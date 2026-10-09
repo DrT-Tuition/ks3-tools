@@ -25,7 +25,7 @@
       different substance.
     - Mass "lost" or "made" in a reaction: success message says atoms are only rearranged.
     - Every equation needs changing: some equations are already balanced.
-  Support (atom pictures, atom count, hints and answers) starts OFF on every visit; pupils try unaided first.
+  Support (atom pictures, atom count) starts OFF on every visit; pupils try unaided first.
     - Mass is lost when a gas forms: feedback says escaping gas carries the atoms away.
   Checks: every answer is calculated by the solver; the bank is verified on load and any item that
   cannot be balanced shows an error instead of a question.
@@ -46,18 +46,18 @@ try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t ===
   --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
   --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
   --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  --shadow:0 2px 8px rgba(20,36,61,.08); --atom-edge:rgba(20,36,61,.35);
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
   --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
-  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --atom-edge:rgba(233,237,243,.45);
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
   color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
   --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
-  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --atom-edge:rgba(233,237,243,.45);
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
   color-scheme:dark;}
 
 *{box-sizing:border-box}
@@ -67,7 +67,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
 
 /* header */
-header{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
 h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
@@ -167,13 +168,16 @@ details.custom summary{font-weight:700;cursor:pointer}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.coef,.atom{transition:color .15s,transform .15s}}
 
-/* footer: brand, subtle */
-footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
-footer.brand svg{height:28px;width:auto;display:block;flex:none}
-footer.brand .mk-dark{display:none}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
-:root[data-theme="dark"] footer.brand .mk-light{display:none}
-:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: licence line only */
+footer.brand{margin-top:8px;color:var(--muted);font-size:14px}
 footer.brand a{color:inherit}
 </style>
 </head>
@@ -182,26 +186,28 @@ footer.brand a{color:inherit}
 <div class="wrap">
   <header>
     <h1>Balance the Equation<small>Change only the big numbers in front. Count every atom on both sides.</small></h1>
-    <div class="tools">
-      <div class="chip" aria-live="polite">Solved <b id="sSolved">0</b></div>
-      <div class="chip">First try <b id="sFirst">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
-      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
-    </div>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
+  <div class="bar">
   <div class="levels" role="group" aria-label="Level">
     <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
     <button type="button" data-level="core" aria-pressed="false">Core</button>
     <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
     <button type="button" data-level="all" aria-pressed="false">Mixed</button>
   </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Solved <b id="sSolved">0</b></div>
+      <div class="chip">First try <b id="sFirst">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
 
   <div class="support" role="group" aria-label="Support">
     <span class="lbl">Support:</span>
     <button class="sw" type="button" data-support="pictures" aria-pressed="false"><span class="dot"></span>Atom pictures <span class="state">off</span></button>
     <button class="sw" type="button" data-support="count" aria-pressed="false"><span class="dot"></span>Atom count <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="hints" aria-pressed="false"><span class="dot"></span>Hints and answers <span class="state">off</span></button>
   </div>
 
   <div class="bankerr" id="bankErr" hidden></div>
@@ -233,10 +239,10 @@ footer.brand a{color:inherit}
 
     <div class="actions">
       <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint" hidden>Hint</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
       <button class="btn" type="button" id="reset">Reset to 1s</button>
       <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal" hidden>Show answer</button>
+      <button class="btn" type="button" id="reveal">Show answer</button>
       <button class="btn primary" type="button" id="next">Next equation →</button>
     </div>
   </section>
@@ -253,11 +259,7 @@ footer.brand a{color:inherit}
 
   <p class="rule"><b>Remember:</b> the small numbers are part of the formula. Change them and you make a different substance. H<sub>2</sub>O is water; H<sub>2</sub>O<sub>2</sub> is hydrogen peroxide. In a reaction, atoms are only rearranged. None are made or lost. If a gas escapes, its atoms are still there, in the air.</p>
 
-  <footer class="brand">
-    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
-    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
-    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
-  </footer>
+  <footer class="brand">Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></footer>
 </div>
 
 <script>
@@ -388,7 +390,7 @@ const prettyFormula = f => { const sub = "₀₁₂₃₄₅₆₇₈₉"; retur
 })();
 
 /* ---------- state ---------- */
-const support = { pictures: false, count: false, hints: false };   // all OFF at the start, every time
+const support = { pictures: false, count: false };   // all OFF at the start, every time
 const state = { level: "warm", queue: [], idx: 0, eq: null, ctx: "", word: "", co: [], answer: null, hints: 0, checks: 0, done: false, revealed: false, custom: false,
   score: { solved: 0, first: 0, streak: 0 } };
 function shuffle(a){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
@@ -538,7 +540,6 @@ document.querySelectorAll(".sw").forEach(b => b.onclick = () => {
   const k = b.dataset.support, on = !support[k]; support[k] = on;
   b.setAttribute("aria-pressed", on ? "true" : "false");
   b.querySelector(".state").textContent = on ? "on" : "off";
-  if (k === "hints"){ $("hint").hidden = !on; $("reveal").hidden = !on; }
   renderParticles(); renderTally();
 });
 $("customGo").onclick = () => {
