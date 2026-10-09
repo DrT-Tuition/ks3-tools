@@ -8,12 +8,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
 /* Dr T's Tuition palette, dyslexia-friendly: pale Tint page, Paper cards, Ink text. */
 :root{
   --bg:#E9EDF3; --surface:#FBFAF8; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
   --accent:#14243D; --gold:#D9A536; --focus:#14243D; --shadow:0 2px 8px rgba(20,36,61,.08);
   --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14243D; --surface:#1E3555; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
@@ -25,6 +30,9 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.6 var(--f-body);letter-spacing:.01em;word-spacing:.06em}
 .wrap{max-width:960px;margin:0 auto;padding:32px 16px 40px}
 h1{font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.15;margin:0 0 8px;color:var(--accent)}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
 .lead{color:var(--muted);margin:0 0 8px;max-width:60ch}
 h2{font-size:20px;margin:32px 0 12px;color:var(--accent)}
 .rule{width:56px;height:3px;background:var(--gold);margin:16px 0 8px;border:0}
@@ -48,7 +56,7 @@ footer.brand{margin-top:40px}
 </head>
 <body>
 <div class="wrap">
-  <h1>KS3 Science Tools</h1>
+  <div class="top"><h1>KS3 Science Tools</h1><button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button></div>
   <p class="lead">Free interactive tools for KS3 science lessons. Open one on the board or share the link. No log-in, nothing to install.</p>
   <hr class="rule">
 
@@ -67,5 +75,17 @@ footer.brand{margin-top:40px}
     <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
   </footer>
 </div>
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+</script>
 </body>
 </html>

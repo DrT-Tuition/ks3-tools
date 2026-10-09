@@ -4,107 +4,162 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Balance the Equation</title>
+<!--
+  SCIENCE SPEC — Balance the Equation (KS3)
+  Models: a chemical reaction as atoms rearranging. The total number of each type of atom
+          is the same before and after (conservation of mass). Pupils change only the numbers
+          in front of each formula until every element's count matches.
+  Source: KS3 National Curriculum (Chemistry: chemical reactions) — "chemical reactions as the
+          rearrangement of atoms", "representing chemical reactions using formulae and using
+          equations", "combustion, thermal decomposition, oxidation and displacement reactions",
+          "conservation of mass". AQA KS3 3.6.4 Types of reaction (word equations; particle
+          diagrams; total number of atoms conserved; "balance a symbol equation" is Extend).
+          SoW: Y7 T4 1C3 Reactions (L10–15), Y7 T3 C2.1 Groups 1 and 7, Y8 T1 C1.4 Neutralisation,
+          Y8 T3 2C3 Metals and acid (displacement, extracting metals).
+  Simplifications (shown on screen as "Model limits"):
+    - Metals and compounds such as magnesium oxide are giant structures, not separate molecules.
+      The particle picture draws one formula's worth of atoms as a group.
+    - State symbols are left out.
+  Misconceptions designed out (BEST / common KS3):
+    - Balancing by changing the small numbers: clicking a formula explains why that makes a
+      different substance.
+    - Mass "lost" or "made" in a reaction: success message says atoms are only rearranged.
+    - Every equation needs changing: some equations are already balanced.
+    - Mass is lost when a gas forms: feedback says escaping gas carries the atoms away.
+  Checks: every answer is calculated by the solver; the bank is verified on load and any item that
+  cannot be balanced shows an error instead of a question.
+-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
-html{color-scheme:light}
-body{margin:0}
-img{max-width:100%}
-[hidden]{display:none!important}
-/* Layout: one working card — equation with steppers on top, atom tally beneath, controls in a footer row. Projector-sized type. */
 /* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
-   pale Tint page, warm Paper cards, Ink text (not pure black on pure white). Gold is decoration only on light. */
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
 :root{
   --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
   --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
   --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
   --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  --f-brand:Georgia, "Times New Roman", serif;
-  --shadow:0 2px 8px rgba(20,36,61,.08);
+  --shadow:0 2px 8px rgba(20,36,61,.08); --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
   --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
-  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; color-scheme:dark;}}
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
   --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
-  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; color-scheme:dark;}
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
 
 *{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
-h1{font-family:var(--f-body);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent);text-wrap:balance}
-h1 small{display:block;font-family:var(--f-body);font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
-.score{display:flex;gap:8px;flex-wrap:wrap}
-.chip{font-family:var(--f-body);font-size:14px;padding:6px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
-.chip b{color:var(--accent)}
 
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
 .levels{display:flex;flex-wrap:wrap;gap:6px}
-.levels button{font:700 15px var(--f-body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 
-.card{background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:20px}
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
 .meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
-.ctx{font-family:var(--f-body);font-weight:600;font-size:clamp(18px,2.2vw,22px)}
-.qno{font-family:var(--f-body);font-size:15px;color:var(--muted)}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.word{margin:-6px 0 0;font-size:clamp(18px,2vw,21px);color:var(--ink)}
+.word .lbl{color:var(--muted);font-size:15px;margin-right:6px}
 
-.eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;padding:8px 0}
+.eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;padding:4px 0}
 .sp{display:flex;align-items:center;gap:6px}
-.step{display:grid;grid-template-rows:auto auto auto;justify-items:center}
-.step button{width:44px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-size:16px;cursor:pointer;line-height:1}
+.step{display:grid;justify-items:center}
+.step button{width:46px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-size:16px;cursor:pointer;line-height:1}
 .step button:hover{border-color:var(--accent)}
-.coef{font-family:var(--f-body);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.1;min-width:1.2ch;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
-.coef.one{color:var(--muted);opacity:.55}
+.coef{font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.15;min-width:1.2ch;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
+.coef.one{color:var(--muted);opacity:.6}
 .formula{font-family:var(--f-body);font-weight:700;font-size:clamp(34px,5vw,52px);background:none;border:0;color:var(--ink);cursor:help;padding:0 2px;border-radius:6px}
 .formula sub{font-size:.55em;vertical-align:-.25em;line-height:0}
-.op{font-family:var(--f-body);font-size:clamp(28px,4vw,42px);color:var(--muted);padding:0 2px}
+.op{font-size:clamp(28px,4vw,42px);color:var(--muted);padding:0 2px}
 .op.arrow{color:var(--ink)}
 
-.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+/* particle picture */
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.side{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:40px}
+.side .tag{width:100%;text-align:center;font-size:14px;color:var(--muted)}
+.parrow{font-size:28px;color:var(--ink)}
+.plus{color:var(--muted);font-size:20px}
+.mol{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1.5px dashed var(--line);border-radius:10px;max-width:150px;justify-content:center}
+.atom{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font:700 11px var(--f-body);border:1.5px solid var(--atom-edge);letter-spacing:0}
+.more{font-size:14px;color:var(--muted)}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+@media (max-width:640px){.prow{grid-template-columns:minmax(0,1fr)}.parrow{text-align:center;transform:rotate(90deg)}}
+
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 @media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
-.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
-.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.toggle{font:400 13px var(--f-body);text-transform:none;letter-spacing:0;display:flex;align-items:center;gap:6px;color:var(--ink);cursor:pointer}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.toggle{font:400 15px var(--f-body);display:flex;align-items:center;gap:6px;color:var(--ink);cursor:pointer}
+.toggle input{width:18px;height:18px}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 th{font:700 15px var(--f-body);color:var(--muted);text-align:center;padding:0 6px 6px}
 th:first-child{text-align:left}
-td{padding:6px;text-align:center;border-top:1px solid var(--line);font-family:var(--f-body);font-size:20px}
+td{padding:6px;text-align:center;border-top:1px solid var(--line);font-size:20px}
 td:first-child{text-align:left}
-.tile{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:6px;background:var(--accent);color:var(--accent-ink);font:700 18px var(--f-body)}
-.st{font-family:var(--f-body);font-size:14px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.tile{display:inline-grid;place-items:center;min-width:42px;height:42px;padding:0 6px;border-radius:6px;font:700 17px var(--f-body);border:1.5px solid var(--atom-edge)}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
 .st.ok{color:var(--good);background:var(--good-bg)}
 .st.no{color:var(--bad);background:var(--bad-bg)}
-.hidden-note{color:var(--muted);font-size:15px;margin:4px 0}
-
-.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:17px}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
 .feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
-.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good);font-weight:700}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
 .feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
-.feedback .msg.tip{border-left:4px solid var(--gold);background:var(--surface)}
-.feedback ul{margin:4px 0 0;padding-left:20px}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
 
+/* actions */
 .actions{display:flex;flex-wrap:wrap;gap:8px}
-.btn{font:700 16px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.gold{background:var(--surface);color:var(--accent);border-color:var(--line);border-bottom:4px solid var(--gold)}
 .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
 .btn:not(.primary):hover{border-color:var(--accent)}
 .spacer{flex:1}
 
 details.custom{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
 details.custom summary{font-weight:700;cursor:pointer}
 .crow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.crow input{flex:1 1 260px;min-width:0;font:500 17px var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
-.cnote{color:var(--muted);font-size:14px;margin:8px 0 0}
-.cerr{color:var(--bad);font-size:15px;margin:8px 0 0}
-
-.rule{font-size:15px;color:var(--muted);margin:0}
+.crow input{flex:1 1 260px;min-width:0;font:400 18px var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.cnote{color:var(--muted);font-size:15px;margin:8px 0 0}
+.cerr{color:var(--bad);font-size:16px;margin:8px 0 0}
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
 .rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.coef,.atom{transition:color .15s,transform .15s}}
+
+/* footer: brand, subtle */
 footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
 footer.brand svg{height:28px;width:auto;display:block;flex:none}
 footer.brand .mk-dark{display:none}
@@ -112,7 +167,6 @@ footer.brand .mk-dark{display:none}
 :root[data-theme="dark"] footer.brand .mk-light{display:none}
 :root[data-theme="dark"] footer.brand .mk-dark{display:block}
 footer.brand a{color:inherit}
-@media (prefers-reduced-motion:no-preference){.coef{transition:color .15s}}
 </style>
 </head>
 <body>
@@ -120,30 +174,42 @@ footer.brand a{color:inherit}
 <div class="wrap">
   <header>
     <h1>Balance the Equation<small>Change only the big numbers in front. Count every atom on both sides.</small></h1>
-    <div class="score" aria-live="polite">
-      <span class="chip">Solved <b id="sSolved">0</b></span>
-      <span class="chip">First try <b id="sFirst">0</b></span>
-      <span class="chip">Streak <b id="sStreak">0</b></span>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Solved <b id="sSolved">0</b></div>
+      <div class="chip">First try <b id="sFirst">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </header>
 
   <div class="levels" role="group" aria-label="Level">
-    <button type="button" id="lvl-warm" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" id="lvl-core" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" id="lvl-challenge" data-level="challenge" aria-pressed="false">Challenge</button>
-    <button type="button" id="lvl-all" data-level="all" aria-pressed="false">Mixed</button>
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+    <button type="button" data-level="all" aria-pressed="false">Mixed</button>
   </div>
+
+  <div class="bankerr" id="bankErr" hidden></div>
 
   <section class="card" aria-label="Equation">
     <div class="meta">
       <div class="ctx" id="ctx"></div>
       <div class="qno" id="qno"></div>
     </div>
+    <p class="word" id="word"></p>
     <div class="eq" id="eq"></div>
+
+    <div class="particles">
+      <h2>What the atoms look like
+        <label class="toggle"><input type="checkbox" id="showParticles" checked> Show</label>
+      </h2>
+      <div id="pview"></div>
+      <p class="limits"><b>Model limits:</b> real atoms are far too small to see, and they have no colour. Metals, carbon, and compounds such as magnesium oxide and sodium chloride are giant structures, not separate molecules. A dashed box shows one formula's worth of atoms, not a molecule. Water, oxygen, carbon dioxide and methane really are separate molecules.</p>
+    </div>
 
     <div class="lower">
       <div class="panel">
-        <h2>Atom count
+        <h2>Count the atoms
           <label class="toggle"><input type="checkbox" id="showTally" checked> Show</label>
         </h2>
         <div id="tally"></div>
@@ -156,7 +222,7 @@ footer.brand a{color:inherit}
 
     <div class="actions">
       <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn gold" type="button" id="hint">Hint</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
       <button class="btn" type="button" id="reset">Reset to 1s</button>
       <span class="spacer"></span>
       <button class="btn" type="button" id="reveal">Show answer</button>
@@ -165,16 +231,16 @@ footer.brand a{color:inherit}
   </section>
 
   <details class="custom">
-    <summary>Use your own equation</summary>
+    <summary>Try your own equation</summary>
     <div class="crow">
-      <input id="customInput" type="text" spellcheck="false" autocomplete="off" placeholder="e.g. Fe2O3 + CO -> Fe + CO2" aria-label="Your equation">
+      <input id="customInput" type="text" spellcheck="false" autocomplete="off" placeholder="e.g. Mg + O2 -> MgO" aria-label="Your equation">
       <button class="btn primary" type="button" id="customGo">Use this</button>
     </div>
-    <p class="cnote">Type formulas with plain numbers (H2O, Ca(OH)2). Separate substances with + and the two sides with -> or =.</p>
+    <p class="cnote">Type formulas with plain numbers, like H2O. Put + between substances and -> between the two sides.</p>
     <p class="cerr" id="customErr" hidden></p>
   </details>
 
-  <p class="rule"><b>Remember:</b> the small numbers are part of the formula. Change them and you've made a different substance. H<sub>2</sub>O is water; H<sub>2</sub>O<sub>2</sub> is hydrogen peroxide.</p>
+  <p class="rule"><b>Remember:</b> the small numbers are part of the formula. Change them and you make a different substance. H<sub>2</sub>O is water; H<sub>2</sub>O<sub>2</sub> is hydrogen peroxide. In a reaction, atoms are only rearranged. None are made or lost. If a gas escapes, its atoms are still there, in the air.</p>
 
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
@@ -184,50 +250,63 @@ footer.brand a{color:inherit}
 </div>
 
 <script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- question bank: [symbol equation, context, word equation] ---------- */
 const BANK = {
   warm: [
-    ["H2 + O2 -> H2O", "Hydrogen burning in oxygen"],
-    ["Mg + O2 -> MgO", "Magnesium burning in air"],
-    ["Na + Cl2 -> NaCl", "Sodium reacting with chlorine"],
-    ["Mg + HCl -> MgCl2 + H2", "Magnesium and hydrochloric acid"],
-    ["Zn + HCl -> ZnCl2 + H2", "Zinc and hydrochloric acid"],
-    ["K + Cl2 -> KCl", "Potassium reacting with chlorine"],
-    ["NaOH + HCl -> NaCl + H2O", "Neutralisation"],
-    ["CaCO3 -> CaO + CO2", "Thermal decomposition of limestone"],
-    ["Li + O2 -> Li2O", "Lithium tarnishing in air"],
-    ["Cu + O2 -> CuO", "Heating copper in air"]
+    ["Mg + O2 -> MgO", "Burning magnesium", "magnesium + oxygen → magnesium oxide"],
+    ["H2 + O2 -> H2O", "Burning hydrogen (the squeaky pop test)", "hydrogen + oxygen → water"],
+    ["Na + Cl2 -> NaCl", "Sodium reacting with chlorine", "sodium + chlorine → sodium chloride"],
+    ["Cu + O2 -> CuO", "Heating copper in air", "copper + oxygen → copper oxide"],
+    ["Mg + HCl -> MgCl2 + H2", "Magnesium and hydrochloric acid", "magnesium + hydrochloric acid → magnesium chloride + hydrogen"],
+    ["Zn + HCl -> ZnCl2 + H2", "Zinc and hydrochloric acid", "zinc + hydrochloric acid → zinc chloride + hydrogen"],
+    ["C + O2 -> CO2", "Burning carbon", "carbon + oxygen → carbon dioxide"],
+    ["Fe + S -> FeS", "Heating iron with sulfur", "iron + sulfur → iron sulfide"],
+    ["CaCO3 -> CaO + CO2", "Heating limestone (thermal decomposition)", "calcium carbonate → calcium oxide + carbon dioxide"]
   ],
   core: [
-    ["CH4 + O2 -> CO2 + H2O", "Methane burning (combustion)"],
-    ["Na + H2O -> NaOH + H2", "Sodium and water"],
-    ["K + H2O -> KOH + H2", "Potassium and water"],
-    ["Cl2 + KBr -> KCl + Br2", "Halogen displacement"],
-    ["CuO + C -> Cu + CO2", "Extracting copper with carbon"],
-    ["Al + O2 -> Al2O3", "Aluminium oxide layer forming"],
-    ["Fe + Cl2 -> FeCl3", "Iron reacting with chlorine"],
-    ["H2SO4 + NaOH -> Na2SO4 + H2O", "Neutralising sulfuric acid"],
-    ["CaCO3 + HCl -> CaCl2 + H2O + CO2", "Limestone and acid"],
-    ["Ca(OH)2 + HCl -> CaCl2 + H2O", "Neutralising calcium hydroxide"],
-    ["N2 + H2 -> NH3", "Making ammonia"],
-    ["Fe2O3 + CO -> Fe + CO2", "Blast furnace"]
+    ["CH4 + O2 -> CO2 + H2O", "Burning methane (natural gas)", "methane + oxygen → carbon dioxide + water"],
+    ["Li + O2 -> Li2O", "Lithium tarnishing in air", "lithium + oxygen → lithium oxide"],
+    ["Na + O2 -> Na2O", "Sodium tarnishing in air", "sodium + oxygen → sodium oxide"],
+    ["Na + H2O -> NaOH + H2", "Sodium and water", "sodium + water → sodium hydroxide + hydrogen"],
+    ["K + H2O -> KOH + H2", "Potassium and water", "potassium + water → potassium hydroxide + hydrogen"],
+    ["Cl2 + KBr -> KCl + Br2", "Chlorine displacing bromine", "chlorine + potassium bromide → potassium chloride + bromine"],
+    ["CuO + C -> Cu + CO2", "Extracting copper with carbon", "copper oxide + carbon → copper + carbon dioxide"],
+    ["H2O2 -> H2O + O2", "Hydrogen peroxide breaking down", "hydrogen peroxide → water + oxygen"],
+    ["HCl + NaOH -> NaCl + H2O", "Neutralisation", "hydrochloric acid + sodium hydroxide → sodium chloride + water"],
+    ["Zn + CuSO4 -> ZnSO4 + Cu", "Zinc displacing copper", "zinc + copper sulfate → zinc sulfate + copper"]
   ],
   challenge: [
-    ["Fe2O3 + C -> Fe + CO2", "Extracting iron with carbon"],
-    ["C3H8 + O2 -> CO2 + H2O", "Propane burning"],
-    ["C2H6 + O2 -> CO2 + H2O", "Ethane burning"],
-    ["Al + HCl -> AlCl3 + H2", "Aluminium and hydrochloric acid"],
-    ["Al2O3 -> Al + O2", "Electrolysis of aluminium oxide"],
-    ["Na2CO3 + HCl -> NaCl + H2O + CO2", "Sodium carbonate and acid"],
-    ["NH3 + O2 -> NO + H2O", "Oxidising ammonia"],
-    ["C6H12O6 + O2 -> CO2 + H2O", "Aerobic respiration"],
-    ["CO2 + H2O -> C6H12O6 + O2", "Photosynthesis"],
-    ["Fe + O2 -> Fe2O3", "Iron rusting (simplified)"]
+    ["Al + O2 -> Al2O3", "Aluminium reacting with oxygen", "aluminium + oxygen → aluminium oxide"],
+    ["Fe + O2 -> Fe2O3", "Hot iron reacting with oxygen", "iron + oxygen → iron oxide"],
+    ["Fe + Cl2 -> FeCl3", "Iron reacting with chlorine", "iron + chlorine → iron chloride"],
+    ["Ca + H2O -> Ca(OH)2 + H2", "Calcium and water", "calcium + water → calcium hydroxide + hydrogen"],
+    ["C3H8 + O2 -> CO2 + H2O", "Burning propane (barbecue gas)", "propane + oxygen → carbon dioxide + water"],
+    ["Fe2O3 + C -> Fe + CO2", "Extracting iron with carbon", "iron oxide + carbon → iron + carbon dioxide"],
+    ["Al + HCl -> AlCl3 + H2", "Aluminium and hydrochloric acid", "aluminium + hydrochloric acid → aluminium chloride + hydrogen"],
+    ["CaCO3 + HCl -> CaCl2 + H2O + CO2", "Limestone and hydrochloric acid", "calcium carbonate + hydrochloric acid → calcium chloride + water + carbon dioxide"]
   ]
 };
 
 const ELEMENTS = new Set("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U".split(" "));
 const NAMES = {H:"hydrogen",O:"oxygen",C:"carbon",N:"nitrogen",Na:"sodium",Cl:"chlorine",Mg:"magnesium",Zn:"zinc",Cu:"copper",S:"sulfur",Ca:"calcium",Li:"lithium",K:"potassium",Br:"bromine",Al:"aluminium",Fe:"iron",I:"iodine",F:"fluorine",P:"phosphorus",Si:"silicon",Pb:"lead",Ag:"silver"};
+/* Atom colours: each has a fixed text colour chosen for contrast; the symbol is always printed, so colour is never the only clue. */
+const ATOM = {H:["#FFFFFF","#1E252E"],O:["#D64541","#FFFFFF"],C:["#3A3F47","#FFFFFF"],N:["#3B6FD8","#FFFFFF"],Cl:["#2E8B4E","#FFFFFF"],
+  Na:["#7E4FC9","#FFFFFF"],Mg:["#9CA3AF","#1E252E"],Cu:["#D2803B","#1E252E"],Zn:["#6F7E8C","#FFFFFF"],Ca:["#D9D2BF","#1E252E"],
+  Fe:["#5B3A29","#FFFFFF"],Al:["#E2E7EC","#1E252E"],K:["#9446B0","#FFFFFF"],Li:["#C2477F","#FFFFFF"],Br:["#7A2424","#FFFFFF"],S:["#E8C53A","#1E252E"]};
+const atomColour = el => ATOM[el] || ["#56657A","#FFFFFF"];
 const nm = el => NAMES[el] || el;
+const cap = s => s[0].toUpperCase() + s.slice(1);
 
 function parseFormula(s){
   let i = 0;
@@ -238,8 +317,8 @@ function parseFormula(s){
       const c = s[i];
       if (c === "("){ i++; const inner = group(); if (s[i] !== ")") throw new Error("Unmatched bracket in " + s); i++; const n = num(); for (const k in inner) m[k] = (m[k]||0) + inner[k]*n; }
       else if (c === ")") return m;
-      else if (/[A-Z]/.test(c)){ let el = c; i++; while (i < s.length && /[a-z]/.test(s[i])) el += s[i++]; if (!ELEMENTS.has(el)) throw new Error("'" + el + "' isn't an element symbol"); const n = num(); m[el] = (m[el]||0) + n; }
-      else throw new Error("Couldn't read '" + s + "'");
+      else if (/[A-Z]/.test(c)){ let el = c; i++; while (i < s.length && /[a-z]/.test(s[i])) el += s[i++]; if (!ELEMENTS.has(el)) throw new Error("'" + el + "' isn't an element symbol."); const n = num(); m[el] = (m[el]||0) + n; }
+      else throw new Error("I couldn't read '" + s + "'. Element symbols start with a capital letter, like Mg.");
     }
     return m;
   };
@@ -247,34 +326,36 @@ function parseFormula(s){
   if (i !== s.length) throw new Error("Unmatched bracket in " + s);
   return r;
 }
-
+/* atoms in formula order, for drawing (keeps H2O as H, H, O) */
+function atomList(s){
+  const out = []; const f = parseFormula(s);
+  const order = []; s.replace(/[A-Z][a-z]?/g, m => { if (!order.includes(m)) order.push(m); });
+  order.forEach(el => { for (let k = 0; k < f[el]; k++) out.push(el); });
+  return out;
+}
 function parseEquation(str){
   const parts = str.replace(/\s+/g, "").split(/->|→|=/);
-  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error("Put -> (or =) between the reactants and the products.");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error("Put -> between the reactants and the products.");
   const side = p => p.split("+").map(f => { if (!f) throw new Error("There's a stray +."); const clean = f.replace(/^[0-9]+/, ""); return { f: clean, atoms: parseFormula(clean) }; });
   const L = side(parts[0]), R = side(parts[1]);
-  if (L.length + R.length > 6) throw new Error("Use six substances or fewer.");
+  if (L.length + R.length > 5) throw new Error("Use five substances or fewer.");
   const elsL = new Set(L.flatMap(x => Object.keys(x.atoms))), elsR = new Set(R.flatMap(x => Object.keys(x.atoms)));
-  for (const e of elsL) if (!elsR.has(e)) throw new Error(nm(e)[0].toUpperCase() + nm(e).slice(1) + " is on the left but not the right.");
-  for (const e of elsR) if (!elsL.has(e)) throw new Error(nm(e)[0].toUpperCase() + nm(e).slice(1) + " is on the right but not the left.");
+  for (const e of elsL) if (!elsR.has(e)) throw new Error(cap(nm(e)) + " is in the reactants but not the products.");
+  for (const e of elsR) if (!elsL.has(e)) throw new Error(cap(nm(e)) + " is in the products but not the reactants.");
   return { L, R };
 }
-
 function elementsOf(eq){ const out = []; for (const s of [...eq.L, ...eq.R]) for (const k of Object.keys(s.atoms)) if (!out.includes(k)) out.push(k); return out; }
 function totals(eq, co){
-  const els = elementsOf(eq), t = {};
-  els.forEach(e => t[e] = [0,0]);
+  const t = {}; elementsOf(eq).forEach(e => t[e] = [0,0]);
   eq.L.forEach((s,i) => { for (const k in s.atoms) t[k][0] += s.atoms[k]*co[i]; });
   eq.R.forEach((s,j) => { for (const k in s.atoms) t[k][1] += s.atoms[k]*co[eq.L.length + j]; });
   return t;
 }
 const gcd = (a,b) => b ? gcd(b, a % b) : a;
-function isBalanced(eq, co){ const t = totals(eq, co); return Object.values(t).every(([a,b]) => a === b); }
-
+const isBalanced = (eq, co) => Object.values(totals(eq, co)).every(([a,b]) => a === b);
 function solve(eq){
-  const n = eq.L.length + eq.R.length, max = n >= 6 ? 8 : 12;
-  let best = null, bestSum = Infinity;
-  const co = new Array(n).fill(1);
+  const n = eq.L.length + eq.R.length, max = 10;
+  let best = null, bestSum = Infinity; const co = new Array(n).fill(1);
   (function rec(k, sum){
     if (sum + (n - k) >= bestSum) return;
     if (k === n){ if (isBalanced(eq, co)){ best = co.slice(); bestSum = sum; } return; }
@@ -282,101 +363,123 @@ function solve(eq){
   })(0, 0);
   return best;
 }
+const formulaHTML = f => f.replace(/([A-Za-z)])([0-9]+)/g, "$1<sub>$2</sub>");
+const prettyFormula = f => { const sub = "₀₁₂₃₄₅₆₇₈₉"; return f.replace(/([A-Za-z)])([0-9]+)/g, (_, a, d) => a + [...d].map(x => sub[x]).join("")); };
 
-function formulaHTML(f){ return f.replace(/([A-Za-z)])([0-9]+)/g, "$1<sub>$2</sub>"); }
-function prettyFormula(f){ const sub = "₀₁₂₃₄₅₆₇₈₉"; return f.replace(/([A-Za-z)])([0-9]+)/g, (_, a, d) => a + [...d].map(x => sub[x]).join("")); }
+/* ---------- check the bank on load: every item must parse and balance ---------- */
+(function verifyBank(){
+  const bad = [];
+  for (const lvl in BANK) BANK[lvl] = BANK[lvl].filter(item => {
+    try { const eq = parseEquation(item[0]); if (!solve(eq)) throw new Error("no whole-number answer"); return true; }
+    catch (e) { bad.push(item[0] + " (" + e.message + ")"); return false; }
+  });
+  if (bad.length){ const el = document.getElementById("bankErr"); el.hidden = false; el.textContent = "These questions were skipped because they have a mistake: " + bad.join("; "); }
+})();
 
-// ---------- state ----------
-const state = { level: "warm", queue: [], idx: 0, eq: null, ctx: "", co: [], answer: null, hints: 0, checks: 0, done: false, revealed: false, custom: false,
+/* ---------- state ---------- */
+const state = { level: "warm", queue: [], idx: 0, eq: null, ctx: "", word: "", co: [], answer: null, hints: 0, checks: 0, done: false, revealed: false, custom: false,
   score: { solved: 0, first: 0, streak: 0 } };
-
 function shuffle(a){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
-function buildQueue(){
-  const src = state.level === "all" ? [...BANK.warm, ...BANK.core, ...BANK.challenge] : BANK[state.level];
-  state.queue = shuffle(src); state.idx = 0;
-}
+function buildQueue(){ const src = state.level === "all" ? [...BANK.warm, ...BANK.core, ...BANK.challenge] : BANK[state.level]; state.queue = shuffle(src); state.idx = 0; }
 function load(item, custom){
   const eq = parseEquation(item[0]);
-  state.eq = eq; state.ctx = item[1]; state.custom = !!custom;
-  state.co = new Array(eq.L.length + eq.R.length).fill(1);
-  state.answer = solve(eq);
-  state.hints = 0; state.checks = 0; state.done = false; state.revealed = false;
-  render(); setFeedback([{ cls: "", html: "Use the arrows to change the big numbers, then press <b>Check</b>." }]);
+  Object.assign(state, { eq, ctx: item[1], word: item[2] || "", custom: !!custom, co: new Array(eq.L.length + eq.R.length).fill(1),
+    answer: solve(eq), hints: 0, checks: 0, done: false, revealed: false });
+  render(); setFeedback([{ cls: "", html: "Use the arrows to change the big numbers. Then press <b>Check</b>." }]);
 }
 
-// ---------- rendering ----------
+/* ---------- rendering ---------- */
 const $ = id => document.getElementById(id);
+const labelFor = l => ({ warm: "Warm-up", core: "Core", challenge: "Challenge", all: "Mixed" }[l]);
 function render(){
   const { eq, co } = state;
   $("ctx").textContent = state.ctx;
   $("qno").textContent = state.custom ? "Your equation" : `${labelFor(state.level)} · ${state.idx + 1} of ${state.queue.length}`;
+  $("word").innerHTML = state.word ? `<span class="lbl">Word equation:</span>${state.word}` : "";
   const eqEl = $("eq"); eqEl.innerHTML = "";
-  const all = [...eq.L, ...eq.R];
-  all.forEach((s, i) => {
+  [...eq.L, ...eq.R].forEach((s, i) => {
     if (i === eq.L.length){ const a = document.createElement("span"); a.className = "op arrow"; a.textContent = "→"; a.setAttribute("aria-label","reacts to make"); eqEl.appendChild(a); }
     else if (i > 0){ const p = document.createElement("span"); p.className = "op"; p.textContent = "+"; eqEl.appendChild(p); }
     const sp = document.createElement("div"); sp.className = "sp";
     const step = document.createElement("div"); step.className = "step";
-    const up = document.createElement("button"); up.type = "button"; up.textContent = "▲"; up.setAttribute("aria-label", "Increase number in front of " + s.f); up.id = "up" + i;
-    const val = document.createElement("div"); val.className = "coef" + (co[i] === 1 ? " one" : ""); val.textContent = co[i]; val.setAttribute("aria-live","polite");
-    const dn = document.createElement("button"); dn.type = "button"; dn.textContent = "▼"; dn.setAttribute("aria-label", "Decrease number in front of " + s.f); dn.id = "dn" + i;
+    const up = document.createElement("button"); up.type = "button"; up.textContent = "▲"; up.id = "up" + i; up.setAttribute("aria-label", "More " + prettyFormula(s.f));
+    const val = document.createElement("div"); val.className = "coef" + (co[i] === 1 ? " one" : ""); val.textContent = co[i];
+    const dn = document.createElement("button"); dn.type = "button"; dn.textContent = "▼"; dn.id = "dn" + i; dn.setAttribute("aria-label", "Fewer " + prettyFormula(s.f));
     up.onclick = () => bump(i, 1); dn.onclick = () => bump(i, -1);
     step.append(up, val, dn);
     const fm = document.createElement("button"); fm.type = "button"; fm.className = "formula"; fm.innerHTML = formulaHTML(s.f);
     fm.title = "You can't change the small numbers"; fm.onclick = () => subscriptWarning(s.f);
     sp.append(step, fm); eqEl.appendChild(sp);
   });
-  renderTally();
+  renderParticles(); renderTally();
+}
+function atomEl(el){ const [bg, fg] = atomColour(el); const d = document.createElement("span"); d.className = "atom"; d.style.background = bg; d.style.color = fg; d.textContent = el; d.title = nm(el); return d; }
+function renderParticles(){
+  const box = $("pview");
+  if (!$("showParticles").checked){ box.innerHTML = '<p class="hidden-note">Hidden. Picture the atoms yourself.</p>'; return; }
+  const { eq, co } = state; box.innerHTML = "";
+  const row = document.createElement("div"); row.className = "prow";
+  const side = (list, off, tag) => {
+    const d = document.createElement("div"); d.className = "side";
+    list.forEach((s, j) => {
+      if (j > 0){ const p = document.createElement("span"); p.className = "plus"; p.textContent = "+"; d.appendChild(p); }
+      const n = co[off + j], shown = Math.min(n, 6), atoms = atomList(s.f);
+      for (let k = 0; k < shown; k++){ const m = document.createElement("span"); m.className = "mol"; m.setAttribute("aria-hidden","true"); atoms.forEach(a => m.appendChild(atomEl(a))); d.appendChild(m); }
+      if (n > shown){ const more = document.createElement("span"); more.className = "more"; more.textContent = `+ ${n - shown} more`; d.appendChild(more); }
+    });
+    const t = document.createElement("div"); t.className = "tag"; t.textContent = tag; d.appendChild(t);
+    return d;
+  };
+  row.append(side(eq.L, 0, "Reactants"), Object.assign(document.createElement("div"), { className: "parrow", textContent: "→" }), side(eq.R, eq.L.length, "Products"));
+  box.appendChild(row);
 }
 function renderTally(){
   const box = $("tally");
   if (!$("showTally").checked){ box.innerHTML = '<p class="hidden-note">Hidden. Count the atoms yourself, then press Check.</p>'; return; }
   const t = totals(state.eq, state.co);
-  let h = '<table><thead><tr><th>Element</th><th>Left</th><th>Right</th><th></th></tr></thead><tbody>';
+  let h = '<table><thead><tr><th>Atom</th><th>Reactants</th><th>Products</th><th></th></tr></thead><tbody>';
   for (const [el, [a, b]] of Object.entries(t)){
-    const ok = a === b;
-    h += `<tr><td><span class="tile" title="${nm(el)}">${el}</span></td><td>${a}</td><td>${b}</td><td><span class="st ${ok ? "ok" : "no"}">${ok ? "Equal" : "Not equal"}</span></td></tr>`;
+    const ok = a === b, [bg, fg] = atomColour(el);
+    h += `<tr><td><span class="tile" style="background:${bg};color:${fg}" title="${nm(el)}">${el}</span></td><td>${a}</td><td>${b}</td><td><span class="st ${ok ? "ok" : "no"}" aria-label="${ok ? "Equal" : "Not equal"}">${ok ? "✓" : "✗"}<span class="w"> ${ok ? "Equal" : "Not equal"}</span></span></td></tr>`;
   }
   box.innerHTML = h + "</tbody></table>";
 }
-function setFeedback(items){
-  $("feedback").innerHTML = items.map(m => `<div class="msg ${m.cls}">${m.html}</div>`).join("");
-}
-function labelFor(l){ return { warm: "Warm-up", core: "Core", challenge: "Challenge", all: "Mixed" }[l]; }
+function setFeedback(items){ $("feedback").innerHTML = items.map(m => `<div class="msg ${m.cls}">${m.html}</div>`).join(""); }
 function updateScore(){ $("sSolved").textContent = state.score.solved; $("sFirst").textContent = state.score.first; $("sStreak").textContent = state.score.streak; }
+function equationText(){
+  const part = (arr, off) => arr.map((s, i) => `${state.co[off+i] > 1 ? state.co[off+i] : ""}${formulaHTML(s.f)}`).join(" + ");
+  return `<span style="white-space:nowrap">${part(state.eq.L, 0)}</span> → <span style="white-space:nowrap">${part(state.eq.R, state.eq.L.length)}</span>`;
+}
 
-// ---------- actions ----------
+/* ---------- actions ---------- */
 function bump(i, d){
   if (state.revealed) return;
-  state.co[i] = Math.min(12, Math.max(1, state.co[i] + d));
+  state.co[i] = Math.min(10, Math.max(1, state.co[i] + d));
   render();
   const btn = $((d > 0 ? "up" : "dn") + i); if (btn) btn.focus();
 }
 function subscriptWarning(f){
-  setFeedback([{ cls: "tip", html: `You can't change the small numbers in <b>${formulaHTML(f)}</b>. They are part of the formula. Change the big number in front instead.` }]);
+  setFeedback([{ cls: "tip", html: `You can't change the small numbers in <b>${formulaHTML(f)}</b>. They are part of the formula, so changing them makes a different substance. Change the big number in front instead.` }]);
 }
 function check(){
   if (state.revealed){ setFeedback([{ cls: "", html: "The answer is showing. Press <b>Next equation</b> to try another." }]); return; }
   state.checks++;
-  const t = totals(state.eq, state.co);
-  const wrong = Object.entries(t).filter(([, [a, b]]) => a !== b);
+  const wrong = Object.entries(totals(state.eq, state.co)).filter(([, [a, b]]) => a !== b);
   if (wrong.length){
-    state.score.streak = 0; updateScore();
-    const list = wrong.map(([el, [a, b]]) => `<li>${cap(nm(el))}: ${a} on the left, ${b} on the right</li>`).join("");
-    setFeedback([{ cls: "bad", html: `Not balanced yet.<ul>${list}</ul>` }]);
+    if (!state.done){ state.score.streak = 0; updateScore(); }
+    const list = wrong.map(([el, [a, b]]) => `<li>${cap(nm(el))}: ${a} in the reactants, ${b} in the products</li>`).join("");
+    setFeedback([{ cls: "bad", html: $("showTally").checked ? `<b>Not balanced yet.</b><ul>${list}</ul>` : "<b>Not balanced yet.</b> Count each type of atom again." }]);
     return;
   }
   const g = state.co.reduce(gcd);
-  if (g > 1){
-    setFeedback([{ cls: "tip", html: `Balanced, but every number can be divided by ${g}. Use the simplest whole numbers.` }]);
-    return;
-  }
+  if (g > 1){ setFeedback([{ cls: "tip", html: `Balanced, but every big number can be divided by ${g}. Use the smallest whole numbers.` }]); return; }
   if (!state.done){
     state.done = true; state.score.solved++; state.score.streak++;
     if (state.checks === 1 && state.hints === 0) state.score.first++;
     updateScore();
   }
-  setFeedback([{ cls: "good", html: `Balanced! ${equationText()}` }]);
+  const already = state.co.every(c => c === 1);
+  setFeedback([{ cls: "good", html: `<b>${already ? "Correct. This one was already balanced!" : "Balanced!"}</b> ${equationText()}<br>The same atoms are on both sides. They have only been rearranged, so the total mass stays the same. If a gas escapes, the reading on a balance goes down, but the atoms are still there, in the air.` }]);
 }
 function hint(){
   if (state.revealed || !state.answer) return;
@@ -386,38 +489,30 @@ function hint(){
   const all = [...state.eq.L, ...state.eq.R];
   if (!wrong.length){
     const g = state.co.reduce(gcd);
-    setFeedback([{ cls: "tip", html: g > 1 ? `It's balanced. Now divide every big number by ${g}.` : "It's already balanced. Press <b>Check</b>." }]);
+    setFeedback([{ cls: "tip", html: g > 1 ? `It's balanced. Now divide every big number by ${g}.` : "Every atom matches. Press <b>Check</b>." }]);
     return;
   }
-  // Prefer an element that appears in only one substance on each side: easiest to fix first.
   const single = wrong.find(([el]) => all.filter(s => s.atoms[el]).length === 2) || wrong[0];
   const [el, [a, b]] = single;
   const target = all.findIndex((s, i) => s.atoms[el] && state.co[i] !== state.answer[i]);
-  let html = `Look at <b>${nm(el)}</b>: ${a} on the left, ${b} on the right.`;
-  if (target >= 0){
-    const side = target < state.eq.L.length ? "left" : "right";
-    html += ` Try changing the number in front of <b>${formulaHTML(all[target].f)}</b> on the ${side}.`;
+  let html = `Look at <b>${nm(el)}</b>: ${a} in the reactants, ${b} in the products.`;
+  if (state.hints >= 2 && target >= 0){
+    html += ` Try changing the number in front of <b>${formulaHTML(all[target].f)}</b>.`;
     if (state.hints >= 3) html += ` It should be <b>${state.answer[target]}</b>.`;
   }
   setFeedback([{ cls: "tip", html }]);
 }
 function reveal(){
-  if (!state.answer){ setFeedback([{ cls: "bad", html: "I couldn't find whole numbers up to 12 that balance this one." }]); return; }
-  state.co = state.answer.slice(); state.revealed = true; state.score.streak = 0; updateScore();
+  if (!state.answer){ setFeedback([{ cls: "bad", html: "I couldn't find whole numbers up to 10 that balance this one." }]); return; }
+  state.co = state.answer.slice(); state.revealed = true; if (!state.done){ state.score.streak = 0; updateScore(); }
   render(); setFeedback([{ cls: "", html: `Answer: ${equationText()}` }]);
 }
 function next(){
   if (state.custom){ buildQueue(); load(state.queue[0]); return; }
   state.idx++;
-  if (state.idx >= state.queue.length){ buildQueue(); }
+  if (state.idx >= state.queue.length) buildQueue();
   load(state.queue[state.idx]);
 }
-function equationText(){
-  const all = [...state.eq.L, ...state.eq.R];
-  const part = (arr, off) => arr.map((s, i) => `${state.co[off+i] > 1 ? state.co[off+i] : ""}${formulaHTML(s.f)}`).join(" + ");
-  return `<span style="white-space:nowrap">${part(state.eq.L, 0)}</span> → <span style="white-space:nowrap">${part(state.eq.R, state.eq.L.length)}</span>`;
-}
-const cap = s => s[0].toUpperCase() + s.slice(1);
 
 document.querySelectorAll(".levels button").forEach(b => b.onclick = () => {
   state.level = b.dataset.level;
@@ -427,21 +522,21 @@ document.querySelectorAll(".levels button").forEach(b => b.onclick = () => {
 $("check").onclick = check; $("hint").onclick = hint; $("reveal").onclick = reveal; $("next").onclick = next;
 $("reset").onclick = () => { if (state.revealed) return; state.co.fill(1); render(); setFeedback([{ cls: "", html: "Reset. All the big numbers are back to 1." }]); };
 $("showTally").onchange = renderTally;
+$("showParticles").onchange = renderParticles;
 $("customGo").onclick = () => {
   const err = $("customErr"); err.hidden = true;
   const v = $("customInput").value.trim();
   if (!v){ err.textContent = "Type an equation first."; err.hidden = false; return; }
   try {
     const eq = parseEquation(v);
-    if (!solve(eq)) throw new Error("This one can't be balanced with whole numbers up to 12. Check the formulas.");
+    if (!solve(eq)) throw new Error("This one can't be balanced with whole numbers up to 10. Check the formulas.");
     const label = eq.L.map(s => prettyFormula(s.f)).join(" + ") + " → " + eq.R.map(s => prettyFormula(s.f)).join(" + ");
-    load([v, "Your equation: " + label], true);
+    load([v, label, ""], true);
   } catch (e){ err.textContent = e.message; err.hidden = false; }
 };
 $("customInput").addEventListener("keydown", e => { if (e.key === "Enter") $("customGo").click(); });
 
 buildQueue(); load(state.queue[0]); updateScore();
 </script>
-
 </body>
 </html>
