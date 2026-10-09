@@ -25,6 +25,7 @@
       different substance.
     - Mass "lost" or "made" in a reaction: success message says atoms are only rearranged.
     - Every equation needs changing: some equations are already balanced.
+  Support (atom pictures, atom count, hints and answers) starts OFF on every visit; pupils try unaided first.
     - Mass is lost when a gas forms: feedback says escaping gas carries the atoms away.
   Checks: every answer is calculated by the solver; the bank is verified on load and any item that
   cannot be balanced shows an error instead of a question.
@@ -80,6 +81,15 @@ h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-
 .levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
 /* main card */
 .card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
 .meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
@@ -118,8 +128,6 @@ h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-
 .lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 @media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
-.toggle{font:400 15px var(--f-body);display:flex;align-items:center;gap:6px;color:var(--ink);cursor:pointer}
-.toggle input{width:18px;height:18px}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 th{font:700 15px var(--f-body);color:var(--muted);text-align:center;padding:0 6px 6px}
 th:first-child{text-align:left}
@@ -189,6 +197,13 @@ footer.brand a{color:inherit}
     <button type="button" data-level="all" aria-pressed="false">Mixed</button>
   </div>
 
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="pictures" aria-pressed="false"><span class="dot"></span>Atom pictures <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="count" aria-pressed="false"><span class="dot"></span>Atom count <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="hints" aria-pressed="false"><span class="dot"></span>Hints and answers <span class="state">off</span></button>
+  </div>
+
   <div class="bankerr" id="bankErr" hidden></div>
 
   <section class="card" aria-label="Equation">
@@ -199,19 +214,15 @@ footer.brand a{color:inherit}
     <p class="word" id="word"></p>
     <div class="eq" id="eq"></div>
 
-    <div class="particles">
-      <h2>What the atoms look like
-        <label class="toggle"><input type="checkbox" id="showParticles" checked> Show</label>
-      </h2>
+    <div class="particles" id="particlesPanel" hidden>
+      <h2>What the atoms look like</h2>
       <div id="pview"></div>
       <p class="limits"><b>Model limits:</b> real atoms are far too small to see, and they have no colour. Metals, carbon, and compounds such as magnesium oxide and sodium chloride are giant structures, not separate molecules. A dashed box shows one formula's worth of atoms, not a molecule. Water, oxygen, carbon dioxide and methane really are separate molecules.</p>
     </div>
 
     <div class="lower">
       <div class="panel">
-        <h2>Count the atoms
-          <label class="toggle"><input type="checkbox" id="showTally" checked> Show</label>
-        </h2>
+        <h2>Count the atoms</h2>
         <div id="tally"></div>
       </div>
       <div class="panel">
@@ -222,10 +233,10 @@ footer.brand a{color:inherit}
 
     <div class="actions">
       <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn hint" type="button" id="hint" hidden>Hint</button>
       <button class="btn" type="button" id="reset">Reset to 1s</button>
       <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn" type="button" id="reveal" hidden>Show answer</button>
       <button class="btn primary" type="button" id="next">Next equation →</button>
     </div>
   </section>
@@ -377,6 +388,7 @@ const prettyFormula = f => { const sub = "₀₁₂₃₄₅₆₇₈₉"; retur
 })();
 
 /* ---------- state ---------- */
+const support = { pictures: false, count: false, hints: false };   // all OFF at the start, every time
 const state = { level: "warm", queue: [], idx: 0, eq: null, ctx: "", word: "", co: [], answer: null, hints: 0, checks: 0, done: false, revealed: false, custom: false,
   score: { solved: 0, first: 0, streak: 0 } };
 function shuffle(a){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
@@ -416,7 +428,8 @@ function render(){
 function atomEl(el){ const [bg, fg] = atomColour(el); const d = document.createElement("span"); d.className = "atom"; d.style.background = bg; d.style.color = fg; d.textContent = el; d.title = nm(el); return d; }
 function renderParticles(){
   const box = $("pview");
-  if (!$("showParticles").checked){ box.innerHTML = '<p class="hidden-note">Hidden. Picture the atoms yourself.</p>'; return; }
+  $("particlesPanel").hidden = !support.pictures;
+  if (!support.pictures){ box.innerHTML = ""; return; }
   const { eq, co } = state; box.innerHTML = "";
   const row = document.createElement("div"); row.className = "prow";
   const side = (list, off, tag) => {
@@ -435,7 +448,7 @@ function renderParticles(){
 }
 function renderTally(){
   const box = $("tally");
-  if (!$("showTally").checked){ box.innerHTML = '<p class="hidden-note">Hidden. Count the atoms yourself, then press Check.</p>'; return; }
+  if (!support.count){ box.innerHTML = '<p class="hidden-note">Count each type of atom on both sides yourself, then press Check. Stuck? Turn on <b>Atom count</b> under Support.</p>'; return; }
   const t = totals(state.eq, state.co);
   let h = '<table><thead><tr><th>Atom</th><th>Reactants</th><th>Products</th><th></th></tr></thead><tbody>';
   for (const [el, [a, b]] of Object.entries(t)){
@@ -468,7 +481,7 @@ function check(){
   if (wrong.length){
     if (!state.done){ state.score.streak = 0; updateScore(); }
     const list = wrong.map(([el, [a, b]]) => `<li>${cap(nm(el))}: ${a} in the reactants, ${b} in the products</li>`).join("");
-    setFeedback([{ cls: "bad", html: $("showTally").checked ? `<b>Not balanced yet.</b><ul>${list}</ul>` : "<b>Not balanced yet.</b> Count each type of atom again." }]);
+    setFeedback([{ cls: "bad", html: support.count ? `<b>Not balanced yet.</b><ul>${list}</ul>` : "<b>Not balanced yet.</b> Count each type of atom again." }]);
     return;
   }
   const g = state.co.reduce(gcd);
@@ -521,8 +534,13 @@ document.querySelectorAll(".levels button").forEach(b => b.onclick = () => {
 });
 $("check").onclick = check; $("hint").onclick = hint; $("reveal").onclick = reveal; $("next").onclick = next;
 $("reset").onclick = () => { if (state.revealed) return; state.co.fill(1); render(); setFeedback([{ cls: "", html: "Reset. All the big numbers are back to 1." }]); };
-$("showTally").onchange = renderTally;
-$("showParticles").onchange = renderParticles;
+document.querySelectorAll(".sw").forEach(b => b.onclick = () => {
+  const k = b.dataset.support, on = !support[k]; support[k] = on;
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  b.querySelector(".state").textContent = on ? "on" : "off";
+  if (k === "hints"){ $("hint").hidden = !on; $("reveal").hidden = !on; }
+  renderParticles(); renderTally();
+});
 $("customGo").onclick = () => {
   const err = $("customErr"); err.hidden = true;
   const v = $("customInput").value.trim();
