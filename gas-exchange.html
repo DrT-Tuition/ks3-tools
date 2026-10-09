@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gas Exchange</title>
+<!--
+  SCIENCE SPEC — Gas Exchange (KS3)
+  Models: a close-up of one alveolus (air sac) with a capillary wrapped round its lower wall.
+    Oxygen (O₂, two joined balls) and carbon dioxide (CO₂, three balls in a row) particles move
+    at random. Nothing pushes or pulls them: more O₂ crosses air → blood only because there are
+    more O₂ particles in the air than in the blood; CO₂ crosses blood → air for the same reason.
+    Particles do cross both ways at random (all particles move at the same speed everywhere,
+    so they spread out evenly when left alone; they change direction more often inside the wall).
+    The meter is computed from the simulation's particle counts: (O₂ per area in the air − O₂ per
+    area in the blood by the wall) ÷ wall thickness × number of alveoli (few = 3, many = 12),
+    smoothed over about 4 s and scaled so it matches the net number of O₂ particles that
+    actually cross all the way into the blood (checked on load to within 40%).
+    Controls: Breathing on/off + "Take one breath" (ventilation: half the air in the alveolus
+    leaves up the air tube and fresh air comes in), Blood flow on/off (blood carries particles
+    away and brings new blood low in O₂ and high in CO₂), Wall thin (one cell thick) / thick,
+    Alveoli few / many (surface area).
+    Adaptations shown: thin walls (short distance), many alveoli (large surface area),
+    good blood supply (keeps the difference in concentration high), moist lining.
+  Source: KS3 NC + AQA KS3 3.8.3 Breathing (gas exchange in alveoli) and 3.5.1 Particle model
+    (diffusion keyword); to be matched to the new department lessons when they are written.
+    KS3 NC (Biology, Structure and function of living organisms, Gas exchange systems):
+    "the structure and functions of the gas exchange system in humans, including adaptations
+    to function". SoW: Year 7 Term 2 Body systems, L28 Gas exchange.
+  Simplifications (shown on screen as "Model limits"): far fewer particles than real; particle
+    numbers are not real proportions; nitrogen and water vapour not shown; one alveolus shown
+    (more alveoli handled by multiplying the measured rate); the wall is drawn as one strip
+    (alveolus wall + capillary wall); oxygen just flows with the blood (in reality red blood
+    cells carry it); each breath replaces half the air in the alveolus.
+  Misconceptions designed out (BEST / common KS3): only oxygen moves; blood "sucks" oxygen in /
+    gases are pumped across; air goes into the blood vessels; we breathe out no oxygen at all;
+    diffusion stops when blood flows (or only works when blood is still); oxygen turns into
+    carbon dioxide in the lungs. Not included: smoking, asthma, disease (later topic).
+  Support starts OFF on every visit: Labels; Particle counts.
+  Idea credit: none — designed from scratch.
+  Facts and values used (all in const FACTS near the top of the script):
+    - Alveoli are tiny air sacs at the end of the bronchioles; the lungs have millions of them.
+    - The alveolus wall and the capillary wall are each one cell thick.
+    - Oxygen diffuses from the air in the alveoli into the blood; carbon dioxide diffuses from
+      the blood into the air in the alveoli.
+    - Diffusion: particles spread out by random movement from where there are many to where
+      there are fewer.
+    - Red blood cells carry oxygen.
+    - Breathed-in air ≈ 21% oxygen, ≈ 0.04% carbon dioxide; breathed-out air ≈ 16% oxygen,
+      ≈ 4% carbon dioxide (used only in feedback).
+    - Model values: a breath every 4 s (≈ 15 breaths per minute); each breath swaps half the
+      air; fresh air = 100 O₂ + 3 CO₂ model particles per alveolus; arriving blood = 4 O₂ +
+      60 CO₂ model particles per capillary length; blood flow 60 model units per second; few = 3 alveoli, many = 12 alveoli;
+      wall 12 (thin) or 40 (thick) model units.
+  Checks: on load the script (1) checks every choice / label / sentence-frame task has exactly
+    one correct answer that exists, and (2) runs the simulation headless with a fixed seed for
+    each setting and computes the Core answers (faster / slower / no change, the fastest set-up)
+    and the Warm-up "blood leaving vs arriving" answer from it. If a computed answer disagrees
+    with the authored answer, that task shows a visible error instead.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{
+  --tissue:#F3E7E2; --air:#F7FAFD; --sac-edge:#B9776E; --wallc:#EBBDB4; --wall-line:#B9776E; --nucleus:#9A5A52;
+  --lining:#7FB8E0; --plasma:#F6D6D0; --vessel-edge:#BF625A; --rbc:#C0392B; --rbc-mid:#DD6A5E;
+  --o2:#1F63C6; --o2-edge:#0D356F; --co2:#3B414B; --co2-edge:#14181E; --label-bg:rgba(251,250,248,.92);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --tissue:#1A2B46; --air:#24395B; --sac-edge:#D4A098; --wallc:#734650; --wall-line:#C08A90; --nucleus:#E0B0B0;
+  --lining:#4A8CC0; --plasma:#4B2C3A; --vessel-edge:#C0707A; --rbc:#D9544F; --rbc-mid:#F08A80;
+  --o2:#86C0FF; --o2-edge:#D7EAFF; --co2:#E3E8EF; --co2-edge:#8F9BAD; --label-bg:rgba(30,53,85,.92);}}
+:root[data-theme="dark"]{
+  --tissue:#1A2B46; --air:#24395B; --sac-edge:#D4A098; --wallc:#734650; --wall-line:#C08A90; --nucleus:#E0B0B0;
+  --lining:#4A8CC0; --plasma:#4B2C3A; --vessel-edge:#C0707A; --rbc:#D9544F; --rbc-mid:#F08A80;
+  --o2:#86C0FF; --o2-edge:#D7EAFF; --co2:#E3E8EF; --co2-edge:#8F9BAD; --label-bg:rgba(30,53,85,.92);}
+
+.simgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:940px){.simgrid{grid-template-columns:minmax(0,1.9fr) minmax(0,1fr)}}
+.canvas-wrap{position:relative;width:100%}
+#sim{display:block;width:100%;height:auto;border-radius:8px;background:var(--tissue)}
+.simhead{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mini{font:700 15px var(--f-body);min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mini:hover{border-color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:16px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:34px;height:18px;flex:none}
+.side{display:grid;gap:12px;align-content:start;min-width:0}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;margin-bottom:8px}
+.ctl:last-child{margin-bottom:0}
+.ctl .nm{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:700 16px var(--f-body);min-height:44px;min-width:64px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.meter-val{font-size:clamp(28px,3.4vw,38px);font-weight:700;color:var(--accent);line-height:1.1;font-variant-numeric:tabular-nums}
+.meter-val small{font-size:16px;font-weight:400;color:var(--muted)}
+.mbar{height:14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);overflow:hidden;margin:8px 0 4px}
+.mbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.mbar i{transition:none}}
+#spark{display:block;width:100%;height:56px;margin-top:4px}
+.mnote{font-size:15px;color:var(--muted);margin:2px 0 0}
+.mrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.mrow .mnote{flex:1 1 160px}
+.rec{margin:6px 0 0;padding-left:20px;font-size:15px}
+.rec li{margin:2px 0}
+.counts{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;font-size:16px}
+.counts div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.counts b{display:block;font-size:15px;color:var(--muted)}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;line-height:1.4}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::before{content:"✓ ";color:var(--accent)}
+.lrow{display:flex;align-items:center;gap:10px;margin:4px 0}
+.badge{flex:none;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;display:grid;place-items:center;font-size:16px}
+select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.frame{line-height:2.4}
+.frame select{margin:2px 4px;vertical-align:middle}
+.step-l{margin:0 0 8px;font-size:17px}
+.setnow{font-size:16px;color:var(--muted);margin:8px 0 0}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Gas Exchange<small>Watch oxygen and carbon dioxide cross between the air and the blood.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="bar">
+  <div class="levels" role="group" aria-label="Level">
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+  </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Particle counts <span class="state">off</span></button>
+  </div>
+
+  <section class="card" aria-label="Gas Exchange">
+    <div id="bankErr" class="bankerr" hidden></div>
+    <div class="meta"><span class="ctx" id="taskText"></span><span class="qno" id="qno"></span></div>
+    <div class="simgrid">
+      <div class="side">
+      <div class="particles">
+        <h2><span>Inside the lung: one alveolus</span>
+          <span class="simhead"><button class="mini" type="button" id="playBtn" aria-pressed="false">Pause</button><button class="mini" type="button" id="stepBtn">Step 1 s</button></span></h2>
+        <div class="canvas-wrap"><canvas id="sim" role="img" aria-label="Diagram of one alveolus with a capillary wrapped round it."></canvas></div>
+        <div class="legend" aria-label="Key">
+          <span><svg viewBox="0 0 34 18" aria-hidden="true"><circle cx="12" cy="9" r="6" fill="var(--o2)" stroke="var(--o2-edge)"/><circle cx="22" cy="9" r="6" fill="var(--o2)" stroke="var(--o2-edge)"/></svg>Oxygen (O₂): two balls</span>
+          <span><svg viewBox="0 0 34 18" aria-hidden="true"><circle cx="6" cy="9" r="5" fill="var(--co2)" stroke="var(--co2-edge)"/><circle cx="28" cy="9" r="5" fill="var(--co2)" stroke="var(--co2-edge)"/><circle cx="17" cy="9" r="6.5" fill="var(--co2-edge)" stroke="var(--co2)"/></svg>Carbon dioxide (CO₂): three balls</span>
+          <span><svg viewBox="0 0 34 18" aria-hidden="true"><ellipse cx="17" cy="9" rx="13" ry="7" fill="var(--rbc)"/><ellipse cx="17" cy="9" rx="6" ry="3" fill="var(--rbc-mid)"/></svg>Red blood cell</span>
+        </div>
+        <p class="mnote" id="motionNote" hidden>Motion is reduced on this device. Press <b>Step 1 s</b> to move the model on, or <b>Play</b>.</p>
+        <div class="counts" id="counts" hidden aria-live="off"></div>
+      </div>
+      <div class="panel"><h2>Your answer</h2><div id="answer"></div></div>
+      </div>
+      <div class="side">
+        <div class="panel" role="group" aria-label="Controls">
+          <h2>Controls</h2>
+          <div class="ctl"><span class="nm" id="lbBreath">Breathing</span>
+            <div class="seg" role="group" aria-labelledby="lbBreath"><button type="button" data-set="breath" data-val="on">On</button><button type="button" data-set="breath" data-val="off">Off</button><button type="button" id="breatheBtn">Take one breath</button></div></div>
+          <div class="ctl"><span class="nm" id="lbFlow">Blood flow</span>
+            <div class="seg" role="group" aria-labelledby="lbFlow"><button type="button" data-set="flow" data-val="on">On</button><button type="button" data-set="flow" data-val="off">Off</button></div></div>
+          <div class="ctl"><span class="nm" id="lbWall">Wall</span>
+            <div class="seg" role="group" aria-labelledby="lbWall"><button type="button" data-set="wall" data-val="thin">Thin</button><button type="button" data-set="wall" data-val="thick">Thick</button></div></div>
+          <div class="ctl"><span class="nm" id="lbAlv">Number of alveoli</span>
+            <div class="seg" role="group" aria-labelledby="lbAlv"><button type="button" data-set="alv" data-val="few">Few</button><button type="button" data-set="alv" data-val="many">Many</button></div></div>
+        </div>
+        <div class="panel">
+          <h2>Oxygen into the blood</h2>
+          <div class="meter-val" id="mVal" aria-live="off">…</div>
+          <div class="mbar" aria-hidden="true"><i id="mBar"></i></div>
+          <canvas id="spark" aria-hidden="true"></canvas>
+          <div class="mrow"><p class="mnote" id="mNote">Particles per minute, from all the alveoli in the bunch.</p>
+          <button class="mini" type="button" id="recBtn">Record reading</button></div>
+          <ol class="rec" id="recList" aria-live="polite"></ol>
+        </div>
+        <div class="panel"><h2>Feedback</h2><div class="feedback" id="fb" aria-live="polite"></div></div>
+      </div>
+    </div>
+    <p class="rule" id="stuck"></p>
+    <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Real air is mostly nitrogen, which is not shown. Only one alveolus is drawn; more alveoli multiply the reading. The meter works out the speed from the oxygen difference and the wall, so it is smoother than counting. In real blood, red blood cells pick up and carry the oxygen; here it just flows along with the blood.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" id="check">Check</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn" type="button" id="reset">Reset</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn primary" type="button" id="next">Next →</button>
+    </div>
+  </section>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ================= FACTS (easy to change; checked against the department lessons) ================= */
+const FACTS = {
+  airInPct:  { o2: 21, co2: 0.04 },   // % in breathed-in air (feedback only)
+  airOutPct: { o2: 16, co2: 4 },      // % in breathed-out air (feedback only)
+  wallText: "one cell thick",         // alveolus wall and capillary wall
+  breathEvery: 4,                     // model: seconds between breaths (about 15 breaths a minute)
+  breathOutFraction: 0.5,             // model: share of the air in the alveolus swapped each breath
+  freshO2: 100, freshCO2: 3,           // model particles in an alveolus full of fresh air
+  bloodInO2: 4, bloodInCO2: 60,        // model particles in one capillary-length of arriving blood
+  alveoli: { few: 3, many: 12 },      // alveoli in the model bunch
+  wall: { thin: 12, thick: 40 }       // wall thickness in model units
+};
+const DEFAULTS = { breath: "on", flow: "on", wall: "thin", alv: "many" };
+
+/* ================= geometry (model units: 960 × 480) ================= */
+const GW = 960, GH = 480, SAC_L = 60, SAC_R = 900, TOP = 70, Y0 = 240, AMP = 70, CAP_H = 80;
+const TUBE_L = 400, TUBE_R = 560, FLOW = 60;
+const SPEED = { air: 110, wall: 110, blood: 110 }, JIT = { air: 0.4, wall: 3.0, blood: 1.0 };
+const YB = new Float64Array(GW + 2);
+for (let i = 0; i <= GW + 1; i++) { const xc = Math.min(Math.max(i, SAC_L), SAC_R); YB[i] = Y0 + AMP * Math.sin(Math.PI * (xc - SAC_L) / (SAC_R - SAC_L)); }
+function yb(x) { const i = x < 0 ? 0 : x > GW ? GW : x, j = i | 0, f = i - j; return YB[j] + (YB[j + 1] - YB[j]) * f; }
+let AIR_AREA = 0; for (let x = SAC_L; x < SAC_R; x++) AIR_AREA += YB[x] - TOP;
+const CAP_AREA = (SAC_R - SAC_L) * CAP_H;
+/* Meter calibration: the diffusion rule (difference in concentration ÷ wall thickness) is scaled by
+   METER_K so it matches the crossing rate the particles actually achieve (checked on load). */
+const METER_K = 55000;
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ================= the simulation ================= */
+function makeSim(settings, rng) {
+  const S = { set: Object.assign({}, settings), rng, t: 0, parts: [], rbcs: [], log: [], winStart: 0,
+              breathT: 0, pendingIn: null, carry: { o2: 0, co2: 0, bo2: 0, bco2: 0 }, lastOut: null };
+  const R = rng;
+  const th = () => FACTS.wall[S.set.wall];
+  S.th = th;
+  function randAir() { return { x: SAC_L + 10 + R() * (SAC_R - SAC_L - 20), y: 0 }; }
+  function add(k, region, x, y) { S.parts.push({ k, r: region, x, y, a: R() * Math.PI * 2, side: region }); }
+  function addAir(k) { const p = randAir(); p.y = TOP + 6 + R() * (yb(p.x) - TOP - 12); add(k, "air", p.x, p.y); }
+  function addBlood(k, x0, x1) { const x = x0 + R() * (x1 - x0); const top = yb(x) + th(); add(k, "blood", x, top + 4 + R() * (CAP_H - 8)); }
+  for (let i = 0; i < FACTS.freshO2; i++) addAir("O2");
+  for (let i = 0; i < FACTS.freshCO2; i++) addAir("CO2");
+  for (let i = 0; i < FACTS.bloodInO2; i++) addBlood("O2", 0, GW);
+  for (let i = 0; i < FACTS.bloodInCO2; i++) addBlood("CO2", 0, GW);
+  for (let i = 0; i < 8; i++) S.rbcs.push({ x: i * 120 + R() * 30, f: 0.3 + R() * 0.4, tag: i === 3 });
+
+  S.breathe = function () {
+    const air = S.parts.filter(p => p.r === "air");
+    let o = 0, c = 0;
+    for (const p of air) if (R() < FACTS.breathOutFraction) { p.r = "out"; if (p.k === "O2") o++; else c++; }
+    S.lastOut = { o2: o, co2: c };
+    S.carry.o2 += FACTS.freshO2 * FACTS.breathOutFraction; S.carry.co2 += FACTS.freshCO2 * FACTS.breathOutFraction;
+    const no = Math.floor(S.carry.o2), nc = Math.floor(S.carry.co2); S.carry.o2 -= no; S.carry.co2 -= nc;
+    S.pendingIn = { o2: no, co2: nc, at: S.t };
+    S.breathT = 0;
+  };
+  S.setWall = function (w) {
+    const t0 = th(); S.set.wall = w; const t1 = th();
+    for (const p of S.parts) {
+      if (p.r === "wall") { const f = (p.y - yb(p.x)) / t0; p.y = yb(p.x) + f * t1; }
+      else if (p.r === "blood") { p.y += t1 - t0; }
+    }
+  };
+  S.step = function (dt) {
+    S.t += dt;
+    const st = S.set, t = th(), flowOn = st.flow === "on";
+    if (st.breath === "on") { S.breathT += dt; if (S.breathT >= FACTS.breathEvery) S.breathe(); }
+    if (S.pendingIn && S.t >= S.pendingIn.at) {
+      const pi = S.pendingIn; S.pendingIn = null;
+      for (let i = 0; i < pi.o2 + pi.co2; i++) S.parts.push({ k: i < pi.o2 ? "O2" : "CO2", r: "in", side: "air", x: TUBE_L + 12 + R() * ((TUBE_R - TUBE_L) / 2 - 24), y: -10 - R() * 70, a: Math.PI / 2 });
+    }
+    if (flowOn) {
+      const area = FLOW * dt / GW;
+      S.carry.bo2 += FACTS.bloodInO2 * area; S.carry.bco2 += FACTS.bloodInCO2 * area;
+      while (S.carry.bo2 >= 1) { S.carry.bo2--; addBlood("O2", 0, FLOW * dt); }
+      while (S.carry.bco2 >= 1) { S.carry.bco2--; addBlood("CO2", 0, FLOW * dt); }
+      for (const c of S.rbcs) { c.x += FLOW * dt; if (c.x > GW + 40) c.x -= GW + 80; }
+    }
+    const keep = [];
+    for (const p of S.parts) {
+      if (p.r === "out") {
+        if (p.tx === undefined) p.tx = (TUBE_L + TUBE_R) / 2 + 12 + R() * ((TUBE_R - TUBE_L) / 2 - 24);
+        const dx = p.tx - p.x, dy = TOP - p.y, d = Math.hypot(dx, dy) || 1, v = 300 * dt;
+        if (p.y <= TOP + 2) p.y -= v; else if (d <= v) { p.x = p.tx; p.y = TOP; } else { p.x += dx / d * v; p.y += dy / d * v; }
+        if (p.y > -20) keep.push(p); continue;
+      }
+      if (p.r === "in") {
+        p.y += 260 * dt; if (p.y > TOP + 12) { p.r = "air"; p.a = R() * Math.PI * 2; }
+        keep.push(p); continue;
+      }
+      const reg = p.r;
+      p.a += (R() - 0.5) * 2 * JIT[reg];
+      let vx = Math.cos(p.a) * SPEED[reg], vy = Math.sin(p.a) * SPEED[reg];
+      if (reg === "blood" && flowOn) vx += FLOW;
+      let nx = p.x + vx * dt, ny = p.y + vy * dt;
+      if (reg === "air") {
+        if (nx < SAC_L + 6) { nx = SAC_L + 6; p.a = Math.PI - p.a; }
+        if (nx > SAC_R - 6) { nx = SAC_R - 6; p.a = Math.PI - p.a; }
+        if (ny < TOP + 6) { ny = TOP + 6; p.a = -p.a; }
+        if (ny > yb(nx)) p.r = "wall";
+      } else if (reg === "wall") {
+        if (nx < SAC_L + 2) { nx = SAC_L + 2; p.a = Math.PI - p.a; }
+        if (nx > SAC_R - 2) { nx = SAC_R - 2; p.a = Math.PI - p.a; }
+        const top = yb(nx);
+        if (ny < top) { p.r = "air"; if (p.side === "blood" && p.k === "O2") S.log.push([S.t, -1]); p.side = "air"; }
+        else if (ny > top + t) { p.r = "blood"; if (p.side === "air" && p.k === "O2") S.log.push([S.t, 1]); p.side = "blood"; }
+      } else {
+        const top = yb(nx) + t, bot = top + CAP_H;
+        if (ny > bot - 5) { ny = bot - 5; p.a = -p.a; }
+        if (ny < top) {
+          if (nx > SAC_L + 2 && nx < SAC_R - 2) p.r = "wall";
+          else { ny = top + 1; p.a = -p.a; }
+        }
+        if (nx < 4) { nx = 4; p.a = Math.PI - p.a; }
+        if (nx > GW - 2) { if (flowOn) continue; nx = GW - 2; p.a = Math.PI - p.a; }
+      }
+      p.x = nx; p.y = ny; keep.push(p);
+    }
+    S.parts = keep;
+    while (S.log.length && S.log[0][0] < S.t - 30) S.log.shift();
+  };
+  /* measured: net O₂ particles that crossed all the way into the blood, per minute, one alveolus */
+  S.transit = function (win) {
+    const from = Math.max(S.winStart, S.t - (win || 12)), span = S.t - from;
+    if (span < 1) return null;
+    let n = 0; for (const e of S.log) if (e[0] >= from) n += e[1];
+    return n / span * 60;
+  };
+  /* meter: from the particle counts — O₂ concentration in the air minus in the blood by the wall,
+     divided by the wall thickness, times the number of alveoli (surface area) */
+  S.meterNow = function () {
+    let a = 0, b = 0;
+    for (const p of S.parts) if (p.k === "O2") { if (p.r === "air" || p.r === "in") a++; else if (p.r === "blood" && p.x > SAC_L && p.x < SAC_R) b++; }
+    const diff = a / AIR_AREA - b / CAP_AREA;
+    return METER_K * diff / th() * 60 * FACTS.alveoli[S.set.alv];
+  };
+  S.ema = null;
+  S.track = function (dt) { const m = S.meterNow(); S.ema = S.ema === null ? m : S.ema + (m - S.ema) * Math.min(1, dt / 4); };
+  S.rate = function () { return S.ema; };
+  S.counts = function () {
+    const c = { air: { o2: 0, co2: 0 }, arr: { o2: 0, co2: 0 }, lea: { o2: 0, co2: 0 } };
+    for (const p of S.parts) {
+      const o = p.k === "O2" ? "o2" : "co2";
+      if (p.r === "air") c.air[o]++;
+      else if (p.r === "blood") { if (p.x < GW / 3) c.arr[o]++; else if (p.x > GW * 2 / 3) c.lea[o]++; }
+    }
+    return c;
+  };
+  return S;
+}
+const DT = 1 / 30;
+function runFor(S, secs) { const n = Math.round(secs / DT); for (let i = 0; i < n; i++) S.step(DT); }
+
+/* headless run with a fixed seed: average meter and measured crossings (per minute).
+   Runs in slices so the page stays responsive. */
+function headlessRunner(settings, seed) {
+  const S = makeSim(settings, mulberry32(seed || 7));
+  const warm = Math.round(15 / DT), n = Math.round(40 / DT), secs = 40;
+  let i = 0, net = 0, msum = 0, mn = 0;
+  const cnt = { arr: { o2: 0, co2: 0 }, lea: { o2: 0, co2: 0 } };
+  return {
+    run(k) {
+      for (let s = 0; s < k && i < warm + n; s++, i++) {
+        S.step(DT);
+        if (i === warm - 1) S.log.length = 0;
+        if (i >= warm) {
+          if ((i - warm) % 30 === 0) { const c = S.counts(); for (const z of ["arr", "lea"]) for (const g of ["o2", "co2"]) cnt[z][g] += c[z][g]; msum += S.meterNow(); mn++; }
+          while (S.log.length) net += S.log.shift()[1];
+        }
+      }
+      return i >= warm + n;
+    },
+    result() { return { rate: msum / mn, transit: net / secs * 60 * FACTS.alveoli[settings.alv], cnt }; }
+  };
+}
+function headless(settings, seed) { const h = headlessRunner(settings, seed); while (!h.run(1e6)); return h.result(); }
+const MODEL_CONFIGS = [];
+for (const breath of ["on", "off"]) for (const flow of ["on", "off"]) for (const wall of ["thin", "thick"]) MODEL_CONFIGS.push({ breath, flow, wall, alv: "many" });
+/* ================= tasks ================= */
+const SPEEDOPTS = [{ id: "faster", t: "Faster" }, { id: "slower", t: "Slower" }, { id: "same", t: "No change" }];
+const CTRL_NAME = { breath: "Breathing", flow: "Blood flow", wall: "Wall", alv: "Number of alveoli" };
+const VAL_NAME = { on: "on", off: "off", thin: "thin", thick: "thick", few: "few", many: "many" };
+const LABEL_OPTS = ["alveolus", "capillary", "red blood cell", "air in", "air out"];
+const LABEL_MARKS = [ // marker number → correct name; positions are drawn in the sim
+  { n: 1, ans: "alveolus" }, { n: 2, ans: "capillary" }, { n: 3, ans: "red blood cell" }, { n: 4, ans: "air in" }, { n: 5, ans: "air out" }];
+
+const TASKS = {
+  warm: [
+    { type: "choice", text: "Watch the oxygen (O₂) particles. Which way does oxygen move overall?",
+      opts: [
+        { id: "a", t: "From the air in the alveolus into the blood", ok: true },
+        { id: "b", t: "From the blood into the air", fb: "That is the way carbon dioxide goes. There are lots of O₂ particles in the air and few in the blood, so oxygen spreads into the blood." },
+        { id: "c", t: "Oxygen cannot get through the wall", fb: "Oxygen particles do cross. The wall is very thin, so they get through easily." },
+        { id: "d", t: "Air flows through holes into the blood vessel", mis: "air goes into the blood vessels", fb: "Air stays in the alveolus. Only single gas particles diffuse across the wall into the blood." }],
+      why: "There are many O₂ particles in the air and few in the blood, so more cross into the blood.",
+      hints: ["Look at the O₂ particles: two balls joined together.", "Where are there lots of O₂ particles? Where are there only a few?", "Particles spread from where there are many to where there are few."] },
+    { type: "choice", text: "Now watch the carbon dioxide (CO₂) particles. Which way does carbon dioxide move overall?",
+      opts: [
+        { id: "a", t: "From the blood into the air in the alveolus", ok: true },
+        { id: "b", t: "From the air into the blood", fb: "That is the way oxygen goes. There are lots of CO₂ particles in the arriving blood and few in the air." },
+        { id: "c", t: "It stays put – only oxygen moves", mis: "only oxygen moves", fb: "Both gases move. CO₂ diffuses out of the blood into the air, at the same time as O₂ diffuses in." },
+        { id: "d", t: "The heart pumps it through the wall", mis: "gases are pumped across", fb: "The heart pumps blood along the vessel, but nothing pumps gases through the wall. They cross by diffusion." }],
+      why: "There are many CO₂ particles in the arriving blood and few in the air, so CO₂ spreads into the air.",
+      hints: ["Look at the CO₂ particles: three balls in a row.", "Compare the blood with the air. Where are most of the CO₂ particles?", "CO₂ goes the opposite way to O₂."] },
+    { type: "label", text: "Match each number on the diagram to its name.",
+      why: "1 is the air sac, 2 is the blood vessel, 3 is a red blood cell, 4 points down the air tube (in), 5 points up (out).",
+      hints: ["Start with 3: it is red and flows along with the blood.", "The alveolus holds air. The capillary is the tube with blood in it.", "The down arrow in the air tube is air in. The up arrow is air out."] },
+    { type: "choice", text: "Compare the blood arriving (left) with the blood leaving (right). What is different about the blood leaving?",
+      check: "leaving",
+      opts: [
+        { id: "a", t: "It has more oxygen and less carbon dioxide", ok: true },
+        { id: "b", t: "It has less oxygen and more carbon dioxide", fb: "That describes blood arriving. Oxygen diffuses in and carbon dioxide diffuses out as the blood passes." },
+        { id: "c", t: "Nothing – the gases stay the same", fb: "The blood changes as it passes the alveolus. Gases diffuse in and out across the wall." },
+        { id: "d", t: "It has all the oxygen and no carbon dioxide left", fb: "Not all of it. Blood leaving still has some carbon dioxide, and the air keeps some oxygen too." }],
+      why: "Oxygen diffuses into the blood and carbon dioxide diffuses out as it flows past.",
+      hints: ["Look at the left end of the capillary, then the right end.", "Count a few O₂ particles at each end. Then do the same for CO₂.", "Blood picks up oxygen and gets rid of carbon dioxide."], support: "counts" },
+    { type: "choice", text: "How do oxygen particles get from the air into the blood?",
+      opts: [
+        { id: "a", t: "They move about at random and spread from where there are many to where there are few", ok: true },
+        { id: "b", t: "The blood sucks them in", mis: "blood sucks oxygen in", fb: "Blood does not suck. Particles move at random both ways, but more cross into the blood because there are more of them in the air." },
+        { id: "c", t: "They are pumped across the wall", mis: "gases are pumped across", fb: "Nothing pumps gases across. They cross by diffusion, which needs no pump." },
+        { id: "d", t: "Air pushes through holes into the blood vessel", mis: "air goes into the blood vessels", fb: "Air does not enter the blood vessel. Single gas particles diffuse through the thin wall." }],
+      why: "This is diffusion: random movement from where there are many particles to where there are few.",
+      hints: ["Watch one O₂ particle. Does it move in a straight line?", "Particles cross the wall both ways. Which way do more cross?", "The word for this is diffusion."] },
+    { type: "choice", text: "Press Take one breath and watch the particles that leave up the air tube. Is there any oxygen in the air we breathe out?",
+      opts: [
+        { id: "a", t: "Yes, lots – only some of the oxygen diffuses into the blood", ok: true },
+        { id: "b", t: "No – all the oxygen goes into the blood", mis: "we breathe out no oxygen", fb: "Some O₂ leaves in every breath out. Only some of the oxygen diffuses into the blood." },
+        { id: "c", t: "No – the oxygen turns into carbon dioxide in the lungs", mis: "oxygen turns into carbon dioxide in the lungs", fb: "Oxygen does not turn into carbon dioxide in the lungs. The CO₂ comes from the blood." },
+        { id: "d", t: "No – breathed-out air is all carbon dioxide", fb: "Breathed-out air is only about " + FACTS.airOutPct.co2 + "% carbon dioxide. It still has about " + FACTS.airOutPct.o2 + "% oxygen." }],
+      why: "Breathed-out air still has about " + FACTS.airOutPct.o2 + "% oxygen. Breathed-in air has about " + FACTS.airInPct.o2 + "%.",
+      hints: ["Press Take one breath. Watch the tube at the top.", "Look at the shapes leaving: are any of them two balls joined?", "Lots of O₂ particles leave. Only some diffused into the blood."] }
+  ],
+  core: [
+    { type: "predict", ctrl: "wall", to: "thick", expect: "slower",
+      text: "What happens if the wall is thick? Predict, then set Wall to Thick and watch the meter.",
+      fbWrong: { faster: "A thick wall means a longer distance to cross. Particles take longer to get through, so it is slower.", same: "Look at the meter after 20 seconds. A thicker wall means a longer distance, so fewer particles get across each minute." },
+      why: "A thick wall is a longer distance for particles to diffuse across, so gas exchange is slower. Real walls are " + FACTS.wallText + ".",
+      hints: ["Look at the meter now. Then change only the wall.", "Set Wall to Thick and wait about 20 seconds.", "A thicker wall is a longer journey for each particle."] },
+    { type: "predict", ctrl: "alv", to: "few", expect: "slower",
+      text: "What happens with only a few alveoli? Predict, then set Number of alveoli to Few and watch the meter.",
+      fbWrong: { faster: "Fewer alveoli means less surface for gases to cross, so less oxygen gets in each minute.", same: "Each alveolus works the same, so fewer alveoli means less oxygen in altogether." },
+      why: "Fewer alveoli means a smaller surface area, so less oxygen can diffuse in at once. Real lungs have millions of alveoli.",
+      hints: ["The meter adds up the oxygen from every alveolus in the bunch.", "Set Number of alveoli to Few and look at the meter.", "Less surface to cross means less oxygen in each minute."] },
+    { type: "predict", ctrl: "flow", to: "off", expect: "slower",
+      text: "What happens if the blood stops flowing? Predict, then switch Blood flow off and watch for 30 seconds.",
+      fbWrong: { faster: "Some people think gases only cross when the blood is still. In fact, still blood fills up with oxygen, the difference gets small, and diffusion slows down.", same: "Wait 30 seconds and watch the meter fall. Still blood fills up with oxygen, so the difference gets small." },
+      mis: { faster: "diffusion only works when blood is still" },
+      why: "Flowing blood carries oxygen away, so the blood next to the wall stays low in oxygen and the difference stays high.",
+      hints: ["Watch the O₂ particles in the capillary after you switch the flow off.", "Still blood fills up with oxygen. What happens to the difference between air and blood?", "A smaller difference means slower diffusion."] },
+    { type: "predict", ctrl: "breath", to: "off", expect: "slower",
+      text: "What happens if breathing stops? Predict, then switch Breathing off and watch for 30 seconds.",
+      fbWrong: { faster: "Without breathing, no fresh air comes in. The air in the alveolus runs low in oxygen, so less diffuses into the blood.", same: "Wait 30 seconds. The air runs low in oxygen, so the meter falls." },
+      why: "Breathing brings in fresh air, keeping lots of oxygen in the alveolus. Without it, the difference gets smaller and diffusion slows.",
+      hints: ["Watch the O₂ particles in the air after you switch breathing off.", "No fresh air comes in. What happens to the oxygen in the alveolus?", "Less oxygen in the air means a smaller difference, so slower diffusion."] },
+    { type: "choice", text: "Ava wants to test if wall thickness changes the speed of gas exchange. Which plan is a fair test?",
+      opts: [
+        { id: "a", t: "Change only the wall. Keep breathing, blood flow and alveoli the same.", ok: true },
+        { id: "b", t: "Make the wall thick and switch blood flow off.", fb: "That changes two things. If the meter falls, Ava cannot tell which change caused it." },
+        { id: "c", t: "Change all four controls to see a big difference.", fb: "Changing everything means you cannot tell which change made the difference. Change one thing only." },
+        { id: "d", t: "Measure once with a thin wall only.", fb: "One reading gives nothing to compare. Measure with a thin wall, then with a thick wall." }],
+      why: "In a fair test you change one thing and keep everything else the same.",
+      hints: ["How many things should Ava change?", "If two things change, can you tell which one made the difference?", "Change one thing; keep the rest the same."] },
+    { type: "best", text: "Set the controls so oxygen gets into the blood as fast as possible. Use Record reading to compare. Then press Check.",
+      setup: { wall: "thick", alv: "few", flow: "off" },
+      why: "Thin walls, many alveoli, flowing blood and breathing all help: short distance, big surface area and a big difference.",
+      hints: ["Try one control at a time and record the meter each time.", "Which wall gives a shorter distance? Do you want more or fewer alveoli?", "Keep both breathing and blood flow on: they keep the difference high."] }
+  ],
+  challenge: [
+    { type: "choice", text: "Switch Breathing off and watch the air. Why do we need to keep breathing?",
+      setupAfter: null,
+      opts: [
+        { id: "a", t: "It keeps bringing fresh air, so the air always has many more O₂ particles than the blood: a big difference in concentration", ok: true },
+        { id: "b", t: "Breathing pushes oxygen through the wall", mis: "gases are pumped across", fb: "Breathing moves air in and out of the alveolus. It does not push gases through the wall; they diffuse." },
+        { id: "c", t: "Without breathing, the oxygen particles stop moving", fb: "Particles never stop moving. Without fresh air the alveolus runs low in oxygen, so the difference gets small." },
+        { id: "d", t: "Breathing out gets rid of all the oxygen we don't need", fb: "Breathing out does remove some oxygen, but that is not why we breathe. We breathe to keep the difference high." }],
+      why: "Breathing replaces the air, so there is always a big difference in concentration between air and blood.",
+      hints: ["With breathing off, what happens to the number of O₂ particles in the air?", "Diffusion is fast when there are many particles on one side and few on the other.", "Breathing keeps that difference big."] },
+    { type: "choice", text: "Switch Blood flow off and watch the capillary. Why does the heart keep blood flowing through the lungs?",
+      opts: [
+        { id: "a", t: "Flowing blood carries oxygen away, so the blood by the wall stays low in oxygen and the difference stays high", ok: true },
+        { id: "b", t: "Flowing blood sucks oxygen through the wall", mis: "blood sucks oxygen in", fb: "Blood does not suck. It carries oxygen away, so the blood next to the wall stays low in oxygen." },
+        { id: "c", t: "Gases can only cross when the blood is still", mis: "diffusion stops when blood flows", fb: "Diffusion carries on while blood flows. In fact it is faster, because flow keeps the difference high." },
+        { id: "d", t: "The pumping squeezes oxygen across the wall", mis: "gases are pumped across", fb: "The heart pumps blood along the vessels. Gases cross the wall by diffusion, not by squeezing." }],
+      why: "Blood flow keeps taking oxygen away, so there is always a big difference between air and blood.",
+      hints: ["With flow off, watch the O₂ particles build up in the capillary.", "What happens to the difference between air and blood when the blood fills up?", "Flowing blood keeps the difference high."] },
+    { type: "frame", text: "Explain one adaptation. Build the sentence.", pre: "The wall between the air and the blood is", mid: "so",
+      a: [{ id: "a1", t: "one cell thick", ok: true }, { id: "a2", t: "thick and strong", fb: "A thick wall would slow diffusion down. The real wall is " + FACTS.wallText + "." }, { id: "a3", t: "full of holes", mis: "air goes into the blood vessels", fb: "The wall has no holes. Air stays in the alveolus; gas particles diffuse through the cells." }],
+      b: [{ id: "b1", t: "gases only have a short distance to diffuse.", ok: true }, { id: "b2", t: "the blood can suck the oxygen through.", mis: "blood sucks oxygen in", fb: "Blood does not suck. A thin wall helps because the distance is short." }, { id: "b3", t: "air can flow into the blood.", mis: "air goes into the blood vessels", fb: "Air does not flow into the blood. Gas particles diffuse across." }],
+      setup: { wall: "thin" },
+      why: "A wall one cell thick gives a short distance, so diffusion is fast.",
+      hints: ["Try the Thin and Thick wall buttons and watch the meter.", "Which wall lets particles through faster? Why?", "One cell thick… so a short distance."] },
+    { type: "frame", text: "Explain one adaptation. Build the sentence.", pre: "The lungs have", mid: "so",
+      a: [{ id: "a1", t: "millions of alveoli", ok: true }, { id: "a2", t: "one big air sac", fb: "One big sac would have far less surface. Lungs have millions of tiny alveoli." }, { id: "a3", t: "a few large alveoli", fb: "Few alveoli means less surface. Try Few on the controls and watch the meter." }],
+      b: [{ id: "b1", t: "there is a huge surface area for gases to diffuse across.", ok: true }, { id: "b2", t: "they can pump more oxygen into the blood.", mis: "gases are pumped across", fb: "Alveoli do not pump. They give a big surface for diffusion." }, { id: "b3", t: "the air can stay in the lungs for ever.", fb: "Air keeps moving in and out. Lots of alveoli help because they give a big surface area." }],
+      setup: { alv: "many" },
+      why: "Millions of alveoli give a huge surface area, so lots of oxygen can diffuse at once.",
+      hints: ["Try Few and Many alveoli and watch the meter.", "More alveoli means more of something. What?", "Many alveoli… so a huge surface area."] },
+    { type: "frame", text: "Explain one adaptation. Build the sentence.", pre: "Each alveolus is wrapped in", mid: "so",
+      a: [{ id: "a1", t: "capillaries with blood flowing through", ok: true }, { id: "a2", t: "a thick layer of fat", fb: "There is no fat layer. Alveoli are wrapped in capillaries full of flowing blood." }, { id: "a3", t: "still blood that never moves", mis: "diffusion only works when blood is still", fb: "The blood keeps flowing. Try Blood flow off: diffusion slows down." }],
+      b: [{ id: "b1", t: "oxygen is carried away and the difference stays high.", ok: true }, { id: "b2", t: "the blood can suck the oxygen in.", mis: "blood sucks oxygen in", fb: "Blood does not suck. It carries oxygen away, keeping the difference high." }, { id: "b3", t: "the gases can stop moving.", fb: "Particles never stop moving. Flowing blood keeps the difference between air and blood high." }],
+      setup: { flow: "on" },
+      why: "A good blood supply carries oxygen away, keeping a big difference in concentration.",
+      hints: ["Try Blood flow on and off. Watch the meter.", "What does flowing blood do with the oxygen?", "Blood flowing… so the difference stays high."] },
+    { type: "frame", text: "Explain one adaptation. Build the sentence.", pre: "The inside of each alveolus is", mid: "so",
+      a: [{ id: "a1", t: "moist (lined with a thin layer of water)", ok: true }, { id: "a2", t: "dry and dusty", fb: "The lining is moist, not dry. Look at the thin layer on the inside of the wall." }, { id: "a3", t: "covered in hairs", fb: "Hairs are found higher up the airways, not in the alveoli. The lining is moist." }],
+      b: [{ id: "b1", t: "gases can dissolve and then diffuse across the wall.", ok: true }, { id: "b2", t: "the water pumps the gases across.", mis: "gases are pumped across", fb: "Water does not pump. Gases dissolve in it, then diffuse across." }, { id: "b3", t: "the air can flow into the blood.", mis: "air goes into the blood vessels", fb: "Air does not flow into the blood. Gases dissolve in the moist lining, then diffuse." }],
+      setup: {},
+      why: "A moist lining lets gases dissolve, so they can diffuse across the wall.",
+      hints: ["Turn on Labels and find the thin layer on the inside of the wall.", "What happens to a gas when it meets water?", "Moist… so gases dissolve, then diffuse."] }
+  ]
+};
+const LEVELS = ["warm", "core", "challenge"];
+const LEVEL_NAME = { warm: "Warm-up", core: "Core", challenge: "Challenge" };
+
+/* ---------- load-time bank check (structure) ---------- */
+const bankErrors = [];
+function checkBank() {
+  for (const lv of LEVELS) TASKS[lv].forEach((tk, i) => {
+    const where = LEVEL_NAME[lv] + " task " + (i + 1);
+    const bad = m => { tk.broken = m; bankErrors.push(where + ": " + m); };
+    if (!tk.hints || tk.hints.length !== 3) bad("needs three hints");
+    if (tk.type === "choice") {
+      const ids = tk.opts.map(o => o.id);
+      if (new Set(ids).size !== ids.length) bad("repeated option id");
+      if (tk.opts.filter(o => o.ok).length !== 1) bad("must have exactly one correct option");
+      if (tk.opts.some(o => !o.ok && !o.fb)) bad("a wrong option has no feedback");
+    } else if (tk.type === "frame") {
+      for (const side of ["a", "b"]) if (tk[side].filter(o => o.ok).length !== 1 || tk[side].some(o => !o.ok && !o.fb)) bad("sentence part " + side + " is not valid");
+    } else if (tk.type === "label") {
+      const names = LABEL_MARKS.map(m => m.ans);
+      if (names.some(n => !LABEL_OPTS.includes(n)) || new Set(names).size !== names.length) bad("label answers do not match the options");
+    } else if (tk.type === "predict") {
+      if (!(tk.ctrl in DEFAULTS) || DEFAULTS[tk.ctrl] === tk.to) bad("control change is not valid");
+    }
+  });
+}
+checkBank();
+
+/* ---------- load-time model check: compute answers from the simulation ---------- */
+let MODEL = null;
+function key(s) { return s.breath + "|" + s.flow + "|" + s.wall + "|" + s.alv; }
+function runModelChecks(done) {
+  if (MODEL) return MODEL;
+  const res = {};
+  for (const s of MODEL_CONFIGS) {
+    const h = done ? done[key(s)] : headless(s, 11);
+    res[key(s)] = h;
+    const f = Object.assign({}, s, { alv: "few" });
+    const sc = FACTS.alveoli.few / FACTS.alveoli.many;
+    res[key(f)] = { rate: h.rate * sc, transit: h.transit * sc, cnt: h.cnt };
+  }
+  const base = res[key(DEFAULTS)].rate, baseT = res[key(DEFAULTS)].transit;
+  const verdict = (r, b) => r < b * 0.85 ? "slower" : r > b * 1.15 ? "faster" : "same";
+  if (Math.abs(base / baseT - 1) > 0.4) bankErrors.push("Meter: its reading does not match the particles that actually cross (" + Math.round(base) + " vs " + Math.round(baseT) + ")");
+  let best = null; for (const k in res) if (!best || res[k].rate > res[best].rate) best = k;
+  MODEL = { res, base, verdict, best };
+  for (const lv of LEVELS) TASKS[lv].forEach((tk, i) => {
+    const where = LEVEL_NAME[lv] + " task " + (i + 1);
+    if (tk.type === "predict") {
+      const s = Object.assign({}, DEFAULTS, { [tk.ctrl]: tk.to });
+      tk.model = res[key(s)].rate; tk.computed = verdict(tk.model, base);
+      const byCrossings = verdict(res[key(s)].transit, baseT);
+      if (tk.computed !== tk.expect || byCrossings !== tk.expect) { tk.broken = "the model gives '" + tk.computed + "' but the task expects '" + tk.expect + "'"; bankErrors.push(where + ": " + tk.broken); }
+    }
+    if (tk.type === "best") {
+      tk.bestSet = Object.fromEntries(["breath", "flow", "wall", "alv"].map((k, j) => [k, best.split("|")[j]]));
+      if (best !== key(DEFAULTS)) { tk.broken = "the model's fastest set-up is not the expected one"; bankErrors.push(where + ": " + tk.broken); }
+    }
+    if (tk.check === "leaving") {
+      const c = res[key(DEFAULTS)].cnt;
+      if (!(c.lea.o2 > c.arr.o2 && c.lea.co2 < c.arr.co2)) { tk.broken = "the model's blood leaving does not have more O₂ and less CO₂"; bankErrors.push(where + ": " + tk.broken); }
+    }
+  });
+  return MODEL;
+}
+
+/* ================= page ================= */
+const $ = id => document.getElementById(id);
+const cv = $("sim"), ctx = cv.getContext("2d"), spark = $("spark"), sctx = spark.getContext("2d");
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+let sim = null, running = !(reduceMQ && reduceMQ.matches), support = { labels: false, counts: false };
+let sparkData = [], sparkMarks = [], sparkT = 0, countsT = 0, records = [];
+let TOK = {};
+const TOKS = ["tissue", "air", "sac-edge", "wallc", "wall-line", "nucleus", "lining", "plasma", "vessel-edge", "rbc", "rbc-mid", "o2", "o2-edge", "co2", "co2-edge", "label-bg", "ink", "muted", "accent", "accent-ink", "line", "surface"];
+function readTokens() { const cs = getComputedStyle(document.documentElement); for (const k of TOKS) TOK[k] = cs.getPropertyValue("--" + k).trim(); }
+
+/* ---------- sim set-up ---------- */
+function newSim(settings) {
+  sim = makeSim(Object.assign({}, DEFAULTS, settings || {}), Math.random);
+  runFor(sim, 25);
+  sparkData = []; sparkMarks = []; sparkT = 0;
+  for (let i = 0; i < 300; i++) { sim.step(DT); sim.track(DT); if (i % 15 === 14 && i > 120) sparkData.push(Math.max(0, sim.rate())); }
+  syncControls(); draw(); updateMeter(); updateCounts();
+}
+function setSetting(k, v) {
+  if (sim.set[k] === v) return;
+  if (k === "wall") sim.setWall(v); else sim.set[k] = v;
+  if (k === "breath" && v === "on") sim.breathT = 0;
+  sparkMarks.push(sparkData.length);
+  syncControls(); draw(); updateMeter(); renderSetNow();
+}
+function syncControls() {
+  document.querySelectorAll("[data-set]").forEach(b => b.setAttribute("aria-pressed", sim.set[b.dataset.set] === b.dataset.val ? "true" : "false"));
+  const s = sim.set;
+  cv.setAttribute("aria-label", "Diagram of one alveolus with a capillary wrapped round it. Breathing " + s.breath + ", blood flow " + s.flow + ", " + s.wall + " wall, " + s.alv + " alveoli.");
+}
+document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click", () => setSetting(b.dataset.set, b.dataset.val)));
+$("breatheBtn").addEventListener("click", () => { sim.breathe(); if (!running) { for (let i = 0; i < 30; i++) { sim.step(DT); sim.track(DT); } } draw(); });
+
+/* ---------- play / pause / step ---------- */
+function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("playBtn").setAttribute("aria-pressed", running ? "false" : "true"); $("motionNote").hidden = !(reduceMQ && reduceMQ.matches); }
+$("playBtn").addEventListener("click", () => { running = !running; paintPlay(); if (running) startLoop(); });
+$("stepBtn").addEventListener("click", () => { for (let i = 0; i < Math.round(1 / DT); i++) { sim.step(DT); sim.track(DT); } sampleSpark(1); draw(); updateMeter(); updateCounts(); });
+
+/* ---------- canvas sizing ---------- */
+let scale = 1;
+function resize() {
+  const w = cv.parentElement.clientWidth || 600, dpr = window.devicePixelRatio || 1;
+  scale = w / GW;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(w * GH / GW * dpr); cv.style.height = Math.round(w * GH / GW) + "px";
+  ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+  const sw = spark.parentElement.clientWidth || 300;
+  spark.width = Math.round(sw * dpr); spark.height = Math.round(56 * dpr); spark.style.width = "100%";
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw(); drawSpark();
+}
+if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement); else window.addEventListener("resize", resize);
+
+/* ---------- drawing ---------- */
+function bandPath(x0, x1, topF, botF) {
+  ctx.beginPath(); ctx.moveTo(x0, topF(x0));
+  for (let x = x0; x <= x1; x += 8) ctx.lineTo(x, topF(x));
+  ctx.lineTo(x1, topF(x1));
+  for (let x = x1; x >= x0; x -= 8) ctx.lineTo(x, botF(x));
+  ctx.lineTo(x0, botF(x0)); ctx.closePath();
+}
+function strokeCurve(x0, x1, f) { ctx.beginPath(); ctx.moveTo(x0, f(x0)); for (let x = x0; x <= x1; x += 8) ctx.lineTo(x, f(x)); ctx.lineTo(x1, f(x1)); ctx.stroke(); }
+function arrow(x0, y0, x1, y1, col, w) {
+  const a = Math.atan2(y1 - y0, x1 - x0), h = 4 * w;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1 - Math.cos(a) * h * 0.8, y1 - Math.sin(a) * h * 0.8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - Math.cos(a - 0.45) * h, y1 - Math.sin(a - 0.45) * h); ctx.lineTo(x1 - Math.cos(a + 0.45) * h, y1 - Math.sin(a + 0.45) * h); ctx.closePath(); ctx.fill();
+}
+function draw() {
+  if (!sim) return;
+  const t = sim.th(), capTop = x => yb(x) + t, capBot = x => yb(x) + t + CAP_H;
+  ctx.clearRect(0, 0, GW, GH);
+  ctx.fillStyle = TOK.tissue; ctx.fillRect(0, 0, GW, GH);
+  // capillary
+  bandPath(0, GW, capTop, capBot); ctx.fillStyle = TOK.plasma; ctx.fill();
+  ctx.strokeStyle = TOK["vessel-edge"]; ctx.lineWidth = 3; strokeCurve(0, GW, capBot); strokeCurve(0, SAC_L, capTop); strokeCurve(SAC_R, GW, capTop);
+  // wall (alveolus wall + capillary wall)
+  bandPath(SAC_L, SAC_R, yb, capTop); ctx.fillStyle = TOK.wallc; ctx.fill();
+  ctx.strokeStyle = TOK["wall-line"]; ctx.lineWidth = 1.2;
+  const rows = sim.set.wall === "thin" ? 2 : 6, rh = t / rows;
+  for (let r = 1; r < rows; r++) strokeCurve(SAC_L, SAC_R, x => yb(x) + r * rh);
+  strokeCurve(SAC_L, SAC_R, capTop);
+  for (let r = 0; r < rows; r++) {
+    const step = sim.set.wall === "thin" ? 84 : 56, off = (r % 2) * step / 2;
+    for (let x = SAC_L + off + step; x < SAC_R - 6; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, yb(x) + r * rh); ctx.lineTo(x, yb(x) + (r + 1) * rh); ctx.stroke();
+      ctx.fillStyle = TOK.nucleus; ctx.beginPath(); ctx.ellipse(x - step / 2, yb(x - step / 2) + (r + 0.5) * rh, 9, Math.max(1.6, rh * 0.28), 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // air sac and tube
+  ctx.beginPath(); ctx.moveTo(SAC_L, yb(SAC_L)); ctx.lineTo(SAC_L, TOP + 40); ctx.quadraticCurveTo(SAC_L, TOP, SAC_L + 40, TOP);
+  ctx.lineTo(TUBE_L, TOP); ctx.lineTo(TUBE_L, -2); ctx.lineTo(TUBE_R, -2); ctx.lineTo(TUBE_R, TOP);
+  ctx.lineTo(SAC_R - 40, TOP); ctx.quadraticCurveTo(SAC_R, TOP, SAC_R, TOP + 40); ctx.lineTo(SAC_R, yb(SAC_R));
+  for (let x = SAC_R; x >= SAC_L; x -= 8) ctx.lineTo(x, yb(x));
+  ctx.closePath(); ctx.fillStyle = TOK.air; ctx.fill();
+  ctx.strokeStyle = TOK["sac-edge"]; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(SAC_L, yb(SAC_L)); ctx.lineTo(SAC_L, TOP + 40); ctx.quadraticCurveTo(SAC_L, TOP, SAC_L + 40, TOP); ctx.lineTo(TUBE_L, TOP); ctx.lineTo(TUBE_L, -2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TUBE_R, -2); ctx.lineTo(TUBE_R, TOP); ctx.lineTo(SAC_R - 40, TOP); ctx.quadraticCurveTo(SAC_R, TOP, SAC_R, TOP + 40); ctx.lineTo(SAC_R, yb(SAC_R)); ctx.stroke();
+  // moist lining
+  ctx.strokeStyle = TOK.lining; ctx.lineWidth = 6; strokeCurve(SAC_L + 2, SAC_R - 2, x => yb(x) - 2);
+  // air in / air out arrows
+  arrow(436, 6, 436, 58, TOK.muted, 3.2); arrow(524, 58, 524, 6, TOK.muted, 3.2);
+  // blood flow arrows
+  if (sim.set.flow === "on") { arrow(6, capTop(0) + CAP_H / 2, 52, capTop(0) + CAP_H / 2, TOK["vessel-edge"], 3.2); arrow(GW - 54, capTop(GW) + CAP_H / 2, GW - 8, capTop(GW) + CAP_H / 2, TOK["vessel-edge"], 3.2); }
+  else { ctx.fillStyle = TOK["vessel-edge"]; const y = capTop(0) + CAP_H / 2; ctx.fillRect(18, y - 12, 7, 24); ctx.fillRect(31, y - 12, 7, 24); }
+  // red blood cells
+  for (const c of sim.rbcs) {
+    const y = capTop(c.x) + 14 + c.f * (CAP_H - 28);
+    ctx.fillStyle = TOK.rbc; ctx.beginPath(); ctx.ellipse(c.x, y, 26, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = TOK["rbc-mid"]; ctx.beginPath(); ctx.ellipse(c.x, y, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // particles
+  const k = Math.max(1, 2.1 / (4.5 * scale)), ro = 4.5 * k, rc = 5 * k, re = 4.2 * k;
+  ctx.lineWidth = 1;
+  for (const p of sim.parts) {
+    const ca = Math.cos(p.a), sa = Math.sin(p.a);
+    if (p.k === "O2") {
+      ctx.fillStyle = TOK.o2; ctx.strokeStyle = TOK["o2-edge"];
+      for (const d of [-0.8, 0.8]) { ctx.beginPath(); ctx.arc(p.x + ca * ro * d, p.y + sa * ro * d, ro, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    } else {
+      ctx.fillStyle = TOK.co2; ctx.strokeStyle = TOK["co2-edge"];
+      for (const d of [-1.6, 1.6]) { ctx.beginPath(); ctx.arc(p.x + ca * re * d, p.y + sa * re * d, re, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+      ctx.fillStyle = TOK["co2-edge"]; ctx.strokeStyle = TOK.co2; ctx.beginPath(); ctx.arc(p.x, p.y, rc, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+  }
+  const tk = curTask();
+  if (tk && tk.type === "label") drawMarkers();
+  else if (support.labels) drawLabels();
+}
+function tagCell() { const c = sim.rbcs.find(r => r.tag); const t = sim.th(); return { x: c.x, y: yb(c.x) + t + 14 + c.f * (CAP_H - 28) }; }
+function markerPos() {
+  const t = sim.th(), c = tagCell();
+  return { 1: [250, 140], 2: [120, yb(120) + t + CAP_H - 16], 3: [Math.min(Math.max(c.x, 30), GW - 30), c.y - 34], 4: [404, 32], 5: [556, 32] };
+}
+function drawMarkers() {
+  const r = 15 / scale, pos = markerPos();
+  ctx.font = "700 " + (16 / scale) + "px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const n in pos) {
+    const x = pos[n][0], y = Math.max(r + 2, pos[n][1]);
+    ctx.fillStyle = TOK.accent; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = TOK.surface; ctx.lineWidth = 2 / scale; ctx.stroke();
+    ctx.fillStyle = TOK["accent-ink"]; ctx.fillText(n, x, y + 1 / scale);
+  }
+}
+function pill(text, x, y, align) {
+  const fs = (scale < 0.5 ? 12 : 15) / scale, pad = 5 / scale;
+  ctx.font = "700 " + fs + "px " + getComputedStyle(document.body).fontFamily; ctx.textBaseline = "middle";
+  const w = ctx.measureText(text).width;
+  let x0 = align === "right" ? x - w - pad * 2 : align === "center" ? x - w / 2 - pad : x;
+  x0 = Math.max(2, Math.min(GW - w - pad * 2 - 2, x0));
+  ctx.fillStyle = TOK["label-bg"]; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, y - fs * 0.75, w + pad * 2, fs * 1.5, 6 / scale) : ctx.rect(x0, y - fs * 0.75, w + pad * 2, fs * 1.5); ctx.fill();
+  ctx.fillStyle = TOK.ink; ctx.textAlign = "left"; ctx.fillText(text, x0 + pad, y + 1);
+}
+function drawLabels() {
+  const t = sim.th(), c = tagCell();
+  pill("Air in ↓", 425, 24, "right");
+  pill("Air out ↑", 540, 24, "left");
+  pill("Alveolus (air sac)", SAC_L + 14, TOP + 26, "left");
+  pill("Moist lining", 690, yb(690) - 22, "center");
+  pill(sim.set.wall === "thin" ? "Wall: one cell thick" : "Wall: thick", 230, yb(230) - 22, "center");
+  const nar = scale < 0.5;
+  if (!nar) pill("Red blood cell", c.x, c.y + 26, "center");
+  pill("Capillary", GW / 2, nar ? yb(GW / 2) + t + CAP_H + 10 : GH - 14, "center");
+  pill(nar ? "Blood in: low O₂" : "Blood arrives: low in oxygen", 4, GH - (nar ? 22 : 14), "left");
+  pill(nar ? "Blood out: more O₂" : "Blood leaves: more oxygen", GW - 4, GH - (nar ? 22 : 14), "right");
+}
+
+/* ---------- meter, sparkline, counts ---------- */
+function meterMax() { return MODEL ? MODEL.base * 1.3 : 1200; }
+function meterVal() { const v = sim.rate(); return v === null ? null : Math.max(0, Math.round(v / 10) * 10); }
+function updateMeter() {
+  const v = meterVal();
+  $("mVal").innerHTML = v === null ? "…" : "≈ " + v + " <small>per minute</small>";
+  $("mBar").style.width = v === null ? "0" : Math.min(100, v / meterMax() * 100) + "%";
+}
+function sampleSpark(n) { for (let i = 0; i < n; i++) { const v = meterVal(); sparkData.push(v || 0); } while (sparkData.length > 60) { sparkData.shift(); sparkMarks = sparkMarks.map(m => m - 1).filter(m => m >= 0); } drawSpark(); }
+function drawSpark() {
+  const w = spark.clientWidth || 300, h = 56;
+  sctx.clearRect(0, 0, w, h);
+  sctx.strokeStyle = TOK.line; sctx.lineWidth = 1; sctx.beginPath(); sctx.moveTo(0, h - 1); sctx.lineTo(w, h - 1); sctx.stroke();
+  sctx.setLineDash([4, 4]); sctx.strokeStyle = TOK.muted;
+  for (const m of sparkMarks) { const x = w - (sparkData.length - 1 - m) / 59 * w; sctx.beginPath(); sctx.moveTo(x, 2); sctx.lineTo(x, h); sctx.stroke(); }
+  sctx.setLineDash([]);
+  if (sparkData.length < 2) return;
+  const mx = meterMax();
+  sctx.strokeStyle = TOK.accent; sctx.lineWidth = 2.5; sctx.beginPath();
+  const n0 = sparkData.length; sparkData.forEach((v, i) => { const x = w - (n0 - 1 - i) / 59 * w, y = h - 3 - Math.min(1, v / mx) * (h - 8); i ? sctx.lineTo(x, y) : sctx.moveTo(x, y); });
+  sctx.stroke();
+}
+function updateCounts() {
+  if (!support.counts) return;
+  const c = sim.counts(), o = sim.lastOut;
+  $("counts").innerHTML =
+    "<div><b>Air in the alveolus</b>O₂ " + c.air.o2 + " · CO₂ " + c.air.co2 + "</div>" +
+    "<div><b>Blood arriving (left third)</b>O₂ " + c.arr.o2 + " · CO₂ " + c.arr.co2 + "</div>" +
+    "<div><b>Blood leaving (right third)</b>O₂ " + c.lea.o2 + " · CO₂ " + c.lea.co2 + "</div>" +
+    "<div><b>Last breath out</b>" + (o ? "O₂ " + o.o2 + " · CO₂ " + o.co2 : "no breath yet") + "</div>";
+}
+function settingsText(s) { return "wall " + s.wall + ", " + s.alv + " alveoli, blood flow " + s.flow + ", breathing " + s.breath; }
+$("recBtn").addEventListener("click", () => {
+  const v = meterVal();
+  records.push((v === null ? "measuring" : "≈ " + v + " per minute") + ": " + settingsText(sim.set));
+  if (records.length > 5) records.shift();
+  $("recList").innerHTML = records.map(r => "<li>" + r + "</li>").join("");
+});
+
+/* ---------- animation loop ---------- */
+let rafId = 0, last = 0, acc = 0;
+function frame(ts) {
+  rafId = 0;
+  if (!running || document.hidden) return;
+  const dt = last ? Math.min(0.25, (ts - last) / 1000) : 0; last = ts; acc += dt;
+  while (acc >= DT) { sim.step(DT); sim.track(DT); acc -= DT; sparkT += DT; countsT += DT; }
+  if (sparkT >= 0.5) { sparkT = 0; sampleSpark(1); updateMeter(); }
+  if (countsT >= 0.25) { countsT = 0; updateCounts(); }
+  draw();
+  rafId = requestAnimationFrame(frame);
+}
+function startLoop() { if (!rafId && running && !document.hidden) { last = 0; rafId = requestAnimationFrame(frame); } }
+document.addEventListener("visibilitychange", startLoop);
+
+/* ---------- support switches ---------- */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", support[k] ? "true" : "false"); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  $("counts").hidden = !support.counts; updateCounts(); draw(); renderStuck();
+}));
+
+/* ---------- theme ---------- */
+function retheme() { readTokens(); draw(); drawSpark(); }
+$("themeBtn").addEventListener("click", retheme);
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", retheme); }
+
+/* ================= tasks: score, check, hint, reveal ================= */
+const G = { level: "warm", idx: 0, score: 0, streak: 0, st: {}, ans: {} };
+function curTask() { return TASKS[G.level][G.idx]; }
+function tstate() { const k = G.level + G.idx; return G.st[k] || (G.st[k] = { solved: false, revealed: false, hints: 0, graded: 0 }); }
+function blankAns(tk) { return tk.type === "label" ? { labels: ["", "", "", "", ""] } : tk.type === "frame" ? { a: "", b: "" } : { pick: null }; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fb(html, cls) { $("fb").innerHTML = '<div class="msg ' + (cls || "") + '">' + html + "</div>"; }
+function addFb(html, cls) { $("fb").insertAdjacentHTML("beforeend", '<div class="msg ' + (cls || "") + '">' + html + "</div>"); }
+function misLine(m) { return m ? "<b>Common mistake:</b> thinking “" + esc(m) + "”. " : ""; }
+
+function loadTask() {
+  const tk = curTask();
+  G.ans = blankAns(tk);
+  $("qno").textContent = LEVEL_NAME[G.level] + " · Task " + (G.idx + 1) + " of " + TASKS[G.level].length;
+  $("taskText").textContent = tk.text;
+  newSim(tk.setup || {});
+  $("fb").innerHTML = "";
+  renderAnswer(); renderHint(); renderStuck();
+  const broken = tk.broken;
+  $("check").disabled = !!broken; $("reveal").disabled = !!broken;
+  if (broken) fb("This task has been switched off because the model check failed: " + esc(broken), "bad");
+}
+function renderSetNow() { const el = document.getElementById("setNow"); if (el) el.textContent = "Now: " + settingsText(sim.set) + "."; }
+function renderAnswer() {
+  const tk = curTask(), A = $("answer");
+  if (tk.type === "choice") {
+    A.innerHTML = '<div class="opts" role="group" aria-label="Answers">' + tk.opts.map(o => '<button type="button" class="opt" data-id="' + o.id + '" aria-pressed="' + (G.ans.pick === o.id) + '">' + esc(o.t) + "</button>").join("") + "</div>";
+    A.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { G.ans.pick = b.dataset.id; renderAnswer(); A.querySelector('[data-id="' + b.dataset.id + '"]').focus(); }));
+  } else if (tk.type === "label") {
+    A.innerHTML = LABEL_MARKS.map((m, i) => '<div class="lrow"><span class="badge" aria-hidden="true">' + m.n + '</span><label class="sr" for="lab' + i + '" style="position:absolute;left:-9999px">Number ' + m.n + '</label><select id="lab' + i + '"><option value="">Choose…</option>' + LABEL_OPTS.map(o => '<option' + (G.ans.labels[i] === o ? " selected" : "") + ">" + o + "</option>").join("") + "</select></div>").join("");
+    A.querySelectorAll("select").forEach((s, i) => s.addEventListener("change", () => { G.ans.labels[i] = s.value; }));
+  } else if (tk.type === "predict") {
+    A.innerHTML = '<p class="step-l"><b>1.</b> Predict: oxygen will get into the blood…</p><div class="seg" role="group" aria-label="Prediction">' + SPEEDOPTS.map(o => '<button type="button" data-p="' + o.id + '" aria-pressed="' + (G.ans.pick === o.id) + '">' + o.t + "</button>").join("") + '</div><p class="step-l" style="margin-top:10px"><b>2.</b> Set ' + CTRL_NAME[tk.ctrl] + " to " + VAL_NAME[tk.to] + '. Change nothing else.</p><p class="step-l"><b>3.</b> Watch the meter, then press Check.</p><p class="setnow" id="setNow"></p>';
+    A.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => { G.ans.pick = b.dataset.p; renderAnswer(); A.querySelector('[data-p="' + b.dataset.p + '"]').focus(); }));
+  } else if (tk.type === "best") {
+    A.innerHTML = '<p class="step-l">Use the controls. Press Record reading to compare set-ups.</p><p class="setnow" id="setNow"></p>';
+  } else if (tk.type === "frame") {
+    const sel = (side, opts) => '<select id="fr' + side + '" aria-label="' + (side === "a" ? "First part" : "Second part") + '"><option value="">Choose…</option>' + opts.map(o => '<option value="' + o.id + '"' + (G.ans[side] === o.id ? " selected" : "") + ">" + esc(o.t) + "</option>").join("") + "</select>";
+    A.innerHTML = '<p class="frame">' + esc(tk.pre) + " " + sel("a", tk.a) + " " + esc(tk.mid) + " " + sel("b", tk.b) + "</p>";
+    A.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { G.ans[s.id.slice(2)] = s.value; }));
+  }
+  renderSetNow();
+}
+function renderHint() {
+  const st = tstate();
+  $("hint").textContent = st.hints >= 3 ? "No more hints – try Show answer" : "Hint (" + (st.hints + 1) + "/3)";
+}
+function renderStuck() {
+  const tk = curTask(), el = $("stuck");
+  const want = tk.support || (tk.type === "frame" ? "labels" : tk.type === "choice" && G.level === "warm" && G.idx < 2 ? "counts" : null);
+  if (want && !support[want]) { el.innerHTML = "Stuck? Turn on <b>" + (want === "counts" ? "Particle counts" : "Labels") + "</b> under Support."; el.hidden = false; }
+  else if (tk.type === "label") { el.innerHTML = "Labels are hidden for this task: it is your turn to label."; el.hidden = false; }
+  else el.hidden = true;
+}
+
+/* grade → { ok, incomplete, html } */
+function grade(tk) {
+  if (tk.type === "choice") {
+    if (!G.ans.pick) return { incomplete: true, html: "Pick an answer first." };
+    const o = tk.opts.find(x => x.id === G.ans.pick);
+    return o.ok ? { ok: true, html: "<b>Correct.</b> " + esc(tk.why) } : { ok: false, html: "<b>Not quite.</b> " + misLine(o.mis) + esc(o.fb) };
+  }
+  if (tk.type === "label") {
+    if (G.ans.labels.some(v => !v)) return { incomplete: true, html: "Choose a name for every number." };
+    const wrong = LABEL_MARKS.filter((m, i) => G.ans.labels[i] !== m.ans).map(m => m.n);
+    if (!wrong.length) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
+    let extra = "";
+    if (G.ans.labels[3] === "air out" && G.ans.labels[4] === "air in") extra = " Look at the arrows: air comes in down the tube and goes out up it.";
+    else if (wrong.includes(1) || wrong.includes(2)) extra = " The alveolus holds air; the capillary carries blood.";
+    return { ok: false, html: "<b>Not quite.</b> Check number" + (wrong.length > 1 ? "s " : " ") + wrong.join(", ") + "." + extra };
+  }
+  if (tk.type === "predict") {
+    if (!G.ans.pick) return { incomplete: true, html: "Make your prediction first: faster, slower or no change." };
+    if (sim.set[tk.ctrl] !== tk.to) return { incomplete: true, html: "Now test it: set " + CTRL_NAME[tk.ctrl] + " to " + VAL_NAME[tk.to] + " and watch the meter." };
+    const other = Object.keys(DEFAULTS).filter(k => k !== tk.ctrl && sim.set[k] !== DEFAULTS[k]);
+    if (other.length) return { ok: false, html: "<b>Not a fair test.</b> You also changed " + other.map(k => CTRL_NAME[k].toLowerCase()).join(" and ") + ". Change only one thing, or you cannot tell which change made the difference." };
+    const comp = tk.computed || "slower";
+    if (G.ans.pick !== comp) return { ok: false, html: "<b>Not quite.</b> " + misLine(tk.mis && tk.mis[G.ans.pick]) + esc(tk.fbWrong[G.ans.pick]) };
+    const mv = meterVal(), nums = mv === null ? "" : " The meter now reads about " + mv + " per minute.";
+    return { ok: true, html: "<b>Correct: " + comp + ".</b> " + esc(tk.why) + nums };
+  }
+  if (tk.type === "best") {
+    const b = tk.bestSet || DEFAULTS, tips = { wall: "A thick wall is a longer distance for particles to cross.", alv: "Fewer alveoli means less surface area.", flow: "Still blood fills up with oxygen, so the difference gets small.", breath: "Without breathing, the air runs low in oxygen." };
+    const wrong = Object.keys(b).filter(k => sim.set[k] !== b[k]);
+    if (!wrong.length) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
+    return { ok: false, html: "<b>Not the fastest yet.</b> " + esc(tips[wrong[0]]) + (wrong.length === 2 ? " One more control also needs changing." : wrong.length > 2 ? " " + ["", "", "", "Two", "Three"][wrong.length] + " more controls also need changing." : "") };
+  }
+  if (tk.type === "frame") {
+    if (!G.ans.a || !G.ans.b) return { incomplete: true, html: "Choose both parts of the sentence." };
+    const a = tk.a.find(o => o.id === G.ans.a), b = tk.b.find(o => o.id === G.ans.b);
+    if (a.ok && b.ok) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
+    const bad = [a, b].filter(o => !o.ok);
+    return { ok: false, html: "<b>Not quite.</b> " + bad.map(o => misLine(o.mis) + esc(o.fb)).join(" ") };
+  }
+}
+function ensureModel() { if (!MODEL) { runModelChecks(); showBankErrors(); } }
+$("check").addEventListener("click", () => {
+  const tk = curTask(), st = tstate();
+  if (tk.type === "predict" || tk.type === "best") ensureModel();
+  if (tk.broken) return;
+  if (st.solved || st.revealed) { fb("This task is done. Press Next → for a new one.", "tip"); return; }
+  const r = grade(tk);
+  if (r.incomplete) { fb(r.html, "tip"); return; }
+  if (r.ok) {
+    st.solved = true; G.score++;
+    if (st.graded === 0 && st.hints === 0) G.streak++;
+    fb(r.html, "good");
+  } else { G.streak = 0; fb(r.html, "bad"); }
+  st.graded++;
+  $("sScore").textContent = G.score; $("sStreak").textContent = G.streak;
+});
+$("hint").addEventListener("click", () => {
+  const tk = curTask(), st = tstate();
+  if (st.hints < 3) st.hints++;
+  $("fb").innerHTML = "";
+  for (let i = 0; i < st.hints; i++) addFb("<b>Hint " + (i + 1) + ":</b> " + esc(tk.hints[i]), "tip");
+  if (st.hints >= 3) addFb("No more hints. Try Show answer.", "");
+  renderHint();
+});
+$("reveal").addEventListener("click", () => {
+  const tk = curTask(), st = tstate();
+  if (tk.type === "predict" || tk.type === "best") ensureModel();
+  if (tk.broken) return;
+  let ans = "";
+  if (tk.type === "choice") { const o = tk.opts.find(x => x.ok); G.ans.pick = o.id; ans = o.t; }
+  else if (tk.type === "label") { G.ans.labels = LABEL_MARKS.map(m => m.ans); ans = LABEL_MARKS.map(m => m.n + " " + m.ans).join(", "); }
+  else if (tk.type === "predict") { G.ans.pick = tk.computed || tk.expect; for (const k in DEFAULTS) if (k !== tk.ctrl) setSetting(k, DEFAULTS[k]); setSetting(tk.ctrl, tk.to); ans = (tk.computed || tk.expect); }
+  else if (tk.type === "best") { const b = tk.bestSet || DEFAULTS; for (const k in b) setSetting(k, b[k]); ans = settingsText(b); }
+  else if (tk.type === "frame") { const a = tk.a.find(o => o.ok), b = tk.b.find(o => o.ok); G.ans.a = a.id; G.ans.b = b.id; ans = tk.pre + " " + a.t + " " + tk.mid + " " + b.t; }
+  if (!st.solved) st.revealed = true;
+  renderAnswer();
+  fb("<b>Answer:</b> " + esc(ans.charAt(0).toUpperCase() + ans.slice(1)) + (/[.]$/.test(ans) ? "" : ".") + " " + esc(tk.why), "");
+});
+$("reset").addEventListener("click", () => {
+  const tk = curTask(); G.ans = blankAns(tk);
+  newSim(tk.setup || {}); $("fb").innerHTML = ""; renderAnswer();
+});
+$("next").addEventListener("click", () => { G.idx = (G.idx + 1) % TASKS[G.level].length; loadTask(); });
+document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  G.level = b.dataset.level; G.idx = 0; loadTask();
+}));
+
+/* ---------- bank errors ---------- */
+function showBankErrors() {
+  const el = $("bankErr");
+  if (bankErrors.length) { el.hidden = false; el.innerHTML = "<b>Question check failed.</b> These tasks are switched off:<br>" + bankErrors.map(esc).join("<br>"); }
+  const tk = curTask(); if (tk && tk.broken) { $("check").disabled = true; $("reveal").disabled = true; }
+}
+
+/* ---------- model check in the background (keeps the page responsive) ---------- */
+function modelChecksInBackground() {
+  const done = {}; let ci = 0, h = null;
+  (function work() {
+    if (MODEL) return;
+    const t0 = performance.now();
+    while (performance.now() - t0 < 18) {
+      if (!h) { if (ci >= MODEL_CONFIGS.length) { runModelChecks(done); showBankErrors(); updateMeter(); drawSpark(); return; } h = headlessRunner(MODEL_CONFIGS[ci], 11); }
+      if (h.run(40)) { done[key(MODEL_CONFIGS[ci])] = h.result(); h = null; ci++; }
+    }
+    setTimeout(work, 0);
+  })();
+}
+
+/* ---------- start ---------- */
+readTokens(); paintPlay();
+showBankErrors();
+loadTask(); resize();
+startLoop();
+setTimeout(modelChecksInBackground, 300);
+if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { if (reduceMQ.matches) { running = false; } paintPlay(); });
+</script>
+</body>
+</html>

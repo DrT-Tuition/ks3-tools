@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light Rays</title>
+<!--
+  SCIENCE SPEC — Light Rays (KS3)
+  Models: a ray box aimed at (1) a plane mirror or (2) a parallel-sided glass block or water tank in air.
+    Mirror: the reflected ray leaves the point of incidence at an angle of reflection equal to the angle
+    of incidence, both measured from the normal (dashed line at 90° to the surface).
+    Block/tank: the ray refracts at the top surface (computed with Snell's law, n₁ sin i = n₂ sin r,
+    using the refractive indices in FACTS) so it bends towards the normal going in; it bends away from
+    the normal coming out of the bottom surface, so it leaves parallel to the incident ray. A ray along
+    the normal goes straight on. A faint partly reflected ray is drawn at the top surface.
+    Light travels in straight lines; arrowheads show the direction from the source.
+  Source: KS3 NC + AQA KS3 3.4.2 Light (the brief said 3.4.3; in the AQA KS3 syllabus v2.2 these points
+    are in 3.4.2 Light: "angle of incidence equals the angle of reflection"; "when light enters a denser
+    medium it bends towards the normal; when it enters a less dense medium it bends away from the normal";
+    keywords incident ray, reflected ray, normal line, angle of incidence, angle of reflection, refraction).
+    KS3 NC Physics: Light waves — "light waves travelling through a vacuum; speed of light"; "the transmission
+    of light through materials: absorption, diffuse scattering and specular reflection at a surface";
+    "use of ray model to explain imaging in mirrors ... refraction of light".
+    To be matched to the new department lessons when they are written.
+  SoW lessons served: Year 8 Term 2 Light — L22 Light, L23 Reflection, L24 Investigating reflection
+    (practical), L25 Refraction.
+  Levels: Warm-up = hit stars using the mirror (L23). Core = read the angle of incidence, predict the angle
+    of reflection, aim to a set angle; predict towards/away/straight for glass and water; light travels from
+    source to eye (L22–L25). Challenge = predict where the ray leaves the block; direction of the emerging
+    ray; why light bends (it slows down in glass); glass versus water; aim for a set angle inside glass (L25).
+  Facts and values used:
+    - Angle of incidence = angle of reflection (plane mirror), both measured from the normal.
+    - The normal is a line at 90° to the surface at the point where the ray hits it.
+    - Entering a denser material (glass, water) light bends towards the normal; leaving it, away from the normal.
+    - A ray along the normal (angle of incidence 0°) does not change direction.
+    - A parallel-sided block: the ray that comes out is parallel to the ray that went in.
+    - Light slows down in glass and water (it bends because its speed changes). No speed values are shown.
+    - Refractive index (used only inside the code, never shown): air 1.00, glass 1.5, water 1.33.
+      So glass bends light more than water.
+    - Light travels in straight lines, from a source into the eye; eyes do not send out light.
+    - Some light is reflected at the surface of the block (faint ray).
+    - Ray box aim range 0° to 65° from the normal; Core angles 30°, 55°, 35°, 40°, 0°; Challenge 50°, 35°,
+      45°, angle in glass 20°. Warm-up stars placed on the reflected ray for 40°, 20° and 60°.
+  Simplifications (shown on screen as "Model limits"): one thin ray only; the ray box, mirror and block are
+    not to scale; the tank's walls are ignored; only one faint reflection is drawn (real light also reflects
+    a little at the bottom surface and some is absorbed); white light is drawn as one colour (no splitting
+    into colours); total internal reflection is left out.
+  Misconceptions designed out (BEST / common KS3): angles measured from the mirror surface instead of the
+    normal (named whenever an answer equals 90° − the right angle); light bends away from the normal entering
+    glass; light speeds up in glass; nothing "pulls" light into glass; light travels from the eye to the
+    object (arrows always point away from the source); a ray along the normal bending; the emerging ray not
+    parallel to the incident ray.
+  Support starts OFF on every visit: Protractor (centred on the point of incidence, reads from the normal),
+    Angle readouts (numbers and arcs for each angle), Labels (names of rays, normal and surfaces).
+  Idea credit: Idea from Bending Light, PhET Interactive Simulations, University of Colorado Boulder
+    (https://phet.colorado.edu). Nothing copied: own code, art, layout and wording.
+  Checks: on load the bank is verified in code — every star can be hit within the aim range and never lies on
+    the incident ray or outside the scene; every fixed angle is in range; every towards/away/straight,
+    parallel, glass-versus-water and speed answer is computed from Snell's law with the FACTS values; the
+    exit-point answer is inside the marker range; the Challenge target angle in glass is reachable. A failed
+    check shows a visible error instead of the task.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--ray:#C0261B;--ray-faint:rgba(192,38,27,.38);--glass:rgba(96,150,200,.22);--glass-edge:#4F7FA8;--water:rgba(40,110,190,.30);--water-edge:#2C6AAE;--mirror:#6B7684;--target:#5B3FB5;--box:#3B4554;--prot:rgba(20,36,61,.07)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}}
+:root[data-theme="dark"]{--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}
+.stage{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
+.scene{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px;display:grid;gap:10px;min-width:0}
+svg.sim{width:100%;height:auto;display:block;touch-action:pan-y;user-select:none;-webkit-user-select:none;border-radius:6px}
+svg.sim.grab{cursor:crosshair}
+.side{display:grid;gap:14px;min-width:0}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:0 6px 4px}
+.aimrow{display:flex;align-items:center;gap:10px;flex:1 1 260px;min-width:0}
+.aimrow label{font-weight:700;white-space:nowrap}
+input[type=range]{flex:1;min-width:0;height:44px;accent-color:var(--accent);cursor:pointer}
+input[type=range]:disabled{cursor:not-allowed;opacity:.5}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:700 15px var(--f-body);min-height:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.seg button[aria-pressed="true"]:disabled{opacity:.85}
+.readout{font-size:16px;font-variant-numeric:tabular-nums;padding:0 6px;margin:0}
+.readout b{color:var(--accent)}
+.locknote{font-size:15px;color:var(--muted);margin:0;padding:0 6px}
+.fld{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
+.fld label{font-weight:700;min-width:11ch}
+.fld input[type=number]{font:700 20px var(--f-body);width:5.2ch;min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.fld input[type=number]:focus{border-color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opt{font:700 17px var(--f-body);text-align:left;min-height:44px;padding:9px 14px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center}
+.opt .box{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);flex:none}
+.opt[aria-pressed="true"]{border-color:var(--accent)}
+.opt[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px var(--surface)}
+.ans p{margin:0 0 6px}
+.ans .q{font-weight:700}
+.sim text{font-family:var(--f-body);fill:var(--ink)}
+.sim .lab{fill:var(--muted);font-weight:700}
+.sim .num{fill:var(--accent);font-weight:700}
+.stars{color:var(--target)}
+@media (max-width:480px){.fld label{min-width:0}.aimrow label{white-space:normal}}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Light Rays<small>Aim the ray box. Measure the angles from the normal.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="bar">
+  <div class="levels" role="group" aria-label="Level">
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+  </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="protractor" aria-pressed="false"><span class="dot"></span>Protractor <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="readouts" aria-pressed="false"><span class="dot"></span>Angle readouts <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+  </div>
+
+  <section class="card" aria-label="Light Rays">
+    <div class="meta"><span class="ctx" id="taskText">Loading…</span><span class="qno" id="qno"></span></div>
+    <div id="bankErr" class="bankerr" role="alert" hidden></div>
+    <div class="stage">
+      <div class="scene">
+        <svg class="sim" id="sim" viewBox="0 0 900 520" role="img" aria-labelledby="simDesc"><desc id="simDesc">Ray diagram</desc><g id="g"></g><g id="pulses" aria-hidden="true"></g></svg>
+        <div class="ctrls">
+          <div class="aimrow"><label for="aim">Aim the ray box</label><input type="range" id="aim" min="0" max="65" step="1" value="10"></div>
+          <div class="seg" role="group" aria-label="Surface">
+            <button type="button" data-scene="mirror" aria-pressed="true">Mirror</button>
+            <button type="button" data-scene="glass" aria-pressed="false">Glass block</button>
+            <button type="button" data-scene="water" aria-pressed="false">Water tank</button>
+          </div>
+        </div>
+        <p class="readout" id="readout" hidden></p>
+        <p class="locknote" id="lockNote"></p>
+      </div>
+      <div class="side">
+        <div class="panel ans"><h2>Your answer</h2><div id="ans"></div><p class="hidden-note" id="stuck"></p></div>
+        <div class="panel"><h2>Feedback</h2><div class="feedback" id="fb" aria-live="polite"></div></div>
+      </div>
+    </div>
+    <p class="limits"><b>Model limits:</b> one thin ray, not to scale. Real light also partly reflects at the bottom of the block, and some is absorbed. The tank’s walls are ignored. White light is shown as one colour.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" id="check">Check</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn" type="button" id="reset">Reset</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn primary" type="button" id="next">Next →</button>
+    </div>
+  </section>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts and values (check against the department's lessons) ===== */
+const FACTS = {
+  n: { air: 1.00, glass: 1.5, water: 1.33 },   // refractive index: used in code only, never shown
+  aimMin: 0, aimMax: 65,                          // ray box aim, degrees from the normal
+  names: { glass: "glass", water: "water" }
+};
+
+/* ===== Scene geometry (SVG units) ===== */
+const W = 900, H = 520, S = { x: 120, y: 100 };   // S = slit of the ray box
+const MIRROR_Y = 360, TOP = 290, BOT = 420, LEFT = 40, RIGHT = 880;
+const STAR_R = 24, EXIT_MIN = 130, EXIT_MAX = 860;
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+const round = x => Math.round(x);
+
+/* Snell's law: angle in the second material, or null if no ray gets through */
+function refract(iDeg, n1, n2) { const s = n1 / n2 * Math.sin(rad(iDeg)); return Math.abs(s) > 1 ? null : deg(Math.asin(s)); }
+
+function toEdge(p, dx, dy) {
+  let t = Infinity;
+  if (dx > 1e-9) t = Math.min(t, (W - p.x) / dx); if (dx < -1e-9) t = Math.min(t, -p.x / dx);
+  if (dy > 1e-9) t = Math.min(t, (H - p.y) / dy); if (dy < -1e-9) t = Math.min(t, -p.y / dy);
+  return { x: p.x + dx * t, y: p.y + dy * t };
+}
+
+/* Work out every ray for a scene and aim */
+function trace(scene, i) {
+  const out = { scene, i };
+  if (scene === "mirror") {
+    out.P = { x: S.x + (MIRROR_Y - S.y) * Math.tan(rad(i)), y: MIRROR_Y };
+    out.refl = toEdge(out.P, Math.sin(rad(i)), -Math.cos(rad(i)));
+    out.r = i;                                   // law of reflection
+  } else {
+    const n = FACTS.n[scene];
+    out.P = { x: S.x + (TOP - S.y) * Math.tan(rad(i)), y: TOP };
+    out.r = refract(i, FACTS.n.air, n);          // angle inside the material
+    out.Q = { x: out.P.x + (BOT - TOP) * Math.tan(rad(out.r)), y: BOT };
+    out.e = refract(out.r, n, FACTS.n.air);      // angle of the ray that comes out
+    out.emer = toEdge(out.Q, Math.sin(rad(out.e)), Math.cos(rad(out.e)));
+    out.part = { x: out.P.x + 150 * Math.sin(rad(i)), y: out.P.y - 150 * Math.cos(rad(i)) };
+    out.straightX = out.P.x + (BOT - TOP) * Math.tan(rad(i));  // where it would leave if it did not bend
+  }
+  return out;
+}
+
+function distToRay(pt, a, b) {            // distance from pt to segment a→b
+  const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy;
+  let t = L ? ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / L : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(pt.x - a.x - t * dx, pt.y - a.y - t * dy);
+}
+function starAt(iT, d) { const tr = trace("mirror", iT); return { x: tr.P.x + d * Math.sin(rad(iT)), y: tr.P.y - d * Math.cos(rad(iT)) }; }
+function hits(star, i) { const tr = trace("mirror", i); return distToRay(star, tr.P, tr.refl) < STAR_R; }
+function hitRange(star) {
+  let lo = null, hi = null;
+  for (let a = FACTS.aimMin; a <= FACTS.aimMax + 1e-9; a += 0.1) { if (hits(star, a)) { if (lo === null) lo = a; hi = a; } }
+  return lo === null ? null : { lo, hi, mid: (lo + hi) / 2 };
+}
+function towardsAway(from, to) { if (Math.abs(from) < 1e-9) return "straight"; return to < from ? "towards" : "away"; }
+
+/* ===== Task bank ===== */
+const DIR_OPTS = [["towards", "Bends towards the normal"], ["away", "Bends away from the normal"], ["straight", "Does not change direction"]];
+const BANK = {
+  warm: [
+    { type: "target", scene: "mirror", start: 10, iT: 40, d: 240, text: "Aim the ray box. Bounce the light off the mirror to hit the star." },
+    { type: "target", scene: "mirror", start: 10, iT: 20, d: 280, text: "Hit the new star. Watch where the ray meets the mirror." },
+    { type: "target", scene: "mirror", start: 10, iT: 60, d: 190, text: "Hit the star on the far right." }
+  ],
+  core: [
+    { type: "angles", scene: "mirror", fixed: 30, hide: "after", text: "Read the angle of incidence. Predict the angle of reflection." },
+    { type: "angles", scene: "mirror", fixed: 55, hide: "after", text: "Read the angle of incidence. Predict the angle of reflection." },
+    { type: "aimReflect", scene: "mirror", start: 10, target: 35, text: "Aim the ray box so the angle of reflection is 35°." },
+    { type: "choice", scene: "glass", fixed: 40, hide: "inside", kind: "enter", text: "The ray goes into the glass block. What happens to it?" },
+    { type: "choice", scene: "glass", fixed: 40, hide: "emergent", kind: "leave", text: "The ray now leaves the glass into the air. What happens to it?" },
+    { type: "choice", scene: "water", fixed: 0, hide: "inside", kind: "enter", text: "This ray goes along the normal into the water. What happens to it?" },
+    { type: "choice", scene: "mirror", fixed: 25, kind: "eye", text: "You can see the ray box glowing. Which way does the light travel?" }
+  ],
+  challenge: [
+    { type: "exit", scene: "glass", fixed: 50, hide: "inside", text: "Predict where the ray leaves the bottom of the glass block. Move the marker." },
+    { type: "choice", scene: "glass", fixed: 35, hide: "emergent", kind: "parallel", text: "Which way does the ray go when it comes out of the block?" },
+    { type: "choice", scene: "glass", fixed: 45, kind: "speed", text: "Why does light change direction when it goes into glass?" },
+    { type: "choice", scene: "glass", fixed: 45, scenes: ["glass", "water"], kind: "compare", text: "Switch between glass and water. Which bends the ray more?" },
+    { type: "aimRefract", scene: "glass", start: 10, target: 20, text: "Aim the ray box so the ray inside the glass is 20° from the normal." }
+  ]
+};
+
+/* Choice questions: options and the answer key are computed from the model */
+function choiceSetup(t) {
+  const i = t.fixed, n = FACTS.n[t.scene];
+  if (t.kind === "enter") { const r = refract(i, FACTS.n.air, n); return { opts: DIR_OPTS, key: towardsAway(i, r) }; }
+  if (t.kind === "leave") { const r = refract(i, FACTS.n.air, n), e = refract(r, n, FACTS.n.air); return { opts: DIR_OPTS, key: towardsAway(r, e) }; }
+  if (t.kind === "parallel") {
+    const r = refract(i, FACTS.n.air, n), e = refract(r, n, FACTS.n.air);
+    const key = Math.abs(e - i) < 1e-6 ? "parallel" : (e > i ? "bigger" : "normal");
+    return { opts: [["parallel", "Parallel to the ray that went in"], ["normal", "Straight down the normal"], ["bigger", "Further from the normal than the ray that went in"]], key };
+  }
+  if (t.kind === "speed") {
+    const key = n > FACTS.n.air ? "slow" : "fast";   // speed in a material = speed in vacuum ÷ n
+    return { opts: [["slow", "It slows down in glass"], ["fast", "It speeds up in glass"], ["pull", "The glass pulls the light towards it"]], key };
+  }
+  if (t.kind === "compare") {
+    const rg = refract(i, 1, FACTS.n.glass), rw = refract(i, 1, FACTS.n.water);
+    const key = Math.abs(rg - rw) < 0.5 ? "same" : (rg < rw ? "glass" : "water");
+    return { opts: [["glass", "Glass bends it more"], ["water", "Water bends it more"], ["same", "They bend it the same"]], key };
+  }
+  if (t.kind === "eye") return { opts: [["source", "From the ray box to my eye"], ["eye", "From my eye to the ray box"], ["both", "Both ways at once"]], key: "source" };
+  return null;
+}
+
+/* ===== Load-time bank check ===== */
+function checkBank() {
+  const errs = [];
+  for (const lv in BANK) BANK[lv].forEach((t, k) => {
+    const name = lv + " task " + (k + 1);
+    const a = t.fixed !== undefined ? t.fixed : t.start;
+    if (!(a >= FACTS.aimMin && a <= FACTS.aimMax)) errs.push(name + ": aim out of range");
+    if (t.type === "target") {
+      const st = starAt(t.iT, t.d); t.star = st;
+      if (st.x < STAR_R || st.x > W - STAR_R || st.y < STAR_R || st.y > H - STAR_R) errs.push(name + ": star outside the scene");
+      const hr = hitRange(st); t.range = hr;
+      if (!hr || Math.abs(hr.mid - t.iT) > 1.5) errs.push(name + ": star cannot be hit");
+      if (hr && hits(st, t.start)) errs.push(name + ": star already hit at start");
+      for (let x = FACTS.aimMin; x <= FACTS.aimMax; x += 0.5) { const tr = trace("mirror", x); if (distToRay(st, S, tr.P) < STAR_R + 6) { errs.push(name + ": incident ray crosses the star"); break; } }
+    }
+    if (t.type === "aimReflect" && !(t.target >= FACTS.aimMin && t.target <= FACTS.aimMax)) errs.push(name + ": target unreachable");
+    if (t.type === "aimRefract") { const need = refract(t.target, FACTS.n[t.scene], 1); if (need === null || need > FACTS.aimMax) errs.push(name + ": target unreachable"); else t.need = need; }
+    if (t.type === "exit") { const tr = trace(t.scene, t.fixed); if (tr.Q.x < EXIT_MIN || tr.Q.x > EXIT_MAX) errs.push(name + ": exit point out of range"); }
+    if (t.type === "choice") { const c = choiceSetup(t); if (!c || !c.opts.some(o => o[0] === c.key)) errs.push(name + ": no correct option"); }
+    if (t.scene !== "mirror") { const tr = trace(t.scene, a); if (tr.r === null || tr.Q.x > RIGHT) errs.push(name + ": ray leaves the side of the block"); }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const svg = $("sim"), G = $("g"), PG = $("pulses");
+const sup = { protractor: false, readouts: false, labels: false };
+let level = "warm", idx = 0, task = null, ts = null, score = 0, streak = 0;
+let aim = 10, scene = "mirror", hidden = null, marker = 700, chosen = null, celebrate = 0;
+const done = {};   // "level:idx" -> task state; a solved or revealed task never scores again
+const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function locked() { return task && task.fixed !== undefined && !(ts.solved || ts.revealed); }
+function sceneLocked() { return task && !task.scenes && !(ts.solved || ts.revealed); }
+
+/* ===== Drawing ===== */
+let FS = 22;
+function fit() { const w = svg.getBoundingClientRect().width || W; const sc = w / W; FS = Math.max(20, Math.min(44, 14 / sc)); }
+function el(tag, attrs, txt) { let s = "<" + tag; for (const k in attrs) s += " " + k + '="' + attrs[k] + '"'; return s + (txt !== undefined ? ">" + txt + "</" + tag + ">" : "/>"); }
+function line(a, b, style) { return el("line", Object.assign({ x1: a.x.toFixed(1), y1: a.y.toFixed(1), x2: b.x.toFixed(1), y2: b.y.toFixed(1) }, style)); }
+function arrowAt(a, b, col, op) {
+  const m = { x: a.x + (b.x - a.x) * 0.55, y: a.y + (b.y - a.y) * 0.55 }, L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  const ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, s = 13;
+  const p1 = { x: m.x + ux * s, y: m.y + uy * s }, p2 = { x: m.x - ux * s * 0.6 - uy * s * 0.75, y: m.y - uy * s * 0.6 + ux * s * 0.75 }, p3 = { x: m.x - ux * s * 0.6 + uy * s * 0.75, y: m.y - uy * s * 0.6 - ux * s * 0.75 };
+  return el("path", { d: `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} L${p2.x.toFixed(1)},${p2.y.toFixed(1)} L${p3.x.toFixed(1)},${p3.y.toFixed(1)} Z`, fill: col, opacity: op || 1 });
+}
+function ray(a, b, faint) { const c = faint ? "var(--ray-faint)" : "var(--ray)"; return line(a, b, { stroke: c, "stroke-width": faint ? 3 : 4, "stroke-linecap": "round" }) + (Math.hypot(b.x - a.x, b.y - a.y) > 50 ? arrowAt(a, b, c) : ""); }
+function pt(P, a, R) { return { x: P.x + R * Math.sin(rad(a)), y: P.y - R * Math.cos(rad(a)) }; }   // a = clockwise from "up"
+function arc(P, a1, a2, R, label) {
+  if (Math.abs(a2 - a1) < 0.5) return "";
+  const p1 = pt(P, a1, R), p2 = pt(P, a2, R), sweep = a2 > a1 ? 1 : 0;
+  const mA = (a1 + a2) / 2, rho = R + FS * 0.95, mid = pt(P, mA, rho), span = Math.abs(a2 - a1), w = String(label).length * FS * 0.56;
+  let x = mid.x, anchor = "middle";
+  if (2 * rho * Math.sin(rad(span / 2)) < w + 10) {          // too narrow: put the number just outside the ray
+    const side = Math.sin(rad(mA)) >= 0 ? 1 : -1, dy = Math.abs(mid.y - P.y);
+    if (Math.cos(rad(mA)) < 0) { x = P.x - side * 8; anchor = side > 0 ? "end" : "start"; }   // below the surface: the other side is empty
+    else { x = P.x + side * (dy * Math.tan(rad(span)) + 6); anchor = side > 0 ? "start" : "end"; }
+  }
+  return el("path", { d: `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} A${R},${R} 0 0 ${sweep} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`, fill: "none", stroke: "var(--accent)", "stroke-width": 2.5 }) +
+    el("text", { x: x.toFixed(1), y: (mid.y + FS * 0.35).toFixed(1), "text-anchor": anchor, class: "num", "font-size": FS }, label);
+}
+function protractor(P, full) {
+  const R = 110; let s = "";
+  s += full ? el("circle", { cx: P.x, cy: P.y, r: R, fill: "var(--prot)", stroke: "var(--muted)", "stroke-width": 1.5 })
+            : el("path", { d: `M${P.x - R},${P.y} A${R},${R} 0 0 1 ${P.x + R},${P.y} Z`, fill: "var(--prot)", stroke: "var(--muted)", "stroke-width": 1.5 });
+  const lo = full ? -180 : -90, hi = full ? 175 : 90;
+  for (let a = lo; a <= hi; a += 5) {
+    const major = a % 10 === 0, p1 = pt(P, a, R), p2 = pt(P, a, R - (major ? 14 : 8));
+    s += line(p1, p2, { stroke: "var(--muted)", "stroke-width": major ? 2 : 1.2 });
+    if (major) {
+      let d = ((a % 180) + 180) % 180; d = d <= 90 ? d : 180 - d;
+      if (d % 20 === 0) { const q = pt(P, a, R + FS * 0.45); s += el("text", { x: q.x.toFixed(1), y: (q.y + FS * 0.25).toFixed(1), "text-anchor": "middle", "font-size": (FS * 0.62).toFixed(1), fill: "var(--muted)" }, d); }
+    }
+  }
+  return s;
+}
+function star(c, hit) {
+  const pts = []; for (let k = 0; k < 10; k++) { const r = k % 2 ? STAR_R * 0.45 : STAR_R, a = Math.PI / 5 * k - Math.PI / 2; pts.push((c.x + r * Math.cos(a)).toFixed(1) + "," + (c.y + r * Math.sin(a)).toFixed(1)); }
+  const grow = celebrate > 0 ? 1 + 0.35 * Math.sin(Math.PI * celebrate) : 1;
+  return `<g transform="translate(${c.x},${c.y}) scale(${grow}) translate(${-c.x},${-c.y})">` +
+    el("polygon", { points: pts.join(" "), fill: hit ? "var(--good)" : "var(--target)", stroke: "var(--surface)", "stroke-width": 2 }) + "</g>" +
+    el("text", { x: c.x, y: c.y - STAR_R - 8, "text-anchor": "middle", "font-size": FS, class: "lab", fill: hit ? "var(--good)" : "var(--target)", style: "fill:" + (hit ? "var(--good)" : "var(--target)") }, hit ? "Hit!" : "Target");
+}
+function rayBox(i) {
+  const a = 180 - i;  // pointing direction (clockwise from up)
+  let s = `<g transform="translate(${S.x},${S.y}) rotate(${-i})">`;
+  s += el("rect", { x: -26, y: -96, width: 52, height: 98, rx: 8, fill: "var(--box)" });
+  s += el("rect", { x: -18, y: -84, width: 36, height: 8, rx: 3, fill: "var(--surface)", opacity: .35 });
+  s += el("rect", { x: -10, y: -3, width: 20, height: 6, fill: "var(--ray)" });
+  s += "</g>";
+  return s;
+}
+
+function draw() {
+  const tr = trace(scene, aim); let s = "";
+  const lbl = (x, y, t, anchor) => sup.labels ? el("text", { x, y, "text-anchor": anchor || "start", "font-size": FS, class: "lab" }, t) : "";
+  // label beside a ray, f of the way along, pushed to one side (side = +1 right of travel, -1 left)
+  const along = (a, b, f, t, side) => {
+    if (!sup.labels) return ""; const L = Math.hypot(b.x - a.x, b.y - a.y) || 1, ux = (b.x - a.x) / L, uy = (b.y - a.y) / L;
+    const off = FS * 0.9, px = a.x + (b.x - a.x) * f - uy * off * side, py = a.y + (b.y - a.y) * f + ux * off * side;
+    const w = t.length * FS * 0.56; let anchor = (-uy * side) >= 0 ? "start" : "end", x = px;
+    if (anchor === "start" && x + w > W - 6) { anchor = "end"; x = W - 6; } if (anchor === "end" && x - w < 6) { anchor = "start"; x = 6; }
+    return el("text", { x: x.toFixed(1), y: (py + FS * 0.35).toFixed(1), "text-anchor": anchor, "font-size": FS, class: "lab" }, t);
+  };
+  // surfaces
+  if (scene === "mirror") {
+    s += el("rect", { x: LEFT, y: MIRROR_Y, width: RIGHT - LEFT, height: 14, fill: "url(#hatch)" });
+    s += line({ x: LEFT, y: MIRROR_Y }, { x: RIGHT, y: MIRROR_Y }, { stroke: "var(--mirror)", "stroke-width": 6 });
+    s += lbl(RIGHT - 6, MIRROR_Y + 14 + FS, "Mirror", "end");
+  } else {
+    const fill = scene === "glass" ? "var(--glass)" : "var(--water)", edge = scene === "glass" ? "var(--glass-edge)" : "var(--water-edge)";
+    s += el("rect", { x: LEFT, y: TOP, width: RIGHT - LEFT, height: BOT - TOP, fill, stroke: edge, "stroke-width": 3, rx: 3 });
+    s += lbl(RIGHT - 10, BOT - 12, scene === "glass" ? "Glass block" : "Water", "end");
+  }
+  // normals
+  const P = tr.P, NL = scene === "mirror" ? 150 : 120;
+  s += line({ x: P.x, y: P.y - NL }, { x: P.x, y: P.y + (scene === "mirror" ? 0 : NL * 0.85) }, { stroke: "var(--ink)", "stroke-width": 2, "stroke-dasharray": "9 7", opacity: .75 });
+  s += lbl(P.x + 8, P.y - NL - 4, "Normal");
+  if (scene !== "mirror" && hidden !== "inside") s += line({ x: tr.Q.x, y: tr.Q.y - NL * 0.7 }, { x: tr.Q.x, y: tr.Q.y + 110 }, { stroke: "var(--ink)", "stroke-width": 2, "stroke-dasharray": "9 7", opacity: .55 });
+  if (sup.protractor) s += protractor(P, scene !== "mirror");
+  // rays
+  s += ray(S, P);
+  { const L = Math.hypot(P.x - S.x, P.y - S.y); s += along(S, P, Math.max(40 / L, Math.min(0.45, 1 - 190 / L)), "Incident ray", 1); }
+  const pathPts = [S, P];
+  if (scene === "mirror") {
+    if (hidden !== "after") { s += ray(P, tr.refl); pathPts.push(tr.refl); s += along(P, tr.refl, aim < 30 ? 0.72 : 0.5, "Reflected ray", 1); }
+  } else {
+    s += ray(P, tr.part, true);
+    s += lbl(Math.max(tr.part.x + 12, S.x + 40), tr.part.y - (aim < 25 ? FS + 8 : 4), "Weak reflection");
+    if (hidden !== "inside") {
+      s += ray(P, tr.Q); pathPts.push(tr.Q);
+      { const rx = Math.max(tr.Q.x, P.x) + 150, rw = 13 * FS * 0.56; s += rx + rw > RIGHT - 8 ? lbl(RIGHT - 10, (TOP + BOT) / 2 + FS * 0.4, "Refracted ray", "end") : lbl(rx, (TOP + BOT) / 2 + FS * 0.4, "Refracted ray"); }
+      if (hidden !== "emergent") { s += ray(tr.Q, tr.emer); pathPts.push(tr.emer); s += along(tr.Q, tr.emer, 0.55, "Emerging ray", -1); }
+    }
+  }
+  if (hidden) { const at = hidden === "emergent" ? tr.Q : P; s += el("circle", { cx: at.x + 34, cy: at.y + (hidden === "after" ? -34 : 34), r: FS * 0.85, fill: "var(--surface)", stroke: "var(--accent)", "stroke-width": 2 }) + el("text", { x: at.x + 34, y: at.y + (hidden === "after" ? -34 : 34) + FS * 0.36, "text-anchor": "middle", "font-size": FS, class: "num" }, "?"); }
+  // angle readouts
+  if (sup.readouts) {
+    s += arc(P, -aim, 0, 62, round(aim) + "°");
+    if (scene === "mirror" && hidden !== "after") s += arc(P, 0, aim, 62, round(tr.r) + "°");
+    if (scene !== "mirror" && hidden !== "inside") s += arc(P, 180, 180 - tr.r, 62, round(tr.r) + "°");
+    if (scene !== "mirror" && !hidden) s += arc(tr.Q, 180, 180 - tr.e, 50, round(tr.e) + "°");
+  }
+  // exit marker
+  if (task && task.type === "exit") {
+    s += el("path", { d: `M${marker},${BOT + 4} l-14,26 h28 z`, fill: "var(--accent)" });
+    if (hidden) s += el("text", { x: marker - 20, y: BOT + 24 + FS * 0.3, "text-anchor": "end", "font-size": FS * 0.85, class: "num" }, "Out here?");
+  }
+  // star
+  if (task && task.type === "target") s += star(task.star, hits(task.star, aim));
+  // ray box + aim knob
+  s += rayBox(aim);
+  const k = pt(S, -aim, 48);
+  if (!locked()) s += el("circle", { cx: k.x.toFixed(1), cy: k.y.toFixed(1), r: 22, fill: "var(--surface)", stroke: "var(--accent)", "stroke-width": 3, opacity: .9 }) + el("circle", { cx: k.x.toFixed(1), cy: k.y.toFixed(1), r: 6, fill: "var(--accent)" });
+  s += lbl(S.x + 40, S.y - 60, "Ray box");
+  G.innerHTML = `<defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="var(--mirror)" stroke-width="2"/></pattern></defs>` + s;
+  path = pathPts;
+  // HTML readout
+  const ro = $("readout");
+  ro.hidden = !sup.readouts;
+  if (sup.readouts) {
+    let t = `Angle of incidence <b>${round(aim)}°</b>`;
+    if (scene === "mirror" && hidden !== "after") t += ` · Angle of reflection <b>${round(tr.r)}°</b>`;
+    if (scene !== "mirror" && hidden !== "inside") t += ` · Angle of refraction <b>${round(tr.r)}°</b>`;
+    if (scene !== "mirror" && !hidden) t += ` · Ray leaving <b>${round(tr.e)}°</b>`;
+    ro.innerHTML = t + " (from the normal)";
+  }
+  $("simDesc").textContent = `Ray box aimed at ${scene === "mirror" ? "a mirror" : scene === "glass" ? "a glass block" : "a water tank"}.` + (sup.readouts ? ` Angle of incidence ${round(aim)} degrees.` : "");
+  const aimEl = $("aim"); aimEl.value = aim; aimEl.disabled = locked();
+  aimEl.setAttribute("aria-valuetext", sup.readouts ? round(aim) + " degrees from the normal" : "aim position " + round(aim) + " of 65");
+  document.querySelectorAll(".seg button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.scene === scene ? "true" : "false"); b.disabled = !!(task && sceneLocked() && b.dataset.scene !== scene) || !!(task && task.scenes && !task.scenes.includes(b.dataset.scene) && !(ts.solved || ts.revealed)); });
+  svg.classList.toggle("grab", !locked() || (task && task.type === "exit"));
+  $("lockNote").textContent = locked() ? (task.type === "exit" ? "The ray box is fixed for this task. Drag the marker or use the slider in Your answer." : "The ray box is fixed for this task.") : (task && task.type === "target" ? "Drag the round handle, or anywhere in the picture, to aim." : "Drag in the picture or use the slider to aim.");
+}
+
+/* ===== Light pulses (show direction of travel) ===== */
+let path = [], phase = 0, last = 0, raf = 0;
+function frame(t) {
+  raf = 0; const dt = last ? Math.min(0.05, (t - last) / 1000) : 0; last = t;
+  if (celebrate > 0) { celebrate = Math.max(0, celebrate - dt * 1.6); draw(); }
+  if (!reduced && path.length > 1) {
+    phase = (phase + dt * 260) % 180;
+    const segs = []; let total = 0;
+    for (let k = 1; k < path.length; k++) { const L = Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y); segs.push(L); total += L; }
+    let html = "";
+    for (let d = phase; d < total; d += 180) {
+      let rem = d, k = 0; while (k < segs.length && rem > segs[k]) { rem -= segs[k]; k++; }
+      if (k >= segs.length) break; const a = path[k], b = path[k + 1], f = rem / segs[k];
+      html += `<circle cx="${(a.x + (b.x - a.x) * f).toFixed(1)}" cy="${(a.y + (b.y - a.y) * f).toFixed(1)}" r="6" fill="var(--surface)" stroke="var(--ray)" stroke-width="3"/>`;
+    }
+    PG.innerHTML = html;
+  } else PG.innerHTML = "";
+  if (!document.hidden && (!reduced || celebrate > 0)) raf = requestAnimationFrame(frame);
+}
+function kick() { if (!raf && !document.hidden) { last = 0; raf = requestAnimationFrame(frame); } }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else kick(); });
+
+/* ===== Answer panel ===== */
+function buildAnswer() {
+  const A = $("ans"); chosen = null;
+  if (task.type === "target") A.innerHTML = `<p>Hit the star with the reflected ray.</p><p class="hidden-note">The star turns green and says “Hit!” when your ray hits it. Then press Check.</p>`;
+  else if (task.type === "angles") A.innerHTML = `<div class="fld"><label for="inInc">Angle of incidence</label><input type="number" id="inInc" min="0" max="90" inputmode="numeric"> °</div><div class="fld"><label for="inRef">Angle of reflection</label><input type="number" id="inRef" min="0" max="90" inputmode="numeric"> °</div><p class="hidden-note">Measure both from the normal.</p>`;
+  else if (task.type === "aimReflect" || task.type === "aimRefract") A.innerHTML = `<p>Use the aim slider or drag in the picture. Press Check when you think it is right.</p>`;
+  else if (task.type === "exit") A.innerHTML = `<div class="fld" style="display:grid;gap:4px"><label for="inExit">Where does the ray leave the block?</label><input type="range" id="inExit" min="${EXIT_MIN}" max="${EXIT_MAX}" step="1" value="${marker}"></div><p class="hidden-note">Light bends at the top surface. Think about which way.</p>`;
+  else if (task.type === "choice") {
+    const c = choiceSetup(task);
+    A.innerHTML = `<div class="opts" role="group" aria-label="Choose one">` + c.opts.map(o => `<button type="button" class="opt" data-v="${o[0]}" aria-pressed="false"><span class="box" aria-hidden="true"></span>${o[1]}</button>`).join("") + `</div>`;
+    A.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { chosen = b.dataset.v; A.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); }));
+  }
+  const ex = $("inExit"); if (ex) ex.addEventListener("input", () => { marker = +ex.value; draw(); });
+  updateStuck();
+}
+function updateStuck() {
+  const st = $("stuck"); let t = "";
+  if (task.type === "angles" || task.type === "aimReflect") t = sup.protractor ? "" : "Stuck? Turn on Protractor under Support.";
+  if (task.type === "aimRefract") t = sup.readouts ? "" : "Stuck? Turn on Angle readouts under Support.";
+  if (task.type === "target") t = sup.protractor ? "" : "Stuck? Turn on Protractor under Support to see the angles.";
+  st.textContent = t; st.hidden = !t;
+}
+
+/* ===== Feedback ===== */
+function say(kind, html) { $("fb").innerHTML = `<div class="msg ${kind}">${html}</div>`; }
+const MIRROR_MC = "You measured from the mirror surface. Angles are always measured from the normal (the dashed line at 90° to the mirror).";
+
+function hintsFor() {
+  const t = task;
+  if (t.type === "target") return ["Look at where the ray hits the mirror. That is where the light bounces.",
+    "The ray bounces off at the same angle to the normal as it comes in. Turn the ray box slowly and watch the reflected ray.",
+    `Aim the ray box so the angle of incidence is about ${round(t.range.mid)}°.`];
+  if (t.type === "angles") return ["Find the dashed normal line where the ray hits the mirror.",
+    "Measure from the normal to the ray, not from the mirror. The Protractor under Support starts at 0° on the normal.",
+    `The angle of incidence is between ${t.fixed - 5}° and ${t.fixed + 5}°. The angle of reflection is the same size.`];
+  if (t.type === "aimReflect") return ["The angle of reflection is measured from the normal to the reflected ray.",
+    "The angle of reflection always equals the angle of incidence. So aim for an angle of incidence of the same size.",
+    `Set the angle of incidence to ${t.target}°.`];
+  if (t.type === "exit") return ["Light changes direction at the top surface of the block.",
+    "Going into glass, light bends towards the normal. So it moves sideways less than a straight line would.",
+    (() => { const tr = trace(t.scene, t.fixed), f = (tr.Q.x - tr.P.x) / (tr.straightX - tr.P.x);
+      return `Put the marker ${f < 0.42 ? "a bit less than" : f > 0.58 ? "a bit more than" : "about"} halfway between the dashed normal and where a straight line would come out.`; })()];
+  if (t.type === "aimRefract") return ["The ray inside the glass is always closer to the normal than the ray going in.",
+    "So the angle of incidence must be bigger than 20°. Turn on Angle readouts to see the angle of refraction.",
+    `Aim the ray box at about ${round(t.need)}°.`];
+  const k = t.kind;
+  if (k === "enter" && t.fixed === 0) return ["Look at the angle between the ray and the normal.", "This ray is along the normal. It hits the surface straight on.", "A ray along the normal goes straight on."];
+  if (k === "enter") return ["Is the ray going into a denser material or a less dense one?", "Glass is denser than air. Think about which way light bends going into a denser material.", "Going into glass, light bends towards the normal."];
+  if (k === "leave") return ["The ray goes from glass back into air.", "Air is less dense than glass. It does the opposite of what happened going in.", "Leaving glass, light bends away from the normal."];
+  if (k === "parallel") return ["Compare what happens at the top surface with the bottom surface.", "It bends towards the normal going in, then away by the same amount coming out.", "The two surfaces are parallel, so the ray comes out parallel to the ray that went in."];
+  if (k === "speed") return ["Think about how fast light travels in air and in glass.", "Light travels fastest through empty space and air. Glass is denser.", "Light slows down when it goes into glass."];
+  if (k === "compare") return ["Press Glass block, then Water tank. Watch the ray inside.", "The more a ray bends, the closer it gets to the normal.", "The ray in glass ends up closer to the normal than in water."];
+  if (k === "eye") return ["Which one makes light: the ray box or your eye?", "Look at the arrows on the rays. They show which way light travels.", "Light goes from a light source into your eye."];
+  return ["", "", ""];
+}
+function answerText() {
+  const t = task;
+  if (t.type === "target") return `Aim at about ${round(t.range.mid)}°. The ray reflects at the same angle to the normal as it hits the mirror.`;
+  if (t.type === "angles") return `Angle of incidence ${t.fixed}°, angle of reflection ${t.fixed}°. The angle of incidence equals the angle of reflection.`;
+  if (t.type === "aimReflect") return `Aim at ${t.target}°. The angle of incidence equals the angle of reflection.`;
+  if (t.type === "exit") return "The ray bends towards the normal in the glass, so it leaves closer to the normal than a straight line would.";
+  if (t.type === "aimRefract") return `Aim at about ${round(t.need)}°. The ray bends towards the normal, so it needs a bigger angle going in.`;
+  const c = choiceSetup(t), o = c.opts.find(x => x[0] === c.key)[1];
+  const why = { enter: t.fixed === 0 ? "A ray along the normal does not change direction." : "Glass is denser than air, so light bends towards the normal.",
+    leave: "Air is less dense than glass, so light bends away from the normal.", parallel: "It bends back by the same amount, so it leaves parallel to the ray that went in.",
+    speed: "Light slows down in glass. The change of speed makes it change direction.", compare: "Light slows down more in glass than in water, so glass bends it more.",
+    eye: "Light travels from a source into your eye. Eyes do not send out light." }[t.kind];
+  return `${o}. ${why}`;
+}
+
+function check() {
+  const t = task;
+  if (ts.solved || ts.revealed) { say("tip", "This task is done. Press Next → for a new one."); return; }
+  let ok = false, msg = "";
+  const tr = trace(scene, aim);
+  if (t.type === "target") {
+    ok = hits(t.star, aim);
+    if (!ok) msg = aim < t.range.mid ? "Your reflected ray passes to the left of the star. Turn the ray box further from the normal (more to the side)."
+                                     : "Your reflected ray passes to the right of the star. Turn the ray box closer to the normal (more straight down).";
+  } else if (t.type === "angles") {
+    const a = $("inInc").value.trim(), b = $("inRef").value.trim();
+    if (a === "" || b === "") { say("tip", "Type both angles first, then press Check."); return; }
+    const inc = +a, ref = +b, I = t.fixed, mc = 90 - I;
+    const incOk = Math.abs(inc - I) <= 1, refOk = Math.abs(ref - I) <= 1;
+    ok = incOk && refOk;
+    if (!ok) {
+      const parts = [];
+      if (!incOk) parts.push(Math.abs(inc - mc) <= 1 ? "Angle of incidence: " + MIRROR_MC : "Angle of incidence: not right. Measure from the dashed normal to the incoming ray.");
+      if (!refOk) {
+        if (Math.abs(ref - mc) <= 1) parts.push(!incOk && Math.abs(inc - mc) <= 1 ? "Angle of reflection: same mix-up. Measure from the normal too." : "Angle of reflection: " + MIRROR_MC);
+        else if (!incOk && Math.abs(ref - inc) <= 1) parts.push("Angle of reflection: you made it equal to your angle of incidence. Good rule – now fix the angle of incidence.");
+        else parts.push("Angle of reflection: it always equals the angle of incidence.");
+      }
+      msg = parts.join("<br>");
+    }
+  } else if (t.type === "aimReflect") {
+    ok = Math.abs(aim - t.target) <= 1;
+    if (!ok) msg = Math.abs(aim - (90 - t.target)) <= 1 ? "Your ray makes " + t.target + "° with the mirror, not with the normal. " + MIRROR_MC
+      : (aim < t.target ? "Your angle of reflection is too small. Turn the ray box further from the normal." : "Your angle of reflection is too big. Turn the ray box closer to the normal.");
+  } else if (t.type === "aimRefract") {
+    ok = Math.abs(tr.r - t.target) <= 1;
+    if (!ok) msg = tr.r < t.target ? "The ray in the glass is too close to the normal. Aim further from the normal." : "The ray in the glass is too far from the normal. Aim closer to the normal.";
+  } else if (t.type === "exit") {
+    const real = tr.Q.x, str = tr.straightX, tol = Math.max(14, 0.4 * Math.abs(str - real));
+    ok = Math.abs(marker - real) <= tol;
+    if (!ok) {
+      if (marker > str + tol * 0.5) msg = "Too far out. That would mean the ray bent away from the normal. Going into glass, light bends towards the normal.";
+      else if (Math.abs(marker - str) <= tol) msg = "That is where it would come out if it did not bend. Light bends towards the normal going into glass, so it comes out closer to the normal.";
+      else if (marker < tr.P.x) msg = "That is behind the normal line. The ray still carries on forwards, just at a smaller angle to the normal.";
+      else if (marker > real) msg = "A bit too far out. The ray bends towards the normal, so it comes out nearer the normal than that.";
+      else msg = "Too near the normal. The ray bends towards the normal, but it still travels sideways a bit.";
+    }
+  } else if (t.type === "choice") {
+    if (!chosen) { say("tip", "Choose an answer first, then press Check."); return; }
+    const c = choiceSetup(t); ok = chosen === c.key;
+    if (!ok) {
+      const M = {
+        enter: { away: "Common mix-up: light bends towards the normal, not away, when it goes into a denser material like glass or water.",
+                 straight: t.fixed === 0 ? "" : "It only goes straight on when it travels along the normal. This ray hits at an angle, so it bends.",
+                 towards: "This ray is along the normal. It hits the surface straight on, so it does not bend.", },
+        leave: { towards: "Going from glass into air (less dense), light bends away from the normal. It is the opposite of going in.", straight: "The ray hits the bottom at an angle, so it changes direction." },
+        parallel: { normal: "It only goes along the normal if it went in along the normal. It bends back by the same amount it bent going in.", bigger: "It bends back by the same amount it bent going in, no more." },
+        speed: { fast: "Common mix-up: light does not speed up in glass. It slows down in a denser material.", pull: "Nothing pulls the light. It changes direction because it slows down in glass." },
+        compare: { water: "Look again at the ray inside. In glass it ends up closer to the normal, so glass bends it more.", same: "Switch between them and look closely. The ray inside glass is closer to the normal." },
+        eye: { eye: "Common mix-up: eyes do not send out light. Light travels from the source into your eye. Look at the arrows.", both: "Light only travels from the source into your eye. Eyes do not send out light." }
+      };
+      if (t.kind === "enter" && t.fixed === 0) msg = "This ray is along the normal. It goes straight on and does not change direction.";
+      else msg = (M[t.kind] && M[t.kind][chosen]) || "Look at the hints.";
+    }
+  }
+  if (ok) {
+    const first = ts.wrong === 0 && ts.hints === 0;
+    ts.solved = true; score++; if (first) streak++;
+    hidden = null; celebrate = reduced ? 0 : 1; kick();
+    const extra = { target: "The angle of reflection equals the angle of incidence.", angles: "Angle of incidence = angle of reflection.", aimReflect: "Angle of incidence = angle of reflection.",
+      exit: "It bent towards the normal in the glass.", aimRefract: "A bigger angle going in gives a bigger angle inside, but always closer to the normal." }[t.type] || answerText();
+    say("good", "<b>Correct.</b> " + extra + (first ? " First try!" : ""));
+  } else { ts.wrong++; streak = 0; say("bad", "<b>Not yet.</b> " + msg); }
+  updateChips(); draw();
+}
+
+function hint() {
+  if (ts.hints >= 3) { say("tip", "No more hints – try Show answer."); return; }
+  const h = hintsFor()[ts.hints]; ts.hints++;
+  say("tip", `<b>Hint ${ts.hints} of 3:</b> ${h}`); updateHintBtn();
+}
+function updateHintBtn() { const b = $("hint"); b.textContent = ts.hints >= 3 ? "No more hints – try Show answer" : `Hint (${ts.hints + 1}/3)`; }
+function reveal() {
+  const t = task;
+  if (!ts.solved) ts.revealed = true;
+  hidden = null;
+  if (t.type === "target") aim = round(t.range.mid);
+  if (t.type === "aimReflect") aim = t.target;
+  if (t.type === "aimRefract") aim = round(t.need);
+  if (t.type === "angles") { $("inInc").value = t.fixed; $("inRef").value = t.fixed; }
+  if (t.type === "exit") { marker = round(trace(scene, aim).Q.x); const ex = $("inExit"); if (ex) ex.value = marker; }
+  if (t.type === "choice") { const c = choiceSetup(t); chosen = c.key; $("ans").querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === c.key ? "true" : "false")); }
+  say("tip", "<b>Answer:</b> " + answerText()); draw(); kick();
+}
+function resetTask() {
+  aim = task.fixed !== undefined ? task.fixed : task.start; scene = task.scene; marker = 700; chosen = null;
+  if (!(ts.solved || ts.revealed)) hidden = task.hide || null;
+  buildAnswer(); $("fb").innerHTML = ""; draw(); kick();
+}
+function updateChips() { $("sScore").textContent = score; $("sStreak").textContent = streak; }
+
+function loadTask() {
+  task = BANK[level][idx]; const key = level + ":" + idx;
+  ts = done[key] || (done[key] = { solved: false, revealed: false, hints: 0, wrong: 0 });
+  ts.hints = 0; ts.wrong = ts.solved || ts.revealed ? ts.wrong : 0;
+  hidden = (ts.solved || ts.revealed) ? null : (task.hide || null);
+  aim = task.fixed !== undefined ? task.fixed : task.start; scene = task.scene; marker = 700;
+  $("taskText").textContent = task.text;
+  $("qno").textContent = `Task ${idx + 1} of ${BANK[level].length}`;
+  buildAnswer(); updateHintBtn();
+  $("fb").innerHTML = (ts.solved || ts.revealed) ? `<div class="msg tip">You have done this task. Explore, or press Next →.</div>` : "";
+  draw(); kick();
+}
+
+/* ===== Input ===== */
+function svgPoint(e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function aimFrom(p) { let a = deg(Math.atan2(p.x - S.x, p.y - S.y)); if (p.y < S.y) a = p.x > S.x ? FACTS.aimMax : FACTS.aimMin; aim = Math.max(FACTS.aimMin, Math.min(FACTS.aimMax, Math.round(a))); }
+let dragging = false;
+function onDrag(e) {
+  const p = svgPoint(e);
+  if (task.type === "exit" && locked()) { marker = Math.max(EXIT_MIN, Math.min(EXIT_MAX, Math.round(p.x))); const ex = $("inExit"); if (ex) ex.value = marker; }
+  else if (!locked()) aimFrom(p);
+  else return;
+  draw();
+}
+svg.addEventListener("pointerdown", e => { if (locked() && task.type !== "exit") return; dragging = true; try { svg.setPointerCapture(e.pointerId); } catch (_) {} onDrag(e); e.preventDefault(); });
+svg.addEventListener("pointermove", e => { if (dragging) onDrag(e); });
+const stop = () => { dragging = false; }; svg.addEventListener("pointerup", stop); svg.addEventListener("pointercancel", stop);
+$("aim").addEventListener("input", e => { if (locked()) return; aim = +e.target.value; draw(); });
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => { if (b.disabled) return; scene = b.dataset.scene; draw(); }));
+document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
+  level = b.dataset.level; idx = 0; document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); loadTask(); }));
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; sup[k] = !sup[k]; b.setAttribute("aria-pressed", sup[k] ? "true" : "false"); b.querySelector(".state").textContent = sup[k] ? "on" : "off"; updateStuck(); draw(); }));
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+$("next").addEventListener("click", () => { idx = (idx + 1) % BANK[level].length; loadTask(); });
+window.addEventListener("resize", () => { fit(); draw(); });
+$("themeBtn").addEventListener("click", () => draw());
+
+/* ===== Start ===== */
+const bankErrors = checkBank();
+if (bankErrors.length) {
+  const be = $("bankErr"); be.hidden = false; be.textContent = "Question bank error – please tell the teacher: " + bankErrors.join("; ");
+  console.warn(bankErrors);
+}
+fit();
+if (!bankErrors.length) loadTask(); else { task = null; draw(); }
+
+</script>
+</body>
+</html>

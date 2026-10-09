@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion</title>
+<!--
+  SCIENCE SPEC — Diffusion (KS3)
+  Models: diffusion as the spreading of particles by their own random movement.
+    Gas mode: a box split by a removable barrier, gas A (circles, letter A) on the left and
+    gas B (squares, letter B) on the right. Particles move in straight lines, bounce off the
+    walls and collide elastically with each other. When the barrier lifts, both gases spread
+    through the whole box until evenly mixed, and keep moving afterwards (no net change).
+    Temperature buttons (Cold 10 °C / Room 20 °C / Hot 60 °C) set particle speed:
+    hotter = faster particles = faster diffusion. Particle size never changes.
+    Liquid mode: a drop of purple dye (potassium permanganate solution) at the bottom of
+    still water, cold (10 °C) and hot (60 °C) beakers side by side. Dye particles take small
+    random steps (water particles are not drawn); hot steps are bigger, so the dye spreads faster.
+    Diffusion in the liquid is slower than in the gas. The number of dye particles never changes.
+  Source: KS3 NC + AQA KS3 3.5.1 Particle model (diffusion keyword: "the process by which
+    particles in liquids or gases spread out through random movement from a region where there
+    are many particles to one where there are fewer"; "draw before and after diagrams ... to explain
+    observations about ... diffusion"); to be matched to the new department lessons when they are written.
+    KS3 NC (Chemistry, The particulate nature of matter): "diffusion in terms of the particle model";
+    "the properties of the different states of matter (solid, liquid and gas) in terms of the particle model".
+    SoW: Year 7 Term 2 Particles — L24 Diffusion, L25 Potassium permanganate practical.
+  Simplifications (shown on screen as "Model limits"):
+    - A few dozen particles stand for billions; each dot stands for lots of particles.
+    - The clock is model time, not real time. Real gas particles move far faster; real dye takes
+      many minutes to spread through a beaker.
+    - The gas cold/hot speed difference is made bigger than in real life so it is easy to see
+      (real speed rises with the square root of the absolute temperature: only about 9% faster at 60 °C than 10 °C).
+    - The liquid clock runs at 2 model seconds per real second so the cold beaker finishes in about 20 s.
+    - Water particles are not drawn in the beakers; the dye takes random steps instead.
+    - 2D, not 3D. Gravity and convection currents are left out (still air, still water).
+    - Only gases and liquids are shown (AQA KS3 defines diffusion in liquids and gases). The tool
+      makes no claim about solids, so it does not clash with jelly/agar practicals (agar is mostly water).
+    - "Evenly mixed" = every gas has at least 40% of its particles in each half of the box for 0.3 model s;
+      "spread out" (liquid) = at least 40% of the dye is in the top half of the water.
+  Misconceptions designed out (BEST / common KS3):
+    - particles spread because they want to / know to / are pushed (feedback names this);
+    - diffusion stops when evenly mixed (particles keep moving; counts wobble about half);
+    - dye "disappears" or dissolves away (dye particle count stays the same; it only looks paler);
+    - particles get bigger when hot (radius is fixed in code; feedback names this);
+    - diffusion only happens in gases (liquid mode shows diffusion in water);
+    - stirring is diffusion (Core task names this).
+  Support starts OFF on every visit: Count in each half; Particle trails (follow one particle).
+  Idea credit: Idea from Diffusion, PhET Interactive Simulations, University of Colorado Boulder
+    (https://phet.colorado.edu). No PhET code, art, layout, colours or wording used.
+  Checks: on load the script checks every task (one correct answer, three hints, feedback on
+    every wrong option), checks FACTS (speeds and step sizes rise with temperature, n even),
+    and runs seeded headless simulations to check that hot gas mixes faster than cold, hot
+    dye spreads faster than cold, and cold gas mixes faster than cold dye. The race answers are
+    computed from those runs; the "Spot the mixed picture" answer is computed by counting
+    particles in each half. Any failure shows a visible error instead of the tasks.
+  Facts and values used:
+    - Diffusion: particles spread out by random movement, from where there are more particles
+      to where there are fewer. Happens in gases and liquids.
+    - Particles keep moving after mixing; there is no net (overall) change.
+    - Hotter particles move faster, so diffusion is faster when hot.
+    - Diffusion in liquids is slower than in gases (liquid particles are close together and collide
+      all the time; gas particles are far apart).
+    - Particles do not get bigger when heated.
+    - Temperatures: Cold 10 °C, Room 20 °C, Hot 60 °C (gas); cold water 10 °C, hot water 60 °C.
+    - Model speed factors (gas): cold ×0.5, room ×1, hot ×1.8 (exaggerated, stated in Model limits).
+    - Model dye step factor (liquid): cold ×1, hot ×2.2 (not exaggerated: real diffusion in water is roughly 3× faster at 60 °C than at 10 °C).
+    - Gas: 40 particles of each gas. Liquid: 240 dye particles per beaker.
+    - Even mix: at least 40% of each gas in each half, held for 0.3 model seconds; dye spread: at least 40% in the top half.
+    - Potassium permanganate makes a purple solution in water.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--gasA:#2160A8;--gasA-ink:#FFFFFF;--gasB:#B4500F;--gasB-ink:#FFFFFF;--dye:#6B2183;--water:#D3E6F4;--boxbg:#FBFAF8;--wall:#1E252E;--barrier:#5A6472;--trail:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--gasA:#82B6F2;--gasA-ink:#14243D;--gasB:#F3A867;--gasB-ink:#14243D;--dye:#D58BEA;--water:#244A72;--boxbg:#192E4B;--wall:#E9EDF3;--barrier:#A9B4C4;--trail:#D9A536}}
+:root[data-theme="dark"]{--gasA:#82B6F2;--gasA-ink:#14243D;--gasB:#F3A867;--gasB-ink:#14243D;--dye:#D58BEA;--water:#244A72;--boxbg:#192E4B;--wall:#E9EDF3;--barrier:#A9B4C4;--trail:#D9A536}
+.taskhead{display:grid;gap:4px}
+.sim{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:10px;min-width:0}
+.simtop{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg .lbl{font-weight:700;font-size:16px;color:var(--muted)}
+.seg button{font:700 16px var(--f-body);min-height:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg button:disabled{opacity:.5;cursor:not-allowed}
+.canvaswrap{display:flex;justify-content:center;min-width:0}
+#cv{display:block;width:100%;max-width:760px;border-radius:8px;touch-action:manipulation}
+.legend{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:16px;color:var(--muted);justify-content:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:20px;height:20px;flex:none}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrls .btn{min-height:44px;padding:8px 16px;font-size:16px}
+.read{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:17px;font-variant-numeric:tabular-nums}
+.read b{color:var(--accent)}
+.counts{border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.counts th,.counts td{padding:3px 10px;border-bottom:1px solid var(--line);text-align:left}
+.counts th{color:var(--muted);font-weight:700}
+.runs{margin:0;padding-left:20px;font-size:16px}
+.runs li{margin:0}
+.runs .unfair{color:var(--muted)}
+.opts{display:grid;gap:8px;border:0;margin:0;padding:0;min-width:0}
+.opts legend{font-weight:700;font-size:16px;color:var(--muted);margin-bottom:6px;padding:0}
+.opt{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:17px;line-height:1.45}
+.opt input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pic{flex-direction:column;align-items:center;padding:8px}
+.pic svg{width:100%;height:auto;display:block;border-radius:6px}
+.pic .pl{display:flex;gap:8px;align-items:center;font-weight:700;white-space:nowrap}
+@media (max-width:1240px) and (min-width:1000px),(max-width:560px){.pics{grid-template-columns:minmax(0,1fr)}.pic svg{max-width:300px}}
+.frame{font-size:18px;line-height:2.4}
+.frame select,.numin{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.numrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.numin{width:7.5em}
+.rmnote{font-size:15px;color:var(--muted);margin:0}
+.rmnote:empty{display:none}
+.stage{display:grid;gap:18px;min-width:0}
+@media (min-width:1000px){.stage{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}.stage .lower{grid-template-columns:minmax(0,1fr)}}
+.runs.empty{list-style:none;padding-left:0}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Diffusion<small>Lift the barrier and watch the particles spread out.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="bar">
+  <div class="levels" role="group" aria-label="Level">
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+  </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Count in each half <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="trails" aria-pressed="false"><span class="dot"></span>Particle trails <span class="state">off</span></button>
+  </div>
+
+  <section class="card" aria-label="Diffusion">
+    <div class="taskhead">
+      <div class="qno" id="qno">Task 1 of 5</div>
+      <div class="ctx" id="taskText">…</div>
+    </div>
+    <div id="bankErr" class="bankerr" role="alert" hidden></div>
+
+    <div class="stage">
+    <div class="sim">
+      <div class="simtop">
+        <div class="seg" role="group" aria-label="Mode">
+          <span class="lbl">Mode:</span>
+          <button type="button" data-mode="gas" aria-pressed="true">Gas</button>
+          <button type="button" data-mode="liquid" aria-pressed="false">Liquid</button>
+        </div>
+        <div class="seg" role="group" aria-label="Temperature of the gas" id="tempSeg">
+          <span class="lbl">Temperature:</span>
+          <button type="button" data-temp="cold" aria-pressed="false">Cold 10 °C</button>
+          <button type="button" data-temp="room" aria-pressed="true">Room 20 °C</button>
+          <button type="button" data-temp="hot" aria-pressed="false">Hot 60 °C</button>
+        </div>
+      </div>
+      <div class="canvaswrap"><canvas id="cv" role="img" aria-label="Box of gas particles"></canvas></div>
+      <div class="legend" id="legend"></div>
+      <div class="ctrls">
+        <button class="btn primary" type="button" id="go">Lift barrier</button>
+        <button class="btn" type="button" id="pause">Pause</button>
+        <button class="btn" type="button" id="step">Step 1 s</button>
+        <button class="btn" type="button" id="skip">Skip to the end</button>
+      </div>
+      <p class="rmnote" id="rmNote" hidden>Reduced motion is on, so nothing moves by itself. Press Play, Step or Skip.</p>
+      <div class="read" id="readout"></div>
+      <p class="rmnote" id="status" aria-live="polite"></p>
+      <div id="countsBox" hidden></div>
+      <div>
+        <h2 style="font:700 16px var(--f-body);color:var(--muted);margin:0 0 4px">Your runs</h2>
+        <ol class="runs empty" id="runs"><li class="unfair">No runs yet.</li></ol>
+      </div>
+    </div>
+
+    <div class="lower">
+      <div class="panel" id="answerPanel"></div>
+      <div class="panel">
+        <h2>Feedback</h2>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+      </div>
+    </div>
+    </div>
+    <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Here each dot stands for lots of particles. The clock is model time: real gas particles move much faster, and real dye takes many minutes to spread. In the gas, the hot–cold speed difference is made bigger so you can see it. Water particles are not drawn. Air and water are perfectly still here. Only gases and liquids are shown.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" id="check">Check</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn" type="button" id="reset">Reset</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn primary" type="button" id="next">Next →</button>
+    </div>
+  </section>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* =====================================================================
+   FACTS — every number the tool uses. Change values here only.
+   ===================================================================== */
+const FACTS = {
+  gas: {
+    perGas: 40,          // particles of each gas
+    radius: 8,           // model units (never changes with temperature)
+    baseSpeed: 260,      // model units per model second at Room
+    evenMin: 0.4,        // "evenly mixed": at least 40% of each gas in each half...
+    holdFor: 0.3,        // ...for at least 0.3 model seconds (stops a lucky wobble counting)
+    temps: {
+      cold: { name: "Cold", c: 10, speed: 0.5 },
+      room: { name: "Room", c: 20, speed: 1 },
+      hot:  { name: "Hot",  c: 60, speed: 1.8 }
+    }
+  },
+  liquid: {
+    dye: 240,            // dye particles in each beaker
+    baseD: 190,          // random-step size (model units² per model second) in cold water
+    evenTop: 0.4,        // "spread out": at least 40% of the dye in the top half
+    beakers: {
+      cold: { name: "Cold water", c: 10, dfac: 1 },
+      hot:  { name: "Hot water",  c: 60, dfac: 2.2 }
+    }
+  },
+  maxModelTime: 240
+};
+
+/* ---------- maths helpers ---------- */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function gauss(rng){ let u=0; while(u===0) u=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rng()); }
+const r1 = x => Math.round(x*10)/10;
+const fmt = x => r1(x).toFixed(1);
+const W = 600, H = 320, DT = 1/120, BAR = 5;
+
+/* ---------- gas model: hard particles, random motion, elastic collisions ---------- */
+class GasSim {
+  constructor(temp, rng){ this.rng = rng || Math.random; this.reset(temp); }
+  reset(temp){
+    const F = FACTS.gas, r = F.radius, rng = this.rng;
+    this.temp = temp; this.barrier = true; this.lifted = false; this.t = 0;
+    this.mixedAt = null; this.hold = null; this.changed = false; this.trail = []; this.k = 0; this.p = [];
+    const v = F.baseSpeed * F.temps[temp].speed, half = W/2 - BAR - 2*r;
+    for (let g = 0; g < 2; g++) for (let i = 0; i < F.perGas; i++){
+      let x, y, ok, tries = 0;
+      do {
+        x = g === 0 ? r + rng()*half : W/2 + BAR + r + rng()*half;
+        y = r + rng()*(H - 2*r);
+        ok = this.p.every(q => (q.x-x)**2 + (q.y-y)**2 > (2*r+1)**2);
+      } while (!ok && ++tries < 600);
+      const a = rng()*2*Math.PI, s = v*(0.5 + rng());
+      this.p.push({ x, y, vx: s*Math.cos(a), vy: s*Math.sin(a), g });
+    }
+  }
+  setTemp(temp){
+    if (temp === this.temp) return;
+    const k = FACTS.gas.temps[temp].speed / FACTS.gas.temps[this.temp].speed;
+    for (const q of this.p){ q.vx *= k; q.vy *= k; }
+    if (this.lifted && this.mixedAt === null) this.changed = true;
+    this.temp = temp;
+  }
+  lift(){ this.barrier = false; this.lifted = true; this.t = 0; }
+  counts(){ const c = [[0,0],[0,0]]; for (const q of this.p) c[q.g][q.x < W/2 ? 0 : 1]++; return c; }
+  isMixed(){ const m = Math.ceil(FACTS.gas.evenMin*FACTS.gas.perGas); return this.counts().every(row => row[0] >= m && row[1] >= m); }
+  step(dt){
+    const r = FACTS.gas.radius, p = this.p, n = p.length, d2 = 4*r*r;
+    for (const q of p){
+      q.x += q.vx*dt; q.y += q.vy*dt;
+      if (q.x < r){ q.x = r; q.vx = Math.abs(q.vx); } else if (q.x > W-r){ q.x = W-r; q.vx = -Math.abs(q.vx); }
+      if (q.y < r){ q.y = r; q.vy = Math.abs(q.vy); } else if (q.y > H-r){ q.y = H-r; q.vy = -Math.abs(q.vy); }
+      if (this.barrier){
+        if (q.g === 0 && q.x > W/2-BAR-r){ q.x = W/2-BAR-r; q.vx = -Math.abs(q.vx); }
+        if (q.g === 1 && q.x < W/2+BAR+r){ q.x = W/2+BAR+r; q.vx = Math.abs(q.vx); }
+      }
+    }
+    for (let i = 0; i < n; i++){ const a = p[i];
+      for (let j = i+1; j < n; j++){ const b = p[j], dx = b.x-a.x, dy = b.y-a.y, dd = dx*dx+dy*dy;
+        if (dd < d2 && dd > 1e-9){
+          const d = Math.sqrt(dd), nx = dx/d, ny = dy/d, rel = (a.vx-b.vx)*nx + (a.vy-b.vy)*ny;
+          if (rel > 0){ a.vx -= rel*nx; a.vy -= rel*ny; b.vx += rel*nx; b.vy += rel*ny; }
+          const ov = (2*r-d)/2; a.x -= nx*ov; a.y -= ny*ov; b.x += nx*ov; b.y += ny*ov;
+        } } }
+    if (this.lifted){ this.t += dt;
+      if (this.mixedAt === null){ if (this.isMixed()){ if (this.hold === null) this.hold = this.t; if (this.t - this.hold >= FACTS.gas.holdFor) this.mixedAt = this.hold; } else this.hold = null; } }
+    if (++this.k % 3 === 0){ this.trail.push(p[0].x, p[0].y); if (this.trail.length > 640) this.trail.splice(0, 2); }
+  }
+}
+
+/* ---------- liquid model: dye particles take small random steps ---------- */
+class LiquidSim {
+  constructor(rng){ this.rng = rng || Math.random; this.reset(); }
+  reset(){
+    this.added = false; this.t = 0; this.k = 0;
+    this.b = ["cold","hot"].map((key, i) => ({ key, x0: i === 0 ? 45 : 335, w: 220, top: 92, bot: 302, dots: [], mixedAt: null, trail: [] }));
+  }
+  add(){
+    const rng = this.rng; this.added = true; this.t = 0;
+    for (const B of this.b){
+      B.dots = []; B.mixedAt = null; B.trail = [];
+      const cx = B.x0 + B.w/2;
+      for (let i = 0; i < FACTS.liquid.dye; i++) B.dots.push({ x: cx + gauss(rng)*6, y: Math.min(B.bot-3, B.bot - 9 + gauss(rng)*3) });
+    }
+  }
+  topCount(B){ const mid = (B.top + B.bot)/2; let c = 0; for (const d of B.dots) if (d.y < mid) c++; return c; }
+  step(dt){
+    if (!this.added) return;
+    this.t += dt; this.k++;
+    for (const B of this.b){
+      const s = Math.sqrt(2*FACTS.liquid.baseD*FACTS.liquid.beakers[B.key].dfac*dt);
+      const L = B.x0 + 3, R = B.x0 + B.w - 3, T = B.top + 3, Bo = B.bot - 3;
+      for (const d of B.dots){
+        d.x += gauss(this.rng)*s; d.y += gauss(this.rng)*s;
+        if (d.x < L) d.x = 2*L - d.x; if (d.x > R) d.x = 2*R - d.x;
+        if (d.y < T) d.y = 2*T - d.y; if (d.y > Bo) d.y = 2*Bo - d.y;
+        d.x = Math.min(R, Math.max(L, d.x)); d.y = Math.min(Bo, Math.max(T, d.y));
+      }
+      if (B.mixedAt === null && this.topCount(B) >= FACTS.liquid.evenTop*FACTS.liquid.dye) B.mixedAt = this.t;
+      if (this.k % 3 === 0){ B.trail.push(B.dots[0].x, B.dots[0].y); if (B.trail.length > 640) B.trail.splice(0, 2); }
+    }
+  }
+}
+
+/* ---------- headless runs (used for the load check, the race answers and Show answer) ---------- */
+function gasMixTime(temp, rng){ const s = new GasSim(temp, rng); s.lift(); while (s.mixedAt === null && s.t < FACTS.maxModelTime) s.step(DT); return s.mixedAt; }
+function liquidMixTimes(rng){ const s = new LiquidSim(rng); s.add(); while (s.b.some(B => B.mixedAt === null) && s.t < FACTS.maxModelTime) s.step(DT); return { cold: s.b[0].mixedAt, hot: s.b[1].mixedAt }; }
+const CAL = (function(){
+  const avg = a => a.some(x => x === null) ? null : a.reduce((s,x) => s+x, 0)/a.length;
+  const g = {}; for (const t of ["cold","room","hot"]) g[t] = avg([11,22,33].map(seed => gasMixTime(t, mulberry32(seed))));
+  const l = [5,6].map(seed => liquidMixTimes(mulberry32(seed)));
+  return { gas: g, liquid: { cold: avg(l.map(x => x.cold)), hot: avg(l.map(x => x.hot)) } };
+})();
+window.__diffusion = { FACTS, CAL, GasSim, LiquidSim, gasMixTime, liquidMixTimes };
+
+/* ---------- "Spot the mixed picture" pictures, generated then checked by counting ---------- */
+function makePic(kind, rng){
+  const n = 12, r = 9, pts = [], PW = 300, PH = 160;
+  const place = (g, xmin, xmax) => { let x, y, ok, tries = 0;
+    do { x = xmin + r + rng()*(xmax - xmin - 2*r); y = r + 2 + rng()*(PH - 2*r - 4); ok = pts.every(q => (q.x-x)**2 + (q.y-y)**2 > (2*r+2)**2); } while (!ok && ++tries < 800);
+    pts.push({ x, y, g }); };
+  for (let g = 0; g < 2; g++) for (let i = 0; i < n; i++){
+    if (kind === "start") place(g, g === 0 ? 0 : PW/2, g === 0 ? PW/2 : PW);
+    else if (kind === "mixed") place(g, i < n/2 ? 0 : PW/2, i < n/2 ? PW/2 : PW);
+    else place(g, PW/2, PW);
+  }
+  const c = [[0,0],[0,0]]; for (const q of pts) c[q.g][q.x < PW/2 ? 0 : 1]++;
+  const m = Math.ceil(FACTS.gas.evenMin*n), mixed = c.every(row => row[0] >= m && row[1] >= m);
+  let s = `<svg viewBox="0 0 ${PW} ${PH}" aria-hidden="true"><rect x="1" y="1" width="${PW-2}" height="${PH-2}" rx="6" style="fill:var(--boxbg);stroke:var(--wall)" stroke-width="2"/><line x1="${PW/2}" y1="4" x2="${PW/2}" y2="${PH-4}" style="stroke:var(--muted)" stroke-dasharray="5 5" stroke-width="1.5"/>`;
+  for (const q of pts) s += q.g === 0
+    ? `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${r}" style="fill:var(--gasA);stroke:var(--atom-edge)"/>`
+    : `<rect x="${(q.x-r*.85).toFixed(1)}" y="${(q.y-r*.85).toFixed(1)}" width="${(r*1.7).toFixed(1)}" height="${(r*1.7).toFixed(1)}" rx="2" style="fill:var(--gasB);stroke:var(--atom-edge)"/>`;
+  return { svg: s + "</svg>", mixed, kind };
+}
+const PICS = (function(){ const rng = mulberry32(7); return ["crowded","mixed","start"].map(k => makePic(k, rng)); })();
+
+/* ---------- run log ---------- */
+const runs = [];
+function latest(state, temp){ for (let i = runs.length-1; i >= 0; i--){ const x = runs[i]; if (x.state === state && x.temp === temp && x.fair) return x; } return null; }
+function gasLabel(t){ const T = FACTS.gas.temps[t]; return `${T.name} ${T.c} °C`; }
+function liqLabel(t){ const T = FACTS.liquid.beakers[t]; return `${T.name} ${T.c} °C`; }
+
+/* =====================================================================
+   TASKS
+   ===================================================================== */
+const half = FACTS.gas.perGas/2;
+const TASKS = {
+  warm: [
+    { id: "w1", mode: "gas", temp: "room", type: "choice",
+      text: "The barrier is about to lift. Predict: where will the particles be after a while?",
+      options: [
+        { k: "stay", t: "Gas A stays on the left. Gas B stays on the right.", fb: "Nothing holds them back once the barrier lifts. The particles move randomly, so they cross into the other half." },
+        { k: "swap", t: "Gas A and gas B swap sides.", fb: "Particles don't swap neatly. Each one moves randomly, so they end up mixed through the whole box." },
+        { k: "mix",  t: "Both gases spread through the whole box and mix evenly." },
+        { k: "crowd", t: "All the particles crowd into one half.", fb: "Random movement spreads particles out. They don't crowd into one side." }
+      ],
+      answer: () => "mix",
+      hints: ["Think about what the barrier was doing.", "With no barrier, can particles cross the middle? Do they move one way or randomly?", "Random movement in every direction ends with both gases all over the box."],
+      reason: "Particles move randomly, so both gases spread out until they are evenly mixed.",
+      after: "Now press Lift barrier and watch.",
+      reveal(){ if (!gas.lifted) doGo(); } },
+    { id: "w2", mode: "gas", temp: "room", type: "pics",
+      text: "Spot the mixed picture. Which box shows the gases a long time after the barrier lifts?",
+      hints: ["Look at both halves of each box. The dashed line is the middle.", "Count the circles (gas A) and squares (gas B) in each half.", "The right box has about the same number of each gas in both halves."],
+      reason: "A long time after, about half of each gas is in each half of the box.",
+      fbKind: { start: "That is how the gases start. Once the barrier lifts, particles move randomly and cross the middle.", crowded: "Particles don't crowd to one side. Random movement spreads them through the whole box." } },
+    { id: "w3", mode: "gas", temp: "room", type: "choice",
+      text: "Lift the barrier and wait until the gases are evenly mixed. What are the particles doing now?",
+      options: [
+        { k: "stop", t: "They have stopped moving.", fb: "Misconception: diffusion stops when evenly mixed. The particles never stop. They keep moving and colliding." },
+        { k: "back", t: "They are moving back to where they started.", fb: "Particles move randomly. They don't remember where they started, so the gases don't unmix." },
+        { k: "grow", t: "They are getting bigger to fill the box.", fb: "Misconception: particles don't get bigger. They spread out by moving." },
+        { k: "move", t: "They keep moving in random directions." }
+      ],
+      answer: () => "move",
+      hints: ["Lift the barrier and watch the box after it is mixed.", "Turn on Particle trails under Support and follow one particle.", "The particles never stop. They keep moving at random."],
+      reason: "Particles keep moving after mixing. There is just no overall change.",
+      reveal(){ if (!gas.lifted) doGo(); setSupport("trails", true); } },
+    { id: "w4", mode: "liquid", type: "choice",
+      text: "A drop of purple dye goes into still water. Predict: what will happen?",
+      options: [
+        { k: "gone", t: "The dye disappears.", fb: "Misconception: the dye does not disappear. All its particles are still there, spread out through the water." },
+        { k: "spread", t: "The dye slowly spreads out through all the water." },
+        { k: "blob", t: "The dye stays as a blob at the bottom.", fb: "Dye particles move randomly too. They spread out from the blob into the water." },
+        { k: "stir", t: "The dye can only spread if you stir it.", fb: "Misconception: stirring is not diffusion. Diffusion happens on its own, by random movement." }
+      ],
+      answer: () => "spread",
+      hints: ["Press Add dye and watch for a while.", "Look at the top of the water. Does any purple reach it?", "The dye particles spread through all the water. None are lost."],
+      reason: "The dye particles move randomly and spread out through the water. This is diffusion.",
+      after: "Press Add dye to watch it happen.",
+      reveal(){ if (!liq.added) doGo(); } },
+    { id: "w5", mode: "gas", temp: "room", type: "choice",
+      text: "Finish the sentence. In diffusion, particles spread from where there are …",
+      options: [
+        { k: "hc", t: "hot places to cold places.", fb: "Diffusion is about how many particles there are, not hot and cold." },
+        { k: "lr", t: "the left side to the right side.", fb: "The side doesn't matter. Gas A spreads right while gas B spreads left." },
+        { k: "mf", t: "more particles to fewer particles." },
+        { k: "fm", t: "fewer particles to more particles.", fb: "That is backwards. Watch the box: each gas spreads into the half with fewer of its particles." }
+      ],
+      answer: () => "mf",
+      hints: ["Watch gas A when the barrier lifts. Where are there lots of A at the start?", "Gas A starts all on the left. Which way does it spread?", "It spreads from where there are more A particles to where there are fewer."],
+      reason: "Overall, particles spread from where there are more to where there are fewer, by random movement." }
+  ],
+  core: [
+    { id: "c1", mode: "gas", temp: "cold", type: "choice",
+      text: "Race! Predict: will the gases mix faster when cold or hot? Then run Cold, then Hot, and press Check.",
+      options: [
+        { k: "cold", t: "Cold gas mixes faster.", fb: "Cold particles move more slowly, so they take longer to spread out." },
+        { k: "hot",  t: "Hot gas mixes faster." },
+        { k: "same", t: "Both take the same time.", fb: "Temperature changes how fast the particles move, so it changes how fast they mix." }
+      ],
+      answer: () => CAL.gas.hot < CAL.gas.cold ? "hot" : "cold",
+      needs(){ const miss = ["cold","hot"].filter(t => !latest("gas", t)).map(gasLabel); if (miss.length) return `Now run the race. Still to run: ${miss.join(" and ")}. Pick the temperature, then press Lift barrier.`; return raceOdd(); },
+      good(){ const c = latest("gas","cold"), h = latest("gas","hot"); return `Your runs: Cold ${fmt(c.time)} s, Hot ${fmt(h.time)} s.`; },
+      hints: ["Pick Cold, press Lift barrier and wait for Even mix. Then do the same with Hot.", "Compare the times in Your runs.", "Hot particles move faster, so they mix sooner."],
+      reason: "Hot particles move faster, so they spread out and mix sooner.",
+      reveal(){ ensureGasRuns(["cold","hot"]); } },
+    { id: "c2", mode: "liquid", type: "choice",
+      text: "Predict: in which beaker will the dye spread out faster? Then press Add dye and wait for both.",
+      options: [
+        { k: "same", t: "Both the same.", fb: "Temperature changes how fast the particles move, so it changes how fast the dye spreads." },
+        { k: "hot",  t: "Hot water." },
+        { k: "cold", t: "Cold water.", fb: "In cold water the particles move more slowly, so the dye spreads more slowly." }
+      ],
+      answer: () => CAL.liquid.hot < CAL.liquid.cold ? "hot" : "cold",
+      needs(){ if (!(liq.added && liq.b.every(B => B.mixedAt !== null))) return "Now test it. Press Add dye and wait until both beakers say Spread out."; return liq.b[1].mixedAt >= liq.b[0].mixedAt ? "This time the hot beaker was not faster. That can happen by chance, because the movement is random. Scientists repeat tests, so run it again: press Start again, then Add dye." : null; },
+      good(){ return `Cold water: ${fmt(liq.b[0].mixedAt)} s. Hot water: ${fmt(liq.b[1].mixedAt)} s.`; },
+      hints: ["Press Add dye and watch both beakers.", "Which beaker shows Spread out first?", "Particles in hot water move faster, so the dye spreads faster."],
+      reason: "Particles in hot water move faster, so the dye spreads out faster.",
+      reveal(){ finishLiquid(); } },
+    { id: "c3", mode: "gas", temp: "hot", type: "frame",
+      text: "Explain the race. Finish the sentence.",
+      frame: ["In hot gas, the particles move", "so they", "."],
+      gaps: [
+        [{ k: "", t: "choose…" }, { k: "slower", t: "slower" }, { k: "faster", t: "faster" }, { k: "bigger", t: "and get bigger" }],
+        [{ k: "", t: "choose…" }, { k: "want", t: "want to fill the empty space" }, { k: "pushed", t: "get pushed into the gaps" }, { k: "sooner", t: "spread out and mix sooner" }]
+      ],
+      answer: ["faster", "sooner"],
+      fb: {
+        slower: "Hot particles move faster, not slower. Watch the Hot box.",
+        bigger: "Misconception: particles don't get bigger when hot. They stay the same size and move faster.",
+        want: "Misconception: particles can't want anything. They spread because they move randomly.",
+        pushed: "Misconception: nothing pushes them. They spread out by their own random movement."
+      },
+      hints: ["Watch the box at Hot, then at Cold. What changes about the particles?", "Gap 1 is about speed. Gap 2 is about how fast they mix.", "Particles move faster, so they spread out and mix sooner."],
+      reason: "In hot gas, the particles move faster, so they spread out and mix sooner." },
+    { id: "c4", mode: "gas", temp: "cold", type: "choice",
+      text: "Both at 10 °C: which spreads out faster, a gas or dye in water? Predict, then run Cold gas and the liquid.",
+      options: [
+        { k: "only", t: "Only the gas. Diffusion can't happen in a liquid.", fb: "Misconception: diffusion doesn't only happen in gases. Dye spreads through water by diffusion too, just more slowly." },
+        { k: "same", t: "They take the same time.", fb: "Particles in a liquid are close together and bump into each other all the time, so the liquid is slower." },
+        { k: "liquid", t: "The dye in water.", fb: "Particles in a liquid are close together and bump into each other all the time, so they spread more slowly." },
+        { k: "gas", t: "The gas. Its particles are far apart, so they bump into each other less." }
+      ],
+      answer: () => CAL.gas.cold < CAL.liquid.cold ? "gas" : "liquid",
+      needs(){ const m = []; if (!latest("gas","cold")) m.push("the gas at Cold 10 °C"); if (!latest("liquid","cold")) m.push("the dye (switch Mode to Liquid)"); if (m.length) return `Now test it. Still to run: ${m.join(" and ")}.`; return latest("gas","cold").time >= latest("liquid","cold").time ? "This time your gas was not faster than the dye. That can happen by chance, because the movement is random. Scientists repeat tests, so run the Cold gas again." : null; },
+      good(){ const g = latest("gas","cold").time, l = latest("liquid","cold").time; return `Your runs: gas ${fmt(g)} s, dye in cold water ${fmt(l)} s.`; },
+      hints: ["Run the gas at Cold, then switch Mode to Liquid and press Add dye.", "Compare the gas time with the cold water time in Your runs.", "Gas particles are far apart and bump into each other less, so a gas diffuses faster than a liquid."],
+      reason: "Gas particles are far apart and bump into each other less, so gases diffuse faster than liquids.",
+      reveal(){ if (!latest("liquid","cold")) finishLiquid(); ensureGasRuns(["cold"]); } },
+    { id: "c5", mode: "liquid", type: "choice",
+      text: "Sam stirs the beaker and the dye spreads at once. Is stirring diffusion?",
+      options: [
+        { k: "yes", t: "Yes. The dye spreads, so it is diffusion.", fb: "Misconception: stirring is not diffusion. Stirring moves the whole liquid around. Diffusion is spreading by the particles' own random movement." },
+        { k: "no",  t: "No. Stirring moves the liquid around. Diffusion happens on its own." },
+        { k: "want", t: "Yes. Stirring makes the particles want to spread.", fb: "Misconception: particles can't want anything. Stirring moves the liquid, and that is not diffusion." }
+      ],
+      answer: () => "no",
+      hints: ["In the beakers, did anyone stir the water?", "Diffusion is spreading by random movement on its own. What does stirring add?", "Stirring moves the liquid around, so it is not diffusion."],
+      reason: "Diffusion is spreading by the particles' own random movement. Stirring moves the whole liquid, so it is not diffusion." }
+  ],
+  challenge: [
+    { id: "x1", mode: "gas", temp: "room", type: "choice",
+      text: "Someone sprays perfume in one corner of a still room. Soon you smell it across the room. Why?",
+      options: [
+        { k: "want", t: "The perfume particles want to fill the room.", fb: "Misconception: particles don't want or know anything. They spread because they move randomly." },
+        { k: "push", t: "The air pushes the perfume particles away.", fb: "Misconception: nothing pushes them. In still air, random movement alone spreads the smell." },
+        { k: "rand", t: "Perfume particles move randomly and collide with air particles. They spread from where there are more to where there are fewer." },
+        { k: "grow", t: "The perfume particles get bigger until they fill the room.", fb: "Misconception: particles don't get bigger. They spread out by moving." }
+      ],
+      answer: () => "rand",
+      hints: ["The box is like the room. Gas A could be the perfume.", "What moves the particles in the box? Nothing pushes them.", "Random movement and collisions spread them from more to fewer."],
+      reason: "Perfume particles move randomly and collide with air particles, so they spread from where there are more to where there are fewer." },
+    { id: "x2", mode: "gas", temp: "room", type: "choice",
+      text: `The gases mixed a while ago. The count of gas A goes from ${half+1} left and ${half-1} right to ${half-1} left and ${half+1} right. Why doesn't diffusion just stop?`,
+      options: [
+        { k: "stop", t: "Diffusion only happens at the start.", fb: "Misconception: diffusion stops when evenly mixed. The particles keep moving and crossing both ways. There's just no overall change." },
+        { k: "unmix", t: "The gases are starting to unmix.", fb: "Random movement doesn't sort particles. Small ups and downs are just chance." },
+        { k: "both", t: "Particles keep moving both ways. About as many cross each way, so there is no overall change." },
+        { k: "wrong", t: "The particles have stopped, so the counts must be wrong.", fb: "Misconception: particles never stop moving. That is why the counts keep changing a little." }
+      ],
+      answer: () => "both",
+      hints: ["Lift the barrier, wait for Even mix, then turn on Count in each half under Support.", "Watch the counts for a while. Do they stay exactly the same?", "Particles still cross both ways, so the counts wobble around half each. There is no overall change."],
+      reason: "Particles never stop moving. After mixing, about as many cross each way, so there is no net change.",
+      reveal(){ if (!gas.lifted) doGo(); setSupport("counts", true); } },
+    { id: "x3", mode: "gas", temp: "cold", type: "number",
+      text: "Compare the times. Run Cold and Hot. How many seconds faster did Hot mix? Work out Cold time − Hot time.",
+      unit: "s",
+      target(){ const c = latest("gas","cold"), h = latest("gas","hot"); return (c && h) ? r1(r1(c.time) - r1(h.time)) : null; },
+      needs(){ const miss = ["cold","hot"].filter(t => !latest("gas", t)).map(gasLabel); if (miss.length) return `Run it first. Still to run: ${miss.join(" and ")}.`; return raceOdd(); },
+      hints: ["Run the gas at Cold and at Hot. The times appear in Your runs.", "Take the Hot time away from the Cold time.", "Use the latest Cold and Hot times in Your runs: Cold − Hot."],
+      reason: "Cold time − Hot time. Hot particles move faster, so Hot is quicker.",
+      reveal(){ ensureGasRuns(["cold","hot"]); } },
+    { id: "x4", mode: "liquid", type: "choice",
+      text: "As the dye spreads, the purple looks paler. Why?",
+      options: [
+        { k: "less", t: "The same dye particles spread through more water, so there are fewer in each part." },
+        { k: "gone", t: "Some dye particles disappear.", fb: "Misconception: the dye doesn't disappear. Turn on Count in each half: the total stays the same." },
+        { k: "shrink", t: "The dye particles shrink.", fb: "Misconception: particles don't change size. They spread further apart." },
+        { k: "clear", t: "The water turns the dye particles colourless.", fb: "The dye particles don't change. They are just spread further apart, so each part has fewer." }
+      ],
+      answer: () => "less",
+      hints: ["Press Add dye and turn on Count in each half under Support.", "Look at the total number of dye particles. Does it change?", "Same number of particles, more water: fewer in each part, so it looks paler."],
+      reason: "No dye is lost. The same particles spread through more water, so each part has fewer and looks paler.",
+      reveal(){ finishLiquid(); setSupport("counts", true); } },
+    { id: "x5", mode: "gas", temp: "room", type: "choice",
+      text: "Turn on Particle trails under Support and follow one particle. What does its path look like?",
+      options: [
+        { k: "line", t: "A straight line to the emptiest side.", fb: "Particles don't aim for empty spaces. Each collision sends it off in a new direction." },
+        { k: "still", t: "It stays still once the gases mix.", fb: "Misconception: particles keep moving after mixing. Watch the trail keep growing." },
+        { k: "zig", t: "A zigzag. It changes direction each time it collides." },
+        { k: "circle", t: "It goes round in circles.", fb: "Look again. The path is not a loop. Each collision sends it off in a random direction." }
+      ],
+      answer: () => "zig",
+      hints: ["Turn on Particle trails, then lift the barrier.", "Watch what happens to the ringed particle when it hits another one.", "Straight bits, then a sharp turn at each collision: a random zigzag."],
+      reason: "Each particle moves in a straight line until it collides, then goes off in a new random direction: a zigzag.",
+      reveal(){ setSupport("trails", true); if (!gas.lifted) doGo(); } }
+  ]
+};
+
+/* ---------- load-time checks: show a visible error rather than a wrong question ---------- */
+function bankErrors(){
+  const e = [], G = FACTS.gas.temps, L = FACTS.liquid.beakers;
+  if (!(G.cold.speed < G.room.speed && G.room.speed < G.hot.speed)) e.push("Gas speeds must rise with temperature.");
+  if (!(L.cold.dfac < L.hot.dfac)) e.push("Dye steps must be bigger in hot water.");
+  if (FACTS.gas.perGas % 2) e.push("Particles per gas must be even.");
+  for (const k of ["cold","room","hot"]) if (CAL.gas[k] === null) e.push(`Gas at ${k} never mixed.`);
+  if (CAL.liquid.cold === null || CAL.liquid.hot === null) e.push("Dye never spread out.");
+  if (!(CAL.gas.hot < CAL.gas.room && CAL.gas.room < CAL.gas.cold)) e.push("Model check failed: hot gas should mix faster than cold.");
+  if (!(CAL.liquid.hot < CAL.liquid.cold)) e.push("Model check failed: dye should spread faster in hot water.");
+  if (!(CAL.gas.cold < CAL.liquid.cold)) e.push("Model check failed: gas should diffuse faster than liquid.");
+  if (PICS.filter(p => p.mixed).length !== 1) e.push("Picture task: exactly one picture must be mixed.");
+  for (const lv of Object.keys(TASKS)) for (const T of TASKS[lv]){
+    if (!T.hints || T.hints.length !== 3) e.push(`${T.id}: needs three hints.`);
+    if (T.type === "choice"){
+      let a; try { a = T.answer(); } catch (err) { e.push(`${T.id}: answer failed.`); continue; }
+      if (T.options.filter(o => o.k === a).length !== 1) e.push(`${T.id}: answer not one of the options.`);
+      for (const o of T.options) if (o.k !== a && !o.fb) e.push(`${T.id}: option "${o.k}" has no feedback.`);
+    }
+    if (T.type === "frame"){
+      T.answer.forEach((a, i) => { if (!T.gaps[i].some(o => o.k === a)) e.push(`${T.id}: gap ${i+1} answer missing.`); });
+      for (const g of T.gaps) for (const o of g) if (o.k && !T.answer.includes(o.k) && !T.fb[o.k]) e.push(`${T.id}: "${o.k}" has no feedback.`);
+    }
+  }
+  return e;
+}
+
+/* =====================================================================
+   APP
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const RM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const cv = $("cv"), ctx = cv.getContext("2d");
+let mode = "gas", gas = new GasSim("room"), liq = new LiquidSim(), running = !RM, acc = 0, dirty = true;
+let level = "warm", idx = 0, score = 0, streak = 0;
+const support = { counts: false, trails: false };
+const tstate = {};
+const st = T => tstate[T.id] || (tstate[T.id] = { solved: false, revealed: false, wrong: 0, hints: 0 });
+const cur = () => TASKS[level][idx];
+
+/* colours come from the CSS tokens so both themes work */
+let C = {};
+function readColours(){ const s = getComputedStyle(document.documentElement), g = n => s.getPropertyValue(n).trim();
+  C = { gasA: g("--gasA"), gasAi: g("--gasA-ink"), gasB: g("--gasB"), gasBi: g("--gasB-ink"), dye: g("--dye"), water: g("--water"), box: g("--boxbg"), wall: g("--wall"), bar: g("--barrier"), trail: g("--trail"), edge: g("--atom-edge"), ink: g("--ink"), muted: g("--muted"), font: g("--f-body") || "sans-serif" };
+  dirty = true; }
+$("themeBtn").addEventListener("click", () => setTimeout(readColours, 0));
+if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => setTimeout(readColours, 0));
+
+/* canvas sizing */
+let scale = 1;
+function resize(){ const w = Math.max(200, cv.clientWidth), h = w*H/W, dpr = window.devicePixelRatio || 1;
+  cv.style.height = h + "px"; cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  scale = w/W; ctx.setTransform(dpr*scale, 0, 0, dpr*scale, 0, 0); dirty = true; }
+new ResizeObserver(resize).observe(cv);
+
+function drawTrail(arr, extra){
+  if (arr.length < 4) return;
+  ctx.strokeStyle = C.trail; ctx.lineWidth = 2/Math.min(1, scale)*0.9; ctx.globalAlpha = .85; ctx.beginPath(); ctx.moveTo(arr[0], arr[1]);
+  for (let i = 2; i < arr.length; i += 2) ctx.lineTo(arr[i], arr[i+1]);
+  if (extra) ctx.lineTo(extra.x, extra.y);
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
+function ring(x, y, r){ ctx.strokeStyle = C.trail; ctx.lineWidth = 3/Math.min(1, scale); ctx.beginPath(); ctx.arc(x, y, r, 0, 2*Math.PI); ctx.stroke(); }
+
+function draw(){
+  dirty = false;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.box; ctx.fillRect(0, 0, W, H);
+  if (mode === "gas") drawGas(); else drawLiquid();
+}
+function drawGas(){
+  const r = FACTS.gas.radius, letters = r*scale >= 6.5;
+  ctx.strokeStyle = C.wall; ctx.lineWidth = 3; ctx.strokeRect(1.5, 1.5, W-3, H-3);
+  if (gas.barrier){ ctx.fillStyle = C.bar; ctx.fillRect(W/2-BAR, 0, 2*BAR, H); }
+  if (support.trails) drawTrail(gas.trail, gas.p[0]);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = `700 ${r*1.25}px ${C.font}`;
+  for (const q of gas.p){
+    ctx.lineWidth = 1.2; ctx.strokeStyle = C.edge;
+    if (q.g === 0){ ctx.fillStyle = C.gasA; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2*Math.PI); ctx.fill(); ctx.stroke(); }
+    else { const s = r*.88; ctx.fillStyle = C.gasB; ctx.beginPath(); ctx.rect(q.x-s, q.y-s, 2*s, 2*s); ctx.fill(); ctx.stroke(); }
+    if (letters){ ctx.fillStyle = q.g === 0 ? C.gasAi : C.gasBi; ctx.fillText(q.g === 0 ? "A" : "B", q.x, q.y + r*.06); }
+  }
+  if (support.trails) ring(gas.p[0].x, gas.p[0].y, r + 5);
+}
+function drawLiquid(){
+  const fs = Math.max(17, 13/scale);
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (const B of liq.b){
+    ctx.fillStyle = C.water; ctx.fillRect(B.x0, B.top, B.w, B.bot - B.top);
+    ctx.strokeStyle = C.wall; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.x0-2, 58); ctx.lineTo(B.x0-2, B.bot+2); ctx.lineTo(B.x0+B.w+2, B.bot+2); ctx.lineTo(B.x0+B.w+2, 58); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.font = `700 ${fs}px ${C.font}`; ctx.fillText(liqLabel(B.key), B.x0 + B.w/2, 36);
+    if (!liq.added){ ctx.fillStyle = C.muted; ctx.font = `400 ${fs*.85}px ${C.font}`; ctx.fillText("Water only", B.x0 + B.w/2, (B.top+B.bot)/2); }
+    ctx.fillStyle = C.dye; ctx.globalAlpha = .8;
+    for (const d of B.dots){ ctx.beginPath(); ctx.arc(d.x, d.y, 3.2, 0, 2*Math.PI); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    if (support.trails && liq.added){ drawTrail(B.trail, B.dots[0]); ring(B.dots[0].x, B.dots[0].y, 7); }
+  }
+}
+
+/* readouts */
+function readout(){
+  let s = "";
+  if (mode === "gas"){
+    s = gas.lifted ? `<span>Time since lift: <b>${fmt(gas.t)} s</b></span><span>Even mix: <b>${gas.mixedAt === null ? "not yet" : "at " + fmt(gas.mixedAt) + " s"}</b></span>` : `<span>Barrier down. Press <b>Lift barrier</b>.</span>`;
+    if (gas.changed) s += `<span>Temperature changed during the run: not a fair test.</span>`;
+  } else {
+    s = liq.added ? `<span>Time: <b>${fmt(liq.t)} s</b></span>` + liq.b.map(B => `<span>${FACTS.liquid.beakers[B.key].name}: <b>${B.mixedAt === null ? "not spread out yet" : "spread out at " + fmt(B.mixedAt) + " s"}</b></span>`).join("") : `<span>Press <b>Add dye</b> to drop dye into both beakers.</span>`;
+  }
+  $("readout").innerHTML = s;
+  const cb = $("countsBox");
+  cb.hidden = !support.counts;
+  if (support.counts){
+    if (mode === "gas"){ const c = gas.counts();
+      cb.innerHTML = `<table class="counts"><caption class="hidden-note" style="text-align:left">Count in each half (${FACTS.gas.perGas} of each gas)</caption><tr><th scope="col">Gas</th><th scope="col">Left half</th><th scope="col">Right half</th></tr><tr><th scope="row">● A</th><td>${c[0][0]}</td><td>${c[0][1]}</td></tr><tr><th scope="row">■ B</th><td>${c[1][0]}</td><td>${c[1][1]}</td></tr></table>`;
+    } else {
+      cb.innerHTML = `<table class="counts"><caption class="hidden-note" style="text-align:left">Dye particles in each half of the water</caption><tr><th scope="col">Beaker</th><th scope="col">Top half</th><th scope="col">Bottom half</th><th scope="col">Total</th></tr>` + liq.b.map(B => { const t = liq.added ? liq.topCount(B) : 0, n = B.dots.length; return `<tr><th scope="row">${FACTS.liquid.beakers[B.key].name}</th><td>${t}</td><td>${n - t}</td><td>${n}</td></tr>`; }).join("") + `</table>`;
+    }
+  }
+}
+function renderRuns(){
+  const ol = $("runs");
+  if (!runs.length){ ol.className = "runs empty"; ol.innerHTML = `<li class="unfair">No runs yet.</li>`; return; }
+  ol.className = "runs";
+  ol.innerHTML = runs.slice(-6).map(x => x.fair
+    ? `<li>${x.state === "gas" ? "Gas, " + gasLabel(x.temp) + ": evenly mixed at" : "Dye, " + liqLabel(x.temp) + ": spread out at"} <b>${fmt(x.time)} s</b></li>`
+    : `<li class="unfair">Gas, temperature changed during the run: not a fair test (${fmt(x.time)} s)</li>`).join("");
+  ol.start = Math.max(1, runs.length - 5);
+}
+let gasLogged = false, liqLogged = [false, false];
+function logEvents(){
+  if (gas.mixedAt !== null && !gasLogged){ gasLogged = true; runs.push({ state: "gas", temp: gas.temp, time: gas.mixedAt, fair: !gas.changed }); renderRuns(); $("status").textContent = `Evenly mixed at ${fmt(gas.mixedAt)} s. The particles keep moving.`; }
+  liq.b.forEach((B, i) => { if (B.mixedAt !== null && !liqLogged[i]){ liqLogged[i] = true; runs.push({ state: "liquid", temp: B.key, time: B.mixedAt, fair: true }); renderRuns(); $("status").textContent = `${FACTS.liquid.beakers[B.key].name}: dye spread out at ${fmt(B.mixedAt)} s.`; } });
+}
+
+/* controls */
+function stepActive(seconds){ const n = Math.round(seconds/DT); for (let i = 0; i < n; i++){ if (mode === "gas") gas.step(DT); else liq.step(DT); } logEvents(); dirty = true; }
+function resetGas(){ gas.reset(gas.temp); gasLogged = false; dirty = true; }
+function resetLiquid(){ liq.reset(); liqLogged = [false, false]; dirty = true; }
+function doGo(){
+  if (mode === "gas"){ if (!gas.lifted){ gas.lift(); $("status").textContent = "Barrier lifted."; } else resetGas(); }
+  else { if (!liq.added){ liq.add(); liqLogged = [false, false]; $("status").textContent = "Dye added."; } else resetLiquid(); }
+  paintControls();
+}
+function finishLiquid(){ const was = mode; mode = "liquid"; if (!liq.added){ liq.add(); liqLogged = [false, false]; } while (liq.b.some(B => B.mixedAt === null) && liq.t < FACTS.maxModelTime) liq.step(DT); mode = was; logEvents(); dirty = true; paintControls(); }
+function addGasRun(t){ const time = gasMixTime(t); if (time !== null) runs.push({ state: "gas", temp: t, time, fair: true }); }
+function ensureGasRuns(temps){ for (const t of temps) if (!latest("gas", t)) addGasRun(t);
+  /* Show answer must leave runs that agree with the answer: repeat (as a scientist would) if chance reversed them */
+  for (let i = 0; i < 10; i++){ const c = latest("gas","cold"), h = latest("gas","hot"), l = latest("liquid","cold");
+    if (temps.includes("hot") && c && h && h.time >= c.time){ addGasRun("cold"); addGasRun("hot"); }
+    else if (!temps.includes("hot") && c && l && c.time >= l.time) addGasRun("cold"); else break; }
+  renderRuns(); }
+function raceOdd(){ const c = latest("gas","cold"), h = latest("gas","hot"); return h.time >= c.time ? "This time your Hot run was not faster. That can happen by chance, because the movement is random. Scientists repeat tests, so run Cold and Hot again." : null; }
+function paintControls(){
+  $("go").textContent = mode === "gas" ? (gas.lifted ? "Put barrier back" : "Lift barrier") : (liq.added ? "Start again" : "Add dye");
+  $("pause").textContent = running ? "Pause" : "Play";
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode ? "true" : "false"));
+  document.querySelectorAll("[data-temp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.temp === gas.temp ? "true" : "false"));
+  $("tempSeg").hidden = mode !== "gas";
+  $("legend").innerHTML = mode === "gas"
+    ? `<span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" style="fill:var(--gasA);stroke:var(--atom-edge)"/></svg>Circle A = gas A</span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" style="fill:var(--gasB);stroke:var(--atom-edge)"/></svg>Square B = gas B</span><span>Grey bar = barrier</span>`
+    : `<span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5" style="fill:var(--dye)"/></svg>Purple dot = dye particles (potassium permanganate)</span><span>Water particles fill the gaps but are not drawn</span>`;
+  cv.setAttribute("aria-label", mode === "gas" ? `Box with gas A on the left and gas B on the right. ${gas.lifted ? "The barrier is lifted." : "The barrier is down."} Temperature ${gasLabel(gas.temp)}.` : "Two beakers of water, cold 10 °C and hot 60 °C, with purple dye at the bottom.");
+  dirty = true; readout();
+}
+function setMode(m){ mode = m; paintControls(); }
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+document.querySelectorAll("[data-temp]").forEach(b => b.addEventListener("click", () => { gas.setTemp(b.dataset.temp); paintControls(); }));
+$("go").addEventListener("click", doGo);
+$("pause").addEventListener("click", () => { running = !running; paintControls(); });
+$("step").addEventListener("click", () => stepActive(1));
+$("skip").addEventListener("click", () => {
+  if (mode === "gas"){ if (!gas.lifted) gas.lift(); let n = 0; while (gas.mixedAt === null && gas.t < FACTS.maxModelTime){ gas.step(DT); n++; } stepActive(1); }
+  else finishLiquid();
+  paintControls();
+});
+if (RM) $("rmNote").hidden = false;
+
+/* support switches (always off on load, never stored) */
+function setSupport(key, on){ support[key] = on; const b = document.querySelector(`[data-support="${key}"]`); b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector(".state").textContent = on ? "on" : "off"; dirty = true; readout(); }
+document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => setSupport(b.dataset.support, !support[b.dataset.support])));
+
+/* animation: requestAnimationFrame, paused when the tab is hidden */
+let last = null, lastRead = 0;
+const LIQ_RATE = 2; /* liquid clock: 2 model seconds per real second, so cold dye takes about 20 s to watch */
+function frame(ts){
+  requestAnimationFrame(frame);
+  if (document.hidden){ last = null; return; }
+  if (last === null) last = ts;
+  const dt = Math.min(0.05, (ts - last)/1000); last = ts;
+  if (running){ const rate = mode === "liquid" ? LIQ_RATE : 1, cap = 8*rate; acc += dt*rate; let n = 0; while (acc >= DT && n < cap){ if (mode === "gas") gas.step(DT); else liq.step(DT); acc -= DT; n++; } if (n === cap) acc = 0; logEvents(); dirty = true; }
+  if (dirty) draw();
+  if (ts - lastRead > 150){ lastRead = ts; readout(); }
+}
+
+/* ---------- task UI ---------- */
+const fbBox = $("feedback");
+function say(kind, html){ fbBox.innerHTML = `<div class="msg ${kind}">${html}</div>`; }
+function renderTask(){
+  const T = cur(), s = st(T), n = TASKS[level].length;
+  $("qno").textContent = `${{ warm: "Warm-up", core: "Core", challenge: "Challenge" }[level]} · Task ${idx+1} of ${n}` + (s.solved ? " · solved" : s.revealed ? " · answer shown" : "");
+  $("taskText").textContent = T.text;
+  const P = $("answerPanel");
+  if (T.type === "choice"){
+    P.innerHTML = `<fieldset class="opts"><legend>Your answer</legend>` + T.options.map(o => `<label class="opt"><input type="radio" name="ans" value="${o.k}"><span>${o.t}</span></label>`).join("") + `</fieldset>`;
+  } else if (T.type === "pics"){
+    P.innerHTML = `<fieldset class="opts"><legend>Your answer</legend><div class="pics">` + PICS.map((p, i) => `<label class="opt pic"><span class="pl"><input type="radio" name="ans" value="${i}">Box ${i+1}</span>${p.svg}</label>`).join("") + `</div><p class="hidden-note">● circle = gas A, ■ square = gas B. The dashed line is the middle.</p></fieldset>`;
+  } else if (T.type === "frame"){
+    const sel = (g, i) => `<select id="gap${i}" aria-label="Gap ${i+1}">` + g.map(o => `<option value="${o.k}">${o.t}</option>`).join("") + `</select>`;
+    P.innerHTML = `<h2>Your answer</h2><p class="frame">${T.frame[0]} ${sel(T.gaps[0], 0)} ${T.frame[1]} ${sel(T.gaps[1], 1)}${T.frame[2]}</p>`;
+  } else if (T.type === "number"){
+    P.innerHTML = `<h2>Your answer</h2><div class="numrow"><label for="num">Cold time − Hot time =</label><input class="numin" id="num" type="number" step="0.1" inputmode="decimal"> <span>${T.unit}</span></div><p class="hidden-note">Use the latest Cold and Hot times in Your runs.</p>`;
+  }
+  fbBox.innerHTML = `<p class="hidden-note">Answer, then press Check.</p>`;
+  paintHint();
+}
+function paintHint(){ const s = st(cur()), b = $("hint"); b.textContent = s.hints >= 3 ? "No more hints – try Show answer" : `Hint (${s.hints+1}/3)`; }
+function loadTask(){
+  const T = cur();
+  $("status").textContent = "";
+  if (T.temp) gas.setTemp(T.temp);
+  resetGas(); resetLiquid();
+  setMode(T.mode); renderTask(); paintControls();
+}
+function readAnswer(T){
+  if (T.type === "choice" || T.type === "pics"){ const r = document.querySelector('input[name="ans"]:checked'); return r ? r.value : null; }
+  if (T.type === "frame"){ const a = [$("gap0").value, $("gap1").value]; return a.every(Boolean) ? a : null; }
+  if (T.type === "number"){ const v = $("num").value.trim(); return v === "" || isNaN(+v) ? null : +v; }
+}
+function mark(T, a){
+  if (T.type === "choice"){ const ok = a === T.answer(); return ok ? { ok, msg: T.reason + (T.good ? " " + T.good() : "") + (T.after ? " " + T.after : "") } : { ok, msg: T.options.find(o => o.k === a).fb }; }
+  if (T.type === "pics"){ const p = PICS[+a]; return p.mixed ? { ok: true, msg: T.reason } : { ok: false, msg: T.fbKind[p.kind] }; }
+  if (T.type === "frame"){ const wrong = a.filter((k, i) => k !== T.answer[i]); return wrong.length ? { ok: false, msg: wrong.map(k => T.fb[k]).join("<br>") } : { ok: true, msg: T.reason }; }
+  if (T.type === "number"){
+    const t = T.target(), c = latest("gas","cold"), h = latest("gas","hot");
+    if (Math.abs(a - t) <= 0.15) return { ok: true, msg: `${fmt(c.time)} − ${fmt(h.time)} = ${fmt(t)} s. Hot particles move faster, so Hot mixes sooner.` };
+    if (Math.abs(a + t) <= 0.15) return { ok: false, msg: "You took Cold away from Hot. Do Cold time − Hot time." };
+    if (Math.abs(a - r1(c.time)) <= 0.05 || Math.abs(a - r1(h.time)) <= 0.05) return { ok: false, msg: "That is one of the times. Take the Hot time away from the Cold time." };
+    return { ok: false, msg: `Check your subtraction: Cold ${fmt(c.time)} s − Hot ${fmt(h.time)} s.` };
+  }
+}
+$("check").addEventListener("click", () => {
+  const T = cur(), s = st(T);
+  if (s.solved || s.revealed){ say("tip", "You have finished this task. Press <b>Next →</b>."); return; }
+  const a = readAnswer(T);
+  if (a === null){ say("tip", T.type === "number" ? "Type a number first." : T.type === "frame" ? "Choose a word for both gaps first." : "Pick an answer first."); return; }
+  const need = T.needs ? T.needs() : null;
+  if (need){ say("tip", need); return; }
+  const r = mark(T, a);
+  if (r.ok){ s.solved = true; score++; if (s.wrong === 0 && s.hints === 0) streak++; say("good", `<b>Correct.</b> ${r.msg}`); }
+  else { s.wrong++; streak = 0; say("bad", `<b>Not yet.</b> ${r.msg}`); }
+  $("sScore").textContent = score; $("sStreak").textContent = streak;
+  $("qno").textContent = $("qno").textContent.replace(/ · (solved|answer shown)$/, "") + (s.solved ? " · solved" : "");
+});
+$("hint").addEventListener("click", () => {
+  const T = cur(), s = st(T);
+  if (s.hints < 3) s.hints++;
+  say("tip", T.hints.slice(0, s.hints).map((h, i) => `<b>Hint ${i+1}:</b> ${h}`).join("<br>"));
+  paintHint();
+});
+$("reveal").addEventListener("click", () => {
+  const T = cur(), s = st(T);
+  if (!s.solved) s.revealed = true;
+  if (T.reveal) T.reveal();
+  let ans = "";
+  if (T.type === "choice"){ const k = T.answer(); document.querySelectorAll('input[name="ans"]').forEach(r => r.checked = r.value === k); ans = T.options.find(o => o.k === k).t; }
+  if (T.type === "pics"){ const i = PICS.findIndex(p => p.mixed); document.querySelectorAll('input[name="ans"]').forEach(r => r.checked = +r.value === i); ans = `Box ${i+1}.`; }
+  if (T.type === "frame"){ $("gap0").value = T.answer[0]; $("gap1").value = T.answer[1]; ans = T.reason; }
+  if (T.type === "number"){ const t = T.target(); $("num").value = fmt(t); const c = latest("gas","cold"), h = latest("gas","hot"); ans = `${fmt(c.time)} − ${fmt(h.time)} = ${fmt(t)} s.`; }
+  say("tip", `<b>Answer:</b> ${ans}${T.type === "frame" ? "" : " " + T.reason}`);
+  paintControls();
+  if (!s.solved) $("qno").textContent = $("qno").textContent.replace(/ · (solved|answer shown)$/, "") + " · answer shown";
+});
+$("reset").addEventListener("click", () => { loadTask(); });
+$("next").addEventListener("click", () => { idx = (idx + 1) % TASKS[level].length; loadTask(); });
+document.querySelectorAll("[data-level]").forEach(b => b.addEventListener("click", () => {
+  level = b.dataset.level; idx = 0;
+  document.querySelectorAll("[data-level]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  loadTask();
+}));
+document.addEventListener("visibilitychange", () => { last = null; });
+
+/* ---------- start ---------- */
+readColours(); resize();
+const errs = bankErrors();
+if (errs.length){ const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Error: this tool found a problem with its questions, so they are hidden.</b><br>" + errs.join("<br>"); $("answerPanel").hidden = true; }
+loadTask();
+requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>

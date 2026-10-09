@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gas Pressure</title>
+<!--
+  SCIENCE SPEC — Gas Pressure (KS3)
+  Models: a sealed box of gas particles. Pupils can pump particles in (or let some out through a valve),
+    heat or cool the gas, and squash the box with a piston (or let it out). A gauge shows the pressure.
+    Gas pressure is caused by particles colliding with the walls of the container.
+  Source: KS3 NC + AQA KS3 3.5.1 Particle model ("Gas pressure: caused by collisions of particles with the walls
+    of a container"; Apply: "Explain unfamiliar observations about gas pressure in terms of particles");
+    KS3 NC Chemistry "the particulate nature of matter" / Physics "pressure in fluids" (AQA 3.1.4 atmospheric pressure
+    used only in the Challenge plane-bottle case); to be matched to the new department lessons when they are written.
+    SoW lessons: Year 7 Term 2 Particles L26 Gas pressure; reused in Year 8 Term 5 L68 Pressure in gases.
+  How the model works:
+    - Particles move in straight lines, bounce off the walls and off each other (elastic, equal mass).
+    - Average speed is set by temperature: speed ∝ √(absolute temperature). Heating rescales every speed;
+      particle size never changes. Squashing the box does not change the temperature (held constant).
+    - Gauge reading is computed from P ∝ N × T(K) ÷ V (no equation is shown to pupils).
+      In the simulation each wall hit gives a push ∝ speed and hits per second ∝ N × speed ÷ space, so the
+      collisions tell the same story as the gauge (more particles, hotter, or less space → more pressure).
+    - Every answer (up / down / same, the explain-frame words, the Challenge outcome) is computed from the
+      pressure rule in code, and the whole task bank is checked on load; a failed check shows a visible error.
+  Simplifications (shown on screen as "Model limits"): only up to 100 particles (a real box holds billions of billions);
+    real particles move much faster (air particles: about 500 m/s at room temperature) and are far too small to see;
+    flat 2D box; gravity left out; temperature held steady while squashing; air treated as one kind of particle;
+    the gauge scale is made up so the starting box reads 100 kPa (about normal air pressure).
+  Misconceptions designed out (BEST / common KS3), named in feedback when chosen:
+    - Pressure is caused by particles hitting each other (not the walls) — only wall hits flash; feedback corrects.
+    - Particles expand / get bigger when heated (or shrink when cooled) — particle radius is a constant.
+    - Hot air rises so the pressure moves to the top — gas pushes equally on every wall (gravity left out).
+    - A gas has no weight / mass — football case: pumping in air makes the ball a tiny bit heavier.
+    - Cooling adds "cold" — cooling takes energy away; particles slow down.
+    - Also: particles "melt"; gases "suck" (bottle case: the walls are pushed in by the air outside).
+  Support starts OFF on every visit: Show wall hits; Gauge numbers.
+  Idea credit: Idea from Gases Intro, PhET Interactive Simulations, University of Colorado Boulder (https://phet.colorado.edu).
+  Facts and values used:
+    - Gas pressure is caused by particles hitting the walls of the container.
+    - Hotter gas → particles move faster (more energy); particles stay the same size.
+    - Starting box: 50 particles, 20 °C, box size 100 % → gauge 100 kPa (about normal air pressure at sea level, ~100 kPa).
+    - Gauge scale 0–700 kPa. 1 kPa = 1000 N/m² (not shown on page).
+    - Controls: particles 10–100 in steps of 10; temperature −50 °C to 200 °C (Heat/Cool buttons change it by 20 °C);
+      box size 50 %–100 % (Squash / Let out buttons change it by 10 %).
+    - Absolute temperature used in code = °C + 273.
+    - "Same" means the pressure changed by less than 2 %.
+    - Air particles move at about 500 m/s at room temperature.
+    - A home freezer is about −18 °C. Cool morning used: 10 °C. Hot sunny day used: 35 °C.
+    - Air lower down (near the ground) has more particles in each litre than air high up, so air pressure is higher
+      at the ground than at a plane's cruising height (plane cabins are kept at lower pressure than the ground, about
+      75–80 kPa; the tool models this as 40 → 50 particles, i.e. 80 → 100 kPa). This Challenge case (last in the level)
+      uses atmospheric pressure (AQA 3.1.4), which may be beyond Y7 L26 — remove it from BANK.challenge if not taught yet.
+    - Pumping air into a ball adds particles, and particles have mass, so the ball gets a tiny bit heavier.
+  Checks: load-time bank check (directions, frame answers, exactly one correct option per question, Challenge outcome
+    matches computed pressure change, values inside control ranges, gauge never off-scale).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--hit:#C2410C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--hit:#8FD3FF}}
+:root[data-theme="dark"]{--hit:#8FD3FF}
+.task{margin:0;font-weight:700;font-size:clamp(19px,2.2vw,23px);line-height:1.4}
+.sim{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:16px;align-items:stretch}
+@media (max-width:700px){.sim{grid-template-columns:minmax(0,1fr)}}
+.ctrls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.ctrls{grid-template-columns:minmax(0,1fr)}}
+.simbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.simbox canvas{display:block;width:100%;touch-action:none;cursor:default}
+.simbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-top:8px}
+.simbar .note{font-size:15px;color:var(--muted)}
+.gauge{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.gauge .gname{margin:2px 0 0;font-weight:700;color:var(--muted)}
+.gauge .gname span{color:var(--accent);font-size:21px;margin-left:4px}
+.gauge svg{width:100%;max-width:240px;height:auto;display:block;margin:0 auto}
+.gauge .key{font-size:14px;color:var(--muted);margin:2px 0 0}
+.ctrl{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:4px}
+.ctrl .lab{font-weight:700;font-size:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ctrl .lab output{font-variant-numeric:tabular-nums;color:var(--accent)}
+.ctrl .row{display:flex;flex-wrap:wrap;gap:8px}
+.sbtn{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:1 1 auto}
+.sbtn:hover:not(:disabled){border-color:var(--accent)}
+.sbtn:disabled,input[type=range]:disabled{opacity:.45;cursor:not-allowed}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:var(--accent);background:transparent;cursor:pointer}
+.lock{font-size:15px;color:var(--muted);margin:0}
+.ask{display:grid;gap:10px}
+.ask p{margin:0}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left}
+.choice[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.choice[aria-pressed="true"]::before{content:"✓ ";color:var(--accent)}
+.choice:hover{border-color:var(--accent)}
+.frame{display:grid;gap:8px}
+.frame label{display:grid;gap:4px;font-weight:700;font-size:16px}
+select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.step{font-size:15px;font-weight:700;color:var(--muted);margin:0}
+@media (max-width:700px){.gauge svg{max-width:200px}}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Gas Pressure<small>Pump in particles, heat them or squash them. Watch the pressure.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="bar">
+  <div class="levels" role="group" aria-label="Level">
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+  </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="hits" aria-pressed="false"><span class="dot"></span>Show wall hits <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="nums" aria-pressed="false"><span class="dot"></span>Gauge numbers <span class="state">off</span></button>
+  </div>
+
+  <section class="card" aria-label="Gas Pressure">
+    <div id="bankErr" class="bankerr" role="alert" hidden></div>
+    <div class="meta">
+      <span class="qno" id="qno">Task 1 of 3</span>
+    </div>
+    <p class="task" id="taskText"></p>
+    <div class="sim">
+      <div class="simbox">
+        <canvas id="box" role="img" aria-label="A sealed box of gas particles"></canvas>
+        <div class="simbar">
+          <span class="note" id="simNote">Drag the piston, or use the controls.</span>
+          <span class="row" style="display:flex;gap:8px">
+            <button class="sbtn" type="button" id="playBtn">Pause</button>
+            <button class="sbtn" type="button" id="stepBtn" hidden>Step</button>
+          </span>
+        </div>
+      </div>
+      <div class="gauge">
+        <svg id="gauge" viewBox="0 0 240 216" role="img" aria-label="Pressure gauge"></svg>
+        <p class="gname">Pressure <span id="gRead"></span></p>
+        <p class="key">Dashed line: pressure at the start</p>
+      </div>
+    </div>
+    <div class="ctrls">
+        <div class="ctrl" id="ctrlN">
+          <div class="lab"><span>Particles</span><output id="outN">50</output></div>
+          <div class="row">
+            <button class="sbtn" type="button" id="pumpBtn">Pump in 10</button>
+            <button class="sbtn" type="button" id="ventBtn">Let 10 out</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="lab"><label for="tempR">Temperature</label><output id="outT">20 °C</output></div>
+          <input type="range" id="tempR" min="-50" max="200" step="1" value="20">
+          <div class="row">
+            <button class="sbtn" type="button" id="coolBtn">Cool</button>
+            <button class="sbtn" type="button" id="heatBtn">Heat</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="lab"><label for="volR">Box size</label><output id="outV">100 %</output></div>
+          <input type="range" id="volR" min="50" max="100" step="1" value="100">
+          <div class="row">
+            <button class="sbtn" type="button" id="squashBtn">Squash</button>
+            <button class="sbtn" type="button" id="letBtn">Let out</button>
+          </div>
+        </div>
+    </div>
+    <div class="lower">
+      <div class="panel ask" id="ask" aria-label="Your answer"></div>
+      <div class="panel">
+        <h2>Feedback</h2>
+        <div class="feedback" id="fb" aria-live="polite"><p class="hidden-note">Press Check when you are ready.</p></div>
+      </div>
+    </div>
+    <p class="limits"><b>Model limits:</b> A real box holds billions of billions of particles, far too small to see. Real air particles move much faster, about 500 m/s. The box is flat, gravity is left out, and the temperature stays the same while you squash it. The gauge scale is made up so the starting box reads 100 kPa, about normal air pressure.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" id="check">Check</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn" type="button" id="reset">Reset</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn primary" type="button" id="next">Next →</button>
+    </div>
+  </section>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* =====================================================================
+   FACTS — every number the tool uses or states. Change them here.
+   ===================================================================== */
+const FACTS = {
+  refPressure: 100,     // kPa shown for the starting box (about normal air pressure at sea level)
+  refN: 50,             // particles in the starting box
+  refTempC: 20,         // °C of the starting box
+  kelvin: 273,          // absolute temperature = °C + 273 (used in code only)
+  nMin: 10, nMax: 100, nStep: 10,
+  tMin: -50, tMax: 200, tStep: 20,
+  vMin: 50, vMax: 100, vStep: 10,   // box size, % of full size
+  gaugeMax: 700,        // kPa, top of the dial
+  sameTol: 0.02,        // a change under 2 % counts as "stays the same"
+  airSpeed: 500,        // m/s, air particles at room temperature (Model limits note)
+  freezerC: -18,        // °C, a home freezer
+  coolMorningC: 10,     // °C, a cool morning (bike tyre case)
+  hotDayC: 35,          // °C, a hot sunny day
+  cabinN: 40, groundN: 50  // plane case: air in the cabin high up has about 80 % of the particles per litre of air at the ground
+};
+const NAMES = { N: "the number of particles", T: "the temperature", V: "the box size" };
+
+/* Pressure rule (never shown to pupils): P ∝ N × T(absolute) ÷ V */
+function pressure(s) {
+  return FACTS.refPressure * (s.N / FACTS.refN) *
+    ((s.T + FACTS.kelvin) / (FACTS.refTempC + FACTS.kelvin)) * (100 / s.V);
+}
+function dirOf(a, b) {
+  const pa = pressure(a), pb = pressure(b), r = (pb - pa) / pa;
+  return Math.abs(r) < FACTS.sameTol ? "same" : (r > 0 ? "up" : "down");
+}
+const DIRWORD = { up: "went up", down: "went down", same: "stayed the same" };
+
+/* The particle reason for a change, computed from which thing changed and which way. */
+function reasonFor(vary, sign) {
+  if (vary === "N") return sign > 0
+    ? "More particles means more hits on the walls each second, so the pressure goes up."
+    : "Fewer particles means fewer hits on the walls each second, so the pressure goes down.";
+  if (vary === "T") return sign > 0
+    ? "Heating gives the particles more energy. They move faster, so they hit the walls harder and more often."
+    : "Cooling takes energy away. The particles move slower, so they hit the walls less hard and less often.";
+  return sign < 0
+    ? "Squashing gives the particles less room. They reach the walls more often, so the pressure goes up."
+    : "A bigger box gives the particles more room. They reach the walls less often, so the pressure goes down.";
+}
+
+/* Explain-frame word banks (Core). Answers are computed in frameAnswer(). */
+const F1 = [
+  { id: "faster", t: "move faster" },
+  { id: "slower", t: "move slower" },
+  { id: "lessRoom", t: "have less room to move" },
+  { id: "moreRoom", t: "have more room to move" },
+  { id: "bigger", t: "get bigger", mis: "Particles never get bigger when heated. They stay the same size and move faster." },
+  { id: "smaller", t: "get smaller", mis: "Particles never shrink. When cooled or squashed they stay the same size." },
+  { id: "cold", t: "have “cold” added to them", mis: "Cooling does not add “cold”. It takes energy away, so the particles slow down." }
+];
+const F2 = [
+  { id: "harderMore", t: "the walls harder and more often" },
+  { id: "softerLess", t: "the walls less hard and less often" },
+  { id: "more", t: "the walls more often (each hit just as hard)" },
+  { id: "less", t: "the walls less often (each hit just as hard)" },
+  { id: "eachOther", t: "each other more often", mis: "Pressure is caused by particles hitting the walls, not by particles hitting each other." },
+  { id: "asBefore", t: "the walls just as before" }
+];
+const F3 = [
+  { id: "up", t: "goes up" },
+  { id: "down", t: "goes down" },
+  { id: "same", t: "stays the same" },
+  { id: "top", t: "moves to the top of the box", mis: "Pressure does not move to the top. The gas pushes equally on every wall." }
+];
+function frameAnswer(t) {
+  const sign = needSign(t);
+  if (t.vary === "T") return sign > 0 ? ["faster", "harderMore", "up"] : ["slower", "softerLess", "down"];
+  if (t.vary === "V") return sign < 0 ? ["lessRoom", "more", "up"] : ["moreRoom", "less", "down"];
+  return null;
+}
+function needSign(t) { return t.need.same ? 0 : ("min" in t.need ? 1 : -1); }
+
+/* =====================================================================
+   TASK BANK
+   kind "predict": pick up / down / same, then do it.  (frame:true adds the explain frame)
+   kind "question": do it, then pick the answer.
+   kind "case": real-life case (Challenge); pick what happens and the particle reason.
+   ===================================================================== */
+const BANK = {
+  warm: [
+    { kind: "predict", start: { N: 30, T: 20, V: 100 }, vary: "N", need: { min: 20 },
+      text: "Predict: you pump 20 more particles into the box. What will the pressure do?",
+      doText: "Now press Pump in 10 twice. Watch the gauge.",
+      hints: ["Think about what hits the walls of the box.",
+              "More particles inside means more of them reach the walls each second.",
+              "More hits each second → higher pressure. Pick “Goes up”, then pump in 20."] },
+    { kind: "predict", start: { N: 80, T: 20, V: 100 }, vary: "N", need: { max: -30 },
+      text: "Predict: you let 30 particles out through the valve. What will the pressure do?",
+      doText: "Now press Let 10 out three times. Watch the gauge.",
+      hints: ["Think about how many particles are left to hit the walls.",
+              "Fewer particles means fewer hits on the walls each second.",
+              "Fewer hits → lower pressure. Pick “Goes down”, then let 30 out."] },
+    { kind: "predict", start: { N: 50, T: 20, V: 100 }, vary: "N", need: { same: true, pumped: 10, vented: 10 },
+      text: "Predict: you pump in 10 particles, then let 10 out. What will the pressure do in the end?",
+      doText: "Now pump in 10, then let 10 out. Compare the needle with the dashed line.",
+      hints: ["Count the particles at the start and at the end.",
+              "Same number of particles, same temperature, same box size.",
+              "Nothing has changed in the end, so the hits are the same. Pick “Stays the same”."] }
+  ],
+  core: [
+    { kind: "predict", frame: true, start: { N: 50, T: 20, V: 100 }, vary: "T", need: { min: 80 },
+      text: "Predict: you heat the gas to 100 °C or more. What will the pressure do?",
+      doText: "Now heat the gas to 100 °C or more. Then finish the sentence.",
+      hints: ["Watch how fast the particles move as you heat them.",
+              "Hotter particles have more energy. Do they hit the walls harder or softer?",
+              "Faster particles hit the walls harder and more often, so the pressure goes up."] },
+    { kind: "predict", frame: true, start: { N: 50, T: 150, V: 100 }, vary: "T", need: { max: -100 },
+      text: "Predict: you cool the gas to 50 °C or less. What will the pressure do?",
+      doText: "Now cool the gas to 50 °C or less. Then finish the sentence.",
+      hints: ["Watch how fast the particles move as you cool them.",
+              "Cooling takes energy away from the particles. It does not add “cold”.",
+              "Slower particles hit the walls less hard and less often, so the pressure goes down."] },
+    { kind: "predict", frame: true, start: { N: 50, T: 20, V: 100 }, vary: "V", need: { max: -40 },
+      text: "Predict: you squash the box to 60 % of its size or less. What will the pressure do?",
+      doText: "Now squash the box to 60 % or less. Then finish the sentence.",
+      hints: ["Watch how much room the particles have.",
+              "The temperature stays the same, so the particles keep the same speed.",
+              "Less room → they reach the walls more often (each hit just as hard) → pressure goes up."] },
+    { kind: "predict", frame: true, start: { N: 50, T: 20, V: 50 }, vary: "V", need: { min: 40 },
+      text: "Predict: you let the piston out to 90 % of the full size or more. What will the pressure do?",
+      doText: "Now let the box out to 90 % or more. Then finish the sentence.",
+      hints: ["Watch how much room the particles have now.",
+              "The particles keep the same speed, but they have further to travel between walls.",
+              "More room → they reach the walls less often (each hit just as hard) → pressure goes down."] },
+    { kind: "question", start: { N: 50, T: 20, V: 100 }, vary: "T", need: { min: 130 },
+      text: "Heat the gas to 150 °C or more. Which walls do the particles push on?",
+      options: [
+        { t: "All the walls equally", ok: true },
+        { t: "Mostly the top wall, because hot air rises", mis: "Hot air rising does not move the pressure to the top. In a sealed box the fast particles hit every wall equally." },
+        { t: "Only the piston, because it can move", w: "The particles hit every wall. The piston is just the wall that can move." },
+        { t: "None, because hot particles stop hitting the walls", w: "Hot particles move faster, so they hit the walls more, not less." }
+      ],
+      hints: ["Turn on Show wall hits under Support, then watch every wall.",
+              "Do the particles only fly upwards, or in every direction?",
+              "Particles move in every direction, so they hit every wall: top, bottom and sides."] },
+    { kind: "question", start: { N: 30, T: -40, V: 100 }, vary: "T", need: { min: 160 },
+      text: "Heat the gas from −40 °C to 120 °C or more. Watch one particle. What happens to it?",
+      options: [
+        { t: "It moves faster", ok: true },
+        { t: "It gets bigger", mis: "Particles do not expand when heated. They stay the same size and move faster." },
+        { t: "It starts to melt", w: "A single particle cannot melt. Melting is something a whole solid does." },
+        { t: "It keeps the same speed", w: "Look again. Heating gives particles more energy, so they move faster." }
+      ],
+      hints: ["Compare the particles before and after heating.",
+              "Look at their speed and at their size.",
+              "They stay the same size. Their speed changes."] },
+    { kind: "question", start: { N: 30, T: 20, V: 100 }, vary: "N", need: { min: 20 },
+      text: "Pump in 20 particles and watch the box. What causes the pressure on the walls?",
+      options: [
+        { t: "Particles hitting the walls", ok: true },
+        { t: "Particles hitting each other", mis: "Particles do hit each other, but that does not push on the box. Pressure is caused by particles hitting the walls." },
+        { t: "The weight of the gas pressing on the bottom", w: "A gas does have mass, but here the pressure comes from particles hitting every wall, not just the bottom." },
+        { t: "The particles getting bigger", mis: "Particles never get bigger. More particles means more hits on the walls." }
+      ],
+      hints: ["Turn on Show wall hits under Support.",
+              "What pushes on the inside of the box each time?",
+              "Every time a particle hits a wall it gives the wall a tiny push."] }
+  ],
+  challenge: [
+    { kind: "case", title: "Balloon in a freezer",
+      text: "A blown-up balloon is put in a freezer at " + (FACTS.freezerC < 0 ? "−" + Math.abs(FACTS.freezerC) : FACTS.freezerC) + " °C.",
+      start: { N: 50, T: 20, V: 100 }, tryState: { N: 50, T: FACTS.freezerC, V: 100 },
+      tryNote: "The box shows the air inside the balloon. The box is kept the same size, so you can see the push on the inside get smaller.",
+      whatLabel: "What happens to the balloon?",
+      what: [
+        { t: "It shrinks", dir: "down" },
+        { t: "It gets bigger", dir: "up" },
+        { t: "Nothing changes", dir: "same" },
+        { t: "It fills up with cold and gets heavier", dir: "mis", mis: "Cooling does not add “cold”. It takes energy away from the particles." }
+      ],
+      reason: [
+        { t: "The particles slow down, so they hit the inside of the balloon less hard and less often", ok: true },
+        { t: "The particles shrink in the cold", mis: "Particles never change size. They slow down." },
+        { t: "Cold particles get into the balloon", mis: "Nothing gets in. The balloon is sealed. Cooling takes energy away." },
+        { t: "The particles stop moving completely", w: "Gas particles keep moving even in a freezer, just more slowly." }
+      ],
+      hints: ["Press Try it in the box and watch the gauge.",
+              "Cooling takes energy away from the particles. How do they move now?",
+              "Slower particles push less on the inside, so the air outside squashes the balloon."] },
+    { kind: "case", title: "Bike tyre on a hot day",
+      text: "A bike tyre is pumped up on a cool morning (" + FACTS.coolMorningC + " °C). Later it sits in the sun at " + FACTS.hotDayC + " °C.",
+      start: { N: 50, T: FACTS.coolMorningC, V: 100 }, tryState: { N: 50, T: FACTS.hotDayC, V: 100 },
+      tryNote: "The box shows the air inside the tyre.",
+      whatLabel: "What happens to the tyre?",
+      what: [
+        { t: "It gets harder (higher pressure)", dir: "up" },
+        { t: "It gets softer (lower pressure)", dir: "down" },
+        { t: "Nothing changes", dir: "same" },
+        { t: "Only the top of the tyre gets harder", dir: "mis", mis: "Hot air rising does not move the pressure to the top. The gas pushes equally on every part of the tyre." }
+      ],
+      reason: [
+        { t: "The particles move faster, so they hit the inside of the tyre harder and more often", ok: true },
+        { t: "The particles expand in the heat", mis: "Particles do not expand when heated. They move faster." },
+        { t: "The particles hit each other more, and that makes the pressure", mis: "Pressure is caused by particles hitting the walls, not each other." },
+        { t: "Hot particles all rise to the top of the tyre", mis: "Hot particles still move in every direction and hit every wall." }
+      ],
+      hints: ["Press Try it in the box and watch the gauge.",
+              "Heating gives the particles more energy.",
+              "Faster particles hit the tyre wall harder and more often."] },
+    { kind: "case", title: "Aerosol can",
+      text: "An aerosol can (for example, deodorant) has the warning “Do not heat”.",
+      start: { N: 50, T: 20, V: 100 }, tryState: { N: 50, T: 200, V: 100 },
+      tryNote: "The box shows the gas inside the can, heated to 200 °C.",
+      whatLabel: "What could happen if the can is heated?",
+      what: [
+        { t: "The pressure inside rises until the can bursts", dir: "up" },
+        { t: "The pressure inside falls and the can is crushed", dir: "down" },
+        { t: "The pressure inside stays the same", dir: "same" },
+        { t: "The gas weighs nothing, so it floats out", dir: "mis", mis: "A gas does have mass. Its particles are real and each one has a tiny mass." }
+      ],
+      reason: [
+        { t: "Hot particles move faster and hit the walls of the can harder and more often", ok: true },
+        { t: "The particles get bigger and push on the walls", mis: "Particles do not expand when heated. They move faster." },
+        { t: "The heat pushes all the pressure to the top of the can", mis: "Pressure does not move to the top. The gas pushes equally on every wall." },
+        { t: "The particles hit each other harder, and that is what pressure is", mis: "Pressure is caused by particles hitting the walls, not each other." }
+      ],
+      hints: ["Press Try it in the box and watch the gauge.",
+              "The can is sealed and cannot get bigger. What happens to the particles when heated?",
+              "Faster particles push harder on the walls. Metal cans can only take so much."] },
+    { kind: "case", title: "Pumping up a football",
+      text: "You pump more air into a football.",
+      start: { N: 30, T: 20, V: 100 }, tryState: { N: 60, T: 20, V: 100 },
+      tryNote: "The box shows the air inside the ball.",
+      whatLabel: "What happens to the ball?",
+      what: [
+        { t: "It gets firmer and a tiny bit heavier", dir: "up" },
+        { t: "It gets firmer but no heavier, because air weighs nothing", dir: "mis", mis: "A gas does have mass. Every particle you pump in adds a tiny bit of mass." },
+        { t: "It gets softer", dir: "down" },
+        { t: "Nothing changes", dir: "same" }
+      ],
+      reason: [
+        { t: "More particles inside means more hits on the inside walls each second", ok: true },
+        { t: "The new particles are bigger than the old ones", mis: "All air particles here are the same size. There are just more of them." },
+        { t: "The particles hit each other more often", mis: "Pressure is caused by particles hitting the walls, not each other." },
+        { t: "The air inside gets colder", w: "Pumping adds particles. The temperature stays about the same." }
+      ],
+      hints: ["Press Try it in the box and watch the gauge.",
+              "Each pump adds more particles. Does a particle have mass?",
+              "More particles → more hits on the walls → firmer. More particles → more mass."] },
+    { kind: "case", title: "Blocked syringe",
+      text: "You put your thumb over the end of a syringe full of air and push the plunger in.",
+      start: { N: 50, T: 20, V: 100 }, tryState: { N: 50, T: 20, V: 50 },
+      tryNote: "The box shows the air inside the syringe.",
+      whatLabel: "What happens as you push?",
+      what: [
+        { t: "It gets harder to push", dir: "up" },
+        { t: "It gets easier to push", dir: "down" },
+        { t: "It feels the same all the way", dir: "same" },
+        { t: "The air disappears", dir: "mis", mis: "The air does not disappear. The particles are all still there, just closer together." }
+      ],
+      reason: [
+        { t: "The particles have less room, so they hit the walls and plunger more often", ok: true },
+        { t: "Each particle gets squashed smaller", mis: "Particles never change size. They just get closer together." },
+        { t: "The particles hit each other more, and that makes the pressure", mis: "Pressure is caused by particles hitting the walls, not each other." },
+        { t: "The particles speed up because they are squashed", w: "If you push slowly the temperature hardly changes, so the speed stays the same. They hit more often." }
+      ],
+      hints: ["Press Try it in the box and watch the gauge.",
+              "The particles keep the same speed but have less room.",
+              "Less room → more hits on the plunger each second → harder to push."] },
+    { kind: "case", title: "Bottle on a plane", outside: true,
+      text: "On a plane, high up, you screw the lid on an empty plastic bottle (it is full of air). When the plane lands, the bottle is crushed.",
+      start: { N: FACTS.cabinN, T: 20, V: 100 }, tryState: { N: FACTS.groundN, T: 20, V: 100 },
+      tryNote: "This time the box shows the air outside the bottle: first in the plane high up, then near the ground.",
+      whatLabel: "What changed as the plane came down?",
+      what: [
+        { t: "The air pressure outside the bottle went up", dir: "up" },
+        { t: "The air pressure outside the bottle went down", dir: "down" },
+        { t: "The air pressure did not change anywhere", dir: "same" },
+        { t: "The air inside sucked the bottle in", dir: "mis", mis: "Gases do not suck. The bottle is pushed in by the air outside." }
+      ],
+      reason: [
+        { t: "Near the ground, more air particles hit the outside of the bottle than particles inside hit the inside", ok: true },
+        { t: "The air particles inside the bottle shrank", mis: "Particles never change size." },
+        { t: "The air inside has no mass, so it cannot push back", mis: "A gas does have mass. The air inside still pushes, just less than the air outside." },
+        { t: "The particles inside hit each other instead of the walls", mis: "Pressure is caused by particles hitting the walls. The inside particles still hit the walls." }
+      ],
+      hints: ["Press Try it in the box. This time the box is the air outside the bottle.",
+              "Air near the ground has more particles in each litre than air high up.",
+              "More particles outside → more hits on the outside of the bottle than on the inside → crushed."] }
+  ]
+};
+
+/* ---------- load-time bank check ---------- */
+function clampState(s) { return { N: s.N, T: s.T, V: s.V }; }
+function inRange(s) {
+  return s.N >= FACTS.nMin && s.N <= FACTS.nMax && s.T >= FACTS.tMin && s.T <= FACTS.tMax && s.V >= FACTS.vMin && s.V <= FACTS.vMax;
+}
+function targetOf(t) {
+  const s = clampState(t.start);
+  if (t.need.same) return s;
+  s[t.vary] += ("min" in t.need ? t.need.min : t.need.max);
+  return s;
+}
+function checkBank() {
+  const errs = [];
+  const maxP = pressure({ N: FACTS.nMax, T: FACTS.tMax, V: FACTS.vMin });
+  if (maxP > FACTS.gaugeMax) errs.push("Gauge would go off the scale (" + Math.round(maxP) + " kPa).");
+  if (Math.abs(pressure({ N: FACTS.refN, T: FACTS.refTempC, V: 100 }) - FACTS.refPressure) > 0.001) errs.push("Reference pressure wrong.");
+  Object.keys(BANK).forEach(lv => BANK[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (!t.hints || t.hints.length !== 3) errs.push(id + ": needs 3 hints.");
+    if (t.kind === "predict" || t.kind === "question") {
+      const tg = targetOf(t);
+      if (!inRange(t.start) || !inRange(tg)) errs.push(id + ": start or target outside the controls.");
+      if (t.vary === "N" && (t.start.N % FACTS.nStep || tg.N % FACTS.nStep)) errs.push(id + ": particle numbers must be in steps of " + FACTS.nStep + ".");
+      if (t.kind === "predict") {
+        const d = dirOf(t.start, tg), want = t.need.same ? "same" : null;
+        if (want && d !== want) errs.push(id + ": expected no change.");
+        if (!t.need.same && d === "same") errs.push(id + ": change too small to see.");
+        if (t.frame) {
+          const fa = frameAnswer(t);
+          if (!fa || fa[2] !== d) errs.push(id + ": frame answer disagrees with the gauge.");
+          else if (!F1.some(o => o.id === fa[0]) || !F2.some(o => o.id === fa[1]) || !F3.some(o => o.id === fa[2])) errs.push(id + ": frame answer missing from the word bank.");
+        }
+      } else if (t.options.filter(o => o.ok).length !== 1) errs.push(id + ": needs exactly one right answer.");
+    }
+    if (t.kind === "case") {
+      if (!inRange(t.start) || !inRange(t.tryState)) errs.push(id + ": try-it values outside the controls.");
+      const d = dirOf(t.start, t.tryState);
+      const right = t.what.filter(o => o.dir === d);
+      if (right.length !== 1) errs.push(id + ": needs exactly one outcome matching the pressure change (" + d + ").");
+      if (t.reason.filter(o => o.ok).length !== 1) errs.push(id + ": needs exactly one right reason.");
+    }
+  }));
+  return errs;
+}
+
+/* =====================================================================
+   SIMULATION (box units: full box width = 1, height = H)
+   ===================================================================== */
+const H = 0.62, R = 0.014, BASE_SPEED = 0.34; // speed at refTempC, box widths per second
+const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+const sim = { N: 50, T: 20, V: 100, parts: [], hits: [], time: 0 };
+const cnt = { pumped: 0, vented: 0 };
+let shownP = 100, running = !reduceMotion, impulse = 0, impulseLog = [];
+
+function speedFor(T) { return BASE_SPEED * Math.sqrt((T + FACTS.kelvin) / (FACTS.refTempC + FACTS.kelvin)); }
+function randSpeed(T) { // 2D Maxwell (Rayleigh) shape, mean-square speed = speedFor(T)^2
+  const u = Math.max(1e-6, Math.random());
+  return speedFor(T) * Math.sqrt(-Math.log(u));
+}
+function newParticle(x, y, angle) {
+  const a = angle == null ? Math.random() * Math.PI * 2 : angle, v = randSpeed(sim.T);
+  return { x, y, vx: v * Math.cos(a), vy: v * Math.sin(a) };
+}
+function fillParticles() {
+  sim.parts = [];
+  const xMax = sim.V / 100;
+  let tries = 0;
+  while (sim.parts.length < sim.N && tries < 20000) {
+    tries++;
+    const x = R + Math.random() * (xMax - 2 * R), y = R + Math.random() * (H - 2 * R);
+    if (sim.parts.every(p => (p.x - x) ** 2 + (p.y - y) ** 2 > (2.2 * R) ** 2)) sim.parts.push(newParticle(x, y));
+  }
+  while (sim.parts.length < sim.N) sim.parts.push(newParticle(R + Math.random() * (xMax - 2 * R), R + Math.random() * (H - 2 * R)));
+}
+function setTemp(T) {
+  T = Math.max(FACTS.tMin, Math.min(FACTS.tMax, Math.round(T)));
+  const k = Math.sqrt((T + FACTS.kelvin) / (sim.T + FACTS.kelvin));
+  sim.parts.forEach(p => { p.vx *= k; p.vy *= k; });
+  sim.T = T;
+}
+function setVol(V) { sim.V = Math.max(FACTS.vMin, Math.min(FACTS.vMax, Math.round(V))); }
+function pump() {
+  if (sim.N >= FACTS.nMax) return;
+  for (let i = 0; i < FACTS.nStep; i++) sim.parts.push(newParticle(R + 0.004, H / 2 + (Math.random() - 0.5) * 0.06, (Math.random() - 0.5) * 1.4));
+  sim.N += FACTS.nStep; cnt.pumped += FACTS.nStep;
+}
+function vent() {
+  if (sim.N <= FACTS.nMin) return;
+  // remove the particles nearest the valve (top wall, near the left)
+  const vx = 0.12;
+  sim.parts.sort((a, b) => ((a.x - vx) ** 2 + a.y ** 2) - ((b.x - vx) ** 2 + b.y ** 2));
+  sim.parts.splice(0, FACTS.nStep);
+  sim.N -= FACTS.nStep; cnt.vented += FACTS.nStep;
+}
+
+function step(dt) {
+  const xMax = sim.V / 100, P = sim.parts, now = sim.time;
+  for (const p of P) {
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.x < R) { p.x = R; if (p.vx < 0) { impulse += -2 * p.vx; p.vx = -p.vx; addHit(0, p.y, "L"); } }
+    if (p.x > xMax - R) { p.x = xMax - R; if (p.vx > 0) { impulse += 2 * p.vx; p.vx = -p.vx; addHit(xMax, p.y, "R"); } }
+    if (p.y < R) { p.y = R; if (p.vy < 0) { impulse += -2 * p.vy; p.vy = -p.vy; addHit(p.x, 0, "T"); } }
+    if (p.y > H - R) { p.y = H - R; if (p.vy > 0) { impulse += 2 * p.vy; p.vy = -p.vy; addHit(p.x, H, "B"); } }
+  }
+  // elastic collisions between equal particles (no flash: they don't push on the box)
+  const d2 = (2 * R) ** 2;
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i], b = P[j], dx = b.x - a.x, dy = b.y - a.y, dd = dx * dx + dy * dy;
+    if (dd < d2 && dd > 1e-12) {
+      const d = Math.sqrt(dd), nx = dx / d, ny = dy / d;
+      const rel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+      if (rel > 0) { a.vx -= rel * nx; a.vy -= rel * ny; b.vx += rel * nx; b.vy += rel * ny; }
+      const push = (2 * R - d) / 2; a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+    }
+  }
+  sim.time += dt;
+  sim.hits = sim.hits.filter(h => now - h.t < 0.45);
+}
+function addHit(x, y, side) { sim.hits.push({ x, y, side, t: sim.time }); }
+/* Test hook: average wall push per unit wall length per second (should follow the gauge). */
+window.__gasPressure = { sim, pressure, measure(seconds) {
+  impulse = 0; const t0 = sim.time; while (sim.time - t0 < seconds) step(1 / 120);
+  const per = 2 * (sim.V / 100) + 2 * H; return impulse / per / seconds;
+}, bankErrors: () => checkBank() };
+
+/* =====================================================================
+   DRAWING
+   ===================================================================== */
+const cv = document.getElementById("box"), cx = cv.getContext("2d");
+let C = {}, geo = { left: 0, top: 0, s: 1, w: 0, h: 0 };
+function readColours() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  C = { ink: g("--ink"), muted: g("--muted"), accent: g("--accent"), edge: g("--atom-edge"), hit: g("--hit"), surface: g("--surface"), line: g("--line"), sunk: g("--sunk") };
+}
+function resize() {
+  const w = cv.parentElement.clientWidth - 20;
+  if (w <= 0) return;
+  const dpr = window.devicePixelRatio || 1;
+  const left = Math.max(46, w * 0.09), right = Math.max(40, w * 0.08), top = 34, bottom = 14;
+  const s = w - left - right;
+  const h = Math.round(top + H * s + bottom);
+  cv.style.height = h + "px";
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  geo = { left, top, s, w, h };
+  draw();
+}
+function draw() {
+  const { left, top, s, w, h } = geo; if (!s) return;
+  cx.clearRect(0, 0, w, h);
+  const X = x => left + x * s, Y = y => top + y * s, xp = X(sim.V / 100), wall = Math.max(4, s * 0.012);
+  // gas space
+  cx.fillStyle = C.surface; cx.fillRect(X(0), Y(0), xp - X(0), H * s);
+  // walls (left, top, bottom) drawn as a thick U on its side
+  cx.strokeStyle = C.ink; cx.lineWidth = wall; cx.lineCap = "square";
+  cx.beginPath(); cx.moveTo(X(1) + wall, Y(0) - wall / 2); cx.lineTo(X(0) - wall / 2, Y(0) - wall / 2);
+  cx.lineTo(X(0) - wall / 2, Y(H) + wall / 2); cx.lineTo(X(1) + wall, Y(H) + wall / 2); cx.stroke();
+  // pump pipe on the left wall
+  const py = Y(H / 2);
+  cx.lineWidth = 3; cx.strokeStyle = C.muted;
+  cx.strokeRect(4, py - 9, left - wall - 8, 18);
+  cx.fillStyle = C.muted; cx.font = "700 13px " + getComputedStyle(document.body).fontFamily;
+  cx.textAlign = "left"; cx.fillText("pump", 4, py - 14);
+  // valve on top wall near the left
+  const vx = X(0.12);
+  cx.strokeStyle = C.muted; cx.lineWidth = 3;
+  cx.beginPath(); cx.moveTo(vx - 8, Y(0) - wall); cx.lineTo(vx - 8, Y(0) - 20); cx.moveTo(vx + 8, Y(0) - wall); cx.lineTo(vx + 8, Y(0) - 20);
+  cx.moveTo(vx - 16, Y(0) - 22); cx.lineTo(vx + 16, Y(0) - 22); cx.stroke();
+  cx.fillText("valve", vx + 20, Y(0) - 14);
+  // piston plate + rod
+  cx.fillStyle = C.accent; cx.fillRect(xp, Y(0) - wall / 2, wall * 1.6, H * s + wall);
+  cx.fillRect(xp + wall * 1.6, py - 5, w - xp - wall * 1.6, 10);
+  cx.fillStyle = C.muted; cx.textAlign = "center"; cx.fillText("piston", Math.min(w - 26, xp + wall), Y(0) - 14);
+  // grip marks on the piston (drag hint)
+  cx.strokeStyle = C.surface; cx.lineWidth = 2;
+  for (let k = -1; k <= 1; k++) { cx.beginPath(); cx.moveTo(xp + wall * 0.5, py + k * 8); cx.lineTo(xp + wall * 1.1, py + k * 8); cx.stroke(); }
+  // particles (same size at every temperature)
+  const pr = Math.max(3.5, R * s);
+  cx.fillStyle = C.accent; cx.strokeStyle = C.edge; cx.lineWidth = 1;
+  for (const p of sim.parts) { cx.beginPath(); cx.arc(X(p.x), Y(p.y), pr, 0, Math.PI * 2); cx.fill(); cx.stroke(); }
+  // wall hits (Support)
+  if (support.hits) {
+    cx.strokeStyle = C.hit; cx.lineCap = "round";
+    for (const hh of sim.hits) {
+      const a = Math.max(0, 1 - (sim.time - hh.t) / 0.45); cx.globalAlpha = a; cx.lineWidth = 7;
+      const L = 12; cx.beginPath();
+      if (hh.side === "L") { cx.moveTo(X(0) + 3, Y(hh.y) - L); cx.lineTo(X(0) + 3, Y(hh.y) + L); }
+      else if (hh.side === "R") { cx.moveTo(xp - 3, Y(hh.y) - L); cx.lineTo(xp - 3, Y(hh.y) + L); }
+      else if (hh.side === "T") { cx.moveTo(X(hh.x) - L, Y(0) + 3); cx.lineTo(X(hh.x) + L, Y(0) + 3); }
+      else { cx.moveTo(X(hh.x) - L, Y(H) - 3); cx.lineTo(X(hh.x) + L, Y(H) - 3); }
+      cx.stroke();
+    }
+    cx.globalAlpha = 1; cx.lineCap = "butt";
+  }
+  cv.setAttribute("aria-label", "Sealed box with " + sim.N + " gas particles at " + fmtT(sim.T) + ", box size " + sim.V + " %.");
+}
+
+/* ---------- gauge (SVG) ---------- */
+const gsvg = document.getElementById("gauge"), GC = { x: 120, y: 110, r: 92 };
+const ang = v => -135 + 270 * Math.max(0, Math.min(FACTS.gaugeMax, v)) / FACTS.gaugeMax;
+function pt(deg, r) { const a = deg * Math.PI / 180; return [GC.x + r * Math.sin(a), GC.y - r * Math.cos(a)]; }
+function buildGauge() {
+  let s = '<circle cx="' + GC.x + '" cy="' + GC.y + '" r="' + (GC.r + 8) + '" style="fill:var(--surface);stroke:var(--ink);stroke-width:3"/>';
+  for (let v = 0; v <= FACTS.gaugeMax; v += 50) {
+    const major = v % 100 === 0, a = ang(v), p1 = pt(a, GC.r), p2 = pt(a, GC.r - (major ? 14 : 7));
+    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" style="stroke:var(--ink);stroke-width:' + (major ? 3 : 1.5) + '"/>';
+    if (support.nums && major) { const q = pt(a, GC.r - 28); s += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 5).toFixed(1) + '" text-anchor="middle" style="fill:var(--ink);font:700 14px var(--f-body)">' + v + '</text>'; }
+  }
+  if (!support.nums) {
+    const a = [GC.x - 84, GC.y + 92], b = [GC.x + 84, GC.y + 92]; // just outside the dial ends, clear of the needle
+    s += '<text x="' + a[0].toFixed(1) + '" y="' + (a[1] + 4).toFixed(1) + '" text-anchor="middle" style="fill:var(--ink);font:700 15px var(--f-body)">low</text>';
+    s += '<text x="' + b[0].toFixed(1) + '" y="' + (b[1] + 4).toFixed(1) + '" text-anchor="middle" style="fill:var(--ink);font:700 15px var(--f-body)">high</text>';
+  }
+  s += '<line id="gStart" x1="' + GC.x + '" y1="' + GC.y + '" x2="' + GC.x + '" y2="' + (GC.y - GC.r + 4) + '" style="stroke:var(--muted);stroke-width:3;stroke-dasharray:6 5"/>';
+  s += '<polygon id="gNeedle" points="' + (GC.x - 5) + ',' + GC.y + ' ' + GC.x + ',' + (GC.y - GC.r + 10) + ' ' + (GC.x + 5) + ',' + GC.y + '" style="fill:var(--accent)"/>';
+  s += '<circle cx="' + GC.x + '" cy="' + GC.y + '" r="9" style="fill:var(--accent)"/>';
+  gsvg.innerHTML = s;
+  setGauge();
+}
+function setGauge() {
+  const n = document.getElementById("gNeedle"), st = document.getElementById("gStart"), rd = document.getElementById("gRead");
+  if (!n) return;
+  n.setAttribute("transform", "rotate(" + ang(shownP).toFixed(2) + " " + GC.x + " " + GC.y + ")");
+  st.setAttribute("transform", "rotate(" + ang(pressure(cur.start)).toFixed(2) + " " + GC.x + " " + GC.y + ")");
+  const P = pressure(sim);
+  rd.textContent = support.nums ? Math.round(shownP) + " kPa" : "";
+  gsvg.setAttribute("aria-label", support.nums ? "Pressure gauge reading " + Math.round(P) + " kPa" : "Pressure gauge. Turn on Gauge numbers to read the value.");
+}
+
+/* =====================================================================
+   UI + TASK FLOW
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const support = { hits: false, nums: false };   // always OFF on load (never stored)
+const score = { s: 0, streak: 0 };
+const progress = {};                             // per task: solved, revealed, dirty, hints
+let level = "warm", idx = 0, cur = null, answer = {};
+function fmtT(T) { return (T < 0 ? "−" + Math.abs(T) : T) + " °C"; }
+function key() { return level + idx; }
+function prog() { return progress[key()] || (progress[key()] = { solved: false, revealed: false, dirty: false, hints: 0 }); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+function locked() { return cur.kind === "predict" && !answer.pred && !prog().revealed; }
+function refreshControls() {
+  const L = locked();
+  $("outN").textContent = sim.N; $("outT").textContent = fmtT(sim.T); $("outV").textContent = sim.V + " %";
+  $("tempR").value = sim.T; $("volR").value = sim.V;
+  $("pumpBtn").disabled = L || sim.N >= FACTS.nMax; $("ventBtn").disabled = L || sim.N <= FACTS.nMin;
+  $("heatBtn").disabled = L || sim.T >= FACTS.tMax; $("coolBtn").disabled = L || sim.T <= FACTS.tMin;
+  $("squashBtn").disabled = L || sim.V <= FACTS.vMin; $("letBtn").disabled = L || sim.V >= FACTS.vMax;
+  $("tempR").disabled = L; $("volR").disabled = L;
+  const lk = $("lockNote"); if (lk) lk.hidden = !L;
+  if (!running) { shownP = pressure(sim); }
+  setGauge(); draw();
+}
+function changed() { if (reduceMotion || !running) shownP = pressure(sim); refreshControls(); }
+
+function choiceRow(name, opts, sel) {
+  return '<div class="choices" role="group" aria-label="' + esc(name) + '">' + opts.map((o, i) =>
+    '<button type="button" class="choice" data-g="' + name + '" data-v="' + i + '" aria-pressed="' + (sel === i) + '">' + esc(o.t) + '</button>').join("") + '</div>';
+}
+function sel(id, label, opts) {
+  return '<label>' + label + '<select id="' + id + '"><option value="">Choose…</option>' +
+    opts.map(o => '<option value="' + o.id + '">' + esc(o.t) + '</option>').join("") + '</select></label>';
+}
+const PRED = [{ t: "Goes up ↑", v: "up" }, { t: "Goes down ↓", v: "down" }, { t: "Stays the same =", v: "same" }];
+function renderAsk() {
+  const t = cur, a = $("ask"); let h = "";
+  if (t.kind === "predict") {
+    h += '<p class="step">Step 1: predict</p>' + choiceRow("pred", PRED, PRED.findIndex(p => p.v === answer.pred));
+    h += '<p class="lock" id="lockNote">Pick a prediction first. Then the controls unlock.</p>';
+    h += '<p class="step">Step 2: do it</p><p>' + esc(t.doText) + '</p>';
+    if (t.frame) {
+      h += '<p class="step">Step 3: explain</p><div class="frame">' +
+        sel("f1", "The particles …", F1) + sel("f2", "so they hit …", F2) + sel("f3", "so the pressure …", F3) + '</div>';
+    }
+  } else if (t.kind === "question") {
+    h += '<p class="step">Step 1: do it, and watch</p><p class="step">Step 2: pick your answer</p>' + choiceRow("opt", t.options, answer.opt);
+  } else {
+    h += '<p><b>' + esc(t.title) + '.</b> ' + esc(t.text) + '</p>';
+    h += '<button type="button" class="sbtn" id="tryBtn" style="flex:none;justify-self:start">Try it in the box</button>';
+    h += '<p class="lock" id="tryNote" hidden>' + esc(t.tryNote) + '</p>';
+    h += '<p class="step">' + esc(t.whatLabel) + '</p>' + choiceRow("what", t.what, answer.what);
+    h += '<p class="step">The particle reason:</p>' + choiceRow("why", t.reason, answer.why);
+  }
+  a.innerHTML = '<h2>Your answer</h2>' + h;
+  a.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => {
+    const g = b.dataset.g, v = +b.dataset.v;
+    if (g === "pred") answer.pred = PRED[v].v; else answer[g] = v;
+    a.querySelectorAll('.choice[data-g="' + g + '"]').forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    refreshControls();
+  }));
+  ["f1", "f2", "f3"].forEach(id => { const e = $(id); if (e) e.addEventListener("change", () => { answer[id] = e.value; }); });
+  const tb = $("tryBtn");
+  if (tb) tb.addEventListener("click", () => tryIt());
+}
+function tryIt() {
+  loadState(cur.start); refreshControls();
+  $("tryNote").hidden = false;
+  const s = cur.tryState, me = cur;
+  setTimeout(() => { if (cur !== me) return; // a short pause so pupils see the before, then the after
+    if (s.N !== sim.N) { while (sim.N < s.N) pump(); while (sim.N > s.N) vent(); }
+    setTemp(s.T); setVol(s.V); changed();
+  }, reduceMotion ? 0 : 700);
+}
+function loadState(s) {
+  sim.N = s.N; sim.T = s.T; sim.V = s.V; cnt.pumped = 0; cnt.vented = 0;
+  fillParticles(); sim.hits = []; shownP = pressure(sim);
+}
+function setFb(html) { $("fb").innerHTML = html; }
+function msg(cls, html) { return '<div class="msg ' + cls + '">' + html + '</div>'; }
+
+function startTask() {
+  const list = BANK[level]; cur = list[idx]; answer = {};
+  $("qno").textContent = "Task " + (idx + 1) + " of " + list.length;
+  $("taskText").textContent = cur.kind === "case" ? "Real life: pick what happens and the particle reason." : cur.text;
+  loadState(cur.start);
+  renderAsk();
+  $("simNote").textContent = cur.kind === "case" ? "Press Try it to model the case in the box." : "Drag the piston, or use the controls.";
+  setFb('<p class="hidden-note">Press Check when you are ready.</p>');
+  paintHint(); refreshControls();
+}
+function paintHint() {
+  const n = prog().hints;
+  $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : "Hint (" + (n + 1) + "/3)";
+}
+
+function actionStatus(t) {
+  for (const k of ["N", "T", "V"]) if (k !== t.vary && sim[k] !== t.start[k]) return { ok: false, other: k };
+  const d = sim[t.vary] - t.start[t.vary];
+  if (t.need.same) return { ok: d === 0 && cnt.pumped >= t.need.pumped && cnt.vented >= t.need.vented };
+  if ("min" in t.need) return { ok: d >= t.need.min };
+  return { ok: d <= t.need.max };
+}
+function good(html) {
+  const p = prog();
+  if (!p.solved && !p.revealed) { score.s++; if (!p.dirty && p.hints === 0) score.streak++; }
+  p.solved = true; paintScore();
+  setFb(msg("good", "<b>Correct.</b> " + html));
+}
+function bad(lines) {
+  const p = prog(); p.dirty = true; score.streak = 0; paintScore();
+  setFb(msg("bad", "<b>Not yet.</b><ul>" + lines.map(l => "<li>" + l + "</li>").join("") + "</ul>"));
+}
+function neutral(html) { setFb(msg("tip", html)); }
+function paintScore() { $("sScore").textContent = score.s; $("sStreak").textContent = score.streak; }
+
+function check() {
+  const t = cur;
+  if (t.kind === "predict") {
+    if (!answer.pred) return neutral("Step 1: pick a prediction first.");
+    const st = actionStatus(t);
+    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset and only change " + NAMES[t.vary] + ".");
+    if (!st.ok) return neutral(t.doText);
+    const d = dirOf(t.start, sim), sign = Math.sign(sim[t.vary] - t.start[t.vary]);
+    const why = t.need.same ? "Same particles, same temperature, same space → the same hits → the same pressure." : reasonFor(t.vary, sign);
+    if (t.frame) {
+      if (!answer.f1 || !answer.f2 || !answer.f3) return neutral("Step 3: choose a word in each box to finish the sentence.");
+    }
+    const lines = [];
+    if (answer.pred !== d) lines.push("Your prediction: the pressure " + DIRWORD[answer.pred].replace("went", "would go").replace("stayed", "would stay") + ". The gauge shows it " + DIRWORD[d] + ". " + why);
+    if (t.frame) {
+      const fa = frameAnswer(t);
+      const pick = [F1.find(o => o.id === answer.f1), F2.find(o => o.id === answer.f2), F3.find(o => o.id === answer.f3)];
+      if (pick[0].id !== fa[0]) lines.push(pick[0].mis ? "<b>Misconception:</b> " + pick[0].mis : "First box: " + (t.vary === "T" ? (sign > 0 ? "heating makes the particles move faster." : "cooling makes the particles move slower.") : (sign < 0 ? "the particles have less room. Their speed does not change." : "the particles have more room. Their speed does not change.")));
+      if (pick[1].id !== fa[1]) {
+        if (pick[1].mis) lines.push("<b>Misconception:</b> " + pick[1].mis);
+        else if (t.vary === "V" && (pick[1].id === "harderMore" || pick[1].id === "softerLess")) lines.push("Second box: the temperature did not change, so the particles keep the same speed. Each hit is just as hard. They just hit the walls " + (sign < 0 ? "more" : "less") + " often.");
+        else if (t.vary === "T" && (pick[1].id === "more" || pick[1].id === "less")) lines.push("Second box: the speed changed, so each hit is " + (sign > 0 ? "harder" : "less hard") + " too, not just " + (sign > 0 ? "more" : "less") + " often.");
+        else lines.push("Second box: " + reasonFor(t.vary, sign));
+      }
+      if (pick[2].id !== fa[2]) lines.push(pick[2].mis ? "<b>Misconception:</b> " + pick[2].mis : "Third box: look at the gauge. The pressure " + DIRWORD[d] + ".");
+    }
+    if (lines.length) return bad(lines);
+    return good("The pressure " + DIRWORD[d] + ". " + why);
+  }
+  if (t.kind === "question") {
+    const st = actionStatus(t);
+    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset and only change " + NAMES[t.vary] + ".");
+    if (!st.ok) return neutral("First do it: " + esc(t.text.split(".")[0]) + ".");
+    if (answer.opt == null) return neutral("Now pick your answer.");
+    const o = t.options[answer.opt];
+    if (o.ok) return good(esc(o.t) + ". " + (t.vary === "N" ? "Each hit gives the wall a tiny push. Lots of hits make the pressure." : reasonFor(t.vary, 1)));
+    return bad([o.mis ? "<b>Misconception:</b> " + o.mis : o.w]);
+  }
+  // case
+  if (answer.what == null || answer.why == null) return neutral("Pick what happens and the particle reason.");
+  const d = dirOf(t.start, t.tryState), w = t.what[answer.what], r = t.reason[answer.why], lines = [];
+  if (w.dir !== d) {
+    if (w.mis) lines.push("<b>Misconception:</b> " + w.mis);
+    else lines.push("What happens: in the box, the pressure " + (t.outside ? "outside the bottle " : "") + DIRWORD[d] + ". Press Try it to see.");
+  }
+  if (!r.ok) lines.push(r.mis ? "<b>Misconception:</b> " + r.mis : r.w);
+  if (lines.length) return bad(lines);
+  return good(esc(w.t) + ". " + esc(t.reason.find(x => x.ok).t) + ".");
+}
+
+function hint() {
+  const p = prog();
+  if (p.hints >= 3) return;
+  p.hints++; paintHint();
+  setFb(msg("tip", "<b>Hint " + p.hints + ":</b> " + esc(cur.hints[p.hints - 1])));
+}
+function reveal() {
+  const t = cur, p = prog(); p.revealed = true;
+  if (t.kind === "predict") {
+    loadState(t.start);
+    if (t.need.same) { pump(); vent(); }
+    else if (t.vary === "N") { const tg = targetOf(t); while (sim.N < tg.N) pump(); while (sim.N > tg.N) vent(); }
+    else if (t.vary === "T") setTemp(targetOf(t).T); else setVol(targetOf(t).V);
+    const d = dirOf(t.start, sim), sign = needSign(t);
+    answer.pred = d;
+    renderAsk();
+    let extra = "";
+    if (t.frame) {
+      const fa = frameAnswer(t);
+      ["f1", "f2", "f3"].forEach((id, i) => { $(id).value = fa[i]; answer[id] = fa[i]; });
+      extra = " The particles " + F1.find(o => o.id === fa[0]).t + " so they hit " + F2.find(o => o.id === fa[1]).t + " so the pressure " + F3.find(o => o.id === fa[2]).t + ".";
+    }
+    changed();
+    setFb(msg("tip", "<b>Answer:</b> the pressure " + DIRWORD[d] + ". " + (t.need.same ? "Same particles, same temperature, same space → same pressure." : reasonFor(t.vary, sign)) + extra));
+  } else if (t.kind === "question") {
+    loadState(t.start);
+    const tg = targetOf(t);
+    if (t.vary === "N") { while (sim.N < tg.N) pump(); } else setTemp(tg.T);
+    answer.opt = t.options.findIndex(o => o.ok); renderAsk(); changed();
+    setFb(msg("tip", "<b>Answer:</b> " + esc(t.options[answer.opt].t) + ". " + (t.vary === "N" ? "Each hit on a wall gives it a tiny push." : reasonFor("T", 1))));
+  } else {
+    const d = dirOf(t.start, t.tryState);
+    answer.what = t.what.findIndex(o => o.dir === d); answer.why = t.reason.findIndex(o => o.ok);
+    renderAsk(); tryIt();
+    setFb(msg("tip", "<b>Answer:</b> " + esc(t.what[answer.what].t) + ". " + esc(t.reason[answer.why].t) + "."));
+  }
+}
+function resetTask() { answer = {}; loadState(cur.start); renderAsk(); setFb('<p class="hidden-note">Press Check when you are ready.</p>'); refreshControls(); }
+
+/* ---------- wiring ---------- */
+$("pumpBtn").addEventListener("click", () => { pump(); changed(); });
+$("ventBtn").addEventListener("click", () => { vent(); changed(); });
+$("heatBtn").addEventListener("click", () => { setTemp(sim.T + FACTS.tStep); changed(); });
+$("coolBtn").addEventListener("click", () => { setTemp(sim.T - FACTS.tStep); changed(); });
+$("squashBtn").addEventListener("click", () => { setVol(sim.V - FACTS.vStep); changed(); });
+$("letBtn").addEventListener("click", () => { setVol(sim.V + FACTS.vStep); changed(); });
+$("tempR").addEventListener("input", e => { setTemp(+e.target.value); changed(); });
+$("volR").addEventListener("input", e => { setVol(+e.target.value); changed(); });
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reveal").addEventListener("click", reveal);
+$("reset").addEventListener("click", resetTask);
+$("next").addEventListener("click", () => { idx = (idx + 1) % BANK[level].length; startTask(); });
+document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  level = b.dataset.level; idx = 0; startTask();
+}));
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support, on = !(b.getAttribute("aria-pressed") === "true");
+  b.setAttribute("aria-pressed", on); b.querySelector(".state").textContent = on ? "on" : "off";
+  support[k] = on;
+  if (k === "nums") buildGauge(); else draw();
+}));
+// drag the piston
+let dragging = false;
+function pistonX() { return geo.left + (sim.V / 100) * geo.s; }
+cv.addEventListener("pointerdown", e => {
+  if (locked()) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left;
+  if (Math.abs(x - pistonX()) < 30 || x > pistonX()) { dragging = true; cv.setPointerCapture(e.pointerId); }
+});
+cv.addEventListener("pointermove", e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left;
+  cv.style.cursor = (!locked() && (Math.abs(x - pistonX()) < 30 || x > pistonX())) ? "ew-resize" : "default";
+  if (!dragging) return;
+  setVol(((x - geo.left) / geo.s) * 100); changed();
+});
+cv.addEventListener("pointerup", () => { dragging = false; });
+cv.addEventListener("pointercancel", () => { dragging = false; });
+// play / pause / step (reduced motion starts paused)
+function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("stepBtn").hidden = running; }
+$("playBtn").addEventListener("click", () => { running = !running; paintPlay(); last = 0; });
+$("stepBtn").addEventListener("click", () => { for (let i = 0; i < 30; i++) step(1 / 120); shownP = pressure(sim); setGauge(); draw(); });
+// theme changes: re-read the colour tokens
+$("themeBtn").addEventListener("click", () => { readColours(); draw(); });
+if (window.matchMedia) { const m = window.matchMedia("(prefers-color-scheme: dark)"); if (m.addEventListener) m.addEventListener("change", () => { readColours(); draw(); }); }
+if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement); else window.addEventListener("resize", resize);
+
+let last = 0;
+function loop(ts) {
+  if (running && !document.hidden) {
+    const dt = last ? Math.min(0.05, (ts - last) / 1000) : 0; last = ts;
+    step(dt / 2); step(dt / 2);
+    const P = pressure(sim); shownP += (P - shownP) * Math.min(1, dt * 5);
+    setGauge(); draw();
+  } else last = 0;
+  requestAnimationFrame(loop);
+}
+document.addEventListener("visibilitychange", () => { last = 0; });
+
+/* ---------- start ---------- */
+(function init() {
+  readColours();
+  const errs = checkBank();
+  if (errs.length) { const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Question bank error – please tell your teacher.</b><ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"; }
+  cur = BANK.warm[0];
+  buildGauge(); startTask(); paintPlay(); resize();
+  requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>

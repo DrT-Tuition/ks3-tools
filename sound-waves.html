@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound Waves</title>
+<!--
+  SCIENCE SPEC — Sound Waves (KS3)
+  Models: a loudspeaker cone vibrating and passing its vibration to the air in front of it.
+    Each air particle only vibrates back and forth around its own place; the pattern
+    (compressions and rarefactions) is what travels to the ear. A microphone at the ear feeds
+    an oscilloscope-style trace. Loudness slider = amplitude (only the size of the vibration and
+    the height of the trace change). Pitch slider = frequency in Hz (only how close together the
+    waves are changes). "Remove the air" makes a vacuum (like the bell-jar demo): the speaker still
+    vibrates, but there are no particles to pass the vibration on, so no sound reaches the ear and
+    the trace is flat. The wave travels across the screen at the same speed for every pitch and
+    every loudness. Optional real sound (Web Audio API), off by default, gentle maximum volume,
+    same frequency as the slider, silent when the air is removed.
+  Source: KS3 NC + AQA KS3 3.4.1 Sound (with keywords ultrasound / pressure wave / loudspeaker from 3.4.3);
+    to be matched to the new department lessons when they are written.
+    KS3 NC (Physics, Waves): observed waves; sound needs a medium; speed of sound in air, water, solids;
+    frequencies of sound in hertz (Hz); auditory range of humans and animals; pressure waves; loudspeaker.
+    SoW: Year 8 Term 2 Sound — L18 Sound and energy transfer, L19 Loudness and pitch, L20 Detecting sound.
+  Facts and values used (all in const FACTS near the top of the script):
+    - Speed of sound in air: 330 m/s (AQA KS3 3.4.1 fact).
+    - Speed of sound in water: about 1500 m/s; in steel: about 5000 m/s (typical textbook values —
+      NOT in the AQA KS3 facts; check against the department's PowerPoints). Only used to say
+      solids > liquids > gases ("the denser the medium, the faster sound travels", AQA 3.4.1).
+    - Sound does not travel through a vacuum (AQA 3.4.1 fact). Space is (almost) a vacuum.
+    - Human hearing range (auditory range): about 20 Hz to 20 000 Hz.
+    - Ultrasound: sound with a frequency above 20 000 Hz, too high for humans to hear (AQA 3.4.3 keyword).
+    - Frequency = number of waves produced in one second, in hertz (Hz) (AQA keyword).
+    - Amplitude = the maximum amount of vibration, from the middle position (AQA keyword).
+    - Greater amplitude → louder; greater frequency → higher pitch (AQA 3.4.1).
+    - Pitch slider range on screen: 100–1000 Hz in 50 Hz steps. Loudness slider: 1–10 (no unit).
+    - Oscilloscope screen shows 0.01 s (1/100 of a second) across; so frequency = waves counted × 100.
+    - Challenge sort frequencies: 10, 200, 3000, 15 000, 25 000, 45 000 Hz (groups computed from the range).
+  Simplifications (shown on screen as "Model limits"): far fewer, far bigger particles than real air;
+    motion slowed down hugely; sound drawn travelling one way only (really it spreads out in all
+    directions); the trace is drawn as a wavy (transverse-looking) line, but it is a picture of the
+    pressure going up and down at the ear — sound itself is a longitudinal wave; across the trace is
+    time, so the gap between peaks on the trace is the time for one wave, not a wavelength: the
+    Trace labels support calls it "one wave" (reviewer change; teacher to confirm wording). On-screen wavelengths are not to scale (in air, 100 Hz has λ ≈ 3.3 m), but they keep the
+    rule λ ∝ 1/f because the on-screen speed is the same for every frequency. No energy loss with distance.
+  Misconceptions designed out (BEST / common KS3):
+    - Louder means higher pitch (and higher means louder) — sliders are independent; feedback names it.
+    - Sound can travel through a vacuum / space — vacuum switch, Challenge question.
+    - Air particles travel all the way from the speaker to your ear — ringed particle with a home mark
+      only vibrates about its home; Core question.
+    - A higher (or louder) sound travels faster — constant wave speed in code; Challenge question.
+    - Sound travels fastest through air / slowest through solids — Challenge question.
+  Support starts OFF on every visit (Trace labels, Grid, Air labels). Air labels names compression and
+    rarefaction: not AQA KS3 keywords, so teacher to confirm they are taught (L18/L20).
+  Idea credit: Idea from Sound Waves, PhET Interactive Simulations, University of Colorado Boulder (https://phet.colorado.edu).
+    Nothing copied: own code, drawing, layout, colours and wording.
+  Checks: every task bank is validated on load (targets inside slider ranges and not already matched at
+    the start; count-task wave numbers are whole; sort items are not on a boundary and groups are
+    computed from FACTS; each choice question has exactly one correct option; the fastest material is
+    computed from FACTS). A failed task is removed and a visible error is shown.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.sim{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.sim{grid-template-columns:minmax(0,1fr)}}
+.view{display:grid;gap:8px;min-width:0}
+.view canvas{width:100%;display:block;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+#air{height:210px}
+#trace{height:170px}
+@media (max-width:480px){#air{height:170px}#trace{height:140px}}
+.cap{font-size:15px;color:var(--muted);margin:0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.cap b{color:var(--ink)}
+.ear-status{font-size:16px;margin:0;font-weight:700}
+.ear-status.on{color:var(--good)}
+.ear-status.off{color:var(--muted)}
+.legend{display:inline-flex;gap:14px;flex-wrap:wrap}
+.legend .k{display:inline-block;width:26px;height:0;border-top:3px solid var(--accent);vertical-align:middle;margin-right:6px}
+.legend .k.dash{border-top:3px dashed var(--muted)}
+.ctrls{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:12px;min-width:0}
+.slider label{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;font-weight:700;font-size:17px}
+.slider label output{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.slider input[type=range]{width:100%;height:44px;margin:0;accent-color:var(--accent);cursor:pointer}
+.slider .ends{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:-6px}
+.note{font-size:15px;color:var(--muted);margin:0;line-height:1.45}
+.tg{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;width:100%}
+.tg .state{font-weight:400;color:var(--muted);margin-left:auto}
+.tg[aria-pressed="true"]{border:2px solid var(--accent)}
+.tg[aria-pressed="true"] .state{color:var(--accent);font-weight:700}
+.tgrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tgrow .tg{justify-content:center;text-align:center}
+.answer-box{display:grid;gap:10px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.opt{font:400 17px var(--f-body);min-height:48px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left;display:flex;gap:8px;align-items:center;line-height:1.35}
+.opt::before{content:"○";font-size:18px;color:var(--muted);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::before{content:"●";color:var(--accent)}
+.opt:hover{border-color:var(--accent)}
+.minis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini{display:grid;gap:6px;min-width:0}
+.mini canvas{width:100%;height:110px;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk)}
+.numrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-weight:700}
+.numrow input{font:700 20px var(--f-body);width:8em;min-height:46px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.sort{display:grid;gap:8px}
+.srow{display:grid;grid-template-columns:8em minmax(0,1fr);gap:8px;align-items:center}
+.srow b{font-variant-numeric:tabular-nums}
+.srow .grp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.srow .opt{font-size:15px;min-height:44px;padding:6px 8px}
+@media (max-width:560px){.srow{grid-template-columns:minmax(0,1fr)}.srow .grp{grid-template-columns:minmax(0,1fr)}}
+.lower.wide{grid-template-columns:minmax(0,1fr)}
+.task-hint{font-size:16px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion: no-preference){.feedback .msg.good{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.97)}to{transform:none}}}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Sound Waves<small>Change the loudness and pitch. Watch the air and the trace.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="bar">
+  <div class="levels" role="group" aria-label="Level">
+    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
+    <button type="button" data-level="core" aria-pressed="false">Core</button>
+    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
+  </div>
+    <div class="tools">
+      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
+      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="support" role="group" aria-label="Support">
+    <span class="lbl">Support:</span>
+    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Trace labels <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="grid" aria-pressed="false"><span class="dot"></span>Grid <span class="state">off</span></button>
+    <button class="sw" type="button" data-support="airlabels" aria-pressed="false"><span class="dot"></span>Air labels <span class="state">off</span></button>
+  </div>
+
+  <section class="card" aria-label="Sound Waves">
+    <div id="bankErr" class="bankerr" hidden></div>
+    <div class="meta">
+      <div class="ctx" id="taskText">Loading…</div>
+      <div class="qno" id="taskNo"></div>
+    </div>
+    <div class="sim">
+      <div class="view">
+        <canvas id="air" role="img" aria-label="A loudspeaker on the left vibrates. Air particles in front of it vibrate back and forth. An ear is on the right."></canvas>
+        <p class="ear-status off" id="earStatus" aria-live="off">At the ear: silence.</p>
+        <canvas id="trace" role="img" aria-label="Oscilloscope trace of the sound at the ear."></canvas>
+        <p class="cap"><span id="traceCap">Oscilloscope: the sound at the ear. The screen shows <b>0.01 s</b>.</span><span class="legend" id="legend"></span></p>
+      </div>
+      <div class="ctrls">
+        <div class="slider">
+          <label for="loud">Loudness (amplitude) <output id="loudOut" for="loud">4 of 10</output></label>
+          <input type="range" id="loud" min="1" max="10" step="1" value="4">
+          <div class="ends" aria-hidden="true"><span>quiet</span><span>loud</span></div>
+        </div>
+        <div class="slider">
+          <label for="pitch">Pitch (frequency) <output id="pitchOut" for="pitch">300 Hz</output></label>
+          <input type="range" id="pitch" min="100" max="1000" step="50" value="300">
+          <div class="ends" aria-hidden="true"><span>low</span><span>high</span></div>
+        </div>
+        <p class="note" id="rangeNote">People can hear from about 20&nbsp;Hz to 20&nbsp;000&nbsp;Hz. This slider only goes from 100&nbsp;Hz to 1000&nbsp;Hz.</p>
+        <button class="tg" type="button" id="airBtn" aria-pressed="false">Remove the air <span class="state">off</span></button>
+        <div class="tgrow">
+          <button class="tg" type="button" id="playBtn" aria-pressed="false">Pause</button>
+          <button class="tg" type="button" id="stepBtn">Step</button>
+        </div>
+        <button class="tg" type="button" id="soundBtn" aria-pressed="false">♪ Sound <span class="state">off</span></button>
+        <p class="note">Sound plays the real pitch. It is quiet, but check your volume first.</p>
+      </div>
+    </div>
+    <div class="lower" id="lower">
+      <div class="panel">
+        <h2>Your answer</h2>
+        <div class="answer-box" id="answerBox"></div>
+      </div>
+      <div class="panel">
+        <h2>Feedback</h2>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+      </div>
+    </div>
+    <p class="limits"><b>Model limits:</b> Real air particles are far too small to see, and there are billions of them. The motion is slowed down a lot so you can see it. Real sound spreads out in all directions. Sound is a longitudinal wave: the wavy trace is just a picture of the air pressure going up and down at the ear. Across the trace is time. The waves are not drawn to scale.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" id="check">Check</button>
+      <button class="btn hint" type="button" id="hint">Hint</button>
+      <button class="btn" type="button" id="reset">Reset</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="reveal">Show answer</button>
+      <button class="btn primary" type="button" id="next">Next →</button>
+    </div>
+  </section>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== FACTS: every number or fact the tool states (check against the department's PowerPoints) ===== */
+const FACTS = {
+  speedAir: 330,          // m/s (AQA KS3 3.4.1)
+  speedWater: 1500,       // m/s, about (typical textbook value)
+  speedSteel: 5000,       // m/s, about (typical textbook value)
+  hearingLow: 20,         // Hz, human hearing range low end
+  hearingHigh: 20000,     // Hz, human hearing range high end; above this = ultrasound
+  traceWindow: 0.01,      // s shown across the oscilloscope screen
+  pitchMin: 100, pitchMax: 1000, pitchStep: 50,   // Hz, slider
+  loudMin: 1, loudMax: 10                         // loudness slider (no unit)
+};
+const TOL = { loud: 1, pitch: 0 };    // match tolerance for Core: loudness one step either way, pitch exact
+const CROSS = 1.2;                    // s for the slowed-down sound to cross the screen (same for every pitch)
+const wavesAcross = P => P / 250;     // waves across the air picture (1000 Hz → 4, 100 Hz → 0.4): λ ∝ 1/f
+const fDisp = P => wavesAcross(P) / CROSS;   // slowed-down vibrations per second on screen
+
+const NB = " ";
+const fmt = n => (n >= 10000 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) : String(n));   // 20 000 (space from five digits), 1500
+const hz = n => fmt(n) + NB + "Hz";
+
+/* ===== Task bank ===== */
+const EFFECT = { louder: "taller", quieter: "shorter", higher: "closer", lower: "apart" };
+const TRACE_OPTS = [
+  { id: "taller", text: "The waves got taller" },
+  { id: "shorter", text: "The waves got less tall" },
+  { id: "closer", text: "The waves got closer together" },
+  { id: "apart", text: "The waves got further apart" }
+];
+const BANK = {
+  warm: [
+    { type: "change", dir: "louder", start: { L: 3, P: 300 },
+      text: "Predict: what will happen to the trace? Pick one. Then make the sound louder and watch.",
+      hints: ["Loudness is the top slider.", "Move only the Loudness slider to the right. Watch the height of the trace.", "Louder sound: bigger vibrations. The waves get taller."] },
+    { type: "change", dir: "higher", start: { L: 5, P: 200 },
+      text: "Predict: what will happen to the trace? Pick one. Then make the pitch higher and watch.",
+      hints: ["Pitch is the second slider.", "Move only the Pitch slider to the right. Count the waves on the trace.", "Higher pitch: more waves each second. The waves get closer together."] },
+    { type: "change", dir: "quieter", start: { L: 8, P: 400 },
+      text: "Predict: what will happen to the trace? Pick one. Then make the sound quieter and watch.",
+      hints: ["Loudness is the top slider.", "Move only the Loudness slider to the left. Watch the height of the trace.", "Quieter sound: smaller vibrations. The waves get less tall."] },
+    { type: "change", dir: "lower", start: { L: 5, P: 800 },
+      text: "Predict: what will happen to the trace? Pick one. Then make the pitch lower and watch.",
+      hints: ["Pitch is the second slider.", "Move only the Pitch slider to the left. Count the waves on the trace.", "Lower pitch: fewer waves each second. The waves get further apart."] },
+    { type: "pick2", ask: "louder", A: { L: 3, P: 700 }, B: { L: 8, P: 250 }, start: { L: 4, P: 300 },
+      text: "Look at trace A and trace B. Which one is the louder sound?",
+      hints: ["Loudness shows up in one thing on a trace: height or spacing?", "Look at how tall the waves are, not how many there are.", "The louder sound has the taller waves (bigger amplitude)."] },
+    { type: "pick2", ask: "higher", A: { L: 3, P: 800 }, B: { L: 9, P: 200 }, start: { L: 4, P: 300 },
+      text: "Look at trace A and trace B. Which one has the higher pitch?",
+      hints: ["Pitch shows up in one thing on a trace: height or spacing?", "Count how many waves fit across each screen.", "The higher pitch has more waves, closer together (higher frequency)."] }
+  ],
+  core: [
+    { type: "match", target: { L: 8, P: 200 }, start: { L: 4, P: 500 },
+      text: "Match the trace. Set the sliders so your trace sits on the dashed target.",
+      hints: ["Compare two things: how tall the waves are and how close together they are.", "Change one slider at a time. Height is loudness. Spacing is pitch.", "The target is loud (about 8) with waves far apart (200 Hz)."] },
+    { type: "match", target: { L: 3, P: 700 }, start: { L: 7, P: 300 },
+      text: "Match the trace. Set the sliders so your trace sits on the dashed target.",
+      hints: ["Is the target taller or less tall than yours? Closer together or further apart?", "Make it quieter, then make the pitch higher.", "The target is quiet (about 3) with waves close together (700 Hz)."] },
+    { type: "match", target: { L: 6, P: 450 }, start: { L: 2, P: 150 },
+      text: "Match the trace. The trace changes when the sound reaches the ear.",
+      hints: ["Count the target's waves across the screen.", "Each wave on the screen means 100 Hz. Then match the height.", "The target has 4 and a half waves (450 Hz) and loudness about 6."] },
+    { type: "match", target: { L: 10, P: 1000 }, start: { L: 5, P: 500 },
+      text: "Match the trace. Make the loudest, highest sound this speaker can make.",
+      hints: ["The target is as tall and as squashed together as it gets.", "Push both sliders as far as they go.", "Loudness 10 and pitch 1000 Hz."] },
+    { type: "flat", start: { L: 5, P: 400 },
+      text: "Make the trace a flat line, so the ear hears nothing. Do it without touching the sliders.",
+      hints: ["What does sound need to travel from the speaker to the ear?", "Look at the switches under the sliders.", "Press Remove the air. With no particles, the vibration cannot be passed on."] },
+    { type: "choice", start: { L: 6, P: 150 },
+      text: "Watch the ringed particle in the air. What does it do while the sound plays?",
+      options: [
+        { id: "travel", text: "It travels from the speaker to the ear", mis: "Air particles do not travel all the way from the speaker to your ear. Look at the small line: each particle stays near its own place." },
+        { id: "vibrate", text: "It moves back and forth around its own place", correct: true },
+        { id: "still", text: "It stays still the whole time", mis: "Watch again. It does move, but only a little, back and forth. That is how the vibration is passed on." },
+        { id: "up", text: "It moves up and down", mis: "In a sound wave the particles move back and forth along the direction the sound travels, not up and down." }
+      ],
+      reason: "Each particle vibrates back and forth around its own place and passes the vibration to the next particle. Only the pattern travels to the ear.",
+      hints: ["Find the particle with a ring. The small line shows where it started.", "Does it ever get near the ear? Watch for a few seconds, or press Pause then Step.", "It only moves a little bit, back and forth, around its small line."] }
+  ],
+  challenge: [
+    { type: "count", f: 400, start: { L: 5, P: 300 },
+      text: "The screen shows 0.01 s. Count the waves of the mystery sound. What is its frequency?",
+      hints: ["Frequency is the number of waves in one second. Stuck? Turn on Grid under Support.", "Count the waves on the screen. 1 second is 100 times longer than 0.01 s.", "Multiply the number of waves you counted by 100. The answer is in Hz."] },
+    { type: "count", f: 700, start: { L: 5, P: 300 },
+      text: "Another mystery sound. Count the waves in 0.01 s. What is its frequency?",
+      hints: ["Count from where a wave starts on the middle line to where the next one starts.", "Count all the whole waves across the screen, then multiply by 100.", "There are 7 waves. 7 × 100 = ?"] },
+    { type: "choice", start: { L: 6, P: 300 }, id: "space",
+      text: "An astronaut hits a bell outside a space station. Can sound travel through space?",
+      options: [
+        { id: "yes", text: "Yes, nothing in space gets in the way", mis: "Sound cannot travel through a vacuum. Space is almost empty: there are no particles to pass the vibration on." },
+        { id: "no", text: "No, there are no particles to pass the vibration on", correct: true },
+        { id: "loud", text: "Only if the sound is very loud", mis: "Making it louder makes bigger vibrations, but with no particles nothing can carry them. Try Remove the air with loudness 10." },
+        { id: "high", text: "Only if the sound has a high pitch", mis: "Pitch does not help. With no particles, no sound of any pitch can travel. Try Remove the air at 1000 Hz." }
+      ],
+      reason: "Sound needs particles (a medium) to travel. Space is almost a vacuum, so the bell vibrates but no sound travels.",
+      hints: ["Try it: press Remove the air and watch the ear.", "Is there air in space?", "Sound cannot travel through a vacuum. Space is almost a vacuum."] },
+    { type: "sort", items: [10, 200, 3000, 15000, 25000, 45000], start: { L: 5, P: 300 },
+      text: "Sort each sound. Can a person hear it, is it too low, or is it ultrasound?",
+      hints: ["You need the lowest and highest frequencies people can hear.", "People hear from about 20 Hz to 20 000 Hz.", "Below 20 Hz: too low. Above 20 000 Hz: ultrasound. In between: people can hear it."] },
+    { type: "choice", start: { L: 6, P: 300 }, id: "speed",
+      text: "A pupil puts an ear on a steel railing. A friend taps it far away. Which does sound travel fastest through?",
+      speedQ: true,
+      hints: ["Sound is passed on from particle to particle.", "In which state are the particles packed closest together?", "Sound travels fastest through solids. Steel is a solid."] },
+    { type: "choice", start: { L: 6, P: 300 }, id: "highlow",
+      text: "A high note and a low note leave the speaker at the same time. Which reaches your ear first?",
+      options: [
+        { id: "high", text: "The high note", mis: "A common mistake: a higher pitch does not travel faster. All sounds travel through air at the same speed, about 330 m/s." },
+        { id: "low", text: "The low note", mis: "A lower pitch does not travel faster either. All sounds travel through air at the same speed, about 330 m/s." },
+        { id: "same", text: "They arrive at the same time", correct: true },
+        { id: "loud", text: "Whichever one is louder", mis: "Louder does not mean faster. Loudness changes the size of the vibrations, not the speed of the sound." }
+      ],
+      reason: "In air, every sound travels at about 330 m/s, whatever its pitch or loudness.",
+      hints: ["Test it: change the pitch and watch how long the sound takes to reach the ear.", "Does the time to reach the ear change when the pitch changes?", "The speed of sound in air does not depend on pitch."] }
+  ]
+};
+
+/* the speed question's options are built from FACTS, so the answer is computed */
+(function buildSpeedOptions(){
+  const q = BANK.challenge.find(t => t.speedQ);
+  const mats = [["air", "Air (a gas)", FACTS.speedAir], ["water", "Water (a liquid)", FACTS.speedWater], ["steel", "Steel (a solid)", FACTS.speedSteel]];
+  const fastest = mats.reduce((a, b) => (b[2] > a[2] ? b : a));
+  q.options = mats.map(m => ({ id: m[0], text: m[1], correct: m === fastest,
+    mis: m === fastest ? "" : m[0] === "air"
+      ? "Sound is slowest in air (about " + FACTS.speedAir + NB + "m/s). Gas particles are far apart, so the vibration takes longer to pass on."
+      : "Water is quicker than air, but not the quickest. Particles in a solid are packed closest together, so they pass the vibration on fastest." }));
+  q.options.push({ id: "vacuum", text: "Empty space (a vacuum)", correct: false,
+    mis: "Sound cannot travel through a vacuum at all. There are no particles to pass the vibration on." });
+  q.reason = "Sound travels about " + fmt(FACTS.speedAir) + NB + "m/s in air, about " + fmt(FACTS.speedWater) + NB + "m/s in water and about " + fmt(FACTS.speedSteel) + NB + "m/s in steel. Packed particles pass the vibration on fastest.";
+})();
+
+const hearGroup = f => (f < FACTS.hearingLow ? "low" : f > FACTS.hearingHigh ? "ultra" : "hear");
+const GROUPS = [{ id: "low", text: "Too low to hear" }, { id: "hear", text: "People can hear it" }, { id: "ultra", text: "Ultrasound" }];
+
+/* ===== Check every task on load ===== */
+function validate(){
+  const errs = [];
+  const inL = L => Number.isInteger(L) && L >= FACTS.loudMin && L <= FACTS.loudMax;
+  const inP = P => P >= FACTS.pitchMin && P <= FACTS.pitchMax && (P - FACTS.pitchMin) % FACTS.pitchStep === 0;
+  for (const lv of Object.keys(BANK)){
+    BANK[lv] = BANK[lv].filter((t, i) => {
+      const bad = m => { errs.push(lv + " task " + (i + 1) + ": " + m); return false; };
+      if (!t.start || !inL(t.start.L) || !inP(t.start.P)) return bad("start values outside the sliders");
+      if (!t.hints || t.hints.length !== 3) return bad("needs three hints");
+      if (t.type === "change"){
+        const room = { louder: t.start.L < FACTS.loudMax, quieter: t.start.L > FACTS.loudMin, higher: t.start.P < FACTS.pitchMax, lower: t.start.P > FACTS.pitchMin }[t.dir];
+        if (!room) return bad("no room to move the slider");
+        if (!TRACE_OPTS.some(o => o.id === EFFECT[t.dir])) return bad("answer missing");
+      } else if (t.type === "pick2"){
+        if (t.ask === "louder" && t.A.L === t.B.L) return bad("traces equally loud");
+        if (t.ask === "higher" && t.A.P === t.B.P) return bad("traces equal pitch");
+        if (!inL(t.A.L) || !inL(t.B.L) || !inP(t.A.P) || !inP(t.B.P)) return bad("trace values out of range");
+      } else if (t.type === "match"){
+        if (!inL(t.target.L) || !inP(t.target.P)) return bad("target outside the sliders");
+        if (isMatch(t.start, t.target)) return bad("already matched at the start");
+      } else if (t.type === "count"){
+        const n = t.f * FACTS.traceWindow;
+        if (Math.abs(n - Math.round(n)) > 1e-9 || n < 2) return bad("wave count is not a whole number");
+      } else if (t.type === "sort"){
+        if (t.items.some(f => f === FACTS.hearingLow || f === FACTS.hearingHigh)) return bad("item on a boundary");
+        const gs = new Set(t.items.map(hearGroup)); if (gs.size < 3) return bad("every group needs an item");
+      } else if (t.type === "choice"){
+        if (!t.options || t.options.filter(o => o.correct).length !== 1) return bad("needs exactly one correct option");
+        if (!t.reason) return bad("needs a reason");
+      }
+      return true;
+    });
+  }
+  // the model's speed must not depend on pitch or loudness
+  const v = P => wavesAcross(P) / fDisp(P);   // screen-widths per... = CROSS for every P
+  if ([100, 550, 1000].some(P => Math.abs(v(P) - CROSS) > 1e-9)) errs.push("model: wave speed depends on pitch");
+  return errs;
+}
+function isMatch(a, b){ return Math.abs(a.L - b.L) <= TOL.loud && Math.abs(a.P - b.P) <= TOL.pitch; }
+
+/* ===== Elements and state ===== */
+const $ = id => document.getElementById(id);
+const airC = $("air"), trC = $("trace"), loud = $("loud"), pitch = $("pitch");
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const support = { labels: false, grid: false, airlabels: false };
+let level = "warm", idx = 0, score = 0, streak = 0;
+const tstate = {};
+const st = () => (tstate[level + ":" + idx] ||= { solved: false, revealed: false, hints: 0, wrong: 0 });
+const task = () => BANK[level][idx];
+let answer = null;                 // chosen option id / sort map / typed number
+let airOn = true, playing = !(reduceMQ && reduceMQ.matches), soundOn = false;
+let simT = 0, phase = 0, Acur = 0.4, hist = [];
+let lastFrame = 0, rafId = 0;
+
+/* ===== Theme tokens for canvas ===== */
+let tok = {};
+function readTokens(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["ink", "muted", "accent", "line", "sunk", "surface", "good", "bad", "gold"]) tok[k] = cs.getPropertyValue("--" + k).trim();
+}
+
+/* ===== Canvas sizing ===== */
+function fit(c){
+  const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const w = Math.max(10, Math.round(r.width)), h = Math.max(10, Math.round(r.height));
+  if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)){ c.width = Math.round(w * d); c.height = Math.round(h * d); c._dirty = true; }
+  const ctx = c.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0);
+  return { ctx, w, h };
+}
+
+/* ===== Sound history (the speaker's movement over time), so the pattern travels at one speed ===== */
+const Lnow = () => +loud.value, Pnow = () => +pitch.value;
+const Atarget = () => Lnow() / FACTS.loudMax;
+function fillSteady(){
+  // a steady wave already filling the air (used on task load, reset and resume)
+  hist = []; Acur = Atarget();
+  const f = fDisp(Pnow()), n = 90, span = CROSS + 0.3;
+  for (let k = 0; k <= n; k++){
+    const tk = simT - span + span * k / n;
+    hist.push({ t: tk, y: Acur * Math.sin(phase - 2 * Math.PI * f * (simT - tk)), A: Acur, P: Pnow(), air: airOn });
+  }
+}
+function sampleAt(t){
+  if (!hist.length || t < hist[0].t) return null;
+  let lo = 0, hi = hist.length - 1;
+  if (t >= hist[hi].t) return hist[hi];
+  while (hi - lo > 1){ const m = (lo + hi) >> 1; if (hist[m].t <= t) lo = m; else hi = m; }
+  const a = hist[lo], b = hist[hi], u = (t - a.t) / ((b.t - a.t) || 1);
+  return { y: a.y + (b.y - a.y) * u, A: u < .5 ? a.A : b.A, P: u < .5 ? a.P : b.P, air: a.air && b.air };
+}
+/* displacement (−1…1 × amplitude) of the air at fraction u of the way to the ear */
+function dispAt(u){
+  if (!airOn) return 0;
+  if (!playing) return Acur * Math.sin(phase - 2 * Math.PI * u * wavesAcross(Pnow()));
+  const s = sampleAt(simT - u * CROSS);
+  return s && s.air ? s.y : 0;
+}
+function earSample(){
+  if (!airOn) return null;
+  if (!playing) return { A: Acur, P: Pnow() };
+  const s = sampleAt(simT - CROSS);
+  return s && s.air && s.A > 0 ? s : null;
+}
+
+/* ===== Particles ===== */
+let parts = [], partKey = "", ringIdx = 0;
+function rng(seed){ return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+function layoutParticles(W, h){
+  const key = W + "x" + h; if (key === partKey) return; partKey = key;
+  const sp = W < 320 ? 10 : 12, cols = Math.max(8, Math.floor(W / sp)), top = 28, rows = Math.max(5, Math.floor((h - top - 14) / 14));
+  const r = rng(7); parts = [];
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++){
+    parts.push({ u: (i + 0.5 + (r() - .5) * .3) / cols, y: top + (j + 0.5 + (r() - .5) * .4) * ((h - top - 10) / rows) });
+  }
+  const ri = Math.floor(cols * 0.38), rj = Math.floor(rows / 2);
+  ringIdx = rj * cols + ri; parts[ringIdx].u = (ri + 0.5) / cols; parts[ringIdx].y = top + (rj + 0.5) * ((h - top - 10) / rows);
+}
+
+/* ===== Draw the air ===== */
+function drawAir(){
+  const { ctx, w, h } = fit(airC);
+  ctx.clearRect(0, 0, w, h); ctx.fillStyle = tok.sunk; ctx.fillRect(0, 0, w, h);
+  const spkW = Math.max(54, Math.min(86, w * .11)), earW = Math.max(52, Math.min(80, w * .1));
+  const x0 = spkW + 2, x1 = w - earW - 4, W = x1 - x0, cy = h / 2;
+  const maxD = Math.min(16, W * .032);
+  layoutParticles(W, h);
+  // speaker: magnet + cone; the cone face moves with the vibration (also in a vacuum)
+  const yNow = playing ? (hist.length ? hist[hist.length - 1].y : 0) : Acur * Math.sin(phase);
+  const face = x0 + yNow * maxD, s = Math.min(1, h / 210);
+  ctx.fillStyle = tok.muted; ctx.fillRect(6, cy - 22 * s, 20 * s + 6, 44 * s);
+  ctx.beginPath(); ctx.moveTo(26 * s + 6, cy - 16 * s); ctx.lineTo(face, cy - 70 * s); ctx.lineTo(face, cy + 70 * s); ctx.lineTo(26 * s + 6, cy + 16 * s); ctx.closePath();
+  ctx.fillStyle = tok.line; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = tok.ink; ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(face, cy - 70 * s); ctx.lineTo(face, cy + 70 * s); ctx.stroke();
+  ctx.font = "700 14px " + getComputedStyle(document.body).fontFamily; ctx.fillStyle = tok.ink; ctx.textAlign = "center";
+  ctx.fillText("Speaker", spkW / 2 + 2, h - 8);
+  // ear
+  const ex = w - earW / 2 + 2, es = s;
+  ctx.strokeStyle = tok.ink; ctx.lineWidth = 3; ctx.beginPath();
+  ctx.moveTo(ex - 14 * es, cy - 30 * es);
+  ctx.bezierCurveTo(ex + 6 * es, cy - 56 * es, ex + 34 * es, cy - 34 * es, ex + 22 * es, cy - 2 * es);
+  ctx.bezierCurveTo(ex + 14 * es, cy + 18 * es, ex + 2 * es, cy + 16 * es, ex + 2 * es, cy + 32 * es);
+  ctx.bezierCurveTo(ex + 2 * es, cy + 44 * es, ex - 12 * es, cy + 46 * es, ex - 16 * es, cy + 36 * es);
+  ctx.stroke(); ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(ex - 6 * es, cy - 18 * es); ctx.bezierCurveTo(ex + 8 * es, cy - 30 * es, ex + 20 * es, cy - 12 * es, ex + 6 * es, cy + 2 * es);
+  ctx.stroke();
+  ctx.fillText("Ear", ex, h - 8);
+  // field
+  if (!airOn){
+    ctx.setLineDash([8, 6]); ctx.strokeStyle = tok.muted; ctx.lineWidth = 2; ctx.strokeRect(x0 + 8, 10, W - 16, h - 20); ctx.setLineDash([]);
+    ctx.fillStyle = tok.muted; ctx.font = "700 17px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("No air: a vacuum", x0 + W / 2, cy - 4);
+    ctx.font = "400 15px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("No particles to pass the vibration on", x0 + W / 2, cy + 20);
+  } else {
+    ctx.textAlign = "left"; ctx.fillStyle = tok.muted; ctx.font = "400 14px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("The sound travels this way →", x0 + 10, 18);
+    // faint shading where the particles are squashed together (higher pressure)
+    const NB2 = 90;
+    for (let i = 0; i < NB2; i++){
+      const u = (i + .5) / NB2, d = -(dispAt(u + .5 / NB2) - dispAt(u - .5 / NB2)) * maxD / (W / NB2);
+      if (d > 0.02){ ctx.globalAlpha = Math.min(.3, d * 1.2); ctx.fillStyle = tok.accent; ctx.fillRect(x0 + i * W / NB2, 26, W / NB2 + .5, h - 34); }
+    }
+    ctx.globalAlpha = 1;
+    for (let k = 0; k < parts.length; k++){
+      const p = parts[k]; if (k === ringIdx) continue;
+      const x = x0 + p.u * W + dispAt(p.u) * maxD;
+      ctx.beginPath(); ctx.arc(x, p.y, 3.1, 0, 6.2832); ctx.fillStyle = tok.muted; ctx.fill();
+    }
+    // ringed particle with a mark at its home position
+    const rp = parts[ringIdx], hx = x0 + rp.u * W, rx = hx + dispAt(rp.u) * maxD;
+    ctx.strokeStyle = tok.accent; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(hx, rp.y + 9); ctx.lineTo(hx, rp.y + 19); ctx.stroke();
+    ctx.beginPath(); ctx.arc(rx, rp.y, 4.6, 0, 6.2832); ctx.fillStyle = tok.accent; ctx.fill();
+    ctx.beginPath(); ctx.arc(rx, rp.y, 8.5, 0, 6.2832); ctx.lineWidth = 2; ctx.stroke();
+    if (support.airlabels) drawAirLabels(ctx, x0, W, h, maxD);
+  }
+  ctx.textAlign = "left";
+}
+function drawAirLabels(ctx, x0, W, h, maxD){
+  // compression where particles bunch up (displacement falls with distance), rarefaction where they spread
+  const N = 160; let best = { c: 0, cu: -1, r: 0, ru: -1 };
+  for (let i = 2; i < N - 2; i++){
+    const u = i / N, d = -(dispAt(u + 1 / N) - dispAt(u - 1 / N)) * maxD / (2 * W / N);
+    if (d > best.c){ best.c = d; best.cu = u; }
+    if (-d > best.r){ best.r = -d; best.ru = u; }
+  }
+  const lab = (u, text) => {
+    const x = x0 + u * W, f = getComputedStyle(document.body).fontFamily;
+    ctx.font = "700 14px " + f; const tw = ctx.measureText(text).width + 14;
+    const bx = Math.min(Math.max(x - tw / 2, x0 + 2), x0 + W - tw - 2), by = h - 26;
+    ctx.fillStyle = tok.surface; ctx.strokeStyle = tok.accent; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 22, 6) : ctx.rect(bx, by, tw, 22); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = tok.accent; ctx.textAlign = "center"; ctx.fillText(text, bx + tw / 2, by + 16);
+    ctx.beginPath(); ctx.moveTo(x, by); ctx.lineTo(x, by - 8); ctx.stroke(); ctx.textAlign = "left";
+  };
+  if (best.c > 0.03) lab(best.cu, "compression");
+  if (best.r > 0.03 && Math.abs(best.ru - best.cu) > 0.12) lab(best.ru, "rarefaction");
+}
+
+/* ===== Draw an oscilloscope trace ===== */
+function drawTrace(c, curves, opts){
+  const { ctx, w, h } = fit(c); const f = getComputedStyle(document.body).fontFamily;
+  ctx.clearRect(0, 0, w, h); ctx.fillStyle = tok.sunk; ctx.fillRect(0, 0, w, h);
+  const pad = 10, top = opts.small ? 8 : 26, cy = top + (h - top - 8) / 2, ampMax = (h - top - 8) / 2 - 4;
+  const X = tau => pad + (tau / FACTS.traceWindow) * (w - 2 * pad);
+  if (opts.grid){
+    ctx.strokeStyle = tok.line; ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++){ const x = X(i * FACTS.traceWindow / 10); ctx.beginPath(); ctx.moveTo(x, top - 4); ctx.lineTo(x, h - 4); ctx.stroke(); }
+    for (let j = -2; j <= 2; j++){ const y = cy + j * ampMax / 2; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke(); }
+  }
+  ctx.strokeStyle = tok.muted; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad, cy); ctx.lineTo(w - pad, cy); ctx.stroke();
+  for (const cv of curves){
+    const A = cv.flat ? 0 : (cv.L / FACTS.loudMax) * ampMax;
+    ctx.save(); ctx.lineWidth = cv.dash ? 3.5 : 3; ctx.strokeStyle = cv.dash ? tok.muted : tok.accent;
+    if (cv.dash) ctx.setLineDash([9, 7]);
+    ctx.beginPath();
+    for (let x = pad; x <= w - pad; x += 1.5){
+      const tau = (x - pad) / (w - 2 * pad) * FACTS.traceWindow;
+      const y = cy - A * Math.sin(2 * Math.PI * cv.P * tau);
+      x === pad ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+  const lc = curves.find(c => c.label && !c.flat);
+  if (opts.labels && lc){
+    const A = (lc.L / FACTS.loudMax) * ampMax, T = 1 / lc.P, ink = tok.accent;
+    ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = 2; ctx.font = "700 14px " + f;
+    const arrow = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      for (const [ax, ay, bx, by] of [[x1, y1, x2, y2], [x2, y2, x1, y1]]){ const a = Math.atan2(by - ay, bx - ax);
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + 7 * Math.cos(a + .5), ay + 7 * Math.sin(a + .5)); ctx.lineTo(ax + 7 * Math.cos(a - .5), ay + 7 * Math.sin(a - .5)); ctx.closePath(); ctx.fill(); } };
+    // amplitude: middle line to the top of the first wave
+    const ax = X(T / 4); arrow(ax, cy, ax, cy - A);
+    { const aw = ctx.measureText("amplitude").width + 8, ty = cy - A / 2;
+      ctx.fillStyle = tok.sunk; ctx.fillRect(ax + 6, ty - 10, aw, 20); ctx.fillStyle = ink;
+      ctx.textAlign = "left"; ctx.fillText("amplitude", ax + 10, ty + 5); }
+    // one wave: from a point on one wave to the same point on the next (across the trace is time, so this is not labelled "wavelength")
+    let ta = T / 4, ya = 12; if (ta + T > FACTS.traceWindow + 1e-9){ ta = 0; }
+    const xa = X(ta), xb = X(ta + T);
+    ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5;
+    const yEnd = ta === 0 ? cy : cy - A;
+    ctx.beginPath(); ctx.moveTo(xa, ya); ctx.lineTo(xa, yEnd); ctx.moveTo(xb, ya); ctx.lineTo(xb, yEnd); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 2;
+    arrow(xa, ya, xb, ya);
+    const tw = ctx.measureText("one wave").width + 10, mx = (xa + xb) / 2;
+    const bx = Math.min(Math.max(mx - tw / 2, 2), w - tw - 2);
+    ctx.fillStyle = tok.sunk; ctx.fillRect(bx, ya - 10, tw, 20); ctx.fillStyle = ink; ctx.textAlign = "center"; ctx.fillText("one wave", bx + tw / 2, ya + 5);
+    ctx.textAlign = "left";
+  }
+}
+
+/* ===== Main draw ===== */
+function draw(){
+  drawAir();
+  const t = task(); const es = earSample();
+  const own = es ? { L: es.A * FACTS.loudMax, P: es.P, label: true } : { L: 0, P: Pnow(), flat: true };
+  let curves = [];
+  if (t && t.type === "count") curves = [{ L: 7, P: t.f, label: true }];
+  else {
+    if (t && t.type === "match") curves.push({ L: t.target.L, P: t.target.P, dash: true });
+    if (t && t.type === "flat") curves.push({ L: 0, P: 100, dash: true, flat: true });
+    curves.push(own);
+  }
+  drawTrace(trC, curves, { grid: support.grid, labels: support.labels });
+  // ear status (words, not colour alone)
+  const el = $("earStatus");
+  let txt, on = false;
+  if (!airOn) txt = "At the ear: silence. There is no air to carry the sound.";
+  else if (!es) txt = "At the ear: silence. The sound has not arrived yet.";
+  else { txt = "At the ear: a sound is arriving."; on = true; }
+  if (el.textContent !== txt){ el.textContent = txt; el.className = "ear-status " + (on ? "on" : "off"); }
+}
+function drawMinis(){
+  const t = task(); if (!t || t.type !== "pick2") return;
+  for (const k of ["A", "B"]){ const c = $("mini" + k); if (c) drawTrace(c, [{ L: t[k].L, P: t[k].P }], { small: true, grid: support.grid }); }
+}
+
+/* ===== Animation loop: paused when hidden; reduced motion starts paused ===== */
+function frame(now){
+  rafId = 0;
+  const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 0; lastFrame = now;
+  if (playing){
+    simT += dt; Acur += (Atarget() - Acur) * Math.min(1, dt * 8);
+    phase += 2 * Math.PI * fDisp(Pnow()) * dt;
+    hist.push({ t: simT, y: Acur * Math.sin(phase), A: Acur, P: Pnow(), air: airOn });
+    while (hist.length > 2 && hist[1].t < simT - CROSS - 0.4) hist.shift();
+  }
+  draw(); if (soundOn) audioUpdate();
+  if (playing && !document.hidden) rafId = requestAnimationFrame(frame);
+}
+function kick(){ if (!rafId && !document.hidden){ lastFrame = 0; rafId = requestAnimationFrame(frame); } }
+function redraw(){ if (!playing) { Acur = Atarget(); draw(); } else kick(); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); audioUpdate(); });
+
+/* ===== Real sound (Web Audio), off by default ===== */
+let actx = null, osc = null, gain = null;
+const MAX_GAIN = 0.06;
+function audioUpdate(){
+  // the real sound follows what is arriving at the ear, so it changes when the trace does
+  if (!actx) return;
+  const es = soundOn && !document.hidden ? earSample() : null;
+  const g = es ? MAX_GAIN * Math.min(1, es.A) : 0;
+  gain.gain.setTargetAtTime(g, actx.currentTime, 0.05);
+  if (es) osc.frequency.setTargetAtTime(es.P, actx.currentTime, 0.03);
+}
+$("soundBtn").addEventListener("click", () => {
+  soundOn = !soundOn;
+  try {
+    if (soundOn && !actx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      actx = new AC(); osc = actx.createOscillator(); gain = actx.createGain();
+      osc.type = "sine"; gain.gain.value = 0; osc.frequency.value = Pnow(); osc.connect(gain).connect(actx.destination); osc.start();
+    }
+    if (actx && actx.state === "suspended") actx.resume();
+  } catch (e) { soundOn = false; }
+  const b = $("soundBtn"); b.setAttribute("aria-pressed", soundOn); b.querySelector(".state").textContent = soundOn ? "on" : "off";
+  audioUpdate();
+});
+
+/* ===== Controls ===== */
+function readouts(){
+  $("loudOut").textContent = Lnow() + " of " + FACTS.loudMax;
+  $("pitchOut").textContent = hz(Pnow());
+}
+for (const el of [loud, pitch]) el.addEventListener("input", () => { readouts(); redraw(); audioUpdate(); });
+function setAir(on){
+  airOn = on;
+  if (!on) for (const e of hist) e.air = false;   // removing the air also removes the sound already on its way
+  const b = $("airBtn"); b.setAttribute("aria-pressed", !on); b.querySelector(".state").textContent = on ? "off" : "on";
+  if (!playing) Acur = Atarget(); audioUpdate(); redraw();
+}
+$("airBtn").addEventListener("click", () => setAir(!airOn));
+function setPlaying(p){
+  playing = p; const b = $("playBtn"); b.textContent = p ? "Pause" : "Play"; b.setAttribute("aria-pressed", !p);
+  b.setAttribute("aria-label", p ? "Pause the motion" : "Play the motion");
+  $("stepBtn").disabled = p;
+  if (p){ fillSteady(); kick(); } else { Acur = Atarget(); draw(); }
+}
+$("playBtn").addEventListener("click", () => setPlaying(!playing));
+$("stepBtn").addEventListener("click", () => { if (!playing){ phase += Math.PI / 4; Acur = Atarget(); draw(); } });
+
+/* ===== Support switches (off on every load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", support[k]); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  redraw(); drawMinis();
+}));
+
+/* ===== Theme changes: re-read tokens and redraw ===== */
+function themeChanged(){ setTimeout(() => { readTokens(); redraw(); drawMinis(); }, 0); }
+$("themeBtn").addEventListener("click", themeChanged);
+if (window.matchMedia){ const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", themeChanged); }
+if (window.ResizeObserver) new ResizeObserver(() => { redraw(); drawMinis(); }).observe(airC);
+
+/* ===== Feedback ===== */
+const fb = $("feedback");
+function say(kind, html){ fb.innerHTML = '<div class="msg ' + kind + '">' + html + "</div>"; }
+function setChips(){ $("sScore").textContent = score; $("sStreak").textContent = streak; }
+function hintLabel(){ const h = st().hints; $("hint").textContent = h < 3 ? "Hint (" + (h + 1) + "/3)" : "No more hints – try Show answer"; }
+
+/* ===== Build the answer area for each task ===== */
+function optButtons(opts, onPick, extraClass){
+  const wrap = document.createElement("div"); wrap.className = extraClass || "opts"; wrap.setAttribute("role", "group");
+  for (const o of opts){
+    const b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.textContent = o.text; b.dataset.id = o.id;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => { wrap.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x === b)); onPick(o.id); });
+    wrap.appendChild(b);
+  }
+  return wrap;
+}
+function pressOpt(container, id){ container.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === id)); }
+function buildAnswer(){
+  const t = task(), box = $("answerBox"); box.innerHTML = ""; answer = null;
+  const p = (txt) => { const e = document.createElement("p"); e.className = "task-hint"; e.textContent = txt; box.appendChild(e); };
+  if (t.type === "change"){
+    box.appendChild(optButtons(TRACE_OPTS, id => answer = id));
+    p("Then move the slider and watch the trace. Press Check.");
+  } else if (t.type === "pick2"){
+    const m = document.createElement("div"); m.className = "minis";
+    for (const k of ["A", "B"]){ const d = document.createElement("div"); d.className = "mini";
+      d.innerHTML = '<canvas id="mini' + k + '" role="img" aria-label="Trace ' + k + '"></canvas>'; m.appendChild(d); }
+    box.appendChild(m);
+    box.appendChild(optButtons([{ id: "A", text: "Trace A" }, { id: "B", text: "Trace B" }], id => answer = id));
+    requestAnimationFrame(drawMinis);
+  } else if (t.type === "match"){
+    p("Use the sliders. Your trace (solid line) must sit on the target (dashed line).");
+  } else if (t.type === "flat"){
+    p("Your trace must sit on the flat dashed target line.");
+  } else if (t.type === "choice"){
+    box.appendChild(optButtons(t.options, id => answer = id));
+  } else if (t.type === "count"){
+    const d = document.createElement("div"); d.className = "numrow";
+    d.innerHTML = '<label for="numIn">Frequency =</label><input id="numIn" type="number" inputmode="numeric" min="0" step="1" autocomplete="off"><span>Hz</span>';
+    box.appendChild(d);
+    const inp = d.querySelector("input");
+    inp.addEventListener("input", () => answer = inp.value.trim() === "" ? null : Number(inp.value));
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+    p("Frequency is the number of waves in 1 second.");
+  } else if (t.type === "sort"){
+    answer = {}; const s = document.createElement("div"); s.className = "sort";
+    for (const f of t.items){
+      const r = document.createElement("div"); r.className = "srow"; r.dataset.f = f;
+      const b = document.createElement("b"); b.textContent = hz(f); r.appendChild(b);
+      r.appendChild(optButtons(GROUPS, id => answer[f] = id, "grp"));
+      r.lastChild.setAttribute("aria-label", hz(f));
+      s.appendChild(r);
+    }
+    box.appendChild(s);
+  }
+}
+
+/* ===== Load a task ===== */
+function loadTask(){
+  const t = task();
+  $("taskNo").textContent = "Task " + (idx + 1) + " of " + BANK[level].length;
+  $("taskText").textContent = t.text;
+  $("rangeNote").hidden = t.type === "sort";
+  $("lower").classList.toggle("wide", t.type === "sort");
+  $("traceCap").innerHTML = t.type === "count"
+    ? "Oscilloscope: the <b>mystery sound</b>. The screen shows <b>0.01 s</b>."
+    : "Oscilloscope: the sound at the ear. The screen shows <b>0.01 s</b>.";
+  $("legend").innerHTML = t.type === "match" || t.type === "flat"
+    ? '<span><span class="k"></span>your trace</span><span><span class="k dash"></span>target</span>' : "";
+  resetControls(); fb.innerHTML = ""; hintLabel(); buildAnswer();
+  if (st().solved) say("good", "Correct. You have already solved this task.");
+}
+function resetControls(){
+  const t = task(); loud.value = t.start.L; pitch.value = t.start.P; airOn = true;
+  const b = $("airBtn"); b.setAttribute("aria-pressed", "false"); b.querySelector(".state").textContent = "off";
+  readouts(); audioUpdate(); Acur = Atarget(); fillSteady(); redraw();
+}
+
+/* ===== Marking ===== */
+const DIRWORD = { louder: "louder", quieter: "quieter", higher: "higher", lower: "lower" };
+function evaluate(){
+  const t = task(), L = Lnow(), P = Pnow();
+  if (t.type === "change"){
+    if (!answer) return { none: "Pick what you think will happen to the trace first." };
+    const isLoud = t.dir === "louder" || t.dir === "quieter";
+    const moved = isLoud ? (t.dir === "louder" ? L > t.start.L : L < t.start.L) : (t.dir === "higher" ? P > t.start.P : P < t.start.P);
+    const other = isLoud ? P !== t.start.P : L !== t.start.L;
+    const want = EFFECT[t.dir];
+    if (!airOn) return { ok: false, msg: "The air is removed, so the trace is flat. Put the air back to see the sound." };
+    if (other) return { ok: false, msg: isLoud
+      ? "You changed the pitch too. Put Pitch back to " + hz(t.start.P) + ". Change only the loudness, so you can see what it does."
+      : "You changed the loudness too. Put Loudness back to " + t.start.L + ". Change only the pitch, so you can see what it does." };
+    if (!moved){
+      const sl = isLoud ? "Loudness" : "Pitch";
+      return { ok: false, msg: "Your sound is not " + DIRWORD[t.dir] + " yet. Move the " + sl + " slider the other way, then watch the trace." };
+    }
+    if (answer !== want){
+      let m;
+      if (isLoud && (answer === "closer" || answer === "apart")) m = "That is the mix-up between loud and high. Loudness does not change the pitch. It changes how tall the waves are (the amplitude). Look again at the trace.";
+      else if (!isLoud && (answer === "taller" || answer === "shorter")) m = "That is the mix-up between high and loud. Pitch does not change the loudness. It changes how close together the waves are (the frequency). Count the waves again.";
+      else m = "Look again: the change went the other way. Compare the trace now with how it looked at the start (press Reset to see it again).";
+      return { ok: false, msg: m };
+    }
+    return { ok: true, msg: isLoud ? "A " + DIRWORD[t.dir] + " sound has " + (t.dir === "louder" ? "bigger" : "smaller") + " vibrations, so the waves are " + (want === "taller" ? "taller" : "less tall") + ". The spacing stayed the same."
+      : "A " + DIRWORD[t.dir] + " pitch means " + (t.dir === "higher" ? "more" : "fewer") + " waves each second, so the waves are " + (want === "closer" ? "closer together" : "further apart") + ". The height stayed the same." };
+  }
+  if (t.type === "pick2"){
+    if (!answer) return { none: "Pick trace A or trace B first." };
+    const key = t.ask === "louder" ? "L" : "P", right = t.A[key] > t.B[key] ? "A" : "B", other = right === "A" ? "B" : "A";
+    if (answer === right) return { ok: true, msg: t.ask === "louder"
+      ? "Trace " + right + " has the taller waves (bigger amplitude), so it is louder. It has fewer waves, but that only means a lower pitch."
+      : "Trace " + right + " has more waves, closer together (higher frequency), so it has the higher pitch. Its waves are less tall, but that only means it is quieter." };
+    return { ok: false, msg: t.ask === "louder"
+      ? "Trace " + other + " has more waves, closer together. That shows a higher pitch, not a louder sound. Louder means taller waves."
+      : "Trace " + other + " has taller waves. That shows a louder sound, not a higher pitch. Higher pitch means more waves, closer together." };
+  }
+  if (t.type === "match"){
+    if (!airOn) return { ok: false, msg: "The air is removed, so your trace is flat. Put the air back." };
+    const dL = L - t.target.L, dP = P - t.target.P, bits = [];
+    if (Math.abs(dL) > TOL.loud) bits.push(dL > 0 ? "Your waves are too tall: make the sound quieter." : "Your waves are not tall enough: make the sound louder.");
+    if (Math.abs(dP) > TOL.pitch) bits.push(dP > 0 ? "Your waves are too close together: lower the pitch." : "Your waves are too far apart: raise the pitch.");
+    if (bits.length) return { ok: false, msg: bits.join(" ") };
+    return { ok: true, msg: "Your trace matches: loudness " + L + " and " + hz(P) + ". The target was loudness " + t.target.L + " and " + hz(t.target.P) + "." };
+  }
+  if (t.type === "flat"){
+    if (!airOn) return { ok: true, msg: "With no air there are no particles to pass the vibration on. The speaker still vibrates, but no sound reaches the ear." };
+    if (L !== t.start.L || P !== t.start.P) return { ok: false, msg: "No sliders this time. Even the quietest setting still makes a sound. What does sound need to travel through?" };
+    return { ok: false, msg: "The trace is not flat yet. Sound still travels through the air to the ear. Look at the switches under the sliders." };
+  }
+  if (t.type === "choice"){
+    if (!answer) return { none: "Pick an answer first." };
+    const o = t.options.find(x => x.id === answer);
+    return o.correct ? { ok: true, msg: t.reason } : { ok: false, msg: o.mis };
+  }
+  if (t.type === "count"){
+    if (answer === null || !isFinite(answer)) return { none: "Type a number of hertz first." };
+    const n = Math.round(t.f * FACTS.traceWindow);
+    if (answer === t.f) return { ok: true, msg: n + " waves in 0.01 s means " + n + " × 100 = " + hz(t.f) + " in 1 second." };
+    if (answer === n) return { ok: false, msg: "You counted " + n + " waves. Good counting, but that is only 0.01 s. Frequency is the number of waves in 1 second, which is 100 times longer." };
+    if (answer === n * 10 || answer === n * 1000) return { ok: false, msg: "Check your multiplying. 1 second is 100 times longer than 0.01 s." };
+    return { ok: false, msg: "Not that number. Count the waves again, from one start on the middle line to the next. Then multiply by 100." };
+  }
+  if (t.type === "sort"){
+    const missing = t.items.filter(f => !answer[f]);
+    if (missing.length) return { none: "Sort every sound first. " + missing.length + " still to do." };
+    const wrong = t.items.filter(f => answer[f] !== hearGroup(f));
+    if (!wrong.length) return { ok: true, msg: "People hear from about " + hz(FACTS.hearingLow) + " to " + hz(FACTS.hearingHigh) + ". Sound above " + hz(FACTS.hearingHigh) + " is ultrasound." };
+    const ultraMiss = wrong.some(f => hearGroup(f) === "ultra");
+    return { ok: false, msg: wrong.length + (wrong.length === 1 ? " sound is" : " sounds are") + " in the wrong group: " + wrong.map(hz).join(", ") + "." +
+      (ultraMiss ? " Ultrasound is still sound, made by vibrations. It is just too high for people to hear." : " Think about the lowest and highest sounds people can hear.") };
+  }
+}
+function check(){
+  const r = evaluate(), s = st();
+  if (r.none){ say("tip", r.none); return; }
+  if (r.ok){
+    if (!s.solved && !s.revealed){ score++; if (s.wrong === 0 && s.hints === 0) streak++; }
+    s.solved = true; setChips(); say("good", "<b>Correct.</b> " + r.msg);
+  } else {
+    s.wrong++; streak = 0; setChips(); say("bad", "<b>Not yet.</b> " + r.msg);
+  }
+}
+function hint(){
+  const s = st(), t = task();
+  if (s.hints >= 3){ say("tip", "No more hints. Try Show answer."); return; }
+  s.hints++; hintLabel(); say("tip", "<b>Hint " + s.hints + ":</b> " + t.hints[s.hints - 1]);
+}
+function reveal(){
+  const t = task(), s = st(); if (!s.solved) s.revealed = true;
+  const box = $("answerBox"); let msg = "";
+  if (t.type === "change"){
+    const step = t.dir === "louder" ? 4 : t.dir === "quieter" ? -4 : 0, pst = t.dir === "higher" ? 300 : t.dir === "lower" ? -300 : 0;
+    loud.value = Math.min(FACTS.loudMax, Math.max(FACTS.loudMin, t.start.L + step)); pitch.value = Math.min(FACTS.pitchMax, Math.max(FACTS.pitchMin, t.start.P + pst));
+    setAir(true); readouts(); audioUpdate(); answer = EFFECT[t.dir]; pressOpt(box, answer);
+    msg = TRACE_OPTS.find(o => o.id === answer).text + ". " + ((t.dir === "louder" || t.dir === "quieter") ? "Loudness changes the amplitude (height) only." : "Pitch changes the frequency (spacing) only.");
+  } else if (t.type === "pick2"){
+    const key = t.ask === "louder" ? "L" : "P"; answer = t.A[key] > t.B[key] ? "A" : "B"; pressOpt(box, answer);
+    msg = "Trace " + answer + ". " + (t.ask === "louder" ? "Louder sounds have taller waves (bigger amplitude)." : "Higher pitch sounds have more waves, closer together (higher frequency).");
+  } else if (t.type === "match"){
+    loud.value = t.target.L; pitch.value = t.target.P; setAir(true); readouts(); audioUpdate();
+    msg = "Loudness " + t.target.L + " and " + hz(t.target.P) + ". Height shows loudness; spacing shows pitch.";
+  } else if (t.type === "flat"){
+    setAir(false); msg = "Remove the air. Sound needs particles to travel, so nothing reaches the ear.";
+  } else if (t.type === "choice"){
+    const o = t.options.find(x => x.correct); answer = o.id; pressOpt(box, answer); msg = o.text + ". " + t.reason;
+  } else if (t.type === "count"){
+    const n = Math.round(t.f * FACTS.traceWindow); const inp = $("numIn"); inp.value = t.f; answer = t.f;
+    msg = hz(t.f) + ". There are " + n + " waves in 0.01 s, so " + n + " × 100 = " + fmt(t.f) + " waves in 1 second.";
+  } else if (t.type === "sort"){
+    box.querySelectorAll(".srow").forEach(r => { const f = +r.dataset.f; answer[f] = hearGroup(f); pressOpt(r, answer[f]); });
+    msg = "Below " + hz(FACTS.hearingLow) + ": too low. " + hz(FACTS.hearingLow) + " to " + hz(FACTS.hearingHigh) + ": people can hear it. Above " + hz(FACTS.hearingHigh) + ": ultrasound.";
+  }
+  redraw(); say("tip", "<b>Answer:</b> " + msg);
+}
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reveal").addEventListener("click", reveal);
+$("reset").addEventListener("click", () => { resetControls(); buildAnswer(); fb.innerHTML = ""; });
+$("next").addEventListener("click", () => { idx = (idx + 1) % BANK[level].length; loadTask(); });
+document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  level = b.dataset.level; idx = 0; loadTask();
+}));
+
+/* ===== Start ===== */
+readTokens();
+const bankErrors = validate();
+if (bankErrors.length){ const e = $("bankErr"); e.hidden = false; e.textContent = "Some tasks were left out because they failed a check: " + bankErrors.join("; ") + "."; }
+setPlaying(playing);
+loadTask(); setChips();
+
+</script>
+</body>
+</html>
