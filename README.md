@@ -7,5 +7,6 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Tool | Link |
 |---|---|
 | Balance the Equation | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
+| Make a Wave | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
 
 Made by Dr T’s Tuition. Shared under CC BY-NC-SA 4.0 — see [LICENSE](LICENSE).
