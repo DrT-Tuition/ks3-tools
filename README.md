@@ -8,4 +8,4 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 |---|---|
 | Balance the Equation | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
 
-Shared under CC BY-NC-SA 4.0 — see [LICENSE](LICENSE).
+Made by Dr T’s Tuition. Shared under CC BY-NC-SA 4.0 — see [LICENSE](LICENSE).
