@@ -586,7 +586,6 @@ function lungPts(s, g){
 function areaOf(pts){ let a=0; for (let i=0;i<pts.length;i++){ const b=pts[(i+1)%pts.length]; a += pts[i][0]*b[1]-b[0]*pts[i][1]; } return Math.abs(a)/2; }
 function volume(g){ return areaOf(g.lungL) + areaOf(g.lungR); }
 const G0 = geom(0);
-const HB0 = G0.D(C+30) - 6; // heart rest position (Canva layer drawn at p = 0)
 function mapPoint(s, x, y, g){
   const dx = Math.abs(x - C) - 40;
   const k = (wallInner(y, g) - 40) / (wallInner(y, G0) - 40);
@@ -698,7 +697,7 @@ const LAYOUT = {
   intercostal: { side:-1, y: 420, anchor: g => [C - (g.r[5].w + g.r[6].w)/2, (g.r[5].y + g.r[6].y)/2] },
   alveoli:     { side: 1, y: 186, anchor: g => [ZX - 30, ZY + 56] },
   bronchiole:  { side: 1, y: 266, anchor: g => mapPoint(1, BRONCHIOLE_NODE[0], BRONCHIOLE_NODE[1], g) },
-  heart:       { side: 1, y: 372, anchor: g => [C + 84, g.D(C+84) - 22] },
+  heart:       { side: 1, y: 372, anchor: g => [C + 84, G0.D(C+84) - 22] },
   diaphragm:   { side: 1, y: 470, anchor: g => [C + 150, g.D(C+150)] }
 };
 const PIN_X = { "-1": 130, "1": 630 };
@@ -1027,7 +1026,7 @@ function draw(p, flowV){
   const right = tl.map(q => [2*C - q[0], q[1]]).reverse();
   $("torso").setAttribute("d", closedPath(tl.concat(right)));
   // heart (behind lungs, sits on the diaphragm)
-  const hb = g.D(C+30) - 6;
+  const hb = G0.D(C+30) - 6; // fixed: heart stays still
   $("heart").setAttribute("d", closedPath([[C-40, hb-40],[C-10, hb-112],[C+50, hb-118],[C+102, hb-60],[C+80, hb-2],[C+10, hb+2]]));
   // lungs
   const dl = closedPath(g.lungL), dr = closedPath(g.lungR);
@@ -1070,7 +1069,8 @@ function draw(p, flowV){
   l2.setAttribute("x1", f1(zs[0] + 13)); l2.setAttribute("y1", f1(zs[1] + 7)); l2.setAttribute("x2", ZX - 40); l2.setAttribute("y2", ZY + 50);
   document.querySelectorAll("#zoomIn .alv").forEach(c => c.setAttribute("r", f1(8.5 + 2.5*p)));
   const ai = $("alvImg"); if (ai){ const k = 1 + (2.5*p/8.5)*0.35, ox = ZJUNC[0], oy = ZJUNC[1]; ai.setAttribute("transform", "translate(" + f1(ox) + " " + f1(oy) + ") scale(" + k.toFixed(3) + ") translate(" + f1(-ox) + " " + f1(-oy) + ")"); }
-  $("heartImg").setAttribute("transform", "translate(0 " + f1(hb - HB0) + ")");
+  // heart kept still on purpose (Dan, 11 Oct 2026): in reality it is carried down a little by the diaphragm,
+  // but a moving heart could suggest to KS3 pupils that it helps with breathing
   fitLayers(g, on);
   // air flow arrows at the top of the trachea
   const mag = Math.min(1, Math.abs(flowV)/0.12), dir = flowV > 0 ? 1 : -1;
