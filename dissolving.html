@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dissolving</title>
+<!--
+  SCIENCE SPEC — Dissolving (KS3)
+  Models: a beaker holding 100 g of solvent (water or oil) on a top-pan balance. Pupils add a solute
+    (sugar, salt or sand) a spatula at a time, stir, and change the temperature (20–100 °C, in 20 °C steps).
+    A solute dissolves up to its solubility (the most that dissolves in 100 g of solvent at that temperature);
+    any extra stays as solid at the bottom and the solution is saturated. Cooling a saturated sugar solution
+    makes the extra sugar come out as crystals (amount = difference in solubility). The balance always reads
+    mass of solvent + mass of solute added (conservation of mass), dissolved or not. A zoomed-in particle view
+    shows solvent particles surrounding solute particles: dissolved solute particles spread out between the
+    solvent particles; they never vanish, shrink or change. Undissolved solid stays packed in a regular pattern
+    at the bottom. All answers are computed in code from DATA.
+  Sources (department lessons, C2.2 Separating mixtures):
+    - C2.2 L2 Solutions (build_C22_L2_Solutions.py, from "Solutions and solubility PPT" s1–12):
+      solute / solvent / solution (s5–7; sweet tea, sea water, coffee, propanone); water particles surround
+      sugar particles, which break away, spread out and mix (s8); salt, sugar, sand in water and oil (s9:
+      salt and sugar dissolve in water but not oil; sand dissolves in neither); mass of solution = mass of
+      solvent + mass of solute, 100 g + 15 g = 115 g, Alina's samples B 107 g and D 120 g (s10, WS Task 2);
+      hinge 10 g sugar + 100 g water = 110 g; gases dissolve: oxygen in water for fish, carbon dioxide in fizzy
+      drinks (s11); misconceptions slide (melting, mass lost, colourless, only solids).
+    - C2.2 L3 Solubility (build_C22_L3_Solubility.py, s13–20): saturated solution, over 200 g sugar in 100 g
+      water (s14); solubility = the most solute that dissolves in 100 g of water; bar chart lithium chloride 83,
+      copper chloride 73, magnesium chloride 54, sodium chloride 36 g per 100 g water (s15); sugar solubility
+      20 °C 202, 40 °C 236, 60 °C 289, 80 °C 365, 100 °C 476 g per 100 g water (s17); estimate at 50 °C about
+      260 g, accept 255–265 g (graph task answer); cooling a saturated solution 80 → 20 °C gives 163 g of
+      crystals (Check It / how to mark); Jo hinge (saturated); Gemma cartoon (Ella / Finn / Gus);
+      misconceptions slide (stirring, insoluble = slow, faster = more soluble).
+  KS3 strand: NC Chemistry, Pure and impure substances: "the concept of a pure substance; mixtures, including
+    dissolving"; "simple techniques for separating mixtures"; "the identification of pure substances";
+    Particulate nature of matter: "conservation of mass, changes of state". AQA KS3 3.5.2 Pure substances
+    (solute, solvent, solution, solubility, saturated).
+  SoW lessons served: Year 8 Term 3 C2.2 Separating mixtures — L2 Solutions, L3 Solubility.
+  Simplifications (shown on screen as "Model limits"):
+    - Particles are far too small to see; each drawn particle stands for lots. One solute particle is drawn
+      for about every 10 g (at least 1, at most 50). Particle numbers are not to scale.
+    - The solvent is always 100 g, so the solubility values can be used directly.
+    - Salt is kept at 36 g per 100 g of water at every temperature (the lessons give no other value).
+    - Only the five lesson temperatures are used (20, 40, 60, 80, 100 °C); no in-between values are invented.
+    - Heating is shown with a thermometer only; in real life you heat on a hot plate, not on a balance.
+    - Dissolving happens faster than in real life. Stirring speeds it up but never makes more dissolve.
+    - The liquid level is drawn the same whatever is dissolved.
+    - Solutions here are clear and colourless; real solutions can be coloured (squash, copper sulfate) but
+      you can always see through them (said in Model limits and in feedback).
+  Misconceptions designed out (BEST, University of York, Chemistry — dissolving; lesson misconception slides):
+    - Dissolving = melting (E8, H2 feedback; the sugar never turns liquid on its own, it mixes with water).
+    - Mass is lost when something dissolves (balance always = solvent + solute; E3, E4, E5, H7 feedback).
+    - Particles disappear or shrink (particle view keeps the same number and size; E9 feedback).
+    - Solutions must be colourless (Model limits; E2 success feedback).
+    - Only solids dissolve (E10: gases dissolve too).
+    - Insoluble means dissolves slowly (H8; sand never dissolves however long you stir; H3 feedback).
+    - Dissolving faster means more soluble; stir long enough and any amount dissolves (H9 predict-then-reveal).
+  Facts and values used:
+    - Solvent: 100 g of water or oil. Salt and sugar dissolve in water but not in oil; sand dissolves in neither (L2 s9).
+    - Sugar in water: 202 g (20 °C), 236 g (40 °C), 289 g (60 °C), 365 g (80 °C), 476 g (100 °C) per 100 g water (L3 s17).
+    - Sugar at 50 °C: about 260 g; answers 255–265 g accepted (L3 graph task). Not used by the model.
+    - Sodium chloride (salt): 36 g per 100 g water (L3 s15 bar chart); kept the same at every temperature.
+    - Bar chart: lithium chloride 83, copper chloride 73, magnesium chloride 54, sodium chloride 36 g (L3 s15).
+    - Crystals on cooling 80 → 20 °C: 365 − 202 = 163 g (L3 Check It).
+    - Mass sums: 100 + 15 = 115 g; 100 + 7 = 107 g; 120 − 100 = 20 g; hinge 100 + 10 = 110 g (L2).
+    - Gases dissolve: fish breathe oxygen dissolved in water; fizzy drinks have carbon dioxide dissolved (L2 s11).
+    - Coloured solutions: squash, copper sulfate (L2 misconception slide).
+    - The beaker can take up to 500 g of solute (model limit, not a science value).
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Support starts OFF on every visit (Mass sum; Dissolved meter). Hint and Show answer are always there.
+  Idea credit: none (designed from scratch).
+  Checks: on load the data and every question are verified (data increasing with temperature; computed
+    answers inside their accepted ranges; each misconception "trap" value outside it; exactly one correct
+    option; the correct option matches the model; for model goals, the start state fails and the Show-answer
+    state passes); any failure shows a visible error box instead of the question.
+  Drawing: beaker, balance, thermometer and particles are drawn in SVG by code (no pictures). Particles use
+    the house look; solute particles carry the letter S, solvent particles are plain, with a key.
+  Sound: none.
+-->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+/* House particle look, the same in every tool (Particle Model's style): solid fill, dark outline, small highlight */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
+/* apparatus colours */
+:root{--glass:#5E7187;--glass-fill:rgba(255,255,255,.45);--glass-shine:rgba(255,255,255,.75);--water:#CFE2F3;--oil:#F2E2A2;--solid:#FFFFFF;--solid-edge:#8C97A6;--sand:#D9BD86;--sand-edge:#8E6E3A;
+  --metal:#D3DAE3;--metal-2:#B7C1CD;--metal-edge:#5E7187;--lcd:#DCE9D2;--lcd-ink:#1E252E;--therm:#B3261E;--bench:#C9C2B2;--zoom-water:#DDEBF7;--zoom-oil:#F5ECCB;--rod:#8FA3B8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--glass:#A9B9CC;--glass-fill:rgba(255,255,255,.07);--glass-shine:rgba(255,255,255,.22);--water:#24507A;--oil:#5E5326;--solid:#E9EDF3;--solid-edge:#7F8DA0;--sand:#B79A63;--sand-edge:#E1C995;
+  --metal:#3A5374;--metal-2:#2D4566;--metal-edge:#A9B4C4;--lcd:#1B3A2E;--lcd-ink:#BFF0CF;--therm:#FF8A80;--bench:#2C3D55;--zoom-water:#1D3E62;--zoom-oil:#3D3A22;--rod:#A9B9CC}}
+:root[data-theme="dark"]{--glass:#A9B9CC;--glass-fill:rgba(255,255,255,.07);--glass-shine:rgba(255,255,255,.22);--water:#24507A;--oil:#5E5326;--solid:#E9EDF3;--solid-edge:#7F8DA0;--sand:#B79A63;--sand-edge:#E1C995;
+  --metal:#3A5374;--metal-2:#2D4566;--metal-edge:#A9B4C4;--lcd:#1B3A2E;--lcd-ink:#BFF0CF;--therm:#FF8A80;--bench:#2C3D55;--zoom-water:#1D3E62;--zoom-oil:#3D3A22;--rod:#A9B9CC}
+.scene{display:grid;gap:10px}
+.readouts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.rd{display:inline-flex;align-items:baseline;gap:8px;background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:3px 12px}
+.rd .rl{font-size:15px;color:var(--muted);font-weight:700}
+.rd b{font-size:clamp(20px,2.4vw,26px);color:var(--accent);font-variant-numeric:tabular-nums}
+.bstate{flex:1 1 280px;margin:0;font-weight:700;font-size:17px;line-height:1.4;padding:6px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:560px){.views{grid-template-columns:minmax(0,1fr)}}
+.view{margin:0;display:grid;gap:6px;align-content:start}
+.view figcaption{font-size:15px;font-weight:700;color:var(--muted)}
+.view svg{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px;align-items:center}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key svg{width:24px;height:24px;border:0;background:none;flex:none}
+.sumline{margin:0;font-size:17px}
+.controls{display:grid;gap:10px}
+.crow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.ctl{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:700 16px var(--f-body);padding:10px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.btn.add{min-height:44px;padding:8px 14px}
+.own{display:inline-flex;align-items:center;gap:6px}
+.own input{font:700 18px var(--f-body);width:6ch;padding:6px 8px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.slider{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;flex:1 1 240px;min-width:0}
+.slider label{font-weight:700;font-size:16px}
+.slider input{flex:1 1 140px;min-width:0;height:44px;accent-color:var(--accent)}
+.slider output{font-weight:700;color:var(--accent);min-width:5ch;font-variant-numeric:tabular-nums}
+.btn.stir{min-width:110px;min-height:48px}
+.log{font-size:16px;color:var(--muted);min-height:1.6em;margin:0}
+.log b{color:var(--ink)}
+.note{font-size:15px;color:var(--muted);margin:0}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.numrow label{font-weight:700}
+.numrow input{font:700 22px var(--f-body);width:7ch;max-width:100%;padding:8px 10px;min-height:48px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.numrow .unit{font-weight:700;font-size:20px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.bank{display:grid;gap:8px}
+.brow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.brow .bl{font-weight:700;min-width:5.5em}
+.wbtn{font:700 16px var(--f-body);padding:6px 14px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.wbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.wbtn[aria-pressed="true"]::before{content:"✓ "}
+.data{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.data h3{margin:0 0 2px;font-size:15px;color:var(--muted)}
+.data svg{width:100%;height:auto;display:block}
+.data table{border-collapse:collapse;font-size:16px;width:100%;font-variant-numeric:tabular-nums}
+.data th,.data td{border:1px solid var(--line);padding:2px 6px;text-align:center}
+.data th{font-weight:700;text-align:left;white-space:nowrap}
+.support-box{margin:0;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:6px 12px;font-size:17px}
+.support-box b{color:var(--accent)}
+@media (max-width:480px){.seg button{padding:10px 11px}.brow .bl{min-width:0;width:100%}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel .wbtn{min-height:38px;padding:4px 12px}
+  .qpanel .bank{gap:4px}
+  .qpanel .data{padding:4px 8px}
+  .qpanel .numrow input{min-height:42px;padding:4px 8px}
+  .qpanel .small{margin-top:2px;font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Dissolving<small>Add a solute to a solvent, stir, and watch the particles and the balance.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dissolving</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Dissolving model">
+      <div class="scene particles">
+        <div class="readouts">
+          <span class="rd" id="massRead"><span class="rl">Balance</span><b id="massVal">100 g</b></span>
+          <span class="rd" id="tempRead"><span class="rl">Temperature</span><b id="tempVal">20 °C</b></span>
+          <p class="bstate" id="stateRead" aria-live="polite"></p>
+        </div>
+        <p class="support-box sumline" id="sumBox" hidden></p>
+        <p class="support-box sumline" id="meterBox" hidden></p>
+        <div class="views">
+          <figure class="view">
+            <figcaption>The beaker on a balance</figcaption>
+            <svg id="beaker" viewBox="0 18 440 344" role="img" aria-label="Beaker on a balance"></svg>
+          </figure>
+          <figure class="view" id="zoomFig">
+            <figcaption>Zoomed in on the dashed circle: particles</figcaption>
+            <svg id="zoom" viewBox="0 0 440 320" role="img" aria-label="Particles"><defs><clipPath id="zclip"><rect x="2" y="2" width="436" height="316" rx="10"/></clipPath></defs><g id="zg" clip-path="url(#zclip)"></g><rect x="2" y="2" width="436" height="316" rx="10" style="fill:none;stroke:var(--glass);stroke-width:3;stroke-dasharray:10 7"/></svg>
+            <div class="key" id="key"></div>
+          </figure>
+        </div>
+        <div class="controls">
+          <div class="crow">
+            <div class="ctl"><span class="clbl" id="solventLbl">Solvent</span><div class="seg" role="group" aria-labelledby="solventLbl" id="solventWrap">
+              <button type="button" data-solvent="water" aria-pressed="true">Water</button><button type="button" data-solvent="oil" aria-pressed="false">Oil</button></div></div>
+            <div class="ctl"><span class="clbl" id="soluteLbl">Solute</span><div class="seg" role="group" aria-labelledby="soluteLbl" id="soluteWrap">
+              <button type="button" data-solute="sugar" aria-pressed="true">Sugar</button><button type="button" data-solute="salt" aria-pressed="false">Salt</button><button type="button" data-solute="sand" aria-pressed="false">Sand</button></div></div>
+          </div>
+          <div class="crow">
+            <div class="ctl" id="addWrap" role="group" aria-label="Add solute"><span class="clbl">Add</span>
+              <button class="btn add" type="button" data-add="5">+ 5 g</button><button class="btn add" type="button" data-add="10">+ 10 g</button><button class="btn add" type="button" data-add="50">+ 50 g</button>
+              <span class="own"><label for="own">or your own:</label><input id="own" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Your own amount in grams"> g <button class="btn add" type="button" id="ownAdd">Add</button></span>
+            </div>
+          </div>
+          <div class="crow">
+            <div class="slider" id="tempWrap"><label for="temp">Temperature</label><input type="range" id="temp" min="20" max="100" step="20" value="20"><output id="tempOut" for="temp">20 °C</output></div>
+            <button class="btn primary stir" type="button" id="stir">Stir</button>
+            <button class="btn" type="button" id="empty">Empty beaker</button>
+          </div>
+        </div>
+        <p class="log" id="log" aria-live="polite"></p>
+        <p class="note">A new solute or solvent starts a fresh beaker of 100 g of solvent. The balance was set to 0 g with the empty beaker on it.</p>
+      </div>
+      <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Here each particle stands for lots, and the numbers are not to scale. The solvent is always 100 g. Only the lesson's data is used: salt stays at 36 g per 100 g of water at every temperature. In real life you heat on a hot plate, not on a balance, and dissolving takes longer. Real solutions can be coloured, like squash or copper sulfate solution, but you can always see through them.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="sum" aria-pressed="false"><span class="dot"></span>Mass sum <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="meter" aria-pressed="false"><span class="dot"></span>Dissolved meter <span class="state">off</span></button>
+        </div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="sum" aria-pressed="false"><span class="dot"></span>Mass sum <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="meter" aria-pressed="false"><span class="dot"></span>Dissolved meter <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Data: every value comes from C2.2 L2 Solutions and L3 Solubility ===== */
+const DATA = {
+  solventMass: 100,                                            // g of solvent in the beaker (solubility is per 100 g)
+  temps: [20, 40, 60, 80, 100],                                // °C, the lesson's results table (L3 s17)
+  sugarWater: { 20: 202, 40: 236, 60: 289, 80: 365, 100: 476 }, // g sugar per 100 g water (L3 s17)
+  sugar50: { about: 260, lo: 255, hi: 265 },                   // L3 graph task: "about 260 g (accept 255–265 g)"
+  saltWater: 36,                                               // g sodium chloride per 100 g water (L3 s15 bar chart)
+  chlorides: [["Lithium chloride", 83], ["Copper chloride", 73], ["Magnesium chloride", 54], ["Sodium chloride", 36]], // L3 s15
+  maxSolute: 500,                                              // g, most the model's beaker takes (model limit)
+  gPerParticle: 10, maxParticles: 50                           // particle view: about one solute particle per 10 g
+};
+const SOLVENTS = { water: { name: "water", Name: "Water" }, oil: { name: "oil", Name: "Oil" } };
+const SOLUTES = { sugar: { name: "sugar", Name: "Sugar" }, salt: { name: "salt", Name: "Salt" }, sand: { name: "sand", Name: "Sand" } };
+/* solubility rule (L2 s9 + L3): g that dissolve in 100 g of solvent */
+function capOf(solvent, solute, T) {
+  if (solvent !== "water") return 0;                 // salt, sugar and sand do not dissolve in oil
+  if (solute === "sugar") return DATA.sugarWater[T];
+  if (solute === "salt") return DATA.saltWater;      // same at every temperature (no other value in the lessons)
+  return 0;                                          // sand is insoluble
+}
+/* a beaker state with no DOM: used by the model and by the load-time check */
+function makeState(s) {
+  const B = { solvent: s.solvent || "water", solute: s.solute || "sugar", T: s.T || 20, D: 0, U: s.add || 0 };
+  if (s.settle) settleState(B);
+  if (s.thenT != null) setTempState(B, s.thenT);
+  return B;
+}
+const EPS = 1e-6;
+const capB = B => capOf(B.solvent, B.solute, B.T);
+const totalB = B => B.D + B.U;
+const massB = B => DATA.solventMass + totalB(B);
+function settleState(B) { const c = capB(B), m = Math.max(0, Math.min(B.U, c - B.D)); B.D += m; B.U -= m; if (B.U < EPS) B.U = 0; }
+function setTempState(B, T) { B.T = T; const c = capB(B); let out = 0; if (B.D > c + EPS) { out = B.D - c; B.D = c; B.U += out; } return out; }
+const saturated = B => B.U > EPS && B.D >= capB(B) - EPS && capB(B) > 0;
+const lowestTempFor = g => DATA.temps.find(T => DATA.sugarWater[T] >= g);
+const g = x => { const r = Math.round(x * 10) / 10; return (Number.isInteger(r) ? String(r) : r.toFixed(1)) + " g"; };
+
+/* ===== Question bank ===== */
+const MELT_WHY = "Dissolving is not melting. Melting is one substance turning into a liquid when it is heated. When sugar dissolves, its particles mix with the water particles.";
+const TASKS = {
+  easy: [
+    { kind: "bank", setup: { solvent: "water", solute: "sugar", add: 0 },
+      text: "You stir sugar into a cup of tea. The sugar dissolves in the water and makes sweet tea. Choose the right word for each part.",
+      slots: [["Solute", "sugar"], ["Solvent", "water"], ["Solution", "sweet tea"]],
+      meaning: { "sugar": "Sugar is the solute: the substance that dissolves.", "water": "Water is the solvent: the liquid that does the dissolving.", "sweet tea": "Sweet tea is the solution: the mixture made when the sugar dissolves." },
+      explain: "Sugar is the solute, water is the solvent, and sweet tea is the solution. Solute + solvent → solution.",
+      hints: ["The solute is the substance that dissolves.", "The solvent is the liquid that does the dissolving.", "Sugar dissolves in water. The mixture they make is the sweet tea."] },
+    { kind: "goal", goal: "sugarSolution", setup: { solvent: "water", solute: "sugar", add: 0 }, answerSetup: { solvent: "water", solute: "sugar", add: 10, settle: true },
+      text: "Make a sugar solution on the model. Add some sugar to the water and stir until it has all dissolved. Then press Check.",
+      hints: ["Check the solvent is Water and the solute is Sugar.", "Press + 10 g, then press Stir.", "Wait until no solid sugar is left at the bottom, then press Check."] },
+    { kind: "predict", setup: { solvent: "water", solute: "sugar", add: 0 }, reveal: { solvent: "water", solute: "sugar", add: 10 }, revealMass: 110,
+      text: "Predict: you dissolve 10 g of sugar in 100 g of water. What will the balance show? Choose, then press Check to test it on the model.",
+      options: [
+        { t: "100 g", why: "That is a common mistake: the sugar does not disappear. Its particles are still there, so its mass still counts." },
+        { t: "Between 100 g and 110 g", why: "That is a common mistake: dissolved things do not weigh less. No particles are lost, so 100 + 10 = 110 g." },
+        { t: "110 g", ok: true, val: 110 },
+        { t: "More than 110 g", why: "Mixing does not add mass. Nothing new is added, so 100 + 10 = 110 g." }
+      ],
+      explain: "No particles are lost: 100 g + 10 g = 110 g. Mass of solution = mass of solvent + mass of solute.",
+      hints: ["Think about the sugar particles. Are they still in the beaker?", "No mass is lost when a solute dissolves.", "Add the mass of the water and the mass of the sugar."] },
+    { kind: "num", setup: { solvent: "water", solute: "sugar", add: 0 }, answerSetup: { solvent: "water", solute: "sugar", add: 7, settle: true }, ans: () => DATA.solventMass + 7,
+      text: "Alina dissolves 7 g of sugar in 100 g of water. What is the mass of the solution? You can test it on the model with “your own”.",
+      what: "Mass of solution", traps: [[100, "That is just the water. The sugar particles are still there, so add their mass too."], [7, "That is just the sugar. Add the mass of the water too."], [93, "You took away. No mass is lost when a solute dissolves, so add the masses."]],
+      low: "Too small. No mass is lost when sugar dissolves. Mass of solution = mass of solvent + mass of solute.", high: "Too big. Mass of solution = mass of solvent + mass of solute.",
+      explain: "100 g + 7 g = 107 g of solution.",
+      hints: ["Mass of solution = mass of solvent + mass of solute.", "The solvent is 100 g of water. The solute is 7 g of sugar.", "7 + 100 = ?"] },
+    { kind: "num", setup: { solvent: "water", solute: "sugar", add: 0 }, answerSetup: { solvent: "water", solute: "sugar", add: 20, settle: true }, ans: () => 120 - DATA.solventMass,
+      text: "Alina's sample D is a sugar solution with a mass of 120 g. It was made with 100 g of water. What mass of sugar is dissolved in it?",
+      what: "Mass of sugar", traps: [[120, "That is the whole solution. Take away the mass of the water."], [220, "You added. Take the water away: 120 − 100."], [100, "That is the mass of the water, not the sugar."]],
+      low: "Too small. The solution is 120 g, and 100 g of that is water.", high: "Too big. The solution is 120 g, and 100 g of that is water.",
+      explain: "120 − 100 = 20 g of sugar. The sugar's mass is still there in the solution.",
+      hints: ["Mass of solution = mass of solvent + mass of solute.", "120 g = 100 g of water + ? g of sugar.", "120 − 100 = ?"] },
+    { kind: "predict", setup: { solvent: "water", solute: "sugar", add: 0 }, reveal: { solvent: "water", solute: "sand", add: 10 }, revealSolute: true,
+      text: "Predict: which solid will not dissolve in water? Choose, then press Check. The model will add 10 g of it to water and stir.",
+      options: [
+        { t: "Salt", solute: "salt", why: "Salt does dissolve in water. It makes a clear solution, like sea water. Try it in Demo." },
+        { t: "Sugar", solute: "sugar", why: "Sugar does dissolve in water. It makes a clear solution, like sweet tea. Try it in Demo." },
+        { t: "Sand", solute: "sand", ok: true }
+      ],
+      explain: "Sand is insoluble in water. It stays at the bottom however long you stir. Salt and sugar dissolve in water.",
+      hints: ["Think about the practical with salt, sugar and sand.", "Which one stayed at the bottom of the water as a solid?", "Sea water has salt dissolved in it, and sweet tea has sugar. What about a sandy beach?"] },
+    { kind: "choice", setup: { solvent: "oil", solute: "salt", add: 0 }, answerSetup: { solvent: "oil", solute: "sugar", add: 10, settle: true }, verify: "oil",
+      text: "Salt and sugar both dissolve in water. What happens when you add them to oil? Test both on the model, then choose.",
+      options: [
+        { t: "Neither of them dissolves in oil", ok: true },
+        { t: "Both of them dissolve in oil too", why: "Test it: salt and sugar stay solid at the bottom of the oil. A solute can dissolve in one solvent but not in another." },
+        { t: "Only sugar dissolves in oil", why: "Test it: sugar stays solid at the bottom of the oil too. A solute can dissolve in one solvent but not in another." }
+      ],
+      explain: "Salt and sugar dissolved in water but not in oil. A solute can dissolve in one solvent but not in another.",
+      hints: ["The solvent is set to Oil. Add some salt and stir.", "Now press Sugar, add some and stir. Look at the bottom of the beaker.", "Solid left at the bottom means it did not dissolve."] },
+    { kind: "choice", setup: { solvent: "water", solute: "sugar", add: 20 },
+      text: "People say sugar “melts” in hot tea. What really happens to the sugar?",
+      options: [
+        { t: "It dissolves: its particles mix with the water", ok: true },
+        { t: "It melts: it turns into a liquid on its own", why: "That is a common mistake. " + MELT_WHY },
+        { t: "It disappears, so the tea gets lighter", why: "That is a common mistake. The sugar particles are still there. You can still taste the sugar, and no mass is lost." }
+      ],
+      explain: "Sugar dissolves: its particles mix with the water. Melting is one substance turning into a liquid.",
+      hints: ["Is the sugar turning into a liquid on its own, or mixing with the water?", "Melting needs heat and only one substance. Here there are two substances.", "Sugar is the solute. Water is the solvent. The word is…?"] },
+    { kind: "choice", setup: { solvent: "water", solute: "sugar", add: 30 }, answerSetup: { solvent: "water", solute: "sugar", add: 30, settle: true },
+      text: "Press Stir and watch the zoomed-in view. What happens to the particles when sugar dissolves in water?",
+      options: [
+        { t: "Water particles surround the sugar particles. They spread out and mix.", ok: true },
+        { t: "The sugar particles shrink until they vanish.", why: "That is a common mistake. The particles never vanish or get smaller. Count them: they spread out between the water particles, and the mass stays the same." },
+        { t: "The sugar particles melt and turn into water particles.", why: "Sugar never turns into water, and dissolving is not melting. The sugar particles spread out between the water particles." }
+      ],
+      explain: "Water particles surround each sugar particle. The sugar particles break away, spread out and mix with the water. They are still there.",
+      hints: ["Press Stir, then look at the particles with an S.", "Do the S particles change size? Do they disappear?", "They break away from the solid and go between the water particles."] },
+    { kind: "choice", setup: { solvent: "water", solute: "sugar", add: 0 },
+      text: "Which of these is true about fizzy drinks?",
+      options: [
+        { t: "They have carbon dioxide gas dissolved in them", ok: true },
+        { t: "Gases cannot dissolve, so the gas is only in the bubbles", why: "That is a common mistake: solids are not the only things that dissolve. Gases can dissolve in liquids too. Fish breathe oxygen that is dissolved in water." },
+        { t: "Water is the solute in a fizzy drink", why: "Water is the solvent: the liquid that does the dissolving. Carbon dioxide is the solute." }
+      ],
+      explain: "Gases can dissolve in liquids too. Fizzy drinks have carbon dioxide dissolved in them, and fish breathe oxygen dissolved in water.",
+      hints: ["Solutions are not always a solid in a liquid.", "Fish breathe oxygen that is dissolved in water.", "Which gas makes a drink fizzy?"] }
+  ],
+  hard: [
+    { kind: "goal", goal: "saturated20", hideState: true, setup: { solvent: "water", solute: "sugar", add: 0 }, answerSetup: { solvent: "water", solute: "sugar", add: 220, settle: true },
+      text: "Make a saturated sugar solution at 20 °C. Keep adding sugar and stirring until no more will dissolve. Then press Check.",
+      hints: ["Use water, sugar and 20 °C. Add sugar in big amounts and stir after each one.", "100 g of water dissolves over 200 g of sugar. Keep going.", "When solid sugar stays at the bottom after stirring, no more will dissolve."] },
+    { kind: "choice", setup: { solvent: "water", solute: "sugar", add: 230, settle: true },
+      text: "Jo keeps adding sugar to water and stirring. Now some sugar stays at the bottom. What is true?",
+      options: [
+        { t: "Stirring for longer will dissolve it all.", why: "That is a common mistake. Once a solution is saturated, no more dissolves, however long you stir. Try it: press Stir." },
+        { t: "The solution is saturated.", ok: true },
+        { t: "The sugar has become insoluble.", why: "Sugar is still soluble: lots of it dissolved. Insoluble means none dissolves at all." },
+        { t: "The sugar is melting.", why: MELT_WHY }
+      ],
+      explain: "No more sugar can dissolve at this temperature: it's saturated. Sugar is still soluble; stirring won't help; dissolving is not melting.",
+      hints: ["Some sugar dissolved, then the rest stayed solid.", "What do we call a solution that can't dissolve any more solute?", "It starts with s: s…"] },
+    { kind: "choice", setup: { solvent: "water", solute: "salt", add: 50, settle: true },
+      text: "Gemma added lots of salt to a cup of water. Some salt was left at the bottom. Who is right?",
+      options: [
+        { t: "Ella: “Salt is insoluble, because some was left at the bottom.”", why: "Insoluble means none dissolves, not “some is left over”. Salt did dissolve until the water was saturated." },
+        { t: "Finn: “The water was saturated. Salt is still soluble.”", ok: true },
+        { t: "Gus: “The salt left over is too heavy to dissolve.”", why: "Being heavy is not the reason. The water was saturated: no more salt could dissolve." }
+      ],
+      explain: "Finn is right. Salt dissolved until the water was saturated. Insoluble means none dissolves, not “some is left over”.",
+      hints: ["Did any of the salt dissolve?", "Insoluble means it does not dissolve at all.", "Some dissolved, then no more could. That word is…?"] },
+    { kind: "choice", data: "chart", chartChoice: "max", setup: { solvent: "water", solute: "salt", add: 0 },
+      text: "Look at the bar chart. Which solute is the most soluble?",
+      hints: ["Solubility is the most solute that dissolves in 100 g of water.", "The more grams that dissolve, the more soluble it is.", "Find the longest bar."] },
+    { kind: "num", data: "chart", setup: { solvent: "water", solute: "salt", add: 0 },
+      ans: () => DATA.chlorides[0][1] - DATA.chlorides[3][1],
+      text: "Use the bar chart. How much more lithium chloride dissolves in 100 g of water than sodium chloride?",
+      what: "Difference", traps: [[83, "That is lithium chloride on its own. Take away the sodium chloride: 83 − 36."], [36, "That is sodium chloride on its own. Take it away from lithium chloride: 83 − 36."], [119, "You added them. “How much more” means take away."]],
+      low: "Too small. Read both bars again, then take away.", high: "Too big. Read both bars again, then take away.",
+      explain: "Lithium chloride 83 g − sodium chloride 36 g = 47 g more.",
+      hints: ["Read the bar for lithium chloride, then for sodium chloride.", "Lithium chloride: 83 g. Sodium chloride: 36 g.", "83 − 36 = ?"] },
+    { kind: "num", data: "table", setup: { solvent: "water", solute: "sugar", add: 0 },
+      ans: () => DATA.sugar50.about, lo: () => DATA.sugar50.lo, hi: () => DATA.sugar50.hi,
+      text: "Use the results for sugar. Estimate the solubility of sugar at 50 °C.",
+      what: "At 50 °C", note: "Answers from 255 g to 265 g count.",
+      traps: [[236, "That is the value at 40 °C. 50 °C is halfway between 40 °C and 60 °C."], [289, "That is the value at 60 °C. 50 °C is halfway between 40 °C and 60 °C."], [525, "You added the two values. Find a value between 236 g and 289 g."]],
+      low: "Too small. 50 °C is between 40 °C (236 g) and 60 °C (289 g), about halfway.", high: "Too big. 50 °C is between 40 °C (236 g) and 60 °C (289 g), about halfway.",
+      explain: "50 °C is halfway between 40 °C (236 g) and 60 °C (289 g). The graph gives about 260 g.",
+      hints: ["Find the two temperatures either side of 50 °C.", "40 °C: 236 g. 60 °C: 289 g.", "Pick a value about halfway between 236 g and 289 g."] },
+    { kind: "num", data: "table", setup: { solvent: "water", solute: "sugar", T: 80, add: 365, settle: true }, answerSetup: { solvent: "water", solute: "sugar", T: 80, add: 365, settle: true, thenT: 20 },
+      ans: () => DATA.sugarWater[80] - DATA.sugarWater[20],
+      text: "The beaker holds a saturated sugar solution at 80 °C. Cool it to 20 °C on the model. What mass of solid sugar crystals forms?",
+      what: "Crystals", traps: [[365, "That is how much was dissolved at 80 °C. Some sugar stays dissolved at 20 °C."], [202, "That is how much stays dissolved at 20 °C. Take it away from 365 g."], [567, "You added. Take away: 365 − 202."], [465, "That is the balance reading. It does not change: the crystals are still in the beaker."]],
+      low: "Too small. Find the solubility at 80 °C and at 20 °C, then take away.", high: "Too big. Find the solubility at 80 °C and at 20 °C, then take away.",
+      explain: "365 − 202 = 163 g. Less sugar can stay dissolved at 20 °C, so about 163 g comes out as crystals. The balance still shows 465 g.",
+      hints: ["Move the temperature down to 20 °C and watch the bottom of the beaker.", "At 80 °C, 365 g was dissolved. At 20 °C only 202 g can stay dissolved.", "365 − 202 = ?"] },
+    { kind: "choice", setup: { solvent: "water", solute: "sand", add: 10 },
+      text: "Sand is insoluble in water. What does insoluble mean? You can stir the sand on the model to test it.",
+      options: [
+        { t: "It does not dissolve at all in that solvent", ok: true },
+        { t: "It dissolves very slowly", why: "That is a common mistake. Insoluble means it does not dissolve at all. Slow dissolving is still dissolving." },
+        { t: "It dissolves only when you stir it", why: "Stirring only makes soluble things dissolve faster. Stir the sand: it never dissolves." }
+      ],
+      explain: "Insoluble means not able to dissolve. Sand stays at the bottom of water however long you stir.",
+      hints: ["Press Stir a few times and watch the sand.", "Does any sand go between the water particles?", "The prefix in- means not."] },
+    { kind: "predict", setup: { solvent: "water", solute: "sugar", add: 0 }, reveal: { solvent: "water", solute: "sugar", add: 250 }, revealSat: true,
+      text: "Stirring makes sugar dissolve faster. Does it make more sugar dissolve? Predict, then press Check. The model adds 250 g of sugar to 100 g of water at 20 °C and stirs.",
+      options: [
+        { t: "No. Stirring makes it dissolve faster, not more.", ok: true },
+        { t: "Yes. Stir long enough and it will all dissolve.", why: "That is a common mistake. Once a solution is saturated, no more dissolves, however long you stir. Press Stir again and watch." },
+        { t: "Yes. Dissolving faster means it is more soluble.", why: "That is a common mistake. Solubility is how much dissolves, not how quickly." }
+      ],
+      explain: "Solubility is how much dissolves, not how quickly. At 20 °C only {sat20} of sugar dissolves in 100 g of water, so {left} stays solid.",
+      hints: ["Solubility is the most solute that dissolves in 100 g of water.", "At 20 °C, 100 g of water dissolves 202 g of sugar.", "250 g is more than that. Can stirring change the solubility?"] },
+    { kind: "goal", goal: "dissolve300", setup: { solvent: "water", solute: "sugar", add: 0 }, answerSetup: { solvent: "water", solute: "sugar", T: 80, add: 300, settle: true }, need: 300,
+      text: "Dissolve 300 g of sugar completely in 100 g of water. Use the lowest temperature that works. Then press Check.",
+      hints: ["Type 300 in “your own” and press Add. Then try a temperature and stir.", "Look at the results for sugar: which temperatures dissolve 300 g or more?", "60 °C dissolves 289 g. 80 °C dissolves 365 g."] }
+  ]
+};
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });   // stable ids for saved ticks
+/* the chart question's options are made from the data, so the answer always matches the chart */
+TASKS.hard.forEach(t => {
+  if (t.chartChoice) {
+    const max = Math.max(...DATA.chlorides.map(c => c[1]));
+    t.options = DATA.chlorides.map(([n, v]) => v === max ? { t: n, ok: true } : { t: n, why: n + ": only " + v + " g dissolves. The most soluble solute has the most grams dissolving in 100 g of water: the longest bar." });
+    const top = DATA.chlorides.find(c => c[1] === max);
+    t.explain = top[0] + " is the most soluble: " + top[1] + " g dissolves in 100 g of water.";
+  }
+});
+const fill = s => String(s).replace(/\{sat20\}/g, g(DATA.sugarWater[20])).replace(/\{left\}/g, g(250 - DATA.sugarWater[20]));
+
+/* goal tests: return { ok, text } for a beaker state */
+const GOALS = {
+  sugarSolution(B) {
+    if (B.solvent !== "water") return { ok: false, text: "Sugar does not dissolve in oil. Change the solvent to water." };
+    if (B.solute !== "sugar") return { ok: false, text: B.solute === "sand" ? "Sand is insoluble: it does not dissolve in water. Choose sugar." : "That is salt. Choose sugar for this question." };
+    if (totalB(B) < EPS) return { ok: false, text: "There is no sugar in the beaker yet. Press + 10 g." };
+    if (saturated(B)) return { ok: false, text: "Too much sugar: the water is saturated and some stays solid. Press Empty beaker and add less." };
+    if (B.U > EPS) return { ok: false, text: "Some sugar is still solid at the bottom. Press Stir to help it dissolve." };
+    return { ok: true, text: "Correct. Sugar is the solute, water is the solvent, and the mixture is a solution. It is clear: you can see through it. (Solutions can be coloured too, like squash.) The balance shows 100 g + " + g(totalB(B)) + " = " + g(massB(B)) + "." };
+  },
+  saturated20(B) {
+    if (B.solvent !== "water") return { ok: false, text: "Sugar does not dissolve in oil at all, so there is no solution. Use water." };
+    if (B.solute !== "sugar") return { ok: false, text: B.solute === "sand" ? "Sand is insoluble: none of it dissolves. A saturated solution needs a solute that dissolves. Use sugar." : "Use sugar for this question." };
+    if (B.T !== 20) return { ok: false, text: "Set the temperature to 20 °C." };
+    if (totalB(B) < EPS) return { ok: false, text: "There is no sugar in the beaker yet. Add some and stir." };
+    if (B.U < EPS) return { ok: false, text: "All the sugar has dissolved, so it is not saturated yet. Add more sugar and stir." };
+    if (!saturated(B)) return { ok: false, text: "There is solid at the bottom, but it is still dissolving. Press Stir, then check again." };
+    return { ok: true, text: "Correct. No more sugar will dissolve at 20 °C, and solid stays at the bottom: the solution is saturated. About " + g(DATA.sugarWater[20]) + " of sugar dissolves in 100 g of water at 20 °C." };
+  },
+  dissolve300(B) {
+    const need = 300, low = lowestTempFor(need);
+    if (B.solvent !== "water") return { ok: false, text: "Sugar does not dissolve in oil. Use water." };
+    if (B.solute !== "sugar") return { ok: false, text: "Use sugar for this question." };
+    if (totalB(B) < EPS) return { ok: false, text: "There is no sugar in the beaker yet. Type 300 in “your own” and press Add." };
+    if (totalB(B) < need - EPS) return { ok: false, text: "Add exactly 300 g of sugar. You have added " + g(totalB(B)) + ", so add " + g(need - totalB(B)) + " more." };
+    if (totalB(B) > need + EPS) return { ok: false, text: "Add exactly 300 g of sugar. You have added " + g(totalB(B)) + ". Press Empty beaker to start again." };
+    if (B.U > EPS && saturated(B)) return { ok: false, text: "At " + B.T + " °C only " + g(capB(B)) + " of sugar dissolves in 100 g of water, so " + g(B.U) + " stays solid. Try a higher temperature." };
+    if (B.U > EPS) return { ok: false, text: "Some sugar is still solid. Press Stir to help it dissolve." };
+    if (B.T > low) return { ok: false, text: "All 300 g dissolved, but " + B.T + " °C is not the lowest temperature that works. Try a cooler one." };
+    return { ok: true, text: "Correct. At " + low + " °C up to " + g(DATA.sugarWater[low]) + " of sugar dissolves, so all 300 g dissolves. At " + DATA.temps[DATA.temps.indexOf(low) - 1] + " °C only " + g(DATA.sugarWater[DATA.temps[DATA.temps.indexOf(low) - 1]]) + " would. As the temperature increases, the solubility increases." };
+  }
+};
+
+function bankCheck() {
+  const errs = [];
+  for (let i = 1; i < DATA.temps.length; i++) if (!(DATA.sugarWater[DATA.temps[i]] > DATA.sugarWater[DATA.temps[i - 1]])) errs.push("data: sugar solubility must rise with temperature");
+  const s50 = DATA.sugar50; if (!(s50.lo <= s50.about && s50.about <= s50.hi && s50.lo > DATA.sugarWater[40] && s50.hi < DATA.sugarWater[60])) errs.push("data: 50 °C estimate outside 40–60 °C values");
+  if (DATA.chlorides.some(c => !(c[1] > 0))) errs.push("data: bar chart values");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (!t.hints || t.hints.length !== 3) errs.push(id + ": needs 3 hints");
+    if (t.kind === "choice" || t.kind === "predict") {
+      if (!t.options || t.options.filter(o => o.ok).length !== 1) errs.push(id + ": needs exactly one correct option");
+      else if (t.options.some(o => !o.ok && !o.why)) errs.push(id + ": a wrong option has no feedback");
+    }
+    if (t.verify === "oil" && !(capOf("oil", "salt", 20) === 0 && capOf("oil", "sugar", 20) === 0 && t.options[0].ok)) errs.push(id + ": oil answer disagrees with the model");
+    if (t.kind === "predict") {
+      const R = makeState(Object.assign({ settle: true }, t.reveal));
+      if (t.revealMass != null) { const ok = t.options.find(o => o.ok); if (massB(R) !== t.revealMass || ok.val !== massB(R) || ok.t !== g(massB(R))) errs.push(id + ": predicted mass disagrees with the model"); }
+      if (t.revealSolute) { if (t.options.some(o => (capOf("water", o.solute, 20) === 0) !== !!o.ok) || t.options.find(o => o.ok).solute !== t.reveal.solute) errs.push(id + ": insoluble answer disagrees with the model"); }
+      if (t.revealSat && !(saturated(R) && Math.abs(R.D - DATA.sugarWater[20]) < EPS)) errs.push(id + ": reveal is not saturated");
+    }
+    if (t.kind === "num") {
+      const a = t.ans(), lo = t.lo ? t.lo() : a, hi = t.hi ? t.hi() : a;
+      if (!(isFinite(a) && a > 0 && lo <= a && a <= hi)) errs.push(id + ": answer not computable");
+      (t.traps || []).forEach(([v]) => { if (v >= lo - 0.5 && v <= hi + 0.5) errs.push(id + ": trap " + v + " is inside the accepted range"); });
+      if (t.answerSetup && t.answerSetup.thenT != null) { const B = makeState(t.answerSetup); if (Math.abs(B.U - a) > EPS || massB(B) !== DATA.solventMass + t.answerSetup.add) errs.push(id + ": crystals in the model disagree with the answer"); }
+    }
+    if (t.kind === "goal") {
+      const f = GOALS[t.goal]; if (!f) { errs.push(id + ": unknown goal"); return; }
+      if (f(makeState(t.setup)).ok) errs.push(id + ": the start state already passes");
+      if (!f(makeState(t.answerSetup)).ok) errs.push(id + ": the answer state does not pass");
+    }
+    if (t.kind === "bank") {
+      const words = t.slots.map(s => s[1]);
+      if (new Set(words).size !== words.length || words.some(w => !t.meaning[w])) errs.push(id + ": word bank");
+    }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { sum: false, meter: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = null, S = {};       // current task and its answer state
+let B = makeState({});        // the beaker
+let stirLeft = 0, addFx = [], logMsg = "", hideState = false;
+
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:dissolving";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+/* ===== Particle drawing (house look) ===== */
+function svgParticle(x, y, r, fill) { return `<circle cx="${(+x).toFixed(1)}" cy="${(+y).toFixed(1)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${(x - r * .35).toFixed(1)}" cy="${(y - r * .35).toFixed(1)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>`; }
+function soluteParticle(x, y, r) { return svgParticle(x, y, r, "var(--particle-2)") + `<text x="${(+x).toFixed(1)}" y="${(y + r * 0.42).toFixed(1)}" font-size="${(r * 1.15).toFixed(1)}" font-weight="700" text-anchor="middle" style="fill:var(--particle-2-ink);font-family:var(--f-body)">S</text>`; }
+
+/* ===== Zoomed-in particle view =====
+   The window shows a small part of the beaker near the bottom. Solid solute sits in a regular, touching pattern
+   at the bottom. Liquid particles (solvent, and any dissolved solute) touch but have no pattern. When a solute
+   particle dissolves it moves from the top of the solid to a place between solvent particles; the number and
+   size of solute particles never change. */
+const ZW = 440, ZH = 320, PR = 13, LAT_COLS = 15, LAT_X0 = (ZW - LAT_COLS * 2 * PR) / 2 + PR, LAT_Y0 = ZH - 8 - PR;
+const LAT_ORDER = (() => { const o = [7]; for (let k = 1; k <= 7; k++) o.push(7 - k, 7 + k); return o; })();   // fill from the middle out
+function latticePos(i) { const row = Math.floor(i / LAT_COLS), col = LAT_ORDER[i % LAT_COLS]; return { x: LAT_X0 + col * 2 * PR, y: LAT_Y0 - row * 2 * PR }; }
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+let CELLS = [], PERM = [];
+/* liquid places: random, touching or nearly touching, no pattern (seeded so the picture is the same each time) */
+function makeCells() {
+  seed = 12345; CELLS = []; const md = (2 * PR + 0.8) ** 2;
+  for (let n = 0; n < 9000; n++) {
+    const x = PR + 3 + rnd() * (ZW - 2 * PR - 6), y = -PR + rnd() * (LAT_Y0 + PR);
+    if (CELLS.every(c => (c.x - x) ** 2 + (c.y - y) ** 2 >= md)) CELLS.push({ id: CELLS.length, x, y });
+  }
+}
+makeCells();
+function newPerm() { PERM = CELLS.map(c => c.id).filter(id => CELLS[id].y > 22); for (let i = PERM.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [PERM[i], PERM[j]] = [PERM[j], PERM[i]]; } }
+let solv = [], latL = [], disL = [], ptime = 0;
+function wantCounts() {
+  const tot = totalB(B); if (tot < EPS) return { N: 0, nd: 0 };
+  const N = Math.min(DATA.maxParticles, Math.max(1, Math.round(tot / DATA.gPerParticle)));
+  return { N, nd: Math.min(N, Math.round(N * B.D / tot)) };
+}
+let lastCounts = { N: 0, nd: 0 };
+function particleLayout(snap) {
+  const { N, nd } = wantCounts(); lastCounts = { N, nd };
+  while (latL.length + disL.length < N) latL.push({ x: LAT_X0 + 7 * 2 * PR + (Math.random() - 0.5) * 120, y: -30 - Math.random() * 60, ph: Math.random() * 6.28 });   // new solid falls in from above
+  while (latL.length + disL.length > N) { if (latL.length) latL.pop(); else disL.pop(); }
+  while (disL.length < nd && latL.length) disL.push(latL.pop());   // the top of the solid breaks away first
+  while (disL.length > nd) latL.push(disL.pop());                  // crystals: particles join the solid again
+  latL.forEach((p, i) => { const q = latticePos(i); p.tx = q.x; p.ty = q.y; p.liq = false; });
+  const lat = latL.map(p => ({ x: p.tx, y: p.ty }));
+  const free = CELLS.filter(c => lat.every(l => (l.x - c.x) ** 2 + (l.y - c.y) ** 2 >= (2 * PR - 1) ** 2));
+  const freeSet = new Set(free.map(c => c.id));
+  const dCells = PERM.filter(id => freeSet.has(id)).slice(0, disL.length).map(id => CELLS[id]);
+  disL.forEach((p, i) => { const c = dCells[i] || free[i % free.length]; p.tx = c.x; p.ty = c.y; p.liq = true; });
+  const used = new Set(dCells.map(c => c.id));
+  const targets = free.filter(c => !used.has(c.id));
+  /* move each solvent particle to the nearest new place, so they slide rather than jump */
+  const pool = solv.slice(), next = [];
+  targets.forEach(t => {
+    let bi = -1, bd = 1e9;
+    for (let k = 0; k < pool.length; k++) { const d = (pool[k].x - t.x) ** 2 + (pool[k].y - t.y) ** 2; if (d < bd) { bd = d; bi = k; } }
+    const p = bi >= 0 && bd < 70 * 70 ? pool.splice(bi, 1)[0] : { x: t.x, y: t.y, ph: Math.random() * 6.28 };
+    p.tx = t.x; p.ty = t.y; next.push(p);
+  });
+  solv = next;
+  if (snap || reduced()) [...solv, ...latL, ...disL].forEach(p => { p.x = p.tx; p.y = p.ty; });
+}
+function drawZoom(dt) {
+  const k = Math.min(1, (dt || 0) * 7), still = reduced();
+  ptime += dt || 0;
+  const all = [...solv, ...latL, ...disL];
+  all.forEach(p => { p.x += (p.tx - p.x) * (still ? 1 : k); p.y += (p.ty - p.y) * (still ? 1 : k); });
+  const wob = (p, a) => still ? [p.x, p.y] : [p.x + a * Math.sin(ptime * 3.1 + p.ph), p.y + a * Math.cos(ptime * 2.7 + p.ph * 1.3)];
+  const stirA = stirLeft > 0 ? 3.2 : 1.8;
+  let h = `<rect x="0" y="0" width="${ZW}" height="${ZH}" style="fill:${B.solvent === "oil" ? "var(--zoom-oil)" : "var(--zoom-water)"}"/>`;
+  solv.forEach(p => { const [x, y] = wob(p, stirA); h += svgParticle(x, y, PR, "var(--particle)"); });
+  latL.forEach(p => { const [x, y] = wob(p, 0.6); h += soluteParticle(x, y, PR); });
+  disL.forEach(p => { const [x, y] = wob(p, stirA); h += soluteParticle(x, y, PR); });
+  $("zg").innerHTML = h;
+}
+function settledParticles() { return [...solv, ...latL, ...disL].every(p => Math.abs(p.tx - p.x) < 0.5 && Math.abs(p.ty - p.y) < 0.5); }
+
+/* ===== Beaker, balance and thermometer ===== */
+const BK = { l: 120, r: 320, top: 78, bot: 284, liq: 150 };
+function pileHeight(U) { return U < EPS ? 0 : Math.min(72, 11 + Math.sqrt(U) * 3.2); }
+function drawBeaker() {
+  const solName = SOLUTES[B.solute].name, liqFill = B.solvent === "oil" ? "var(--oil)" : "var(--water)";
+  let h = "";
+  h += `<rect x="0" y="350" width="440" height="30" style="fill:var(--bench)"/>`;
+  // balance
+  h += `<path d="M70 352 L84 304 L356 304 L370 352 Z" style="fill:var(--metal);stroke:var(--metal-edge);stroke-width:2.5;stroke-linejoin:round"/>`;
+  h += `<rect x="96" y="290" width="248" height="12" rx="4" style="fill:var(--metal-2);stroke:var(--metal-edge);stroke-width:2"/>`;
+  h += `<rect x="160" y="312" width="120" height="32" rx="5" style="fill:var(--lcd);stroke:var(--metal-edge);stroke-width:2"/>`;
+  h += `<text x="272" y="337" font-size="23" font-weight="700" text-anchor="end" style="fill:var(--lcd-ink);font-family:var(--f-body);font-variant-numeric:tabular-nums">${esc(g(massB(B)))}</text>`;
+  // liquid, pile of undissolved solid
+  h += `<path d="M${BK.l + 4} ${BK.liq} L${BK.r - 4} ${BK.liq} L${BK.r - 4} ${BK.bot - 8} Q${BK.r - 4} ${BK.bot - 3} ${BK.r - 10} ${BK.bot - 3} L${BK.l + 10} ${BK.bot - 3} Q${BK.l + 4} ${BK.bot - 3} ${BK.l + 4} ${BK.bot - 8} Z" style="fill:${liqFill}"/>`;
+  h += `<path d="M${BK.l + 4} ${BK.liq} L${BK.r - 4} ${BK.liq}" style="stroke:var(--glass);stroke-width:2;opacity:.7"/>`;
+  const ph = pileHeight(B.U);
+  if (ph > 0) {
+    const fillP = B.solute === "sand" ? "var(--sand)" : "var(--solid)", edge = B.solute === "sand" ? "var(--sand-edge)" : "var(--solid-edge)";
+    const y0 = BK.bot - 4, w = Math.min(90, 34 + ph * 1.2), cx = 228;
+    h += `<path d="M${cx - w} ${y0} Q${cx - w * 0.55} ${y0 - ph * 0.95} ${cx} ${y0 - ph} Q${cx + w * 0.55} ${y0 - ph * 0.95} ${cx + w} ${y0} Z" style="fill:${fillP};stroke:${edge};stroke-width:2"/>`;
+    seed = 777; for (let i = 0; i < Math.min(26, 6 + ph); i++) { const a = rnd() * 2 - 1, yy = y0 - 3 - rnd() * ph * 0.8 * (1 - Math.abs(a)); h += `<circle cx="${(cx + a * w * 0.75).toFixed(1)}" cy="${yy.toFixed(1)}" r="1.8" style="fill:${edge};opacity:.6"/>`; }
+  }
+  // falling solid while adding
+  addFx.forEach(f => { h += `<circle cx="${f.x.toFixed(1)}" cy="${f.y.toFixed(1)}" r="3" style="fill:${B.solute === "sand" ? "var(--sand)" : "var(--solid)"};stroke:var(--solid-edge);stroke-width:1"/>`; });
+  // thermometer
+  const tH = 60 + (B.T - 20) / 80 * 130;
+  h += `<rect x="140" y="34" width="16" height="236" rx="8" style="fill:var(--glass-fill);stroke:var(--glass);stroke-width:2"/>`;
+  h += `<circle cx="148" cy="266" r="11" style="fill:var(--therm);stroke:var(--glass);stroke-width:2"/>`;
+  h += `<rect x="144.5" y="${(258 - tH).toFixed(1)}" width="7" height="${tH.toFixed(1)}" rx="3" style="fill:var(--therm)"/>`;
+  // stirring rod
+  if (stirLeft > 0) {
+    const sw = reduced() ? 0 : Math.sin(ptime * 9) * 26;
+    h += `<path d="M${(250 + sw).toFixed(1)} 40 L${(236 - sw * 0.6).toFixed(1)} 266" style="stroke:var(--rod);stroke-width:7;stroke-linecap:round"/>`;
+    if (!reduced()) h += `<path d="M${BK.l + 40} ${BK.liq + 40} q 70 ${(18 * Math.sin(ptime * 9)).toFixed(1)} 140 0" style="fill:none;stroke:var(--glass);stroke-width:2;opacity:.6"/>`;
+  }
+  // spatula while adding
+  if (addFx.length) h += `<path d="M300 30 L360 18" style="stroke:var(--metal-edge);stroke-width:6;stroke-linecap:round"/><path d="M262 40 L302 28 L306 38 L268 50 Z" style="fill:var(--metal);stroke:var(--metal-edge);stroke-width:2"/>`;
+  // beaker glass with lip and spout, graduation marks
+  h += `<path d="M${BK.l - 8} ${BK.top - 6} Q${BK.l} ${BK.top - 4} ${BK.l} ${BK.top + 6} L${BK.l} ${BK.bot - 10} Q${BK.l} ${BK.bot} ${BK.l + 10} ${BK.bot} L${BK.r - 10} ${BK.bot} Q${BK.r} ${BK.bot} ${BK.r} ${BK.bot - 10} L${BK.r} ${BK.top} L${BK.r + 6} ${BK.top - 4}" style="fill:var(--glass-fill);stroke:var(--glass);stroke-width:4;stroke-linejoin:round;stroke-linecap:round"/>`;
+  h += `<path d="M${BK.l + 10} ${BK.top + 20} L${BK.l + 10} ${BK.bot - 20}" style="stroke:var(--glass-shine);stroke-width:6;stroke-linecap:round"/>`;
+  for (let i = 0; i < 4; i++) { const y = BK.bot - 30 - i * 40; h += `<path d="M${BK.r - 26} ${y} L${BK.r - 6} ${y}" style="stroke:var(--glass);stroke-width:2"/>`; }
+  // the dashed circle that the zoomed-in view shows
+  h += `<circle cx="228" cy="258" r="26" style="fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:6 5"/>`;
+  // labels
+  h += `<path d="M${BK.r - 30} ${BK.liq + 20} L${BK.r + 14} ${BK.liq + 20}" style="stroke:var(--ink);stroke-width:1.5"/><text x="${BK.r + 18}" y="${BK.liq + 26}" font-size="17" font-weight="700" style="fill:var(--ink);font-family:var(--f-body)">100 g</text><text x="${BK.r + 18}" y="${BK.liq + 46}" font-size="17" font-weight="700" style="fill:var(--ink);font-family:var(--f-body)">${SOLVENTS[B.solvent].name}</text>`;
+  $("beaker").innerHTML = h;
+  $("beaker").setAttribute("aria-label", `Beaker with 100 grams of ${B.solvent}${totalB(B) > EPS ? " and " + g(totalB(B)) + " of " + solName + " added" : ""}. ${B.U > EPS ? g(B.U) + " of solid is at the bottom." : ""} The balance shows ${g(massB(B))}.`);
+}
+
+/* ===== Readouts ===== */
+function stateText() {
+  const sv = SOLVENTS[B.solvent].name, sl = SOLUTES[B.solute].name, cap = capB(B);
+  if (totalB(B) < EPS) return "Just " + sv + " (the solvent). Add a solute.";
+  if (cap === 0) return (sl === "sand" ? "Sand" : SOLUTES[B.solute].Name) + " does not dissolve in " + sv + ". It stays as a solid at the bottom.";
+  if (B.U < EPS && B.D >= cap - EPS) return "Saturated solution: all the " + sl + " has dissolved, but no more would dissolve at " + B.T + " °C.";
+  if (B.U < EPS) return "Solution: all the " + sl + " has dissolved. It is clear: you can see through it.";
+  if (saturated(B)) return "Saturated: no more " + sl + " will dissolve. The extra stays as a solid at the bottom.";
+  return "Dissolving… some " + sl + " is still solid at the bottom. Stir to speed it up.";
+}
+function renderReadouts() {
+  $("massVal").textContent = g(massB(B));
+  $("tempVal").textContent = B.T + " °C";
+  $("stateRead").textContent = hideState ? "What is in the beaker? (This line is hidden for this question.)" : stateText();
+  const sl = SOLUTES[B.solute].name, sv = SOLVENTS[B.solvent].name;
+  $("sumBox").hidden = !support.sum; $("meterBox").hidden = !support.meter;
+  $("sumBox").innerHTML = `<b>Mass sum:</b> ${g(DATA.solventMass)} ${sv} + ${g(totalB(B))} ${sl} = <b>${g(massB(B))}</b>`;
+  const cap = capB(B);
+  $("meterBox").innerHTML = `<b>Dissolved meter:</b> ${g(B.D)} of ${sl} dissolved · solid at the bottom: ${g(B.U)} · most that can dissolve in 100 g of ${sv} at ${B.T} °C: ${cap === 0 ? "none" : g(cap)}`;
+  $("tempOut").textContent = B.T + " °C"; $("temp").value = B.T;
+  document.querySelectorAll("#solventWrap button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.solvent === B.solvent)));
+  document.querySelectorAll("#soluteWrap button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.solute === B.solute)));
+  $("key").innerHTML = `<span><svg viewBox="0 0 30 30" aria-hidden="true">${svgParticle(15, 15, 12, "var(--particle)")}</svg>${SOLVENTS[B.solvent].Name} particle (solvent)</span><span><svg viewBox="0 0 30 30" aria-hidden="true">${soluteParticle(15, 15, 12)}</svg>${SOLUTES[B.solute].Name} particle (solute)</span>`;
+  $("zoom").setAttribute("aria-label", "Zoomed-in particles: " + wantCounts().nd + " " + sl + " particles spread between " + sv + " particles; " + (wantCounts().N - wantCounts().nd) + " in the solid at the bottom.");
+  $("log").innerHTML = logMsg;
+}
+function say(html) { logMsg = html; $("log").innerHTML = html; }
+
+/* ===== Model actions ===== */
+let lastPhase = "";
+function phaseOf() { if (totalB(B) < EPS) return "empty"; if (capB(B) === 0) return "insol"; if (B.U < EPS) return "solution"; if (saturated(B)) return "sat"; return "dissolving"; }
+function newBeaker(solvent, solute, T) {
+  B = makeState({ solvent, solute, T: T || B.T || 20 });
+  solv = []; latL = []; disL = []; newPerm(); stirLeft = 0; addFx = []; lastPhase = "empty";
+  particleLayout(true);
+}
+function addSolute(amt, quiet) {
+  if (!(amt > 0)) return false;
+  if (totalB(B) + amt > DATA.maxSolute + EPS) { say("The beaker can take up to " + DATA.maxSolute + " g of solute. Press <b>Empty beaker</b> to start again."); return false; }
+  B.U += amt;
+  if (!quiet) { say("You added <b>" + g(amt) + "</b> of " + SOLUTES[B.solute].name + "."); if (!reduced()) for (let i = 0; i < 10; i++) addFx.push({ x: 262 + Math.random() * 14, y: 46 - i * 9, v: 180 + Math.random() * 60 }); }
+  particleLayout(false); afterChange(); tourSignal("add"); return true;
+}
+function stir() {
+  if (reduced()) { settleState(B); stirLeft = 0.6; particleLayout(false); afterChange(); setTimeout(() => { stirLeft = 0; draw(0); }, 600); }
+  else stirLeft = 2.0;
+  tourSignal("stir"); kick();
+}
+function setTemp(T) {
+  const out = setTempState(B, T);
+  if (out > EPS && B.solute === "sugar") tried.crystals = true;
+  if (out > EPS) say("As it cooled, solid " + SOLUTES[B.solute].name + " crystals formed at the bottom. Less can stay dissolved at " + T + " °C.");
+  particleLayout(false); afterChange(); tourSignal("temp");
+}
+function afterChange() {
+  const ph = phaseOf();
+  if (ph !== lastPhase) {
+    if (ph === "sat" && lastPhase === "dissolving") say("No more " + SOLUTES[B.solute].name + " will dissolve: the solution is <b>saturated</b>.");
+    if (ph === "solution" && lastPhase === "dissolving") say("All the " + SOLUTES[B.solute].name + " has dissolved.");
+    lastPhase = ph;
+  }
+  markTry(); renderReadouts(); draw(0);
+}
+/* one animation loop: dissolving, stirring, falling solid, particle movement. Pauses when the tab is hidden. */
+let rafId = 0, lastTs = null, running = false;
+function kick() { if (!running && !document.hidden) { running = true; lastTs = null; rafId = requestAnimationFrame(loop); } }
+function loop(ts) {
+  const dt = lastTs == null ? 0 : Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
+  let changed = false;
+  if (!reduced()) {
+    const cap = capB(B);
+    if (B.U > EPS && B.D < cap - EPS) {
+      const rate = stirLeft > 0 ? 150 : 4, m = Math.min(B.U, cap - B.D, rate * dt);
+      B.D += m; B.U -= m; if (B.U < EPS) B.U = 0; if (cap - B.D < EPS) B.D = cap; changed = m > 0;
+    }
+    addFx.forEach(f => { f.y += f.v * dt; }); addFx = addFx.filter(f => f.y < BK.liq);
+  }
+  if (stirLeft > 0) stirLeft = Math.max(0, stirLeft - dt);
+  if (changed) { const c = wantCounts(); if (c.N !== lastCounts.N || c.nd !== lastCounts.nd) particleLayout(false); afterChange(); }
+  draw(dt);
+  const busy = stirLeft > 0 || addFx.length || (B.U > EPS && B.D < capB(B) - EPS && !reduced()) || !settledParticles() || !reduced();
+  if (busy && !document.hidden) rafId = requestAnimationFrame(loop); else running = false;
+}
+document.addEventListener("visibilitychange", () => { lastTs = null; if (document.hidden) { cancelAnimationFrame(rafId); running = false; } else kick(); });
+if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { particleLayout(true); draw(0); kick(); });
+function draw(dt) { drawBeaker(); drawZoom(dt); }
+
+/* ===== Demo: things to try (ticked when done) ===== */
+const TRY = [
+  ["solution", "Add 10 g of sugar to water and stir. Watch the balance and the particles."],
+  ["sand", "Try sand in water. Does it dissolve?"],
+  ["oil", "Change the solvent to oil. Try salt and sugar."],
+  ["sat", "Keep adding sugar until no more will dissolve."],
+  ["crystals", "Heat a saturated sugar solution, stir, then cool it to 20 °C."]
+];
+const tried = {};
+function markTry() {
+  const ph = phaseOf();
+  if (B.solvent === "water" && B.solute === "sugar" && ph === "solution") tried.solution = true;
+  if (B.solvent === "water" && B.solute === "sand" && totalB(B) > EPS) tried.sand = true;
+  if (B.solvent === "oil" && B.solute !== "sand" && totalB(B) > EPS) tried.oil = true;
+  if (ph === "sat" && B.solute === "sugar") tried.sat = true;
+  if (mode === "demo") document.querySelectorAll("#tryList li").forEach(li => li.classList.toggle("done", !!tried[li.dataset.k]));
+}
+
+/* ===== Task loading ===== */
+function applySetup(s, animate) {
+  newBeaker(s.solvent, s.solute, s.T || 20);
+  if (s.add) addSolute(s.add, true);
+  if (s.settle) settleState(B);
+  if (s.thenT != null) setTempState(B, s.thenT);
+  lastPhase = phaseOf();
+  particleLayout(!animate); say(""); afterChange();
+}
+function loadDemo() {
+  hideState = false; task = null;
+  $("tryList").innerHTML = TRY.map(([k, x]) => `<li data-k="${k}">${esc(x)}</li>`).join("");
+  applySetup({ solvent: B.solvent || "water", solute: B.solute || "sugar", T: 20, add: 0 });
+  say("Press <b>+ 10 g</b> to add some " + SOLUTES[B.solute].name + ".");
+}
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const list = LEVELS[level]; task = list[idx];
+  hideState = !!task.hideState;
+  S = { choice: null, bank: {}, order: shuffled(task.options ? task.options.length : 0), border: task.slots ? task.slots.map(() => shuffled(task.slots.length)) : [] };
+  applySetup(task.setup);
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = fill(task.text);
+  renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function showAnswerState() {
+  if (task.kind === "choice" || task.kind === "predict") {
+    const i = task.options.findIndex(o => o.ok); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+    if (task.kind === "predict") applySetup(Object.assign({ settle: true }, task.reveal));
+    else if (task.answerSetup) applySetup(task.answerSetup);
+  } else if (task.kind === "bank") {
+    task.slots.forEach(([lab, w]) => { S.bank[lab] = w; }); renderBankSel();
+  } else if (task.kind === "num") {
+    $("ans").value = String(task.ans()); if (task.answerSetup) applySetup(task.answerSetup);
+  } else if (task.kind === "goal") applySetup(task.answerSetup);
+  hideState = false; renderReadouts();
+}
+function showFinished(p) {
+  showAnswerState();
+  if (p.solved) document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+function dataHtml(kind) {
+  if (kind === "chart") {
+    const max = Math.max(...DATA.chlorides.map(c => c[1])), W = 420, lw = 160, bh = 22, gap = 6;
+    let s = `<svg viewBox="0 0 ${W} ${DATA.chlorides.length * (bh + gap) + 4}" role="img" aria-label="Bar chart of solubility in grams per 100 grams of water: ${DATA.chlorides.map(c => c[0] + " " + c[1]).join(", ")}">`;
+    DATA.chlorides.forEach(([n, v], i) => {
+      const y = 2 + i * (bh + gap), w = (W - lw - 50) * v / 100;
+      s += `<text x="${lw - 6}" y="${y + 16}" font-size="15" text-anchor="end" style="fill:var(--ink);font-family:var(--f-body)">${n}</text>`;
+      s += `<rect x="${lw}" y="${y}" width="${w.toFixed(1)}" height="${bh}" rx="3" style="fill:var(--particle);stroke:var(--particle-edge);stroke-width:1.5"/>`;
+      s += `<text x="${(lw + w + 6).toFixed(1)}" y="${y + 16}" font-size="15" font-weight="700" style="fill:var(--ink);font-family:var(--f-body)">${v} g</text>`;
+    });
+    return `<div class="data"><h3>Solubility (g per 100 g of water)</h3>${s}</svg></div>`;
+  }
+  return `<div class="data"><h3>Solubility of sugar (g per 100 g of water)</h3><table><tr><th scope="row">Temperature (°C)</th>${DATA.temps.map(T => `<td>${T}</td>`).join("")}</tr><tr><th scope="row">Sugar (g)</th>${DATA.temps.map(T => `<td>${DATA.sugarWater[T]}</td>`).join("")}</tr></table></div>`;
+}
+function renderAnswer() {
+  const a = $("answer"); let h = task.data ? dataHtml(task.data) : "";
+  if (task.kind === "choice" || task.kind === "predict") {
+    h += `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) => { const o = task.options[i];
+      return `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(o.t)}</span></button>`; }).join("") + `</div>`;
+    a.innerHTML = h;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (task.kind === "bank") {
+    h += `<div class="bank">` + task.slots.map(([lab], si) => `<div class="brow" role="group" aria-label="${lab}"><span class="bl">${lab}:</span>` +
+      S.border[si].map(wi => { const w = task.slots[wi][1]; return `<button type="button" class="wbtn" data-slot="${lab}" data-w="${w}" aria-pressed="false">${w}</button>`; }).join("") + `</div>`).join("") + `</div>`;
+    a.innerHTML = h;
+    a.querySelectorAll(".wbtn").forEach(b => b.addEventListener("click", () => { S.bank[b.dataset.slot] = b.dataset.w; renderBankSel(); }));
+  } else if (task.kind === "num") {
+    h += `<div class="numrow"><label for="ans">${task.what} =</label><input id="ans" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">g</span></div>` + (task.note ? `<p class="small">${task.note}</p>` : "");
+    a.innerHTML = h;
+    $("ans").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  } else {
+    a.innerHTML = `<p class="small" style="margin:0">Use the controls under the beaker. Press Check when you are ready.</p>`;
+  }
+}
+function renderBankSel() { document.querySelectorAll("#answer .wbtn").forEach(b => b.setAttribute("aria-pressed", String(S.bank[b.dataset.slot] === b.dataset.w))); }
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  document.querySelectorAll(`.sw[data-support="${k}"]`).forEach(x => { x.setAttribute("aria-pressed", String(support[k])); x.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  renderReadouts();
+}));
+
+/* ===== Marking ===== */
+function parseNum(s) { s = String(s || "").trim().replace(",", ".").replace(/\s*(g|grams?)\s*$/i, "").replace(/\s/g, ""); return s === "" || isNaN(+s) ? NaN : +s; }
+function evaluate() {
+  if (task.kind === "choice" || task.kind === "predict") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = task.options[S.choice];
+    return o.ok ? { ok: true, text: "Correct. " + fill(task.explain) } : { ok: false, text: fill(o.why) };
+  }
+  if (task.kind === "bank") {
+    const miss = task.slots.filter(([lab]) => !S.bank[lab]);
+    if (miss.length === task.slots.length) return { skip: "Choose a word for each part first." };
+    if (miss.length) return { skip: "Choose a word for " + miss.map(m => m[0]).join(" and ") + " too." };
+    const wrong = task.slots.filter(([lab, w]) => S.bank[lab] !== w);
+    if (!wrong.length) return { ok: true, text: "Correct. " + task.explain };
+    return { ok: false, text: wrong.map(([lab]) => lab + ": you chose " + S.bank[lab] + ". " + task.meaning[S.bank[lab]]).join(" ") };
+  }
+  if (task.kind === "goal") return GOALS[task.goal](B);
+  const x = parseNum($("ans").value);
+  if (isNaN(x)) return { skip: "Type a number in the box first." };
+  const a = task.ans(), lo = task.lo ? task.lo() : a, hi = task.hi ? task.hi() : a;
+  if (x >= lo - 1e-9 && x <= hi + 1e-9) return { ok: true, text: "Correct. " + task.explain };
+  const tr = (task.traps || []).find(([v]) => Math.abs(x - v) < 0.01);
+  return { ok: false, text: tr ? tr[1] : (x < lo ? task.low : task.high) };
+}
+/* predict-then-reveal: run the test on the model after the pupil commits to a prediction */
+function runReveal() {
+  const r = task.reveal;
+  applySetup({ solvent: r.solvent, solute: r.solute, T: r.T || 20, add: 0 });
+  addSolute(r.add); stir();
+}
+/* keep the question line and the feedback in view together (desktop: the panel scrolls; phone: the page scrolls) */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector("#quizPanel .actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+const STUCK = { goal: "Stuck? Turn on <b>Dissolved meter</b> under Support.", num: "Stuck? Turn on <b>Mass sum</b> or <b>Dissolved meter</b> under Support." };
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (task.kind === "predict") runReveal();
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + esc(r.text) + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    if (hideState) { hideState = false; renderReadouts(); }
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + esc(r.text));
+    const need = (task.kind === "goal" && !support.meter) || (task.kind === "num" && !task.data && !(support.sum && support.meter));
+    $("stuckNote").innerHTML = need ? STUCK[task.kind] : "";
+  }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog();
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(task.hints[p.hints - 1])}`); hintLabel();   // latest hint only
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  showAnswerState();
+  let t;
+  if (task.kind === "choice" || task.kind === "predict") { const a = task.options.find(o => o.ok).t; t = "Answer: " + a + (/[.!?]”?$/.test(a) ? " " : ". ") + fill(task.explain); }
+  else if (task.kind === "bank") t = "Answer: " + task.slots.map(([l, w]) => l + " = " + w).join(", ") + ". " + task.explain;
+  else if (task.kind === "num") t = "Answer: " + g(task.ans()) + ". " + task.explain;
+  else t = "Answer: the model now shows it. " + GOALS[task.goal](B).text.replace(/^Correct\. /, "");
+  msg("tip", esc(t) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  $("doneBadge").hidden = true; loadTask();
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#beaker", text: "This is the model: a beaker holding 100 g of water, sitting on a balance." },
+  { el: "#soluteWrap", text: "Choose the solute: the solid you will add. Start with sugar." },
+  { el: "#addWrap", text: "Add the solute a spatula at a time, or type your own amount.", do: "add", doText: "Press + 10 g." },
+  { el: "#stir", text: "Stirring helps the solute dissolve faster.", do: "stir", doText: "Press Stir." },
+  { el: "#zoomFig", text: "This zooms in on the particles. The solute particles (S) spread out between the solvent particles. They never vanish." },
+  { el: "#massRead", text: "The balance shows the total mass. No mass is lost when a solute dissolves." },
+  { el: "#stateRead", text: "This line tells you what is in the beaker: a solution, dissolving, or saturated." },
+  { el: "#tempWrap", text: "Change the temperature. Hotter water can dissolve more sugar.", do: "temp", doText: "Move the temperature slider." },
+  { el: "#solventWrap", text: "Change the solvent to oil. Does sugar still dissolve?", do: "solvent", doText: "Press Oil." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:dissolving", "1"); } catch (e) {}
+  $("newHere").hidden = true;
+  applySetup({ solvent: "water", solute: "sugar", T: 20, add: 0 }); kick();   // the tour starts on a fresh beaker of water, so every "do" step can happen
+  tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that is hidden
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* ===== Wiring ===== */
+document.querySelectorAll("#addWrap .add[data-add]").forEach(b => b.addEventListener("click", () => { addSolute(+b.dataset.add); kick(); }));
+function ownAdd() {
+  const x = parseNum($("own").value);
+  if (!(x > 0)) { say("Type an amount in grams first, such as 7."); return; }
+  if (Math.round(x * 10) / 10 !== x) { say("Use whole grams or one decimal place, such as 7 or 7.5."); return; }
+  addSolute(x); kick();
+}
+$("ownAdd").addEventListener("click", ownAdd);
+$("own").addEventListener("keydown", e => { if (e.key === "Enter") ownAdd(); });
+$("stir").addEventListener("click", stir);
+$("empty").addEventListener("click", () => { newBeaker(B.solvent, B.solute, B.T); say("A fresh beaker of 100 g of " + SOLVENTS[B.solvent].name + "."); afterChange(); kick(); });
+$("temp").addEventListener("input", e => { setTemp(+e.target.value); kick(); });
+document.querySelectorAll("#solventWrap button").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.solvent === B.solvent) return;
+  newBeaker(b.dataset.solvent, B.solute, B.T); say("A fresh beaker of 100 g of " + SOLVENTS[B.solvent].name + "."); afterChange(); kick();
+  if (B.solvent === "oil") tourSignal("solvent");
+}));
+document.querySelectorAll("#soluteWrap button").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.solute === B.solute) return;
+  newBeaker(B.solvent, b.dataset.solute, B.T); say("A fresh beaker. The solute is now " + SOLUTES[B.solute].name + "."); afterChange(); kick();
+}));
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask(); kick();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+/* keep the question panel within the screen, so Check is always visible (desktop) */
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:dissolving")) $("newHere").hidden = true; } catch (e) {}
+</script>
+</body>
+</html>

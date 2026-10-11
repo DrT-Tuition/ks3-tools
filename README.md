@@ -13,6 +13,9 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
+| Dissolving | Chemistry | https://drt-tuition.github.io/ks3-tools/dissolving.html |
+| Separate It | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
+| Displacement Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
 | Make a Wave | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
 | Sound Waves | Physics | https://drt-tuition.github.io/ks3-tools/sound-waves.html |
 | Echo Timer | Physics | https://drt-tuition.github.io/ks3-tools/echo-timer.html |
