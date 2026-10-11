@@ -229,6 +229,10 @@ footer.brand a{color:inherit}
 @media (min-width:1000px){.stage{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}.stage .lower{grid-template-columns:minmax(0,1fr)}}
 .runs.empty{list-style:none;padding-left:0}
 
+/* House particle look, the same in every tool (Particle Model's style): solid fill, dark outline, small highlight */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
 </style>
 </head>
 <body>
@@ -485,8 +489,8 @@ function makePic(kind, rng){
   const m = Math.ceil(FACTS.gas.evenMin*n), mixed = c.every(row => row[0] >= m && row[1] >= m);
   let s = `<svg viewBox="0 0 ${PW} ${PH}" aria-hidden="true"><rect x="1" y="1" width="${PW-2}" height="${PH-2}" rx="6" style="fill:var(--boxbg);stroke:var(--wall)" stroke-width="2"/><line x1="${PW/2}" y1="4" x2="${PW/2}" y2="${PH-4}" style="stroke:var(--muted)" stroke-dasharray="5 5" stroke-width="1.5"/>`;
   for (const q of pts) s += q.g === 0
-    ? `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${r}" style="fill:var(--gasA);stroke:var(--atom-edge)"/>`
-    : `<rect x="${(q.x-r*.85).toFixed(1)}" y="${(q.y-r*.85).toFixed(1)}" width="${(r*1.7).toFixed(1)}" height="${(r*1.7).toFixed(1)}" rx="2" style="fill:var(--gasB);stroke:var(--atom-edge)"/>`;
+    ? svgParticle(q.x, q.y, r, "var(--particle)")
+    : svgParticle(q.x, q.y, r, "var(--particle-2)");
   return { svg: s + "</svg>", mixed, kind };
 }
 const PICS = (function(){ const rng = mulberry32(7); return ["crowded","mixed","start"].map(k => makePic(k, rng)); })();
@@ -728,7 +732,7 @@ const cur = () => TASKS[level][idx];
 /* colours come from the CSS tokens so both themes work */
 let C = {};
 function readColours(){ const s = getComputedStyle(document.documentElement), g = n => s.getPropertyValue(n).trim();
-  C = { gasA: g("--gasA"), gasAi: g("--gasA-ink"), gasB: g("--gasB"), gasBi: g("--gasB-ink"), dye: g("--dye"), water: g("--water"), box: g("--boxbg"), wall: g("--wall"), bar: g("--barrier"), trail: g("--trail"), edge: g("--atom-edge"), ink: g("--ink"), muted: g("--muted"), font: g("--f-body") || "sans-serif" };
+  C = { gasA: g("--particle"), gasAi: g("--particle-ink"), gasB: g("--particle-2"), gasBi: g("--particle-2-ink"), pedge: g("--particle-edge"), dye: g("--dye"), water: g("--water"), box: g("--boxbg"), wall: g("--wall"), bar: g("--barrier"), trail: g("--trail"), edge: g("--atom-edge"), ink: g("--ink"), muted: g("--muted"), font: g("--f-body") || "sans-serif" };
   dirty = true; }
 $("themeBtn").addEventListener("click", () => setTimeout(readColours, 0));
 if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => setTimeout(readColours, 0));
@@ -747,6 +751,14 @@ function drawTrail(arr, extra){
   if (extra) ctx.lineTo(extra.x, extra.y);
   ctx.stroke(); ctx.globalAlpha = 1;
 }
+/* House particle (same look in every tool): solid fill, dark outline about 0.15 × radius, white highlight up and to the left */
+function houseParticle(c, x, y, r, fill, edge) {
+  c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fillStyle = fill; c.fill();
+  c.lineWidth = Math.max(1, r * 0.145); c.strokeStyle = edge; c.stroke();
+  c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.28, 0, 6.2832); c.fillStyle = "rgba(255,255,255,.38)"; c.fill();
+}
+/* the same look as an SVG string */
+function svgParticle(x, y, r, fill) { return `<circle cx="${(+x).toFixed(1)}" cy="${(+y).toFixed(1)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${(x - r * .35).toFixed(1)}" cy="${(y - r * .35).toFixed(1)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>`; }
 function ring(x, y, r){ ctx.strokeStyle = C.trail; ctx.lineWidth = 3/Math.min(1, scale); ctx.beginPath(); ctx.arc(x, y, r, 0, 2*Math.PI); ctx.stroke(); }
 
 function draw(){
@@ -762,9 +774,7 @@ function drawGas(){
   if (support.trails) drawTrail(gas.trail, gas.p[0]);
   ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = `700 ${r*1.25}px ${C.font}`;
   for (const q of gas.p){
-    ctx.lineWidth = 1.2; ctx.strokeStyle = C.edge;
-    if (q.g === 0){ ctx.fillStyle = C.gasA; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 2*Math.PI); ctx.fill(); ctx.stroke(); }
-    else { const s = r*.88; ctx.fillStyle = C.gasB; ctx.beginPath(); ctx.rect(q.x-s, q.y-s, 2*s, 2*s); ctx.fill(); ctx.stroke(); }
+    houseParticle(ctx, q.x, q.y, r, q.g === 0 ? C.gasA : C.gasB, C.pedge);
     if (letters){ ctx.fillStyle = q.g === 0 ? C.gasAi : C.gasBi; ctx.fillText(q.g === 0 ? "A" : "B", q.x, q.y + r*.06); }
   }
   if (support.trails) ring(gas.p[0].x, gas.p[0].y, r + 5);
@@ -778,7 +788,7 @@ function drawLiquid(){
     ctx.fillStyle = C.ink; ctx.font = `700 ${fs}px ${C.font}`; ctx.fillText(liqLabel(B.key), B.x0 + B.w/2, 36);
     if (!liq.added){ ctx.fillStyle = C.muted; ctx.font = `400 ${fs*.85}px ${C.font}`; ctx.fillText("Water only", B.x0 + B.w/2, (B.top+B.bot)/2); }
     ctx.fillStyle = C.dye; ctx.globalAlpha = .8;
-    for (const d of B.dots){ ctx.beginPath(); ctx.arc(d.x, d.y, 3.2, 0, 2*Math.PI); ctx.fill(); }
+    for (const d of B.dots) houseParticle(ctx, d.x, d.y, 3.4, C.dye, C.pedge);
     ctx.globalAlpha = 1;
     if (support.trails && liq.added){ drawTrail(B.trail, B.dots[0]); ring(B.dots[0].x, B.dots[0].y, 7); }
   }
@@ -844,7 +854,7 @@ function paintControls(){
   document.querySelectorAll("[data-temp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.temp === gas.temp ? "true" : "false"));
   $("tempSeg").hidden = mode !== "gas";
   $("legend").innerHTML = mode === "gas"
-    ? `<span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" style="fill:var(--gasA);stroke:var(--atom-edge)"/></svg>Circle A = gas A</span><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" style="fill:var(--gasB);stroke:var(--atom-edge)"/></svg>Square B = gas B</span><span>Grey bar = barrier</span>`
+    ? `<span><svg viewBox="0 0 20 20" aria-hidden="true">${svgParticle(10, 10, 8, "var(--particle)")}</svg>A = gas A</span><span><svg viewBox="0 0 20 20" aria-hidden="true">${svgParticle(10, 10, 8, "var(--particle-2)")}</svg>B = gas B</span><span>Grey bar = barrier</span>`
     : `<span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5" style="fill:var(--dye)"/></svg>Purple dot = dye particles (potassium permanganate)</span><span>Water particles fill the gaps but are not drawn</span>`;
   cv.setAttribute("aria-label", mode === "gas" ? `Box with gas A on the left and gas B on the right. ${gas.lifted ? "The barrier is lifted." : "The barrier is down."} Temperature ${gasLabel(gas.temp)}.` : "Two beakers of water, cold 10 °C and hot 60 °C, with purple dye at the bottom.");
   dirty = true; readout();

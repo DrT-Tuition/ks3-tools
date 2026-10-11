@@ -245,8 +245,10 @@ footer.brand a{color:inherit}
 .zoomc{fill:#FFFFFF;stroke:none}
 .molkey{margin:4px 6px 2px;font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.molkey svg{vertical-align:middle}.molkey .mol circle{stroke-width:.4}
 /* molecules sit on pale tissue in both themes, so they use fixed strong colours */
-.mol .o2 circle{fill:#1F5FA8;stroke:#FFFFFF;stroke-width:.9}
-.mol .co2 circle{fill:#3E434A;stroke:#FFFFFF;stroke-width:.9}
+.mol .o2 circle{fill:#1F5FA8;stroke:#14243D;stroke-width:.55}
+.mol .co2 circle{fill:#59606B;stroke:#14243D;stroke-width:.55}
+.mol .co2 circle.cc{fill:#23272E}
+.mol circle.phl{fill:rgba(255,255,255,.38);stroke:none}
 .flow{fill:none;stroke:var(--air);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .flowhead{fill:var(--air)}
 #chest text.flowtxt{fill:var(--air);font-weight:700;font-size:20px}
@@ -402,7 +404,7 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
           <g id="labels"></g>
           <g id="pins"></g>
         </svg>
-        <p class="molkey" aria-hidden="false"><svg viewBox="-9 -5 18 10" width="22" height="12" aria-hidden="true" class="mol"><g class="o2"><circle cx="-2.6" cy="0" r="3"/><circle cx="2.6" cy="0" r="3"/></g></svg> oxygen (O₂) <svg viewBox="-11 -5 22 10" width="26" height="12" aria-hidden="true" class="mol"><g class="co2"><circle cx="-5" cy="0" r="2.6"/><circle cx="0" cy="0" r="2.9"/><circle cx="5" cy="0" r="2.6"/></g></svg> carbon dioxide (CO₂), in breathed-out air</p>
+        <p class="molkey" aria-hidden="false"><svg viewBox="-9 -5 18 10" width="22" height="12" aria-hidden="true" class="mol"><g class="o2"><circle cx="-2.6" cy="0" r="3"/><circle cx="2.6" cy="0" r="3"/><circle class="phl" cx="-3.65" cy="-1.05" r="0.84"/><circle class="phl" cx="1.55" cy="-1.05" r="0.84"/></g></svg> oxygen (O₂) <svg viewBox="-11 -5 22 10" width="26" height="12" aria-hidden="true" class="mol"><g class="co2"><circle cx="-5" cy="0" r="2.6"/><circle class="cc" cx="0" cy="0" r="2.9"/><circle cx="5" cy="0" r="2.6"/><circle class="phl" cx="-5.91" cy="-0.91" r="0.73"/><circle class="phl" cx="-1.01" cy="-1.01" r="0.81"/><circle class="phl" cx="4.09" cy="-0.91" r="0.73"/></g></svg> carbon dioxide (CO₂), in breathed-out air</p>
       </div>
 
       <div class="ctrls">
@@ -957,9 +959,11 @@ const RIB_URI = "data:image/webp;base64,UklGRgAGAABXRUJQVlA4WAoAAAAQAAAANwAANgAA
   function mol(parent, id, r){
     const m = el("g", { id, class:"mol" }, parent);
     const o = el("g", { class:"o2" }, m);
-    el("circle", { cx: -r*0.9, cy: 0, r }, o); el("circle", { cx: r*0.9, cy: 0, r }, o);
+    // house particle look: each atom has a dark outline and a small highlight (same as Particle Model)
+    const atom = (g, cx, rr, cls) => { el("circle", { cx, cy: 0, r: rr, class: cls || "" }, g); el("circle", { cx: cx - rr*0.35, cy: -rr*0.35, r: rr*0.28, class: "phl" }, g); };
+    atom(o, -r*0.9, r); atom(o, r*0.9, r);
     const c = el("g", { class:"co2" }, m);
-    el("circle", { cx: -r*1.7, cy: 0, r: r*0.85 }, c); el("circle", { cx: 0, cy: 0, r: r*0.95 }, c); el("circle", { cx: r*1.7, cy: 0, r: r*0.85 }, c);
+    atom(c, -r*1.7, r*0.85); atom(c, 0, r*0.95, "cc"); atom(c, r*1.7, r*0.85);
     return m;
   }
   for (let i=0;i<MOL_N;i++) mol(dg, "mo"+i, 3.4);

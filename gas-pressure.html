@@ -209,6 +209,10 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
 .step{font-size:15px;font-weight:700;color:var(--muted);margin:0}
 @media (max-width:700px){.gauge svg{max-width:200px}}
 
+/* House particle look, the same in every tool (Particle Model's style): solid fill, dark outline, small highlight */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
 </style>
 </head>
 <body>
@@ -740,10 +744,16 @@ window.__gasPressure = { sim, pressure, measure(seconds) {
    DRAWING
    ===================================================================== */
 const cv = document.getElementById("box"), cx = cv.getContext("2d");
+/* House particle (same look in every tool): solid fill, dark outline about 0.15 × radius, white highlight up and to the left */
+function houseParticle(c, x, y, r, fill, edge) {
+  c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fillStyle = fill; c.fill();
+  c.lineWidth = Math.max(1, r * 0.145); c.strokeStyle = edge; c.stroke();
+  c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.28, 0, 6.2832); c.fillStyle = "rgba(255,255,255,.38)"; c.fill();
+}
 let C = {}, geo = { left: 0, top: 0, s: 1, w: 0, h: 0 };
 function readColours() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
-  C = { ink: g("--ink"), muted: g("--muted"), accent: g("--accent"), edge: g("--atom-edge"), hit: g("--hit"), surface: g("--surface"), line: g("--line"), sunk: g("--sunk") };
+  C = { part: g("--particle"), pedge: g("--particle-edge"), ink: g("--ink"), muted: g("--muted"), accent: g("--accent"), edge: g("--atom-edge"), hit: g("--hit"), surface: g("--surface"), line: g("--line"), sunk: g("--sunk") };
 }
 function resize() {
   const w = cv.parentElement.clientWidth - 20;
@@ -789,8 +799,7 @@ function draw() {
   for (let k = -1; k <= 1; k++) { cx.beginPath(); cx.moveTo(xp + wall * 0.5, py + k * 8); cx.lineTo(xp + wall * 1.1, py + k * 8); cx.stroke(); }
   // particles (same size at every temperature)
   const pr = Math.max(3.5, R * s);
-  cx.fillStyle = C.accent; cx.strokeStyle = C.edge; cx.lineWidth = 1;
-  for (const p of sim.parts) { cx.beginPath(); cx.arc(X(p.x), Y(p.y), pr, 0, Math.PI * 2); cx.fill(); cx.stroke(); }
+  for (const p of sim.parts) houseParticle(cx, X(p.x), Y(p.y), pr, C.part, C.pedge);
   // wall hits (Support)
   if (support.hits) {
     cx.strokeStyle = C.hit; cx.lineCap = "round";
