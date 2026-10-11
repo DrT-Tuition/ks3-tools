@@ -57,6 +57,12 @@
     each setting and computes the Core answers (faster / slower / no change, the fastest set-up)
     and the Warm-up "blood leaving vs arriving" answer from it. If a computed answer disagrees
     with the authored answer, that task shows a visible error instead.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+    Easy = the 6 Warm-up + 4 Core tasks (10); Hard = the 6 Challenge tasks. Two Core predict tasks were dropped to keep
+    Easy at 10 (Dan, 11 Oct 2026): "What happens if the blood stops flowing?" and "What happens if breathing stops?",
+    because Hard questions 1 and 2 ask about the same two changes. The model check still runs every set-up (the
+    fastest-set-up task needs them all). The Support switches (Labels, Particle counts) sit in the Demo panel in Demo
+    and in the question panel in the Knowledge check; both start off.
   Illustration (Gemini, style E, 11 Oct 2026): a lung-tissue texture behind the alveolus, a flat-cell texture inside the
   wall rows, and one red blood cell picture reused for every cell. Shapes, wall rows, cell outlines, nuclei and every
   particle are still drawn and placed by code (the canvas falls back to the plain drawing until the pictures load).
@@ -235,6 +241,104 @@ select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius
 .step-l{margin:0 0 8px;font-size:17px}
 .setnow{font-size:16px;color:var(--muted);margin:8px 0 0}
 
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+/* Gas Exchange in the new layout */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;align-items:start}
+.opt{display:flex;gap:10px;align-items:flex-start}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt.done-ok,.seg button.done-ok{border:2px solid var(--good);background:var(--good-bg);color:var(--good)}
+.ask{display:grid;gap:8px}
+.ask .step-l{margin:0}
+.ask .setnow{margin:0}
+.seg .k{margin-right:4px}
+#stuck{margin:0}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -245,34 +349,28 @@ select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius
     <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
-  <div class="bar">
-  <div class="levels" role="group" aria-label="Level">
-    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
-  </div>
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Gas Exchange</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
 
-  <div class="support" role="group" aria-label="Support">
-    <span class="lbl">Support:</span>
-    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Particle counts <span class="state">off</span></button>
-  </div>
-
-  <section class="card" aria-label="Gas Exchange">
-    <div id="bankErr" class="bankerr" hidden></div>
-    <div class="meta"><span class="ctx" id="taskText"></span><span class="qno" id="qno"></span></div>
-    <div class="simgrid">
-      <div class="side">
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Gas Exchange model">
       <div class="particles">
         <h2><span>Inside the lung: one alveolus</span>
-          <span class="simhead"><button class="mini" type="button" id="playBtn" aria-pressed="false">Pause</button><button class="mini" type="button" id="stepBtn">Step 1 s</button></span></h2>
-        <div class="canvas-wrap"><canvas id="sim" role="img" aria-label="Diagram of one alveolus with a capillary wrapped round it."></canvas></div>
+          <span class="simhead" id="simhead"><button class="mini" type="button" id="playBtn" aria-pressed="false">Pause</button><button class="mini" type="button" id="stepBtn">Step 1 s</button><button class="mini" type="button" id="demoReset">Start again</button></span></h2>
+        <div class="canvas-wrap" id="simWrap"><canvas id="sim" role="img" aria-label="Diagram of one alveolus with a capillary wrapped round it."></canvas></div>
         <div class="legend" aria-label="Key">
           <span><svg viewBox="0 0 34 18" aria-hidden="true"><circle cx="12" cy="9" r="6" fill="var(--o2)" stroke="var(--o2-edge)"/><circle cx="22" cy="9" r="6" fill="var(--o2)" stroke="var(--o2-edge)"/><circle cx="9.90" cy="6.90" r="1.68" fill="rgba(255,255,255,.38)"/><circle cx="19.90" cy="6.90" r="1.68" fill="rgba(255,255,255,.38)"/></svg>Oxygen (O₂): two balls</span>
           <span><svg viewBox="0 0 34 18" aria-hidden="true"><circle cx="6" cy="9" r="5" fill="var(--co2)" stroke="var(--co2-edge)"/><circle cx="28" cy="9" r="5" fill="var(--co2)" stroke="var(--co2-edge)"/><circle cx="17" cy="9" r="6.5" fill="var(--co2-c)" stroke="var(--co2-edge)"/><circle cx="4.25" cy="7.25" r="1.40" fill="rgba(255,255,255,.38)"/><circle cx="26.25" cy="7.25" r="1.40" fill="rgba(255,255,255,.38)"/><circle cx="14.72" cy="6.72" r="1.82" fill="rgba(255,255,255,.38)"/></svg>Carbon dioxide (CO₂): three balls</span>
@@ -281,21 +379,19 @@ select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius
         <p class="mnote" id="motionNote" hidden>Motion is reduced on this device. Press <b>Step 1 s</b> to move the model on, or <b>Play</b>.</p>
         <div class="counts" id="counts" hidden aria-live="off"></div>
       </div>
-      <div class="panel"><h2>Your answer</h2><div id="answer"></div></div>
-      </div>
-      <div class="side">
-        <div class="panel" role="group" aria-label="Controls">
+      <div class="mgrid">
+        <div class="panel" role="group" aria-label="Controls" id="ctrlPanel">
           <h2>Controls</h2>
-          <div class="ctl"><span class="nm" id="lbBreath">Breathing</span>
+          <div class="ctl" id="ctlBreath"><span class="nm" id="lbBreath">Breathing</span>
             <div class="seg" role="group" aria-labelledby="lbBreath"><button type="button" data-set="breath" data-val="on">On</button><button type="button" data-set="breath" data-val="off">Off</button><button type="button" id="breatheBtn">Take one breath</button></div></div>
-          <div class="ctl"><span class="nm" id="lbFlow">Blood flow</span>
+          <div class="ctl" id="ctlFlow"><span class="nm" id="lbFlow">Blood flow</span>
             <div class="seg" role="group" aria-labelledby="lbFlow"><button type="button" data-set="flow" data-val="on">On</button><button type="button" data-set="flow" data-val="off">Off</button></div></div>
-          <div class="ctl"><span class="nm" id="lbWall">Wall</span>
+          <div class="ctl" id="ctlWall"><span class="nm" id="lbWall">Wall</span>
             <div class="seg" role="group" aria-labelledby="lbWall"><button type="button" data-set="wall" data-val="thin">Thin</button><button type="button" data-set="wall" data-val="thick">Thick</button></div></div>
-          <div class="ctl"><span class="nm" id="lbAlv">Number of alveoli</span>
+          <div class="ctl" id="ctlAlv"><span class="nm" id="lbAlv">Number of alveoli</span>
             <div class="seg" role="group" aria-labelledby="lbAlv"><button type="button" data-set="alv" data-val="few">Few</button><button type="button" data-set="alv" data-val="many">Many</button></div></div>
         </div>
-        <div class="panel">
+        <div class="panel" id="meterPanel">
           <h2>Oxygen into the blood</h2>
           <div class="meter-val" id="mVal" aria-live="off">…</div>
           <div class="mbar" aria-hidden="true"><i id="mBar"></i></div>
@@ -304,20 +400,60 @@ select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius
           <button class="mini" type="button" id="recBtn">Record reading</button></div>
           <ol class="rec" id="recList" aria-live="polite"></ol>
         </div>
-        <div class="panel"><h2>Feedback</h2><div class="feedback" id="fb" aria-live="polite"></div></div>
       </div>
-    </div>
-    <p class="rule" id="stuck"></p>
     <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Real air is mostly nitrogen, which is not shown. Only one alveolus is drawn; more alveoli multiply the reading. The meter works out the speed from the oxygen difference and the wall, so it is smoother than counting. In real blood, red blood cells pick up and carry the oxygen; here it just flows along with the blood.</p>
-    <div class="actions">
-      <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint</button>
-      <button class="btn" type="button" id="reset">Reset</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
-      <button class="btn primary" type="button" id="next">Next →</button>
-    </div>
-  </section>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer" class="ask" aria-label="Your answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+        <div class="support" role="group" aria-label="Support" id="supportGrp">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Particle counts <span class="state">off</span></button>
+        </div>
+        </div>
+        <p class="rule" id="stuck"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
 
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
@@ -332,7 +468,7 @@ select{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius
   const root = document.documentElement, btn = document.getElementById("themeBtn");
   const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
-  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
   btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
@@ -583,17 +719,6 @@ const TASKS = {
       fbWrong: { faster: "Fewer alveoli means less surface for gases to cross, so less oxygen gets in each minute.", same: "Each alveolus works the same, so fewer alveoli means less oxygen in altogether." },
       why: "Fewer alveoli means a smaller surface area, so less oxygen can diffuse in at once. Real lungs have millions of alveoli.",
       hints: ["The meter adds up the oxygen from every alveolus in the bunch.", "Set Number of alveoli to Few and look at the meter.", "Less surface to cross means less oxygen in each minute."] },
-    { type: "predict", ctrl: "flow", to: "off", expect: "slower",
-      text: "What happens if the blood stops flowing? Predict, then switch Blood flow off and watch for 30 seconds.",
-      fbWrong: { faster: "Some people think gases only cross when the blood is still. In fact, still blood fills up with oxygen, the difference gets small, and diffusion slows down.", same: "Wait 30 seconds and watch the meter fall. Still blood fills up with oxygen, so the difference gets small." },
-      mis: { faster: "diffusion only works when blood is still" },
-      why: "Flowing blood carries oxygen away, so the blood next to the wall stays low in oxygen and the difference stays high.",
-      hints: ["Watch the O₂ particles in the capillary after you switch the flow off.", "Still blood fills up with oxygen. What happens to the difference between air and blood?", "A smaller difference means slower diffusion."] },
-    { type: "predict", ctrl: "breath", to: "off", expect: "slower",
-      text: "What happens if breathing stops? Predict, then switch Breathing off and watch for 30 seconds.",
-      fbWrong: { faster: "Without breathing, no fresh air comes in. The air in the alveolus runs low in oxygen, so less diffuses into the blood.", same: "Wait 30 seconds. The air runs low in oxygen, so the meter falls." },
-      why: "Breathing brings in fresh air, keeping lots of oxygen in the alveolus. Without it, the difference gets smaller and diffusion slows.",
-      hints: ["Watch the O₂ particles in the air after you switch breathing off.", "No fresh air comes in. What happens to the oxygen in the alveolus?", "Less oxygen in the air means a smaller difference, so slower diffusion."] },
     { type: "choice", text: "Ava wants to test if wall thickness changes the speed of gas exchange. Which plan is a fair test?",
       opts: [
         { id: "a", t: "Change only the wall. Keep breathing, blood flow and alveoli the same.", ok: true },
@@ -651,13 +776,13 @@ const TASKS = {
       hints: ["Turn on Labels and find the thin layer on the inside of the wall.", "What happens to a gas when it meets water?", "Moist… so gases dissolve, then diffuse."] }
   ]
 };
-const LEVELS = ["warm", "core", "challenge"];
+const LVL_KEYS = ["warm", "core", "challenge"];
 const LEVEL_NAME = { warm: "Warm-up", core: "Core", challenge: "Challenge" };
 
 /* ---------- load-time bank check (structure) ---------- */
 const bankErrors = [];
 function checkBank() {
-  for (const lv of LEVELS) TASKS[lv].forEach((tk, i) => {
+  for (const lv of LVL_KEYS) TASKS[lv].forEach((tk, i) => {
     const where = LEVEL_NAME[lv] + " task " + (i + 1);
     const bad = m => { tk.broken = m; bankErrors.push(where + ": " + m); };
     if (!tk.hints || tk.hints.length !== 3) bad("needs three hints");
@@ -696,7 +821,7 @@ function runModelChecks(done) {
   if (Math.abs(base / baseT - 1) > 0.4) bankErrors.push("Meter: its reading does not match the particles that actually cross (" + Math.round(base) + " vs " + Math.round(baseT) + ")");
   let best = null; for (const k in res) if (!best || res[k].rate > res[best].rate) best = k;
   MODEL = { res, base, verdict, best };
-  for (const lv of LEVELS) TASKS[lv].forEach((tk, i) => {
+  for (const lv of LVL_KEYS) TASKS[lv].forEach((tk, i) => {
     const where = LEVEL_NAME[lv] + " task " + (i + 1);
     if (tk.type === "predict") {
       const s = Object.assign({}, DEFAULTS, { [tk.ctrl]: tk.to });
@@ -740,6 +865,7 @@ function setSetting(k, v) {
   if (k === "breath" && v === "on") sim.breathT = 0;
   sparkMarks.push(sparkData.length);
   syncControls(); draw(); updateMeter(); renderSetNow();
+  tourSignal(k);
 }
 function syncControls() {
   document.querySelectorAll("[data-set]").forEach(b => b.setAttribute("aria-pressed", sim.set[b.dataset.set] === b.dataset.val ? "true" : "false"));
@@ -747,7 +873,7 @@ function syncControls() {
   cv.setAttribute("aria-label", "Diagram of one alveolus with a capillary wrapped round it. Breathing " + s.breath + ", blood flow " + s.flow + ", " + s.wall + " wall, " + s.alv + " alveoli.");
 }
 document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click", () => setSetting(b.dataset.set, b.dataset.val)));
-$("breatheBtn").addEventListener("click", () => { sim.breathe(); if (!running) { for (let i = 0; i < 30; i++) { sim.step(DT); sim.track(DT); } } draw(); });
+$("breatheBtn").addEventListener("click", () => { tourSignal("breath"); sim.breathe(); if (!running) { for (let i = 0; i < 30; i++) { sim.step(DT); sim.track(DT); } } draw(); });
 
 /* ---------- play / pause / step ---------- */
 function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("playBtn").setAttribute("aria-pressed", running ? "false" : "true"); $("motionNote").hidden = !(reduceMQ && reduceMQ.matches); }
@@ -948,6 +1074,7 @@ $("recBtn").addEventListener("click", () => {
   records.push((v === null ? "measuring" : "≈ " + v + " per minute") + ": " + settingsText(sim.set));
   if (records.length > 5) records.shift();
   $("recList").innerHTML = records.map(r => "<li>" + r + "</li>").join("");
+  tourSignal("rec");
 });
 
 /* ---------- animation loop ---------- */
@@ -970,6 +1097,7 @@ document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => 
   const k = b.dataset.support; support[k] = !support[k];
   b.setAttribute("aria-pressed", support[k] ? "true" : "false"); b.querySelector(".state").textContent = support[k] ? "on" : "off";
   $("counts").hidden = !support.counts; updateCounts(); draw(); renderStuck();
+  if (support[k]) tourSignal("support");
 }));
 
 /* ---------- theme ---------- */
@@ -978,55 +1106,110 @@ $("themeBtn").addEventListener("click", retheme);
 if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", retheme); }
 
 /* ================= tasks: score, check, hint, reveal ================= */
-const G = { level: "warm", idx: 0, score: 0, streak: 0, st: {}, ans: {} };
-function curTask() { return TASKS[G.level][G.idx]; }
-function tstate() { const k = G.level + G.idx; return G.st[k] || (G.st[k] = { solved: false, revealed: false, hints: 0, graded: 0 }); }
+for (const lv of LVL_KEYS) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });   // stable ids for saved ticks
+const DEMO_TASK = { type: "demo" };
+let mode = "demo", level = "", idx = 0, streak = 0, LEVELS = {};   // easy = Warm-up + Core, hard = Challenge
+const G = { st: {}, ans: {}, ord: {} };
+function curTask() { return mode === "demo" || !LEVELS[level] ? DEMO_TASK : LEVELS[level][idx]; }
 function blankAns(tk) { return tk.type === "label" ? { labels: ["", "", "", "", ""] } : tk.type === "frame" ? { a: "", b: "" } : { pick: null }; }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-function fb(html, cls) { $("fb").innerHTML = '<div class="msg ' + (cls || "") + '">' + html + "</div>"; }
+function fb(html, cls) { $("fb").innerHTML = '<div class="msg ' + (cls || "") + '">' + html + "</div>"; requestAnimationFrame(keepInView); }
 function addFb(html, cls) { $("fb").insertAdjacentHTML("beforeend", '<div class="msg ' + (cls || "") + '">' + html + "</div>"); }
 function misLine(m) { return m ? "<b>Common mistake:</b> thinking “" + esc(m) + "”. " : ""; }
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:gas-exchange";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, curTask()), p = G.st[k] || (G.st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function paintScore() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+
+const TRY = [
+  "Watch the O₂ particles. Which way do most of them cross the wall?",
+  "Press Take one breath and watch the particles leave up the air tube.",
+  "Make the wall thick. What happens to the meter?",
+  "Switch Blood flow off. Watch the oxygen build up in the capillary.",
+  "Turn on Particle counts. Compare the blood arriving with the blood leaving."
+];
+function loadDemo() {
+  G.ans = {};
+  $("tryList").innerHTML = TRY.map(x => "<li>" + esc(x) + "</li>").join("");
+  newSim({});
+}
 function loadTask() {
-  const tk = curTask();
+  if (mode === "demo") return loadDemo();
+  const list = LEVELS[level], tk = list[idx];
   G.ans = blankAns(tk);
-  $("qno").textContent = LEVEL_NAME[G.level] + " · Task " + (G.idx + 1) + " of " + TASKS[G.level].length;
+  G.ord = { opts: shuffled(tk.opts ? tk.opts.length : 0), labels: shuffled(LABEL_OPTS.length), speed: shuffled(SPEEDOPTS.length),
+            a: shuffled(tk.a ? tk.a.length : 0), b: shuffled(tk.b ? tk.b.length : 0) };
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = "Question " + (idx + 1) + " of " + list.length;
   $("taskText").textContent = tk.text;
   newSim(tk.setup || {});
   $("fb").innerHTML = "";
-  renderAnswer(); renderHint(); renderStuck();
+  renderAnswer(); renderHint(); renderStuck(); renderDots();
   const broken = tk.broken;
   $("check").disabled = !!broken; $("reveal").disabled = !!broken;
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
   if (broken) fb("This task has been switched off because the model check failed: " + esc(broken), "bad");
+  else if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+/* a question already done: show its answer, highlighted, until progress is reset */
+function showFinished(p) {
+  fillAnswer(curTask());
+  if (p.solved) highlightDone();
+  fb(p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+              : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.", p.solved ? "good" : "tip");
+}
+function highlightDone() { $("answer").querySelectorAll(".opt[aria-pressed='true'], [data-p][aria-pressed='true']").forEach(b => b.classList.add("done-ok")); }
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
 }
 function renderSetNow() { const el = document.getElementById("setNow"); if (el) el.textContent = "Now: " + settingsText(sim.set) + "."; }
+/* answers in a shuffled order each time a question opens (data-id / values keep the original answer, letters follow the shown order) */
 function renderAnswer() {
   const tk = curTask(), A = $("answer");
+  if (tk.type === "demo") { A.innerHTML = ""; return; }
   if (tk.type === "choice") {
-    A.innerHTML = '<div class="opts" role="group" aria-label="Answers">' + tk.opts.map(o => '<button type="button" class="opt" data-id="' + o.id + '" aria-pressed="' + (G.ans.pick === o.id) + '">' + esc(o.t) + "</button>").join("") + "</div>";
+    A.innerHTML = '<div class="opts" role="group" aria-label="Answers">' + G.ord.opts.map((i, pos) => { const o = tk.opts[i];
+      return '<button type="button" class="opt" data-id="' + o.id + '" data-i="' + i + '" aria-pressed="' + (G.ans.pick === o.id) + '"><span class="k">' + "ABCDEF"[pos] + '</span><span>' + esc(o.t) + "</span></button>"; }).join("") + "</div>";
     A.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { G.ans.pick = b.dataset.id; renderAnswer(); A.querySelector('[data-id="' + b.dataset.id + '"]').focus(); }));
   } else if (tk.type === "label") {
-    A.innerHTML = LABEL_MARKS.map((m, i) => '<div class="lrow"><span class="badge" aria-hidden="true">' + m.n + '</span><label class="sr" for="lab' + i + '" style="position:absolute;left:-9999px">Number ' + m.n + '</label><select id="lab' + i + '"><option value="">Choose…</option>' + LABEL_OPTS.map(o => '<option' + (G.ans.labels[i] === o ? " selected" : "") + ">" + o + "</option>").join("") + "</select></div>").join("");
+    A.innerHTML = LABEL_MARKS.map((m, i) => '<div class="lrow"><span class="badge" aria-hidden="true">' + m.n + '</span><label class="sr" for="lab' + i + '" style="position:absolute;left:-9999px">Number ' + m.n + '</label><select id="lab' + i + '"><option value="">Choose…</option>' + G.ord.labels.map(j => LABEL_OPTS[j]).map(o => '<option' + (G.ans.labels[i] === o ? " selected" : "") + ">" + o + "</option>").join("") + "</select></div>").join("");
     A.querySelectorAll("select").forEach((s, i) => s.addEventListener("change", () => { G.ans.labels[i] = s.value; }));
   } else if (tk.type === "predict") {
-    A.innerHTML = '<p class="step-l"><b>1.</b> Predict: oxygen will get into the blood…</p><div class="seg" role="group" aria-label="Prediction">' + SPEEDOPTS.map(o => '<button type="button" data-p="' + o.id + '" aria-pressed="' + (G.ans.pick === o.id) + '">' + o.t + "</button>").join("") + '</div><p class="step-l" style="margin-top:10px"><b>2.</b> Set ' + CTRL_NAME[tk.ctrl] + " to " + VAL_NAME[tk.to] + '. Change nothing else.</p><p class="step-l"><b>3.</b> Watch the meter, then press Check.</p><p class="setnow" id="setNow"></p>';
+    A.innerHTML = '<p class="step-l"><b>1.</b> Predict: oxygen will get into the blood…</p><div class="seg" role="group" aria-label="Prediction">' + G.ord.speed.map((j, pos) => { const o = SPEEDOPTS[j];
+      return '<button type="button" data-p="' + o.id + '" data-i="' + j + '" aria-pressed="' + (G.ans.pick === o.id) + '"><span class="k">' + "ABC"[pos] + "</span>" + o.t + "</button>"; }).join("") + '</div><p class="step-l"><b>2.</b> Set ' + CTRL_NAME[tk.ctrl] + " to " + VAL_NAME[tk.to] + '. Change nothing else.</p><p class="step-l"><b>3.</b> Watch the meter, then press Check.</p><p class="setnow" id="setNow"></p>';
     A.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => { G.ans.pick = b.dataset.p; renderAnswer(); A.querySelector('[data-p="' + b.dataset.p + '"]').focus(); }));
   } else if (tk.type === "best") {
     A.innerHTML = '<p class="step-l">Use the controls. Press Record reading to compare set-ups.</p><p class="setnow" id="setNow"></p>';
   } else if (tk.type === "frame") {
-    const sel = (side, opts) => '<select id="fr' + side + '" aria-label="' + (side === "a" ? "First part" : "Second part") + '"><option value="">Choose…</option>' + opts.map(o => '<option value="' + o.id + '"' + (G.ans[side] === o.id ? " selected" : "") + ">" + esc(o.t) + "</option>").join("") + "</select>";
+    const sel = (side, opts) => '<select id="fr' + side + '" aria-label="' + (side === "a" ? "First part" : "Second part") + '"><option value="">Choose…</option>' + G.ord[side].map(j => opts[j]).map(o => '<option value="' + o.id + '"' + (G.ans[side] === o.id ? " selected" : "") + ">" + esc(o.t) + "</option>").join("") + "</select>";
     A.innerHTML = '<p class="frame">' + esc(tk.pre) + " " + sel("a", tk.a) + " " + esc(tk.mid) + " " + sel("b", tk.b) + "</p>";
     A.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { G.ans[s.id.slice(2)] = s.value; }));
   }
   renderSetNow();
 }
 function renderHint() {
-  const st = tstate();
+  const st = prog();
   $("hint").textContent = st.hints >= 3 ? "No more hints – try Show answer" : "Hint (" + (st.hints + 1) + "/3)";
 }
 function renderStuck() {
   const tk = curTask(), el = $("stuck");
-  const want = tk.support || (tk.type === "frame" ? "labels" : tk.type === "choice" && G.level === "warm" && G.idx < 2 ? "counts" : null);
+  if (tk.type === "demo") { el.hidden = true; return; }
+  const want = tk.support || (tk.type === "frame" ? "labels" : tk.type === "choice" && (tk.id === "warm1" || tk.id === "warm2") ? "counts" : null);
   if (want && !support[want]) { el.innerHTML = "Stuck? Turn on <b>" + (want === "counts" ? "Particle counts" : "Labels") + "</b> under Support."; el.hidden = false; }
   else if (tk.type === "label") { el.innerHTML = "Labels are hidden for this task: it is your turn to label."; el.hidden = false; }
   else el.hidden = true;
@@ -1037,88 +1220,227 @@ function grade(tk) {
   if (tk.type === "choice") {
     if (!G.ans.pick) return { incomplete: true, html: "Pick an answer first." };
     const o = tk.opts.find(x => x.id === G.ans.pick);
-    return o.ok ? { ok: true, html: "<b>Correct.</b> " + esc(tk.why) } : { ok: false, html: "<b>Not quite.</b> " + misLine(o.mis) + esc(o.fb) };
+    return o.ok ? { ok: true, html: "<b>✓ Correct.</b> " + esc(tk.why) } : { ok: false, html: "<b>✗ Not quite.</b> " + misLine(o.mis) + esc(o.fb) };
   }
   if (tk.type === "label") {
     if (G.ans.labels.some(v => !v)) return { incomplete: true, html: "Choose a name for every number." };
     const wrong = LABEL_MARKS.filter((m, i) => G.ans.labels[i] !== m.ans).map(m => m.n);
-    if (!wrong.length) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
+    if (!wrong.length) return { ok: true, html: "<b>✓ Correct.</b> " + esc(tk.why) };
     let extra = "";
     if (G.ans.labels[3] === "air out" && G.ans.labels[4] === "air in") extra = " Look at the arrows: air comes in down the tube and goes out up it.";
     else if (wrong.includes(1) || wrong.includes(2)) extra = " The alveolus holds air; the capillary carries blood.";
-    return { ok: false, html: "<b>Not quite.</b> Check number" + (wrong.length > 1 ? "s " : " ") + wrong.join(", ") + "." + extra };
+    return { ok: false, html: "<b>✗ Not quite.</b> Check number" + (wrong.length > 1 ? "s " : " ") + wrong.join(", ") + "." + extra };
   }
   if (tk.type === "predict") {
     if (!G.ans.pick) return { incomplete: true, html: "Make your prediction first: faster, slower or no change." };
     if (sim.set[tk.ctrl] !== tk.to) return { incomplete: true, html: "Now test it: set " + CTRL_NAME[tk.ctrl] + " to " + VAL_NAME[tk.to] + " and watch the meter." };
     const other = Object.keys(DEFAULTS).filter(k => k !== tk.ctrl && sim.set[k] !== DEFAULTS[k]);
-    if (other.length) return { ok: false, html: "<b>Not a fair test.</b> You also changed " + other.map(k => CTRL_NAME[k].toLowerCase()).join(" and ") + ". Change only one thing, or you cannot tell which change made the difference." };
+    if (other.length) return { ok: false, html: "<b>✗ Not a fair test.</b> You also changed " + other.map(k => CTRL_NAME[k].toLowerCase()).join(" and ") + ". Change only one thing, or you cannot tell which change made the difference." };
     const comp = tk.computed || "slower";
-    if (G.ans.pick !== comp) return { ok: false, html: "<b>Not quite.</b> " + misLine(tk.mis && tk.mis[G.ans.pick]) + esc(tk.fbWrong[G.ans.pick]) };
+    if (G.ans.pick !== comp) return { ok: false, html: "<b>✗ Not quite.</b> " + misLine(tk.mis && tk.mis[G.ans.pick]) + esc(tk.fbWrong[G.ans.pick]) };
     const mv = meterVal(), nums = mv === null ? "" : " The meter now reads about " + mv + " per minute.";
-    return { ok: true, html: "<b>Correct: " + comp + ".</b> " + esc(tk.why) + nums };
+    return { ok: true, html: "<b>✓ Correct: " + comp + ".</b> " + esc(tk.why) + nums };
   }
   if (tk.type === "best") {
     const b = tk.bestSet || DEFAULTS, tips = { wall: "A thick wall is a longer distance for particles to cross.", alv: "Fewer alveoli means less surface area.", flow: "Still blood fills up with oxygen, so the difference gets small.", breath: "Without breathing, the air runs low in oxygen." };
     const wrong = Object.keys(b).filter(k => sim.set[k] !== b[k]);
-    if (!wrong.length) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
-    return { ok: false, html: "<b>Not the fastest yet.</b> " + esc(tips[wrong[0]]) + (wrong.length === 2 ? " One more control also needs changing." : wrong.length > 2 ? " " + ["", "", "", "Two", "Three"][wrong.length] + " more controls also need changing." : "") };
+    if (!wrong.length) return { ok: true, html: "<b>✓ Correct.</b> " + esc(tk.why) };
+    return { ok: false, html: "<b>✗ Not the fastest yet.</b> " + esc(tips[wrong[0]]) + (wrong.length === 2 ? " One more control also needs changing." : wrong.length > 2 ? " " + ["", "", "", "Two", "Three"][wrong.length] + " more controls also need changing." : "") };
   }
   if (tk.type === "frame") {
     if (!G.ans.a || !G.ans.b) return { incomplete: true, html: "Choose both parts of the sentence." };
     const a = tk.a.find(o => o.id === G.ans.a), b = tk.b.find(o => o.id === G.ans.b);
-    if (a.ok && b.ok) return { ok: true, html: "<b>Correct.</b> " + esc(tk.why) };
+    if (a.ok && b.ok) return { ok: true, html: "<b>✓ Correct.</b> " + esc(tk.why) };
     const bad = [a, b].filter(o => !o.ok);
-    return { ok: false, html: "<b>Not quite.</b> " + bad.map(o => misLine(o.mis) + esc(o.fb)).join(" ") };
+    return { ok: false, html: "<b>✗ Not quite.</b> " + bad.map(o => misLine(o.mis) + esc(o.fb)).join(" ") };
   }
 }
 function ensureModel() { if (!MODEL) { runModelChecks(); showBankErrors(); } }
 $("check").addEventListener("click", () => {
-  const tk = curTask(), st = tstate();
+  const tk = curTask(), st = prog();
   if (tk.type === "predict" || tk.type === "best") ensureModel();
   if (tk.broken) return;
-  if (st.solved || st.revealed) { fb("This task is done. Press Next → for a new one.", "tip"); return; }
+  if (st.solved || st.revealed) { fb("This question is finished. Choose another question number above, or Reset this question to try it again.", "tip"); return; }
   const r = grade(tk);
   if (r.incomplete) { fb(r.html, "tip"); return; }
   if (r.ok) {
-    st.solved = true; G.score++;
-    if (st.graded === 0 && st.hints === 0) G.streak++;
-    fb(r.html, "good");
-  } else { G.streak = 0; fb(r.html, "bad"); }
-  st.graded++;
-  $("sScore").textContent = G.score; $("sStreak").textContent = G.streak;
+    mark(qkey(level, tk), "solved"); st.solved = true;
+    if (!st.wrong && !st.hints) streak++;
+    fb(r.html + " Choose another question number above.", "good");
+    $("doneBadge").hidden = false; renderDots(); highlightDone();
+  } else { st.wrong++; streak = 0; fb(r.html, "bad"); }
+  paintScore();
 });
 $("hint").addEventListener("click", () => {
-  const tk = curTask(), st = tstate();
+  const tk = curTask(), st = prog();
   if (st.hints < 3) st.hints++;
   $("fb").innerHTML = "";
-  for (let i = 0; i < st.hints; i++) addFb("<b>Hint " + (i + 1) + ":</b> " + esc(tk.hints[i]), "tip");
+  if (st.hints) addFb("<b>Hint " + st.hints + " of 3:</b> " + esc(tk.hints[st.hints - 1]), "tip");   // latest hint only, so it fits beside the question
   if (st.hints >= 3) addFb("No more hints. Try Show answer.", "");
+  requestAnimationFrame(keepInView);
   renderHint();
 });
-$("reveal").addEventListener("click", () => {
-  const tk = curTask(), st = tstate();
-  if (tk.type === "predict" || tk.type === "best") ensureModel();
-  if (tk.broken) return;
+/* put the right answer in place (Show answer, and questions already done); returns the answer text */
+function fillAnswer(tk) {
   let ans = "";
   if (tk.type === "choice") { const o = tk.opts.find(x => x.ok); G.ans.pick = o.id; ans = o.t; }
   else if (tk.type === "label") { G.ans.labels = LABEL_MARKS.map(m => m.ans); ans = LABEL_MARKS.map(m => m.n + " " + m.ans).join(", "); }
   else if (tk.type === "predict") { G.ans.pick = tk.computed || tk.expect; for (const k in DEFAULTS) if (k !== tk.ctrl) setSetting(k, DEFAULTS[k]); setSetting(tk.ctrl, tk.to); ans = (tk.computed || tk.expect); }
   else if (tk.type === "best") { const b = tk.bestSet || DEFAULTS; for (const k in b) setSetting(k, b[k]); ans = settingsText(b); }
   else if (tk.type === "frame") { const a = tk.a.find(o => o.ok), b = tk.b.find(o => o.ok); G.ans.a = a.id; G.ans.b = b.id; ans = tk.pre + " " + a.t + " " + tk.mid + " " + b.t; }
-  if (!st.solved) st.revealed = true;
   renderAnswer();
-  fb("<b>Answer:</b> " + esc(ans.charAt(0).toUpperCase() + ans.slice(1)) + (/[.]$/.test(ans) ? "" : ".") + " " + esc(tk.why), "");
+  return ans;
+}
+$("reveal").addEventListener("click", () => {
+  const tk = curTask(), st = prog();
+  if (tk.type === "predict" || tk.type === "best") ensureModel();
+  if (tk.broken) return;
+  if (!st.solved) { st.revealed = true; mark(qkey(level, tk), "shown"); renderDots(); }
+  const ans = fillAnswer(tk);
+  fb("<b>Answer:</b> " + esc(ans.charAt(0).toUpperCase() + ans.slice(1)) + (/[.]$/.test(ans) ? "" : ".") + " " + esc(tk.why) + (st.solved ? "" : " (No score for this one.)"), "");
 });
-$("reset").addEventListener("click", () => {
-  const tk = curTask(); G.ans = blankAns(tk);
-  newSim(tk.setup || {}); $("fb").innerHTML = ""; renderAnswer();
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  const tk = curTask();
+  delete DONE[qkey(level, tk)]; saveDone(); delete G.st[qkey(level, tk)]; paintScore();
+  loadTask();
+}
+$("reset").addEventListener("click", resetTask);
+$("demoReset").addEventListener("click", loadDemo);
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in G.st) delete G.st[k]; streak = 0; paintScore(); back(); loadTask(); fb("Progress reset. Every question is fresh again.", "tip"); });
+  $("rpNo").addEventListener("click", back);
 });
-$("next").addEventListener("click", () => { G.idx = (G.idx + 1) % TASKS[G.level].length; loadTask(); });
-document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-  G.level = b.dataset.level; G.idx = 0; loadTask();
-}));
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#simWrap", text: "This is the model: one air sac (alveolus) in the lung. A blood vessel (capillary) wraps round it." },
+  { el: ".legend", text: "The key shows oxygen (two balls), carbon dioxide (three balls) and red blood cells." },
+  { el: "#simhead", text: "Pause stops the model. Step 1 s moves it on by one second. Start again puts every control back." },
+  { el: "#ctlBreath", text: "Breathing swaps some of the air in the air sac. Press Take one breath and watch the air tube at the top.", do: "breath", doText: "Press Take one breath." },
+  { el: "#ctlFlow", text: "Blood flow moves the blood along the capillary. Switch it off, and watch the oxygen build up.", do: "flow", doText: "Switch Blood flow off or on." },
+  { el: "#ctlWall", text: "Make the wall between the air and the blood thin or thick.", do: "wall", doText: "Press Thick or Thin." },
+  { el: "#ctlAlv", text: "Choose a few alveoli or many alveoli.", do: "alv", doText: "Press Few or Many." },
+  { el: "#meterPanel", text: "The meter shows how fast oxygen gets into the blood. The line shows how it changes over time." },
+  { el: "#recBtn", text: "Press Record reading to keep the meter reading, so you can compare set-ups.", do: "rec", doText: "Press Record reading." },
+  { el: "#supportGrp", text: "Labels names the parts. Particle counts shows how many particles are in each place.", do: "support", doText: "Turn on Labels or Particle counts." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+const reducedTour = () => !!(reduceMQ && reduceMQ.matches);
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gas-exchange", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reducedTour() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    // a tall target (e.g. the question panel): sit beside it, centred on the part that is on screen
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* ---------- modes ---------- */
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportGrp"));   // the Support switches follow the panel
+  $("demoReset").hidden = mode !== "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+/* keep the question panel within the screen, so Check and the feedback are always visible (desktop) */
+/* keep the question line and the feedback in view together. Desktop: the panel sticks under the top bar at full height,
+   then scrolls itself to the feedback, but never past the question text. Phone: the page scrolls, with the same limit. */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reducedTour() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";   // the height it will have once stuck
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reducedTour() ? "auto" : "smooth" });
+  }
+}
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
 /* ---------- bank errors ---------- */
 function showBankErrors() {
@@ -1142,9 +1464,12 @@ function modelChecksInBackground() {
 }
 
 /* ---------- start ---------- */
+LEVELS = { easy: [...TASKS.warm, ...TASKS.core],   // 5–10 questions per level (Dan, 11 Oct 2026)
+           hard: TASKS.challenge };
 readTokens(); paintPlay();
 showBankErrors();
-loadTask(); resize();
+paintScore(); setMode("demo"); resize(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:gas-exchange")) $("newHere").hidden = true; } catch (e) {}
 startLoop();
 setTimeout(modelChecksInBackground, 300);
 if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { if (reduceMQ.matches) { running = false; } paintPlay(); });

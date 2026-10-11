@@ -35,7 +35,7 @@
     gaps or do not move; mass changes when ice melts; temperature keeps rising while it boils or melts;
     freezing needs "cold" added (energy is taken away); evaporation only happens at the boiling point.
     Sublimation appears in Challenge only (AQA keyword "Sublime").
-  Support starts OFF on every visit: State labels; Heating graph.
+  Support starts OFF on every visit: State labels; Heating graph (and the Demo "Show" switches start off too).
   Idea credit: Idea from States of Matter: Basics, PhET Interactive Simulations, University of Colorado Boulder (https://phet.colorado.edu).
   Facts and values used (all in const FACTS):
     Water: melts 0 °C, boils 100 °C (slider −40 °C to 140 °C)
@@ -45,7 +45,14 @@
     Mercury (Challenge graph only, named "mystery substance"): melts −39 °C, boils 357 °C
     Carbon dioxide (dry ice) sublimes at −78 °C at normal air pressure
     Room temperature 20 °C; puddle example at 20 °C; ice sample mass 50 g; 48 particles
-    Predict items: ethanol at −120 °C (solid), oxygen at −190 °C (liquid), iron at 3000 °C (gas)
+    Predict item: ethanol at −120 °C (solid)
+  Questions: Easy = 6 Warm-up + 4 Core = 10; Hard = 6 Challenge. Dropped to bring Easy to 10 (11 Oct 2026):
+    Core "Heat the ice until it is all liquid, then name the change" (repeats Warm-up "Make it a liquid" and the
+    mass task, which both melt the same ice), and the oxygen (−190 °C) and iron (3000 °C) predict items
+    (near-identical to the ethanol one).
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+    Demo has the substance picker and a "Show" row (State labels, Heating graph) on the model; in the
+    Knowledge check these are the Support switches in the question panel and start off.
   Checks: on load the tool checks every substance (min < melting point < boiling point < max), every
     predict item (in range, not on a melting/boiling point), every answer is one of its options, every task
     has 3 hints, and that the mystery graph's flat parts come out at the listed melting and boiling points.
@@ -190,14 +197,16 @@ select{font:16px var(--f-body);min-height:44px;width:100%;padding:6px 10px;borde
 .btn:disabled,select:disabled,input:disabled{opacity:.5;cursor:not-allowed}
 .btn.slim{padding:6px 12px;font-size:15px;min-height:44px}
 #graph{width:100%;height:220px;display:block}
-#mystery{width:100%;height:320px;display:block}
+#mystery{width:100%;height:300px;display:block}
 fieldset.grp{border:0;margin:0 0 12px;padding:0;min-width:0}
 fieldset.grp legend{font-weight:700;padding:0;margin-bottom:6px}
-.opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left;line-height:1.3}
+.opts{display:grid;gap:8px}
+.opts.two{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
 .opt:hover{border-color:var(--accent)}
-.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--bg)}
-.opt[aria-pressed="true"]::before{content:"✓ "}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
 .nums{display:flex;flex-wrap:wrap;gap:12px 20px}
 .nums label{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .nums .u{white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
@@ -206,6 +215,103 @@ fieldset.grp legend{font-weight:700;padding:0;margin-bottom:6px}
 .pulse{animation:pulse .6s ease-out}
 @keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){.pulse{animation:none}}
+.demo-show{margin:0}
+.qpanel fieldset.grp{margin:0}
+#ask{display:grid;gap:10px}
+.opts.two .opt[aria-pressed="true"]::after,.opts.three .opt[aria-pressed="true"]::after{content:"✓"}
+.opts.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.three .opt{padding-left:10px;padding-right:8px;gap:7px}
+@media (max-width:420px){.opts.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* two questions in one (e.g. arrangement + movement): tighter options so it all fits on a laptop screen */
+#ask.multi fieldset.grp legend{margin-bottom:4px}
+#ask.multi .opt{padding:6px 10px;font-size:16px;line-height:1.3;gap:8px}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -216,84 +322,116 @@ fieldset.grp legend{font-weight:700;padding:0;margin-bottom:6px}
     <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
-  <div class="bar">
-  <div class="levels" role="group" aria-label="Level">
-    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
-  </div>
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Particle Model</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
 
-  <div class="support" role="group" aria-label="Support">
-    <span class="lbl">Support:</span>
-    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>State labels <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Heating graph <span class="state">off</span></button>
-  </div>
-
-  <section class="card" aria-label="Particle Model">
-    <div class="meta"><div class="ctx" id="taskText">Make it a liquid.</div><div class="qno" id="qno">Task 1 of 6</div></div>
-    <div id="bankErr" class="bankerr" role="alert" hidden></div>
-
-    <div class="simgrid">
-      <div class="particles">
-        <h2><span>Sealed box</span><span class="badge" id="badge" hidden></span></h2>
-        <canvas id="stage" role="img" aria-label="A sealed box of particles on a heater, with a thermometer"></canvas>
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Particle Model model">
+      <div class="panel" id="mysteryPanel" hidden>
+        <h2>Heating graph of a mystery substance</h2>
+        <canvas id="mystery" role="img" aria-label="Heating graph of a mystery substance: temperature against time"></canvas>
       </div>
-      <div class="ctrl panel">
-        <p class="readout">Temperature<b id="tRead" aria-live="off">20 °C</b></p>
-        <p class="status" id="status" aria-live="polite">Heater off</p>
-        <div>
-          <label for="tSlider">Set the heater to <output id="tTarget" for="tSlider">20 °C</output></label>
-          <input type="range" id="tSlider" min="-40" max="140" step="1" value="20">
+      <div class="simgrid">
+        <div class="particles">
+          <h2><span>Sealed box</span><span class="badge" id="badge" hidden></span></h2>
+          <canvas id="stage" role="img" aria-label="A sealed box of particles on a heater, with a thermometer"></canvas>
         </div>
-        <div class="hbtns">
-          <button class="btn" type="button" id="heatBtn" aria-pressed="false">▲ Heat</button>
-          <button class="btn" type="button" id="stopBtn">■ Stop</button>
-          <button class="btn" type="button" id="coolBtn" aria-pressed="false">▼ Cool</button>
+        <div class="ctrl panel">
+          <p class="readout" id="readoutBox">Temperature<b id="tRead" aria-live="off">20 °C</b></p>
+          <p class="status" id="status" aria-live="polite">Heater off</p>
+          <div id="sliderWrap">
+            <label for="tSlider">Set the heater to <output id="tTarget" for="tSlider">20 °C</output></label>
+            <input type="range" id="tSlider" min="-40" max="140" step="1" value="20">
+          </div>
+          <div class="hbtns">
+            <button class="btn" type="button" id="heatBtn" aria-pressed="false">▲ Heat</button>
+            <button class="btn" type="button" id="stopBtn">■ Stop</button>
+            <button class="btn" type="button" id="coolBtn" aria-pressed="false">▼ Cool</button>
+          </div>
+          <div id="subWrap">
+            <label for="sub">Substance</label>
+            <select id="sub"></select>
+          </div>
+          <p class="facts" id="facts"></p>
+          <p class="small" id="lockNote" hidden>The controls are off for this question.</p>
+          <button class="btn slim" type="button" id="motionBtn" aria-pressed="false">Motion: smooth</button>
         </div>
-        <div id="subWrap">
-          <label for="sub">Substance</label>
-          <select id="sub"></select>
-        </div>
-        <p class="facts" id="facts"></p>
-        <p class="small" id="lockNote" hidden>The controls are off for this task.</p>
-        <button class="btn slim" type="button" id="motionBtn" aria-pressed="false">Motion: smooth</button>
       </div>
-    </div>
 
-    <div class="panel" id="graphPanel" hidden>
-      <h2><span>Heating graph: temperature against time</span><button class="btn slim" type="button" id="clearGraph">Clear graph</button></h2>
-      <canvas id="graph" role="img" aria-label="Temperature against time graph"></canvas>
-    </div>
+      <div class="support demo-show" id="demoShow" role="group" aria-label="Show on the model">
+        <span class="lbl">Show:</span>
+        <button class="sw" type="button" data-show="labels" aria-pressed="false"><span class="dot"></span>State labels <span class="state">off</span></button>
+        <button class="sw" type="button" data-show="graph" aria-pressed="false"><span class="dot"></span>Heating graph <span class="state">off</span></button>
+      </div>
 
-    <div class="lower" id="lower">
-      <div class="panel">
-        <h2>Your answer</h2>
+      <div class="panel" id="graphPanel" hidden>
+        <h2><span>Heating graph: temperature against time</span><button class="btn slim" type="button" id="clearGraph">Clear graph</button></h2>
+        <canvas id="graph" role="img" aria-label="Temperature against time graph"></canvas>
+      </div>
+
+      <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them, not 48. Here every substance has the same round particles; real ones differ. The lid keeps every particle in. We pretend the pressure stays like normal air, so each substance melts and boils at its usual temperature. The forces between particles are not drawn. The heating graph is not to scale.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
         <div id="ask"></div>
-        <p class="hidden-note" id="stuck" hidden></p>
-      </div>
-      <div class="panel">
-        <h2>Feedback</h2>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
         <div class="feedback" id="fb" aria-live="polite"></div>
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>State labels <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Heating graph <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuck" hidden></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
       </div>
-    </div>
+    </aside>
+  </main>
 
-    <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them, not 48. Here every substance has the same round particles; real ones differ. The lid keeps every particle in. We pretend the pressure stays like normal air, so each substance melts and boils at its usual temperature. The forces between particles are not drawn. The heating graph is not to scale.</p>
-    <div class="actions">
-      <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
-      <button class="btn" type="button" id="reset">Reset</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
-      <button class="btn primary" type="button" id="next">Next →</button>
-    </div>
-  </section>
-
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
     <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
@@ -307,7 +445,7 @@ fieldset.grp legend{font-weight:700;padding:0;margin-bottom:6px}
   const root = document.documentElement, btn = document.getElementById("themeBtn");
   const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
-  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
   btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
@@ -334,9 +472,7 @@ const FACTS = {
   mysterySubstance: "mercury",           // Challenge graph-reading task (name not shown)
   dryIce: { name: "carbon dioxide", sublimesC: -78 },
   predict: [                              // Core predict-then-test items; answers are computed
-    { sub: "ethanol", T: -120, start: 20 },
-    { sub: "oxygen",  T: -190, start: -150 },
-    { sub: "iron",    T: 3000, start: 1300 }
+    { sub: "ethanol", T: -120, start: 20 }
   ]
 };
 /* Model settings (not stated on screen) */
@@ -686,22 +822,29 @@ function setTargetT(T){
   const lo = M.Hlow(T), hi = M.Hhigh(T);
   Ht = H < lo ? lo : H > hi ? hi : H;
 }
-slider.addEventListener("input", () => setTargetT(+slider.value));
-$("heatBtn").addEventListener("click", () => { Ht = M.Htot; slider.value = M.S.max; $("tTarget").textContent = degC(M.S.max); });
-$("coolBtn").addEventListener("click", () => { Ht = 0; slider.value = M.S.min; $("tTarget").textContent = degC(M.S.min); });
-$("stopBtn").addEventListener("click", () => { Ht = H; slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); });
-subSel.addEventListener("change", () => { setSubstance(subSel.value); jumpTo(M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC)))); });
+slider.addEventListener("input", () => { setTargetT(+slider.value); tourSignal("slider"); });
+$("heatBtn").addEventListener("click", () => { Ht = M.Htot; slider.value = M.S.max; $("tTarget").textContent = degC(M.S.max); tourSignal("heat"); });
+$("coolBtn").addEventListener("click", () => { Ht = 0; slider.value = M.S.min; $("tTarget").textContent = degC(M.S.min); tourSignal("cool"); });
+$("stopBtn").addEventListener("click", () => { Ht = H; slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); tourSignal("stop"); });
+subSel.addEventListener("change", () => { setSubstance(subSel.value); jumpTo(M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC)))); if (mode === "demo") { demoSub = subSel.value; renderTry(); } tourSignal("sub"); });
 $("clearGraph").addEventListener("click", clearGraph);
 function paintMotion(){ const b = $("motionBtn"); b.textContent = stepped ? "Motion: stepped" : "Motion: smooth"; b.setAttribute("aria-pressed", stepped ? "true" : "false"); b.title = stepped ? "Show smooth movement" : "Show still pictures every second (less movement)"; }
 $("motionBtn").addEventListener("click", () => { stepped = !stepped; paintMotion(); drawStage(); });
 Object.keys(FACTS.substances).forEach(k => { const S = FACTS.substances[k]; if (S.hidden) return; const o = document.createElement("option"); o.value = k; o.textContent = S.name; subSel.appendChild(o); });
 
-document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
-  const k = b.dataset.support; support[k] = !support[k];
-  b.setAttribute("aria-pressed", support[k] ? "true" : "false"); b.querySelector(".state").textContent = support[k] ? "on" : "off";
-  if (k === "graph") { $("graphPanel").hidden = !support.graph; if (support.graph) drawLiveGraph(); }
-  updateReadouts(); updateStuck();
-}));
+/* Support (Knowledge check) and Show (Demo) switches: all off on load, never stored.
+   The model reads `support`, which follows whichever set belongs to the current mode. */
+const supQuiz = { labels: false, graph: false }, supShow = { labels: false, graph: false };
+function paintSw(b, on){ b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector(".state").textContent = on ? "on" : "off"; }
+function applySupport(){
+  const src = mode === "demo" ? supShow : supQuiz; support.labels = src.labels; support.graph = src.graph;
+  document.querySelectorAll("[data-support]").forEach(b => paintSw(b, supQuiz[b.dataset.support]));
+  document.querySelectorAll("[data-show]").forEach(b => paintSw(b, supShow[b.dataset.show]));
+  $("graphPanel").hidden = !support.graph; if (support.graph) drawLiveGraph();
+  updateReadouts(); if (mode !== "demo") updateStuck();
+}
+document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.support; supQuiz[k] = !supQuiz[k]; applySupport(); }));
+document.querySelectorAll("[data-show]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.show; supShow[k] = !supShow[k]; applySupport(); if (supShow[k]) tourSignal("show"); }));
 
 /* ===== Answer helpers ===== */
 const IDX = { solid: 0, melting: 1, liquid: 2, boiling: 3, gas: 4 };
@@ -811,8 +954,6 @@ const TASKS = {
       hints: ["Press Heat and watch one particle closely.", "Compare its size at the start and at the end.", "It looks the same. Only how it moves changes."] }
   ],
   core: [
-    { text: "Heat the ice until it is all liquid. Then name the change.", sub: "water", T: -20, lockSub: true, goal: "liquid", groups: [nameGroup("solid", "liquid")],
-      hints: ["First make the change: heat the ice.", "Ice turns into a liquid at " + degC(W.mp) + ". Keep heating until no particles are in the pattern.", "Solid → liquid has a name that starts with m."], showT: 30 },
     { text: "This ice has a mass of " + FACTS.sampleMassG + " g. Melt it. What is the mass of the water?", sub: "water", T: -10, lockSub: true,
       groups: [{ key: "mass", label: "Mass of the water", opts: [
           { v: "less", t: "Less than " + FACTS.sampleMassG + " g" }, { v: "same", t: FACTS.sampleMassG + " g" }, { v: "more", t: "More than " + FACTS.sampleMassG + " g" }],
@@ -831,9 +972,7 @@ const TASKS = {
               "Liquid → solid starts with f. Cooling takes something away from the particles."], showT: -20 },
     { text: "Cool the steam until it is all liquid. Then name the change.", sub: "water", T: 120, lockSub: true, goal: "liquid", groups: [nameGroup("gas", "liquid")],
       hints: ["First make the change: cool the steam.", "Steam turns liquid at " + degC(W.bp) + ". Keep cooling until all the particles touch.", "Gas → liquid starts with c."], showT: 60 },
-    predictTask(FACTS.predict[0]),
-    predictTask(FACTS.predict[1]),
-    predictTask(FACTS.predict[2])
+    predictTask(FACTS.predict[0])
   ],
   challenge: [
     { text: "This heating graph is for a mystery substance. Read its melting point and boiling point.", sub: "water", T: FACTS.roomTempC, mystery: true,
@@ -906,26 +1045,57 @@ function bankCheck(){
 }
 
 /* ===== Task engine ===== */
-let level = "warm", idx = 0;
-const state = { score: 0, streak: 0 };
-const rec = {}; // per task: solved, revealed, hints, checks
-let picks = {}, bankErrors = [];
-const cur = () => TASKS[level][idx];
-const rk = () => level + idx;
-const R_ = () => (rec[rk()] = rec[rk()] || { solved: false, revealed: false, hints: 0, checks: 0, wrong: 0 });
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); t.lv = lv; });   // stable ids for saved ticks
+let mode = "demo", level = "", idx = 0, streak = 0;   // level is set when Easy or Hard is first opened
+let LEVELS = {};   // easy = Warm-up + Core questions, hard = Challenge questions (built at start)
+let task = null, demoSub = "water";
+const st = {};     // per-question progress this visit (hints, checks, wrong tries), key "level:id"
+let picks = {}, order = {}, bankErrors = [];
+const cur = () => task;
+const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:particle-model";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, checks: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 function setLock(all, sub){
   locked = all;
   [slider, $("heatBtn"), $("coolBtn"), $("stopBtn")].forEach(e => e.disabled = all);
   subSel.disabled = all || sub;
   $("lockNote").hidden = !all;
-  $("subWrap").hidden = level === "warm";
+  $("subWrap").hidden = mode !== "demo" && task.lv === "warm";
+}
+const TRY = [
+  "Press ▼ Cool. Watch the particles lock into a pattern.",
+  "Press ▲ Heat. Does the temperature stop rising while it boils?",
+  "Turn on the Heating graph. Heat from solid to gas and find the flat parts.",
+  "Set the heater just below the boiling point. Do any particles escape?",
+  "Try another substance. Does it melt and boil at the same temperatures?"
+];
+function renderTry(){ $("tryList").innerHTML = TRY.map(x => "<li>" + esc(x) + "</li>").join(""); }
+function loadDemo(){
+  task = null; picks = {}; hideTemp = false;
+  setSubstance(demoSub); jumpTo(M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC))));
+  setLock(false, false); $("demoShow").hidden = false; $("mysteryPanel").hidden = true;
+  renderTry(); applySupport(); updateReadouts(); drawStage();
 }
 function loadTask(keep){
-  const t = cur();
+  if (mode === "demo") return loadDemo();
+  const list = LEVELS[level]; task = list[idx]; const t = task;
+  $("demoShow").hidden = true;
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = "Question " + (idx + 1) + " of " + list.length;
   $("taskText").textContent = t.text;
-  $("qno").textContent = "Task " + (idx + 1) + " of " + TASKS[level].length;
-  picks = {};
+  picks = {}; order = {};
   hideTemp = false;
   setSubstance(t.sub || "water");
   if (t.randomState) {
@@ -936,69 +1106,102 @@ function loadTask(keep){
   renderAsk();
   fb.innerHTML = "";
   if (bankErrors.length) fb.innerHTML = '<div class="msg bad">This tool has a problem with its questions, so checking is switched off.</div>';
-  paintHint(); updateStuck(); updateReadouts(); drawStage();
+  paintHint(); applySupport(); updateReadouts(); drawStage(); renderDots();
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+/* a question already done: show its answer, highlighted, until progress is reset */
+function showFinished(p){
+  const t = task;
+  if (t.mystery) { $("nMp").value = MYS_FLAT[0]; $("nBp").value = MYS_FLAT[1]; }
+  else {
+    if (t.goal) jumpTo(M.Hlow(t.showT));
+    (t.groups || []).forEach(g => { picks[g.key] = g.ans(); });
+    if (t.predict) setTargetT(t.predict.T);
+    renderAsk();
+    if (p.solved) document.querySelectorAll("#ask .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+  }
+  say(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function renderDots(){
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
 }
 function renderAsk(){
-  const t = cur(); ask.innerHTML = "";
-  $("lower").classList.toggle("wide", !!t.mystery);
+  const t = cur(); ask.innerHTML = ""; ask.classList.remove("multi");
+  $("mysteryPanel").hidden = !t.mystery;   // the graph to read sits on the model card, beside the questions
   if (t.mystery) {
-    const cv = document.createElement("canvas"); cv.id = "mystery"; cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "Heating graph of a mystery substance: temperature against time");
-    ask.appendChild(cv);
     const nums = document.createElement("div"); nums.className = "nums";
     nums.innerHTML = '<label>Melting point <span class="u"><input type="number" id="nMp" step="1"> °C</span></label><label>Boiling point <span class="u"><input type="number" id="nBp" step="1"> °C</span></label>';
     ask.appendChild(nums);
+    ask.querySelectorAll("input").forEach(x => x.addEventListener("keydown", e => { if (e.key === "Enter") doCheck(); }));
     requestAnimationFrame(() => drawMystery());
     return;
   }
   if (!t.groups) { const p = document.createElement("p"); p.className = "small"; p.textContent = "Use the heater controls, then press Check."; ask.appendChild(p); return; }
+  ask.classList.toggle("multi", t.groups.length > 1);
   t.groups.forEach(g => {
     const fs = document.createElement("fieldset"); fs.className = "grp";
     const lg = document.createElement("legend"); lg.textContent = g.label; fs.appendChild(lg);
-    const box = document.createElement("div"); box.className = "opts";
-    g.opts.forEach(o => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.textContent = o.t; b.dataset.v = o.v;
+    const box = document.createElement("div"); box.className = "opts" + (g.opts.every(o => o.t.length <= 12) && g.opts.length > 3 ? " three" : g.opts.every(o => o.t.length <= 32) ? " two" : "");
+    if (!order[g.key]) order[g.key] = shuffled(g.opts.length);   // shown in a random order each time the question opens
+    order[g.key].forEach((i, pos) => {
+      const o = g.opts[i];
+      const b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.dataset.v = o.v; b.dataset.i = i;
+      b.innerHTML = '<span class="k">' + "ABCDEF"[pos] + '</span><span>' + esc(o.t) + '</span>';
       b.setAttribute("aria-pressed", picks[g.key] === o.v ? "true" : "false");
       b.addEventListener("click", () => { picks[g.key] = o.v; box.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === o.v ? "true" : "false")); });
       box.appendChild(b);
     });
     fs.appendChild(box); ask.appendChild(fs);
   });
-  if (t.goal) { const p = document.createElement("p"); p.className = "small"; p.textContent = "Make the change with the heater first."; ask.prepend(p); }
 }
-function drawMystery(){ const cv = $("mystery"); if (cv) drawGraph(cv, MYS_PTS, MYS.S.min, MYS.S.max, 10, 50, 320); }
+function drawMystery(){ const cv = $("mystery"); if (cv) drawGraph(cv, MYS_PTS, MYS.S.min, MYS.S.max, 10, 50, 300); }
 function updateStuck(){
   const t = cur(), n = $("stuck");
+  if (!t) { n.hidden = true; return; }
   if (t.graphHelps && !support.graph) { n.innerHTML = "Stuck? Turn on <b>Heating graph</b> under Support."; n.hidden = false; }
   else if ((t.groups && t.groups.some(g => g.key === "arr")) && !support.labels) { n.innerHTML = "Stuck? Turn on <b>State labels</b> under Support."; n.hidden = false; }
   else n.hidden = true;
 }
 function paintHint(){
-  const h = R_().hints, b = $("hint");
+  const h = prog().hints, b = $("hint");
   b.textContent = h >= 3 ? "No more hints – try Show answer" : "Hint (" + (h + 1) + "/3)";
 }
-function say(kind, html){ const d = document.createElement("div"); d.className = "msg " + kind; d.innerHTML = html; fb.innerHTML = ""; fb.appendChild(d); }
+/* show the feedback: keepInView() brings it into view without hiding the question line */
+function showFb(){ requestAnimationFrame(keepInView); }
+function say(kind, html){ const d = document.createElement("div"); d.className = "msg " + kind; d.innerHTML = html; fb.innerHTML = ""; fb.appendChild(d); showFb(fb); }
 function bump(id){ const e = $(id); e.classList.remove("pulse"); void e.offsetWidth; e.classList.add("pulse"); }
+function paintScore(){ $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 function scoreRight(){
-  const r = R_();
-  if (!r.solved && !r.revealed) {
-    state.score++; $("sScore").textContent = state.score; bump("sScore");
-    if (r.checks === 1 && r.wrong === 0 && r.hints === 0) { state.streak++; $("sStreak").textContent = state.streak; }
-    r.solved = true;
+  const p = prog();
+  if (!p.solved && !p.revealed) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (p.checks === 1 && p.wrong === 0 && p.hints === 0) streak++;
+    paintScore(); bump("sScore");
+    $("doneBadge").hidden = false; renderDots();
   }
 }
-function scoreWrong(){ R_().wrong++; state.streak = 0; $("sStreak").textContent = 0; }
-const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+function scoreWrong(){ prog().wrong++; streak = 0; paintScore(); }
+const NEXT = " Choose another question number above.";
+function sayRight(html){ say("good", html + NEXT); document.querySelectorAll("#ask .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); }
 
 function doCheck(){
   if (bankErrors.length) return;
-  const t = cur(), r = R_();
+  const t = cur(), r = prog();
+  if (r.solved || r.revealed) { say("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
   if (t.mystery) {
     const a = $("nMp").value.trim(), b = $("nBp").value.trim();
     if (a === "" || b === "") { say("tip", "Type a number in both boxes, then press Check."); return; }
     r.checks++;
     const mp = +a, bp = +b, A = MYS_FLAT[0], B = MYS_FLAT[1], near = (x, y) => Math.abs(x - y) <= MYS_TOL;
     const okA = near(mp, A), okB = near(bp, B);
-    if (okA && okB) { scoreRight(); say("good", "<b>Correct.</b> It melts at about " + degC(A) + " and boils at about " + degC(B) + ". These are where the line goes flat."); return; }
+    if (okA && okB) { scoreRight(); sayRight("<b>Correct.</b> It melts at about " + degC(A) + " and boils at about " + degC(B) + ". These are where the line goes flat."); return; }
     scoreWrong();
     const bits = [];
     if (near(mp, B) && near(bp, A)) bits.push("You swapped them. The melting point is the lower flat part; it comes first when heating.");
@@ -1027,7 +1230,7 @@ function doCheck(){
     if (t.goal) { Ht = H; slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); extra = " " + stateWords(t.goal); }
     if (t.predict) { const S = FACTS.substances[t.predict.sub], T = t.predict.T; extra = " " + degC(T) + " is " + (T < S.mp ? "colder than the melting point of " + S.name.toLowerCase() + " (" + degC(S.mp) + "), so it is a solid" : T > S.bp ? "hotter than the boiling point of " + S.name.toLowerCase() + " (" + degC(S.bp) + "), so it is a gas" : "between the melting point (" + degC(S.mp) + ") and boiling point (" + degC(S.bp) + "), so it is a liquid") + ". Watch the box change."; }
     if (t.randomState) extra = " " + stateWords(M.state(H));
-    say("good", "<b>Correct.</b>" + esc(extra));
+    sayRight("<b>Correct.</b>" + esc(extra));
     return;
   }
   scoreWrong();
@@ -1036,19 +1239,19 @@ function doCheck(){
   say("bad", html);
 }
 function doHint(){
-  const t = cur(), r = R_();
+  const t = cur(), r = prog();
   if (r.hints < 3) r.hints++;
-  const list = t.hints.slice(0, r.hints).map((h, i) => "<li><b>Hint " + (i + 1) + ":</b> " + esc(h) + "</li>").join("");
-  say("tip", "<ul>" + list + "</ul>");
+  say("tip", "<b>Hint " + r.hints + " of 3:</b> " + esc(t.hints[r.hints - 1]));   // latest hint only, so it fits beside the question
   paintHint();
 }
 function doReveal(){
   if (bankErrors.length) return;
-  const t = cur(), r = R_();
-  if (!r.solved) r.revealed = true;
+  const t = cur(), r = prog();
+  if (!r.solved) { r.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  const tail = r.solved ? "" : " (No score for this one.)";
   if (t.mystery) {
     $("nMp").value = MYS_FLAT[0]; $("nBp").value = MYS_FLAT[1];
-    say("tip", "<b>Answer:</b> melting point " + degC(MYS_FLAT[0]) + ", boiling point " + degC(MYS_FLAT[1]) + ". The line is flat while the substance changes state.");
+    say("tip", "<b>Answer:</b> melting point " + degC(MYS_FLAT[0]) + ", boiling point " + degC(MYS_FLAT[1]) + ". The line is flat while the substance changes state." + tail);
     return;
   }
   const parts = [];
@@ -1060,19 +1263,150 @@ function doReveal(){
     : t.randomState ? stateWords(M.state(H))
     : (t.groups && t.groups[0].key === "name") ? cap(t.groups[0].ans()) + " is " + CHANGE_DEF[t.groups[0].ans()] + "."
     : "";
-  say("tip", "<b>Answer:</b> " + parts.join(" ") + (reason ? " " + esc(reason) : ""));
+  say("tip", "<b>Answer:</b> " + parts.join(" ") + (reason ? " " + esc(reason) : "") + tail);
+}
+function resetTask(){
+  if (mode === "demo") return loadDemo();
+  const k = qkey(level, task); delete DONE[k]; saveDone(); delete st[k]; paintScore();
+  loadTask(true);
 }
 
 $("check").addEventListener("click", doCheck);
 $("hint").addEventListener("click", doHint);
 $("reveal").addEventListener("click", doReveal);
-$("reset").addEventListener("click", () => loadTask(true));
-$("next").addEventListener("click", () => { idx = (idx + 1) % TASKS[level].length; loadTask(); });
-document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
-  level = b.dataset.level; idx = 0;
-  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+$("reset").addEventListener("click", resetTask);
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#stage", text: "This is the model: a sealed box of particles. The heater is under the box. The thermometer is on the right." },
+  { el: "#heatBtn", text: "Press ▲ Heat to give the particles energy. Watch them move faster.", do: "heat", doText: "Press ▲ Heat." },
+  { el: "#readoutBox", text: "The temperature shows here. While a substance melts or boils, the temperature stays the same." },
+  { el: "#stopBtn", text: "Press ■ Stop to turn the heater off.", do: "stop", doText: "Press ■ Stop." },
+  { el: "#coolBtn", text: "Press ▼ Cool to take energy away. The particles slow down.", do: "cool", doText: "Press ▼ Cool." },
+  { el: "#sliderWrap", text: "You can also drag the slider to set the heater to an exact temperature.", do: "slider", doText: "Move the slider." },
+  { el: "#subWrap", text: "Choose a different substance from this list.", do: "sub", doText: "Pick a new substance." },
+  { el: "#facts", text: "Each substance melts and boils at its own temperature. You can see them here." },
+  { el: "#demoShow", text: "Turn on State labels or the Heating graph to see more about what is happening.", do: "show", doText: "Turn one of them on." },
+  { el: "#motionBtn", text: "Too much movement? Press Motion to see a still picture every second instead." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:particle-model", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const s = TOUR[i], el = document.querySelector(s.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = s.text;
+  tourWait = s.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = s.do ? "▶ " + s.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : s.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    // a tall target (e.g. the question panel): sit beside it, centred on the part that is on screen
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* keep the question line and the feedback in view together. Desktop: the panel sticks under the top bar at full height,
+   then scrolls itself to the feedback, but never past the question text. Phone: the page scrolls, with the same limit. */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";   // the height it will have once stuck
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+/* ===== Modes ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; paintScore(); back(); loadTask(); say("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
   loadTask();
-}));
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+/* keep the question panel within the screen, so Check and Show answer are always visible (desktop) */
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
 /* ===== Theme + resize ===== */
 function redrawAll(){ readTokens(); sizeCanvas(stage); drawStage(); if (support.graph) drawLiveGraph(); drawMystery(); }
@@ -1085,8 +1419,11 @@ if (window.ResizeObserver) new ResizeObserver(() => redrawAll()).observe(stage);
 /* ===== Start ===== */
 bankErrors = bankCheck();
 if (bankErrors.length) { const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Question bank error.</b> Please tell your teacher.<ul>" + bankErrors.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"; $("check").disabled = true; $("reveal").disabled = true; }
+LEVELS = { easy: [...TASKS.warm, ...TASKS.core].slice(0, 10),   // 5–10 questions per level (Dan, 11 Oct 2026)
+           hard: TASKS.challenge };
 readTokens(); paintMotion(); sizeCanvas(stage);
-loadTask();
+paintScore(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:particle-model")) $("newHere").hidden = true; } catch (e) {}
 requestAnimationFrame(frame);
 })();
 </script>

@@ -54,6 +54,9 @@
     - Pumping air into a ball adds particles, and particles have mass, so the ball gets a tiny bit heavier.
   Checks: load-time bank check (directions, frame answers, exactly one correct option per question, Challenge outcome
     matches computed pressure change, values inside control ranges, gauge never off-scale).
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+    Easy = the 3 Warm-up + 7 Core tasks (10); Hard = the 6 Challenge cases. The Support switches (Show wall hits,
+    Gauge numbers) sit in the Demo panel in Demo and in the question panel in the Knowledge check; both start off.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -213,6 +216,124 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
 :root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
 :root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+/* Gas Pressure in the new layout: answer letters, completed answers, model card spacing */
+.choice .k{font-weight:700;color:var(--accent);margin-right:6px}
+.choice.done-ok{border-color:var(--good);background:var(--good-bg)}
+.ask{display:grid;gap:6px}
+.ask .choices{gap:6px}
+.ask .choice{padding:6px 12px;line-height:1.35;font-weight:400}
+.ask .choice[aria-pressed="true"]{font-weight:700}
+.qpanel{container-type:inline-size}
+@container (min-width:440px){.ask .choices.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tryrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.ask p{margin:0}
+.ask .step{margin-top:2px}
+.ask .frame{gap:6px}
+.ask .frame{grid-template-columns:max-content minmax(0,1fr);align-items:center;column-gap:10px;row-gap:6px}
+.ask .frame label{display:contents}
+.model .sim{gap:12px}
+.model .ctrls{gap:10px}
+/* this tool's questions have two parts (what happens + the particle reason), so the question panel is wider */
+@media (min-width:901px){.layout{grid-template-columns:minmax(0,1.2fr) minmax(340px,1fr)}}
+.qpanel{padding-left:20px;padding-right:20px}
+/* compact answers so the question, answers, buttons and feedback all fit a 1366 × 768 laptop screen (fix pass, 11 Oct 2026) */
+.ask{gap:4px}
+.ask .choices{gap:5px}
+.ask .choice{font-size:15px;padding:4px 10px;line-height:1.3;min-height:38px}
+.ask .step{margin-top:0}
+.qtext.case{font-size:19px;line-height:1.35}
+.qpanel .feedback{font-size:16px;line-height:1.45}
+.qpanel .feedback .msg{padding:8px 12px}
+.qpanel .actions{padding:6px 0 8px}
+.ask .tryrow .sbtn{min-height:40px;padding:6px 14px}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -223,43 +344,37 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
     <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
-  <div class="bar">
-  <div class="levels" role="group" aria-label="Level">
-    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
-  </div>
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Gas Pressure</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
 
-  <div class="support" role="group" aria-label="Support">
-    <span class="lbl">Support:</span>
-    <button class="sw" type="button" data-support="hits" aria-pressed="false"><span class="dot"></span>Show wall hits <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="nums" aria-pressed="false"><span class="dot"></span>Gauge numbers <span class="state">off</span></button>
-  </div>
-
-  <section class="card" aria-label="Gas Pressure">
-    <div id="bankErr" class="bankerr" role="alert" hidden></div>
-    <div class="meta">
-      <span class="qno" id="qno">Task 1 of 3</span>
-    </div>
-    <p class="task" id="taskText"></p>
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Gas Pressure model">
     <div class="sim">
       <div class="simbox">
         <canvas id="box" role="img" aria-label="A sealed box of gas particles"></canvas>
         <div class="simbar">
           <span class="note" id="simNote">Drag the piston, or use the controls.</span>
-          <span class="row" style="display:flex;gap:8px">
+          <span class="row" id="playWrap" style="display:flex;gap:8px">
             <button class="sbtn" type="button" id="playBtn">Pause</button>
             <button class="sbtn" type="button" id="stepBtn" hidden>Step</button>
+            <button class="sbtn" type="button" id="demoReset">Start again</button>
           </span>
         </div>
       </div>
-      <div class="gauge">
+      <div class="gauge" id="gaugeBox">
         <svg id="gauge" viewBox="0 0 240 216" role="img" aria-label="Pressure gauge"></svg>
         <p class="gname">Pressure <span id="gRead"></span></p>
         <p class="key">Dashed line: pressure at the start</p>
@@ -273,7 +388,7 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
             <button class="sbtn" type="button" id="ventBtn">Let 10 out</button>
           </div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" id="ctrlT">
           <div class="lab"><label for="tempR">Temperature</label><output id="outT">20 °C</output></div>
           <input type="range" id="tempR" min="-50" max="200" step="1" value="20">
           <div class="row">
@@ -281,7 +396,7 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
             <button class="sbtn" type="button" id="heatBtn">Heat</button>
           </div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" id="ctrlV">
           <div class="lab"><label for="volR">Box size</label><output id="outV">100 %</output></div>
           <input type="range" id="volR" min="50" max="100" step="1" value="100">
           <div class="row">
@@ -290,23 +405,58 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
           </div>
         </div>
     </div>
-    <div class="lower">
-      <div class="panel ask" id="ask" aria-label="Your answer"></div>
-      <div class="panel">
-        <h2>Feedback</h2>
-        <div class="feedback" id="fb" aria-live="polite"><p class="hidden-note">Press Check when you are ready.</p></div>
-      </div>
-    </div>
     <p class="limits"><b>Model limits:</b> A real box holds billions of billions of particles, far too small to see. Real air particles move much faster, about 500 m/s. The box is flat, gravity is left out, and the temperature stays the same while you squash it. The gauge scale is made up so the starting box reads 100 kPa, about normal air pressure.</p>
-    <div class="actions">
-      <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint</button>
-      <button class="btn" type="button" id="reset">Reset</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
-      <button class="btn primary" type="button" id="next">Next →</button>
-    </div>
-  </section>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="ask" class="ask" aria-label="Your answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+        <div class="support" role="group" aria-label="Support" id="supportGrp">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="hits" aria-pressed="false"><span class="dot"></span>Show wall hits <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="nums" aria-pressed="false"><span class="dot"></span>Gauge numbers <span class="state">off</span></button>
+        </div>
+        </div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
 
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
@@ -321,7 +471,7 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
   const root = document.documentElement, btn = document.getElementById("themeBtn");
   const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
-  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
   btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
@@ -854,15 +1004,28 @@ function setGauge() {
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const support = { hits: false, nums: false };   // always OFF on load (never stored)
-const score = { s: 0, streak: 0 };
-const progress = {};                             // per task: solved, revealed, dirty, hints
-let level = "warm", idx = 0, cur = null, answer = {};
+const st = {};                                   // per question this visit: hints, wrong tries (key "level:id")
+let mode = "demo", level = "", idx = 0, streak = 0, cur = null, answer = {}, ORD = {};
+let LEVELS = {};                                 // easy = Warm-up + Core tasks, hard = Challenge cases
+const DEMO = { kind: "demo", start: { N: FACTS.refN, T: FACTS.refTempC, V: 100 } };
 function fmtT(T) { return (T < 0 ? "−" + Math.abs(T) : T) + " °C"; }
-function key() { return level + idx; }
-function prog() { return progress[key()] || (progress[key()] = { solved: false, revealed: false, dirty: false, hints: 0 }); }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+for (const lv of Object.keys(BANK)) BANK[lv].forEach((t, i) => { t.id = lv + (i + 1); });   // stable ids for saved ticks
 
-function locked() { return cur.kind === "predict" && !answer.pred && !prog().revealed; }
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:gas-pressure";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, cur), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function locked() { return mode !== "demo" && cur.kind === "predict" && !answer.pred && !prog().revealed; }
 function refreshControls() {
   const L = locked();
   $("outN").textContent = sim.N; $("outT").textContent = fmtT(sim.T); $("outV").textContent = sim.V + " %";
@@ -877,42 +1040,47 @@ function refreshControls() {
 }
 function changed() { if (reduceMotion || !running) shownP = pressure(sim); refreshControls(); }
 
-function choiceRow(name, opts, sel) {
-  return '<div class="choices" role="group" aria-label="' + esc(name) + '">' + opts.map((o, i) =>
-    '<button type="button" class="choice" data-g="' + name + '" data-v="' + i + '" aria-pressed="' + (sel === i) + '">' + esc(o.t) + '</button>').join("") + '</div>';
+/* answer buttons in a shuffled order (data-i keeps the original index, letters follow the shown order) */
+function choiceRow(name, opts, selI, order) {
+  return '<div class="choices' + (name === "what" || name === "why" || name === "opt" ? " two" : "") + '" role="group" aria-label="' + esc(name) + '">' + order.map((i, pos) =>
+    '<button type="button" class="choice" data-g="' + name + '" data-i="' + i + '" aria-pressed="' + (selI === i) + '"><span class="k">' + "ABCDEFGH"[pos] + '</span>' + esc(opts[i].t) + '</button>').join("") + '</div>';
 }
-function sel(id, label, opts) {
-  return '<label>' + label + '<select id="' + id + '"><option value="">Choose…</option>' +
-    opts.map(o => '<option value="' + o.id + '">' + esc(o.t) + '</option>').join("") + '</select></label>';
+function sel(id, label, opts, order) {
+  return '<label><span>' + label + '</span><select id="' + id + '"><option value="">Choose…</option>' +
+    order.map(i => '<option value="' + opts[i].id + '">' + esc(opts[i].t) + '</option>').join("") + '</select></label>';
 }
 const PRED = [{ t: "Goes up ↑", v: "up" }, { t: "Goes down ↓", v: "down" }, { t: "Stays the same =", v: "same" }];
+function newOrder(t) {
+  ORD = { pred: shuffled(PRED.length), f1: shuffled(F1.length), f2: shuffled(F2.length), f3: shuffled(F3.length) };
+  if (t.options) ORD.opt = shuffled(t.options.length);
+  if (t.what) { ORD.what = shuffled(t.what.length); ORD.why = shuffled(t.reason.length); }
+}
 function renderAsk() {
   const t = cur, a = $("ask"); let h = "";
   if (t.kind === "predict") {
-    h += '<p class="step">Step 1: predict</p>' + choiceRow("pred", PRED, PRED.findIndex(p => p.v === answer.pred));
+    h += '<p class="step">Step 1: predict</p>' + choiceRow("pred", PRED, PRED.findIndex(p => p.v === answer.pred), ORD.pred);
     h += '<p class="lock" id="lockNote">Pick a prediction first. Then the controls unlock.</p>';
     h += '<p class="step">Step 2: do it</p><p>' + esc(t.doText) + '</p>';
     if (t.frame) {
       h += '<p class="step">Step 3: explain</p><div class="frame">' +
-        sel("f1", "The particles …", F1) + sel("f2", "so they hit …", F2) + sel("f3", "so the pressure …", F3) + '</div>';
+        sel("f1", "The particles …", F1, ORD.f1) + sel("f2", "so they hit …", F2, ORD.f2) + sel("f3", "so the pressure …", F3, ORD.f3) + '</div>';
     }
   } else if (t.kind === "question") {
-    h += '<p class="step">Step 1: do it, and watch</p><p class="step">Step 2: pick your answer</p>' + choiceRow("opt", t.options, answer.opt);
+    h += '<p class="step">Step 1: do it, and watch</p><p class="step">Step 2: pick your answer</p>' + choiceRow("opt", t.options, answer.opt, ORD.opt);
   } else {
-    h += '<p><b>' + esc(t.title) + '.</b> ' + esc(t.text) + '</p>';
-    h += '<button type="button" class="sbtn" id="tryBtn" style="flex:none;justify-self:start">Try it in the box</button>';
+    h += '<div class="tryrow"><button type="button" class="sbtn" id="tryBtn" style="flex:none">Try it in the box</button><span class="step">Then pick what happens and the particle reason.</span></div>';
     h += '<p class="lock" id="tryNote" hidden>' + esc(t.tryNote) + '</p>';
-    h += '<p class="step">' + esc(t.whatLabel) + '</p>' + choiceRow("what", t.what, answer.what);
-    h += '<p class="step">The particle reason:</p>' + choiceRow("why", t.reason, answer.why);
+    h += '<p class="step">' + esc(t.whatLabel) + '</p>' + choiceRow("what", t.what, answer.what, ORD.what);
+    h += '<p class="step">The particle reason:</p>' + choiceRow("why", t.reason, answer.why, ORD.why);
   }
-  a.innerHTML = '<h2>Your answer</h2>' + h;
+  a.innerHTML = h;
   a.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => {
-    const g = b.dataset.g, v = +b.dataset.v;
+    const g = b.dataset.g, v = +b.dataset.i;
     if (g === "pred") answer.pred = PRED[v].v; else answer[g] = v;
     a.querySelectorAll('.choice[data-g="' + g + '"]').forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
     refreshControls();
   }));
-  ["f1", "f2", "f3"].forEach(id => { const e = $(id); if (e) e.addEventListener("change", () => { answer[id] = e.value; }); });
+  ["f1", "f2", "f3"].forEach(id => { const e = $(id); if (e) { if (answer[id]) e.value = answer[id]; e.addEventListener("change", () => { answer[id] = e.value; }); } });
   const tb = $("tryBtn");
   if (tb) tb.addEventListener("click", () => tryIt());
 }
@@ -929,22 +1097,58 @@ function loadState(s) {
   sim.N = s.N; sim.T = s.T; sim.V = s.V; cnt.pumped = 0; cnt.vented = 0;
   fillParticles(); sim.hits = []; shownP = pressure(sim);
 }
-function setFb(html) { $("fb").innerHTML = html; }
+function setFb(html) { $("fb").innerHTML = html; if (html) requestAnimationFrame(keepInView); }
 function msg(cls, html) { return '<div class="msg ' + cls + '">' + html + '</div>'; }
 
+const TRY = [
+  "Pump in more particles. Watch the gauge.",
+  "Heat the gas. Do the particles get faster, or bigger?",
+  "Squash the box with the piston. What does the pressure do?",
+  "Turn on Show wall hits. Which walls do the particles push on?",
+  "Pump in 10, then let 10 out. Compare the needle with the dashed line."
+];
+function loadDemo() {
+  cur = DEMO; answer = {};
+  loadState(DEMO.start);
+  $("tryList").innerHTML = TRY.map(x => "<li>" + esc(x) + "</li>").join("");
+  $("simNote").textContent = "Drag the piston, or use the controls.";
+  refreshControls();
+}
 function startTask() {
-  const list = BANK[level]; cur = list[idx]; answer = {};
-  $("qno").textContent = "Task " + (idx + 1) + " of " + list.length;
-  $("taskText").textContent = cur.kind === "case" ? "Real life: pick what happens and the particle reason." : cur.text;
+  if (mode === "demo") return loadDemo();
+  const list = LEVELS[level]; cur = list[idx]; answer = {};
+  newOrder(cur);
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = "Question " + (idx + 1) + " of " + list.length;
+  $("taskText").textContent = cur.kind === "case" ? cur.title + ". " + cur.text : cur.text;
+  $("taskText").classList.toggle("case", cur.kind === "case");
   loadState(cur.start);
   renderAsk();
   $("simNote").textContent = cur.kind === "case" ? "Press Try it to model the case in the box." : "Drag the piston, or use the controls.";
   setFb('<p class="hidden-note">Press Check when you are ready.</p>');
-  paintHint(); refreshControls();
+  paintHint(); renderDots();
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  refreshControls();
+  requestAnimationFrame(keepInView);
 }
 function paintHint() {
   const n = prog().hints;
   $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : "Hint (" + (n + 1) + "/3)";
+}
+/* a question already done: show its answer, highlighted, until progress is reset */
+function showFinished(p) {
+  fillAnswer(cur);
+  if (p.solved) $("ask").querySelectorAll(".choice[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+  setFb(msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                               : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again."));
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; startTask(); }));
 }
 
 function actionStatus(t) {
@@ -956,23 +1160,28 @@ function actionStatus(t) {
 }
 function good(html) {
   const p = prog();
-  if (!p.solved && !p.revealed) { score.s++; if (!p.dirty && p.hints === 0) score.streak++; }
-  p.solved = true; paintScore();
-  setFb(msg("good", "<b>Correct.</b> " + html));
+  mark(qkey(level, cur), "solved"); p.solved = true;
+  if (!p.wrong && !p.hints) streak++;
+  paintScore();
+  setFb(msg("good", "<b>✓ Correct.</b> " + html + " Choose another question number above."));
+  $("doneBadge").hidden = false; renderDots();
+  $("ask").querySelectorAll(".choice[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
 }
 function bad(lines) {
-  const p = prog(); p.dirty = true; score.streak = 0; paintScore();
-  setFb(msg("bad", "<b>Not yet.</b><ul>" + lines.map(l => "<li>" + l + "</li>").join("") + "</ul>"));
+  const p = prog(); p.wrong++; streak = 0; paintScore();
+  setFb(msg("bad", "<b>✗ Not yet.</b><ul>" + lines.map(l => "<li>" + l + "</li>").join("") + "</ul>"));
 }
 function neutral(html) { setFb(msg("tip", html)); }
-function paintScore() { $("sScore").textContent = score.s; $("sStreak").textContent = score.streak; }
+function paintScore() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 
 function check() {
   const t = cur;
+  const p0 = prog();
+  if (p0.solved || p0.revealed) return neutral("This question is finished. Choose another question number above, or Reset this question to try it again.");
   if (t.kind === "predict") {
     if (!answer.pred) return neutral("Step 1: pick a prediction first.");
     const st = actionStatus(t);
-    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset and only change " + NAMES[t.vary] + ".");
+    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset this question and only change " + NAMES[t.vary] + ".");
     if (!st.ok) return neutral(t.doText);
     const d = dirOf(t.start, sim), sign = Math.sign(sim[t.vary] - t.start[t.vary]);
     const why = t.need.same ? "Same particles, same temperature, same space → the same hits → the same pressure." : reasonFor(t.vary, sign);
@@ -998,7 +1207,7 @@ function check() {
   }
   if (t.kind === "question") {
     const st = actionStatus(t);
-    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset and only change " + NAMES[t.vary] + ".");
+    if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset this question and only change " + NAMES[t.vary] + ".");
     if (!st.ok) return neutral("First do it: " + esc(t.text.split(".")[0]) + ".");
     if (answer.opt == null) return neutral("Now pick your answer.");
     const o = t.options[answer.opt];
@@ -1023,8 +1232,8 @@ function hint() {
   p.hints++; paintHint();
   setFb(msg("tip", "<b>Hint " + p.hints + ":</b> " + esc(cur.hints[p.hints - 1])));
 }
-function reveal() {
-  const t = cur, p = prog(); p.revealed = true;
+/* put the right answer in place (Show answer, and questions already done); returns the answer text */
+function fillAnswer(t) {
   if (t.kind === "predict") {
     loadState(t.start);
     if (t.need.same) { pump(); vent(); }
@@ -1032,54 +1241,159 @@ function reveal() {
     else if (t.vary === "T") setTemp(targetOf(t).T); else setVol(targetOf(t).V);
     const d = dirOf(t.start, sim), sign = needSign(t);
     answer.pred = d;
-    renderAsk();
     let extra = "";
     if (t.frame) {
       const fa = frameAnswer(t);
-      ["f1", "f2", "f3"].forEach((id, i) => { $(id).value = fa[i]; answer[id] = fa[i]; });
+      ["f1", "f2", "f3"].forEach((id, i) => { answer[id] = fa[i]; });
       extra = " The particles " + F1.find(o => o.id === fa[0]).t + " so they hit " + F2.find(o => o.id === fa[1]).t + " so the pressure " + F3.find(o => o.id === fa[2]).t + ".";
     }
-    changed();
-    setFb(msg("tip", "<b>Answer:</b> the pressure " + DIRWORD[d] + ". " + (t.need.same ? "Same particles, same temperature, same space → same pressure." : reasonFor(t.vary, sign)) + extra));
-  } else if (t.kind === "question") {
+    renderAsk(); changed();
+    return "<b>Answer:</b> the pressure " + DIRWORD[d] + ". " + (t.need.same ? "Same particles, same temperature, same space → same pressure." : reasonFor(t.vary, sign)) + extra;
+  }
+  if (t.kind === "question") {
     loadState(t.start);
     const tg = targetOf(t);
     if (t.vary === "N") { while (sim.N < tg.N) pump(); } else setTemp(tg.T);
     answer.opt = t.options.findIndex(o => o.ok); renderAsk(); changed();
-    setFb(msg("tip", "<b>Answer:</b> " + esc(t.options[answer.opt].t) + ". " + (t.vary === "N" ? "Each hit on a wall gives it a tiny push." : reasonFor("T", 1))));
-  } else {
-    const d = dirOf(t.start, t.tryState);
-    answer.what = t.what.findIndex(o => o.dir === d); answer.why = t.reason.findIndex(o => o.ok);
-    renderAsk(); tryIt();
-    setFb(msg("tip", "<b>Answer:</b> " + esc(t.what[answer.what].t) + ". " + esc(t.reason[answer.why].t) + "."));
+    return "<b>Answer:</b> " + esc(t.options[answer.opt].t) + ". " + (t.vary === "N" ? "Each hit on a wall gives it a tiny push." : reasonFor("T", 1));
   }
+  const d = dirOf(t.start, t.tryState);
+  answer.what = t.what.findIndex(o => o.dir === d); answer.why = t.reason.findIndex(o => o.ok);
+  renderAsk(); tryIt();
+  return "<b>Answer:</b> " + esc(t.what[answer.what].t) + ". " + esc(t.reason[answer.why].t) + ".";
 }
-function resetTask() { answer = {}; loadState(cur.start); renderAsk(); setFb('<p class="hidden-note">Press Check when you are ready.</p>'); refreshControls(); }
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, cur), "shown"); renderDots(); }
+  const txt = fillAnswer(cur);
+  setFb(msg("tip", txt + (p.solved ? "" : " (No score for this one.)")));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, cur)]; saveDone(); delete st[qkey(level, cur)]; paintScore();
+  startTask();
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#box", text: "This is the model: a sealed box of gas particles. They move about and bounce off the walls." },
+  { el: "#gaugeBox", text: "The gauge shows the pressure in the box. The dashed line shows the pressure at the start." },
+  { el: "#ctrlN", text: "Press Pump in 10 to add particles to the box. Let 10 out lets some out through the valve.", do: "pump", doText: "Press Pump in 10 and watch the gauge." },
+  { el: "#ctrlT", text: "Heat or cool the gas with the buttons or the slider.", do: "temp", doText: "Press Heat, or move the slider." },
+  { el: "#ctrlV", text: "Squash the box or let it out. You can also drag the piston in the picture.", do: "vol", doText: "Press Squash, or drag the piston." },
+  { el: "#playWrap", text: "Pause stops the particles. When it is paused, Step moves them on a little at a time." },
+  { el: "#supportGrp", text: "Show wall hits makes each hit on a wall flash. Gauge numbers puts numbers on the gauge.", do: "support", doText: "Turn on Show wall hits." },
+  { el: "#demoReset", text: "Start again puts the box back to how it began." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+const reducedTour = () => reduceMotion;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gas-pressure", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reducedTour() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    // a tall target (e.g. the question panel): sit beside it, centred on the part that is on screen
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
 
 /* ---------- wiring ---------- */
-$("pumpBtn").addEventListener("click", () => { pump(); changed(); });
+$("pumpBtn").addEventListener("click", () => { pump(); changed(); tourSignal("pump"); });
 $("ventBtn").addEventListener("click", () => { vent(); changed(); });
-$("heatBtn").addEventListener("click", () => { setTemp(sim.T + FACTS.tStep); changed(); });
-$("coolBtn").addEventListener("click", () => { setTemp(sim.T - FACTS.tStep); changed(); });
-$("squashBtn").addEventListener("click", () => { setVol(sim.V - FACTS.vStep); changed(); });
-$("letBtn").addEventListener("click", () => { setVol(sim.V + FACTS.vStep); changed(); });
-$("tempR").addEventListener("input", e => { setTemp(+e.target.value); changed(); });
-$("volR").addEventListener("input", e => { setVol(+e.target.value); changed(); });
+$("heatBtn").addEventListener("click", () => { setTemp(sim.T + FACTS.tStep); changed(); tourSignal("temp"); });
+$("coolBtn").addEventListener("click", () => { setTemp(sim.T - FACTS.tStep); changed(); tourSignal("temp"); });
+$("squashBtn").addEventListener("click", () => { setVol(sim.V - FACTS.vStep); changed(); tourSignal("vol"); });
+$("letBtn").addEventListener("click", () => { setVol(sim.V + FACTS.vStep); changed(); tourSignal("vol"); });
+$("tempR").addEventListener("input", e => { setTemp(+e.target.value); changed(); tourSignal("temp"); });
+$("volR").addEventListener("input", e => { setVol(+e.target.value); changed(); tourSignal("vol"); });
 $("check").addEventListener("click", check);
 $("hint").addEventListener("click", hint);
 $("reveal").addEventListener("click", reveal);
 $("reset").addEventListener("click", resetTask);
-$("next").addEventListener("click", () => { idx = (idx + 1) % BANK[level].length; startTask(); });
-document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-  level = b.dataset.level; idx = 0; startTask();
-}));
+$("demoReset").addEventListener("click", loadDemo);
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; paintScore(); back(); startTask(); setFb(msg("tip", "Progress reset. Every question is fresh again.")); });
+  $("rpNo").addEventListener("click", back);
+});
 document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.support, on = !(b.getAttribute("aria-pressed") === "true");
   b.setAttribute("aria-pressed", on); b.querySelector(".state").textContent = on ? "on" : "off";
   support[k] = on;
   if (k === "nums") buildGauge(); else draw();
+  if (on && k === "hits") tourSignal("support");
 }));
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportGrp"));   // the Support switches follow the panel
+  $("demoReset").hidden = mode !== "demo";
+  startTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
 // drag the piston
 let dragging = false;
 function pistonX() { return geo.left + (sim.V / 100) * geo.s; }
@@ -1092,7 +1406,7 @@ cv.addEventListener("pointermove", e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left;
   cv.style.cursor = (!locked() && (Math.abs(x - pistonX()) < 30 || x > pistonX())) ? "ew-resize" : "default";
   if (!dragging) return;
-  setVol(((x - geo.left) / geo.s) * 100); changed();
+  setVol(((x - geo.left) / geo.s) * 100); changed(); tourSignal("vol");
 });
 cv.addEventListener("pointerup", () => { dragging = false; });
 cv.addEventListener("pointercancel", () => { dragging = false; });
@@ -1104,6 +1418,37 @@ $("stepBtn").addEventListener("click", () => { for (let i = 0; i < 30; i++) step
 $("themeBtn").addEventListener("click", () => { readColours(); draw(); });
 if (window.matchMedia) { const m = window.matchMedia("(prefers-color-scheme: dark)"); if (m.addEventListener) m.addEventListener("change", () => { readColours(); draw(); }); }
 if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement); else window.addEventListener("resize", resize);
+/* keep the question panel within the screen, so Check and the feedback are always visible (desktop) */
+/* keep the question line and the feedback in view together. Desktop: the panel sticks under the top bar at full height,
+   then scrolls itself to the feedback, but never past the question text. Phone: the page scrolls, with the same limit. */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reducedTour() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";   // the height it will have once stuck
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reducedTour() ? "auto" : "smooth" });
+  }
+}
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
 let last = 0;
 function loop(ts) {
@@ -1122,8 +1467,11 @@ document.addEventListener("visibilitychange", () => { last = 0; });
   readColours();
   const errs = checkBank();
   if (errs.length) { const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Question bank error – please tell your teacher.</b><ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"; }
-  cur = BANK.warm[0];
-  buildGauge(); startTask(); paintPlay(); resize();
+  LEVELS = { easy: [...BANK.warm, ...BANK.core],   // 5–10 questions per level (Dan, 11 Oct 2026)
+             hard: BANK.challenge };
+  cur = DEMO;
+  buildGauge(); paintScore(); setMode("demo"); paintPlay(); resize(); fitPanel();
+  try { if (localStorage.getItem("ks3tools-toured:gas-pressure")) $("newHere").hidden = true; } catch (e) {}
   requestAnimationFrame(loop);
 })();
 

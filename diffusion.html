@@ -45,6 +45,11 @@
     - diffusion only happens in gases (liquid mode shows diffusion in water);
     - stirring is diffusion (Core task names this).
   Support starts OFF on every visit: Count in each half; Particle trails (follow one particle).
+  Questions: Easy = 5 Warm-up + 5 Core = 10; Hard = 5 Challenge. None dropped.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+    Demo has every model control and a "Show" row (Count in each half, Particle trails) on the model; in the
+    Knowledge check these are the Support switches in the question panel and start off. The "Spot the mixed
+    picture" boxes are drawn on the model card in a random order each time; the answer is chosen by box number.
   Idea credit: Idea from Diffusion, PhET Interactive Simulations, University of Colorado Boulder
     (https://phet.colorado.edu). No PhET code, art, layout, colours or wording used.
   Checks: on load the script checks every task (one correct answer, three hints, feedback on
@@ -214,25 +219,116 @@ footer.brand a{color:inherit}
 .opt{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:17px;line-height:1.45}
 .opt input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
 .opt:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.pics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.pic{flex-direction:column;align-items:center;padding:8px}
+.pics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pic{display:grid;gap:4px;justify-items:center;margin:0}
 .pic svg{width:100%;height:auto;display:block;border-radius:6px}
-.pic .pl{display:flex;gap:8px;align-items:center;font-weight:700;white-space:nowrap}
-@media (max-width:1240px) and (min-width:1000px),(max-width:560px){.pics{grid-template-columns:minmax(0,1fr)}.pic svg{max-width:300px}}
+.pic figcaption{font-weight:700}
+@media (max-width:560px){.pics{grid-template-columns:minmax(0,1fr)}.pic svg{max-width:300px}}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.qpanel .frame{margin:0}
+.qpanel .opt{font-size:16px;line-height:1.4;padding:8px 12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#cv{max-width:640px}
 .frame{font-size:18px;line-height:2.4}
 .frame select,.numin{font:400 17px var(--f-body);min-height:44px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
 .numrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .numin{width:7.5em}
 .rmnote{font-size:15px;color:var(--muted);margin:0}
 .rmnote:empty{display:none}
-.stage{display:grid;gap:18px;min-width:0}
-@media (min-width:1000px){.stage{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}.stage .lower{grid-template-columns:minmax(0,1fr)}}
 .runs.empty{list-style:none;padding-left:0}
 
 /* House particle look, the same in every tool (Particle Model's style): solid fill, dark outline, small highlight */
 :root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
 :root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -243,84 +339,116 @@ footer.brand a{color:inherit}
     <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
-  <div class="bar">
-  <div class="levels" role="group" aria-label="Level">
-    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
-  </div>
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Diffusion</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
 
-  <div class="support" role="group" aria-label="Support">
-    <span class="lbl">Support:</span>
-    <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Count in each half <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="trails" aria-pressed="false"><span class="dot"></span>Particle trails <span class="state">off</span></button>
-  </div>
-
-  <section class="card" aria-label="Diffusion">
-    <div class="taskhead">
-      <div class="qno" id="qno">Task 1 of 5</div>
-      <div class="ctx" id="taskText">…</div>
-    </div>
-    <div id="bankErr" class="bankerr" role="alert" hidden></div>
-
-    <div class="stage">
-    <div class="sim">
-      <div class="simtop">
-        <div class="seg" role="group" aria-label="Mode">
-          <span class="lbl">Mode:</span>
-          <button type="button" data-mode="gas" aria-pressed="true">Gas</button>
-          <button type="button" data-mode="liquid" aria-pressed="false">Liquid</button>
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Diffusion model">
+      <div class="panel" id="picsPanel" hidden>
+        <h2>Spot the mixed picture</h2>
+        <div class="pics" id="picsRow"></div>
+        <p class="hidden-note">● circle = gas A, ■ square = gas B. The dashed line is the middle.</p>
+      </div>
+      <div class="sim">
+        <div class="simtop">
+          <div class="seg" role="group" aria-label="Mode" id="stateSeg">
+            <span class="lbl">Mode:</span>
+            <button type="button" data-state="gas" aria-pressed="true">Gas</button>
+            <button type="button" data-state="liquid" aria-pressed="false">Liquid</button>
+          </div>
+          <div class="seg" role="group" aria-label="Temperature of the gas" id="tempSeg">
+            <span class="lbl">Temperature:</span>
+            <button type="button" data-temp="cold" aria-pressed="false">Cold 10 °C</button>
+            <button type="button" data-temp="room" aria-pressed="true">Room 20 °C</button>
+            <button type="button" data-temp="hot" aria-pressed="false">Hot 60 °C</button>
+          </div>
         </div>
-        <div class="seg" role="group" aria-label="Temperature of the gas" id="tempSeg">
-          <span class="lbl">Temperature:</span>
-          <button type="button" data-temp="cold" aria-pressed="false">Cold 10 °C</button>
-          <button type="button" data-temp="room" aria-pressed="true">Room 20 °C</button>
-          <button type="button" data-temp="hot" aria-pressed="false">Hot 60 °C</button>
+        <div class="canvaswrap"><canvas id="cv" role="img" aria-label="Box of gas particles"></canvas></div>
+        <div class="legend" id="legend"></div>
+        <div class="ctrls">
+          <button class="btn primary" type="button" id="go">Lift barrier</button>
+          <button class="btn" type="button" id="pause">Pause</button>
+          <button class="btn" type="button" id="step">Step 1 s</button>
+          <button class="btn" type="button" id="skip">Skip to the end</button>
+        </div>
+        <p class="rmnote" id="rmNote" hidden>Reduced motion is on, so nothing moves by itself. Press Play, Step or Skip.</p>
+        <div class="read" id="readout"></div>
+        <p class="rmnote" id="status" aria-live="polite"></p>
+        <div id="countsBox" hidden></div>
+        <div id="runsBox">
+          <h2 style="font:700 16px var(--f-body);color:var(--muted);margin:0 0 4px">Your runs</h2>
+          <ol class="runs empty" id="runs"><li class="unfair">No runs yet.</li></ol>
         </div>
       </div>
-      <div class="canvaswrap"><canvas id="cv" role="img" aria-label="Box of gas particles"></canvas></div>
-      <div class="legend" id="legend"></div>
-      <div class="ctrls">
-        <button class="btn primary" type="button" id="go">Lift barrier</button>
-        <button class="btn" type="button" id="pause">Pause</button>
-        <button class="btn" type="button" id="step">Step 1 s</button>
-        <button class="btn" type="button" id="skip">Skip to the end</button>
-      </div>
-      <p class="rmnote" id="rmNote" hidden>Reduced motion is on, so nothing moves by itself. Press Play, Step or Skip.</p>
-      <div class="read" id="readout"></div>
-      <p class="rmnote" id="status" aria-live="polite"></p>
-      <div id="countsBox" hidden></div>
-      <div>
-        <h2 style="font:700 16px var(--f-body);color:var(--muted);margin:0 0 4px">Your runs</h2>
-        <ol class="runs empty" id="runs"><li class="unfair">No runs yet.</li></ol>
-      </div>
-    </div>
 
-    <div class="lower">
-      <div class="panel" id="answerPanel"></div>
-      <div class="panel">
-        <h2>Feedback</h2>
+      <div class="support" id="demoShow" role="group" aria-label="Show on the model">
+        <span class="lbl">Show:</span>
+        <button class="sw" type="button" data-show="counts" aria-pressed="false"><span class="dot"></span>Count in each half <span class="state">off</span></button>
+        <button class="sw" type="button" data-show="trails" aria-pressed="false"><span class="dot"></span>Particle trails <span class="state">off</span></button>
+      </div>
+
+      <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Here each dot stands for lots of particles. The clock is model time: real gas particles move much faster, and real dye takes many minutes to spread. In the gas, the hot–cold speed difference is made bigger so you can see it. Water particles are not drawn. Air and water are perfectly still here. Only gases and liquids are shown.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answerPanel"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
         <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="counts" aria-pressed="false"><span class="dot"></span>Count in each half <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="trails" aria-pressed="false"><span class="dot"></span>Particle trails <span class="state">off</span></button>
+        </div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
       </div>
-    </div>
-    </div>
-    <p class="limits"><b>Model limits:</b> Real particles are far too small to see, and there are billions of them. Here each dot stands for lots of particles. The clock is model time: real gas particles move much faster, and real dye takes many minutes to spread. In the gas, the hot–cold speed difference is made bigger so you can see it. Water particles are not drawn. Air and water are perfectly still here. Only gases and liquids are shown.</p>
-    <div class="actions">
-      <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint</button>
-      <button class="btn" type="button" id="reset">Reset</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
-      <button class="btn primary" type="button" id="next">Next →</button>
-    </div>
-  </section>
+    </aside>
+  </main>
 
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
     <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
@@ -334,7 +462,7 @@ footer.brand a{color:inherit}
   const root = document.documentElement, btn = document.getElementById("themeBtn");
   const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
-  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
   btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
@@ -723,11 +851,26 @@ const $ = id => document.getElementById(id);
 const RM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const cv = $("cv"), ctx = cv.getContext("2d");
 let mode = "gas", gas = new GasSim("room"), liq = new LiquidSim(), running = !RM, acc = 0, dirty = true;
-let level = "warm", idx = 0, score = 0, streak = 0;
-const support = { counts: false, trails: false };
-const tstate = {};
-const st = T => tstate[T.id] || (tstate[T.id] = { solved: false, revealed: false, wrong: 0, hints: 0 });
-const cur = () => TASKS[level][idx];
+let appMode = "demo", level = "", idx = 0, streak = 0;     // appMode: demo or quiz; mode (above): gas or liquid
+let LEVELS = {};   // easy = Warm-up + Core questions, hard = Challenge questions (built at start)
+let task = null, order = [];
+const support = { counts: false, trails: false };   // what the model shows now (Show switches in Demo, Support switches in the Knowledge check)
+const tstate = {};   // per-question progress this visit (hints, wrong tries), key "level:id"
+const cur = () => task;
+
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:diffusion";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = tstate[k] || (tstate[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+const st = () => prog();
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 /* colours come from the CSS tokens so both themes work */
 let C = {};
@@ -834,8 +977,8 @@ function stepActive(seconds){ const n = Math.round(seconds/DT); for (let i = 0; 
 function resetGas(){ gas.reset(gas.temp); gasLogged = false; dirty = true; }
 function resetLiquid(){ liq.reset(); liqLogged = [false, false]; dirty = true; }
 function doGo(){
-  if (mode === "gas"){ if (!gas.lifted){ gas.lift(); $("status").textContent = "Barrier lifted."; } else resetGas(); }
-  else { if (!liq.added){ liq.add(); liqLogged = [false, false]; $("status").textContent = "Dye added."; } else resetLiquid(); }
+  if (mode === "gas"){ if (!gas.lifted){ gas.lift(); $("status").textContent = "Barrier lifted."; tourSignal("lift"); } else resetGas(); }
+  else { if (!liq.added){ liq.add(); liqLogged = [false, false]; $("status").textContent = "Dye added."; tourSignal("dye"); } else resetLiquid(); }
   paintControls();
 }
 function finishLiquid(){ const was = mode; mode = "liquid"; if (!liq.added){ liq.add(); liqLogged = [false, false]; } while (liq.b.some(B => B.mixedAt === null) && liq.t < FACTS.maxModelTime) liq.step(DT); mode = was; logEvents(); dirty = true; paintControls(); }
@@ -850,7 +993,7 @@ function raceOdd(){ const c = latest("gas","cold"), h = latest("gas","hot"); ret
 function paintControls(){
   $("go").textContent = mode === "gas" ? (gas.lifted ? "Put barrier back" : "Lift barrier") : (liq.added ? "Start again" : "Add dye");
   $("pause").textContent = running ? "Pause" : "Play";
-  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode ? "true" : "false"));
+  document.querySelectorAll("[data-state]").forEach(b => b.setAttribute("aria-pressed", b.dataset.state === mode ? "true" : "false"));
   document.querySelectorAll("[data-temp]").forEach(b => b.setAttribute("aria-pressed", b.dataset.temp === gas.temp ? "true" : "false"));
   $("tempSeg").hidden = mode !== "gas";
   $("legend").innerHTML = mode === "gas"
@@ -859,22 +1002,32 @@ function paintControls(){
   cv.setAttribute("aria-label", mode === "gas" ? `Box with gas A on the left and gas B on the right. ${gas.lifted ? "The barrier is lifted." : "The barrier is down."} Temperature ${gasLabel(gas.temp)}.` : "Two beakers of water, cold 10 °C and hot 60 °C, with purple dye at the bottom.");
   dirty = true; readout();
 }
-function setMode(m){ mode = m; paintControls(); }
-document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
-document.querySelectorAll("[data-temp]").forEach(b => b.addEventListener("click", () => { gas.setTemp(b.dataset.temp); paintControls(); }));
+function setSim(m){ mode = m; paintControls(); if (appMode === "demo") renderTry(); }
+document.querySelectorAll("[data-state]").forEach(b => b.addEventListener("click", () => { setSim(b.dataset.state); if (mode === "liquid") tourSignal("liquid"); }));
+document.querySelectorAll("[data-temp]").forEach(b => b.addEventListener("click", () => { gas.setTemp(b.dataset.temp); paintControls(); tourSignal("temp"); }));
 $("go").addEventListener("click", doGo);
-$("pause").addEventListener("click", () => { running = !running; paintControls(); });
+$("pause").addEventListener("click", () => { running = !running; paintControls(); if (running) tourSignal("play"); });
 $("step").addEventListener("click", () => stepActive(1));
 $("skip").addEventListener("click", () => {
   if (mode === "gas"){ if (!gas.lifted) gas.lift(); let n = 0; while (gas.mixedAt === null && gas.t < FACTS.maxModelTime){ gas.step(DT); n++; } stepActive(1); }
   else finishLiquid();
-  paintControls();
+  paintControls(); tourSignal("skip");
 });
 if (RM) $("rmNote").hidden = false;
 
-/* support switches (always off on load, never stored) */
-function setSupport(key, on){ support[key] = on; const b = document.querySelector(`[data-support="${key}"]`); b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector(".state").textContent = on ? "on" : "off"; dirty = true; readout(); }
-document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => setSupport(b.dataset.support, !support[b.dataset.support])));
+/* Support (Knowledge check) and Show (Demo) switches: all off on load, never stored.
+   The model reads `support`, which follows whichever set belongs to the current mode. */
+const supQuiz = { counts: false, trails: false }, supShow = { counts: false, trails: false };
+function paintSw(b, on){ b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector(".state").textContent = on ? "on" : "off"; }
+function applySupport(){
+  const src = appMode === "demo" ? supShow : supQuiz; support.counts = src.counts; support.trails = src.trails;
+  document.querySelectorAll("[data-support]").forEach(b => paintSw(b, supQuiz[b.dataset.support]));
+  document.querySelectorAll("[data-show]").forEach(b => paintSw(b, supShow[b.dataset.show]));
+  dirty = true; readout();
+}
+function setSupport(key, on){ supQuiz[key] = on; applySupport(); }
+document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => setSupport(b.dataset.support, !supQuiz[b.dataset.support])));
+document.querySelectorAll("[data-show]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.show; supShow[k] = !supShow[k]; applySupport(); if (supShow[k]) tourSignal("show"); }));
 
 /* animation: requestAnimationFrame, paused when the tab is hidden */
 let last = null, lastRead = 0;
@@ -891,39 +1044,81 @@ function frame(ts){
 
 /* ---------- task UI ---------- */
 const fbBox = $("feedback");
-function say(kind, html){ fbBox.innerHTML = `<div class="msg ${kind}">${html}</div>`; }
+/* show the feedback: keepInView() brings it into view without hiding the question line */
+function showFb(){ requestAnimationFrame(keepInView); }
+function say(kind, html){ fbBox.innerHTML = `<div class="msg ${kind}">${html}</div>`; showFb(fbBox); }
+const LETTERS = "ABCDEF";
 function renderTask(){
-  const T = cur(), s = st(T), n = TASKS[level].length;
-  $("qno").textContent = `${{ warm: "Warm-up", core: "Core", challenge: "Challenge" }[level]} · Task ${idx+1} of ${n}` + (s.solved ? " · solved" : s.revealed ? " · answer shown" : "");
+  const T = cur(), n = LEVELS[level].length;
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx+1} of ${n}`;
   $("taskText").textContent = T.text;
   const P = $("answerPanel");
+  $("picsPanel").hidden = T.type !== "pics";
   if (T.type === "choice"){
-    P.innerHTML = `<fieldset class="opts"><legend>Your answer</legend>` + T.options.map(o => `<label class="opt"><input type="radio" name="ans" value="${o.k}"><span>${o.t}</span></label>`).join("") + `</fieldset>`;
+    order = shuffled(T.options.length);   // shown in a random order each time the question opens
+    P.innerHTML = `<fieldset class="opts"><legend class="sr-only">Your answer</legend>` + order.map((i, pos) => { const o = T.options[i];
+      return `<label class="opt" data-i="${i}"><input type="radio" name="ans" value="${o.k}"><span class="k">${LETTERS[pos]}</span><span>${o.t}</span></label>`; }).join("") + `</fieldset>`;
   } else if (T.type === "pics"){
-    P.innerHTML = `<fieldset class="opts"><legend>Your answer</legend><div class="pics">` + PICS.map((p, i) => `<label class="opt pic"><span class="pl"><input type="radio" name="ans" value="${i}">Box ${i+1}</span>${p.svg}</label>`).join("") + `</div><p class="hidden-note">● circle = gas A, ■ square = gas B. The dashed line is the middle.</p></fieldset>`;
+    order = shuffled(PICS.length);        // the three boxes are drawn in a random order; Box 1, 2, 3 follow the shown order
+    $("picsRow").innerHTML = order.map((i, pos) => `<figure class="pic">${PICS[i].svg}<figcaption>Box ${pos+1}</figcaption></figure>`).join("");
+    P.innerHTML = `<fieldset class="opts"><legend>Your answer: which box is mixed?</legend>` + order.map((i, pos) => `<label class="opt" data-i="${i}"><input type="radio" name="ans" value="${i}"><span>Box ${pos+1}</span></label>`).join("") + `</fieldset>`;
   } else if (T.type === "frame"){
-    const sel = (g, i) => `<select id="gap${i}" aria-label="Gap ${i+1}">` + g.map(o => `<option value="${o.k}">${o.t}</option>`).join("") + `</select>`;
-    P.innerHTML = `<h2>Your answer</h2><p class="frame">${T.frame[0]} ${sel(T.gaps[0], 0)} ${T.frame[1]} ${sel(T.gaps[1], 1)}${T.frame[2]}</p>`;
+    /* the word choices in each gap are shuffled; "choose…" stays first */
+    const sel = (g, i) => `<select id="gap${i}" aria-label="Gap ${i+1}"><option value="">${g[0].t}</option>` + shuffled(g.length - 1).map(j => g[j + 1]).map(o => `<option value="${o.k}">${o.t}</option>`).join("") + `</select>`;
+    P.innerHTML = `<p class="frame">${T.frame[0]} ${sel(T.gaps[0], 0)} ${T.frame[1]} ${sel(T.gaps[1], 1)}${T.frame[2]}</p>`;
   } else if (T.type === "number"){
-    P.innerHTML = `<h2>Your answer</h2><div class="numrow"><label for="num">Cold time − Hot time =</label><input class="numin" id="num" type="number" step="0.1" inputmode="decimal"> <span>${T.unit}</span></div><p class="hidden-note">Use the latest Cold and Hot times in Your runs.</p>`;
+    P.innerHTML = `<div class="numrow"><label for="num">Cold time − Hot time =</label><input class="numin" id="num" type="number" step="0.1" inputmode="decimal"> <span>${T.unit}</span></div><p class="hidden-note">Use the latest Cold and Hot times in Your runs.</p>`;
+    $("num").addEventListener("keydown", e => { if (e.key === "Enter") doCheck(); });
   }
   fbBox.innerHTML = `<p class="hidden-note">Answer, then press Check.</p>`;
-  paintHint();
+  paintHint(); renderDots();
 }
 function paintHint(){ const s = st(cur()), b = $("hint"); b.textContent = s.hints >= 3 ? "No more hints – try Show answer" : `Hint (${s.hints+1}/3)`; }
+const TRY = {
+  gas: ["Press Lift barrier and watch the two gases spread out.", "Wait until the gases are evenly mixed. Do the particles stop moving?", "Run it at Cold, then at Hot. Which mixes faster? Look at Your runs.", "Turn on Particle trails and follow one particle."],
+  liquid: ["Press Add dye and watch the purple spread through the water.", "Which beaker spreads out first: cold or hot?", "Turn on Count in each half. Does the total number of dye particles change?", "Switch to Gas. Which is faster: a gas or dye in water?"]
+};
+function renderTry(){ $("tryList").innerHTML = TRY[mode].map(x => `<li>${x}</li>`).join(""); }
+function loadDemo(){
+  task = null; $("picsPanel").hidden = true; $("demoShow").hidden = false; $("status").textContent = "";
+  resetGas(); resetLiquid(); paintControls(); renderTry(); applySupport();
+}
 function loadTask(){
-  const T = cur();
+  if (appMode === "demo") return loadDemo();
+  task = LEVELS[level][idx]; const T = task;
+  $("demoShow").hidden = true;
   $("status").textContent = "";
   if (T.temp) gas.setTemp(T.temp);
   resetGas(); resetLiquid();
-  setMode(T.mode); renderTask(); paintControls();
+  setSim(T.mode); renderTask(); applySupport(); paintControls();
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+/* a question already done: show its answer, highlighted, until progress is reset */
+function showFinished(p){
+  const T = cur();
+  if (T.type === "choice"){ const k = T.answer(); document.querySelectorAll('input[name="ans"]').forEach(r => { r.checked = r.value === k; if (r.checked && p.solved) r.closest(".opt").classList.add("done-ok"); }); }
+  if (T.type === "pics"){ const i = PICS.findIndex(x => x.mixed); document.querySelectorAll('input[name="ans"]').forEach(r => { r.checked = +r.value === i; if (r.checked && p.solved) r.closest(".opt").classList.add("done-ok"); }); }
+  if (T.type === "frame"){ $("gap0").value = T.answer[0]; $("gap1").value = T.answer[1]; }
+  if (T.type === "number"){ const t = T.target(); if (t !== null) $("num").value = fmt(t); }
+  say(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function renderDots(){
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
 }
 function readAnswer(T){
   if (T.type === "choice" || T.type === "pics"){ const r = document.querySelector('input[name="ans"]:checked'); return r ? r.value : null; }
   if (T.type === "frame"){ const a = [$("gap0").value, $("gap1").value]; return a.every(Boolean) ? a : null; }
   if (T.type === "number"){ const v = $("num").value.trim(); return v === "" || isNaN(+v) ? null : +v; }
 }
-function mark(T, a){
+function markAnswer(T, a){
   if (T.type === "choice"){ const ok = a === T.answer(); return ok ? { ok, msg: T.reason + (T.good ? " " + T.good() : "") + (T.after ? " " + T.after : "") } : { ok, msg: T.options.find(o => o.k === a).fb }; }
   if (T.type === "pics"){ const p = PICS[+a]; return p.mixed ? { ok: true, msg: T.reason } : { ok: false, msg: T.fbKind[p.kind] }; }
   if (T.type === "frame"){ const wrong = a.filter((k, i) => k !== T.answer[i]); return wrong.length ? { ok: false, msg: wrong.map(k => T.fb[k]).join("<br>") } : { ok: true, msg: T.reason }; }
@@ -935,52 +1130,192 @@ function mark(T, a){
     return { ok: false, msg: `Check your subtraction: Cold ${fmt(c.time)} s − Hot ${fmt(h.time)} s.` };
   }
 }
-$("check").addEventListener("click", () => {
+function paintScore(){ $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function doCheck(){
   const T = cur(), s = st(T);
-  if (s.solved || s.revealed){ say("tip", "You have finished this task. Press <b>Next →</b>."); return; }
+  if (errs.length) return;
+  if (s.solved || s.revealed){ say("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
   const a = readAnswer(T);
   if (a === null){ say("tip", T.type === "number" ? "Type a number first." : T.type === "frame" ? "Choose a word for both gaps first." : "Pick an answer first."); return; }
   const need = T.needs ? T.needs() : null;
   if (need){ say("tip", need); return; }
-  const r = mark(T, a);
-  if (r.ok){ s.solved = true; score++; if (s.wrong === 0 && s.hints === 0) streak++; say("good", `<b>Correct.</b> ${r.msg}`); }
+  const r = markAnswer(T, a);
+  if (r.ok){
+    mark(qkey(level, T), "solved"); s.solved = true; if (s.wrong === 0 && s.hints === 0) streak++;
+    say("good", `<b>Correct.</b> ${r.msg} Choose another question number above.`);
+    $("doneBadge").hidden = false; renderDots();
+    const sel = document.querySelector('input[name="ans"]:checked'); if (sel) sel.closest(".opt").classList.add("done-ok");
+  }
   else { s.wrong++; streak = 0; say("bad", `<b>Not yet.</b> ${r.msg}`); }
-  $("sScore").textContent = score; $("sStreak").textContent = streak;
-  $("qno").textContent = $("qno").textContent.replace(/ · (solved|answer shown)$/, "") + (s.solved ? " · solved" : "");
-});
+  paintScore();
+}
+$("check").addEventListener("click", doCheck);
 $("hint").addEventListener("click", () => {
   const T = cur(), s = st(T);
   if (s.hints < 3) s.hints++;
-  say("tip", T.hints.slice(0, s.hints).map((h, i) => `<b>Hint ${i+1}:</b> ${h}`).join("<br>"));
+  say("tip", `<b>Hint ${s.hints} of 3:</b> ${T.hints[s.hints - 1]}`);   // latest hint only, so it fits beside the question
   paintHint();
 });
 $("reveal").addEventListener("click", () => {
+  if (errs.length) return;
   const T = cur(), s = st(T);
-  if (!s.solved) s.revealed = true;
+  if (!s.solved){ s.revealed = true; mark(qkey(level, T), "shown"); renderDots(); }
   if (T.reveal) T.reveal();
   let ans = "";
   if (T.type === "choice"){ const k = T.answer(); document.querySelectorAll('input[name="ans"]').forEach(r => r.checked = r.value === k); ans = T.options.find(o => o.k === k).t; }
-  if (T.type === "pics"){ const i = PICS.findIndex(p => p.mixed); document.querySelectorAll('input[name="ans"]').forEach(r => r.checked = +r.value === i); ans = `Box ${i+1}.`; }
+  if (T.type === "pics"){ const i = PICS.findIndex(p => p.mixed); document.querySelectorAll('input[name="ans"]').forEach(r => r.checked = +r.value === i); ans = `Box ${order.indexOf(i)+1}.`; }
   if (T.type === "frame"){ $("gap0").value = T.answer[0]; $("gap1").value = T.answer[1]; ans = T.reason; }
   if (T.type === "number"){ const t = T.target(); $("num").value = fmt(t); const c = latest("gas","cold"), h = latest("gas","hot"); ans = `${fmt(c.time)} − ${fmt(h.time)} = ${fmt(t)} s.`; }
-  say("tip", `<b>Answer:</b> ${ans}${T.type === "frame" ? "" : " " + T.reason}`);
+  say("tip", `<b>Answer:</b> ${ans}${T.type === "frame" ? "" : " " + T.reason}${s.solved ? "" : " (No score for this one.)"}`);
   paintControls();
-  if (!s.solved) $("qno").textContent = $("qno").textContent.replace(/ · (solved|answer shown)$/, "") + " · answer shown";
 });
-$("reset").addEventListener("click", () => { loadTask(); });
-$("next").addEventListener("click", () => { idx = (idx + 1) % TASKS[level].length; loadTask(); });
-document.querySelectorAll("[data-level]").forEach(b => b.addEventListener("click", () => {
-  level = b.dataset.level; idx = 0;
-  document.querySelectorAll("[data-level]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+function resetTask(){
+  if (appMode === "demo") return loadDemo();
+  const k = qkey(level, task); delete DONE[k]; saveDone(); delete tstate[k]; paintScore();
   loadTask();
-}));
+}
+$("reset").addEventListener("click", resetTask);
 document.addEventListener("visibilitychange", () => { last = null; });
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#cv", text: "This is the model: a box with gas A on the left and gas B on the right. The grey bar in the middle is a barrier." },
+  { el: "#go", text: "Press Lift barrier and watch the particles spread out.", do: "lift", doText: "Press Lift barrier." },
+  { el: "#readout", text: "This shows the time since the barrier lifted, and when the gases are evenly mixed." },
+  { el: "#pause", text: "Press Pause to freeze the model, and Play to start it again. Step 1 s moves it on one second at a time.", do: "play", doText: "Press Pause, then Play." },
+  { el: "#skip", text: "Skip to the end jumps to when the gases are evenly mixed.", do: "skip", doText: "Press Skip to the end." },
+  { el: "#runsBox", text: "Your runs lists how long each run took to mix, so you can compare them." },
+  { el: "#tempSeg", text: "Change the temperature. Then press Put barrier back and Lift barrier for a new run.", do: "temp", doText: "Press Cold or Hot." },
+  { el: "#stateSeg", text: "Press Liquid to see purple dye spreading in cold and hot water.", do: "liquid", doText: "Press Liquid." },
+  { el: "#go", text: "Press Add dye and watch both beakers.", do: "dye", doText: "Press Add dye." },
+  { el: "#demoShow", text: "Turn on Count in each half or Particle trails to see more about what is happening.", do: "show", doText: "Turn one of them on." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:diffusion", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const s = TOUR[i], el = document.querySelector(s.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = s.text;
+  tourWait = s.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = s.do ? "▶ " + s.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : s.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: RM ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    // a tall target (e.g. the question panel): sit beside it, centred on the part that is on screen
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* keep the question line and the feedback in view together. Desktop: the panel sticks under the top bar at full height,
+   then scrolls itself to the feedback, but never past the question text. Phone: the page scrolls, with the same limit. */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("feedback");
+  if (appMode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: RM ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";   // the height it will have once stuck
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: RM ? "auto" : "smooth" });
+  }
+}
+/* ===== Modes ===== */
+$("toQuiz").addEventListener("click", () => setAppMode("easy"));
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in tstate) delete tstate[k]; streak = 0; paintScore(); back(); loadTask(); say("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+function setAppMode(m) {
+  if (m === "tour") { if (appMode !== "demo") setAppMode("demo"); tourStart(); return; }
+  tourEnd();
+  appMode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = appMode !== "demo"; $("quizPanel").hidden = appMode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setAppMode(b.dataset.mode)));
+/* keep the question panel within the screen, so Check and Show answer are always visible (desktop) */
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
 /* ---------- start ---------- */
 readColours(); resize();
 const errs = bankErrors();
 if (errs.length){ const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Error: this tool found a problem with its questions, so they are hidden.</b><br>" + errs.join("<br>"); $("answerPanel").hidden = true; }
-loadTask();
+LEVELS = { easy: [...TASKS.warm, ...TASKS.core].slice(0, 10),   // 5–10 questions per level (Dan, 11 Oct 2026)
+           hard: TASKS.challenge };
+paintScore(); setAppMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:diffusion")) $("newHere").hidden = true; } catch (e) {}
 requestAnimationFrame(frame);
 
 </script>

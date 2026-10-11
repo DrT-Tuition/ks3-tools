@@ -56,6 +56,9 @@
     - Air goes down the trachea to the lungs; food goes down the oesophagus to the stomach.
     - Model positions: normal breath in = 60% of the slider, deep breath = 100% (drawing values only).
   Support starts OFF on every visit: Labels; Volume and pressure meters.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+    Easy = Warm-up (3) + Core (5) = 8 questions; Hard = Challenge (5). In Demo the Support switches sit in the Demo panel
+    and Deep breath in is always available. Letter pins show only in labelling questions.
   Idea credit: none (designed from scratch; no PhET equivalent).
   Checks: on load the tool computes the model at "breathed out", "normal breath in" and "deep breath in"
     and derives every predict/frame answer from it (ribs move up and out? diaphragm moves down? volume up?
@@ -205,9 +208,7 @@ footer.brand a{color:inherit}
   --airway:#D8B4AB; --airway-edge:#F6D8D0;
   --air:#9CCBFF; --heart:#8E5A62; --zoom:#1B3150;}
 
-.sim{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);grid-template-areas:"stage ctrls" "fb ctrls" "task task";gap:16px;align-items:start}
-.stage{grid-area:stage}.ctrls{grid-area:ctrls}.taskarea{grid-area:task}.fbpanel{grid-area:fb}
-@media (max-width:860px){.sim{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;grid-template-areas:"stage" "ctrls" "task" "fb"}}
+.sim{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 .stage{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:0}
 #chest{width:100%;height:auto;display:block;max-height:72vh}
 #chest text{font-family:var(--f-body);fill:var(--ink)}
@@ -306,7 +307,7 @@ footer.brand a{color:inherit}
 .wchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .wchip.used{border-style:dashed;opacity:.6}
 .ghost{position:fixed;z-index:50;pointer-events:none;font:700 17px var(--f-body);padding:6px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);transform:translate(-50%,-60%)}
-.pinrows{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.pinrows{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 10px}
 .pinrow{display:flex;align-items:center;gap:8px;font-weight:700}
 .pinrow .lt{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:3px solid var(--accent);color:var(--accent);flex:none}
 select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
@@ -332,6 +333,132 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
 .sortrow .s{flex:1 1 220px}
 .word{font-weight:700}
 
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* Breathing in the shared layout */
+.opt .k{font-weight:700;color:var(--accent);margin-right:8px}
+.opts.col .opt{display:flex;align-items:flex-start;line-height:1.4}
+#taskArea.solved .opt[aria-pressed="true"],#taskArea.solved select,#taskArea.solved .seq li:not(.now){border-color:var(--good);background:var(--good-bg)}
+#taskArea .note{margin:0}
+.opts.col .opt[aria-pressed="true"]::before{margin-right:6px}
+/* controls in a strip under the picture, so the picture can be as big as the screen allows */
+#chest{max-height:max(280px,calc(100vh - 420px))}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctrls .pair{display:flex;gap:8px}
+.ctrls .bbtn{padding:8px 16px}
+.ctrls .slider{flex:1 1 240px;min-width:0}
+.ctrls .status{flex:1 1 260px;align-self:stretch}
+.ctrls .note,.ctrls .lockmsg{flex:1 1 100%}
+.ctrls .meters{flex:1 1 100%;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+#demoSupport .support{border-top:1px solid var(--line);padding-top:10px}
+/* compact answers so the question, answers, buttons and feedback fit the panel on a laptop */
+#quizPanel{gap:10px}
+#taskArea{gap:8px}
+#taskArea .bank{gap:6px}
+#taskArea .wchip{font-size:16px;min-height:40px;padding:4px 11px}
+#taskArea .note{font-size:15px;line-height:1.4}
+#taskArea .pinrow .lt{width:30px;height:30px}
+#taskArea select{min-height:40px;font-size:16px}
+#taskArea .seq{gap:6px}
+#taskArea .seq li{padding:2px 4px 2px 6px;gap:5px;font-size:16px;line-height:1.3}
+#taskArea .seq .num{min-width:16px}
+#taskArea .mv{width:38px;height:38px;font-size:18px}
+#taskArea .grp{gap:6px}
+#taskArea .grp .q{font-size:16px}
+#taskArea .opts{gap:6px}
+#taskArea .opt{font-size:16px;line-height:1.35;min-height:42px;padding:6px 12px}
+#taskArea .sortrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;padding-bottom:6px}
+#taskArea .sortrow .s{font-size:16px;line-height:1.35;margin:0}
+#taskArea .sortrow .opt{padding:6px 10px}
+#taskArea .frame{line-height:2.3;font-size:17px}
+#quizPanel .feedback{font-size:17px;line-height:1.45}
+#quizPanel .feedback .msg{padding:8px 12px}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -342,29 +469,24 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
     <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
   </header>
 
-  <div class="bar">
-  <div class="levels" role="group" aria-label="Level">
-    <button type="button" data-level="warm" aria-pressed="true">Warm-up</button>
-    <button type="button" data-level="core" aria-pressed="false">Core</button>
-    <button type="button" data-level="challenge" aria-pressed="false">Challenge</button>
-  </div>
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Breathing</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite">Score <b id="sScore">0</b></div>
-      <div class="chip">Streak <b id="sStreak">0</b></div>
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
 
-  <div class="support" role="group" aria-label="Support">
-    <span class="lbl">Support:</span>
-    <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
-    <button class="sw" type="button" data-support="meters" aria-pressed="false"><span class="dot"></span>Volume and pressure meters <span class="state">off</span></button>
-  </div>
-
-  <section class="card" aria-label="Breathing">
-    <div id="bankErr" class="bankerr" hidden></div>
-    <div class="meta"><span class="ctx" id="taskText">…</span><span class="qno" id="taskNo">Task 1 of 3</span></div>
-
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Breathing model">
     <div class="sim">
       <div class="stage">
         <svg id="chest" viewBox="0 0 760 540" role="img" aria-labelledby="chestTitle">
@@ -412,13 +534,13 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
           <button class="bbtn" type="button" id="bIn">Breathe in</button>
           <button class="bbtn" type="button" id="bOut">Breathe out</button>
         </div>
-        <button class="bbtn" type="button" id="bDeep" hidden>Deep breath in</button>
-        <div class="slider">
+        <button class="bbtn" type="button" id="bDeep">Deep breath in</button>
+        <button class="sw" type="button" id="autoBtn" aria-pressed="false"><span class="dot"></span>Breathe automatically <span class="state">off</span></button>
+        <div class="slider" id="sliderWrap">
           <label for="pSlider">Scrub through a breath</label>
           <input type="range" id="pSlider" min="0" max="100" step="1" value="0" aria-valuetext="Breathed out">
           <div class="ends"><span>Breathed out</span><span>Deep breath in</span></div>
         </div>
-        <button class="sw" type="button" id="autoBtn" aria-pressed="false"><span class="dot"></span>Breathe automatically <span class="state">off</span></button>
         <p class="note" id="rmNote" hidden>Automatic breathing is off because your device asks for less motion. Use the buttons or slider.</p>
         <p class="lockmsg" id="lockMsg" hidden>Predict first. The chest moves after you press Check.</p>
         <div class="status" aria-live="polite" id="status">Resting.</div>
@@ -436,23 +558,60 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
           </div>
         </div>
       </div>
-      <div class="panel taskarea" id="taskArea" aria-label="Your task"></div>
-      <div class="panel fbpanel">
-        <h2>Feedback</h2>
-        <div class="feedback" id="feedback" aria-live="polite"><div class="msg">Have a go, then press Check.</div></div>
-      </div>
     </div>
 
     <p class="limits"><b>Model limits:</b> This is a flat cut-away picture, not to scale. Real ribs curve round to the spine and breastbone. Real lungs have millions of alveoli, far too small to see. Only quiet breathing is shown. Air is mostly nitrogen, which is not drawn, and molecules are shown far bigger than they really are.</p>
-    <div class="actions">
-      <button class="btn primary" type="button" id="check">Check</button>
-      <button class="btn hint" type="button" id="hint">Hint</button>
-      <button class="btn" type="button" id="reset">Reset</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="reveal">Show answer</button>
-      <button class="btn primary" type="button" id="next">Next →</button>
-    </div>
-  </section>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="qdots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 8</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div class="taskarea" id="taskArea" aria-label="Your answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div id="quizSupport">
+        <div class="support" id="supportBar" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="meters" aria-pressed="false"><span class="dot"></span>Volume and pressure meters <span class="state">off</span></button>
+        </div>
+        </div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
 
   <footer class="brand">
     <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
@@ -467,7 +626,7 @@ select{font:17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px
   const root = document.documentElement, btn = document.getElementById("themeBtn");
   const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
-  const paint = () => { const d = isDark(); btn.textContent = d ? "☀ Light mode" : "☾ Dark mode"; btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
   btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
@@ -981,7 +1140,7 @@ function drawWords(g, x, y, side, lines, cls){
 function buildLabels(){
   const g = $("labels"); g.textContent = "";
   if (!support.labels) return;
-  const hide = level === "warm" ? new Set(currentTask().pins.concat(["heart"])) : new Set();
+  const ct = currentTask(), hide = ct && ct.type === "label" ? new Set(ct.pins.concat(["heart"])) : new Set();
   Object.keys(LAYOUT).forEach(id => {
     if (hide.has(id)) return;
     const L = LAYOUT[id], x = L.side < 0 ? 150 : 610;
@@ -991,8 +1150,7 @@ function buildLabels(){
 }
 function buildPins(){
   const g = $("pins"); g.textContent = "";
-  if (level !== "warm") return;
-  const t = currentTask();
+  const t = currentTask(); if (!t || t.type !== "label") return;
   t.pins.forEach((id,i) => {
     const L = LAYOUT[id], x = PIN_X[L.side];
     const pg = el("g", { class:"pin", "data-pin": id, tabindex: 0, role:"button", id:"pin_"+id }, g);
@@ -1006,8 +1164,8 @@ function buildPins(){
   refreshPins();
 }
 function refreshPins(){
-  if (level !== "warm") return;
-  const t = currentTask(), ui = t.st.ui;
+  const t = currentTask(); if (!t || t.type !== "label") return;
+  const ui = t.st.ui;
   t.pins.forEach((id,i) => {
     const pg = $("pin_"+id); if (!pg) return;
     const w = ui[id];
@@ -1124,7 +1282,7 @@ function draw(p, flowV){
 const rmq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let reduceMotion = !!(rmq && rmq.matches);
 let P = 0, prevP = 0, flowV = 0, dotPhase = 0, anim = null, auto = false, autoWait = 0, lastT = 0, rafId = 0, dirty = true;
-let level = "warm", taskIdx = 0, score = 0, streak = 0;
+let level = "", streak = 0;   // level "" so the first Easy/Hard press opens the first question not yet done
 const support = { labels:false, meters:false };
 
 function startBreath(kind){
@@ -1146,7 +1304,7 @@ function tick(now){
     anim.t += dt*1000; let u = Math.min(1, anim.t/anim.dur);
     let e = reduceMotion ? Math.ceil(u*5 - 1e-9)/5 : ease(u);
     P = anim.from + (anim.to - anim.from)*e; anim.frac = u;
-    if (u >= 1){ anim = null; if (auto) autoWait = P > 0.3 ? 0.5 : 1.0; }
+    if (u >= 1){ const fin = anim; anim = null; if (auto) autoWait = P > 0.3 ? 0.5 : 1.0; else tourSignal(fin.to === FACTS.deepBreath ? "deep" : fin.kind); }
     active = true; dirty = true;
   } else if (auto){
     autoWait -= dt; if (autoWait <= 0) startBreathAuto(); active = true;
@@ -1197,7 +1355,7 @@ function render(){
 $("bIn").addEventListener("click", () => { setAuto(false); startBreath("in"); });
 $("bOut").addEventListener("click", () => { setAuto(false); startBreath("out"); });
 $("bDeep").addEventListener("click", () => { setAuto(false); startBreath("deep"); });
-$("pSlider").addEventListener("input", e => { if (locked()) { e.target.value = Math.round(P*100); return; } setAuto(false); anim = null; P = e.target.value/100; kick(); });
+$("pSlider").addEventListener("input", e => { if (locked()) { e.target.value = Math.round(P*100); return; } setAuto(false); anim = null; P = e.target.value/100; kick(); tourSignal("slider"); });
 function setAuto(v){
   auto = v && !reduceMotion; const b = $("autoBtn");
   b.setAttribute("aria-pressed", auto ? "true" : "false"); b.querySelector(".state").textContent = auto ? "on" : "off";
@@ -1219,52 +1377,102 @@ document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("
   b.setAttribute("aria-pressed", support[k] ? "true" : "false"); b.querySelector(".state").textContent = support[k] ? "on" : "off";
   if (k === "meters") $("meters").hidden = !support.meters;
   if (k === "labels") buildLabels();
+  if (support[k]) tourSignal(k);
   dirty = true; render();
 }));
 
 /* ---------------------------------------------------------------------
    TASK ENGINE
    --------------------------------------------------------------------- */
-function currentTask(){ return TASKS[level][taskIdx]; }
+["warm","core","challenge"].forEach(lv => TASKS[lv].forEach((t,i) => { t.id = lv + (i+1); }));   // stable ids for saved ticks
+let mode = "demo", idx = 0;
+let LEVELS = { easy: [...TASKS.warm, ...TASKS.core], hard: TASKS.challenge };   // Easy = Warm-up + Core (8), Hard = Challenge (5)
+function currentTask(){ return mode === "quiz" ? LEVELS[level][idx] : null; }
+function shuffled(n){ const a = [...Array(n).keys()]; for (let i=n-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
 function freshUI(t){
   if (t.type === "label") return {};
-  if (t.type === "sequence") return { order: t.start.slice() };
+  if (t.type === "sequence"){ let o; do { o = shuffled(5); } while (o.join() === "0,1,2,3,4"); return { order: o }; }   // a new jumbled order each time
   return { picks: t.groups.map(() => null) };
 }
-["warm","core","challenge"].forEach(lv => TASKS[lv].forEach(t => t.st = { solved:false, revealed:false, hints:0, clean:true, ui: freshUI(t) }));
+function freshSt(t){ return { solved:false, revealed:false, hints:0, clean:true, ui: freshUI(t) }; }
+["warm","core","challenge"].forEach(lv => TASKS[lv].forEach(t => t.st = freshSt(t)));
+
+/* Progress: ticks are kept in this browser until "Reset progress" (nothing leaves the device) */
+const PKEY = "ks3tools-progress:breathing";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone(){ try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog(){ const t = currentTask(), k = qkey(level, t); t.st.solved = DONE[k] === "solved"; t.st.revealed = DONE[k] === "shown"; return t.st; }
+function mark(k, v){ if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 
 let selectedWord = null;
 function loadTask(){
-  const t = currentTask();
+  if (mode === "demo") return loadDemo();
+  const t = currentTask(), st = prog(), list = LEVELS[level];
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = "Question " + (idx+1) + " of " + list.length;
   $("taskText").textContent = t.text;
-  $("taskNo").textContent = "Task " + (taskIdx+1) + " of " + TASKS[level].length;
-  $("bDeep").hidden = level !== "challenge";
+  $("bDeep").hidden = level !== "hard";
   anim = null; setAuto(false);
   P = prevP = t.startP != null ? t.startP : 0; flowV = 0;
   selectedWord = null;
-  renderTask(); buildPins(); buildLabels(); applyLock(); updateHintBtn();
-  setFeedback([{ cls:"", html: t.st.solved ? "Already solved. Press Next →." : (t.st.revealed ? "Answer shown. Press Next → for a new task." : "Have a go, then press Check.") }]);
+  /* shown order of the answers: a new random order each time the question opens */
+  st.order = t.groups ? t.groups.map(g => shuffled(g.opts.length)) : null;
+  st.rowOrder = t.style === "rows" ? shuffled(t.groups.length) : null;
+  st.words = shuffled(WORDS.length).map(i => WORDS[i]);
+  if (st.solved || st.revealed) fillAnswer(t);
+  renderTask(); buildPins(); buildLabels(); applyLock(); updateHintBtn(); renderDots();
+  $("doneBadge").hidden = !st.solved;
+  if (st.solved) setFeedback([{ cls:"good", html:"<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again." }]);
+  else if (st.revealed) setFeedback([{ cls:"tip", html:"The answer was shown for this one. Choose another question number above, or Reset this question to try it again." }]);
+  else setFeedback([{ cls:"", html:"Have a go, then press Check." }]);
   kick();
 }
+/* put the right answer in place (a question already done, or Show answer) */
+function fillAnswer(t){
+  const st = t.st;
+  if (t.type === "label") t.pins.forEach(id => st.ui[id] = id);
+  else if (t.type === "sequence") st.ui.order = [0,1,2,3,4];
+  else st.ui.picks = t.groups.map(g => g.answer());
+}
+const TRY = [
+  "Breathe in. Which way do the ribs move?",
+  "Watch the diaphragm as you breathe out.",
+  "Compare a normal and a deep breath.",
+  "Turn on the meters, then breathe in."
+];
+function loadDemo(){
+  anim = null; setAuto(false); flowV = 0; selectedWord = null;
+  $("bDeep").hidden = false;
+  $("tryList").innerHTML = TRY.map(x => "<li>" + x + "</li>").join("");
+  buildPins(); buildLabels(); applyLock(); kick();
+}
+function renderDots(){
+  const list = LEVELS[level];
+  $("qdots").innerHTML = list.map((t,i) => { const v = DONE[qkey(level, t)];
+    return '<button type="button" class="dot-q' + (i === idx ? " cur" : "") + (v === "solved" ? " ok" : v === "shown" ? " shown" : "") + '" data-q="' + i + '" aria-label="Question ' + (i+1) + (v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : "") + '"' + (i === idx ? ' aria-current="true"' : "") + '>' + (v === "solved" ? "✓" : i+1) + '</button>'; }).join("");
+  $("qdots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
 function renderTask(){
-  const t = currentTask(), ui = t.st.ui, area = $("taskArea");
+  const t = currentTask(), st = t.st, ui = st.ui, area = $("taskArea");
   area.textContent = "";
-  const h = document.createElement("h2"); h.textContent = "Your task"; area.appendChild(h);
+  area.classList.toggle("solved", st.solved);
   if (t.type === "label"){
     const bank = document.createElement("div"); bank.className = "bank"; bank.setAttribute("role","group"); bank.setAttribute("aria-label","Word bank");
-    WORDS.forEach(w => {
+    st.words.forEach(w => {
       const b = document.createElement("button"); b.type = "button"; b.className = "wchip"; b.dataset.word = w; b.textContent = FACTS.parts[w].word;
       b.setAttribute("aria-pressed","false");
       bank.appendChild(b); setupChip(b);
     });
     area.appendChild(bank);
-    const p = document.createElement("p"); p.className = "note"; p.textContent = "Drag a word onto a letter, or tap a word then tap a letter. You can also pick from the menus."; area.appendChild(p);
+    const p = document.createElement("p"); p.className = "note"; p.textContent = "Drag a word onto a letter, or tap a word then a letter. Or use the menus."; area.appendChild(p);
     const rows = document.createElement("div"); rows.className = "pinrows";
     t.pins.forEach((id,i) => {
       const lab = document.createElement("label"); lab.className = "pinrow"; lab.dataset.pin = id;
       lab.innerHTML = '<span class="lt">' + letter(i) + '</span>';
       const sel = document.createElement("select"); sel.dataset.pin = id; sel.setAttribute("aria-label", "Letter " + letter(i));
-      sel.innerHTML = '<option value="">choose…</option>' + WORDS.map(w => '<option value="' + w + '">' + FACTS.parts[w].word + '</option>').join("");
+      sel.innerHTML = '<option value="">choose…</option>' + st.words.map(w => '<option value="' + w + '">' + FACTS.parts[w].word + '</option>').join("");
       sel.value = ui[id] || "";
       sel.addEventListener("change", () => assign(id, sel.value || null));
       lab.appendChild(sel); rows.appendChild(lab);
@@ -1284,7 +1492,7 @@ function renderTask(){
       li.appendChild(up); li.appendChild(dn); ol.appendChild(li);
     });
     area.appendChild(ol);
-    if (t.st.solved || t.st.revealed){ const p = document.createElement("p"); p.className = "note"; p.textContent = "Now press Breathe " + t.dir + " and watch each step light up."; area.appendChild(p); }
+    if (st.solved || st.revealed){ const p = document.createElement("p"); p.className = "note"; p.textContent = "Now press Breathe " + t.dir + " and watch each step light up."; area.appendChild(p); }
   } else {
     if (t.style === "frame"){
       const p = document.createElement("p"); p.className = "frame";
@@ -1292,19 +1500,26 @@ function renderTask(){
         if (typeof part === "string"){ p.appendChild(document.createTextNode(part)); return; }
         const g = t.groups[part], sel = document.createElement("select");
         sel.setAttribute("aria-label", "Gap " + (part+1));
-        sel.innerHTML = '<option value="">choose…</option>' + g.opts.map(o => '<option value="' + o.id + '">' + o.t + '</option>').join("");
+        sel.innerHTML = '<option value="">choose…</option>' + st.order[part].map(i => g.opts[i]).map(o => '<option value="' + o.id + '">' + o.t + '</option>').join("");
         sel.value = ui.picks[part] || "";
         sel.addEventListener("change", () => { ui.picks[part] = sel.value || null; });
         p.appendChild(sel);
       });
       area.appendChild(p);
     } else {
-      t.groups.forEach((g,j) => {
+      /* sorting rows: the statements are shuffled; Breathing | Respiration stay in the same place on every row */
+      const js = st.rowOrder || t.groups.map((g,j) => j);
+      js.forEach(j => {
+        const g = t.groups[j];
         const box = document.createElement("div"); box.className = t.style === "rows" ? "sortrow" : "grp";
         const q = document.createElement("p"); q.className = t.style === "rows" ? "s" : "q"; q.textContent = g.q; box.appendChild(q);
         const opts = document.createElement("div"); opts.className = "opts" + (t.style === "col" ? " col" : ""); opts.setAttribute("role","group"); opts.setAttribute("aria-label", g.q);
-        g.opts.forEach(o => {
-          const b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.textContent = o.t;
+        const shown = t.style === "rows" ? g.opts.map((o,i) => i) : st.order[j];
+        shown.forEach((oi,pos) => {
+          const o = g.opts[oi];
+          const b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.dataset.i = oi;
+          if (t.style === "col"){ b.innerHTML = '<span class="k">' + "ABCD"[pos] + '</span><span></span>'; b.lastChild.textContent = o.t; }
+          else b.textContent = o.t;
           b.setAttribute("aria-pressed", ui.picks[j] === o.id ? "true" : "false");
           b.addEventListener("click", () => { ui.picks[j] = o.id; opts.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); });
           opts.appendChild(b);
@@ -1394,11 +1609,14 @@ function pinAt(x, y){
 /* feedback + scoring */
 function setFeedback(items){
   const fb = $("feedback"); fb.textContent = "";
-  items.forEach(it => { const d = document.createElement("div"); d.className = "msg " + (it.cls || ""); d.innerHTML = it.html; fb.appendChild(d); });
+  /* messages of the same kind share one box, so the feedback stays short */
+  const merged = []; items.forEach(it => { const last = merged[merged.length - 1]; if (last && last.cls === (it.cls || "")) last.html += (/<\/ul>$/.test(last.html) ? "" : "<br>") + it.html; else merged.push({ cls: it.cls || "", html: it.html }); });
+  merged.forEach(it => { const d = document.createElement("div"); d.className = "msg " + it.cls; d.innerHTML = it.html; fb.appendChild(d); });
+  keepInView();
 }
-function updateScore(){ $("sScore").textContent = score; $("sStreak").textContent = streak; }
+function bump(){ $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 function updateHintBtn(){
-  const t = currentTask(), b = $("hint");
+  const t = currentTask(), b = $("hint"); if (!t) return;
   b.textContent = t.st.hints >= 3 ? "No more hints – try Show answer" : "Hint (" + (t.st.hints + 1) + "/3)";
 }
 function evaluate(t){
@@ -1452,27 +1670,28 @@ function evaluate(t){
 function afterSolve(t){
   applyLock();
   if (t.play){ P = prevP = t.startP || 0; setTimeout(() => startBreath(t.play), 350); }
-  if (t.type === "sequence") renderTask();
+  renderTask(); refreshPins();
 }
 $("check").addEventListener("click", () => {
-  const t = currentTask(), st = t.st;
-  if (st.solved){ setFeedback([{ cls:"good", html:"Correct – already solved. Press Next →." }]); return; }
-  if (st.revealed){ setFeedback([{ html:"You have seen the answer for this one. Press Next → for a new task." }]); return; }
+  const t = currentTask(); if (!t) return;
+  const st = prog();
+  if (st.solved || st.revealed){ setFeedback([{ cls:"tip", html:"This question is finished. Choose another question number above, or Reset this question to try it again." }]); return; }
   const r = evaluate(t);
   if (r.incomplete){ setFeedback(r.msgs.map(m => ({ cls:"bad", html:m }))); return; }
   if (r.ok){
-    st.solved = true; score++; if (st.clean) streak++;
-    updateScore();
+    mark(qkey(level, t), "solved"); st.solved = true; if (st.clean) streak++;
+    bump(); renderDots(); $("doneBadge").hidden = false;
     let extra = t.play ? " Watch it happen now." : (t.type === "sequence" ? " Now press Breathe " + t.dir + " and watch each step light up." : "");
-    setFeedback([{ cls:"good", html:"<b>Correct.</b> " + (t.answerLine || "Every label is right.") + extra }]);
+    setFeedback([{ cls:"good", html:"<b>✓ Correct.</b> " + (t.answerLine || "Every label is right.") + extra + " Choose another question number above." }]);
     afterSolve(t);
   } else {
-    st.clean = false; streak = 0; updateScore();
-    setFeedback([{ cls:"bad", html:"<b>Not yet.</b> " + r.msgs[0] }].concat(r.msgs.slice(1).map(m => ({ cls:"bad", html:m }))));
+    st.clean = false; streak = 0; bump();
+    setFeedback([{ cls:"bad", html:"<b>✗ Not yet.</b> " + r.msgs[0] }].concat(r.msgs.slice(1).map(m => ({ cls:"bad", html:m }))));
   }
 });
 $("hint").addEventListener("click", () => {
-  const t = currentTask(), st = t.st;
+  const t = currentTask(); if (!t) return;
+  const st = t.st;
   if (st.hints >= 3){ setFeedback([{ cls:"tip", html:"No more hints. Press Show answer to see it." }]); return; }
   st.hints++; st.clean = false;
   let h = t.hints[st.hints - 1];
@@ -1486,37 +1705,174 @@ $("hint").addEventListener("click", () => {
   updateHintBtn();
 });
 $("reveal").addEventListener("click", () => {
-  const t = currentTask(), st = t.st;
-  if (!st.solved) st.revealed = true;
-  if (t.type === "label"){ t.pins.forEach(id => st.ui[id] = id); renderTask(); refreshPins(); }
-  else if (t.type === "sequence"){ st.ui.order = [0,1,2,3,4]; }
-  else st.ui.picks = t.groups.map(g => g.answer());
-  if (t.type !== "label") renderTask();
-  setFeedback([{ cls:"tip", html:"<b>Answer:</b> " + (t.type === "label" ? "every letter is now labelled. " + t.pins.map((id,i) => letter(i) + " = " + FACTS.parts[id].word).join(", ") + "." : t.answerLine) + (st.solved ? "" : " No score for this one.") }]);
+  const t = currentTask(); if (!t) return;
+  const st = prog();
+  if (!st.solved){ st.revealed = true; mark(qkey(level, t), "shown"); renderDots(); }
+  fillAnswer(t);
+  setFeedback([{ cls:"tip", html:"<b>Answer:</b> " + (t.type === "label" ? "every letter is now labelled. " + t.pins.map((id,i) => letter(i) + " = " + FACTS.parts[id].word).join(", ") + "." : t.answerLine) + (st.solved ? "" : " (No score for this one.)") }]);
   afterSolve(t);
 });
 $("reset").addEventListener("click", () => {
-  const t = currentTask(); t.st.ui = freshUI(t); t.st.hints = Math.min(t.st.hints, 3);
-  anim = null; setAuto(false); P = prevP = t.startP || 0; flowV = 0; selectedWord = null;
-  renderTask(); refreshPins(); applyLock(); kick();
+  const t = currentTask(); if (!t) { loadDemo(); return; }
+  delete DONE[qkey(level, t)]; saveDone(); t.st = freshSt(t); bump();
+  loadTask();
   setFeedback([{ html:"Reset. Have a go, then press Check." }]);
 });
-$("next").addEventListener("click", () => { taskIdx = (taskIdx + 1) % TASKS[level].length; loadTask(); });
-document.querySelectorAll(".levels button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".levels button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-  level = b.dataset.level; taskIdx = 0; loadTask();
-}));
 document.addEventListener("keydown", e => { if (e.key === "Escape" && selectedWord){ selectedWord = null; refreshChips(); } });
+/* Reset progress: two-step, no pop-up dialog */
+$("resetProg").addEventListener("click", function confirmStep(){
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); ["warm","core","challenge"].forEach(lv => TASKS[lv].forEach(t => t.st = freshSt(t))); streak = 0; bump(); back(); loadTask(); setFeedback([{ cls:"tip", html:"Progress reset. Every question is fresh again." }]); });
+  $("rpNo").addEventListener("click", back);
+});
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#chest", text: "This is the model. It shows the inside of the chest: the lungs, the ribs and the diaphragm under the lungs." },
+  { el: "#bIn", text: "Press Breathe in. Watch the ribs and the diaphragm move.", do: "in", doText: "Press Breathe in and watch." },
+  { el: "#bOut", text: "Now press Breathe out. Which way does everything move this time?", do: "out", doText: "Press Breathe out." },
+  { el: "#bDeep", text: "A deep breath makes the ribs and the diaphragm move further.", do: "deep", doText: "Press Deep breath in." },
+  { el: "#sliderWrap", text: "Drag the slider to move through a breath slowly, bit by bit.", do: "slider", doText: "Move the slider." },
+  { el: "#autoBtn", text: "Turn on Breathe automatically to watch breath after breath." },
+  { el: "#status", text: "This box tells you what the muscles are doing and if air is flowing." },
+  { el: ".molkey", text: "Blue pairs are oxygen. Grey groups of three are carbon dioxide, in the air you breathe out." },
+  { el: '[data-support="labels"]', text: "Turn on Labels to see the name of each part.", do: "labels", doText: "Turn on Labels." },
+  { el: '[data-support="meters"]', text: "Turn on the meters to see the chest volume and the pressure inside the chest.", do: "meters", doText: "Turn on the meters." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:breathing", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control this scene doesn't have
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight, gap = 14;
+  /* the whole pop-up stays on screen: between the sticky bar and the bottom edge (fix pass, 11 Oct 2026) */
+  const minTop = Math.max(8, $("topbar").getBoundingClientRect().bottom + 8), maxTop = Math.max(minTop, vh - h - 8);
+  const clampX = x => Math.min(Math.max(8, x), Math.max(8, vw - w - 8)), clampY = y => Math.min(Math.max(minTop, y), maxTop);
+  const visTop = Math.max(r.top, minTop), visBot = Math.min(r.bottom, vh - 8), midY = (visTop + visBot) / 2;
+  const fitsBelow = r.bottom + gap + h <= vh - 8, fitsAbove = r.top - gap - h >= minTop;
+  const tall = r.height > vh * 0.5 && vw > 900;
+  let side;
+  if (tall && r.left - w - gap - 8 >= 0) side = "left";
+  else if (fitsBelow) side = "below";
+  else if (fitsAbove) side = "above";
+  else if (r.left - w - gap - 8 >= 0) side = "left";
+  else if (r.right + gap + w + 8 <= vw) side = "right";
+  else side = r.top < vh - r.bottom ? "below" : "above";
+  let left, top;
+  if (side === "left" || side === "right") { left = side === "left" ? r.left - w - gap : r.right + gap; top = clampY(midY - h / 2); }
+  else { left = clampX(r.left + r.width / 2 - w / 2); top = clampY(side === "below" ? r.bottom + gap : r.top - h - gap); }
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const ar = $("tourArrow");
+  ar.className = "tour-arrow " + ({ below: "up", above: "down", left: "right", right: "left" })[side];
+  if (side === "left" || side === "right") { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, midY - top - 8), h - 30) + "px"; }
+  else { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  /* no arrow if the pop-up had to sit over the thing it points at */
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.style.display = overlap ? "none" : "";
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* ===== Modes ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+function setMode(m){
+  if (m === "tour"){ if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo"){ if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel so the model can be explored with them */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportBar"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+/* keep the question panel within the screen, so Check and the feedback are always visible (desktop) */
+/* keep the question line and the feedback on screen together (fix pass, 11 Oct 2026):
+   desktop - the panel sticks under the top bar at full height, then scrolls to the feedback but never past the question text */
+function keepInView() {
+  if (mode !== "quiz") return;
+  requestAnimationFrame(() => {
+    const q = $("qpanel"), f = $("feedback"), tt = $("taskText"); if (!q || !f || !tt) return;
+    const rm = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (window.innerWidth > 900) {
+      const stick = parseFloat(getComputedStyle(q).top) || 72, qt = q.getBoundingClientRect().top;
+      if (qt > stick + 1) window.scrollTo({ top: window.scrollY + qt - stick, behavior: rm ? "auto" : "smooth" });
+      const adjust = () => {
+        fitPanel();
+        const pr = q.getBoundingClientRect(), fr = f.getBoundingClientRect(), tr = tt.getBoundingClientRect();
+        const fbBottom = fr.bottom - pr.top + q.scrollTop, cap = tr.top - pr.top + q.scrollTop - 8;
+        const want = Math.max(0, Math.min(fbBottom + 12 - q.clientHeight, cap));
+        if (Math.abs(want - q.scrollTop) > 1) q.scrollTop = want;
+      };
+      adjust(); if (qt > stick + 1 && !rm) { setTimeout(adjust, 250); setTimeout(adjust, 600); }
+    } else {
+      const bar = $("topbar").getBoundingClientRect().bottom, act = q.querySelector(".actions");
+      const ah = act ? act.getBoundingClientRect().height : 0, fr = f.getBoundingClientRect(), tr = tt.getBoundingClientRect();
+      const need = fr.bottom - (window.innerHeight - ah - 8), cap = tr.top - bar - 8;
+      const d = need > 0 ? Math.min(need, cap) : (cap < 0 ? cap : 0);
+      if (Math.abs(d) > 1) window.scrollBy({ top: d, behavior: rm ? "auto" : "smooth" });
+    }
+  });
+}
+function fitPanel(){
+  const q = $("qpanel");
+  if (window.innerWidth <= 900){ q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
 /* start */
 const errs = checkBank();
 if (errs.length){
   const be = $("bankErr"); be.hidden = false; be.innerHTML = "<b>This tool found a problem with its questions, so they are switched off:</b><ul>" + errs.map(e => "<li>" + e + "</li>").join("") + "</ul>";
-  ["check","hint","reveal","next","reset"].forEach(id => $(id).disabled = true);
+  ["check","hint","reveal","reset"].forEach(id => $(id).disabled = true);
   $("taskArea").hidden = true;
 }
 applyMotion();
-loadTask();
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:breathing")) $("newHere").hidden = true; } catch (e) {}
 
 </script>
 </body>

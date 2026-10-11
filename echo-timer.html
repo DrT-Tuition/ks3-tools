@@ -240,6 +240,7 @@ footer.brand a{color:inherit}
 .kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
 .kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
 .layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
 .card{gap:14px}
 .qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
 .qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
@@ -293,8 +294,22 @@ footer.brand a{color:inherit}
 .tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
 .tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
 .tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
 .tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
 @media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -582,7 +597,7 @@ const svg = $("scene"), gStatic = $("gStatic"), gWaves = $("gWaves"), gFx = $("g
 const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 const reduced = () => !!(reduceMQ && reduceMQ.matches);
 const support = { formula: false, worked: false };
-let mode = "demo", level = "easy", idx = 0, streak = 0;
+let mode = "demo", level = "", idx = 0, streak = 0;   // level "" so the first Easy/Hard press opens the first question not yet done
 const st = {};   // per-question progress this visit (hints, wrong tries), key "level:id"
 let LEVELS = {}; // easy = Warm-up + Core questions, hard = Challenge questions (built after the bank check)
 let demoKey = "air"; const DEMO_D = { air: 165, sea: 1500, bat: 4 };
@@ -863,6 +878,7 @@ function loadTask() {
   $("doneBadge").hidden = !p.solved;
   if (p.solved || p.revealed) showFinished(p);
   drawStatic(); drawWaves();
+  requestAnimationFrame(keepInView);
 }
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 /* a question already done: show its answer, highlighted, until progress is reset */
@@ -991,7 +1007,28 @@ function working(t) {
   if (t.ask === "dist") return `${v} × ${tm(t.time)} = ${nice(v * t.time)} m there and back. ÷ 2 = ${nice(answerOf(t))} m to the ${what}.`;
   return `There and back = 2 × ${t.dist} = ${2 * t.dist} m. Time = ${2 * t.dist} ÷ ${v} = ${fmt(answerOf(t), t.dp)} s.`;
 }
-function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(() => $("fb").scrollIntoView({ block: "nearest", behavior: "smooth" })); }
+/* keep the question line and the feedback in view together. Desktop: the panel sticks under the top bar at full height,
+   then scrolls itself to the feedback, but never past the question text. Phone: the page scrolls, with the same limit. */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";   // the height it will have once stuck
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
 function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 function check() {
   const p = prog();
@@ -1108,12 +1145,27 @@ function tourPlace() {
   if (tourI < 0) return;
   const el = document.querySelector(TOUR[tourI].el); if (!el) return;
   const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
-  const below = r.bottom + h + 20 < window.innerHeight || r.top < h + 90;
-  let left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), document.documentElement.clientWidth - w - 8);
-  const top = below ? r.bottom + 14 : r.top - h - 14;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;   // the pop-up stays wholly on screen
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    // a tall target (e.g. the question panel): sit beside it, centred on the part that is on screen
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
   box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
-  const ar = $("tourArrow"); ar.className = "tour-arrow " + (below ? "up" : "down");
-  ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
 }
 function tourSignal(name) {
   if (tourI < 0 || tourWait !== name) return;
