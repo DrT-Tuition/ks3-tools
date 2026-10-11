@@ -380,7 +380,7 @@ footer.brand a{color:inherit}
           <p class="pmode" id="qmode">Knowledge check · Easy</p>
           <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
         </div>
-        <div class="dots" id="dots" role="group" aria-label="Questions"></div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
         <p class="qno" id="qno">Question 1 of 5</p>
         <h2 class="qtext" id="taskText"></h2>
         <div id="answer"></div>
@@ -388,9 +388,6 @@ footer.brand a{color:inherit}
           <button class="btn primary" type="button" id="check">Check</button>
           <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
           <button class="btn" type="button" id="reveal">Show answer</button>
-          <span class="spacer"></span>
-          <button class="btn" type="button" id="prev" aria-label="Previous question">←</button>
-          <button class="btn primary" type="button" id="next">Next →</button>
         </div>
         <div class="feedback" id="fb" aria-live="polite"></div>
         <div class="support" role="group" aria-label="Support">
@@ -876,8 +873,8 @@ function showFinished(p) {
     document.querySelectorAll("#answer .opt").forEach(b => { const on = +b.dataset.i === i; b.setAttribute("aria-pressed", String(on)); b.classList.toggle("done-ok", on && p.solved); });
   } else if (task.kind === "num") $("ans").value = task.ask === "dist" ? nice(answerOf(task)) : fmt(answerOf(task), task.dp);
   else if (task.kind === "target") { S.d = targetDist(task); $("dist").value = S.d; $("distOut").textContent = nice(S.d) + " m"; }
-  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Press Next → for another question, or Reset this question to try it again."
-                                          : "The answer was shown for this one. Press Next → for another question, or Reset this question to try it again.");
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
 }
 function renderDots() {
   const list = LEVELS[level];
@@ -998,13 +995,13 @@ function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</
 function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 function check() {
   const p = prog();
-  if (p.solved || p.revealed) { msg("tip", "This question is finished. Press Next → for another, or Reset this question to try it again."); return; }
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
     mark(qkey(level, task), "solved"); p.solved = true;
     if (!p.wrong && !p.hints) streak++;
-    bump(); msg("good", "<b>✓</b> " + esc(r.text) + " Press Next → for another question."); $("stuckNote").textContent = "";
+    bump(); msg("good", "<b>✓</b> " + esc(r.text) + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
     if (S.hidden) { S.hidden = false; drawStatic(); drawWaves(); }
@@ -1140,7 +1137,6 @@ document.querySelectorAll("#loudWrap button").forEach(b => b.addEventListener("c
   if (S.loud) tourSignal("loud");
 }));
 document.querySelectorAll("#sceneWrap button").forEach(b => b.addEventListener("click", () => { demoKey = b.dataset.scene; loadDemo(); if (demoKey !== "air") tourSignal("scene"); }));
-$("prev").addEventListener("click", () => { const n = LEVELS[level].length; idx = (idx - 1 + n) % n; loadTask(); });
 $("toQuiz").addEventListener("click", () => setMode("easy"));
 /* Reset progress: two-step, no pop-up dialog */
 $("resetProg").addEventListener("click", function confirmStep() {
@@ -1153,7 +1149,6 @@ $("check").addEventListener("click", check);
 $("hint").addEventListener("click", hint);
 $("reset").addEventListener("click", resetTask);
 $("reveal").addEventListener("click", reveal);
-$("next").addEventListener("click", () => { idx = (idx + 1) % LEVELS[level].length; loadTask(); });
 function setMode(m) {
   if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
   tourEnd();
