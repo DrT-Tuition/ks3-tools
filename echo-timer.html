@@ -58,6 +58,9 @@
   Illustration (Gemini, style E, 11 Oct 2026): girl clapping, cliff, bat, moth, survey ship and a seabed texture are
   cut-out pictures placed by code at the scene's own positions; the cliff, moth and seabed move with the slider.
   Sound pulses, distances and the ruler are drawn by code.
+  Sound (off by default, "♪ Sound" switch): a clap, then its echo when the pulse gets back, so the delay heard matches
+  the stopwatch; the echo is quieter and duller. Loud and quiet claps return at the same time. Sea: the ultrasound ping
+  is played at an audible pitch (said on screen). Bat: shown 100× slower, so the squeak is played 100× slower and lower.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,6 +199,11 @@ footer.brand a{color:inherit}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{font:700 16px var(--f-body);padding:10px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
+.tg{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tg .state{font-weight:400;color:var(--muted)}
+.tg[aria-pressed="true"]{border:2px solid var(--accent)}
+.tg[aria-pressed="true"] .state{color:var(--accent);font-weight:700}
+.sound-note{margin:4px 0 0;font-size:16px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .log{font-size:16px;color:var(--muted);min-height:1.6em}
 .log ol{margin:2px 0 0;padding-left:22px;color:var(--ink)}
@@ -277,7 +285,9 @@ footer.brand a{color:inherit}
           <button type="button" data-loud="0" aria-pressed="true">Quiet clap</button>
           <button type="button" data-loud="1" aria-pressed="false">Loud clap</button>
         </div>
+        <button class="tg" type="button" id="soundBtn" aria-pressed="false">♪ Sound <span class="state">off</span></button>
       </div>
+      <p class="sound-note" id="soundNote" hidden></p>
       <div class="log" id="log"></div>
     </div>
     <div class="lower">
@@ -610,11 +620,55 @@ function drawWaves() {
 }
 function setWatch(t) { $("watch").textContent = fmt(t, SCENES[S.key].dp) + " s"; }
 
+/* ===== Sound (off by default; made in the browser with Web Audio, no files) =====
+   The echo plays when the pulse gets back, so pupils hear the same delay the stopwatch shows.
+   Air: a real hand clap, echo quieter and duller. Loud and quiet claps return at the same time.
+   Sea: ultrasound is too high to hear, so the ping is played at a pitch people can hear (said on screen).
+   Bat: the scene is 100× slower, so the squeak is played 100× slower and 100× lower, like a bat detector. */
+let audio = null, soundOn = false;
+const SOUND_NOTE = { air: "",
+  sea: "♪ The ping is played at a pitch you can hear. Real ultrasound is too high for people to hear.",
+  bat: "♪ The squeak is slowed down 100 times, which also makes it 100 times lower, so you can hear it (like a bat detector)." };
+function noiseBuf(ctx, sec) { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * sec), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
+function playSound(kind, echo) {
+  if (!soundOn || !audio) return;
+  const ctx = audio, t = ctx.currentTime + 0.01, out = ctx.createGain(); out.connect(ctx.destination);
+  const vol = (echo ? 0.3 : 1) * (S.key === "air" ? (S.loud ? 0.9 : 0.32) : 0.5);
+  if (kind === "air") {          // clap: a short, sharp burst of noise
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf(ctx, 0.25);
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = echo ? 1100 : 1700; bp.Q.value = 0.9;
+    src.connect(bp); bp.connect(out);
+    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol, t + 0.003); out.gain.exponentialRampToValueAtTime(0.001, t + (echo ? 0.22 : 0.12));
+    src.start(t); src.stop(t + 0.25);
+  } else {                       // sonar ping (steady tone) or slowed-down bat squeak (falling sweep)
+    const o = ctx.createOscillator(); o.type = "sine";
+    const len = kind === "sea" ? 0.6 : 0.3;
+    if (kind === "sea") o.frequency.setValueAtTime(1200, t);
+    else { o.frequency.setValueAtTime(800, t); o.frequency.exponentialRampToValueAtTime(400, t + len); }
+    o.connect(out);
+    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol * 0.6, t + 0.01); out.gain.exponentialRampToValueAtTime(0.001, t + len);
+    o.start(t); o.stop(t + len + 0.05);
+  }
+}
+function syncSound() {
+  $("soundBtn").setAttribute("aria-pressed", String(soundOn));
+  $("soundBtn").querySelector(".state").textContent = soundOn ? "on" : "off";
+  const note = soundOn ? SOUND_NOTE[S.key] : ""; $("soundNote").hidden = !note; $("soundNote").textContent = note;
+}
+$("soundBtn").addEventListener("click", () => {
+  soundOn = !soundOn;
+  if (soundOn && !audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { soundOn = false; } }
+  if (audio && audio.state === "suspended") audio.resume();
+  syncSound();
+});
+
 /* ===== Animation (pauses when the tab is hidden; still picture if reduced motion) ===== */
 function clap() {
   cancelAnimationFrame(rafId); lastTs = null;
   const tEcho = echoTime(S.key, S.d);
+  playSound(S.key, false);
   if (reduced()) {
+    setTimeout(() => playSound(S.key, true), tEcho * SCENES[S.key].slow * 1000);
     anim = { still: true, tScene: tEcho, tEcho, heard: true, real: 9 };
     setWatch(tEcho); drawWaves(); heard(); return;
   }
@@ -625,7 +679,7 @@ function step(ts) {
   if (!anim) return;
   const dt = lastTs == null ? 0 : Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
   anim.real += dt; anim.tScene += dt / SCENES[S.key].slow;
-  if (!anim.heard && anim.tScene >= anim.tEcho) { anim.heard = true; setWatch(anim.tEcho); heard(); }
+  if (!anim.heard && anim.tScene >= anim.tEcho) { anim.heard = true; setWatch(anim.tEcho); heard(); playSound(S.key, true); }
   else if (!anim.heard) setWatch(anim.tScene);
   drawWaves();
   const g = geom();
@@ -661,6 +715,7 @@ function loadTask() {
   $("clap").textContent = sc.btn;
   $("sliderWrap").hidden = !task.slider;
   $("loudWrap").hidden = S.key !== "air" || level !== "warm";
+  syncSound();
   $("distLbl").textContent = sc.distLbl;
   const r = $("dist"); r.min = FACTS.airMin; r.max = FACTS.airMax; r.step = FACTS.airStep; r.value = S.d; $("distOut").textContent = nice(S.d) + " m";
   document.querySelectorAll("#loudWrap button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.loud === "1") === S.loud)));
