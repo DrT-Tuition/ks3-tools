@@ -59,6 +59,8 @@
     parallel, glass-versus-water and speed answer is computed from Snell's law with the FACTS values; the
     exit-point answer is inside the marker range; the Challenge target angle in glass is reachable. A failed
     check shows a visible error instead of the task.
+  Illustration (Gemini, style E, 11 Oct 2026): the glass block is a picture stretched to the block the code draws;
+  every ray, angle and normal is still computed and drawn by code.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,9 +177,9 @@ footer.brand .mk-dark{display:none}
 :root[data-theme="dark"] footer.brand .mk-dark{display:block}
 footer.brand a{color:inherit}
 /* ---- TOOL-SPECIFIC CSS BELOW ---- */
-:root{--ray:#C0261B;--ray-faint:rgba(192,38,27,.38);--glass:rgba(96,150,200,.22);--glass-edge:#4F7FA8;--water:rgba(40,110,190,.30);--water-edge:#2C6AAE;--mirror:#6B7684;--target:#5B3FB5;--box:#3B4554;--prot:rgba(20,36,61,.07)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}}
-:root[data-theme="dark"]{--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}
+:root{--glasspic:.85;--ray:#C0261B;--ray-faint:rgba(192,38,27,.38);--glass:rgba(96,150,200,.22);--glass-edge:#4F7FA8;--water:rgba(40,110,190,.30);--water-edge:#2C6AAE;--mirror:#6B7684;--target:#5B3FB5;--box:#3B4554;--prot:rgba(20,36,61,.07)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--glasspic:.16;--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}}
+:root[data-theme="dark"]{--glasspic:.16;--ray:#FF8A70;--ray-faint:rgba(255,138,112,.40);--glass:rgba(150,200,240,.16);--glass-edge:#8FB8DD;--water:rgba(90,160,235,.26);--water-edge:#8CC0F0;--mirror:#C9D1DC;--target:#C9B8FF;--box:#A9B4C4;--prot:rgba(233,237,243,.07)}
 .stage{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
 .scene{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px;display:grid;gap:10px;min-width:0}
@@ -214,6 +216,7 @@ input[type=range]:disabled{cursor:not-allowed;opacity:.5}
 .stars{color:var(--target)}
 @media (max-width:480px){.fld label{min-width:0}.aimrow label{white-space:normal}}
 
+.glasspic{opacity:var(--glasspic)}
 </style>
 </head>
 <body>
@@ -249,7 +252,7 @@ input[type=range]:disabled{cursor:not-allowed;opacity:.5}
     <div id="bankErr" class="bankerr" role="alert" hidden></div>
     <div class="stage">
       <div class="scene">
-        <svg class="sim" id="sim" viewBox="0 0 900 520" role="img" aria-labelledby="simDesc"><desc id="simDesc">Ray diagram</desc><g id="g"></g><g id="pulses" aria-hidden="true"></g></svg>
+        <svg class="sim" id="sim" viewBox="0 0 900 520" role="img" aria-labelledby="simDesc"><desc id="simDesc">Ray diagram</desc><defs><!-- Gemini (style E) glass block picture, stretched to the block the code draws --><symbol id="sGlass" viewBox="0 0 840 160" preserveAspectRatio="none"><image href="data:image/webp;base64,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" width="840" height="160" preserveAspectRatio="none"/></symbol></defs><g id="g"></g><g id="pulses" aria-hidden="true"></g></svg>
         <div class="ctrls">
           <div class="aimrow"><label for="aim">Aim the ray box</label><input type="range" id="aim" min="0" max="65" step="1" value="10"></div>
           <div class="seg" role="group" aria-label="Surface">
@@ -516,7 +519,9 @@ function draw() {
     s += lbl(RIGHT - 6, MIRROR_Y + 14 + FS, "Mirror", "end");
   } else {
     const fill = scene === "glass" ? "var(--glass)" : "var(--water)", edge = scene === "glass" ? "var(--glass-edge)" : "var(--water-edge)";
-    s += el("rect", { x: LEFT, y: TOP, width: RIGHT - LEFT, height: BOT - TOP, fill, stroke: edge, "stroke-width": 3, rx: 3 });
+    s += el("rect", { x: LEFT, y: TOP, width: RIGHT - LEFT, height: BOT - TOP, fill, stroke: scene === "glass" ? "none" : edge, "stroke-width": 3, rx: 3 });
+    if (scene === "glass") s += `<use href="#sGlass" class="glasspic" x="${LEFT}" y="${TOP}" width="${RIGHT - LEFT}" height="${BOT - TOP}"/>` +
+      el("line", { x1: LEFT, y1: TOP, x2: RIGHT, y2: TOP, stroke: edge, "stroke-width": 2 }) + el("line", { x1: LEFT, y1: BOT, x2: RIGHT, y2: BOT, stroke: edge, "stroke-width": 2 });
     s += lbl(RIGHT - 10, BOT - 12, scene === "glass" ? "Glass block" : "Water", "end");
   }
   // normals
