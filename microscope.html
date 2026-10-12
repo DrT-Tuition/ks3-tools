@@ -1,0 +1,1441 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Microscope</title>
+<!--
+  SCIENCE SPEC — Microscope (KS3)
+  Models: using a light microscope to observe onion skin cells stained with iodine. A side-view light microscope
+    (eyepiece lens, body tube, revolving nosepiece with three objective lenses, stage with clips, coarse-focus and
+    fine-focus knobs, light source, arm, base) is drawn in code beside the circular field of view (what you see down
+    the eyepiece). Pupils place the slide, switch the light on or off, choose an objective lens and turn the coarse-
+    and fine-focus knobs, which raise and lower the stage. Everything is computed in code:
+      total magnification = eyepiece × objective (eyepiece fixed at ×10);
+      field of view width = 1400 ÷ total magnification (model units; a cell is about 4 × 1.25), so higher magnification → each cell looks
+        bigger and fewer cells fit in the circle (cells counted in code: about 190 at ×40, 30 at ×100, 3 at ×400);
+      sharpness: each objective has its own focus position for the stage; blur grows with the distance from it,
+        faster at higher magnification (narrow depth); coarse focus moves the stage 15 steps, fine focus 1 step, so
+        at ×40 coarse focus jumps past the focus and only fine focus can sharpen the image;
+        the lenses are close to parfocal: wherever ×4 is sharp, ×10 and ×40 are still in view (blurry);
+        the stage stops just before the ×40 lens touches the slide;
+      no light → dark field; no slide → bright but empty field; far from focus → nothing in view.
+  Sources: Y7 T1 B1.1 Cells — L1 Observing cells (deck_B11_L1.md) and L3 Microscope practical (deck_B11_L3.md).
+    L1: misconceptions slide 4 (microscope magnifies the image, not the object; total = eyepiece × objective); key
+    words slide 8 (microscope, magnification, resolution; memory hook "magnification makes it look bigger;
+    resolution makes it look sharper"); slide 10 (light microscope: a beam of light, up to about ×2000); slide 13
+    "How to use a microscope" (6 steps); slide 15 drawing rules (pencil, lines only, no shading or colouring, circle
+    about a third of a page, draw about 4–5 similar cells, record magnification, specimen name and date); slide 16
+    calculations (×10 × ×30 = 300, ×40 × ×20 = 800, ×10 × ×50 = 500); slide 17 hinge (objective lens closest to the
+    specimen). L3: starter slides 3–4 (×10 × ×40 = 400; start with the lowest magnification; stretch: a lower
+    magnification gives a wider field of view); misconceptions slide 5 (highest first; coarse focus for all
+    focusing; shaded drawings; "the microscope must be broken": check slide, light, focus); key words slide 9
+    (objective lens: closest to the specimen, different magnifications; eyepiece: usually ×10; specimen; coarse
+    focus: large adjustments; fine focus: small adjustments; "coarse first, fine second"); slides 10–11 recap;
+    slide 12 practical (onion skin, iodine stain, lowest objective first, coarse then fine, then a higher lens);
+    slide 13 true/false; slide 14 hinge (blurry at high magnification → fine focus).
+    KS3 strand: AQA KS3 Biology, Cells: cells as the unit of living organisms; observing cells with a light
+    microscope. KS3 NC Biology: "cells as the fundamental unit of living organisms, including how to observe,
+    interpret and record cell structure using a light microscope".
+  Simplifications (shown on screen as "Model limits"):
+    - The objective lenses are ×4, ×10 and ×40. The decks name ×40 and a ×10 eyepiece; ×4 as the lowest lens is
+      standard school kit but is not stated in the decks.
+    - The onion cells are drawn as a sheet of brick-shaped cells, each with a cell wall and a nucleus, placed by
+      code. Their real size is far smaller; their brown colour comes from the iodine stain.
+    - Focus moves in set steps. A real knob turns smoothly. The real image may also be flipped: the decks don't
+      say, so the model doesn't show or mention it.
+    - Only onion skin is used: the decks name no other specimen.
+    - Parts named on screen but not described in the decks (body tube, nosepiece, clips, arm, base) are only
+      named, never described.
+  Misconceptions designed out (deck misconception slides, hinges and checks):
+    - A microscope makes the actual object bigger (Easy 10; resolution option in Easy 9; Model limits).
+    - The eyepiece does all the magnifying (Easy 4, Hard 1–3: "one lens only" feedback; readout shows both).
+    - Start with the highest magnification (Easy 5, Hard 6 starts at ×40 and is marked wrong without a low start;
+      at ×40 coarse focus overshoots).
+    - Coarse focus for all focusing (Easy 7, Hard 5 order feedback, Hard 8 hinge; goal feedback "use fine focus").
+    - Drawings should be shaded or coloured (Hard 9).
+    - If you can't see anything the microscope is broken (Hard 7 fix-it: light off, no slide, out of focus).
+  Facts and values used:
+    - Eyepiece lens ×10 (L3 key word "usually magnifying x10"); objective lens ×40 (L3 starter); ×4 and ×10
+      objectives (model, see above).
+    - Total magnification = eyepiece × objective (L1 slides 4, 16): 10 × 40 = 400, 10 × 30 = 300, 40 × 20 = 800,
+      10 × 50 = 500 (deck values; the ×40 eyepiece in L1 slide 16 is the deck's own).
+    - Light microscope up to about ×2000 (L1 slide 10).
+    - Method, 6 steps (L1 slide 13, L3 slide 11), worded as in the decks.
+    - Drawing rules (L1 slide 15; L3 slides 12, 13, 15).
+  SoW lessons served: Y7 Term 1 B1.1 Cells — L1 Observing cells (Easy 1–4, 7, 9, 10; Hard 1–5, 9) and
+    L3 Microscope practical (Easy 2–8; Hard 4–10).
+  Support starts OFF on every visit: Labels (names every part), Magnification (total magnification readout and
+    the rule), Focus helper (says dark / empty / nothing in view / blurry / sharp).
+  Idea credit: none (designed from scratch).
+  Checks: on load the model is checked (total = eyepiece × objective; field of view and cell count fall as
+    magnification rises; coarse focus alone can bring the cells into view at ×4 but never sharp at ×40; fine focus
+    can always finish) and every question is verified (closest part computed from the drawing; calculation options
+    computed; predictions and "what should you do" options simulated on the model; goals reachable and not met at
+    the start; one right answer and feedback for every wrong one); any failure shows a visible error box instead of
+    the question.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--m-body:#DCE1E8;--m-body2:#AEB8C5;--m-edge:#3A4656;--m-dark:#2B333E;--m-dark2:#4D5868;--m-metal:#D3D8DF;--m-metal2:#8C96A3;--m-glass:#D7E8F4;--m-lampoff:#9AA3AE;--lbl-line:#5A6472;--sel:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--m-body:#B4BECC;--m-body2:#7E8A9B;--m-edge:#0E1A2C;--m-dark:#262F3B;--m-dark2:#4A576C;--m-metal:#C3CAD4;--m-metal2:#7B8594;--m-glass:#B5CCE0;--m-lampoff:#6E7784;--lbl-line:#A9B4C4;--sel:#D9A536}}
+:root[data-theme="dark"]{--m-body:#B4BECC;--m-body2:#7E8A9B;--m-edge:#0E1A2C;--m-dark:#262F3B;--m-dark2:#4A576C;--m-metal:#C3CAD4;--m-metal2:#7B8594;--m-glass:#B5CCE0;--m-lampoff:#6E7784;--lbl-line:#A9B4C4;--sel:#D9A536}
+
+.scene{display:grid;gap:12px}
+.stage2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:620px){.stage2{grid-template-columns:minmax(0,1fr)}#view{max-width:230px}}
+.vis{min-width:0}
+#scope{width:100%;height:auto;max-width:470px;margin:0 auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk)}
+#scope text{font-family:var(--f-body)}
+.viewcol{display:grid;gap:8px;align-content:start;min-width:0}
+.viewcol h2{margin:0;font-size:16px;color:var(--muted)}
+#view{width:100%;max-width:300px;height:auto;margin:0 auto;display:block}
+.eyenote{margin:0;font-size:15px;color:var(--muted);text-align:center}
+.part{outline:none}
+.tapmode .part{cursor:pointer}
+.part .hit{fill:transparent;stroke:none!important}
+.part.sel path,.part.sel rect:not(.hit),.part.sel circle,.part.sel ellipse{stroke:var(--sel)!important;stroke-width:3.2!important}
+.tapmode .part:hover path,.tapmode .part:hover rect:not(.hit),.tapmode .part:hover circle,.tapmode .part:hover ellipse,
+.part:focus-visible path,.part:focus-visible rect:not(.hit),.part:focus-visible circle,.part:focus-visible ellipse{stroke:var(--focus)!important;stroke-width:3!important}
+.bench{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:10px 14px;min-width:0;align-items:start}
+@media (max-width:560px){.bench{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#objWrap{grid-column:1/-1}}
+.ctl{display:grid;gap:6px;min-width:0}
+.ctl-lbl{font-weight:700;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.mbtn{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.25}
+.mbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mbtn[aria-pressed="true"]::before{content:"✓"}
+.mbtn:disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+.ctl.kit{grid-column:1/-1}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:4px}
+.readout p{margin:0;font-size:17px;line-height:1.4}
+.readout .eq{font-weight:700;color:var(--accent)}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+/* answer area */
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:left;line-height:1.3}
+.tile[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tile[aria-pressed="true"]::before{content:"✓"}
+.tile .ord{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent-ink);color:var(--accent);font-size:14px;flex:none}
+.tile.ordered::before{content:none}
+.tiles.steps{display:grid;gap:6px}
+.tiles.steps .tile{justify-content:flex-start;font-weight:400;font-size:16px;width:100%}
+.tiles.steps .tile[aria-pressed="true"]{font-weight:700}
+.calcrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.calcrow label{font-weight:700;font-size:18px}
+.calcrow input{font:700 20px var(--f-body);width:130px;min-height:46px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.calcrow input:focus{border-color:var(--accent)}
+.bprev{margin:0;font-size:17px}
+.bprev b{color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:17px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0;line-height:1.4}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+@media (min-width:901px) and (max-height:820px){
+  #answer .tile{min-height:40px;padding:5px 10px}
+  #answer .tiles.steps .tile{min-height:38px;padding:4px 10px;font-size:15px}
+  .support-box{font-size:16px;padding:6px 10px}
+}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Microscope<small>Place the slide, choose a lens and focus. Observe onion cells like a scientist.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Microscope</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Microscope model">
+      <div class="scene particles">
+        <div class="stage2">
+          <div class="vis"><svg id="scope" viewBox="0 0 450 470" role="group" aria-label="A light microscope, side view"></svg></div>
+          <div class="viewcol">
+            <h2 id="viewH">What you see down the eyepiece</h2>
+            <svg id="view" viewBox="0 0 300 300" role="img" aria-labelledby="viewH"></svg>
+            <div class="readout" id="readout" aria-live="polite">
+              <p class="eq" id="magLine"></p>
+              <p class="eq" id="totLine" hidden></p>
+              <p id="statusLine" hidden></p>
+              <p id="partLine" hidden></p>
+            </div>
+          </div>
+        </div>
+        <p class="locknote" id="lockNote" hidden>The microscope is set for this question. Answer it, then press Check to see what happens.</p>
+        <div class="bench" id="bench">
+          <div class="ctl" id="objWrap"><span class="ctl-lbl" id="objLbl">Objective lens</span><div class="chips" id="objChips" role="group" aria-labelledby="objLbl"></div></div>
+          <div class="ctl" id="coarseWrap"><span class="ctl-lbl" id="coarseLbl">Coarse focus</span><div class="chips" role="group" aria-labelledby="coarseLbl">
+            <button class="mbtn" type="button" id="cUp" aria-label="Coarse focus: raise the stage">▲ Up</button><button class="mbtn" type="button" id="cDn" aria-label="Coarse focus: lower the stage">▼ Down</button></div></div>
+          <div class="ctl" id="fineWrap"><span class="ctl-lbl" id="fineLbl">Fine focus</span><div class="chips" role="group" aria-labelledby="fineLbl">
+            <button class="mbtn" type="button" id="fUp" aria-label="Fine focus: raise the stage a little">▲ Up</button><button class="mbtn" type="button" id="fDn" aria-label="Fine focus: lower the stage a little">▼ Down</button></div></div>
+          <div class="ctl kit" id="kitWrap"><span class="ctl-lbl" id="kitLbl">Slide and light</span><div class="chips" role="group" aria-labelledby="kitLbl">
+            <button class="mbtn" type="button" id="slideBtn">Place slide on the stage</button><button class="mbtn" type="button" id="lightBtn" aria-pressed="true">Light on</button></div></div>
+        </div>
+      </div>
+      <p class="limits"><b>Model limits:</b> Real cells are far smaller than they look here. The brown colour comes from the iodine stain. Real microscopes differ: this one has ×4, ×10 and ×40 objective lenses and a ×10 eyepiece. Light microscopes can magnify up to about ×2000. Here the focus moves in set steps; a real knob turns smoothly.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="lbl" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="mag" aria-pressed="false"><span class="dot"></span>Magnification <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="focus" aria-pressed="false"><span class="dot"></span>Focus helper <span class="state">off</span></button>
+        </div>
+        <div class="support-box" id="magBox" hidden><h3>Magnification</h3>
+          <p>Total magnification = eyepiece lens × objective lens.</p>
+          <p>Both lenses magnify. Multiply them: don't add them.</p></div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (B1.1 L1 Observing cells, L3 Microscope practical) ===== */
+const EYE = 10;                                  // L3 key word: eyepiece lens "usually magnifying x10"
+const OBJS = [4, 10, 40];                        // ×40: L3 starter. ×4 lowest: standard school kit (not in the decks)
+const LOWEST = Math.min(...OBJS), HIGHEST = Math.max(...OBJS);
+const total = (e, o) => e * o;                   // L1: total magnification = eyepiece × objective
+/* field of view width (model units; an onion cell is about 4 × 1.25): narrower as magnification rises, width ∝ 1 ÷ magnification.
+   FOV_K is set so ×400 shows a few cells (about 3 nuclei, more partial cells), ×100 a good number and ×40 lots. */
+const FOV_K = 1400;
+const FOV = o => FOV_K / total(EYE, o);
+/* focus: the stage moves in steps (0 = lowest). Fine focus = 1 step, coarse focus = 15 steps. */
+const FINE = 1, COARSE = 15, POSMAX = 170;      // POSMAX: the ×40 lens just clears the slide at the top
+const FOCUS = { 4: 154, 10: 155, 40: 156 };      // stage step where each objective is sharp
+const TOL = { 4: 1, 10: .5, 40: .3 }, GAIN = { 4: .6, 10: .7, 40: 1.5 }; // depth of focus shrinks as magnification rises;
+/* the lenses are close to parfocal: wherever ×4 is sharp, ×10 and ×40 are still in view (blurry), so fine focus finishes */
+const VIS = 5, SHARP = .5;                       // blur (px) above VIS: nothing in view; at or below SHARP: sharp
+const blurOf = (o, p) => Math.max(0, Math.abs(p - FOCUS[o]) - TOL[o]) * GAIN[o];
+function seeing(s) {
+  if (!s.light) return "dark";
+  if (!s.slide) return "empty";
+  const b = blurOf(s.obj, s.pos);
+  return b >= VIS ? "none" : b > SHARP ? "blurry" : "sharp";
+}
+const inView = s => { const v = seeing(s); return v === "blurry" || v === "sharp"; };
+/* parts (deck names); descriptions only where the decks give one */
+const PART = {
+  eyepiece:  { name: "Eyepiece lens", lbl: "Eyepiece lens", def: "the lens you look down, usually magnifying ×10", where: "lens at the very top" },
+  tube:      { name: "Body tube", lbl: "Body tube", where: "tube below the top lens" },
+  nosepiece: { name: "Nosepiece", lbl: "Nosepiece", where: "turning part that holds the lower lenses" },
+  objective: { name: "Objective lens", lbl: "Objective lens", def: "the lens closest to the specimen, available in different magnifications", where: "lens just above the slide" },
+  clips:     { name: "Clips", lbl: "Clips", where: "metal strips on the flat platform" },
+  stage:     { name: "Stage", lbl: "Stage", def: "where you place the object you want to observe", where: "flat platform" },
+  light:     { name: "Light source", lbl: "Light source", def: "the lamp that shines a beam of light up through the slide", where: "lamp under the platform" },
+  base:      { name: "Base", lbl: "Base", where: "bottom" },
+  arm:       { name: "Arm", lbl: "Arm", where: "curved back" },
+  coarse:    { name: "Coarse-focus knob", lbl: "Coarse focus", def: "the knob that makes large adjustments to bring an object roughly into view", where: "big knob on the curved back" },
+  fine:      { name: "Fine-focus knob", lbl: "Fine focus", def: "the knob that makes small adjustments to sharpen the final image", where: "small knob on the curved back" }
+};
+const SIX = ["eyepiece", "objective", "stage", "coarse", "fine", "light"];   // the six parts the decks name
+/* method (L1 slide 13, L3 slide 11), in order */
+const METHOD = ["Place the object you want to observe onto the stage.",
+  "Select the objective lens with the lowest magnification.",
+  "Lower the stage to its lowest position.",
+  "Look through the eyepiece and turn the coarse-focus knob until the object comes into view.",
+  "Turn the fine-focus knob until the object is sharply in focus.",
+  "Repeat with a higher-magnification lens for more detail."];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+/* ===== Onion skin cells: a sheet of brick-shaped cells placed by code (seeded, the same every visit) ===== */
+function rng(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const CELLS = (() => {
+  const R = rng(11), H = 1.25, out = [], rowY = (r, x) => r * H + .07 * Math.sin(x * .8 + r * 2.1);
+  const EXT = FOV(LOWEST) / 2 + 4, RN = Math.ceil(EXT / H) + 1;   // the sheet covers the widest field of view
+  for (let r = -RN; r < RN; r++) {
+    let walls = [], x = -EXT - R() * 3;
+    while (x < EXT) { walls.push({ t: x, b: x + (R() - .5) * .35 }); x += 3.2 + R() * 1.6; }
+    walls.push({ t: x, b: x + (R() - .5) * .35 });
+    for (let i = 0; i < walls.length - 1; i++) {
+      const a = walls[i], b = walls[i + 1], mt = (a.t + b.t) / 2, mb = (a.b + b.b) / 2;
+      const pts = [[a.t, rowY(r, a.t)], [mt, rowY(r, mt)], [b.t, rowY(r, b.t)], [b.b, rowY(r + 1, b.b)], [mb, rowY(r + 1, mb)], [a.b, rowY(r + 1, a.b)]];
+      const f = .3 + .4 * R(), nx = a.t + (b.t - a.t) * f, ny = r * H + H * (.5 + (R() - .5) * .35);
+      out.push({ pts, nx, ny, nr: .3 + R() * .06, rot: (R() - .5) * 30, shade: R() });
+    }
+  }
+  /* put the field of view's centre on a nucleus near the middle, so ×40 shows a nucleus */
+  const c = out.reduce((m, k) => Math.hypot(k.nx - .3, k.ny - .2) < Math.hypot(m.nx - .3, m.ny - .2) ? k : m);
+  const dx = c.nx, dy = c.ny;
+  out.forEach(k => { k.pts = k.pts.map(([x, y]) => [x - dx, y - dy]); k.nx -= dx; k.ny -= dy; });
+  return out;
+})();
+const cellsInView = o => CELLS.filter(k => Math.hypot(k.nx, k.ny) <= FOV(o) / 2).length;   // cells whose nucleus is inside the circle
+
+/* ===== Question bank (wording from the decks' checks; answers computed from the model) ===== */
+const TASKS = {
+  easy: [
+    { kind: "choice", rule: { type: "closest" }, bench: { slide: true, light: true, obj: 10, pos: 155 },                     // L1 hinge
+      text: "Which part of the microscope is closest to the specimen?",
+      options: [
+        { t: "Eyepiece lens", part: "eyepiece", why: "The eyepiece is the lens you look through at the top. It is the lens furthest from the specimen." },
+        { t: "Objective lens", part: "objective", ok: true },
+        { t: "Coarse-focus knob", part: "coarse", why: "The coarse-focus knob is on the arm. It moves the stage, but it isn't next to the specimen." },
+        { t: "Light source", part: "light", why: "The light source is under the stage. It shines light up through the slide. The objective lens sits even closer, just above the specimen." }],
+      explain: "The objective lens sits directly above the specimen on the stage. The eyepiece is the lens you look through at the top.",
+      hints: ["Find the specimen: it is on the slide, on the stage.", "Which lens sits just above the slide?", "The objective lens."] },
+    { kind: "bank", marker: "stage", bench: { slide: true, light: true, obj: 10, pos: 120 },                                 // L1 slide 10 / L3 slide 10
+      text: "What is the name of the part marked ? on the microscope?",
+      explain: "The stage is where you place the slide: the object you want to observe.",
+      hints: ["Look at what the ? points to.", "The slide sits on this flat part.", "The stage."] },
+    { kind: "tap", target: "fine", bench: { slide: true, light: true, obj: 10, pos: 120 },                                    // L3 key words
+      text: "Tap the fine-focus knob on the microscope. Then press Check.",
+      explain: "The fine-focus knob makes small adjustments to sharpen the final image.",
+      hints: ["The focus knobs are on the arm, at the back.", "There are two knobs. Fine focus makes the small adjustments.", "In this model it is the smaller knob, lower down the arm."] },
+    { kind: "choice", rule: { type: "calc", e: 10, o: 40 }, bench: { slide: true, light: true, obj: 4, pos: 154 },           // L3 starter Q4
+      text: "The eyepiece lens is ×10. The objective lens is ×40. What is the total magnification?",
+      explain: "Total magnification = eyepiece × objective: 10 × 40 = 400.",
+      hints: ["Both lenses magnify.", "Total magnification = eyepiece × objective.", "10 × 40 = 400. The answer is ×400."] },
+    { kind: "choice", rule: { type: "fixed" },                                                                                 // L3 starter Q5, formative 1
+      text: "True or false? You should always start with the highest-magnification objective lens.",
+      options: [
+        { t: "True: you see the most detail straight away.", why: "This is a common mistake. At high magnification the field of view is narrow, so the specimen is hard to find. Always start with the lowest." },
+        { t: "False: start with the lowest, to find the specimen first.", ok: true }],
+      explain: "Always start with the lowest magnification to locate the specimen first. A lower magnification gives a wider field of view.",
+      hints: ["Look at step 2 of the method.", "A lower magnification gives a wider field of view.", "False."] },
+    { kind: "goal", goal: { type: "focus", obj: LOWEST }, bench: { slide: false, light: true, obj: 10, pos: 30 },               // L3 practical
+      text: "Bring the onion cells into focus at the lowest magnification. Then press Check.",
+      explain: "Lowest magnification first: ×4. Coarse focus brings the cells into view, then fine focus sharpens them.",
+      hints: ["Place the slide, then choose the lowest objective lens.", "Choose ×4. Use coarse focus until the cells come into view.", "Then use fine focus until the cell walls look sharp."] },
+    { kind: "choice", rule: { type: "fixed" },                                                                                 // L3 key words + misconception
+      text: "What does the fine-focus knob do?",
+      options: [
+        { t: "It makes small adjustments to sharpen the final image.", ok: true },
+        { t: "It makes large adjustments to bring the object roughly into view.", why: "That's the coarse-focus knob. Coarse first, fine second: rough focus, then sharpen." },
+        { t: "It changes the magnification.", why: "You change the magnification by choosing a different objective lens." },
+        { t: "It makes the specimen bigger.", why: "Nothing makes the real specimen bigger. A microscope magnifies the image." }],
+      explain: "Fine focus makes small adjustments to sharpen the final image. Coarse first, fine second.",
+      hints: ["Fine means small.", "Coarse focus brings the object roughly into view. What comes next?", "It makes small adjustments to sharpen the image."] },
+    { kind: "choice", lock: true, rule: { type: "zoom", from: 4, to: 10 }, bench: { slide: true, light: true, obj: 4, pos: 155 },   // L3 stretch (field of view)
+      text: "Predict: you change from the ×4 to the ×10 objective lens. How will the onion cells look?",
+      options: [
+        { t: "Bigger, and fewer cells in view", size: 1, count: -1, ok: true },
+        { t: "Smaller, and more cells in view", size: -1, count: 1, why: "A higher magnification makes the image bigger, not smaller." },
+        { t: "Bigger, and more cells in view", size: 1, count: 1, why: "They do look bigger. But the field of view gets narrower, so fewer cells fit in." },
+        { t: "Exactly the same", size: 0, count: 0, why: "Changing the objective lens changes the magnification, so the cells look different." }],
+      explain: "Higher magnification: each cell looks bigger, but the field of view is narrower, so fewer cells fit in.",
+      hints: ["×10 magnifies more than ×4.", "The cells look bigger. Does the circle you look through get any bigger?", "Bigger, and fewer cells in view."] },
+    { kind: "choice", rule: { type: "fixed" },                                                                                 // L1 key words, exit ticket
+      text: "Magnification makes an image look bigger. What does better resolution do?",
+      options: [
+        { t: "It makes the image look sharper: two close points are seen as two, not one blur.", ok: true },
+        { t: "It makes the image look bigger.", why: "That's magnification. Magnification makes it look bigger; resolution makes it look sharper." },
+        { t: "It makes the real cell bigger.", why: "A microscope never changes the real size of the object. It magnifies the image." },
+        { t: "It makes the image brighter.", why: "Brightness comes from the light source. Resolution is about how sharp the image looks." }],
+      explain: "Magnification makes it look bigger; resolution makes it look sharper.",
+      hints: ["Remember the memory hook from the key words.", "Resolution is about seeing two close points as separate.", "It makes the image look sharper."] },
+    { kind: "choice", rule: { type: "fixed" },                                                                                 // L1 misconception
+      text: "You look at an onion cell at ×400. What happens to the real cell on the slide?",
+      options: [
+        { t: "Nothing: it stays the same size. Only the image is magnified.", ok: true },
+        { t: "It becomes 400 times bigger.", why: "A microscope makes the image bigger, not the actual object. The real cell stays the same size." },
+        { t: "It becomes 40 times bigger.", why: "The real cell doesn't change size at all. A microscope magnifies the image, not the object." }],
+      explain: "A microscope magnifies the image of the object. It doesn't change the real size of the object.",
+      hints: ["Does the cell on the slide change, or just what you see?", "A microscope magnifies the image.", "It stays the same size."] }
+  ],
+  hard: [
+    { kind: "calc", e: 10, o: 30, text: "Eyepiece ×10, objective ×30. What is the total magnification? Type the number." },   // L1 formative 1
+    { kind: "calc", e: 40, o: 20, text: "Eyepiece ×40, objective ×20. What is the total magnification? Type the number." },   // L1 formative 2
+    { kind: "calc", e: 10, o: 50, text: "Eyepiece ×10, objective ×50. What is the total magnification? Type the number." },   // L1 formative 3
+    { kind: "goal", goal: { type: "total", want: 400 }, bench: { slide: true, light: true, obj: 4, pos: 154 },              // reverse, from the L3 starter
+      text: "You need a total magnification of ×400. The eyepiece is ×10. Choose the right objective lens on the model. Then press Check.",
+      explain: "Total magnification = eyepiece × objective, so 10 × 40 = 400. The ×40 lens is right.",
+      hints: ["Total magnification = eyepiece × objective.", "10 × ? = 400.", "400 ÷ 10 = 40. Choose the ×40 lens."] },
+    { kind: "order",                                                                                                           // L1 slide 13, L3 slide 11
+      text: "Put the steps for using a microscope in order. Tap them from first to last.",
+      explain: "Place it, lowest lens, lowest stage, coarse focus, fine focus, then a higher lens.",
+      hints: ["What has to go on the stage before anything else?", "Lowest lens and lowest stage come before you look. Coarse focus comes before fine focus.", "Stage → lowest lens → lower the stage → coarse focus → fine focus → higher lens."] },
+    { kind: "goal", goal: { type: "focus", obj: HIGHEST, low: true }, bench: { slide: true, light: true, obj: 40, pos: 0 },   // L3 practical method
+      text: "Get a sharp image of the onion cells at ×40, using the right method. Then press Check.",
+      explain: "Lowest first: find the cells at ×4 with coarse focus, sharpen with fine focus, then move up to ×40 and sharpen again with fine focus.",
+      hints: ["The lens is set to ×40. Is that where you should start?", "Start at ×4: coarse focus, then fine focus. Then switch up.", "×4 → coarse focus until the cells appear → fine focus → ×10 → fine focus → ×40 → fine focus."] },
+    { kind: "goal", goal: { type: "focus", obj: 10 }, bench: { slide: false, light: false, obj: 10, pos: 0 },                 // L3 misconception: "it must be broken"
+      text: "Sam says, “I can't see anything. This microscope must be broken!” Fix it, so you see the onion cells sharply with the ×10 lens. Then press Check.",
+      explain: "The microscope wasn't broken. The light was off, there was no slide, and it needed focusing. Check these first.",
+      hints: ["Check the simple things before you blame the microscope.", "Is the light on? Is there a slide on the stage?", "Turn the light on and place the slide. Then use coarse focus, then fine focus."] },
+    { kind: "choice", lock: true, rule: { type: "act", obj: HIGHEST, want: "sharp" }, bench: { slide: true, light: true, obj: 40, pos: 155 },   // L3 hinge
+      text: "You can see your specimen, but it's blurry at high magnification. What should you do?",
+      options: [
+        { t: "Switch back to the lowest-magnification lens", act: { obj: LOWEST }, why: "Going back to ×4 loses the detail you wanted. The specimen is already in view: just sharpen it." },
+        { t: "Turn the fine-focus knob slowly", act: { fine: 1 }, ok: true },
+        { t: "Add more light", act: {}, why: "More light makes it brighter, not sharper. Blurry means out of focus." },
+        { t: "Remove the slide and start again", act: { slide: false }, why: "You don't need to start again. The specimen is in view: fine focus will sharpen it." }],
+      explain: "At high magnification, the fine-focus knob makes small adjustments to sharpen the image without losing the specimen from view.",
+      hints: ["You can already see the specimen. It just isn't sharp.", "Which knob makes small adjustments?", "Turn the fine-focus knob slowly."] },
+    { kind: "multi",                                                                                                           // L1 slide 15, L3 slides 13 and 15
+      text: "Which of these are rules for a scientific drawing of what you see? Choose all that apply.",
+      items: [
+        { t: "Use a pencil", ok: true },
+        { t: "Draw only the lines you see", ok: true },
+        { t: "Shade and colour it to look real", why: "Scientific drawings use pencil outlines only of what you actually see: no shading and no colouring." },
+        { t: "Draw the field of view as a circle about a third of a page", ok: true },
+        { t: "Draw every cell you can see, however many", why: "If the cells are similar, it's useful to draw about 4–5 only." },
+        { t: "Record the magnification", ok: true },
+        { t: "Record the specimen name and the date", ok: true },
+        { t: "Use a pen, so it doesn't smudge", why: "Always use a pencil for a scientific drawing." }],
+      explain: "Pencil outlines only: no shading or colouring. Record the magnification, specimen name and date.",
+      hints: ["Think about what makes a drawing a scientific record, not a work of art.", "Pencil and outlines only. What three things do you always record?", "Pencil, lines only, circle a third of a page, magnification, specimen name and date."] },
+    { kind: "choice", lock: true, rule: { type: "act", want: "more" }, bench: { slide: true, light: true, obj: 10, pos: 155 },   // L3 stretch answer
+      text: "You are looking at onion cells with the ×10 lens. You want to see more cells in the field of view. What should you do?",
+      options: [
+        { t: "Change to the ×4 objective lens", act: { obj: 4 }, ok: true },
+        { t: "Change to the ×40 objective lens", act: { obj: 40 }, why: "×40 makes each cell look bigger, but the field of view is narrower, so you see fewer cells." },
+        { t: "Turn the fine-focus knob", act: { fine: 1 }, why: "Focusing changes how sharp it looks, not how many cells fit in the field of view." },
+        { t: "Add another drop of iodine", act: {}, why: "Iodine stains the cells so you can see them. It doesn't change how many fit in the field of view." }],
+      explain: "A lower magnification gives a wider field of view, so more cells fit in.",
+      hints: ["How many cells fit in the circle depends on the magnification.", "Lower magnification: wider or narrower field of view?", "Change to the ×4 objective lens."] }
+  ]
+};
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });
+/* computed options for a calculation choice: the product is right; sum and one-lens-only are the documented slips */
+function calcOptions(e, o) {
+  return [{ v: total(e, o), ok: true },
+    { v: e + o, why: "You added the numbers. Multiply them: eyepiece × objective." },
+    { v: o, why: "That's only the objective lens. Both lenses magnify: multiply eyepiece × objective." },
+    { v: e, why: "The eyepiece doesn't do all the magnifying. Both lenses magnify: multiply eyepiece × objective." }].map(x => ({ ...x, t: "×" + x.v }));
+}
+TASKS.easy.forEach(t => { if (t.rule && t.rule.type === "calc") t.options = calcOptions(t.rule.e, t.rule.o); });
+
+/* ===== Simulating the model (for checks, predictions and Show answer) ===== */
+const clampPos = p => Math.max(0, Math.min(POSMAX, p));
+function simAct(s, a) { const n = { ...s }; if (a.obj) n.obj = a.obj; if (a.fine) n.pos = clampPos(n.pos + a.fine * FINE); if (a.slide === false) n.slide = false; return n; }
+function actGood(t, o) {
+  const s = t.bench, n = simAct(s, o.act || {});
+  if (t.rule.want === "sharp") return n.obj === t.rule.obj && seeing(n) === "sharp";
+  if (t.rule.want === "more") return seeing(n) !== "dark" && n.slide && cellsInView(n.obj) > cellsInView(s.obj);
+  return false;
+}
+/* answers */
+function answerOf(t) {
+  if (t.kind === "choice") return t.options.findIndex(o => o.ok);
+  if (t.kind === "bank") return t.marker;
+  if (t.kind === "tap") return t.target;
+  if (t.kind === "calc") return total(t.e, t.o);
+  if (t.kind === "order") return METHOD.map((_, i) => i);
+  if (t.kind === "multi") return t.items.map((x, i) => x.ok ? i : -1).filter(i => i >= 0);
+  if (t.kind === "goal") return t.goal.type === "total" ? OBJS.find(o => total(EYE, o) === t.goal.want) : t.goal.obj;
+  return null;
+}
+function hintsFor(t) {
+  if (t.hints) return t.hints;
+  if (t.kind === "calc") return ["Both lenses magnify.", "Total magnification = eyepiece × objective.", `${t.e} × ${t.o} = ${total(t.e, t.o)}.`];
+  return ["", "", ""];
+}
+
+/* ===== Load-time bank check ===== */
+function goalMet(g, s) {
+  if (g.type === "total") return total(EYE, s.obj) === g.want;
+  if (g.type === "focus") return s.obj === g.obj && seeing(s) === "sharp" && (!g.low || s.lowFound);
+  return false;
+}
+function bankCheck() {
+  const errs = [];
+  /* the model */
+  if (total(10, 40) !== 400 || EYE !== 10 || !OBJS.includes(40)) errs.push("model: magnification rule or lenses wrong");
+  for (let i = 1; i < OBJS.length; i++) {
+    if (!(FOV(OBJS[i]) < FOV(OBJS[i - 1]))) errs.push("model: field of view must narrow as magnification rises");
+    if (!(cellsInView(OBJS[i]) < cellsInView(OBJS[i - 1]))) errs.push("model: fewer cells must fit in at higher magnification");
+  }
+  if (cellsInView(HIGHEST) < 2 || cellsInView(HIGHEST) > 6) errs.push("model: the highest magnification should show a few cells");
+  if (cellsInView(10) < 20 || cellsInView(10) > 60) errs.push("model: ×10 should show a good number of cells");
+  if (cellsInView(LOWEST) < 4 * cellsInView(10)) errs.push("model: the lowest magnification should show lots of cells");
+  const grid = [...Array(Math.floor(POSMAX / COARSE) + 1).keys()].map(k => k * COARSE), base = { slide: true, light: true };
+  if (!grid.some(p => inView({ ...base, obj: LOWEST, pos: p }))) errs.push("model: coarse focus alone must bring the cells into view at the lowest lens");
+  if (grid.some(p => inView({ ...base, obj: HIGHEST, pos: p }))) errs.push("model: at the highest lens coarse focus from the bottom should overshoot");
+  OBJS.filter(o => o < HIGHEST).forEach(o => { for (let off = 0; off < COARSE; off++) if (!grid.some(p => inView({ ...base, obj: o, pos: Math.min(POSMAX, p + off) }))) { errs.push("model: at ×" + o + " coarse focus must always be able to bring the cells into view"); break; } });
+  OBJS.forEach(o => { if (seeing({ ...base, obj: o, pos: FOCUS[o] }) !== "sharp") errs.push("model: ×" + o + " has no sharp position"); });
+  for (let p = 0; p <= POSMAX; p++) if (seeing({ ...base, obj: LOWEST, pos: p }) === "sharp" && OBJS.some(o => !inView({ ...base, obj: o, pos: p }))) errs.push("model: switching up from a sharp ×" + LOWEST + " image must keep the cells in view");
+  if (tipY(HIGHEST) >= STY(POSMAX) - 8) errs.push("model: the highest lens hits the slide at the top of the stage");
+  if (seeing({ light: false, slide: true, obj: 10, pos: FOCUS[10] }) !== "dark" || seeing({ light: true, slide: false, obj: 10, pos: FOCUS[10] }) !== "empty") errs.push("model: light / slide rule wrong");
+  if (new Set(Object.values(PART).map(p => p.name)).size !== Object.keys(PART).length) errs.push("model: two parts share a name");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (t.lock && !t.bench) errs.push(id + ": a locked question needs a model set-up");
+    if (t.kind === "choice") {
+      const ok = t.options.filter(o => o.ok);
+      if (ok.length !== 1) errs.push(id + ": needs exactly one correct option");
+      if (t.options.some(o => !o.ok && !o.why)) errs.push(id + ": a wrong option has no feedback");
+      if (new Set(t.options.map(o => o.t)).size !== t.options.length) errs.push(id + ": two options are the same");
+      const R = t.rule || {};
+      if (R.type === "closest") {
+        const d = o => dist(partAnchor(o.part, t.bench), specimenAt(t.bench));
+        const best = t.options.reduce((a, b) => d(b) < d(a) ? b : a);
+        if (!best.ok) errs.push(id + ": the closest part disagrees with the drawing");
+      }
+      if (R.type === "calc") t.options.forEach(o => { if ((o.v === total(R.e, R.o)) !== !!o.ok) errs.push(id + ": option " + o.t + " disagrees with the rule"); });
+      if (R.type === "zoom") {
+        const sz = Math.sign(total(EYE, R.to) - total(EYE, R.from)), ct = Math.sign(cellsInView(R.to) - cellsInView(R.from));
+        t.options.forEach(o => { if ((o.size === sz && o.count === ct) !== !!o.ok) errs.push(id + ": option '" + o.t + "' disagrees with the model"); });
+        if (seeing(t.bench) !== "sharp" || seeing({ ...t.bench, obj: R.to }) !== "sharp") errs.push(id + ": the cells should be sharp before and after");
+      }
+      if (R.type === "act") {
+        t.options.forEach(o => { if (actGood(t, o) !== !!o.ok) errs.push(id + ": option '" + o.t + "' disagrees with the model"); });
+        if (R.want === "sharp" && seeing(t.bench) !== "blurry") errs.push(id + ": the start should be blurry but in view");
+      }
+    } else if (t.kind === "bank") {
+      if (!SIX.includes(t.marker)) errs.push(id + ": marked part isn't one of the six");
+    } else if (t.kind === "tap") {
+      if (!PART[t.target]) errs.push(id + ": target part missing");
+    } else if (t.kind === "calc") {
+      const a = answerOf(t); if (!(a > 0) || a === t.e + t.o) errs.push(id + ": answer can't be told from adding");
+    } else if (t.kind === "multi") {
+      const a = answerOf(t); if (!a.length || a.length === t.items.length) errs.push(id + ": needs right and wrong items");
+      if (t.items.some(x => !x.ok && !x.why)) errs.push(id + ": a wrong item has no feedback");
+    } else if (t.kind === "goal") {
+      const s0 = { ...t.bench, lowFound: false };
+      if (goalMet(t.goal, s0)) errs.push(id + ": goal is met at the start");
+      if (t.goal.type === "total") { if (OBJS.filter(o => total(EYE, o) === t.goal.want).length !== 1) errs.push(id + ": exactly one lens must give the total"); }
+      else if (!OBJS.includes(t.goal.obj)) errs.push(id + ": goal lens not on the model");
+      else if (!goalMet(t.goal, { slide: true, light: true, obj: t.goal.obj, pos: FOCUS[t.goal.obj], lowFound: true })) errs.push(id + ": goal can't be reached");
+    }
+    const hs = hintsFor(t); if (!hs || hs.length !== 3 || hs.some(h => !h)) errs.push(id + ": needs 3 hints");
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { lbl: false, mag: false, focus: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = { order: [], choice: null, pick: [], tiles: null, typed: "" };
+/* M = the model: slide, light, objective, stage position (pos = target, shown = drawn), what is selected */
+const M = { slide: false, light: true, obj: 10, pos: 60, shown: 60, lowFound: false, sel: null, marker: null, lock: false, info: null };
+const DEMO = { slide: false, light: true, obj: 10, pos: 60, lowFound: false };
+let rafId = 0, lastTs = null;
+
+const PKEY = "ks3tools-progress:microscope";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const now = () => ({ slide: M.slide, light: M.light, obj: M.obj, pos: M.pos, lowFound: M.lowFound });
+
+/* ===== Microscope drawing (side view) ===== */
+const C = 200;
+const STY = p => 352 - p * .22;                     // top of the stage: it rises as the stage moves up
+const OBJLEN = { 4: 40, 10: 54, 40: 70 };            // higher magnification lenses are longer
+const NOSE = 236;                                    // bottom of the nosepiece
+const tipY = o => NOSE + OBJLEN[o];
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const specimenAt = s => [C, STY(s.pos) - 4];
+function partAnchor(id, s) {                          // the point of each part nearest the slide (for "closest" checks)
+  const y = STY(s.pos);
+  return { eyepiece: [C, 90], objective: [C, tipY(s.obj)], coarse: [310, 292], fine: [310, 350], light: [C, 400], stage: [C, y], tube: [C, 214], nosepiece: [C, NOSE], clips: [C - 52, y - 4], arm: [268, y], base: [C, 432] }[id];
+}
+const ST = (fill, w) => `style="fill:${fill};stroke:var(--m-edge);stroke-width:${w || 1.6}"`;
+function barrel(o, L) {
+  const w = 11, tw = 6, th = 12;
+  return `<rect x="${-w}" y="0" width="${2 * w}" height="${L - th}" rx="2" ${ST("url(#gMetal)", 1.4)}/>` +
+    `<rect x="${-w + 1}" y="${L - th - 9}" width="${2 * w - 2}" height="4" style="fill:var(--m-dark2);stroke:none"/>` +
+    `<path d="M${-w} ${L - th} L${w} ${L - th} L${tw} ${L} L${-tw} ${L} Z" ${ST("url(#gMetal)", 1.4)}/>` +
+    `<text x="0" y="15" font-size="11" font-weight="700" text-anchor="middle" style="fill:#1E252E;pointer-events:none">${o}</text>`;
+}
+function knob(cx, cy, r, n, ang) {
+  let h = `<circle cx="${cx}" cy="${cy}" r="${r}" ${ST("url(#gDark)")}/>`;
+  for (let i = 0; i < n; i++) { const a = (ang + i * 360 / n) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    h += `<line x1="${(cx + c * r * .62).toFixed(1)}" y1="${(cy + s * r * .62).toFixed(1)}" x2="${(cx + c * r * .92).toFixed(1)}" y2="${(cy + s * r * .92).toFixed(1)}" style="stroke:var(--m-metal2);stroke-width:2;stroke-linecap:round;pointer-events:none"/>`; }
+  return h + `<circle cx="${cx}" cy="${cy}" r="${(r * .32).toFixed(1)}" ${ST("url(#gMetal)", 1.2)}/>`;
+}
+const tappable = () => mode === "demo" ? true : task.kind === "tap" && !prog().solved && !prog().revealed;
+const HIT = (x, y, w, h) => `<rect class="hit" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}"/>`;
+function P(id, inner) {
+  const tap = tappable(), sel = M.sel === id ? " sel" : "";
+  const nm = mode === "demo" ? PART[id].name : "The " + PART[id].where;
+  return `<g class="part${sel}" data-part="${id}"${tap ? ` tabindex="0" role="button" aria-label="${esc(nm)}"` : ""}>${inner}</g>`;
+}
+const DEFS = `<defs>
+<linearGradient id="gBody" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--m-body)"/><stop offset="1" style="stop-color:var(--m-body2)"/></linearGradient>
+<linearGradient id="gMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--m-metal2)"/><stop offset=".38" style="stop-color:var(--m-metal)"/><stop offset="1" style="stop-color:var(--m-metal2)"/></linearGradient>
+<linearGradient id="gDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--m-dark2)"/><stop offset=".6" style="stop-color:var(--m-dark)"/></linearGradient>
+<radialGradient id="gGlow"><stop offset="0" stop-color="#FFE9A8" stop-opacity=".95"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient>
+</defs>`;
+function labelSpec(id) {
+  const y = STY(M.shown), L = OBJLEN[M.obj];
+  return { eyepiece: { s: "L", ty: 66, ax: C - 14, ay: 66 }, tube: { s: "L", ty: 152, ax: C - 18, ay: 152 }, nosepiece: { s: "L", ty: 214, ax: C - 32, ay: 224 },
+    objective: { s: "L", ty: 264, ax: C - 11, ay: NOSE + L * .5 }, clips: { s: "L", ty: y - 18, ax: C - 60, ay: y - (M.slide ? 6 : 2) },
+    stage: { s: "L", ty: y + 18, ax: C - 72, ay: y + 6 }, light: { s: "L", ty: 404, ax: C - 24, ay: 414 }, base: { s: "L", ty: 448, ax: 124, ay: 444 },
+    arm: { s: "R", ty: 192, ax: 306, ay: 192 }, coarse: { s: "R", ty: 296, ax: 333, ay: 292 }, fine: { s: "R", ty: 354, ax: 324, ay: 350 } }[id];
+}
+function drawScope() {
+  const svg = $("scope"), y = STY(M.shown), o = M.obj;
+  let h = DEFS;
+  h += P("base", `<path d="M118 452 Q118 431 142 430 L308 430 Q332 431 332 452 Z" ${ST("url(#gBody)")}/><rect x="126" y="447" width="198" height="4" rx="2" fill="rgba(0,0,0,.12)"/>${HIT(118, 426, 214, 30)}`);
+  h += P("arm", `<path d="M268 431 L306 431 L306 210 Q306 128 246 112 L218 112 L218 150 L240 152 Q268 160 268 214 Z" ${ST("url(#gBody)")}/><path d="M276 420 L276 214 Q276 168 248 158" style="fill:none;stroke:rgba(255,255,255,.35);stroke-width:4;stroke-linecap:round"/>`);
+  /* light beam (under everything else above the base) */
+  if (M.light) h += `<path d="M${C - 14} 402 L${C - 7} ${(y + 11).toFixed(1)} L${C + 7} ${(y + 11).toFixed(1)} L${C + 14} 402 Z" fill="#FFE08A" opacity=".38" style="pointer-events:none"/>`;
+  h += P("light", (M.light ? `<circle cx="${C}" cy="398" r="28" fill="url(#gGlow)" style="pointer-events:none"/>` : "") +
+    `<rect x="${C - 24}" y="404" width="48" height="27" rx="5" ${ST("url(#gDark)")}/><ellipse cx="${C}" cy="404" rx="16" ry="4.5" style="fill:${M.light ? "#FFE08A" : "var(--m-lampoff)"};stroke:var(--m-edge);stroke-width:1.2"/>${HIT(C - 30, 390, 60, 42)}`);
+  /* stage, riding on the arm */
+  h += P("stage", `<rect x="${C + 58}" y="${(y + 3).toFixed(1)}" width="${268 - C - 56}" height="22" rx="3" ${ST("url(#gDark)", 1.4)}/>` +
+    `<rect x="${C - 72}" y="${y.toFixed(1)}" width="144" height="11" rx="2" ${ST("url(#gDark)")}/><rect x="${C - 68}" y="${(y + 2).toFixed(1)}" width="136" height="2" fill="rgba(255,255,255,.18)" style="pointer-events:none"/>${HIT(C - 76, y - 10, 152, 38)}`);
+  if (M.slide) h += `<g style="pointer-events:none"><rect x="${C - 48}" y="${(y - 4).toFixed(1)}" width="96" height="4" style="fill:var(--m-glass);stroke:var(--m-edge);stroke-width:1"/>` +
+    `<rect x="${C - 15}" y="${(y - 6).toFixed(1)}" width="30" height="2.4" rx="1" fill="#C98F2E"/>` +
+    `<rect x="${C - 19}" y="${(y - 7.6).toFixed(1)}" width="38" height="1.8" style="fill:var(--m-glass);stroke:var(--m-edge);stroke-width:.8"/></g>`;
+  const cy = y - (M.slide ? 7 : 3.4);
+  h += P("clips", `<rect x="${C - 66}" y="${cy.toFixed(1)}" width="28" height="3.4" rx="1.6" ${ST("url(#gMetal)", 1)}/><circle cx="${C - 63}" cy="${(cy + 1.7).toFixed(1)}" r="3.6" ${ST("url(#gMetal)", 1)}/>` +
+    `<rect x="${C + 38}" y="${cy.toFixed(1)}" width="28" height="3.4" rx="1.6" ${ST("url(#gMetal)", 1)}/><circle cx="${C + 63}" cy="${(cy + 1.7).toFixed(1)}" r="3.6" ${ST("url(#gMetal)", 1)}/>${HIT(C - 72, cy - 10, 38, 22)}${HIT(C + 34, cy - 10, 38, 22)}`);
+  h += P("coarse", knob(310, 292, 22, 10, M.shown * 4) + HIT(286, 268, 48, 48));
+  h += P("fine", knob(310, 350, 13, 8, M.shown * 18) + HIT(288, 328, 44, 44));
+  h += P("tube", `<rect x="${C - 18}" y="92" width="36" height="124" ${ST("url(#gBody)")}/><rect x="${C - 21}" y="88" width="42" height="9" rx="2" ${ST("url(#gBody)", 1.4)}/><rect x="${C - 12}" y="100" width="5" height="108" fill="rgba(255,255,255,.35)" style="pointer-events:none"/>${HIT(C - 24, 96, 48, 116)}`);
+  h += P("eyepiece", `<rect x="${C - 13}" y="48" width="26" height="42" rx="2" ${ST("url(#gDark)")}/><rect x="${C - 16}" y="40" width="32" height="11" rx="4" ${ST("url(#gDark)", 1.4)}/>` +
+    `<text x="${C}" y="76" font-size="12" font-weight="700" text-anchor="middle" style="fill:#E9EDF3;pointer-events:none">×10</text>${HIT(C - 24, 34, 48, 58)}`);
+  /* revolving nosepiece: the chosen lens points straight down; the other two are turned aside */
+  const i0 = OBJS.indexOf(o), others = [OBJS[(i0 + 1) % 3], OBJS[(i0 + 2) % 3]];
+  h += P("objective", others.map((oo, k) => `<g transform="translate(${C} 224) rotate(${k ? -36 : 36}) translate(0 10)">${barrel(oo, OBJLEN[oo] * .82)}</g>`).join(""));
+  h += P("nosepiece", `<path d="M${C - 34} 214 L${C + 34} 214 L${C + 27} ${NOSE} L${C - 27} ${NOSE} Z" ${ST("url(#gMetal)")}/><ellipse cx="${C}" cy="215" rx="34" ry="3.5" ${ST("url(#gMetal)", 1.2)}/>${HIT(C - 38, 206, 76, 32)}`);
+  h += P("objective", `<g transform="translate(${C} ${NOSE})">${barrel(o, OBJLEN[o])}</g>${HIT(C - 24, NOSE + 2, 48, OBJLEN[o] + 2)}`);
+  /* labels (support), the ? marker (naming question), the chosen part (tap question) */
+  const lbl = (id, text, bold) => { const L = labelSpec(id), left = L.s === "L", tx = left ? 116 : 344;
+    return `<line x1="${left ? 120 : 340}" y1="${(L.ty - 5).toFixed(1)}" x2="${L.ax}" y2="${L.ay.toFixed(1)}" style="stroke:var(--lbl-line);stroke-width:1.4;pointer-events:none"/>` +
+      `<circle cx="${L.ax}" cy="${L.ay.toFixed(1)}" r="2.4" style="fill:var(--lbl-line)"/>` +
+      `<text x="${tx}" y="${L.ty.toFixed(1)}" font-size="15" font-weight="${bold ? 700 : 700}" text-anchor="${left ? "end" : "start"}" style="fill:var(--ink);pointer-events:none">${esc(text)}</text>`; };
+  if (support.lbl) Object.keys(PART).forEach(id => { if (id !== M.marker) h += lbl(id, PART[id].lbl); });
+  if (M.marker) { const L = labelSpec(M.marker), left = L.s === "L", bx = left ? 82 : 344;
+    h += `<line x1="${left ? 116 : 344}" y1="${(L.ty - 5).toFixed(1)}" x2="${L.ax}" y2="${L.ay.toFixed(1)}" style="stroke:var(--accent);stroke-width:2.2;pointer-events:none"/><circle cx="${L.ax}" cy="${L.ay.toFixed(1)}" r="3.2" style="fill:var(--accent)"/>` +
+      `<rect x="${bx}" y="${(L.ty - 22).toFixed(1)}" width="34" height="30" rx="8" style="fill:var(--accent)"/><text x="${bx + 17}" y="${(L.ty - 1).toFixed(1)}" font-size="21" font-weight="700" text-anchor="middle" style="fill:var(--accent-ink)">?</text>`; }
+  if (M.sel && mode !== "demo") { const L = labelSpec(M.sel), left = L.s === "L", w = 92, bx = left ? 116 - w : 344;
+    h += `<rect x="${bx}" y="${(L.ty - 19).toFixed(1)}" width="${w}" height="26" rx="13" style="fill:var(--sel)"/><text x="${bx + w / 2}" y="${(L.ty - 1).toFixed(1)}" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--accent-ink)">✓ chosen</text>`; }
+  svg.innerHTML = h;
+  /* the two lenses turned aside share the objective's name: only the lens in use takes keyboard focus */
+  const aside = svg.querySelector('.part[data-part="objective"]'); if (aside) { aside.removeAttribute("tabindex"); aside.removeAttribute("role"); aside.removeAttribute("aria-label"); }
+  svg.classList.toggle("tapmode", tappable());
+}
+
+/* ===== Field of view ===== */
+const FR = 130;   // radius of the circle (px)
+const cellCache = {};
+function cellsSVG(o) {
+  if (cellCache[o]) return cellCache[o];
+  const s = FR / (FOV(o) / 2), X = x => (150 + x * s).toFixed(1), Y = y => (150 + y * s).toFixed(1), lim = FOV(o) / 2 + 6;
+  const sw = Math.max(.9, Math.min(5, .075 * s)).toFixed(2);
+  let h = "";
+  CELLS.forEach(k => {
+    if (Math.abs(k.nx) > lim || Math.abs(k.ny) > lim) return;
+    const fill = mixHex("#F6E3A6", "#EBC779", k.shade);
+    h += `<path d="M${k.pts.map(([x, y]) => X(x) + " " + Y(y)).join(" L")} Z" style="fill:${fill};stroke:#94642B;stroke-width:${sw};stroke-linejoin:round"/>`;
+    const rx = k.nr * s, ry = k.nr * .8 * s;
+    h += `<ellipse cx="${X(k.nx)}" cy="${Y(k.ny)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" transform="rotate(${k.rot.toFixed(0)} ${X(k.nx)} ${Y(k.ny)})" style="fill:#9A5E26;stroke:#6E4119;stroke-width:${(+sw * .7).toFixed(2)}"/>`;
+    if (s > 60) h += `<ellipse cx="${(+X(k.nx) - rx * .3).toFixed(1)}" cy="${(+Y(k.ny) - ry * .3).toFixed(1)}" rx="${(rx * .3).toFixed(1)}" ry="${(ry * .25).toFixed(1)}" fill="rgba(255,255,255,.25)"/>`;
+  });
+  return (cellCache[o] = h);
+}
+function hexRGB(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mixHex(a, b, t) { const A = hexRGB(a), B = hexRGB(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); }
+function buildView() {
+  $("view").innerHTML = `<defs><clipPath id="fovClip"><circle cx="150" cy="150" r="${FR}"/></clipPath>` +
+    `<filter id="fovBlur" filterUnits="userSpaceOnUse" x="0" y="0" width="300" height="300"><feGaussianBlur id="fovStd" stdDeviation="0"/></filter>` +
+    `<radialGradient id="gVig"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></radialGradient></defs>` +
+    `<circle cx="150" cy="150" r="148" fill="#0D1117"/>` +
+    `<g clip-path="url(#fovClip)"><rect id="fovBg" x="0" y="0" width="300" height="300" fill="#FBF5E4"/><g id="fovCells" filter="url(#fovBlur)"></g><circle cx="150" cy="150" r="${FR}" fill="url(#gVig)"/></g>` +
+    `<circle cx="150" cy="150" r="${FR}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="3"/>`;
+  updateView(true);
+}
+let viewObj = null;
+function updateView(force) {
+  if (force || viewObj !== M.obj) { $("fovCells").innerHTML = cellsSVG(M.obj); viewObj = M.obj; }
+  const b = blurOf(M.obj, M.shown), on = M.light, sl = M.slide;
+  $("fovBg").setAttribute("fill", !on ? "#07080A" : sl ? "#F3E2B4" : "#FBF5E4");
+  $("fovStd").setAttribute("stdDeviation", Math.min(b, 14).toFixed(2));
+  $("fovCells").setAttribute("opacity", !on || !sl ? 0 : Math.max(0, Math.min(1, 1 - (b - 3) / 5)).toFixed(2));
+  $("view").setAttribute("aria-label", viewDesc());
+}
+function viewDesc() {
+  const v = seeing(now());
+  if (v === "dark") return "Down the eyepiece: dark. The light is off.";
+  if (v === "empty") return "Down the eyepiece: a bright, empty circle. There is no slide on the stage.";
+  if (v === "none") return "Down the eyepiece: a pale brown glow. The cells are far out of focus.";
+  return `Down the eyepiece: onion cells, ${v === "sharp" ? "sharp" : "blurry"}. About ${cellsInView(M.obj)} cells fit in the circle.`;
+}
+const STATUS = { dark: "Dark: the light is off.", empty: "Bright, but empty: there is no slide on the stage.", none: "Nothing in view yet: the cells are far out of focus.",
+  blurry: "In view, but blurry.", sharp: "Sharp: the cells are in focus." };
+
+/* ===== Readout + controls ===== */
+function renderReadout() {
+  $("magLine").textContent = `Eyepiece ×${EYE} · Objective ×${M.obj}`;
+  $("totLine").hidden = !support.mag; $("totLine").textContent = `Total magnification = ${EYE} × ${M.obj} = ×${total(EYE, M.obj)}`;
+  $("statusLine").hidden = !support.focus; $("statusLine").textContent = STATUS[seeing(now())];
+  const showInfo = mode === "demo" && M.info;
+  $("partLine").hidden = !showInfo;
+  if (showInfo) { const p = PART[M.info]; $("partLine").innerHTML = `<b>${esc(p.name)}</b>` + (p.def ? ": " + esc(p.def) + "." : ""); }
+}
+function renderBench() {
+  $("objChips").querySelectorAll(".mbtn").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.o === M.obj)));
+  $("slideBtn").textContent = M.slide ? "Remove the slide" : "Place slide on the stage";
+  $("lightBtn").textContent = M.light ? "Light on" : "Light off"; $("lightBtn").setAttribute("aria-pressed", String(M.light));
+  $("bench").querySelectorAll("button").forEach(b => { b.disabled = M.lock; });
+  if (!M.lock) { $("cUp").disabled = $("fUp").disabled = M.pos >= POSMAX; $("cDn").disabled = $("fDn").disabled = M.pos <= 0; }
+  $("lockNote").hidden = !M.lock;
+}
+function renderScene() { drawScope(); updateView(); renderBench(); renderReadout(); }
+function noteFound() { if (M.obj < HIGHEST && inView(now())) M.lowFound = true; }
+function saveDemo() { if (mode === "demo") Object.assign(DEMO, now()); }
+function changed() { noteFound(); saveDemo(); demoTried(); renderBench(); renderReadout(); animate(); }
+/* stage movement: a short slide (rAF stops while the tab is hidden; reduced motion jumps straight there) */
+function animate() {
+  if (reduced() || document.hidden) { cancelAnimationFrame(rafId); rafId = 0; M.shown = M.pos; drawScope(); updateView(); return; }
+  if (!rafId) { lastTs = null; rafId = requestAnimationFrame(step); }
+}
+function step(ts) {
+  const dt = lastTs == null ? .016 : Math.min(.05, (ts - lastTs) / 1000); lastTs = ts;
+  const d = M.pos - M.shown, v = Math.max(40, Math.abs(d) * 9) * dt;
+  if (Math.abs(d) <= v) { M.shown = M.pos; rafId = 0; } else { M.shown += Math.sign(d) * v; rafId = requestAnimationFrame(step); }
+  drawScope(); updateView();
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; M.shown = M.pos; } else { drawScope(); updateView(); } });
+function move(steps, kind) {
+  if (M.lock) return;
+  const p = clampPos(M.pos + steps); if (p === M.pos) return;
+  M.pos = p; if (kind === "coarse" && M.obj === HIGHEST) SEEN.coarse40 = true;
+  changed(); tourSignal(kind);
+}
+function setObj(o) { if (M.lock) return; M.obj = o; changed(); if (o === LOWEST) tourSignal("obj4"); }
+/* set the model straight to a state (questions, Show answer) */
+function setModel(s, instant) {
+  Object.assign(M, { slide: s.slide, light: s.light, obj: s.obj, pos: s.pos });
+  if (instant) { cancelAnimationFrame(rafId); rafId = 0; M.shown = M.pos; }
+  noteFound(); renderScene(); if (!instant) animate();
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Place the slide. Bring the cells into sharp focus at ×4.",
+             "Switch to ×10, then ×40. How do the cells change?",
+             "At ×40, try coarse focus. Can you get it sharp?",
+             "Turn the light off. What do you see?",
+             "Tap six parts to learn their names."];
+const TRIED = [false, false, false, false, false], SEEN = { parts: {} };
+function tried(i) { if (!TRIED[i]) { TRIED[i] = true; renderTry(); } }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+function demoTried() {
+  if (mode !== "demo") return;
+  const v = seeing(now());
+  if (v === "sharp") SEEN["sharp" + M.obj] = true;
+  if (inView(now())) SEEN["in" + M.obj] = true;
+  if (SEEN.sharp4) tried(0);
+  if (SEEN.sharp4 && SEEN.in10 && SEEN.in40) tried(1);
+  if (SEEN.coarse40) tried(2);
+  if (!M.light && M.slide) tried(3);
+  if (Object.keys(SEEN.parts).length >= 6) tried(4);
+}
+
+/* ===== Task loading ===== */
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function loadDemo() {
+  task = { kind: "demo" };
+  M.lock = false; M.marker = null; M.sel = null; M.info = null; M.lowFound = DEMO.lowFound;
+  setModel(DEMO, true);
+  $("answer").innerHTML = ""; $("stuckNote").textContent = "";
+  moveSupport(); renderSupport(); renderTry(); renderScene();
+}
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const list = LEVELS[level]; task = list[idx];
+  S = { choice: null, pick: [], order: shuffled(task.options ? task.options.length : 0), tiles: null, typed: "" };
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = task.text;
+  moveSupport(); renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  drawScope();
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  const t = task;
+  M.lock = !!t.lock; M.marker = t.kind === "bank" ? t.marker : null; M.sel = null; M.info = null; M.lowFound = false;
+  setModel(t.bench || { slide: true, light: true, obj: 10, pos: FOCUS[10] }, true);
+}
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function tileRow(label, items, cls) {
+  return `<div class="tiles${cls ? " " + cls : ""}" role="group" aria-label="${esc(label)}">` + items.map(([v, txt, pressed, extra]) =>
+    `<button type="button" class="tile${extra ? " ordered" : ""}" data-v="${esc(v)}" aria-pressed="${pressed}">${extra || ""}<span>${esc(txt)}</span></button>`).join("") + `</div>`;
+}
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    const opts = t.options; if (S.order.length !== opts.length) S.order = shuffled(opts.length);
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="${S.choice === i}"><span class="k">${"ABCD"[pos]}</span><span>${esc(opts[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+    return;
+  }
+  if (t.kind === "bank") {
+    if (!S.tiles) S.tiles = shuffled(SIX.length).map(i => SIX[i]);
+    a.innerHTML = tileRow("Part names", S.tiles.map(id => [id, PART[id].name, S.choice === id]));
+    a.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { S.choice = S.choice === b.dataset.v ? null : b.dataset.v; renderAnswer(); }));
+    return;
+  }
+  if (t.kind === "tap") {
+    a.innerHTML = `<p class="bprev">${M.sel ? "You have chosen a part: it says <b>✓ chosen</b> on the microscope. Tap another part to change." : "Tap a part on the microscope."}</p>`;
+    return;
+  }
+  if (t.kind === "calc") {
+    a.innerHTML = `<div class="calcrow"><label for="calcIn">Total magnification = ×</label><input id="calcIn" type="text" inputmode="numeric" autocomplete="off" value="${esc(S.typed)}"></div>`;
+    const inp = $("calcIn");
+    inp.addEventListener("input", () => { S.typed = inp.value; });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+    return;
+  }
+  if (t.kind === "order") {
+    if (!S.tiles) { const ans = answerOf(t).join(); let g = 0; do { S.tiles = shuffled(METHOD.length); } while (S.tiles.join() === ans && g++ < 20); }
+    a.innerHTML = tileRow("Steps to put in order", S.tiles.map(i => { const k = S.pick.indexOf(i); return [i, METHOD[i], k >= 0, k >= 0 ? `<span class="ord">${k + 1}</span>` : ""]; }), "steps") +
+      `<p class="small" style="margin:0">${S.pick.length ? `${S.pick.length} of ${METHOD.length} placed. Tap a step again to take it out.` : "Tap the first step first."}</p>`;
+    a.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { const v = +b.dataset.v; S.pick = S.pick.includes(v) ? S.pick.filter(x => x !== v) : S.pick.concat(v); renderAnswer(); }));
+    return;
+  }
+  if (t.kind === "multi") {
+    if (!S.tiles) S.tiles = shuffled(t.items.length);
+    a.innerHTML = tileRow("Drawing rules", S.tiles.map(i => [i, t.items[i].t, S.pick.includes(i)]));
+    a.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { const v = +b.dataset.v; S.pick = S.pick.includes(v) ? S.pick.filter(x => x !== v) : S.pick.concat(v); renderAnswer(); }));
+    return;
+  }
+  if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the controls under the microscope: <b>Objective lens</b>, <b>Coarse focus</b>, <b>Fine focus</b>, <b>Slide and light</b>.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+/* put the right answer into the answer area and set the model to show it */
+function setAnswerState(instant) {
+  const t = task, a = answerOf(t);
+  if (t.kind === "choice" || t.kind === "bank") S.choice = a;
+  if (t.kind === "order" || t.kind === "multi") S.pick = a.slice();
+  if (t.kind === "calc") S.typed = String(a);
+  if (t.kind === "tap") M.sel = a;
+  renderAnswer();
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task, R = t.rule || {};
+  if (t.kind === "choice" && R.type === "zoom") return setModel({ ...t.bench, obj: R.to }, instant);
+  if (t.kind === "choice" && R.type === "act") return setModel(simAct(t.bench, t.options.find(o => o.ok).act), instant);
+  if (t.kind === "choice" && R.type === "calc" && R.e === EYE && OBJS.includes(R.o)) return setModel({ ...now(), obj: R.o, pos: FOCUS[R.o] }, instant);
+  if (t.kind === "goal") {
+    if (goalMet(t.goal, now())) { renderScene(); return; }
+    const o = answerOf(t);
+    M.lowFound = true;
+    return setModel(t.goal.type === "total" ? { ...now(), obj: o, pos: FOCUS[o] } : { slide: true, light: true, obj: o, pos: FOCUS[o] }, instant);
+  }
+  drawScope();
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+function renderSupport() { $("magBox").hidden = !support.mag; drawScope(); renderReadout(); requestAnimationFrame(keepInView); }
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  renderSupport(); tourSignal("support");
+}));
+function stuckFor(t) {
+  if (t.kind === "bank" || t.kind === "tap" || (t.rule && t.rule.type === "closest")) return support.lbl ? "" : "Stuck? Turn on <b>Labels</b> under Support.";
+  if (t.kind === "calc" || (t.rule && t.rule.type === "calc") || (t.goal && t.goal.type === "total")) return support.mag ? "" : "Stuck? Turn on <b>Magnification</b> under Support.";
+  if (t.kind === "goal") return support.focus ? "" : "Stuck? Turn on <b>Focus helper</b> under Support.";
+  return "";
+}
+
+/* ===== Marking ===== */
+function focusWhy(g) {
+  const s = now(), v = seeing(s);
+  if (!s.light) return "The light is off. No light, no image. Turn the light on.";
+  if (!s.slide) return "There's no slide on the stage. Place the slide first.";
+  if (g.low && !s.lowFound) {
+    if (v === "sharp" && s.obj === g.obj) return "It's sharp, but you skipped a step. Always start with the lowest magnification to find the specimen first.";
+    return s.obj === HIGHEST ? "At ×40 the field of view is narrow and the coarse-focus knob jumps past the focus. Start with the lowest magnification to find the cells first." : "Good start. Bring the cells into view at this low magnification first.";
+  }
+  if (s.obj !== g.obj) {
+    if (g.obj === LOWEST) return `You are using the ×${s.obj} lens. The lowest magnification here is ×${LOWEST}. Start with the lowest.`;
+    if (v === "blurry") return `Good: the cells are in view at ×${s.obj}. Sharpen them with fine focus, then switch to the ×${g.obj} lens and sharpen again.`;
+    if (v === "sharp") return `Good: the cells are sharp at ×${s.obj}. Now switch to the ×${g.obj} lens and sharpen with fine focus.`;
+    return `Choose the ×${g.obj} lens, then focus.`;
+  }
+  if (v === "none") return s.obj === HIGHEST ? "Nothing in view. At ×40 coarse focus jumps past the focus: use fine focus near the focus point." : "Nothing in view yet. Use the coarse-focus knob to bring the cells into view.";
+  if (v === "blurry") return "The cells are in view, but blurry. Use the fine-focus knob to sharpen them. Coarse focus is only for large adjustments.";
+  return "Look again at the image.";
+}
+function evaluate() {
+  const t = task, a = answerOf(t);
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice];
+    if (!o.ok) return { ok: false, html: esc(o.why) };
+    let extra = "";
+    if (t.rule.type === "zoom" || (t.rule.type === "act" && t.rule.want === "more")) { const f = t.bench.obj, to = t.rule.type === "zoom" ? t.rule.to : o.act.obj;
+      extra = ` In this model, about ${cellsInView(f)} cells fit in at ×${f} and about ${cellsInView(to)} at ×${to}.`; }
+    return { ok: true, html: esc("Correct. " + t.explain + extra) };
+  }
+  if (t.kind === "bank") {
+    if (S.choice == null) return { skip: "Choose a name first." };
+    if (S.choice === a) return { ok: true, html: esc(`Correct: the ${PART[a].name.toLowerCase()}. ` + t.explain) };
+    const p = PART[S.choice];
+    return { ok: false, html: esc(`The ${p.name.toLowerCase()} is ${p.def}. Look again at what the ? points to.`) };
+  }
+  if (t.kind === "tap") {
+    if (!M.sel) return { skip: "Tap a part on the microscope first." };
+    if (M.sel === a) return { ok: true, html: esc("Correct. " + t.explain) };
+    if (M.sel === "coarse") return { ok: false, html: "That's the coarse-focus knob. It makes large adjustments. Fine focus is the other knob." };
+    return { ok: false, html: esc(`That's the ${PART[M.sel].name.toLowerCase()}. The focus knobs are on the arm.`) };
+  }
+  if (t.kind === "calc") {
+    const m = String(S.typed).replace(/[×x\s,]/gi, "");
+    if (!m) return { skip: "Type a number first." };
+    if (!/^\d+(\.\d+)?$/.test(m)) return { skip: "Type a number only, like 250." };
+    const v = +m;
+    if (v === a) return { ok: true, html: esc(`Correct: ${t.e} × ${t.o} = ${a}. The total magnification is ×${a}.`) };
+    if (v === t.e + t.o) return { ok: false, html: esc(`You added the numbers: ${t.e} + ${t.o}. Multiply them: eyepiece × objective.`) };
+    if (v === t.o || v === t.e) return { ok: false, html: esc("That's only one lens. Both lenses magnify: multiply eyepiece × objective. The eyepiece doesn't do all the magnifying.") };
+    if (v === t.o / t.e || v === t.e / t.o) return { ok: false, html: "You divided. Multiply the two lenses: eyepiece × objective." };
+    return { ok: false, html: esc(`Check your multiplying: ${t.e} × ${t.o}.`) };
+  }
+  if (t.kind === "order") {
+    if (S.pick.length < METHOD.length) return { skip: `Tap all ${METHOD.length} steps, first to last.` };
+    if (S.pick.join() === a.join()) return { ok: true, html: esc("Correct. " + t.explain) };
+    const pos = i => S.pick.indexOf(i);
+    if (pos(4) < pos(3)) return { ok: false, html: "Coarse first, fine second: rough focus, then sharpen. The coarse-focus step comes before the fine-focus step." };
+    if (pos(5) !== 5) return { ok: false, html: "You only move to a higher-magnification lens at the end, once the image is sharp at low magnification." };
+    if (pos(0) !== 0) return { ok: false, html: "The object has to be on the stage before anything else." };
+    const k = S.pick.findIndex((s, i) => s !== a[i]);
+    return { ok: false, html: esc(`${k === 1 ? "Your first step is" : "Your first " + k + " steps are"} right, but step ${k + 1} isn't. Choose the lowest lens, then lower the stage, before you look.`) };
+  }
+  if (t.kind === "multi") {
+    if (!S.pick.length) return { skip: "Choose at least one rule." };
+    const wrong = S.pick.filter(i => !t.items[i].ok), miss = a.filter(i => !S.pick.includes(i));
+    if (wrong.length) return { ok: false, html: esc(t.items[wrong[0]].why) + (wrong.length > 1 ? ` (${wrong.length} of your choices aren't rules.)` : "") };
+    if (miss.length) return { ok: false, html: esc(`All your choices are rules, but ${miss.length === 1 ? "one rule is" : miss.length + " rules are"} missing.`) };
+    return { ok: true, html: esc("Correct. " + t.explain) };
+  }
+  if (t.kind === "goal") {
+    const g = t.goal;
+    if (goalMet(g, now())) return { ok: true, html: esc("Correct. " + t.explain) };
+    if (g.type === "total") return { ok: false, html: esc(`The ×${M.obj} lens gives ${EYE} × ${M.obj} = ×${total(EYE, M.obj)}. You need ×${g.want}.`) };
+    return { ok: false, html: esc(focusWhy(g)) };
+  }
+  return { skip: "" };
+}
+/* keep the question line and the feedback in view together (same as every tool) */
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = stuckFor(task);
+  }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  const a = answerOf(t);
+  if (t.kind === "choice") { const s = t.options[a].t; return "Answer: " + s + (/[.!?']$/.test(s) ? " " : ". ") + t.explain; }
+  if (t.kind === "bank") return `Answer: the ${PART[a].name.toLowerCase()}. ${t.explain}`;
+  if (t.kind === "tap") return `Answer: the fine-focus knob is now marked ✓ chosen on the microscope. ${t.explain}`;
+  if (t.kind === "calc") return `Answer: ${t.e} × ${t.o} = ${a}, so the total magnification is ×${a}.`;
+  if (t.kind === "order") return "Answer: the steps are now numbered in order. " + t.explain;
+  if (t.kind === "multi") return `Answer: the ${a.length} rules are now ticked. ${t.explain}`;
+  if (t.kind === "goal") return t.goal.type === "total" ? `Answer: the ×${a} lens. ${t.explain}` : `Answer: the model now shows the cells sharp at ×${a}. ${t.explain}`;
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = { choice: null, pick: [], order: shuffled(task.options ? task.options.length : 0), tiles: null, typed: "" };
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Tapping parts of the microscope ===== */
+function tapPart(id) {
+  if (!tappable()) return;
+  if (mode === "demo") { M.info = id; M.sel = id; SEEN.parts[id] = true; demoTried(); drawScope(); renderReadout(); tourSignal("part"); return; }
+  M.sel = id; drawScope(); renderAnswer();
+}
+$("scope").addEventListener("click", e => { const g = e.target.closest(".part"); if (g) tapPart(g.dataset.part); });
+$("scope").addEventListener("keydown", e => { const g = e.target.closest && e.target.closest(".part"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); const id = g.dataset.part; tapPart(id); const n = $("scope").querySelector(`.part[data-part="${id}"]`); if (n) n.focus(); } });
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#scope", text: "This is the model: a light microscope. Tap any part to see its name.", do: "part", doText: "Tap a part of the microscope." },
+  { el: "#slideBtn", text: "Place the onion skin slide on the stage. The cells are stained with iodine.", do: "slide", doText: "Press Place slide on the stage.",
+    pre: () => { if (M.slide) { M.slide = false; changed(); } } },
+  { el: "#objWrap", text: "Choose an objective lens. Always start with the lowest magnification: ×4.", do: "obj4", doText: "Press ×4.",
+    pre: () => { if (M.obj === LOWEST) { M.obj = 10; changed(); } } },
+  { el: "#coarseWrap", text: "Coarse focus makes large adjustments: it moves the stage a long way. Use it to bring the cells into view.", do: "coarse", doText: "Press Up or Down under Coarse focus." },
+  { el: "#view", keep: ["#view"], text: "This circle is what you see down the eyepiece: the field of view. Higher magnification makes the cells look bigger, so fewer fit in." },
+  { el: "#fineWrap", text: "Fine focus makes small adjustments. Use it to sharpen the image.", do: "fine", doText: "Press Up or Down under Fine focus.",
+    pre: () => { if (!M.slide || !M.light || !inView(now())) { Object.assign(M, { slide: true, light: true, obj: LOWEST, pos: 150 }); changed(); } } },
+  { el: "#lightBtn", text: "The light shines up through the slide. No light, no image." },
+  { el: "#supportArea .sw", text: "Stuck? Turn on Labels. It names every part of the microscope.", do: "support", doText: "Turn on Labels." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:microscope", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i]; if (st.pre) st.pre(); const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  if (st.keep && document.documentElement.clientWidth <= 900) {   // narrow: put the well colour and the chart at the top, pop-up below them
+    const bar = $("topbar").getBoundingClientRect().bottom, ks = st.keep.map(q => document.querySelector(q).getBoundingClientRect());
+    let d = Math.min(...ks.map(k => k.top)) - bar - 8;
+    const over = Math.max(...ks.map(k => k.bottom)) - d + 14 + $("tour").offsetHeight - (window.innerHeight - 8);
+    if (over > 0) d += over;   // short screen: keep the chart clear, even if the top of the readout goes under the bar
+    window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  } else el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r0 = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  /* a step can name parts that must stay uncovered (e.g. the colour chart the pupil reads from): place round all of them */
+  const keep = (TOUR[tourI].keep || []).map(q => document.querySelector(q)).filter(e => e && e.getClientRects().length).map(e => e.getBoundingClientRect());
+  const r = keep.reduce((u, k) => ({ top: Math.min(u.top, k.top), bottom: Math.max(u.bottom, k.bottom), left: Math.min(u.left, k.left), right: Math.max(u.right, k.right) }), { top: r0.top, bottom: r0.bottom, left: r0.left, right: r0.right });
+  r.width = r.right - r.left; r.height = r.bottom - r.top;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r0.top, minTop) + Math.min(r0.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  const far = side === "up" ? top - r0.bottom > 30 : side === "down" ? r0.top - (top + h) > 30 : false;   // pop-up sits past a kept part: no arrow
+  ar.hidden = overlap || far; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r0.left + r0.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r0.top, minTop) + Math.min(r0.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), name === "go" ? 2200 : 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+/* ===== Wiring ===== */
+$("objChips").innerHTML = OBJS.map(o => `<button type="button" class="mbtn" data-o="${o}" aria-pressed="false" aria-label="Objective lens ×${o}">×${o}</button>`).join("");
+$("objChips").querySelectorAll(".mbtn").forEach(b => b.addEventListener("click", () => setObj(+b.dataset.o)));
+$("cUp").addEventListener("click", () => move(COARSE, "coarse"));
+$("cDn").addEventListener("click", () => move(-COARSE, "coarse"));
+$("fUp").addEventListener("click", () => move(FINE, "fine"));
+$("fDn").addEventListener("click", () => move(-FINE, "fine"));
+$("slideBtn").addEventListener("click", () => { if (M.lock) return; M.slide = !M.slide; changed(); if (M.slide) tourSignal("slide"); });
+$("lightBtn").addEventListener("click", () => { if (M.lock) return; M.light = !M.light; changed(); });
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+buildView(); bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:microscope")) $("newHere").hidden = true; } catch (e) {}
+</script>
+</body>
+</html>

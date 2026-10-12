@@ -9,6 +9,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Balance the Equation | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
 | Breathing | Biology | https://drt-tuition.github.io/ks3-tools/breathing.html |
 | Gas Exchange | Biology | https://drt-tuition.github.io/ks3-tools/gas-exchange.html |
+| Microscope | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
 | Muscle Pairs | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
@@ -19,6 +20,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Dissolving | Chemistry | https://drt-tuition.github.io/ks3-tools/dissolving.html |
 | Separate It | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
 | Displacement Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
+| Moon Phases | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
 | Make a Wave | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
 | Sound Waves | Physics | https://drt-tuition.github.io/ks3-tools/sound-waves.html |
 | Echo Timer | Physics | https://drt-tuition.github.io/ks3-tools/echo-timer.html |
