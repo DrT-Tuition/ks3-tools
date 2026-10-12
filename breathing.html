@@ -69,6 +69,9 @@
   close-up) is a textbook-style picture generated with Gemini (style E, 11 Oct 2026). Moving parts are fitted each frame
   to the shapes the code computes and clipped to them, so every movement is still calculated; the bronchiole branches,
   molecules, arrows and labels are drawn by code.
+  Air path (12 Oct 2026): each molecule travels down the centre of the trachea, along a bronchus and out along one
+  bronchiole branch to an end point inside the lung (reverse when breathing out); the paths are traced from the airway
+  picture, and the bronchiole tree starts at the open end of each drawn bronchus.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -781,6 +784,19 @@ const M_OUT = compare(FACTS.normalBreath, 0);
 const M_DEEP = compare(0, FACTS.deepBreath);
 const V_MIN = volume(G0), V_MAX = volume(geom(1));
 
+/* airway geometry traced from the Gemini trachea/bronchi picture (#tracheaImg, x 296–464, y −8–267; measured
+   from its outline at full resolution, 12 Oct 2026): trachea centre x 379.6 with an outer width of about 33 down to
+   y ≈ 160; the two bronchi split at y ≈ 180 and run straight (about 50° below horizontal, about 25 wide across the
+   tube) to open ends at the points below. The code bronchiole tree starts at those open ends. */
+const AW_X = 379.6, AW_MOUTH = [[309, 255], [450, 255]];
+/* tree points move with the lung, but the root stays at the open end of its bronchus (the picture does not move),
+   easing to the full lung movement 90 units out along the branches */
+function treePoint(s, x, y, g){
+  const r = AW_MOUTH[s < 0 ? 0 : 1], m = mapPoint(s, x, y, g), w = Math.max(0, 1 - Math.hypot(x - r[0], y - r[1])/90);
+  if (!w) return m;
+  const mr = mapPoint(s, r[0], r[1], g);
+  return [m[0] - w*(mr[0] - r[0]), m[1] - w*(mr[1] - r[1])];
+}
 /* bronchiole tree, built once in resting coordinates */
 const TREE = { L: [[],[],[],[]], R: [[],[],[],[]] };
 let BRONCHIOLE_NODE = null;
@@ -792,7 +808,8 @@ let BRONCHIOLE_NODE = null;
     if (depth < 3){ branch(side, s, x2, y2, ang - 0.46, len*0.7, depth+1); branch(side, s, x2, y2, ang + 0.46, len*0.7, depth+1); }
   }
   [["L",-1],["R",1]].forEach(([side,s])=>{
-    const hx = C + s*48, hy = 262;
+    // root at the open end of each bronchus in the Gemini airway picture (measured: left mouth ≈ (309,255), right ≈ (450,255))
+    const hx = s < 0 ? AW_MOUTH[0][0] : AW_MOUTH[1][0], hy = AW_MOUTH[0][1];
     const A = a => s > 0 ? a : Math.PI - a;
     branch(side, s, hx, hy, A(-1.05), 62, 0);
     branch(side, s, hx, hy, A(0.12), 58, 0);
@@ -800,26 +817,75 @@ let BRONCHIOLE_NODE = null;
   });
 })();
 
-/* air routes: trachea → bronchus → bronchioles (tree points move with the lungs) */
+/* air routes: every molecule has its own path — down the centre of the trachea, along the left or right bronchus,
+   then out along one branch of the bronchiole tree to an end point inside that lung (tree points move with the
+   lungs). Each point carries the half-width a molecule may drift sideways (stays inside the drawn tube). */
 const MOL_N = 30, ZMOL_N = 9;
 const ROUTES = [];
+const MOL_OFF = Array.from({ length: MOL_N }, (_, i) => ((i*0.7548777 + 0.31) % 1)*2 - 1);   // steady sideways place in the tube, −1…1
 (function buildRoutes(){
   const same = (a,b) => Math.abs(a-b) < 1e-6;
-  [["L",-1],["R",1]].forEach(([side,s]) => {
-    TREE[side][0].forEach((seg0, k) => {
-      const tree = [[seg0[0], seg0[1]], [seg0[2], seg0[3]]];
-      let cur = seg0;
-      for (let d=1; d<4; d++){
-        const kids = TREE[side][d].filter(q => same(q[0], cur[2]) && same(q[1], cur[3]));
-        if (!kids.length) break;
-        cur = kids[(k + d) % kids.length]; tree.push([cur[2], cur[3]]);
+  const inside = (x, y, g, pts) => { if (!inPoly(x, y, pts)) return false;
+    for (let k=0;k<8;k++){ const a = k*Math.PI/4; if (!inPoly(x + 8*Math.cos(a), y + 8*Math.sin(a), pts)) return false; } return true; };
+  const G1 = geom(1);
+  [["L",-1],["R",1]].forEach(([side,s], si) => {
+    const mx = AW_MOUTH[si][0], my = AW_MOUTH[si][1];
+    // fixed part (the picture does not move): [x, y, half-width for sideways drift]
+    const fixed = [[AW_X, -6, 8], [AW_X, 158, 8], [AW_X + s*12, 178, 5], [AW_X + s*19.8, 191, 5], [mx + s*-1.5, my - 4, 3], [mx, my, 1.5]];
+    const leaves = [];
+    function walk(seg, d, path){
+      const p2 = path.concat([[seg[2], seg[3]]]);
+      const kids = d < 3 ? TREE[side][d+1].filter(q => same(q[0], seg[2]) && same(q[1], seg[3])) : [];
+      if (!kids.length){ leaves.push(p2); return; }
+      kids.forEach(q => walk(q, d+1, p2));
+    }
+    TREE[side][0].forEach(seg0 => walk(seg0, 0, [[seg0[0], seg0[1]]]));
+    // cut each branch path where it would leave the lung (checked at breathed out and deep breath in)
+    const lungs = [s < 0 ? G0.lungL : G0.lungR], big = s < 0 ? G1.lungL : G1.lungR;
+    const ends = [];
+    leaves.forEach(path => {
+      const keep = [path[0]];
+      for (let i=1;i<path.length;i++){
+        const a = path[i-1], b = path[i]; let last = null;
+        for (let t=0.05; t<=1.0001; t+=0.05){
+          const x = a[0] + (b[0]-a[0])*t, y = a[1] + (b[1]-a[1])*t;
+          const q = treePoint(s, x, y, G1);
+          if (inside(x, y, G0, lungs[0]) && inside(q[0], q[1], G1, big)) last = [x, y]; else break;
+        }
+        if (!last) break;
+        keep.push(last);
+        if (last[0] !== b[0] || last[1] !== b[1]) break;
       }
-      const fixed = [[C, -4], [C, 120], [C, 214]];
-      for (let t=1; t<=4; t++){ const u = t/4, x = (1-u)*(1-u)*C + 2*u*(1-u)*C + u*u*(C + s*50), y = (1-u)*(1-u)*214 + 2*u*(1-u)*238 + u*u*262; fixed.push([x, y]); }
-      ROUTES.push({ s, fixed, tree });
+      // every branch point along the way is also an end point, so the molecules spread through the lung
+      for (let j=2;j<=keep.length;j++){
+        const part = keep.slice(0, j), e = part[j-1];
+        const Lp = part.reduce((acc, q, i) => i ? acc + Math.hypot(q[0]-part[i-1][0], q[1]-part[i-1][1]) : 0, 0);
+        if (Lp > 40 && !ends.some(o => Math.hypot(o[o.length-1][0]-e[0], o[o.length-1][1]-e[1]) < 6)) ends.push(part);
+      }
     });
+    // spread the molecules over the branches: sort the end points round the lung and take every k-th
+    ends.sort((p, q) => Math.atan2(p[p.length-1][1] - my, s*(p[p.length-1][0] - mx)) - Math.atan2(q[q.length-1][1] - my, s*(q[q.length-1][0] - mx)));
+    const n = MOL_N/2;
+    const used = ends.map(() => 0);
+    for (let i=0;i<n;i++){
+      const k = Math.floor((i + 0.5)*ends.length/n), t = ends[k].map(q => q.slice()), c = used[k]++;
+      // a second molecule on the same branch stops partway along its last part, so no two end in the same place
+      if (c){ const a = t[t.length-2], b = t[t.length-1], f = Math.max(0.35, 1 - 0.3*c); b[0] = a[0] + (b[0]-a[0])*f; b[1] = a[1] + (b[1]-a[1])*f; }
+      ROUTES[si + 2*i] = { s, fixed, tree: t };
+    }
   });
 })();
+function alongAir(pts, u){
+  let total = 0; const seg = [];
+  for (let i=1;i<pts.length;i++){ const l = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); seg.push(l); total += l; }
+  let d = u*total;
+  for (let i=0;i<seg.length;i++){
+    if (d <= seg[i] || i === seg.length-1){ const t = seg[i] ? Math.min(1, d/seg[i]) : 0, a = pts[i], b = pts[i+1];
+      return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, Math.atan2(b[1]-a[1], b[0]-a[0]), a[2] + (b[2]-a[2])*t]; }
+    d -= seg[i];
+  }
+  return [pts[0][0], pts[0][1], 0, 0];
+}
 function along(pts, u){
   let total = 0; const seg = [];
   for (let i=1;i<pts.length;i++){ const l = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); seg.push(l); total += l; }
@@ -1202,7 +1268,7 @@ function draw(p, flowV){
   [["L",-1],["R",1]].forEach(([side,s]) => {
     for (let d=0; d<4; d++){
       let path = "";
-      TREE[side][d].forEach(seg => { const a = mapPoint(s, seg[0], seg[1], g), b = mapPoint(s, seg[2], seg[3], g); path += "M" + f1(a[0]) + "," + f1(a[1]) + "L" + f1(b[0]) + "," + f1(b[1]); });
+      TREE[side][d].forEach(seg => { const a = treePoint(s, seg[0], seg[1], g), b = treePoint(s, seg[2], seg[3], g); path += "M" + f1(a[0]) + "," + f1(a[1]) + "L" + f1(b[0]) + "," + f1(b[1]); });
       $("t"+side+d).setAttribute("d", path);
     }
   });
@@ -1252,14 +1318,16 @@ function draw(p, flowV){
   // breathing in: oxygen molecules; breathing out: still mostly oxygen, plus some carbon dioxide
   const showDots = !reduceMotion && mag > 0.05, out = dir < 0;
   for (let i=0;i<7;i++) $("dt"+i).style.opacity = 0;
-  const live = ROUTES.map(R => R.fixed.concat(R.tree.map(q => mapPoint(R.s, q[0], q[1], g))));
   for (let i=0;i<MOL_N;i++){
     const m = $("mo"+i);
     if (!showDots){ m.style.opacity = 0; continue; }
-    const nR = live.length, u = ((Math.floor(i/nR)/Math.ceil(MOL_N/nR) + (i % nR)*0.137 + dotPhase*1.1) % 1 + 1) % 1, R = ROUTES[i % nR];
-    const pos = along(live[i % live.length], u);
-    const inAir = pos[1] < 250 || inPoly(pos[0], pos[1], R.s < 0 ? g.lungL : g.lungR);
-    placeMol(m, pos, out && i % 4 === 1, inAir ? 0.95*mag : 0);
+    const R = ROUTES[i], tw = [0.7, 0.45, 0.25, 0, 0];
+    const pts = R.fixed.concat(R.tree.map((q, k) => { const a = treePoint(R.s, q[0], q[1], g); a.push(tw[k] || 0); return a; }));
+    const u = (((i*0.618034) % 1 + dotPhase*1.1) % 1 + 1) % 1;
+    const pos = alongAir(pts, u), off = MOL_OFF[i]*pos[3];
+    pos[0] -= Math.sin(pos[2])*off; pos[1] += Math.cos(pos[2])*off;
+    // fade out over the last few per cent so a molecule arriving at a branch end does not just vanish
+    placeMol(m, pos, out && i % 4 === 1, 0.95*mag*Math.min(1, (1 - u)/0.06));
   }
   const zk = (8.5 + 2.5*p)/8.5, zox = ZJUNC[0], zoy = ZJUNC[1];
   for (let i=0;i<ZMOL_N;i++){
