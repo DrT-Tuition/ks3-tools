@@ -219,7 +219,7 @@ select{font:400 16px var(--f-body);min-height:44px;max-width:100%;width:100%;pad
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -904,23 +904,54 @@ let C = {}, geo = { left: 0, top: 0, s: 1, w: 0, h: 0 };
 function readColours() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
   C = { part: g("--particle"), pedge: g("--particle-edge"), ink: g("--ink"), muted: g("--muted"), accent: g("--accent"), edge: g("--atom-edge"), hit: g("--hit"), surface: g("--surface"), line: g("--line"), sunk: g("--sunk") };
+  C.font = getComputedStyle(document.body).fontFamily;   // read once (and again on theme change), not every frame
+  bgKey = "";
 }
 function resize() {
   const w = cv.parentElement.clientWidth - 20;
   if (w <= 0) return;
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(1.5, window.devicePixelRatio || 1);   // capped: slow school PCs have no GPU help
   const left = Math.max(46, w * 0.09), right = Math.max(40, w * 0.08), top = 34, bottom = 14;
   const s = w - left - right;
   const h = Math.round(top + H * s + bottom);
   cv.style.height = h + "px";
-  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const W2 = Math.round(w * dpr), H2 = Math.round(h * dpr);
+  if (cv.width !== W2) cv.width = W2; if (cv.height !== H2) cv.height = H2;   // reallocate only on a real size change
   cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  geo = { left, top, s, w, h };
+  geo = { left, top, s, w, h, dpr };
   draw();
 }
+/* Cached layer (Dan, 12 Oct 2026, speed on slow school PCs): the box, pump, valve, piston and labels are drawn into an
+   offscreen canvas only when the piston moves, the size changes or the theme changes; the house particle is drawn once
+   into a small picture that is stamped for every particle. Same look as drawing everything every frame. */
+let bgKey = "", bgCv = null, spr = null;
 function draw() {
-  const { left, top, s, w, h } = geo; if (!s) return;
-  cx.clearRect(0, 0, w, h);
+  const { left, top, s, w, h, dpr } = geo; if (!s || !w) return;   // not sized yet: resize() draws it
+  const X = x => left + x * s, Y = y => top + y * s;
+  const pr = Math.max(3.5, R * s);
+  const key = cv.width + "x" + cv.height + ":" + sim.V;
+  if (key !== bgKey) {
+    if (!spr || !bgKey.startsWith(cv.width + "x" + cv.height + ":")) {   // particle picture: on resize and theme change
+      const o = pr + 2, sz = Math.ceil(2 * o * dpr), c = document.createElement("canvas"); c.width = c.height = sz;
+      const g = c.getContext("2d"), kk = sz / (2 * o); g.setTransform(kk, 0, 0, kk, 0, 0);
+      houseParticle(g, o, o, pr, C.part, C.pedge); spr = { c, o };
+    }
+    bgKey = key;
+    bgCv = bgCv || document.createElement("canvas"); bgCv.width = cv.width; bgCv.height = cv.height;
+    drawStatic(bgCv.getContext("2d"));
+  }
+  cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.clearRect(0, 0, cv.width, cv.height); cx.drawImage(bgCv, 0, 0); cx.restore();
+  const xp = X(sim.V / 100);
+  // particles (same size at every temperature)
+  const sd = 2 * spr.o;
+  for (const p of sim.parts) cx.drawImage(spr.c, X(p.x) - spr.o, Y(p.y) - spr.o, sd, sd);
+  drawHits(X, Y, xp);
+  const lab = "Sealed box with " + sim.N + " gas particles at " + fmtT(sim.T) + ", box size " + sim.V + " %.";
+  if (cv.getAttribute("aria-label") !== lab) cv.setAttribute("aria-label", lab);
+}
+function drawStatic(cx) {
+  const { left, top, s, w, h, dpr } = geo;
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, w, h);
   const X = x => left + x * s, Y = y => top + y * s, xp = X(sim.V / 100), wall = Math.max(4, s * 0.012);
   // gas space
   cx.fillStyle = C.surface; cx.fillRect(X(0), Y(0), xp - X(0), H * s);
@@ -932,7 +963,7 @@ function draw() {
   const py = Y(H / 2);
   cx.lineWidth = 3; cx.strokeStyle = C.muted;
   cx.strokeRect(4, py - 9, left - wall - 8, 18);
-  cx.fillStyle = C.muted; cx.font = "700 13px " + getComputedStyle(document.body).fontFamily;
+  cx.fillStyle = C.muted; cx.font = "700 13px " + C.font;
   cx.textAlign = "left"; cx.fillText("pump", 4, py - 14);
   // valve on top wall near the left
   const vx = X(0.12);
@@ -947,9 +978,8 @@ function draw() {
   // grip marks on the piston (drag hint)
   cx.strokeStyle = C.surface; cx.lineWidth = 2;
   for (let k = -1; k <= 1; k++) { cx.beginPath(); cx.moveTo(xp + wall * 0.5, py + k * 8); cx.lineTo(xp + wall * 1.1, py + k * 8); cx.stroke(); }
-  // particles (same size at every temperature)
-  const pr = Math.max(3.5, R * s);
-  for (const p of sim.parts) houseParticle(cx, X(p.x), Y(p.y), pr, C.part, C.pedge);
+}
+function drawHits(X, Y, xp) {
   // wall hits (Support)
   if (support.hits) {
     cx.strokeStyle = C.hit; cx.lineCap = "round";
@@ -964,7 +994,6 @@ function draw() {
     }
     cx.globalAlpha = 1; cx.lineCap = "butt";
   }
-  cv.setAttribute("aria-label", "Sealed box with " + sim.N + " gas particles at " + fmtT(sim.T) + ", box size " + sim.V + " %.");
 }
 
 /* ---------- gauge (SVG) ---------- */
@@ -992,11 +1021,13 @@ function buildGauge() {
 function setGauge() {
   const n = document.getElementById("gNeedle"), st = document.getElementById("gStart"), rd = document.getElementById("gRead");
   if (!n) return;
-  n.setAttribute("transform", "rotate(" + ang(shownP).toFixed(2) + " " + GC.x + " " + GC.y + ")");
-  st.setAttribute("transform", "rotate(" + ang(pressure(cur.start)).toFixed(2) + " " + GC.x + " " + GC.y + ")");
+  // only touch the page when a value changes (this runs every frame)
+  const set = (el, a, v) => { if (el.getAttribute(a) !== v) el.setAttribute(a, v); };
+  set(n, "transform", "rotate(" + ang(shownP).toFixed(2) + " " + GC.x + " " + GC.y + ")");
+  set(st, "transform", "rotate(" + ang(pressure(cur.start)).toFixed(2) + " " + GC.x + " " + GC.y + ")");
   const P = pressure(sim);
-  rd.textContent = support.nums ? Math.round(shownP) + " kPa" : "";
-  gsvg.setAttribute("aria-label", support.nums ? "Pressure gauge reading " + Math.round(P) + " kPa" : "Pressure gauge. Turn on Gauge numbers to read the value.");
+  const rt = support.nums ? Math.round(shownP) + " kPa" : ""; if (rd.textContent !== rt) rd.textContent = rt;
+  set(gsvg, "aria-label", support.nums ? "Pressure gauge reading " + Math.round(P) + " kPa" : "Pressure gauge. Turn on Gauge numbers to read the value.");
 }
 
 /* =====================================================================
@@ -1026,17 +1057,20 @@ const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 function locked() { return mode !== "demo" && cur.kind === "predict" && !answer.pred && !prog().revealed; }
+/* (speed on slow PCs: this runs on every pointer move while the piston is dragged, so it only touches what changed,
+   and leaves the redraw to the animation loop when that is running) */
+const put = (id, k, v) => { const e = $(id); if (e[k] !== v) e[k] = v; };
 function refreshControls() {
   const L = locked();
-  $("outN").textContent = sim.N; $("outT").textContent = fmtT(sim.T); $("outV").textContent = sim.V + " %";
-  $("tempR").value = sim.T; $("volR").value = sim.V;
-  $("pumpBtn").disabled = L || sim.N >= FACTS.nMax; $("ventBtn").disabled = L || sim.N <= FACTS.nMin;
-  $("heatBtn").disabled = L || sim.T >= FACTS.tMax; $("coolBtn").disabled = L || sim.T <= FACTS.tMin;
-  $("squashBtn").disabled = L || sim.V <= FACTS.vMin; $("letBtn").disabled = L || sim.V >= FACTS.vMax;
-  $("tempR").disabled = L; $("volR").disabled = L;
-  const lk = $("lockNote"); if (lk) lk.hidden = !L;
+  put("outN", "textContent", String(sim.N)); put("outT", "textContent", fmtT(sim.T)); put("outV", "textContent", sim.V + " %");
+  put("tempR", "value", String(sim.T)); put("volR", "value", String(sim.V));
+  put("pumpBtn", "disabled", L || sim.N >= FACTS.nMax); put("ventBtn", "disabled", L || sim.N <= FACTS.nMin);
+  put("heatBtn", "disabled", L || sim.T >= FACTS.tMax); put("coolBtn", "disabled", L || sim.T <= FACTS.tMin);
+  put("squashBtn", "disabled", L || sim.V <= FACTS.vMin); put("letBtn", "disabled", L || sim.V >= FACTS.vMax);
+  put("tempR", "disabled", L); put("volR", "disabled", L);
+  const lk = $("lockNote"); if (lk && lk.hidden !== !L) lk.hidden = !L;
   if (!running) { shownP = pressure(sim); }
-  setGauge(); draw();
+  setGauge(); if (!loopOn) draw();   // while the loop runs it draws on its next tick
 }
 function changed() { if (reduceMotion || !running) shownP = pressure(sim); refreshControls(); }
 
@@ -1404,15 +1438,17 @@ cv.addEventListener("pointerdown", e => {
 });
 cv.addEventListener("pointermove", e => {
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left;
-  cv.style.cursor = (!locked() && (Math.abs(x - pistonX()) < 30 || x > pistonX())) ? "ew-resize" : "default";
+  const cur = (!locked() && (Math.abs(x - pistonX()) < 30 || x > pistonX())) ? "ew-resize" : "default"; if (cv.style.cursor !== cur) cv.style.cursor = cur;
   if (!dragging) return;
-  setVol(((x - geo.left) / geo.s) * 100); changed(); tourSignal("vol");
+  setVol(((x - geo.left) / geo.s) * 100);
+  if (loopOn) dragDirty = true; else changed();   // while the model plays, the readouts catch up on the next tick (at most 30 a second)
+  tourSignal("vol");
 });
 cv.addEventListener("pointerup", () => { dragging = false; });
 cv.addEventListener("pointercancel", () => { dragging = false; });
 // play / pause / step (reduced motion starts paused)
 function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("stepBtn").hidden = running; }
-$("playBtn").addEventListener("click", () => { running = !running; paintPlay(); last = 0; });
+$("playBtn").addEventListener("click", () => { running = !running; paintPlay(); last = 0; kick(); });
 $("stepBtn").addEventListener("click", () => { for (let i = 0; i < 30; i++) step(1 / 120); shownP = pressure(sim); setGauge(); draw(); });
 // theme changes: re-read the colour tokens
 $("themeBtn").addEventListener("click", () => { readColours(); draw(); });
@@ -1450,17 +1486,32 @@ window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventL
 /* the tool name joins the sticky bar once the big title has scrolled away */
 if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
-let last = 0;
-function loop(ts) {
-  if (running && !document.hidden) {
-    const dt = last ? Math.min(0.05, (ts - last) / 1000) : 0; last = ts;
-    step(dt / 2); step(dt / 2);
-    const P = pressure(sim); shownP += (P - shownP) * Math.min(1, dt * 5);
-    setGauge(); draw();
-  } else last = 0;
-  requestAnimationFrame(loop);
+/* Speed on slow school PCs (Dan, 12 Oct 2026): the loop runs only while the model is playing and can be seen (it stops
+   when paused, when the tab is hidden and when the model is scrolled off the screen). It works and draws at most 30 times
+   a second (fewer if the PC can't keep up). Physics steps stay at 1/120 s or less, so speeds don't change. */
+const FPS = [30, 20, 15, 12];
+let last = 0, dragDirty = false, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0;
+const wantLoop = () => running && !document.hidden && onScreen;
+function kick() { if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = 0; nextDue = performance.now(); requestAnimationFrame(() => loop()); } }
+function loop() {
+  const ts = performance.now();   // timer-driven (no empty animation frames between ticks)
+  if (!wantLoop()) { loopOn = false; last = 0; if (dragDirty) { dragDirty = false; changed(); } return; }
+  const gap = 1000 / FPS[fpsI];
+  nextDue = nextDue + gap < ts + 2 ? ts + gap : nextDue + gap;   // frame cap: the next tick on a steady 30 fps grid
+  setTimeout(loop, nextDue - ts);
+  if (lastWork) {   // quiet safety net: if frames average too long over about a second, use a lower frame rate
+    if (ts > ivWarm) { ivSum += ts - lastWork; ivN++; }   // (not in the first second after starting)
+    if (ts - ivT0 >= 1000) { const lim = fpsI ? 1250 / FPS[fpsI] : 40; if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) fpsI++; ivSum = ivN = 0; ivT0 = ts; }
+  } else ivT0 = ivWarm = ts + 1000;
+  lastWork = ts;
+  const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
+  const n = Math.max(2, Math.ceil(dt * 120 - 1e-6)); for (let i = 0; i < n; i++) step(dt / n);
+  const P = pressure(sim); shownP += (P - shownP) * Math.min(1, dt * 5);
+  if (dragDirty) { dragDirty = false; changed(); }
+  setGauge(); draw();
 }
-document.addEventListener("visibilitychange", () => { last = 0; });
+document.addEventListener("visibilitychange", () => { last = 0; kick(); });
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(document.querySelector(".sim"));   // the top 64 px sit under the sticky top bar
 
 /* ---------- start ---------- */
 (function init() {
@@ -1472,7 +1523,7 @@ document.addEventListener("visibilitychange", () => { last = 0; });
   cur = DEMO;
   buildGauge(); paintScore(); setMode("demo"); paintPlay(); resize(); fitPanel();
   try { if (localStorage.getItem("ks3tools-toured:gas-pressure")) $("newHere").hidden = true; } catch (e) {}
-  requestAnimationFrame(loop);
+  kick();
 })();
 
 </script>

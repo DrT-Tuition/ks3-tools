@@ -211,7 +211,7 @@ footer.brand a{color:inherit}
 @media (max-width:560px){.views{grid-template-columns:minmax(0,1fr)}}
 .view{margin:0;display:grid;gap:6px;align-content:start}
 .view figcaption{font-size:15px;font-weight:700;color:var(--muted)}
-.view svg{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.view svg,.view canvas{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px;align-items:center}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key svg{width:24px;height:24px;border:0;background:none;flex:none}
@@ -262,7 +262,7 @@ footer.brand a{color:inherit}
 @media (max-width:480px){.seg button{padding:10px 11px}.brow .bl{min-width:0;width:100%}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -399,7 +399,7 @@ main.layout{min-height:calc(100vh - 70px)}
           </figure>
           <figure class="view" id="zoomFig">
             <figcaption>Zoomed in on the dashed circle: particles</figcaption>
-            <svg id="zoom" viewBox="0 0 440 320" role="img" aria-label="Particles"><defs><clipPath id="zclip"><rect x="2" y="2" width="436" height="316" rx="10"/></clipPath></defs><g id="zg" clip-path="url(#zclip)"></g><rect x="2" y="2" width="436" height="316" rx="10" style="fill:none;stroke:var(--glass);stroke-width:3;stroke-dasharray:10 7"/></svg>
+            <canvas id="zoom" width="440" height="320" role="img" aria-label="Particles"></canvas>
             <div class="key" id="key"></div>
           </figure>
         </div>
@@ -862,12 +862,51 @@ function drawZoom(dt) {
   all.forEach(p => { p.x += (p.tx - p.x) * (still ? 1 : k); p.y += (p.ty - p.y) * (still ? 1 : k); });
   const wob = (p, a) => still ? [p.x, p.y] : [p.x + a * Math.sin(ptime * 3.1 + p.ph), p.y + a * Math.cos(ptime * 2.7 + p.ph * 1.3)];
   const stirA = stirLeft > 0 ? 3.2 : 1.8;
-  let h = `<rect x="0" y="0" width="${ZW}" height="${ZH}" style="fill:${B.solvent === "oil" ? "var(--zoom-oil)" : "var(--zoom-water)"}"/>`;
-  solv.forEach(p => { const [x, y] = wob(p, stirA); h += svgParticle(x, y, PR, "var(--particle)"); });
-  latL.forEach(p => { const [x, y] = wob(p, 0.6); h += soluteParticle(x, y, PR); });
-  disL.forEach(p => { const [x, y] = wob(p, stirA); h += soluteParticle(x, y, PR); });
-  $("zg").innerHTML = h;
+  /* drawn on a canvas (cheap on slow PCs): the same house particles as the SVG key, pre-drawn once as sprites */
+  zSize();
+  const c = zctx, s = ZS.s, sv = zSprite(false), sl = zSprite(true);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, ZS.W, ZS.H); c.setTransform(s, 0, 0, s, 0, 0);
+  c.save(); zRound(c, 2, 2, ZW - 4, ZH - 4, 10); c.clip();
+  c.fillStyle = B.solvent === "oil" ? ZT["zoom-oil"] : ZT["zoom-water"]; c.fillRect(0, 0, ZW, ZH);
+  const put = (sp, p, a) => { const [x, y] = wob(p, a); c.drawImage(sp.c, x - sp.half, y - sp.half, sp.half * 2, sp.half * 2); };
+  solv.forEach(p => put(sv, p, stirA));
+  latL.forEach(p => put(sl, p, 0.6));
+  disL.forEach(p => put(sl, p, stirA));
+  c.restore();
+  zRound(c, 2, 2, ZW - 4, ZH - 4, 10); c.strokeStyle = ZT.glass; c.lineWidth = 3; c.setLineDash([10, 7]); c.stroke(); c.setLineDash([]);
 }
+const zcv = $("zoom"), zctx = zcv.getContext("2d"), ZS = { W: 0, H: 0, s: 1 };
+let ZT = {}, ZSPR = {};
+function zTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["zoom-water", "zoom-oil", "particle", "particle-edge", "particle-2", "particle-2-ink", "glass", "f-body"]) ZT[k] = cs.getPropertyValue("--" + k).trim();
+  ZSPR = {};
+}
+function zSize() {   // backing store follows the shown size, capped at 1.5× for slow PCs; only reallocated when the size changes
+  const w = zcv.clientWidth || ZW, dpr = Math.min(window.devicePixelRatio || 1, 1.5), W = Math.round(w * dpr), H = Math.round(w * ZH / ZW * dpr);
+  if (W !== ZS.W || H !== ZS.H) { ZS.W = zcv.width = W; ZS.H = zcv.height = H; ZS.s = W / ZW; ZSPR = {}; }
+}
+function zRound(c, x, y, w, h, r) {
+  c.beginPath();
+  if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+/* house particle, same numbers as svgParticle(): solid fill, outline 0.145 × r, white highlight up and to the left; solute adds a bold "S" */
+function zSprite(solute) {
+  const k = solute ? "s" : "v"; if (ZSPR[k]) return ZSPR[k];
+  const r = PR, half = r + Math.max(1, r * .145) + 1, px = Math.ceil(half * 2 * ZS.s), cv = document.createElement("canvas");
+  cv.width = cv.height = px; const g = cv.getContext("2d"), f = px / (half * 2); g.setTransform(f, 0, 0, f, half * f, half * f);
+  g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fillStyle = solute ? ZT["particle-2"] : ZT.particle; g.fill();
+  g.lineWidth = Math.max(1, r * .145); g.strokeStyle = ZT["particle-edge"]; g.stroke();
+  g.beginPath(); g.arc(-r * .35, -r * .35, r * .28, 0, Math.PI * 2); g.fillStyle = "rgba(255,255,255,.38)"; g.fill();
+  if (solute) { g.font = "700 " + (r * 1.15) + "px " + ZT["f-body"]; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = ZT["particle-2-ink"]; g.fillText("S", 0, r * 0.42); }
+  return (ZSPR[k] = { c: cv, half });
+}
+zTokens();
+$("themeBtn").addEventListener("click", () => { zTokens(); drawZoom(0); });
+if (window.matchMedia) { const mq = matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", () => { zTokens(); drawZoom(0); }); }
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => { ZSPR = {}; drawZoom(0); });
+if (window.ResizeObserver) new ResizeObserver(() => drawZoom(0)).observe(zcv);
 function settledParticles() { return [...solv, ...latL, ...disL].every(p => Math.abs(p.tx - p.x) < 0.5 && Math.abs(p.ty - p.y) < 0.5); }
 
 /* ===== Beaker, balance and thermometer ===== */
@@ -905,8 +944,9 @@ function drawBeaker() {
     h += `<path d="M${(234 + sw).toFixed(1)} 32 L${(226 - sw * 0.6).toFixed(1)} 211" style="stroke:var(--rod);stroke-width:5.5;stroke-linecap:round"/>`;
     if (!reduced()) h += `<path d="M${BK.l + 14} ${BK.liq + 30} q 43 ${(12 * Math.sin(ptime * 9)).toFixed(1)} 86 0" style="fill:none;stroke:var(--glass);stroke-width:2;opacity:.6"/>`;
   }
-  // the beaker and balance picture (glass is see-through, so everything above shows inside it)
-  h += `<use href="#sBeaker" class="bkpic" x="${PIC.x}" y="${PIC.y}" width="${PIC.w}" height="${PIC.h}"/>`;
+  // the beaker and balance picture (glass is see-through, so everything above shows inside it):
+  // one fixed element between the "under" and "over" groups, so its picture (and dark-mode outline filter) is never rebuilt
+  const under = h; h = "";
   // balance reading in the picture's blank display (the display is light in both themes)
   h += `<text x="${LCD.x}" y="${LCD.y}" font-size="22" font-weight="700" text-anchor="end" style="fill:#1E252E;font-family:var(--f-body);font-variant-numeric:tabular-nums">${esc(g(massB(B)))}</text>`;
   // spatula while adding
@@ -915,11 +955,17 @@ function drawBeaker() {
   h += `<circle cx="${BK.cx}" cy="200" r="18" style="fill:none;stroke:var(--ink);stroke-width:2.2;stroke-dasharray:5 4"/>`;
   // labels
   h += `<path d="M${BK.r - 24} ${BK.liq + 18} L${BK.r + 16} ${BK.liq + 18}" style="stroke:var(--ink);stroke-width:1.5"/><text x="${BK.r + 20}" y="${BK.liq + 24}" font-size="17" font-weight="700" style="fill:var(--ink);font-family:var(--f-body)">100 g</text><text x="${BK.r + 20}" y="${BK.liq + 44}" font-size="17" font-weight="700" style="fill:var(--ink);font-family:var(--f-body)">${SOLVENTS[B.solvent].name}</text>`;
-  $("bkg").innerHTML = h;
-  $("beaker").setAttribute("aria-label", `Beaker with 100 grams of ${B.solvent}${totalB(B) > EPS ? " and " + g(totalB(B)) + " of " + solName + " added" : ""}. ${B.U > EPS ? g(B.U) + " of solid is at the bottom." : ""} The balance shows ${g(massB(B))}.`);
+  if (!$("bkU")) $("bkg").innerHTML = `<g id="bkU"></g><use href="#sBeaker" class="bkpic" x="${PIC.x}" y="${PIC.y}" width="${PIC.w}" height="${PIC.h}"/><g id="bkO"></g>`;
+  putHTML("bkU", under); putHTML("bkO", h);
+  putAttr("beaker", "aria-label", `Beaker with 100 grams of ${B.solvent}${totalB(B) > EPS ? " and " + g(totalB(B)) + " of " + solName + " added" : ""}. ${B.U > EPS ? g(B.U) + " of solid is at the bottom." : ""} The balance shows ${g(massB(B))}.`);
 }
 
 /* ===== Readouts ===== */
+/* only touch the page when something really changed (cheap on slow PCs) */
+const SHOWN = {};
+function putHTML(id, h) { if (SHOWN[id] !== h) { SHOWN[id] = h; $(id).innerHTML = h; } }
+function putText(id, t) { if (SHOWN[id] !== t) { SHOWN[id] = t; $(id).textContent = t; } }
+function putAttr(id, a, v) { const k = id + "@" + a; if (SHOWN[k] !== v) { SHOWN[k] = v; $(id).setAttribute(a, v); } }
 function stateText() {
   const sv = SOLVENTS[B.solvent].name, sl = SOLUTES[B.solute].name, cap = capB(B);
   if (totalB(B) < EPS) return "Just " + sv + " (the solvent). Add a solute.";
@@ -930,22 +976,22 @@ function stateText() {
   return "Dissolving… some " + sl + " is still solid at the bottom. Stir to speed it up.";
 }
 function renderReadouts() {
-  $("massVal").textContent = g(massB(B));
-  $("tempVal").textContent = B.T + " °C";
-  $("stateRead").textContent = hideState ? "What is in the beaker? (This line is hidden for this question.)" : stateText();
+  putText("massVal", g(massB(B)));
+  putText("tempVal", B.T + " °C");
+  putText("stateRead", hideState ? "What is in the beaker? (This line is hidden for this question.)" : stateText());
   const sl = SOLUTES[B.solute].name, sv = SOLVENTS[B.solvent].name;
   $("sumBox").hidden = !support.sum; $("meterBox").hidden = !support.meter;
-  $("sumBox").innerHTML = `<b>Mass sum:</b> ${g(DATA.solventMass)} ${sv} + ${g(totalB(B))} ${sl} = <b>${g(massB(B))}</b>`;
+  putHTML("sumBox", `<b>Mass sum:</b> ${g(DATA.solventMass)} ${sv} + ${g(totalB(B))} ${sl} = <b>${g(massB(B))}</b>`);
   const cap = capB(B);
-  $("meterBox").innerHTML = `<b>Dissolved meter:</b> ${g(B.D)} of ${sl} dissolved · solid at the bottom: ${g(B.U)} · most that can dissolve in 100 g of ${sv} at ${B.T} °C: ${cap === 0 ? "none" : g(cap)}`;
-  $("tempOut").textContent = B.T + " °C"; $("temp").value = B.T;
+  putHTML("meterBox", `<b>Dissolved meter:</b> ${g(B.D)} of ${sl} dissolved · solid at the bottom: ${g(B.U)} · most that can dissolve in 100 g of ${sv} at ${B.T} °C: ${cap === 0 ? "none" : g(cap)}`);
+  putText("tempOut", B.T + " °C"); if (+$("temp").value !== B.T) $("temp").value = B.T;
   document.querySelectorAll("#solventWrap button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.solvent === B.solvent)));
   document.querySelectorAll("#soluteWrap button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.solute === B.solute)));
-  $("key").innerHTML = `<span><svg viewBox="0 0 30 30" aria-hidden="true">${svgParticle(15, 15, 12, "var(--particle)")}</svg>${SOLVENTS[B.solvent].Name} particle (solvent)</span><span><svg viewBox="0 0 30 30" aria-hidden="true">${soluteParticle(15, 15, 12)}</svg>${SOLUTES[B.solute].Name} particle (solute)</span>`;
-  $("zoom").setAttribute("aria-label", "Zoomed-in particles: " + wantCounts().nd + " " + sl + " particles spread between " + sv + " particles; " + (wantCounts().N - wantCounts().nd) + " in the solid at the bottom.");
-  $("log").innerHTML = logMsg;
+  putHTML("key", `<span><svg viewBox="0 0 30 30" aria-hidden="true">${svgParticle(15, 15, 12, "var(--particle)")}</svg>${SOLVENTS[B.solvent].Name} particle (solvent)</span><span><svg viewBox="0 0 30 30" aria-hidden="true">${soluteParticle(15, 15, 12)}</svg>${SOLUTES[B.solute].Name} particle (solute)</span>`);
+  putAttr("zoom", "aria-label", "Zoomed-in particles: " + wantCounts().nd + " " + sl + " particles spread between " + sv + " particles; " + (wantCounts().N - wantCounts().nd) + " in the solid at the bottom.");
+  putHTML("log", logMsg);
 }
-function say(html) { logMsg = html; $("log").innerHTML = html; }
+function say(html) { logMsg = html; putHTML("log", html); }
 
 /* ===== Model actions ===== */
 let lastPhase = "";
@@ -973,20 +1019,46 @@ function setTemp(T) {
   if (out > EPS) say("As it cooled, solid " + SOLUTES[B.solute].name + " crystals formed at the bottom. Less can stay dissolved at " + T + " °C.");
   particleLayout(false); afterChange(); tourSignal("temp");
 }
-function afterChange() {
+function afterChange(noDraw) {
   const ph = phaseOf();
   if (ph !== lastPhase) {
     if (ph === "sat" && lastPhase === "dissolving") say("No more " + SOLUTES[B.solute].name + " will dissolve: the solution is <b>saturated</b>.");
     if (ph === "solution" && lastPhase === "dissolving") say("All the " + SOLUTES[B.solute].name + " has dissolved.");
     lastPhase = ph;
   }
-  markTry(); renderReadouts(); draw(0);
+  markTry(); renderReadouts(); if (!noDraw) draw(0);
 }
-/* one animation loop: dissolving, stirring, falling solid, particle movement. Pauses when the tab is hidden. */
-let rafId = 0, lastTs = null, running = false;
-function kick() { if (!running && !document.hidden) { running = true; lastTs = null; rafId = requestAnimationFrame(loop); } }
+/* one animation loop: dissolving, stirring, falling solid, particle movement. Pauses when the tab is hidden.
+   Slow-PC rules: at most 30 drawn frames a second (all motion is time-based, so speeds do not change); when the
+   model is scrolled off-screen nothing is drawn and the loop only keeps the dissolving/stirring going (10 times a
+   second) until that has finished; and if the computer cannot keep up it quietly drops to 20, 15 then 10 fps
+   (frame over 40 ms, or frames would keep the computer busy for more than about 30% of each second). */
+let rafId = 0, waitId = 0, lastTs = null, running = false, onScreen = true;
+let gap = 1000 / 30, perf = { t0: 0, n: 0, sum: 0 }, frameAvg = 0, costT = 0;
+const GAPS = [1000 / 30, 1000 / 20, 1000 / 15, 1000 / 10];
+const costCh = window.MessageChannel ? new MessageChannel() : null;   // a message posted in a frame runs after that frame is painted
+if (costCh) costCh.port1.onmessage = () => { if (!costT) return; perf.sum += performance.now() - costT; perf.n++; costT = 0; };
+function frameCost() {
+  if (!costCh) return;
+  const now = performance.now();
+  if (!perf.t0) perf.t0 = now;
+  else if (now - perf.t0 > 1000 && perf.n) {
+    const avg = perf.sum / perf.n, i = GAPS.indexOf(gap), load = g => avg * 1000 / g;
+    frameAvg = avg;
+    if ((avg > 40 || load(gap) > 300) && i < GAPS.length - 1) gap = GAPS[i + 1];
+    else if (i > 0 && avg < 20 && load(GAPS[i - 1]) < 150) gap = GAPS[i - 1];
+    perf = { t0: now, n: 0, sum: 0 };
+  }
+  costT = now; costCh.port2.postMessage(0);
+}
+const stateBusy = () => stirLeft > 0 || addFx.length || (B.U > EPS && B.D < capB(B) - EPS && !reduced());
+function kick() { if (!running && !document.hidden) { running = true; lastTs = null; perf = { t0: 0, n: 0, sum: 0 }; rafId = requestAnimationFrame(loop); } }
 function loop(ts) {
-  const dt = lastTs == null ? 0 : Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts;
+  rafId = 0;
+  if (document.hidden) { running = false; return; }
+  if (onScreen && lastTs != null && ts - lastTs < gap - 4) { rafId = requestAnimationFrame(loop); return; }
+  if (onScreen) frameCost();
+  const dt = lastTs == null ? 0 : Math.min(0.15, (ts - lastTs) / 1000); lastTs = ts;
   let changed = false;
   if (!reduced()) {
     const cap = capB(B);
@@ -997,12 +1069,27 @@ function loop(ts) {
     addFx.forEach(f => { f.y += f.v * dt; }); addFx = addFx.filter(f => f.y < BK.liq);
   }
   if (stirLeft > 0) stirLeft = Math.max(0, stirLeft - dt);
-  if (changed) { const c = wantCounts(); if (c.N !== lastCounts.N || c.nd !== lastCounts.nd) particleLayout(false); afterChange(); }
-  draw(dt);
-  const busy = stirLeft > 0 || addFx.length || (B.U > EPS && B.D < capB(B) - EPS && !reduced()) || !settledParticles() || !reduced();
-  if (busy && !document.hidden) rafId = requestAnimationFrame(loop); else running = false;
+  if (changed) { const c = wantCounts(); if (c.N !== lastCounts.N || c.nd !== lastCounts.nd) particleLayout(false); afterChange(true); }
+  if (onScreen) draw(dt);
+  const busy = onScreen ? stateBusy() || !settledParticles() || !reduced() : stateBusy();
+  if (!busy) { running = false; return; }
+  // wait out the gap with a timer, so the browser does not build empty frames in between
+  const wait = (onScreen ? gap : 100) - 15 - (performance.now() - ts);   // the timer ends just under one display frame (16.7 ms) early, so the next frame lands on time
+  if (wait > 2) waitId = setTimeout(() => { waitId = 0; rafId = requestAnimationFrame(loop); }, wait);
+  else rafId = requestAnimationFrame(loop);
 }
-document.addEventListener("visibilitychange", () => { lastTs = null; if (document.hidden) { cancelAnimationFrame(rafId); running = false; } else kick(); });
+function stopLoop() { cancelAnimationFrame(rafId); clearTimeout(waitId); rafId = waitId = 0; running = false; }
+document.addEventListener("visibilitychange", () => { lastTs = null; if (document.hidden) stopLoop(); else kick(); });
+/* is any part of the model (beaker or zoomed-in view) on screen? */
+if (window.IntersectionObserver) {
+  const vis = new Map();
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => vis.set(e.target, e.isIntersecting));
+    const now = [...vis.values()].some(Boolean);
+    if (now !== onScreen) { onScreen = now; lastTs = null; if (onScreen) { draw(0); stopLoop(); kick(); } }
+  });
+  io.observe($("beaker")); io.observe($("zoom"));
+}
 if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { particleLayout(true); draw(0); kick(); });
 function draw(dt) { drawBeaker(); drawZoom(dt); }
 

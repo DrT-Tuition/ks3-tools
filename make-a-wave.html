@@ -253,7 +253,7 @@ footer.brand a{color:inherit}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -827,7 +827,7 @@ const support = { labels: false, arrows: false, grid: false, red: false, slow: f
 function arrow(id, x1, y1, x2, y2){ return `<line class="meas" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-start="url(#${id})" marker-end="url(#${id})"/>`; }
 function drawSVG(svg, sc, t, opt){
   G = geom(opt.pair ? "pair" : sc.kind); svg.__g = G;
-  svg.setAttribute("viewBox", `0 0 ${G.W} ${G.H}`);
+  const vb = `0 0 ${G.W} ${G.H}`; if (svg.getAttribute("viewBox") !== vb) svg.setAttribute("viewBox", vb);
   const T = sc.mode !== "L", id = "ah" + svg.id, AX = G.AX, Y0 = G.Y0, fs = G.fs, rx = G.rx, ry = G.ry;
   let s = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0,0 L10,5 L0,10 z"/></marker></defs>`;
   // grid
@@ -864,18 +864,13 @@ function drawSVG(svg, sc, t, opt){
     s += `<text class="sv" x="${wx + ww}" y="${Y0 + wh / 2 + fs}" text-anchor="end">fixed end</text>`;
   }
   // red coil's own place
-  if (support.red){ const rxx = px(RED * DX); s += `<line class="restmark" x1="${rxx}" y1="${Y0 - 2.2 * ry}" x2="${rxx}" y2="${Y0 + 2.2 * ry}"/>`; sim.trail.forEach(([, p], i) => { s += `<circle class="trail" cx="${px(p[0])}" cy="${py(p[1])}" r="${G.phone ? 2.4 : 3}" opacity="${(0.15 + 0.6 * i / Math.max(1, sim.trail.length)).toFixed(2)}"/>`; }); }
-  // coils
+  if (support.red){ const rxx = px(RED * DX); s += `<line class="restmark" x1="${rxx}" y1="${Y0 - 2.2 * ry}" x2="${rxx}" y2="${Y0 + 2.2 * ry}"/>`; }
+  const s1 = s; s = "";   // everything above stays still; what follows moves
+  if (support.red){ sim.trail.forEach(([, p], i) => { s += `<circle class="trail" cx="${px(p[0])}" cy="${py(p[1])}" r="${G.phone ? 2.4 : 3}" opacity="${(0.15 + 0.6 * i / Math.max(1, sim.trail.length)).toFixed(2)}"/>`; }); }
+  // coils: kept as elements and moved by their attributes (see setCoils below)
   const pts = [];
   for (let i = 0; i <= N; i++){ const x = i * DX, [cx, cy] = coilPos(sc.mode, x, disp(sc, x, t)); pts.push([px(cx), py(cy)]); }
-  s += `<polyline class="spine" points="${pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}"/>`;
-  pts.forEach((p, i) => { if (i !== RED) s += `<ellipse class="coil" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" rx="${rx}" ry="${ry}"/>`; });
-  const rp = pts[RED];
-  s += `<ellipse class="coil redc" cx="${rp[0].toFixed(1)}" cy="${rp[1].toFixed(1)}" rx="${rx}" ry="${ry}"/><text class="sv red" x="${rp[0].toFixed(1)}" y="${(rp[1] - ry - 8).toFixed(1)}" text-anchor="middle">red coil</text>`;
-  // handles
-  const hp = pts[0], hw = G.hw, hh = G.hh;
-  s += `<rect class="handle" x="${(hp[0] - hw / 2).toFixed(1)}" y="${(hp[1] - hh / 2).toFixed(1)}" width="${hw}" height="${hh}" rx="${hw / 3}"/>`;
-  if (sc.kind === "super"){ const q = pts[N]; s += `<rect class="handle" x="${(q[0] - hw / 2).toFixed(1)}" y="${(q[1] - hh / 2).toFixed(1)}" width="${hw}" height="${hh}" rx="${hw / 3}"/>`; }
+  const sTrail = s; s = "";
   // labels and measuring arrows
   if (opt.helpers){
     const fsx = features(sc, t);
@@ -912,6 +907,7 @@ function drawSVG(svg, sc, t, opt){
     } else { const ty = Y0 - ry - 14 - bh / 2; s += `<line class="pinline" x1="${px(m.x)}" y1="${Y0 - ry}" x2="${px(m.x)}" y2="${ty + bh / 2}"/><circle class="pin" cx="${px(m.x)}" cy="${Y0 - ry}" r="${G.phone ? 6 : 7}"/>` + pinBox(px(m.x), ty, m.label); }
   });
   if (opt.cursor !== null && opt.cursor !== undefined){ s += `<line class="cursor" x1="${px(opt.cursor)}" y1="${py(0.56)}" x2="${px(opt.cursor)}" y2="${AX}"/>`; }
+  const s2 = s; s = "";
   // direction of travel (and the title of a compared wave), written along the top
   const ty0 = fs + 4, frozen = sc.kind === "frozen" || opt.pair;
   if (sc.kind === "super"){
@@ -921,7 +917,37 @@ function drawSVG(svg, sc, t, opt){
     else if (frozen && !G.phone) s += `<text class="sv" x="${px(0)}" y="${ty0}">frozen so you can measure it</text>`;
     s += `<text class="sv acc" x="${px(L)}" y="${ty0}" text-anchor="end">${G.phone ? "wave travels →" : "the wave travels from left to right →"}</text>`;
   }
-  svg.innerHTML = s;
+  // the still layers are only rebuilt when they change (scene, size, support switches); the moving layer every frame
+  if (!svg.__lay || !svg.__lay.isConnected || svg.__lay.parentNode !== svg){
+    svg.innerHTML = '<g class="lay-still"></g><g class="lay-trail"></g><g class="lay-coils"></g><g class="lay-move"></g><g class="lay-top"></g>';
+    svg.__lay = svg.firstChild; svg.__k1 = svg.__kt = svg.__k2 = svg.__k3 = null;
+  }
+  const L1 = svg.__lay, LT = L1.nextSibling, LC = LT.nextSibling, L2 = LC.nextSibling, L3 = L2.nextSibling;
+  if (svg.__k1 !== s1){ L1.innerHTML = s1; svg.__k1 = s1; }
+  if (svg.__kt !== sTrail){ LT.innerHTML = sTrail; svg.__kt = sTrail; }
+  setCoils(LC, pts, rx, ry, G.hw, G.hh, sc.kind === "super");
+  if (svg.__k2 !== s2){ L2.innerHTML = s2; svg.__k2 = s2; }
+  if (svg.__k3 !== s){ L3.innerHTML = s; svg.__k3 = s; }
+}
+/* the slinky itself: spine, coils, red coil and its label, hand(s). Built once, then only attributes change. */
+function setCoils(g, pts, rx, ry, hw, hh, two){
+  if (!g.__el){
+    let h = `<polyline class="spine" points=""/>`;
+    for (let i = 0; i <= N; i++) if (i !== RED) h += `<ellipse class="coil"/>`;
+    h += `<ellipse class="coil redc"/><text class="sv red" text-anchor="middle">red coil</text><rect class="handle"/><rect class="handle"/>`;
+    g.innerHTML = h; g.__el = [...g.children];
+  }
+  const E = g.__el;
+  const set = (el, k, v) => { if (el["_" + k] !== v){ el.setAttribute(k, v); el["_" + k] = v; } };   // only touch what changed
+  set(E[0], "points", pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "));
+  let j = 1;
+  const coil = (el, p) => { set(el, "cx", p[0].toFixed(1)); set(el, "cy", p[1].toFixed(1)); set(el, "rx", String(rx)); set(el, "ry", String(ry)); };
+  for (let i = 0; i <= N; i++) if (i !== RED) coil(E[j++], pts[i]);
+  const rp = pts[RED]; coil(E[j++], rp);
+  const tx = E[j++]; set(tx, "x", rp[0].toFixed(1)); set(tx, "y", (rp[1] - ry - 8).toFixed(1));
+  const hand = (el, p, on) => { set(el, "display", on ? "inline" : "none"); if (!on) return;
+    set(el, "x", (p[0] - hw / 2).toFixed(1)); set(el, "y", (p[1] - hh / 2).toFixed(1)); set(el, "width", String(hw)); set(el, "height", String(hh)); set(el, "rx", String(hw / 3)); };
+  hand(E[j++], pts[0], true); hand(E[j++], pts[N], two);
 }
 function pinBox(x, y, label){
   const fs = G.fs, w = label.length * fs * 0.58 + 20, h = fs + 12;
@@ -941,7 +967,7 @@ function draw(){
     drawSVG($("svgB"), b, sc.tb, { helpers: true, title: "Wave B", pair: true });
     G = $("svgA").__g;
   }
-  $("playBtn").textContent = sim.playing ? "Pause" : "Play";
+  const pb = $("playBtn"), pt = sim.playing ? "Pause" : "Play"; if (pb.textContent !== pt) pb.textContent = pt;
 }
 
 /* ================= STATE + QUESTIONS ================= */
@@ -1490,18 +1516,36 @@ window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventL
 /* the tool name joins the sticky bar once the big title has scrolled away */
 if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 
-let last = null;
-function frame(ts){
-  if (last === null) last = ts;
-  const dt = Math.min(0.05, (ts - last) / 1000); last = ts;
-  if (sim.playing){ advance(dt * (support.slow ? 0.4 : 1)); draw(); }
-  requestAnimationFrame(frame);
+/* Animation loop: runs only while something moves; capped at 30 frames a second (fewer if the PC cannot keep up);
+   paused while the tab is hidden or the slinky is scrolled off-screen. Motion is time-based, so speeds do not change. */
+let last = null, rafId = 0, onScreen = true, fpsCap = 30, perfN = 0, perfT = 0, perfBad = 0;
+const canRun = () => !document.hidden && onScreen;
+function settled(){   // a live slinky that has come to rest: nothing left to draw until the next shake, drag or flick
+  const sc = sim.sc; if (!sc || sc.kind !== "live") return false;
+  if (sc.drag !== null || sc.shaking || sc.kicks.length || Math.abs(sc.val) > 1e-4) return false;
+  for (let i = 0; i < sc.hv.length; i++) if (Math.abs(sc.hv[i]) > 1e-4) return false;
+  return true;
 }
+function frame(ts){
+  rafId = 0;
+  if (!sim.playing || !canRun()){ last = null; return; }
+  if (last !== null && ts - last < 1000 / fpsCap - 2){ rafId = requestAnimationFrame(frame); return; }   // frame cap
+  if (last === null) last = ts;
+  else { perfT += ts - last; if (++perfN >= fpsCap){ perfBad = perfT / perfN > 40 ? perfBad + 1 : 0; if (perfBad >= 2 && fpsCap > 10){ fpsCap = fpsCap > 20 ? 20 : fpsCap > 15 ? 15 : 10; perfBad = 0; } perfN = perfT = 0; } }   // quiet safety net
+  const dt = Math.min(0.05 * 60 / fpsCap, (ts - last) / 1000); last = ts;
+  advance(dt * (support.slow ? 0.4 : 1)); draw();
+  if (sim.playing && canRun() && !settled()) rafId = requestAnimationFrame(frame); else last = null;
+}
+function kick(){ if (!rafId && sim.playing && canRun()){ last = null; rafId = requestAnimationFrame(frame); } }
+{ let playing = !!sim.playing;   // setting sim.playing (anywhere) starts the loop when needed
+  Object.defineProperty(sim, "playing", { get: () => playing, set: v => { playing = v; if (v) kick(); }, enumerable: true }); }
+document.addEventListener("visibilitychange", () => { if (document.hidden){ cancelAnimationFrame(rafId); rafId = 0; last = null; } else kick(); });
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (!onScreen){ cancelAnimationFrame(rafId); rafId = 0; last = null; } else kick(); }).observe($("svgA"));
 level = null;   // so the first Easy/Hard opening starts at the first question not yet done
 bumpScore(); setMode("demo"); fitPanel();
 try { if (localStorage.getItem("ks3tools-toured:make-a-wave")) $("newHere").hidden = true; } catch (e) {}
 window.addEventListener("resize", () => draw());
-requestAnimationFrame(frame);
+kick();
 window.__makeAWave = { state, sim, BANK, LEVELS: QL, verify, mark: markAnswer, support, setMode };   // used only by automated tests
 </script>
 </body>

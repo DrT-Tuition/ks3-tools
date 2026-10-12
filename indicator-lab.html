@@ -281,7 +281,7 @@ select{font:700 17px var(--f-body);min-height:44px;padding:6px 10px;border-radiu
 }
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -884,7 +884,7 @@ function drawTile() {
     }
     if (!R) { const rt = x > 300; h += `<text x="${rt ? x - 24 : x + 24}" y="52" font-size="22" font-weight="700" text-anchor="${rt ? "end" : "start"}" style="fill:var(--ink)">${esc(cap(I.name))}</text>`; }
   }
-  svg.innerHTML = h;
+  morph(svg, h);
   svg.setAttribute("aria-label", tileDesc());
 }
 function tileDesc() {
@@ -953,7 +953,7 @@ function renderBench() {
   ln.textContent = `The test is set for this question: ${SOL[M.sol].name} and ${IND[M.ind].name}. Answer it, then press Check to see what happens.`;
 }
 function renderScene() { renderBench(); renderReadout(); renderScale(); drawTile(); }
-function stopRun() { cancelAnimationFrame(rafId); clearTimeout(stillT); if (M.run) { M.run = null; } }
+function stopRun() { paceCancel(rafId); clearTimeout(stillT); if (M.run) { M.run = null; } }
 function wash() { stopRun(); M.wells = []; if (mode === "demo") DEMO.wells = M.wells; renderScene(); }
 
 /* ===== Animation (rAF stops while the tab is hidden; reduced motion shows a still step) ===== */
@@ -967,7 +967,7 @@ function addTest(instant) {
   tourSignal("go");
   if (instant) { finish(); return; }
   if (reduced()) { M.run.move = 1; M.run.colour = .5; renderScene(); stillT = setTimeout(finish, 700); return; }
-  renderScene(); rafId = requestAnimationFrame(step);
+  renderScene(); rafId = paceFrame(step);
 }
 function step(ts) {
   const R = M.run; if (!R) return;
@@ -975,11 +975,11 @@ function step(ts) {
   if (IND[R.ind].paper) { R.move = clamp01(R.t / 0.8); R.colour = clamp01((R.t - 0.9) / 1.1); }
   else { R.move = clamp01(R.t / 0.9); R.drop = clamp01((R.t - 0.4) / 0.35); R.colour = clamp01((R.t - 0.75) / 1.1); }
   drawTile();
-  if (R.t < 2.1) rafId = requestAnimationFrame(step); else finish();
+  if (R.t < 2.1) rafId = paceFrame(step); else finish();
 }
 document.addEventListener("visibilitychange", () => { lastTs = null; });
 function finish() {
-  cancelAnimationFrame(rafId); clearTimeout(stillT);
+  paceCancel(rafId); clearTimeout(stillT);
   const R = M.run; M.run = null;
   if (mode === "demo") { DEMO.wells = M.wells; }
   renderScene();
@@ -1435,6 +1435,67 @@ if (errs.length) {
 LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
 renderChart(); bump(); setMode("demo"); fitPanel();
 try { if (localStorage.getItem("ks3tools-toured:indicator-lab")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
 </script>
 </body>
 </html>

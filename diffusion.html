@@ -244,7 +244,7 @@ footer.brand a{color:inherit}
 :root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -876,15 +876,17 @@ function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0
 let C = {};
 function readColours(){ const s = getComputedStyle(document.documentElement), g = n => s.getPropertyValue(n).trim();
   C = { gasA: g("--particle"), gasAi: g("--particle-ink"), gasB: g("--particle-2"), gasBi: g("--particle-2-ink"), pedge: g("--particle-edge"), dye: g("--dye"), water: g("--water"), box: g("--boxbg"), wall: g("--wall"), bar: g("--barrier"), trail: g("--trail"), edge: g("--atom-edge"), ink: g("--ink"), muted: g("--muted"), font: g("--f-body") || "sans-serif" };
-  dirty = true; }
+  layerKey = ""; markDirty(); }
 $("themeBtn").addEventListener("click", () => setTimeout(readColours, 0));
 if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => setTimeout(readColours, 0));
 
 /* canvas sizing */
 let scale = 1;
-function resize(){ const w = Math.max(200, cv.clientWidth), h = w*H/W, dpr = window.devicePixelRatio || 1;
-  cv.style.height = h + "px"; cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
-  scale = w/W; ctx.setTransform(dpr*scale, 0, 0, dpr*scale, 0, 0); dirty = true; }
+let pxk = 1;   // canvas pixels per model unit
+function resize(){ const w = Math.max(200, cv.clientWidth), h = w*H/W, dpr = Math.min(1.5, window.devicePixelRatio || 1);   // capped for slow PCs
+  cv.style.height = h + "px";
+  const W2 = Math.round(w*dpr), H2 = Math.round(h*dpr); if (cv.width !== W2) cv.width = W2; if (cv.height !== H2) cv.height = H2;   // reallocate only on a real size change
+  scale = w/W; pxk = dpr*scale; ctx.setTransform(pxk, 0, 0, pxk, 0, 0); layerKey = ""; markDirty(); }
 new ResizeObserver(resize).observe(cv);
 
 function drawTrail(arr, extra){
@@ -904,40 +906,62 @@ function houseParticle(c, x, y, r, fill, edge) {
 function svgParticle(x, y, r, fill) { return `<circle cx="${(+x).toFixed(1)}" cy="${(+y).toFixed(1)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${(x - r * .35).toFixed(1)}" cy="${(y - r * .35).toFixed(1)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>`; }
 function ring(x, y, r){ ctx.strokeStyle = C.trail; ctx.lineWidth = 3/Math.min(1, scale); ctx.beginPath(); ctx.arc(x, y, r, 0, 2*Math.PI); ctx.stroke(); }
 
+/* Cached layers (Dan, 12 Oct 2026, speed on slow school PCs): the box or the beakers, with their labels, are drawn once
+   into an offscreen canvas, and each kind of particle once into a small picture that is stamped for every particle.
+   Same look as drawing everything every frame. */
+let layerKey = "", bgCv = null, SPR = {};
+function sprite(r, fill, edge, alpha, letter, ink){
+  const o = r + 2, sz = Math.max(2, Math.ceil(2*o*pxk)), c = document.createElement("canvas"); c.width = c.height = sz;
+  const g = c.getContext("2d"), kk = sz/(2*o); g.setTransform(kk, 0, 0, kk, 0, 0);
+  if (alpha) g.globalAlpha = alpha;
+  houseParticle(g, o, o, r, fill, edge);
+  if (letter){ g.globalAlpha = 1; g.textAlign = "center"; g.textBaseline = "middle"; g.font = `700 ${r*1.25}px ${C.font}`; g.fillStyle = ink; g.fillText(letter, o, o + r*.06); }
+  return { c, o };
+}
+function stamp(sp, x, y){ ctx.drawImage(sp.c, x - sp.o, y - sp.o, 2*sp.o, 2*sp.o); }
+function buildLayers(){
+  const key = cv.width + "x" + cv.height + ":" + mode + ":" + liq.added;
+  if (key === layerKey) return;
+  if (!layerKey.startsWith(cv.width + "x" + cv.height + ":") || !SPR.A){   // particle pictures: on resize and theme change
+    const r = FACTS.gas.radius, letters = r*scale >= 6.5;
+    SPR = { A: sprite(r, C.gasA, C.pedge, 0, letters && "A", C.gasAi), B: sprite(r, C.gasB, C.pedge, 0, letters && "B", C.gasBi), dye: sprite(3.4, C.dye, C.pedge, .8) };
+  }
+  layerKey = key;
+  bgCv = bgCv || document.createElement("canvas"); bgCv.width = cv.width; bgCv.height = cv.height;
+  const c = bgCv.getContext("2d"); c.setTransform(pxk, 0, 0, pxk, 0, 0); c.clearRect(0, 0, W, H);
+  c.fillStyle = C.box; c.fillRect(0, 0, W, H);
+  if (mode === "gas"){ c.strokeStyle = C.wall; c.lineWidth = 3; c.strokeRect(1.5, 1.5, W-3, H-3); return; }
+  const fs = Math.max(17, 13/scale);
+  c.textAlign = "center"; c.textBaseline = "alphabetic";
+  for (const B of liq.b){
+    c.fillStyle = C.water; c.fillRect(B.x0, B.top, B.w, B.bot - B.top);
+    c.strokeStyle = C.wall; c.lineWidth = 3; c.beginPath(); c.moveTo(B.x0-2, 58); c.lineTo(B.x0-2, B.bot+2); c.lineTo(B.x0+B.w+2, B.bot+2); c.lineTo(B.x0+B.w+2, 58); c.stroke();
+    c.fillStyle = C.ink; c.font = `700 ${fs}px ${C.font}`; c.fillText(liqLabel(B.key), B.x0 + B.w/2, 36);
+    if (!liq.added){ c.fillStyle = C.muted; c.font = `400 ${fs*.85}px ${C.font}`; c.fillText("Water only", B.x0 + B.w/2, (B.top+B.bot)/2); }
+  }
+}
 function draw(){
   dirty = false;
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = C.box; ctx.fillRect(0, 0, W, H);
+  buildLayers();
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(bgCv, 0, 0); ctx.restore();
   if (mode === "gas") drawGas(); else drawLiquid();
 }
 function drawGas(){
-  const r = FACTS.gas.radius, letters = r*scale >= 6.5;
-  ctx.strokeStyle = C.wall; ctx.lineWidth = 3; ctx.strokeRect(1.5, 1.5, W-3, H-3);
+  const r = FACTS.gas.radius;
   if (gas.barrier){ ctx.fillStyle = C.bar; ctx.fillRect(W/2-BAR, 0, 2*BAR, H); }
   if (support.trails) drawTrail(gas.trail, gas.p[0]);
-  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = `700 ${r*1.25}px ${C.font}`;
-  for (const q of gas.p){
-    houseParticle(ctx, q.x, q.y, r, q.g === 0 ? C.gasA : C.gasB, C.pedge);
-    if (letters){ ctx.fillStyle = q.g === 0 ? C.gasAi : C.gasBi; ctx.fillText(q.g === 0 ? "A" : "B", q.x, q.y + r*.06); }
-  }
+  for (const q of gas.p) stamp(q.g === 0 ? SPR.A : SPR.B, q.x, q.y);
   if (support.trails) ring(gas.p[0].x, gas.p[0].y, r + 5);
 }
 function drawLiquid(){
-  const fs = Math.max(17, 13/scale);
-  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   for (const B of liq.b){
-    ctx.fillStyle = C.water; ctx.fillRect(B.x0, B.top, B.w, B.bot - B.top);
-    ctx.strokeStyle = C.wall; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.x0-2, 58); ctx.lineTo(B.x0-2, B.bot+2); ctx.lineTo(B.x0+B.w+2, B.bot+2); ctx.lineTo(B.x0+B.w+2, 58); ctx.stroke();
-    ctx.fillStyle = C.ink; ctx.font = `700 ${fs}px ${C.font}`; ctx.fillText(liqLabel(B.key), B.x0 + B.w/2, 36);
-    if (!liq.added){ ctx.fillStyle = C.muted; ctx.font = `400 ${fs*.85}px ${C.font}`; ctx.fillText("Water only", B.x0 + B.w/2, (B.top+B.bot)/2); }
-    ctx.fillStyle = C.dye; ctx.globalAlpha = .8;
-    for (const d of B.dots) houseParticle(ctx, d.x, d.y, 3.4, C.dye, C.pedge);
-    ctx.globalAlpha = 1;
+    for (const d of B.dots) stamp(SPR.dye, d.x, d.y);
     if (support.trails && liq.added){ drawTrail(B.trail, B.dots[0]); ring(B.dots[0].x, B.dots[0].y, 7); }
   }
 }
 
 /* readouts */
+let lastRO = null, lastCB = null;
 function readout(){
   let s = "";
   if (mode === "gas"){
@@ -946,15 +970,16 @@ function readout(){
   } else {
     s = liq.added ? `<span>Time: <b>${fmt(liq.t)} s</b></span>` + liq.b.map(B => `<span>${FACTS.liquid.beakers[B.key].name}: <b>${B.mixedAt === null ? "not spread out yet" : "spread out at " + fmt(B.mixedAt) + " s"}</b></span>`).join("") : `<span>Press <b>Add dye</b> to drop dye into both beakers.</span>`;
   }
-  $("readout").innerHTML = s;
+  if (s !== lastRO){ lastRO = s; $("readout").innerHTML = s; }   // only touch the page when the text changes
   const cb = $("countsBox");
-  cb.hidden = !support.counts;
-  if (support.counts){
+  if (cb.hidden !== !support.counts) cb.hidden = !support.counts;
+  if (support.counts){ let t;
     if (mode === "gas"){ const c = gas.counts();
-      cb.innerHTML = `<table class="counts"><caption class="hidden-note" style="text-align:left">Count in each half (${FACTS.gas.perGas} of each gas)</caption><tr><th scope="col">Gas</th><th scope="col">Left half</th><th scope="col">Right half</th></tr><tr><th scope="row">● A</th><td>${c[0][0]}</td><td>${c[0][1]}</td></tr><tr><th scope="row">■ B</th><td>${c[1][0]}</td><td>${c[1][1]}</td></tr></table>`;
+      t = `<table class="counts"><caption class="hidden-note" style="text-align:left">Count in each half (${FACTS.gas.perGas} of each gas)</caption><tr><th scope="col">Gas</th><th scope="col">Left half</th><th scope="col">Right half</th></tr><tr><th scope="row">● A</th><td>${c[0][0]}</td><td>${c[0][1]}</td></tr><tr><th scope="row">■ B</th><td>${c[1][0]}</td><td>${c[1][1]}</td></tr></table>`;
     } else {
-      cb.innerHTML = `<table class="counts"><caption class="hidden-note" style="text-align:left">Dye particles in each half of the water</caption><tr><th scope="col">Beaker</th><th scope="col">Top half</th><th scope="col">Bottom half</th><th scope="col">Total</th></tr>` + liq.b.map(B => { const t = liq.added ? liq.topCount(B) : 0, n = B.dots.length; return `<tr><th scope="row">${FACTS.liquid.beakers[B.key].name}</th><td>${t}</td><td>${n - t}</td><td>${n}</td></tr>`; }).join("") + `</table>`;
+      t = `<table class="counts"><caption class="hidden-note" style="text-align:left">Dye particles in each half of the water</caption><tr><th scope="col">Beaker</th><th scope="col">Top half</th><th scope="col">Bottom half</th><th scope="col">Total</th></tr>` + liq.b.map(B => { const t = liq.added ? liq.topCount(B) : 0, n = B.dots.length; return `<tr><th scope="row">${FACTS.liquid.beakers[B.key].name}</th><td>${t}</td><td>${n - t}</td><td>${n}</td></tr>`; }).join("") + `</table>`;
     }
+    if (t !== lastCB){ lastCB = t; cb.innerHTML = t; }
   }
 }
 function renderRuns(){
@@ -973,15 +998,15 @@ function logEvents(){
 }
 
 /* controls */
-function stepActive(seconds){ const n = Math.round(seconds/DT); for (let i = 0; i < n; i++){ if (mode === "gas") gas.step(DT); else liq.step(DT); } logEvents(); dirty = true; }
-function resetGas(){ gas.reset(gas.temp); gasLogged = false; dirty = true; }
-function resetLiquid(){ liq.reset(); liqLogged = [false, false]; dirty = true; }
+function stepActive(seconds){ const n = Math.round(seconds/DT); for (let i = 0; i < n; i++){ if (mode === "gas") gas.step(DT); else liq.step(DT); } logEvents(); markDirty(); }
+function resetGas(){ gas.reset(gas.temp); gasLogged = false; markDirty(); }
+function resetLiquid(){ liq.reset(); liqLogged = [false, false]; markDirty(); }
 function doGo(){
   if (mode === "gas"){ if (!gas.lifted){ gas.lift(); $("status").textContent = "Barrier lifted."; tourSignal("lift"); } else resetGas(); }
   else { if (!liq.added){ liq.add(); liqLogged = [false, false]; $("status").textContent = "Dye added."; tourSignal("dye"); } else resetLiquid(); }
   paintControls();
 }
-function finishLiquid(){ const was = mode; mode = "liquid"; if (!liq.added){ liq.add(); liqLogged = [false, false]; } while (liq.b.some(B => B.mixedAt === null) && liq.t < FACTS.maxModelTime) liq.step(DT); mode = was; logEvents(); dirty = true; paintControls(); }
+function finishLiquid(){ const was = mode; mode = "liquid"; if (!liq.added){ liq.add(); liqLogged = [false, false]; } while (liq.b.some(B => B.mixedAt === null) && liq.t < FACTS.maxModelTime) liq.step(DT); mode = was; logEvents(); markDirty(); paintControls(); }
 function addGasRun(t){ const time = gasMixTime(t); if (time !== null) runs.push({ state: "gas", temp: t, time, fair: true }); }
 function ensureGasRuns(temps){ for (const t of temps) if (!latest("gas", t)) addGasRun(t);
   /* Show answer must leave runs that agree with the answer: repeat (as a scientist would) if chance reversed them */
@@ -1000,13 +1025,13 @@ function paintControls(){
     ? `<span><svg viewBox="0 0 20 20" aria-hidden="true">${svgParticle(10, 10, 8, "var(--particle)")}</svg>A = gas A</span><span><svg viewBox="0 0 20 20" aria-hidden="true">${svgParticle(10, 10, 8, "var(--particle-2)")}</svg>B = gas B</span><span>Grey bar = barrier</span>`
     : `<span><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5" style="fill:var(--dye)"/></svg>Purple dot = dye particles (potassium permanganate)</span><span>Water particles fill the gaps but are not drawn</span>`;
   cv.setAttribute("aria-label", mode === "gas" ? `Box with gas A on the left and gas B on the right. ${gas.lifted ? "The barrier is lifted." : "The barrier is down."} Temperature ${gasLabel(gas.temp)}.` : "Two beakers of water, cold 10 °C and hot 60 °C, with purple dye at the bottom.");
-  dirty = true; readout();
+  markDirty(); readout();
 }
 function setSim(m){ mode = m; paintControls(); if (appMode === "demo") renderTry(); }
 document.querySelectorAll("[data-state]").forEach(b => b.addEventListener("click", () => { setSim(b.dataset.state); if (mode === "liquid") tourSignal("liquid"); }));
 document.querySelectorAll("[data-temp]").forEach(b => b.addEventListener("click", () => { gas.setTemp(b.dataset.temp); paintControls(); tourSignal("temp"); }));
 $("go").addEventListener("click", doGo);
-$("pause").addEventListener("click", () => { running = !running; paintControls(); if (running) tourSignal("play"); });
+$("pause").addEventListener("click", () => { running = !running; paintControls(); kick(); if (running) tourSignal("play"); });
 $("step").addEventListener("click", () => stepActive(1));
 $("skip").addEventListener("click", () => {
   if (mode === "gas"){ if (!gas.lifted) gas.lift(); let n = 0; while (gas.mixedAt === null && gas.t < FACTS.maxModelTime){ gas.step(DT); n++; } stepActive(1); }
@@ -1023,21 +1048,38 @@ function applySupport(){
   const src = appMode === "demo" ? supShow : supQuiz; support.counts = src.counts; support.trails = src.trails;
   document.querySelectorAll("[data-support]").forEach(b => paintSw(b, supQuiz[b.dataset.support]));
   document.querySelectorAll("[data-show]").forEach(b => paintSw(b, supShow[b.dataset.show]));
-  dirty = true; readout();
+  markDirty(); readout();
 }
 function setSupport(key, on){ supQuiz[key] = on; applySupport(); }
 document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => setSupport(b.dataset.support, !supQuiz[b.dataset.support])));
 document.querySelectorAll("[data-show]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.show; supShow[k] = !supShow[k]; applySupport(); if (supShow[k]) tourSignal("show"); }));
 
-/* animation: requestAnimationFrame, paused when the tab is hidden */
+/* animation (Dan, 12 Oct 2026, speed on slow school PCs): the loop runs only while something moves or needs drawing,
+   and stops while the tab is hidden or the model is scrolled off the screen. While particles move it works and
+   draws at most 30 times a second (fewer if the PC can't keep up). The model clock is time-based, so speeds don't change. */
 let last = null, lastRead = 0;
 const LIQ_RATE = 2; /* liquid clock: 2 model seconds per real second, so cold dye takes about 20 s to watch */
-function frame(ts){
-  requestAnimationFrame(frame);
-  if (document.hidden){ last = null; return; }
+const FPS = [30, 20, 15, 12];
+let loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0;
+const moving = () => running && (mode === "gas" || liq.added);
+const wantLoop = () => !document.hidden && onScreen && (dirty || moving());
+function kick(){ if (!loopOn && wantLoop()){ loopOn = true; last = null; lastWork = 0; ivN = ivSum = 0; nextDue = performance.now(); requestAnimationFrame(() => frame()); } }
+function markDirty(){ dirty = true; kick(); }
+function frame(){
+  const ts = performance.now();   // timer-driven (no empty animation frames between ticks)
+  if (!wantLoop()){ loopOn = false; last = null; readout(); return; }
+  const gap = 1000 / FPS[fpsI];
+  if (!moving()){ last = null; lastWork = 0; draw(); readout(); loopOn = false; return; }   // paused: one redraw, then the loop stops
+  nextDue = nextDue + gap < ts + 2 ? ts + gap : nextDue + gap;   // frame cap: the next tick on a steady 30 fps grid
+  setTimeout(frame, nextDue - ts);
+  if (lastWork){   // quiet safety net: if frames average too long over about a second, use a lower frame rate
+    if (ts > ivWarm){ ivSum += ts - lastWork; ivN++; }   // (not in the first second after starting)
+    if (ts - ivT0 >= 1000){ const lim = fpsI ? 1250 / FPS[fpsI] : 40; if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) fpsI++; ivSum = ivN = 0; ivT0 = ts; }
+  } else ivT0 = ivWarm = ts + 1000;
+  lastWork = ts;
   if (last === null) last = ts;
-  const dt = Math.min(0.05, (ts - last)/1000); last = ts;
-  if (running){ const rate = mode === "liquid" ? LIQ_RATE : 1, cap = 8*rate; acc += dt*rate; let n = 0; while (acc >= DT && n < cap){ if (mode === "gas") gas.step(DT); else liq.step(DT); acc -= DT; n++; } if (n === cap) acc = 0; logEvents(); dirty = true; }
+  const dt = Math.min(0.1, (ts - last)/1000); last = ts;
+  if (running){ const rate = mode === "liquid" ? LIQ_RATE : 1, cap = 12*rate; acc += dt*rate; let n = 0; while (acc >= DT && n < cap){ if (mode === "gas") gas.step(DT); else liq.step(DT); acc -= DT; n++; } if (n === cap) acc = 0; logEvents(); dirty = true; }
   if (dirty) draw();
   if (ts - lastRead > 150){ lastRead = ts; readout(); }
 }
@@ -1175,7 +1217,8 @@ function resetTask(){
   loadTask();
 }
 $("reset").addEventListener("click", resetTask);
-document.addEventListener("visibilitychange", () => { last = null; });
+document.addEventListener("visibilitychange", () => { last = null; kick(); });
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(cv);   // the top 64 px sit under the sticky top bar
 
 /* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
 const TOUR = [
@@ -1316,7 +1359,7 @@ LEVELS = { easy: [...TASKS.warm, ...TASKS.core].slice(0, 10),   // 5–10 questi
            hard: TASKS.challenge };
 paintScore(); setAppMode("demo"); fitPanel();
 try { if (localStorage.getItem("ks3tools-toured:diffusion")) $("newHere").hidden = true; } catch (e) {}
-requestAnimationFrame(frame);
+kick();
 
 </script>
 </body>

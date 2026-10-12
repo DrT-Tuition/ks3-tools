@@ -252,7 +252,7 @@ footer.brand a{color:inherit}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -775,7 +775,7 @@ function arrowHead(x1, y1, x2, y2, f = 0.5, size = 13) {
 const line = (x1, y1, x2, y2, cls) => `<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" class="${cls}"/>`;
 const text = (x, y, s, cls = "txt", anchor = "middle", size = 22) => `<text x="${r1(x)}" y="${r1(y)}" class="${cls}" text-anchor="${anchor}" font-size="${size}">${s}</text>`;
 function labelFont(svg) {
-  const w = svg.getBoundingClientRect().width || 1000;
+  const w = boxW(svg) || 1000;
   return Math.max(22, Math.min(44, 22 * 760 / w));
 }
 
@@ -830,7 +830,7 @@ function drawBench() {
     g += text(Math.min(xs, 930), 22, "Screen", "txt", xs > 900 ? "end" : "middle", lf);
     g += text(LX - F * K, BY + 60, "F = focal point", "mtxt", "middle", Math.max(18, lf * .8));
   }
-  svg.innerHTML = g;
+  morph(svg, g);
 
   // screen face: what the screen shows
   const P = 14, cx = 150, cy = 14;               // 14 px per cm on the face
@@ -844,7 +844,7 @@ function drawBench() {
   for (let gy = 0; gy <= 300; gy += P) f += line(0, gy, 300, gy, "grid");
   const op = Math.max(.25, 1 / (1 + .12 * blurCm));
   f += `<g filter="url(#fblur)" opacity="${op.toFixed(2)}">${candleAt(cx, cy, hs * P, true)}</g></g>`;
-  $("faceSvg").innerHTML = f;
+  morph($("faceSvg"), f);
   $("faceSvg").setAttribute("aria-label", "The picture on the screen: " + (Math.abs(s - v) <= FACTS.sharpTol_cm ? "sharp" : "blurred"));
 
   $("objR").value = u; $("scrR").value = s;
@@ -917,7 +917,7 @@ function eyeSVG(lf, opts) {
 }
 function drawEye() {
   const t = task(), svg = $("eyeSvg");
-  svg.innerHTML = eyeSVG(labelFont(svg), { inset: true, numbers: t.type === "label" });
+  morph(svg, eyeSVG(labelFont(svg), { inset: true, numbers: t.type === "label" }));
   document.querySelectorAll("[data-light]").forEach(b => b.setAttribute("aria-pressed", b.dataset.light === S.light ? "true" : "false"));
   const cap = (t.hideImage && !S.shown) ? "" : "The image on the retina is upside down. The brain turns it the right way up.";
   $("brainCap").textContent = cap;
@@ -950,8 +950,8 @@ function camSVG(lf) {
 function drawCompare() {
   const s1 = $("eyeSvg2"), s2 = $("camSvg");
   const lf = Math.max(labelFont(s1) * 1.25, 26);
-  s1.innerHTML = eyeSVG(lf, { inset: false, numbers: false });
-  s2.innerHTML = camSVG(lf);
+  morph(s1, eyeSVG(lf, { inset: false, numbers: false }));
+  morph(s2, camSVG(lf));
 }
 
 /* ===== answer panel ===== */
@@ -1007,7 +1007,7 @@ function render() {
   if (t.view === "bench") drawBench();
   if (t.view === "eye") drawEye();
   if (t.view === "compare") drawCompare();
-  if (t.demo) { $("tryList").innerHTML = TRY[demoView].map(x => `<li>${x}</li>`).join(""); return; }
+  if (t.demo) { const tl = TRY[demoView].map(x => `<li>${x}</li>`).join(""); if (render.tl !== tl) { render.tl = tl; $("tryList").innerHTML = tl; } return; }   // only rebuilt when it changes
   $("taskText").textContent = t.text;
   $("qno").textContent = `Question ${idx + 1} of ${LEVELS[level].length}`;
   const p = prog();
@@ -1018,7 +1018,7 @@ function render() {
   if (want && !support[want]) stuck = `Stuck? Turn on <b>${want === "rays" ? "Ray lines" : "Labels"}</b> under Support.`;
   if (t.type === "label" && support.labels) stuck = "Labels stay hidden in this labelling task.";
   if (p.solved) stuck = "Solved ✓ Choose another question number above.";
-  $("stuck").innerHTML = stuck;
+  if (render.st !== stuck) { render.st = stuck; $("stuck").innerHTML = stuck; }
 }
 function renderAll() { drawAnswers(); render(); }
 
@@ -1165,7 +1165,7 @@ function renderDots() {
   $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
 }
 function loadTask() {
-  cancelAnimationFrame(anim);
+  paceCancel(anim);
   if (mode === "demo") { S = DS; $("fb").innerHTML = ""; renderAll(); return; }
   startState(); $("fb").innerHTML = "";
   $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
@@ -1182,15 +1182,17 @@ function setLight(l) {
   S.light = l;
   const target = l === "dim" ? FACTS.pupilDim : FACTS.pupilBright;
   if (reduceMotion || document.hidden) { S.pR = target; render(); return; }
-  cancelAnimationFrame(anim);
-  const step = () => {
+  paceCancel(anim);
+  let last = null;
+  const step = ts => {   // time-based: the pupil closes 12 % of the way each 1/60 s, whatever the frame rate
+    const dt = last == null ? 1 / 60 : Math.min(.1, (ts - last) / 1000); last = ts;
     const d = target - S.pR;
     if (Math.abs(d) < .3) { S.pR = target; render(); return; }
-    S.pR += d * .12; render(); anim = requestAnimationFrame(step);
+    S.pR += d * (1 - Math.pow(.88, dt * 60)); render(); anim = paceFrame(step);
   };
-  anim = requestAnimationFrame(step);
+  anim = paceFrame(step);
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden && anim) { cancelAnimationFrame(anim); S.pR = S.light === "dim" ? FACTS.pupilDim : FACTS.pupilBright; } });
+document.addEventListener("visibilitychange", () => { if (document.hidden && anim) { paceCancel(anim); S.pR = S.light === "dim" ? FACTS.pupilDim : FACTS.pupilBright; } });
 
 /* ===== moving the candle (prediction tasks) ===== */
 function moveCandle() {
@@ -1202,9 +1204,9 @@ function moveCandle() {
   const step = now => {
     const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     S.obj = from + (to - from) * e; render();
-    if (k < 1) requestAnimationFrame(step); else { S.obj = to; render(); }
+    if (k < 1) paceFrame(step); else { S.obj = to; render(); }
   };
-  requestAnimationFrame(step);
+  paceFrame(step);
 }
 
 /* ===== events ===== */
@@ -1228,8 +1230,8 @@ $("qbody").addEventListener("click", e => {
 });
 $("qbody").addEventListener("change", e => { const s = e.target.closest("select"); if (s) S.sel[s.dataset.sel] = s.value; });
 const sharpNow = () => Math.abs(S.scr - imageDist(S.obj)) <= FACTS.sharpTol_cm;
-$("objR").addEventListener("input", e => { if (task().lockObj) return; S.obj = +e.target.value; render(); tourSignal("candle"); });
-$("scrR").addEventListener("input", e => { S.scr = +e.target.value; render(); if (sharpNow()) tourSignal("sharp"); });
+$("objR").addEventListener("input", e => { if (task().lockObj) return; S.obj = +e.target.value; renderSoon(); tourSignal("candle"); });
+$("scrR").addEventListener("input", e => { S.scr = +e.target.value; renderSoon(); if (sharpNow()) tourSignal("sharp"); });
 
 // dragging on the bench
 (function () {
@@ -1246,12 +1248,15 @@ $("scrR").addEventListener("input", e => { S.scr = +e.target.value; render(); if
     if (!which) return; const d = toCm(ev);
     if (which === "scr") S.scr = Math.min(FACTS.scrMax, Math.max(FACTS.scrMin, snap(d)));
     else if (!task().lockObj) S.obj = Math.min(FACTS.objMax, Math.max(FACTS.objMin, snap(-d)));
-    render();
+    renderSoon();
   });
   const end = () => { if (which === "scr" && sharpNow()) tourSignal("sharp"); if (which === "obj") tourSignal("candle"); which = null; };
   svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
 })();
 
+/* slider and drag moves are drawn at most once a frame (paced), not once per input event */
+let rsId = 0;
+function renderSoon() { if (!rsId) rsId = paceFrame(() => { rsId = 0; render(); }); }
 let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 120); });
 
 /* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
@@ -1391,6 +1396,67 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").cl
   chips(); setMode("demo"); fitPanel();
   try { if (localStorage.getItem("ks3tools-toured:lens-and-eye")) $("newHere").hidden = true; } catch (e) {}
 })();
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
 </script>
 </body>
 </html>

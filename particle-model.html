@@ -227,7 +227,7 @@ fieldset.grp legend{font-weight:700;padding:0;margin-bottom:6px}
 #ask.multi .opt{padding:6px 10px;font-size:16px;line-height:1.3;gap:8px}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -626,13 +626,14 @@ function physics(dt){
       // so the liquid stays touching with no big gaps (stands in for the attraction between particles)
       if (p.y < BH - R - 1) {
         let nd = 1e9, q = null;
-        for (const o of P) { if (o === p || o.ph === "g") continue; const dd = Math.hypot(o.x - p.x, o.y - p.y); if (dd < nd) { nd = dd; q = o; } }
+        for (const o of P) { if (o === p || o.ph === "g") continue; const ex = o.x - p.x, ey = o.y - p.y, dd = ex * ex + ey * ey; if (dd < nd) { nd = dd; q = o; } }
+        nd = Math.sqrt(nd);   // squared distances in the search, one square root (Math.hypot is slow on old PCs)
         if (q && nd > 2.2 * R) { p.vx += (q.x - p.x) / nd * 2500 * dt; p.vy += (q.y - p.y) / nd * 2500 * dt; }
       }
-      const sp = Math.hypot(p.vx, p.vy); if (sp > vL) { p.vx *= vL / sp; p.vy *= vL / sp; }
+      const sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy); if (sp > vL) { p.vx *= vL / sp; p.vy *= vL / sp; }
       p.x += p.vx * dt; p.y += p.vy * dt;
     } else {
-      let sp = Math.hypot(p.vx, p.vy);
+      let sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       if (sp < 1) { const a = Math.random() * 6.283; p.vx = Math.cos(a); p.vy = Math.sin(a); sp = 1; }
       const f = 1 + (vG / sp - 1) * Math.min(1, 3 * dt); p.vx *= f; p.vy *= f;
       p.x += p.vx * dt; p.y += p.vy * dt;
@@ -678,29 +679,56 @@ function readTokens(){
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
   TK = { surface: g("--surface"), sunk: g("--sunk"), ink: g("--ink"), muted: g("--muted"), line: g("--line"), accent: g("--accent"),
     particle: g("--particle"), edge: g("--particle-edge"), hot: g("--hot"), cold: g("--cold"), box: g("--box"), bad: g("--bad") };
+  TK.font = getComputedStyle(document.body).fontFamily;   // read once (and again on theme change), not every frame
+  bgKey = "";   // colours changed: rebuild the cached box/thermometer layer and particle picture
 }
 let dpr = 1;
 function sizeCanvas(cv, h){
-  dpr = Math.min(3, window.devicePixelRatio || 1);
+  dpr = Math.min(1.5, window.devicePixelRatio || 1);   // capped: slow school PCs have no GPU help
   const w = cv.clientWidth || 300, hh = h != null ? h : w * LH / LW;
-  cv.width = Math.round(w * dpr); cv.height = Math.round(hh * dpr);
+  const W2 = Math.round(w * dpr), H2 = Math.round(hh * dpr);
+  if (cv.width !== W2) cv.width = W2;     // only reallocate the canvas when its size really changes
+  if (cv.height !== H2) cv.height = H2;
 }
 function heaterDir(){ return Ht > H + 1e-9 ? 1 : Ht < H - 1e-9 ? -1 : 0; }
+/* Cached layers (Dan, 12 Oct 2026, speed on school PCs): the box, thermometer tube and scale are drawn once
+   into an offscreen canvas, and the house particle once into a small picture that is stamped for each particle.
+   Same look as drawing them every frame. */
+let bgKey = "", bgCv = null, spr = null;
+function buildLayers(k){
+  const key = stage.width + "x" + stage.height + ":" + k;
+  if (key === bgKey) return; bgKey = key;
+  bgCv = bgCv || document.createElement("canvas"); bgCv.width = stage.width; bgCv.height = stage.height;
+  const c = bgCv.getContext("2d");
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bgCv.width, bgCv.height); c.setTransform(k, 0, 0, k, 0, 0);
+  c.fillStyle = TK.surface; c.fillRect(BX, BY, BW, BH);
+  c.lineWidth = 4; c.strokeStyle = TK.box; c.strokeRect(BX - 2, BY - 2, BW + 4, BH + 4);
+  const tx = BX + BW + 63, top = BY + 6, bot = BY + BH - 34, bw = 18, br = 17;
+  c.fillStyle = TK.surface; c.strokeStyle = TK.box; c.lineWidth = 2.5;
+  c.beginPath(); c.moveTo(tx - bw / 2, bot); c.lineTo(tx - bw / 2, top + bw / 2); c.arc(tx, top + bw / 2, bw / 2, Math.PI, 0); c.lineTo(tx + bw / 2, bot); c.stroke(); c.fill();
+  c.beginPath(); c.arc(tx, bot + br - 2, br, 0, 6.2832); c.fill(); c.stroke();
+  c.strokeStyle = TK.box; c.lineWidth = 1.5;
+  for (let i = 1; i < 10; i++) { const y = bot - i * (bot - top - bw / 2) / 10; c.beginPath(); c.moveTo(tx + bw / 2, y); c.lineTo(tx + bw / 2 + (i % 5 ? 6 : 11), y); c.stroke(); }
+  // particle picture, drawn at the canvas's own resolution
+  const o = R + 2, sz = Math.ceil(2 * o * k);
+  const sc = document.createElement("canvas"); sc.width = sc.height = sz;
+  const g = sc.getContext("2d"), kk = sz / (2 * o); g.setTransform(kk, 0, 0, kk, 0, 0);
+  g.beginPath(); g.arc(o, o, R, 0, 6.2832); g.fillStyle = TK.particle; g.fill();
+  g.lineWidth = 1.6; g.strokeStyle = TK.edge; g.stroke();
+  g.beginPath(); g.arc(o - R * 0.35, o - R * 0.35, R * 0.28, 0, 6.2832); g.fillStyle = "rgba(255,255,255,.38)"; g.fill();
+  spr = { c: sc, o };
+}
 function drawStage(){
   const k = stage.width / LW, c = sctx;
+  buildLayers(k);
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, stage.width, stage.height);
+  c.drawImage(bgCv, 0, 0);
   c.setTransform(k, 0, 0, k, 0, 0);
-  // box
-  c.fillStyle = TK.surface; c.fillRect(BX, BY, BW, BH);
+  // particles, clipped to the box
   c.save(); c.beginPath(); c.rect(BX, BY, BW, BH); c.clip();
-  for (const p of P) {
-    const x = BX + p.x, y = BY + p.y;
-    c.beginPath(); c.arc(x, y, R, 0, 6.2832); c.fillStyle = TK.particle; c.fill();
-    c.lineWidth = 1.6; c.strokeStyle = TK.edge; c.stroke();
-    c.beginPath(); c.arc(x - R * 0.35, y - R * 0.35, R * 0.28, 0, 6.2832); c.fillStyle = "rgba(255,255,255,.38)"; c.fill();
-  }
+  const sd = 2 * spr.o;
+  for (const p of P) c.drawImage(spr.c, BX + p.x - spr.o, BY + p.y - spr.o, sd, sd);
   c.restore();
-  c.lineWidth = 4; c.strokeStyle = TK.box; c.strokeRect(BX - 2, BY - 2, BW + 4, BH + 4);
   // heater plate
   const dir = heaterDir();
   c.fillStyle = dir > 0 ? TK.hot : dir < 0 ? TK.cold : TK.line;
@@ -715,21 +743,16 @@ function drawStage(){
       c.stroke();
     }
   }
-  // thermometer
+  // thermometer (tube, bulb and scale are in the cached layer)
   const tx = BX + BW + 63, top = BY + 6, bot = BY + BH - 34, bw = 18, br = 17;
-  c.fillStyle = TK.surface; c.strokeStyle = TK.box; c.lineWidth = 2.5;
-  c.beginPath(); c.moveTo(tx - bw / 2, bot); c.lineTo(tx - bw / 2, top + bw / 2); c.arc(tx, top + bw / 2, bw / 2, Math.PI, 0); c.lineTo(tx + bw / 2, bot); c.stroke(); c.fill();
-  c.beginPath(); c.arc(tx, bot + br - 2, br, 0, 6.2832); c.fill(); c.stroke();
   if (!hideTemp) {
     const f = Math.max(0, Math.min(1, (M.T(H) - M.S.min) / (M.S.max - M.S.min)));
     const yy = bot - f * (bot - top - bw / 2);
     c.fillStyle = TK.bad; c.fillRect(tx - bw / 2 + 4, yy, bw - 8, bot - yy + 4);
     c.beginPath(); c.arc(tx, bot + br - 2, br - 4, 0, 6.2832); c.fill();
   } else {
-    c.fillStyle = TK.muted; c.font = "700 22px " + getComputedStyle(document.body).fontFamily; c.textAlign = "center"; c.fillText("?", tx, (top + bot) / 2);
+    c.fillStyle = TK.muted; c.font = "700 22px " + TK.font; c.textAlign = "center"; c.fillText("?", tx, (top + bot) / 2);
   }
-  c.strokeStyle = TK.box; c.lineWidth = 1.5;
-  for (let i = 1; i < 10; i++) { const y = bot - i * (bot - top - bw / 2) / 10; c.beginPath(); c.moveTo(tx + bw / 2, y); c.lineTo(tx + bw / 2 + (i % 5 ? 6 : 11), y); c.stroke(); }
 }
 function niceStep(range, n){
   const raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
@@ -740,7 +763,7 @@ function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt){
   sizeCanvas(cv, hgt || 220);
   const c = cv.getContext("2d"), W = cv.width / dpr, Hh = cv.height / dpr;
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, Hh);
-  const fam = getComputedStyle(document.body).fontFamily;
+  const fam = TK.font;
   const L = 64, Rm = 14, T = 12, B = 46, pw = W - L - Rm, ph = Hh - T - B;
   const tl = pts.length ? pts[pts.length - 1].t : 0;
   const xs = niceStep(Math.max(xmaxMin, tl), 5), xmax = Math.max(xmaxMin, Math.ceil((tl + 1e-9) / xs) * xs);
@@ -766,6 +789,7 @@ function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt){
 /* ===== Readouts ===== */
 const STATE_LABEL = { solid: "Solid", melting: "Melting / freezing: solid and liquid", liquid: "Liquid", boiling: "Boiling / condensing: liquid and gas", gas: "Gas" };
 let lastRead = "";
+const setAttr = (el, a, v) => { if (el.getAttribute(a) !== v) el.setAttribute(a, v); };
 function updateReadouts(){
   const T = M.T(H), st = M.state(H), dir = heaterDir();
   const read = hideTemp ? "? °C" : degC(T);
@@ -773,21 +797,37 @@ function updateReadouts(){
   const s = $("status");
   const txt = dir > 0 ? "▲ Heating" : dir < 0 ? "▼ Cooling" : "Heater off";
   if (s.textContent !== txt) { s.textContent = txt; s.className = "status" + (dir > 0 ? " heat" : dir < 0 ? " cool" : ""); }
-  $("heatBtn").setAttribute("aria-pressed", dir > 0 && Ht >= M.Htot - 1e-9 ? "true" : "false");
-  $("coolBtn").setAttribute("aria-pressed", dir < 0 && Ht <= 1e-9 ? "true" : "false");
+  setAttr($("heatBtn"), "aria-pressed", dir > 0 && Ht >= M.Htot - 1e-9 ? "true" : "false");   // only touch the page when a value changes
+  setAttr($("coolBtn"), "aria-pressed", dir < 0 && Ht <= 1e-9 ? "true" : "false");
   const b = $("badge");
   if (support.labels) {
     let t = hideTemp ? "Label hidden for this task" : "State: " + STATE_LABEL[st];
     if (!hideTemp && st === "liquid" && P.some(p => p.ph === "g")) t += " (some evaporating)";
     if (b.textContent !== t) b.textContent = t;
-    b.hidden = false;
-  } else b.hidden = true;
+    if (b.hidden) b.hidden = false;
+  } else if (!b.hidden) b.hidden = true;
 }
 
 /* ===== Main loop ===== */
-let last = 0, drawAcc = 1e9;
-function frame(now){
-  const dt = Math.min(1 / 30, last ? (now - last) / 1000 : 0); last = now;
+/* Speed on slow school PCs (Dan, 12 Oct 2026): the particles always move, so the loop runs whenever the model
+   can be seen, but it works and draws at most 30 times a second (fewer if the PC can't keep up), and it stops
+   while the tab is hidden or the model is scrolled off the screen. Physics is time-based, so speeds don't change. */
+const FPS = [30, 20, 15, 12];
+let last = 0, drawAcc = 1e9, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0;
+const wantLoop = () => !document.hidden && onScreen;
+function kick(){ if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = 0; nextDue = performance.now(); requestAnimationFrame(() => frame()); } }
+function frame(){
+  const now = performance.now();   // timer-driven (no empty animation frames between ticks)
+  if (!wantLoop()) { loopOn = false; last = 0; return; }
+  const gap = 1000 / FPS[fpsI];
+  nextDue = nextDue + gap < now + 2 ? now + gap : nextDue + gap;   // frame cap: the next tick on a steady 30 fps grid
+  setTimeout(frame, nextDue - now);
+  if (lastWork) {   // quiet safety net: if frames average too long over about a second, use a lower frame rate
+    if (now > ivWarm) { ivSum += now - lastWork; ivN++; }   // (not in the first second after starting)
+    if (now - ivT0 >= 1000) { const lim = fpsI ? 1250 / FPS[fpsI] : 40; if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) fpsI++; ivSum = ivN = 0; ivT0 = now; }
+  } else ivT0 = ivWarm = now + 1000;
+  lastWork = now;
+  const dt = Math.min(0.1, last ? (now - last) / 1000 : 0); last = now;
   // heater: constant power towards the target energy
   const dir = heaterDir();
   if (dir) {
@@ -798,13 +838,13 @@ function frame(now){
     if (!heaterDir()) { slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); graphPts.push({ t: graphT, T: M.T(H) }); if (support.graph) drawLiveGraph(); }
   }
   adjustPhases();
-  const sub = 4; for (let i = 0; i < sub; i++) { simTime += dt / sub; physics(dt / sub); }
+  const sub = Math.max(1, Math.ceil(dt * 120 - 1e-6)); for (let i = 0; i < sub; i++) { simTime += dt / sub; physics(dt / sub); }   // physics steps of 1/120 s or less, whatever the frame rate
   drawAcc += dt;
   if (!stepped || drawAcc >= 0.8) { drawAcc = 0; drawStage(); }
   updateReadouts();
-  requestAnimationFrame(frame);
 }
-document.addEventListener("visibilitychange", () => { last = 0; });
+document.addEventListener("visibilitychange", () => { last = 0; kick(); });
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(stage);   // the top 64 px sit under the sticky top bar
 
 function drawLiveGraph(){ drawGraph(graphCv, graphPts, M.S.min, M.S.max, 20); }
 function clearGraph(){ graphPts = [{ t: 0, T: M.T(H) }]; graphT = 0; graphAcc = 0; if (support.graph) drawLiveGraph(); }
@@ -1424,7 +1464,7 @@ LEVELS = { easy: [...TASKS.warm, ...TASKS.core].slice(0, 10),   // 5–10 questi
 readTokens(); paintMotion(); sizeCanvas(stage);
 paintScore(); setMode("demo"); fitPanel();
 try { if (localStorage.getItem("ks3tools-toured:particle-model")) $("newHere").hidden = true; } catch (e) {}
-requestAnimationFrame(frame);
+kick();
 })();
 </script>
 </body>

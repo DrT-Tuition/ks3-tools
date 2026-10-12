@@ -240,7 +240,7 @@ footer.brand a{color:inherit}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
-.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid transparent}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
 .topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
 .tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
 .tb-name svg{height:28px;width:auto}
@@ -656,20 +656,34 @@ const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 
 /* ===== Theme tokens for canvas ===== */
 /* House particle (same look in every tool): solid fill, dark outline about 0.15 × radius, white highlight up and to the left */
+/* Particles are stamped from small pre-drawn sprites (same house look). Each sprite is drawn at one of 4×4 quarter-pixel
+   offsets, so it can be copied at a whole-pixel position (fast, no resampling) while the motion stays smooth. */
+const SPR = {};
+function houseSprite(c, x, y, r, fill, edge, d) {   // c in device pixels (identity transform); x, y in CSS px; d = device scale
+  const X = x * d, Y = y * d, ix = Math.floor(X), iy = Math.floor(Y);
+  let fx = Math.round((X - ix) * 4), fy = Math.round((Y - iy) * 4), ox = ix, oy = iy;
+  if (fx === 4) { fx = 0; ox++; } if (fy === 4) { fy = 0; oy++; }
+  const k = r + "|" + fill + "|" + edge + "|" + d + "|" + fx + "|" + fy;
+  let sp = SPR[k];
+  if (!sp) { const pad = Math.ceil((r + 2) * d) + 1, S = pad * 2 + 1; sp = document.createElement("canvas"); sp.width = sp.height = S;
+    const g = sp.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); houseParticle(g, (pad + fx / 4) / d, (pad + fy / 4) / d, r, fill, edge); sp._p = pad; sp._img = sp; SPR[k] = sp;
+    if (window.createImageBitmap) createImageBitmap(sp).then(bm => { sp._img = bm; }, () => {}); }   // a bitmap avoids copying the sprite canvas every frame
+  c.drawImage(sp._img, ox - sp._p, oy - sp._p);
+}
 function houseParticle(c, x, y, r, fill, edge) {
   c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fillStyle = fill; c.fill();
   c.lineWidth = Math.max(1, r * 0.145); c.strokeStyle = edge; c.stroke();
   c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.28, 0, 6.2832); c.fillStyle = "rgba(255,255,255,.38)"; c.fill();
 }
-let tok = {};
+let tok = {}, tokVer = 0, FF = "sans-serif";
 function readTokens(){
-  const cs = getComputedStyle(document.documentElement);
+  const cs = getComputedStyle(document.documentElement); tokVer++; FF = getComputedStyle(document.body).fontFamily;
   for (const k of ["ink", "muted", "accent", "line", "sunk", "surface", "good", "bad", "gold", "particle", "particle-edge", "particle-2"]) tok[k] = cs.getPropertyValue("--" + k).trim();
 }
 
 /* ===== Canvas sizing ===== */
 function fit(c){
-  const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const r = c.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 1.5);   // capped: big backing stores are slow on school PCs
   const w = Math.max(10, Math.round(r.width)), h = Math.max(10, Math.round(r.height));
   if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)){ c.width = Math.round(w * d); c.height = Math.round(h * d); c._dirty = true; }
   const ctx = c.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0);
@@ -703,6 +717,13 @@ function dispAt(u){
   const s = sampleAt(simT - u * CROSS);
   return s && s.air ? s.y : 0;
 }
+/* the same, read from a table filled once per frame (hundreds of particles share it) */
+const DN = 720, DTab = new Float64Array(DN + 1);
+function fillDisp(){ for (let i = 0; i <= DN; i++) DTab[i] = dispAt(i / DN); }
+function dispT(u){
+  if (!(u >= 0 && u <= 1)) return dispAt(u);
+  const x = u * DN, i = x | 0; return i >= DN ? DTab[DN] : DTab[i] + (DTab[i + 1] - DTab[i]) * (x - i);
+}
 function earSample(){
   if (!airOn) return null;
   if (!playing) return { A: Acur, P: Pnow() };
@@ -731,68 +752,97 @@ const PIC = {};
 const SPK_CONE = 74 / 200;   // where the cone starts across the speaker picture
 
 /* ===== Draw the air ===== */
+let airLayer = null, airKey = "", airBg = "";   // the still parts of the picture (background, magnet, ear, words), drawn once per size / theme
+/* The still layer is then shown as the canvas's CSS background (once it has loaded), so each frame only draws what moves. */
+function setAirBg(key){
+  if (!airLayer.toBlob || !window.URL) return;
+  airLayer.toBlob(b => {
+    if (!b || key !== airKey) return;
+    const url = URL.createObjectURL(b), im = new Image();
+    im.onload = () => {
+      if (key !== airKey) { URL.revokeObjectURL(url); return; }
+      airC.style.backgroundImage = "url(" + url + ")"; airC.style.backgroundSize = "100% 100%"; airC.style.backgroundRepeat = "no-repeat";
+      if (airC._bgUrl) URL.revokeObjectURL(airC._bgUrl); airC._bgUrl = url; airBg = key;
+      if (!rafId) draw();
+    };
+    im.src = url;
+  });
+}
 function drawAir(){
-  const { ctx, w, h } = fit(airC);
-  ctx.clearRect(0, 0, w, h); ctx.fillStyle = tok.sunk; ctx.fillRect(0, 0, w, h);
+  const { ctx, w, h } = fit(airC), d = airC.width / w;
   const spkW = Math.max(54, Math.min(86, w * .11)), earW = Math.max(52, Math.min(80, w * .1));
   const x0 = spkW + 2, x1 = w - earW - 4, W = x1 - x0, cy = h / 2;
   const maxD = Math.min(16, W * .032);
   layoutParticles(W, h);
-  // speaker: magnet + cone; the cone face moves with the vibration (also in a vacuum)
+  const s = Math.min(1, h / 210);
+  const key = [airC.width, airC.height, tokVer, airOn, !!PIC.speaker, !!PIC.ear].join("|");
+  if (key !== airKey) {
+    airKey = key; airLayer = airLayer || document.createElement("canvas");
+    airLayer.width = airC.width; airLayer.height = airC.height;
+    const c = airLayer.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0);
+    c.clearRect(0, 0, w, h); c.fillStyle = tok.sunk; c.fillRect(0, 0, w, h);
+    if (PIC.speaker) {
+      const im = PIC.speaker, Hd = Math.min(150 * s, h - 64), k = Hd / im.height, cx0 = im.width * SPK_CONE, mw = cx0 * k;
+      c.drawImage(im, 0, 0, cx0, im.height, 6, cy - Hd / 2, mw, Hd);                                     // magnet: still
+    } else { c.fillStyle = tok.muted; c.fillRect(6, cy - 22 * s, 20 * s + 6, 44 * s); }
+    c.font = "700 14px " + FF; c.fillStyle = tok.ink; c.textAlign = "center";
+    c.fillText("Speaker", spkW / 2 + 2, h - 8);
+    // ear
+    const ex = w - earW / 2 + 2, es = s;
+    if (PIC.ear) { const r = PIC.ear.width / PIC.ear.height, eh = Math.min(96 * es, (earW - 4) / r), ew = eh * r; c.drawImage(PIC.ear, w - ew - 4, cy - eh / 2, ew, eh); }
+    else {
+      c.strokeStyle = tok.ink; c.lineWidth = 3; c.beginPath();
+      c.moveTo(ex - 14 * es, cy - 30 * es);
+      c.bezierCurveTo(ex + 6 * es, cy - 56 * es, ex + 34 * es, cy - 34 * es, ex + 22 * es, cy - 2 * es);
+      c.bezierCurveTo(ex + 14 * es, cy + 18 * es, ex + 2 * es, cy + 16 * es, ex + 2 * es, cy + 32 * es);
+      c.bezierCurveTo(ex + 2 * es, cy + 44 * es, ex - 12 * es, cy + 46 * es, ex - 16 * es, cy + 36 * es);
+      c.stroke(); c.lineWidth = 2.5; c.beginPath();
+      c.moveTo(ex - 6 * es, cy - 18 * es); c.bezierCurveTo(ex + 8 * es, cy - 30 * es, ex + 20 * es, cy - 12 * es, ex + 6 * es, cy + 2 * es);
+      c.stroke();
+    }
+    c.fillText("Ear", ex, h - 8);
+    if (airOn){ c.textAlign = "left"; c.fillStyle = tok.muted; c.font = "400 14px " + FF; c.fillText("The sound travels this way →", x0 + 10, 18); }
+    setAirBg(key);
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, airC.width, airC.height); if (airBg !== airKey) ctx.drawImage(airLayer, 0, 0); ctx.setTransform(d, 0, 0, d, 0, 0);
+  // speaker cone: the face moves with the vibration (also in a vacuum)
   const yNow = playing ? (hist.length ? hist[hist.length - 1].y : 0) : Acur * Math.sin(phase);
-  const face = x0 + yNow * maxD, s = Math.min(1, h / 210);
+  const face = x0 + yNow * maxD;
   if (PIC.speaker) {
     const im = PIC.speaker, Hd = Math.min(150 * s, h - 64), k = Hd / im.height, cx0 = im.width * SPK_CONE, mw = cx0 * k;
-    ctx.drawImage(im, 0, 0, cx0, im.height, 6, cy - Hd / 2, mw, Hd);                                   // magnet: still
     ctx.drawImage(im, cx0, 0, im.width - cx0, im.height, 6 + mw - 0.5, cy - Hd / 2, face + 4 - (6 + mw - 0.5), Hd); // cone: to the moving face
   } else {
-    ctx.fillStyle = tok.muted; ctx.fillRect(6, cy - 22 * s, 20 * s + 6, 44 * s);
     ctx.beginPath(); ctx.moveTo(26 * s + 6, cy - 16 * s); ctx.lineTo(face, cy - 70 * s); ctx.lineTo(face, cy + 70 * s); ctx.lineTo(26 * s + 6, cy + 16 * s); ctx.closePath();
     ctx.fillStyle = tok.line; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = tok.ink; ctx.stroke();
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(face, cy - 70 * s); ctx.lineTo(face, cy + 70 * s); ctx.stroke();
   }
-  ctx.font = "700 14px " + getComputedStyle(document.body).fontFamily; ctx.fillStyle = tok.ink; ctx.textAlign = "center";
-  ctx.fillText("Speaker", spkW / 2 + 2, h - 8);
-  // ear
-  const ex = w - earW / 2 + 2, es = s;
-  if (PIC.ear) { const r = PIC.ear.width / PIC.ear.height, eh = Math.min(96 * es, (earW - 4) / r), ew = eh * r; ctx.drawImage(PIC.ear, w - ew - 4, cy - eh / 2, ew, eh); }
-  else {
-    ctx.strokeStyle = tok.ink; ctx.lineWidth = 3; ctx.beginPath();
-    ctx.moveTo(ex - 14 * es, cy - 30 * es);
-    ctx.bezierCurveTo(ex + 6 * es, cy - 56 * es, ex + 34 * es, cy - 34 * es, ex + 22 * es, cy - 2 * es);
-    ctx.bezierCurveTo(ex + 14 * es, cy + 18 * es, ex + 2 * es, cy + 16 * es, ex + 2 * es, cy + 32 * es);
-    ctx.bezierCurveTo(ex + 2 * es, cy + 44 * es, ex - 12 * es, cy + 46 * es, ex - 16 * es, cy + 36 * es);
-    ctx.stroke(); ctx.lineWidth = 2.5; ctx.beginPath();
-    ctx.moveTo(ex - 6 * es, cy - 18 * es); ctx.bezierCurveTo(ex + 8 * es, cy - 30 * es, ex + 20 * es, cy - 12 * es, ex + 6 * es, cy + 2 * es);
-    ctx.stroke();
-  }
-  ctx.fillText("Ear", ex, h - 8);
   // field
   if (!airOn){
     ctx.setLineDash([8, 6]); ctx.strokeStyle = tok.muted; ctx.lineWidth = 2; ctx.strokeRect(x0 + 8, 10, W - 16, h - 20); ctx.setLineDash([]);
-    ctx.fillStyle = tok.muted; ctx.font = "700 17px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = tok.muted; ctx.font = "700 17px " + FF; ctx.textAlign = "center";
     ctx.fillText("No air: a vacuum", x0 + W / 2, cy - 4);
-    ctx.font = "400 15px " + getComputedStyle(document.body).fontFamily;
+    ctx.font = "400 15px " + FF;
     ctx.fillText("No particles to pass the vibration on", x0 + W / 2, cy + 20);
   } else {
-    ctx.textAlign = "left"; ctx.fillStyle = tok.muted; ctx.font = "400 14px " + getComputedStyle(document.body).fontFamily;
-    ctx.fillText("The sound travels this way →", x0 + 10, 18);
+    fillDisp();
     // faint shading where the particles are squashed together (higher pressure)
     const NB2 = 90;
     for (let i = 0; i < NB2; i++){
-      const u = (i + .5) / NB2, d = -(dispAt(u + .5 / NB2) - dispAt(u - .5 / NB2)) * maxD / (W / NB2);
+      const u = (i + .5) / NB2, d = -(dispT(u + .5 / NB2) - dispT(u - .5 / NB2)) * maxD / (W / NB2);
       if (d > 0.02){ ctx.globalAlpha = Math.min(.3, d * 1.2); ctx.fillStyle = tok.accent; ctx.fillRect(x0 + i * W / NB2, 26, W / NB2 + .5, h - 34); }
     }
     ctx.globalAlpha = 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     for (let k = 0; k < parts.length; k++){
       const p = parts[k]; if (k === ringIdx) continue;
-      const x = x0 + p.u * W + dispAt(p.u) * maxD;
-      houseParticle(ctx, x, p.y, 3.3, tok.particle, tok["particle-edge"]);
+      const x = x0 + p.u * W + dispT(p.u) * maxD;
+      houseSprite(ctx, x, p.y, 3.3, tok.particle, tok["particle-edge"], d);
     }
+    ctx.setTransform(d, 0, 0, d, 0, 0);
     // ringed particle with a mark at its home position
-    const rp = parts[ringIdx], hx = x0 + rp.u * W, rx = hx + dispAt(rp.u) * maxD;
+    const rp = parts[ringIdx], hx = x0 + rp.u * W, rx = hx + dispT(rp.u) * maxD;
     ctx.strokeStyle = tok["particle-2"]; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(hx, rp.y + 9); ctx.lineTo(hx, rp.y + 19); ctx.stroke();
-    houseParticle(ctx, rx, rp.y, 4.6, tok["particle-2"], tok["particle-edge"]);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); houseSprite(ctx, rx, rp.y, 4.6, tok["particle-2"], tok["particle-edge"], d); ctx.setTransform(d, 0, 0, d, 0, 0);
     ctx.strokeStyle = tok["particle-2"]; ctx.beginPath(); ctx.arc(rx, rp.y, 8.5, 0, 6.2832); ctx.lineWidth = 2; ctx.stroke();
     if (support.airlabels) drawAirLabels(ctx, x0, W, h, maxD);
   }
@@ -807,7 +857,7 @@ function drawAirLabels(ctx, x0, W, h, maxD){
     if (-d > best.r){ best.r = -d; best.ru = u; }
   }
   const lab = (u, text) => {
-    const x = x0 + u * W, f = getComputedStyle(document.body).fontFamily;
+    const x = x0 + u * W, f = FF;
     ctx.font = "700 14px " + f; const tw = ctx.measureText(text).width + 14;
     const bx = Math.min(Math.max(x - tw / 2, x0 + 2), x0 + W - tw - 2), by = h - 26;
     ctx.fillStyle = tok.surface; ctx.strokeStyle = tok.accent; ctx.lineWidth = 1.5;
@@ -821,7 +871,10 @@ function drawAirLabels(ctx, x0, W, h, maxD){
 
 /* ===== Draw an oscilloscope trace ===== */
 function drawTrace(c, curves, opts){
-  const { ctx, w, h } = fit(c); const f = getComputedStyle(document.body).fontFamily;
+  const { ctx, w, h } = fit(c); const f = FF;
+  // the trace only changes when the sound at the ear (or a setting) changes: skip identical redraws
+  const key = JSON.stringify([curves, opts, c.width, c.height, tokVer]);
+  if (key === c._key) return; c._key = key;
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = tok.sunk; ctx.fillRect(0, 0, w, h);
   const pad = 10, top = opts.small ? 8 : 26, cy = top + (h - top - 8) / 2, ampMax = (h - top - 8) / 2 - 4;
   const X = tau => pad + (tau / FACTS.traceWindow) * (w - 2 * pad);
@@ -897,22 +950,34 @@ function drawMinis(){
   for (const k of ["A", "B"]){ const c = $("mini" + k); if (c) drawTrace(c, [{ L: shownTrace(t, k).L, P: shownTrace(t, k).P }], { small: true, grid: support.grid }); }
 }
 
-/* ===== Animation loop: paused when hidden; reduced motion starts paused ===== */
+/* ===== Animation loop: paused when hidden or scrolled off-screen; reduced motion starts paused =====
+   Drawing is capped at 30 frames a second (fewer if the PC cannot keep up); the motion is time-based so speeds do not change. */
+let fpsCap = 30, perfN = 0, perfT = 0, perfBad = 0, onScreen = true;
+function canRun(){ return !document.hidden && onScreen; }
 function frame(now){
   rafId = 0;
-  const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 0; lastFrame = now;
+  if (!canRun()) { lastFrame = 0; return; }
+  if (lastFrame && now - lastFrame < 1000 / fpsCap - 2){ if (playing) rafId = requestAnimationFrame(frame); return; }   // frame cap
+  const dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
+  if (lastFrame){ perfT += now - lastFrame; if (++perfN >= fpsCap){ perfBad = perfT / perfN > 40 ? perfBad + 1 : 0; if (perfBad >= 2 && fpsCap > 10){ fpsCap = fpsCap > 20 ? 20 : fpsCap > 15 ? 15 : 10; perfBad = 0; } perfN = perfT = 0; } }   // quiet safety net
+  lastFrame = now;
   if (playing){
-    simT += dt; Acur += (Atarget() - Acur) * Math.min(1, dt * 8);
-    phase += 2 * Math.PI * fDisp(Pnow()) * dt;
-    hist.push({ t: simT, y: Acur * Math.sin(phase), A: Acur, P: Pnow(), air: airOn });
+    // record the speaker's movement in steps of at most 1/60 s, so the wave in the air stays smooth at a lower frame rate
+    const n = Math.max(1, Math.ceil(dt * 60 - 1e-6)), st = dt / n;
+    for (let i = 0; i < n; i++){
+      simT += st; Acur += (Atarget() - Acur) * Math.min(1, st * 8); if (Math.abs(Atarget() - Acur) < 1e-4) Acur = Atarget();
+      phase += 2 * Math.PI * fDisp(Pnow()) * st;
+      hist.push({ t: simT, y: Acur * Math.sin(phase), A: Acur, P: Pnow(), air: airOn });
+    }
     while (hist.length > 2 && hist[1].t < simT - CROSS - 0.4) hist.shift();
   }
   draw(); if (soundOn) audioUpdate();
-  if (playing && !document.hidden) rafId = requestAnimationFrame(frame);
+  if (playing && canRun()) rafId = requestAnimationFrame(frame); else lastFrame = 0;
 }
-function kick(){ if (!rafId && !document.hidden){ lastFrame = 0; rafId = requestAnimationFrame(frame); } }
+function kick(){ if (!rafId && canRun()){ lastFrame = 0; rafId = requestAnimationFrame(frame); } }
 function redraw(){ if (!playing) { Acur = Atarget(); draw(); } else kick(); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); audioUpdate(); });
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }).observe(airC);
 
 /* ===== Real sound (Web Audio), off by default ===== */
 let actx = null, osc = null, gain = null;
