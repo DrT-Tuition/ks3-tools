@@ -14,11 +14,13 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
+| Acid Strength | Chemistry | https://drt-tuition.github.io/ks3-tools/acid-strength.html |
 | Indicator Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/indicator-lab.html |
 | Neutralise It | Chemistry | https://drt-tuition.github.io/ks3-tools/neutralise-it.html |
 | Naming Salts | Chemistry | https://drt-tuition.github.io/ks3-tools/naming-salts.html |
 | Dissolving | Chemistry | https://drt-tuition.github.io/ks3-tools/dissolving.html |
 | Separate It | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
+| Metal Reactions | Chemistry | https://drt-tuition.github.io/ks3-tools/metal-reactions.html |
 | Displacement Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
 | Moon Phases | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
 | Make a Wave | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
@@ -27,6 +29,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Light Rays | Physics | https://drt-tuition.github.io/ks3-tools/light-rays.html |
 | Colour Mixer | Physics | https://drt-tuition.github.io/ks3-tools/colour-mixer.html |
 | Lens and Eye | Physics | https://drt-tuition.github.io/ks3-tools/lens-and-eye.html |
+| Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 
 ## Credits
 
