@@ -33,6 +33,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Colour Mixer | Physics | https://drt-tuition.github.io/ks3-tools/colour-mixer.html |
 | Lens and Eye | Physics | https://drt-tuition.github.io/ks3-tools/lens-and-eye.html |
 | Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
+| DNA Builder | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 
 ## Credits
 

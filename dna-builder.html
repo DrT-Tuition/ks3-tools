@@ -1,0 +1,1855 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNA Builder</title>
+<!--
+  SCIENCE SPEC: DNA Builder (dna-builder.html)
+  First A-level tool; placed in the ks3-tools site under an A-level Biology heading at Dan's request, 13 Oct 2026.
+  Level: A-level Biology, OCR A (H420) 2.1.3 (a)–(d)(i). Year 12 reading level (Tier 3 words as in the deck).
+  Serves (SoW): Y12 OCR A 2.1.3 lesson 1, "Nucleotides and DNA structure". Later lessons (DNA replication,
+    transcription and translation) may reuse the strand and double-helix views.
+  Source: Y12 lesson deck "Nucleotides and DNA structure", slides 1–19 (all facts, values and question wording).
+    Slide 6 key words · 7 the monomer, ribose OH / deoxyribose H at carbon 2, phosphate at C5, base at C1 ·
+    8 DNA against RNA (sugar, T/U, double/single strand) · 9 purines double ring (A, G), pyrimidines single ring
+    (C, T, U), purine always pairs with pyrimidine so constant width · 10 condensation releases water, phosphodiester
+    bond links C5 of one sugar to C3 of the next, sugar–phosphate backbone, hydrolysis adds water and breaks it ·
+    11 sort (purine / pyrimidine / sugar / bond) · 12 adenosine is a nucleoside; AMP, ADP, ATP; "phosphorylated" ·
+    13 antiparallel strands, hydrogen bonds, A–T 2, G–C 3, twisting gives the double helix · 14 hinge (5′–AGCT–3′) ·
+    15 find it and fix it · 16–18 exam questions and mark scheme (REJECTs) · 19 exit ticket (20% A → 30% G).
+  What it models (one SVG, three views):
+    1 Nucleotide: choose ribose or deoxyribose, pick up a base (A, T, C, G, U) or a phosphate and attach it to a
+      carbon. Only C1′ (base) and C5′ (phosphate) are accepted; other carbons are refused with a reason. C2′ shows
+      OH (ribose) or H (deoxyribose). T with ribose and U with deoxyribose are allowed but flagged. Adenine + ribose
+      = adenosine (a nucleoside); add phosphates one at a time → AMP, ADP, ATP.
+    2 Polynucleotide: up to 6 DNA nucleotides. Line the next one up so its phosphate sits beside C3′ of the last
+      sugar; Condense releases H₂O and forms a phosphodiester bond (C5′–phosphate–C3′). A flipped nucleotide (its
+      C3′ facing the strand's C3′) is refused. Hydrolyse adds H₂O and breaks the end bond. 5′ and 3′ ends labelled.
+    3 Double helix: an editable DNA template (2–6 bases, 5′ → 3′); pupils add bases to the new strand, drawn
+      inverted (antiparallel). Correct pairs show hydrogen bonds as dashes (A–T 2, G–C 3). Purine–purine is too wide
+      (the strand bulges out); pyrimidine–pyrimidine leaves a gap (too narrow); uracil is refused (RNA only).
+      Readouts: both strands written with their ends, hydrogen-bond total, base percentages. Twist shows a stylised
+      helix. A percentage panel computes A = T, G = C from one base's percentage (total 100%).
+  Simplifications: schematic skeletal shapes (pentagon sugar with its ring O and carbons 1′–5′; phosphate as a
+    circle "P"; bases as rings with the letter inside, atoms in the bases not shown); not true bond angles or sizes;
+    a flat ladder, and the twist is a stylised 2D drawing (real DNA is a 3D helix and far longer). The free 3′ carbon
+    shows OH, as does carbon 5′ before its phosphate is attached. In the strand view the next nucleotide always joins at the 3′ end. In the double-helix view only the
+    3′ and 5′ carbons are numbered on each sugar (all five in the other views), to keep twelve sugars legible.
+  Misconceptions designed out (deck slides 14, 15, 17, 18): hydrolysis for condensation; DNA made of amino acids;
+    "a helix" (single) for the double helix; "dioxyribose"; phosphodiester bonds between the strands (they are within
+    a strand; hydrogen bonds hold the strands); a non-comparison answer for ATP against ADP; writing the complementary
+    strand in the wrong direction; uracil in DNA; adenosine called a nucleotide; purine–purine or
+    pyrimidine–pyrimidine pairs.
+  Facts and values used: three components (pentose sugar, phosphate group, nitrogenous base); deoxyribose (DNA,
+    H on C2′) and ribose (RNA, OH on C2′); phosphate at C5′, base at C1′; purines A, G (double ring); pyrimidines
+    C, T, U (single ring); T in DNA, U in RNA, A C G in both; DNA double-stranded, RNA single-stranded; A–T 2 and
+    G–C 3 hydrogen bonds; phosphodiester bond C5′ → C3′ by condensation, water released; hydrolysis adds water;
+    adenosine = adenine + ribose, a nucleoside; 1, 2, 3 phosphates → AMP, ADP, ATP; PO₄³⁻ (starter only);
+    exit ticket 20% A → G 30%.
+  Checks in code: base pairs, complements, hydrogen-bond totals, percentages, nucleotide names and every question
+    answer are computed from the fact tables; on load bankCheck() verifies every question (one right option, a reason
+    on every wrong one, 3 hints, goals reachable and not already met, computed numbers whole and distinct from the
+    planned wrong answers) and the drawing geometry (purine–pyrimidine fits the fixed width; purine–purine too wide;
+    pyrimidine–pyrimidine leaves a gap). Any failure shows a visible error box and switches that question off.
+  Drawing: everything is drawn by code in SVG (no images); labels in code; colours from CSS tokens (light and dark).
+  Performance: drawn on demand (no animation loop at rest). Condense, Hydrolyse and Twist animate for about a second
+    with paceFrame() (30 fps cap, adaptive slow-down) and finish at once if the tab is hidden or the model scrolls
+    off-screen; morph() patches the SVG; no CSS filters, no backdrop-filter. Reduced motion: still steps, no movement.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF;
+  --sugar:#F6E7B4;--sugar-edge:#7A5E14;--pur:#D3E3F6;--pur-edge:#2D5B8C;--pyr:#F9DCC8;--pyr-edge:#A8460F;--bond:#1E252E;
+  --hb:#2D5B8C;--s1:#2D5B8C;--s2:#C2571A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#5A6472;--fresh:#1D6B3F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --sugar:#5E5024;--sugar-edge:#E4C46A;--pur:#244670;--pur-edge:#8CC4FF;--pyr:#5A3524;--pyr-edge:#FFB37A;--bond:#E9EDF3;
+  --hb:#8CC4FF;--s1:#8CC4FF;--s2:#FFB37A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#A9B4C4;--fresh:#7FD4A0}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --sugar:#5E5024;--sugar-edge:#E4C46A;--pur:#244670;--pur-edge:#8CC4FF;--pyr:#5A3524;--pyr-edge:#FFB37A;--bond:#E9EDF3;
+  --hb:#8CC4FF;--s1:#8CC4FF;--s2:#FFB37A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#A9B4C4;--fresh:#7FD4A0}
+
+h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-bottom:2px}
+.scenewrap{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#scene{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+#scene text{font-family:var(--f-body)}
+/* drawing */
+.bd{stroke:var(--bond);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bd.fresh{stroke:var(--fresh);stroke-width:4}
+.bd.brk{stroke-dasharray:4 5;opacity:.6}
+.sug{fill:var(--sugar);stroke:var(--sugar-edge);stroke-width:2.2;stroke-linejoin:round}
+.pur{fill:var(--pur);stroke:var(--pur-edge);stroke-width:2.2;stroke-linejoin:round}
+.pyr{fill:var(--pyr);stroke:var(--pyr-edge);stroke-width:2.2;stroke-linejoin:round}
+.pho{fill:var(--particle);stroke:var(--particle-edge)}
+.hl{fill:rgba(255,255,255,.38)}
+.wo{fill:var(--particle-2);stroke:var(--particle-edge)}
+.wh{fill:var(--hcol);stroke:var(--particle-edge)}
+.pl{fill:var(--particle-ink);font-weight:700}
+.ol{fill:var(--sugar-edge);font-weight:700}
+.obg{fill:var(--sunk)}
+.bl{fill:var(--ink);font-weight:700}
+.cn{fill:var(--muted);font-weight:700}
+.sm{fill:var(--ink);font-weight:700}
+.tx{fill:var(--ink)}
+.halo{paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.endl{fill:var(--accent);font-weight:700}
+.capt{fill:var(--muted);font-weight:700}
+.hb{stroke:var(--hb);stroke-width:2.6;stroke-dasharray:3.5 3;fill:none}
+.ghost{fill:none;stroke:var(--slot);stroke-width:1.8;stroke-dasharray:5 4}
+.tgt{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 5}
+.hot{fill:transparent;stroke:var(--accent);stroke-width:2.2;stroke-dasharray:5 4;cursor:pointer}
+.hot:hover,.hot:focus-visible{fill:rgba(217,165,54,.22);outline:none}
+.hot.bad{stroke:var(--bad);stroke-dasharray:none;stroke-width:3}
+.slot{fill:transparent;cursor:pointer;stroke:none}
+.slot.sel{fill:rgba(217,165,54,.13);stroke:var(--hlite);stroke-width:3}
+.slot:focus-visible{outline:none;stroke:var(--focus);stroke-width:3}
+.hlite{fill:none;stroke:var(--hlite);stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.hlc{fill:none;stroke:var(--hlite);stroke-width:4}
+.badbox{fill:none;stroke:var(--bad);stroke-width:2.4;stroke-dasharray:6 4}
+.badt{fill:var(--bad);font-weight:700}
+.grab{cursor:grab}
+#scene text{pointer-events:none}
+.rib1{stroke:var(--s1);stroke-width:10;fill:none;stroke-linecap:round}
+.rib2{stroke:var(--s2);stroke-width:10;fill:none;stroke-linecap:round}
+.back{opacity:.42}
+.rung{stroke-width:9;stroke-linecap:butt}
+.rung.pur{stroke:var(--pur-edge);fill:none}.rung.pyr{stroke:var(--pyr-edge);fill:none}
+.drag{cursor:grabbing}
+/* key line + support legends */
+.keyline{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;font-size:15px;color:var(--muted)}
+.keyline span{display:inline-flex;align-items:center;gap:5px}
+.keyline svg{height:20px;width:auto;flex:none}
+.legend{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;display:grid;gap:2px}
+.legend p{margin:0;font-size:16px;line-height:1.45}
+.legend .hook{color:var(--muted)}
+/* controls */
+.ctl{display:grid;gap:10px}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.segb.tog{border-style:dashed}
+.segb.tog[aria-pressed="true"]{border-style:solid;border-color:var(--accent)}
+.segb .state{font-weight:400;color:var(--muted)}
+.scenetabs button{font-size:17px}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+#tmplIn{font:700 20px var(--f-body);letter-spacing:.2em;text-transform:uppercase;width:9.5em;min-height:44px;padding:4px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.readline{margin:0;font-size:18px;line-height:1.45;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.readline .k{font-size:15px;font-weight:700;color:var(--muted)}
+.readline b{color:var(--accent)}
+.readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;gap:0;min-width:0}
+.ro.wide2{grid-column:span 2}.ro.wide4{grid-column:1/-1}.ro.wide3{grid-column:span 3}
+.ro .k{font-size:14px;font-weight:700;color:var(--muted);line-height:1.3}
+.ro .v{font-size:22px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere}
+.ro .v.sm{font-size:17px}
+.rbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;min-width:0}
+.rbox h2{font:700 16px var(--f-body);color:var(--muted);margin:0}
+#pctIn{flex:1 1 160px;min-width:140px;min-height:44px;accent-color:var(--accent)}
+#pctOut{font-size:22px;font-weight:700;color:var(--accent);min-width:3.2em;font-variant-numeric:tabular-nums}
+.pctbars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pbar{display:grid;gap:2px;font-size:16px}
+.pbar .t{font-weight:700}
+.pbar .track{height:14px;border-radius:7px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.pbar .fill{height:100%;background:var(--accent)}
+.pbar .fill.py{background:var(--particle-2)}
+.pbar .n{font-size:20px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.work{margin:0;padding-left:24px;font-size:16px;line-height:1.5;display:grid;gap:1px}
+.small2{font-size:15px;color:var(--muted)}
+.hidenote{color:var(--muted);font-size:16px;margin:0}
+body.quiz .demo-only{display:none!important}
+@media (max-width:640px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.ro.wide3{grid-column:span 2}.ro .v{font-size:20px}.pctbars{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .btn{padding:10px 14px}
+}
+/* answer area */
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left;line-height:1.35}
+.tile[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tile[aria-pressed="true"]::before{content:"✓"}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:150px;font:700 20px var(--f-body);min-height:48px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.sortl{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.sortl li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 12px;font-size:17px}
+.sortl li b{font-weight:700}
+.fixl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.fixl li{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 12px;display:grid;gap:2px}
+.fixl .orig{color:var(--muted);font-size:16px}
+.fixl .fixed{font-size:17px;line-height:2}
+@media (min-width:901px) and (max-height:820px){
+  #answer .tile{min-height:40px;padding:5px 10px}
+  .sortl li{padding:2px 6px 2px 12px;font-size:16px}
+  .sortl .gsel,.fixl .gsel{min-height:40px;padding:2px 6px}
+  .fixl li{padding:4px 10px}.fixl .fixed{line-height:1.8}
+}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>DNA Builder<small><b class="lvl">A-level Biology · OCR A 2.1.3</b>Build nucleotides, join them into a strand, then pair two strands into a double helix.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>DNA Builder</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="DNA model" id="model">
+      <div class="seg scenetabs" id="sceneTabs" role="group" aria-label="View">
+        <button type="button" data-scene="nuc" aria-pressed="true">Nucleotide</button>
+        <button type="button" data-scene="poly" aria-pressed="false">Polynucleotide</button>
+        <button type="button" data-scene="helix" aria-pressed="false">Double helix</button>
+      </div>
+      <p class="mnote" id="lockNote"></p>
+      <div class="scenewrap" id="sceneWrap">
+        <svg id="scene" viewBox="0 0 800 390" role="img" aria-label="A nucleotide model"><g id="world"></g></svg>
+      </div>
+      <p class="keyline" id="keyLine"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="pho" style="stroke-width:1.45"/><circle cx="8.5" cy="8.5" r="2.8" class="hl"/></svg>P = phosphate group</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L21.5 9.4 L17.9 20.6 H6.1 L2.5 9.4 Z" class="sug"/></svg>Pentagon = pentose sugar</span><span><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M3 12 L9 4 L16 7 L16 17 L9 20 Z M16 7 L22.5 3 L28.5 7 L28.5 17 L22.5 21 L16 17" class="pur"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12 L7 3.3 H17 L22 12 L17 20.7 H7 Z" class="pyr"/></svg>Rings with a letter = bases</span></p>
+      <div class="legend" id="supKey" hidden>
+        <p><b>Purines</b> have a double ring: adenine (A) and guanine (G).</p>
+        <p><b>Pyrimidines</b> have a single ring: cytosine (C), thymine (T) and uracil (U).</p>
+        <p class="hook">Memory hook: PURe As Gold (purines are adenine and guanine). Then cut the rest: Cytosine, Uracil, Thymine (C, U, T).</p>
+      </div>
+      <div class="legend" id="supPair" hidden>
+        <p><b>Pairing rules:</b> adenine pairs with thymine (A–T, 2 hydrogen bonds). Guanine pairs with cytosine (G–C, 3 hydrogen bonds).</p>
+        <p>Hydrogen bonds are drawn as dashes between the bases.</p>
+      </div>
+
+      <!-- View 1: nucleotide -->
+      <div class="ctl" id="ctlNuc">
+        <div class="ctlrow" id="sugarRow"><span class="clbl" id="sugL">Sugar:</span>
+          <div class="seg" role="group" aria-labelledby="sugL" id="sugSeg"><button type="button" data-sugar="deoxyribose" aria-pressed="true">Deoxyribose</button><button type="button" data-sugar="ribose" aria-pressed="false">Ribose</button></div></div>
+        <div class="ctl" id="partBox">
+        <div class="ctlrow" id="partRow"><span class="clbl" id="partL">Pick up:</span>
+          <div class="seg" role="group" aria-labelledby="partL" id="partSeg"><button type="button" data-part="P" aria-pressed="false">Phosphate</button><button type="button" data-part="A" aria-pressed="false" aria-label="Base A, adenine">A</button><button type="button" data-part="T" aria-pressed="false" aria-label="Base T, thymine">T</button><button type="button" data-part="C" aria-pressed="false" aria-label="Base C, cytosine">C</button><button type="button" data-part="G" aria-pressed="false" aria-label="Base G, guanine">G</button><button type="button" data-part="U" aria-pressed="false" aria-label="Base U, uracil">U</button></div></div>
+        <div class="ctlrow" id="attachRow" hidden><span class="clbl" id="attL">Attach it to carbon:</span>
+          <div class="seg" role="group" aria-labelledby="attL" id="attSeg"><button type="button" data-c="1">1′</button><button type="button" data-c="2">2′</button><button type="button" data-c="3">3′</button><button type="button" data-c="4">4′</button><button type="button" data-c="5">5′</button></div></div>
+        </div>
+        <div class="ctlrow" id="atpRow" hidden><span class="clbl">Phosphates on adenosine:</span><button type="button" class="segb" id="addP">Add one</button><button type="button" class="segb" id="remP">Take one off</button></div>
+        <div class="ctlrow"><button type="button" class="segb" id="clearNuc">Clear</button><button type="button" class="segb tog" id="cnumBtn" aria-pressed="true">Carbon numbers <span class="state">on</span></button></div>
+        <p class="mnote" id="nucNote" aria-live="polite"></p>
+        <p class="readline" id="nucRead"><span class="k">You have built:</span> <b id="nucWhat"></b></p>
+        <p class="hidenote" id="nucHidden" hidden>The readout is hidden for this question.</p>
+      </div>
+
+      <!-- View 2: polynucleotide -->
+      <div class="ctl" id="ctlPoly" hidden>
+        <div class="ctlrow" id="nextRow"><span class="clbl" id="nxL">Next nucleotide's base:</span>
+          <div class="seg" role="group" aria-labelledby="nxL" id="nextSeg"><button type="button" data-nb="A" aria-pressed="false">A</button><button type="button" data-nb="T" aria-pressed="false">T</button><button type="button" data-nb="C" aria-pressed="false">C</button><button type="button" data-nb="G" aria-pressed="false">G</button></div>
+          <button type="button" class="segb" id="flipBtn">Flip it over</button></div>
+        <div class="ctlrow" id="polyRow"><button type="button" class="btn" id="lineBtn">Line it up at the 3′ end</button><button type="button" class="btn primary" id="condBtn">Condense</button><button type="button" class="btn" id="hydBtn">Hydrolyse</button></div>
+        <p class="mnote" id="polyNote" aria-live="polite"></p>
+        <div class="readouts" id="polyRead">
+          <div class="ro wide2"><span class="k">Strand</span><span class="v" id="roSeq"></span></div>
+          <div class="ro"><span class="k">Nucleotides</span><span class="v" id="roN"></span></div>
+          <div class="ro"><span class="k">Phosphodiester bonds</span><span class="v" id="roB"></span></div>
+          <div class="ro wide4"><span class="k">Water</span><span class="v sm" id="roW"></span></div>
+        </div>
+      </div>
+
+      <!-- View 3: double helix -->
+      <div class="ctl" id="ctlHelix" hidden>
+        <div class="ctlrow" id="tmplRow"><label class="clbl" for="tmplIn">Template strand, 5′ → 3′:</label>
+          <input id="tmplIn" type="text" maxlength="6" autocomplete="off" spellcheck="false" aria-describedby="tmplHelp"><button type="button" class="segb" id="tmplSet">Use it</button><button type="button" class="segb" id="tmplNew">New sequence</button>
+          <span class="small2" id="tmplHelp">2 to 6 letters: A, T, C, G.</span></div>
+        <div class="ctlrow" id="pairRow"><span class="clbl" id="addL">Add to the new strand:</span>
+          <div class="seg" role="group" aria-labelledby="addL" id="addSeg"><button type="button" data-ab="A">A</button><button type="button" data-ab="T">T</button><button type="button" data-ab="C">C</button><button type="button" data-ab="G">G</button><button type="button" data-ab="U">U</button></div>
+          <button type="button" class="segb" id="undoB">Undo</button><button type="button" class="segb" id="clearB">Clear</button><button type="button" class="segb demo-only" id="fillB">Fill it in</button></div>
+        <div class="ctlrow"><button type="button" class="segb tog" id="twistBtn" aria-pressed="false">Twist into a helix <span class="state">off</span></button></div>
+        <p class="mnote" id="helixNote" aria-live="polite"></p>
+        <div class="readouts" id="helixRead">
+          <div class="ro wide2"><span class="k">Template strand</span><span class="v" id="roT"></span></div>
+          <div class="ro wide2"><span class="k">New strand</span><span class="v" id="roP"></span></div>
+          <div class="ro" id="roHbBox"><span class="k">Hydrogen bonds</span><span class="v" id="roHb"></span></div>
+          <div class="ro wide3"><span class="k">Bases in the molecule</span><span class="v sm" id="roPct"></span></div>
+        </div>
+        <p class="hidenote" id="helixHidden" hidden>Some readouts are hidden for this question.</p>
+        <div class="rbox" id="pctBox">
+          <h2>Base percentages in a DNA sample</h2>
+          <div class="ctlrow"><span class="clbl" id="pbL">Set the percentage of:</span>
+            <div class="seg" role="group" aria-labelledby="pbL" id="pctSeg"><button type="button" data-pb="A" aria-pressed="true">A</button><button type="button" data-pb="T" aria-pressed="false">T</button><button type="button" data-pb="G" aria-pressed="false">G</button><button type="button" data-pb="C" aria-pressed="false">C</button></div></div>
+          <div class="ctlrow"><label class="clbl" for="pctIn" id="pctLbl">Adenine:</label><input type="range" id="pctIn" min="0" max="50" step="1" value="25"><output id="pctOut" for="pctIn">25%</output></div>
+          <div class="pctbars" id="pctBars"></div>
+          <ol class="work" id="pctWork"></ol>
+        </div>
+        <p class="hidenote" id="pctHidden" hidden>The percentage panel is hidden for this question.</p>
+      </div>
+      <p class="limits" id="limits"><b>Model limits:</b> Schematic shapes, not true bond angles or sizes. The rings stand for rings of atoms; the atoms are not shown. The strands are drawn as a flat ladder: real DNA is a 3D helix, and far longer.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="key" aria-pressed="false"><span class="dot"></span>Base key <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="pair" aria-pressed="false"><span class="dot"></span>Pairing rules <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (OCR A 2.1.3 lesson 1, "Nucleotides and DNA structure"). One table each; everything else is computed. ===== */
+const PARTS = ["pentose sugar", "phosphate group", "nitrogenous base"];                    // slides 6, 7
+const SUGARS = { deoxyribose: { acid: "DNA", c2: "H" }, ribose: { acid: "RNA", c2: "OH" } };   // slide 7: carbon 2 carries H or OH
+const BASES = {                                                                             // slides 6, 8, 9
+  A: { name: "adenine", ring: "purine", dna: true, rna: true },
+  G: { name: "guanine", ring: "purine", dna: true, rna: true },
+  C: { name: "cytosine", ring: "pyrimidine", dna: true, rna: true },
+  T: { name: "thymine", ring: "pyrimidine", dna: true, rna: false },
+  U: { name: "uracil", ring: "pyrimidine", dna: false, rna: true } };
+const ATTACH = { phosphate: 5, base: 1 };                       // slide 7: phosphate at carbon 5, base at carbon 1
+const STRANDS = { DNA: 2, RNA: 1 };                             // slide 8: double-stranded, single-stranded
+const PAIR = { A: "T", T: "A", G: "C", C: "G" };                // slide 13
+const HBONDS = { A: 2, T: 2, G: 3, C: 3 };                      // slide 13: A–T 2, G–C 3
+const PDE = { from: 5, to: 3 };                                 // slide 10: phosphate links carbon 5 of one sugar to carbon 3 of the next
+const REACT = { condensation: { water: "released", bond: "forms", polymer: "builds up" },      // slide 10
+                hydrolysis: { water: "added", bond: "breaks", polymer: "breaks down" } };
+const BETWEEN = "hydrogen", WITHIN = "phosphodiester";          // slides 13, 18: hydrogen bonds between strands; phosphodiester within one
+const PHOS = { 1: "AMP", 2: "ADP", 3: "ATP" };                  // slide 12
+const NUCLEOSIDE = { base: "A", sugar: "ribose", name: "adenosine" };   // slide 12: a nucleoside, not a nucleotide
+const WIDTH_RULE = "width";                                     // slide 9: a purine always pairs with a pyrimidine, so the width stays constant
+const MAXN = 6;                                                 // strands of up to 6 nucleotides
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const comp = s => [...s].map(b => PAIR[b]).join("");
+const hbOf = s => [...s].reduce((n, b) => n + HBONDS[b], 0);
+const ringOf = b => BASES[b].ring;
+const dnaSugar = () => Object.keys(SUGARS).find(s => SUGARS[s].acid === "DNA");
+const seqW = (s, a, b) => `${a}′–${s}–${b}′`;                    // a sequence written with its ends, e.g. 5′–AGCT–3′
+function pctFrom(b, p) { const r = {}; r[b] = p; r[PAIR[b]] = p; for (const x of "ATGC") if (!(x in r)) r[x] = (100 - 2 * p) / 2; return r; }
+function pairStatus(t, p) {           // template base t, new-strand base p
+  if (!p) return "empty";
+  if (PAIR[t] === p) return "ok";
+  const a = ringOf(t), c = ringOf(p);
+  if (a === "purine" && c === "purine") return "wide";
+  if (a === "pyrimidine" && c === "pyrimidine") return "narrow";
+  return "nc";                       // purine with pyrimidine, but not a complementary pair
+}
+const isAdenosine = n => n.base === NUCLEOSIDE.base && n.sugar === NUCLEOSIDE.sugar;
+function nucDesc(n) {                 // what the pupil has built in view 1
+  const sg = SUGARS[n.sugar], b = n.base && BASES[n.base];
+  if (!b && !n.phos) return { kind: "sugar", t: `A pentose sugar: ${n.sugar}. Attach a base and a phosphate.` };
+  if (!b) return { kind: "part", t: `${cap(n.sugar)} with a phosphate on carbon 5′. Attach a base to carbon 1′.` };
+  if (!n.phos) {
+    if (isAdenosine(n)) return { kind: "nucleoside", t: `${cap(NUCLEOSIDE.name)}: ${b.name} + ${n.sugar}. A nucleoside, not a nucleotide: it has no phosphate.` };
+    return { kind: "part", t: `${cap(n.sugar)} + ${b.name}. No phosphate yet, so not a nucleotide.` };
+  }
+  if (sg.acid === "DNA" ? !b.dna : !b.rna) return { kind: "flag", t: `${cap(n.sugar)} with ${b.name}: check the base. Thymine is found in DNA; RNA has uracil.` };
+  if (isAdenosine(n) && n.phos >= 2) return { kind: PHOS[n.phos], t: `${PHOS[n.phos]}: a phosphorylated nucleotide, with ${n.phos} phosphate groups.` };
+  return { kind: "nucleotide", t: `${sg.acid === "RNA" ? "An" : "A"} ${sg.acid} nucleotide containing ${b.name}.${isAdenosine(n) ? ` This is ${PHOS[1]}.` : ""}` };
+}
+const REFUSE = {                     // why a part can't go on a carbon (slides 7, 10)
+  P: { 1: "Not there. Carbon 1′ is where the base attaches. The phosphate goes on carbon 5′.",
+       2: "Not there. Carbon 2′ carries OH in ribose or H in deoxyribose. The phosphate goes on carbon 5′.",
+       3: "Not there. In one nucleotide the phosphate sits on carbon 5′. Carbon 3′ is where the next nucleotide's phosphate joins, in a strand.",
+       4: "Not there. Carbon 4′ is a ring carbon that links to carbon 5′. The phosphate goes on carbon 5′." },
+  base: { 2: "Not there. The base attaches at carbon 1′. Carbon 2′ carries OH or H.",
+          3: "Not there. The base attaches at carbon 1′. Carbon 3′ links to the next phosphate in a strand.",
+          4: "Not there. The base attaches at carbon 1′. Carbon 4′ is the ring carbon that links to carbon 5′.",
+          5: "Not there. Carbon 5′ is where the phosphate attaches. The base goes on carbon 1′." } };
+
+/* ===== Drawing geometry (one coordinate table). Local nucleotide frame: x points from the sugar to its base,
+   y runs along the strand from the 5′ end to the 3′ end. Sugar ring centre at (0, 0). ===== */
+const R5 = 24, PITCH = 104, HGAP = 24, LGAP = 30;   // ring radius, nucleotide spacing, gap for hydrogen bonds, line-up gap
+const rad = a => a * Math.PI / 180, rp = a => [R5 * Math.cos(rad(a)), R5 * Math.sin(rad(a))];
+const GL = { C1: rp(0), C2: rp(72), C3: rp(144), C4: rp(216), O4: rp(288), BA: 34, PR: 13 };
+GL.C5 = [GL.C4[0] - 10, GL.C4[1] - 22];
+GL.P = [GL.C5[0], -64];                                   // its own phosphate: the next one along sits at y = PITCH − 64 = 40, beside carbon 3′
+GL.P2 = [GL.P[0] - 30, GL.P[1] - 10]; GL.P3 = [GL.P[0] - 60, GL.P[1] - 20];   // ADP / ATP
+GL.X2 = [GL.C2[0], GL.C2[1] + 12]; GL.T2 = [GL.C2[0], GL.C2[1] + 22];        // 2′ OH or H
+GL.T5 = [GL.C5[0] - 6, GL.C5[1] - 12];   // free 5′ OH (no phosphate yet)
+GL.X3 = [GL.C3[0] - 5, GL.C3[1] + 12]; GL.T3 = [GL.C3[0] - 9, GL.C3[1] + 22]; // free 3′ OH
+GL.CL = { 1: [GL.C1[0] + 3, GL.C1[1] - 13], 2: [GL.C2[0] + 14, GL.C2[1] + 3], 3: [GL.C3[0] + 11, GL.C3[1] + 14], 4: [GL.C4[0] - 14, GL.C4[1] + 6], 5: [GL.C5[0] + 14, GL.C5[1] - 2] };
+const PYR = (() => { const c = GL.BA + 20; return { c, far: c + 20, pts: [180, 240, 300, 0, 60, 120].map(a => [c + 20 * Math.cos(rad(a)), 20 * Math.sin(rad(a))]) }; })();
+const PUR = (() => { const s = 20, r5 = s / (2 * Math.sin(Math.PI / 5)), a5 = r5 * Math.cos(Math.PI / 5), a6 = s * Math.sqrt(3) / 2;
+  const c5 = GL.BA + r5, e = c5 + a5, c6 = e + a6;
+  return { c: c6, far: c6 + a6, five: [180, 108, 36, -36, -108].map(a => [c5 + r5 * Math.cos(rad(a)), r5 * Math.sin(rad(a))]),
+           six: [150, 90, 30, -30, -90, -150].map(a => [c6 + s * Math.cos(rad(a)), s * Math.sin(rad(a))]) }; })();
+const farOf = b => ringOf(b) === "purine" ? PUR.far : PYR.far;
+const DW = PUR.far + HGAP + PYR.far;                      // sugar to sugar across a purine–pyrimidine pair: the constant width
+const BULGE = 2 * PUR.far + HGAP - DW;                    // purine + purine: how far the new strand is pushed out
+const NGAP = DW - 2 * PYR.far;                            // pyrimidine + pyrimidine: the gap left (normal gap is HGAP)
+const bFar = (b, o) => ringOf(b) === "purine" ? PUR.far : PYR.far - Math.abs(o) * Math.tan(rad(30));   // base edge at offset o from its axis
+/* affine maps [a b c d e f]: X = a·x + c·y + e, Y = b·x + d·y + f */
+const mul = (A, B) => [A[0] * B[0] + A[2] * B[1], A[1] * B[0] + A[3] * B[1], A[0] * B[2] + A[2] * B[3], A[1] * B[2] + A[3] * B[3], A[0] * B[4] + A[2] * B[5] + A[4], A[1] * B[4] + A[3] * B[5] + A[5]];
+const ap = (M, p) => [M[0] * p[0] + M[2] * p[1] + M[4], M[1] * p[0] + M[3] * p[1] + M[5]];
+const lin = (M, p) => [M[0] * p[0] + M[2] * p[1], M[1] * p[0] + M[3] * p[1]];
+/* nucleotide frame → ladder (u along the template 5′ → 3′, v across towards the new strand) */
+const LT = (U, v) => [0, 1, 1, 0, U, v || 0];             // template-way round
+const LP = (U, v) => [0, -1, -1, 0, U, v];                // new strand: turned through 180° (antiparallel)
+const LF = (U, v) => [0, 1, -1, 0, U, v || 0];            // flipped over: its 3′ end first
+const f1 = v => (Math.round(v * 10) / 10).toString();
+const P2 = p => f1(p[0]) + " " + f1(p[1]);
+const mstr = M => `matrix(${M.map(v => +v.toFixed(4)).join(" ")})`;
+function edgePt(a, b, r) { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [b[0] - dx * r / L, b[1] - dy * r / L]; }
+const FS = { big: { base: 30, c: 19, sm: 19, P: 22, O: 18, end: 20, cap: 18 }, mid: { base: 24, c: 16, sm: 16, P: 18, O: 15, end: 18, cap: 16 },
+             std: { base: 19, c: 15, sm: 14, P: 15, O: 13, end: 18, cap: 16 } };
+
+/* ===== Question bank (wording from the deck; every answer computed from the fact tables) ===== */
+const TASKS = {
+  easy: [
+    { kind: "tiles", setup: { scene: "nuc", nuc: { sugar: "deoxyribose", base: "G", phos: 1 }, lock: { all: 1 } },   // slide 16 Q1, mark scheme slide 17
+      text: "Choose the three components of every nucleotide.",
+      items: [{ t: "A pentose sugar", part: "pentose sugar" }, { t: "A phosphate group", part: "phosphate group" }, { t: "A nitrogenous base", part: "nitrogenous base" },
+              { t: "An amino acid", part: "amino acid", why: "No amino acids: the mark scheme rejects ‘an amino acid’. DNA is made of nucleotides, not amino acids." },
+              { t: "A hydrogen bond", part: "hydrogen bond", why: "A hydrogen bond is not part of a nucleotide. Hydrogen bonds join the bases of two strands." }],
+      explain: () => "Every nucleotide has a pentose sugar, a phosphate group and a nitrogenous base.",
+      hints: ["Look at the nucleotide in the model. It has three parts.", "One is a 5-carbon sugar, one is the circle marked P, one is a ring with a letter.", "A pentose sugar, a phosphate group and a nitrogenous base."] },
+    { kind: "sort", setup: { scene: "nuc" },                                                                         // slide 11
+      text: "Sort each one: purine, pyrimidine, sugar or bond.",
+      cats: ["purine", "pyrimidine", "sugar", "bond"],
+      items: [{ t: "Guanine", b: "G" }, { t: "Uracil", b: "U" }, { t: "Deoxyribose", sugar: "deoxyribose" }, { t: "Phosphodiester", bond: WITHIN }, { t: "Adenine", b: "A" }, { t: "Cytosine", b: "C" }],
+      hints: ["Purines and pyrimidines are bases. Build each base in the model and count its rings.", "Purines have a double ring. Pyrimidines have a single ring. One item is a sugar and one is a bond.", "Guanine, adenine: purine. Uracil, cytosine: pyrimidine. Deoxyribose: sugar. Phosphodiester: bond."] },
+    { kind: "goal", id0: "nucC", setup: { scene: "nuc", nuc: { sugar: "ribose" }, lock: { tabs: 1 } },              // slide 7
+      text: "Build a DNA nucleotide containing cytosine. Then press Check.",
+      hints: ["A DNA nucleotide needs the DNA sugar, a phosphate and a base.", "Choose deoxyribose. Attach C to carbon 1′ and a phosphate to carbon 5′.", "Deoxyribose; cytosine on carbon 1′; phosphate on carbon 5′."] },
+    { kind: "choice", predict: "c2", setup: { scene: "nuc", nuc: { sugar: "ribose", base: "G", phos: 1 }, lock: { all: 1 }, hl: "c2" },   // slide 7
+      text: "This is an RNA nucleotide. Predict: swap ribose for deoxyribose. What changes at carbon 2′?",
+      want: () => SUGARS.ribose.c2 + "→" + SUGARS.deoxyribose.c2,
+      options: [{ t: "OH becomes H: one fewer oxygen", c2: "OH→H" },
+                { t: "H becomes OH", c2: "H→OH", why: "The other way round. Ribose has OH on carbon 2′. Deoxyribose has just H: de-oxy, one fewer oxygen." },
+                { t: "The base moves to carbon 2′", c2: "base", why: "The base stays on carbon 1′ in both sugars. It is the sugar that differs, at carbon 2′." },
+                { t: "Nothing: the two sugars are the same", c2: "same", why: "They differ at carbon 2′: OH in ribose, H in deoxyribose." }],
+      explain: () => `Carbon 2′ carries ${SUGARS.ribose.c2} in ribose but just ${SUGARS.deoxyribose.c2} in deoxyribose: one fewer oxygen. Watch the model.`,
+      hints: ["Look at carbon 2′ in the model: what is on it now?", "‘Deoxy’ means one fewer oxygen.", "OH becomes H."] },
+    { kind: "goal", id0: "join", setup: { scene: "poly", poly: { strand: ["A"], next: "G" }, lock: { tabs: 1 } },     // slide 10
+      text: "Join a second nucleotide to this strand by condensation. Then press Check.",
+      hints: ["The new nucleotide's phosphate must sit beside carbon 3′ of the sugar in the strand.", "Press Line it up at the 3′ end, then press Condense.", "Line it up, then Condense: a phosphodiester bond forms."] },
+    { kind: "choice", predict: "cond", setup: { scene: "poly", poly: { strand: ["A", "T"], next: "G", placed: true }, lock: { all: 1 } },   // slides 10, 17
+      text: "These two nucleotides are lined up. Predict: when they join by condensation, what is released?",
+      want: () => Object.keys(REACT).find(r => REACT[r].water === "released"),
+      options: [{ t: "A molecule of water", r: "condensation" },
+                { t: "Nothing: a molecule of water is added", r: "hydrolysis", why: "Adding water is hydrolysis, which breaks the bond: the mark scheme rejects ‘hydrolysis’ here. Condensation releases water." },
+                { t: "The phosphate group", r: "phosphate", why: "The phosphate stays. It becomes part of the bond, linking carbon 5′ of one sugar to carbon 3′ of the next." },
+                { t: "The base", r: "base", why: "Each nucleotide keeps its base. Only a small molecule leaves." }],
+      explain: () => "A condensation reaction releases a molecule of water, and a phosphodiester bond forms. Watch the model.",
+      hints: ["‘Condensation’ is the clue: think of the starter questions.", "Condensation joins two monomers and releases a small molecule.", "A molecule of water."] },
+    { kind: "tiles", setup: { scene: "nuc", nuc: { sugar: "ribose", base: "U", phos: 1 } },                           // slide 8
+      text: "Choose the three ways DNA and RNA differ.",
+      items: [{ t: "DNA has deoxyribose; RNA has ribose.", ok: () => SUGARS.deoxyribose.acid === "DNA" && SUGARS.ribose.acid === "RNA" },
+              { t: "DNA has thymine; RNA has uracil instead.", ok: () => BASES.T.dna && !BASES.T.rna && BASES.U.rna && !BASES.U.dna },
+              { t: "DNA is double-stranded; RNA is single-stranded.", ok: () => STRANDS.DNA === 2 && STRANDS.RNA === 1 },
+              { t: "DNA has adenine; RNA has none.", ok: () => BASES.A.dna && !BASES.A.rna, why: "A, C and G are found in both DNA and RNA." },
+              { t: "DNA nucleotides have a phosphate; RNA nucleotides don't.", ok: () => !PARTS.includes("phosphate group"), why: "Every nucleotide, in DNA or RNA, has a pentose sugar, a phosphate group and a base." },
+              { t: "DNA is made of amino acids; RNA of nucleotides.", ok: () => false, why: "Both are made of nucleotides. Amino acids are not part of DNA: the mark scheme rejects ‘an amino acid’." }],
+      explain: () => "Sugar: deoxyribose against ribose. Bases: thymine against uracil. Strands: double against single.",
+      hints: ["There is one difference in the sugar, one in the bases and one in the strands.", "A, C and G are in both. Every nucleotide has a phosphate.", "Deoxyribose / ribose; thymine / uracil; double / single strand."] },
+    { kind: "fix", setup: { scene: "helix", helix: { tmpl: "ATGC", part: "TACG" }, lock: { all: 1 } },               // slide 15
+      text: "Find it and fix it. Each line has one error. Choose the words that fix it.",
+      items: [{ orig: "DNA contains the sugar dioxyribose.", pre: "DNA contains the sugar ", post: ".", opts: ["deoxyribose", "dioxyribose", "ribose"], ans: () => dnaSugar(),
+                why: { dioxyribose: "‘Dioxyribose’ is the misspelling itself. It is deoxyribose: de-oxy, one fewer oxygen.", ribose: "Ribose is the sugar in RNA, not DNA." } },
+              { orig: "DNA is a helix.", pre: "DNA is a ", post: ".", opts: ["double helix", "helix", "single helix"], ans: () => STRANDS.DNA === 2 ? "double helix" : "single helix",
+                why: { helix: "Just ‘a helix’ loses the mark. DNA has two strands: a double helix.", "single helix": "DNA is double-stranded. RNA is the single-stranded one." } },
+              { orig: "DNA is made of amino acids joined in a chain.", pre: "DNA is made of ", post: " joined in a chain.", opts: ["nucleotides", "amino acids", "hydrogen bonds"], ans: () => "nucleotides",
+                why: { "amino acids": "Amino acids are the wrong monomer. DNA is a polymer of nucleotides.", "hydrogen bonds": "Hydrogen bonds hold the two strands together. The chain itself is made of nucleotides." } }],
+      hints: ["Read each line slowly. One word or phrase is wrong in each.", "Check the spelling of the sugar, how many strands DNA has, and its monomer.", "Deoxyribose; double helix; nucleotides."] }
+  ],
+  hard: [
+    { kind: "choice", setup: { scene: "helix", helix: { tmpl: "AGCT" }, lock: { all: 1 }, hide: { helixRead: 1 } },   // slide 14 hinge
+      text: () => `One strand of a DNA molecule reads ${seqW(TASKS.hard[0].tmpl, 5, 3)}. What is the complementary strand, written correctly?`, tmpl: "AGCT",
+      options: [{ t: "5′–TCGA–3′", seq: "TCGA", e: "53", why: "Right bases, wrong direction. The strands are antiparallel, so the complementary strand must be written 3′ to 5′." },
+                { t: "3′–TCGA–5′", seq: "TCGA", e: "35" },
+                { t: "3′–AGCT–5′", seq: "AGCT", e: "35", why: "The bases have not been paired at all. Each base pairs with its complementary base." },
+                { t: "5′–UCGA–3′", seq: "UCGA", e: "53", why: "This uses uracil, which belongs in RNA, not DNA. It is also written in the wrong direction." }],
+      explain: () => { const t = TASKS.hard[0].tmpl; return `Base pairing gives ${comp(t)}. The strands are antiparallel, so it is written ${seqW(comp(t), 3, 5)}.`; },
+      hints: ["Two checks: are the bases paired, and which way does the strand run?", "A pairs with T, G with C. Antiparallel means the ends are the other way round.", "3′–TCGA–5′."] },
+    { kind: "goal", id0: "comp", setup: { scene: "helix", helix: { tmpl: "TACGGA" }, lock: { tabs: 1, tmpl: 1 } },   // slide 13
+      text: () => `Build the complementary strand for the template ${seqW("TACGGA", 5, 3)}. Then press Check.`,
+      hints: ["Choose each place on the new strand, then add the base that pairs with it.", "A purine always pairs with a pyrimidine: A with T, G with C.", "The new strand reads 3′–ATGCCT–5′."] },
+    { kind: "num", id0: "hb", setup: { scene: "helix", helix: { tmpl: "GATCGG" }, lock: { all: 1 }, hide: { hb: 1 } }, unit: "hydrogen bonds", tmpl: "GATCGG",   // slide 13
+      text: () => `This template pairs with its complementary strand: ${seqW("GATCGG", 5, 3)}. How many hydrogen bonds hold the two strands together?`,
+      hints: ["Pair each base first. Then count the hydrogen bonds in each pair.", "A–T pairs have 2 hydrogen bonds. G–C pairs have 3.", () => { const t = TASKS.hard[2].tmpl; return `${[...t].map(b => HBONDS[b]).join(" + ")} = ${hbOf(t)}.`; }] },
+    { kind: "choice", predict: "width", setup: { scene: "helix", helix: { tmpl: "AAC" }, lock: { all: 1 } },          // slide 9
+      text: "Why does a purine always pair with a pyrimidine?",
+      want: () => WIDTH_RULE,
+      options: [{ t: "So the DNA molecule stays a constant width", r: "width" },
+                { t: "Because two purines would be too narrow", r: "narrow", why: "The other way round. Two purines (double rings) are too wide. Two pyrimidines (single rings) leave a gap." },
+                { t: "So that every pair has 3 hydrogen bonds", r: "hb3", why: "Not every pair has 3. A–T has 2 hydrogen bonds; G–C has 3." },
+                { t: "Because the bases are joined by phosphodiester bonds", r: "pde", why: "Phosphodiester bonds are within a strand, not between the bases. The bases pair by hydrogen bonds." }],
+      explain: () => "A double ring plus a single ring always gives the same width. Watch the model: two purines (A–G) bulge out; two pyrimidines (C–T) leave a gap.",
+      hints: ["Think about the size of each base: one ring or two?", "A purine is a double ring and a pyrimidine is a single ring. Add them up.", "It keeps the molecule a constant width."] },
+    { kind: "sort", setup: { scene: "poly", poly: { strand: ["C", "A", "T"], next: "G" } },                         // slides 10, 17
+      text: "Condensation or hydrolysis? Sort each statement.",
+      cats: ["condensation", "hydrolysis"],
+      items: [{ t: "Water is released", key: "water", val: "released" }, { t: "Water is added", key: "water", val: "added" },
+              { t: "A phosphodiester bond forms", key: "bond", val: "forms" }, { t: "A phosphodiester bond breaks", key: "bond", val: "breaks" },
+              { t: "A polynucleotide builds up", key: "polymer", val: "builds up" }, { t: "A polynucleotide breaks down", key: "polymer", val: "breaks down" }],
+      hints: ["Try both buttons on the model: Condense and Hydrolyse. Watch the water.", "Condensation joins nucleotides. Hydrolysis reverses it.", "Condensation: released, forms, builds up. Hydrolysis: added, breaks, breaks down."] },
+    { kind: "choice", setup: { scene: "helix", helix: { tmpl: "ATGC", part: "TACG" }, lock: { all: 1 }, hide: { hb: 1 } },   // slides 13, 18
+      text: "Which bonds hold the two strands of a DNA molecule together?",
+      want: () => BETWEEN + "/bases",
+      options: [{ t: "Hydrogen bonds between complementary base pairs", r: "hydrogen/bases" },
+                { t: "Phosphodiester bonds between the bases", r: "phosphodiester/bases", why: "The mark scheme rejects ‘phosphodiester bonds’: those are within a strand, not between. They join sugar to phosphate." },
+                { t: "Hydrogen bonds between the two sugar–phosphate backbones", r: "hydrogen/backbone", why: "The hydrogen bonds join the bases, in complementary pairs, not the backbones." },
+                { t: "Covalent bonds formed by condensation", r: "covalent", why: "Condensation forms the covalent phosphodiester bonds inside each strand. The two strands are held by hydrogen bonds." }],
+      explain: () => "Hydrogen bonds between complementary base pairs: A–T and G–C. Phosphodiester bonds are within each strand.",
+      hints: ["Phosphodiester bonds build each strand's backbone. Something else holds the two strands.", "The bond is a weak one, the same kind that holds an α-helix in shape.", "Hydrogen bonds, between complementary bases."] },
+    { kind: "choice", predict: "atp", setup: { scene: "nuc", nuc: { sugar: "ribose", base: "A", phos: 2 }, lock: { all: 1 }, hide: { nucRead: 1 } },   // slides 12, 18
+      text: "The model shows ADP. Describe the structural difference between ADP and ATP. Which answer gets both marks?",
+      want: () => +Object.keys(PHOS).find(k => PHOS[k] === "ATP") + "/" + +Object.keys(PHOS).find(k => PHOS[k] === "ADP"),
+      options: [{ t: "ATP has three phosphate groups; ADP has two.", r: "3/2" },
+                { t: "ATP has three phosphate groups.", r: "3/-", why: "True, but there is no comparison: no comparison, no mark. Say how many ADP has too." },
+                { t: "ATP has two phosphate groups; ADP has three.", r: "2/3", why: "The other way round. Count the phosphates on the model: this is ADP." },
+                { t: "ATP contains ribose; ADP contains deoxyribose.", r: "sugar", why: "Both have the same sugar, ribose, and the same base, adenine. Only the number of phosphates differs." }],
+      explain: () => "ATP has three phosphate groups; ADP has two. Both are phosphorylated nucleotides. The model now adds the third phosphate.",
+      hints: ["Count the phosphates on the model.", "The mark scheme needs a direct comparison: a number for each.", "ATP has three phosphate groups; ADP has two."] },
+    { kind: "choice", setup: { scene: "nuc", nuc: { sugar: "ribose", base: "A", phos: 0 }, lock: { all: 1 }, hide: { nucRead: 1 } },   // slide 12
+      text: "The model shows adenine joined to ribose, with no phosphate. What is this molecule?",
+      want: () => NUCLEOSIDE.name + "/nucleoside",
+      options: [{ t: "Adenosine: a nucleoside", r: "adenosine/nucleoside" },
+                { t: "Adenosine: a nucleotide", r: "adenosine/nucleotide", why: "A nucleotide also needs a phosphate group. With no phosphate, adenosine is a nucleoside." },
+                { t: "AMP", r: "AMP", why: "AMP has one phosphate group. This molecule has none." },
+                { t: "Adenine: a purine base", r: "adenine", why: "Adenine is only the base. Adenine joined to ribose is adenosine." }],
+      explain: () => "Adenine + ribose = adenosine: a nucleoside, not a nucleotide. Add one phosphate → AMP, two → ADP, three → ATP.",
+      hints: ["Count the three parts of a nucleotide. Which one is missing?", "A base + sugar without a phosphate has a special name ending in ‘-side’.", "Adenosine: a nucleoside."] },
+    { kind: "num", id0: "pct", setup: { scene: "helix", helix: { tmpl: "ATGCAG" }, lock: { all: 1 }, hide: { pct: 1 } }, unit: "%",   // slide 19 exit ticket
+      variants: [{ give: "A", p: 20, ask: "G" }, { give: "G", p: 35, ask: "T" }, { give: "C", p: 18, ask: "A" }],
+      text: t => { const v = t.variants[t.vi || 0]; return `A sample of DNA contains ${v.p}% ${BASES[v.give].name}. What percentage of its bases are ${BASES[v.ask].name}?`; },
+      hints: [() => "Which base pairs with the one given? They are always equal.", t => { const v = t.variants[t.vi || 0]; return `${v.give} = ${PAIR[v.give]}, so together they make ${2 * v.p}%. What is left for the other pair?`; },
+              t => { const v = t.variants[t.vi || 0]; return `(100 − ${2 * v.p}) ÷ 2 = ${pctFrom(v.give, v.p)[v.ask]}%.`; }] },
+    { kind: "choice", setup: { scene: "poly", poly: { strand: ["C", "A"] }, lock: { all: 1 }, cnum: false },          // slides 10, 17
+      text: "Where does the phosphodiester bond form?",
+      want: () => PDE.from + "-" + PDE.to,
+      options: [{ t: "From carbon 5′ of one sugar to carbon 3′ of the next, through the phosphate", r: "5-3" },
+                { t: "From carbon 1′ of one sugar to carbon 1′ of the next", r: "1-1", why: "Carbon 1′ carries the base. The phosphate links carbon 5′ of one sugar to carbon 3′ of the next." },
+                { t: "Between the bases of the two strands", r: "bases", why: "That is where the hydrogen bonds are, between strands. The phosphodiester bond is within one strand." },
+                { t: "From carbon 2′ of one sugar to carbon 5′ of the next", r: "2-5", why: "Carbon 2′ carries just H in deoxyribose. The phosphate links to carbon 3′." }],
+      explain: () => `The phosphate links carbon ${PDE.from}′ of one sugar to carbon ${PDE.to}′ of the next, building the sugar–phosphate backbone. The model now shows the carbon numbers.`,
+      hints: ["It forms in the backbone, between the sugars and phosphates.", "The base is on carbon 1′, and carbon 2′ has H. That leaves two carbons.", "Carbon 5′ of one sugar to carbon 3′ of the next."] }
+  ]
+};
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });
+const txt = t => typeof t.text === "function" ? t.text(t) : t.text;
+/* answers: computed from the facts, never by hand */
+function choiceOk(t, o) {
+  if (t.options[0].seq) { const tm = t.tmpl; return o.seq === comp(tm) && o.e === "35"; }   // complementary bases AND written antiparallel
+  if (t.predict === "c2") return o.c2 === t.want();
+  return o.r === t.want();
+}
+function tileOk(it) { return it.ok ? !!it.ok() : PARTS.includes(it.part); }
+function sortCat(it) {
+  if (it.b) return ringOf(it.b);
+  if (it.sugar) return SUGARS[it.sugar] ? "sugar" : null;
+  if (it.bond) return [WITHIN, BETWEEN].includes(it.bond) ? "bond" : null;
+  if (it.key) return Object.keys(REACT).find(r => REACT[r][it.key] === it.val);
+  return null;
+}
+function numAns(t) {
+  if (t.id0 === "hb") return hbOf(t.tmpl);
+  if (t.id0 === "pct") { const v = t.variants[t.vi || 0]; return pctFrom(v.give, v.p)[v.ask]; }
+  return NaN;
+}
+function numWrongs(t) {     // the wrong answers the feedback names, as [value, reason]
+  if (t.id0 === "hb") {
+    const s = t.tmpl, n = s.length, at = [...s].filter(b => HBONDS[b] === 2).length, gc = n - at;
+    return [[n, "That's the number of base pairs. Each pair is held by 2 or 3 hydrogen bonds."],
+            [2 * n, "You gave every pair 2. A–T pairs have 2 hydrogen bonds, but G–C pairs have 3."],
+            [3 * n, "You gave every pair 3. G–C pairs have 3 hydrogen bonds, but A–T pairs have only 2."],
+            [3 * at + 2 * gc, "Swapped round: A–T has 2 hydrogen bonds and G–C has 3."],
+            [2 * hbOf(s), "Count each base pair once, not each base."]];
+  }
+  const v = t.variants[t.vi || 0], P = PAIR[v.give], g = BASES[v.give].name, a = BASES[v.ask].name;
+  return [[v.p, `You set ${a} equal to ${g}. ${cap(g)} pairs with ${BASES[P].name}, so only ${BASES[P].name} is also ${v.p}%.`],
+          [100 - v.p, `You only took away the ${g}. ${cap(BASES[P].name)} is also ${v.p}%, so take away ${2 * v.p}%.`],
+          [100 - 2 * v.p, `That is ${a} and its partner together. Halve it: the two are equal.`],
+          [(100 - v.p) / 2, `Take away both ${g} and ${BASES[P].name} (${v.p}% each), then halve what is left.`]];
+}
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  /* drawing geometry: a purine–pyrimidine pair fits the constant width; purine–purine is too wide; pyrimidine–pyrimidine leaves a gap */
+  if (!(PUR.far > PYR.far)) errs.push("geometry: a purine must be longer than a pyrimidine");
+  if (Math.abs(DW - PUR.far - PYR.far - HGAP) > 1e-9 || !(BULGE > 15) || !(NGAP > HGAP + 15)) errs.push("geometry: pair widths are wrong");
+  if (Math.abs(PITCH + GL.P[1] - 40) > 1e-9) errs.push("geometry: the next phosphate must sit beside carbon 3′");
+  for (const b of "ATGC") if (pairStatus(b, PAIR[b]) !== "ok" || PAIR[PAIR[b]] !== b || HBONDS[b] !== HBONDS[PAIR[b]]) errs.push("facts: pairing of " + b);
+  if (pairStatus("A", "G") !== "wide" || pairStatus("C", "T") !== "narrow" || pairStatus("A", "C") !== "nc") errs.push("facts: mismatch types");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (!t.hints || t.hints.length !== 3) errs.push(id + ": needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => choiceOk(t, o)).length !== 1) errs.push(id + ": needs exactly one correct option");
+      if (t.options.some(o => !choiceOk(t, o) && !o.why)) errs.push(id + ": a wrong option has no feedback");
+      if (t.options.some(o => choiceOk(t, o) && o.why)) errs.push(id + ": the right option has wrong-answer feedback");
+    } else if (t.kind === "tiles") {
+      const n = t.items.filter(tileOk).length;
+      if (n !== 3) errs.push(id + ": needs three right tiles");
+      if (t.items.some(it => !tileOk(it) && !it.why)) errs.push(id + ": a wrong tile has no feedback");
+    } else if (t.kind === "sort") {
+      if (t.items.some(it => !t.cats.includes(sortCat(it)))) errs.push(id + ": an item has no group");
+      if (t.cats.some(c => !t.items.some(it => sortCat(it) === c))) errs.push(id + ": a group is empty");
+    } else if (t.kind === "fix") {
+      t.items.forEach((it, j) => { const a = it.ans(); if (!it.opts.includes(a) || it.opts.some(o => o !== a && !it.why[o])) errs.push(id + ": line " + (j + 1) + " has no answer or no feedback"); });
+    } else if (t.kind === "num") {
+      const vs = t.variants ? t.variants.map((_, k) => k) : [0];
+      vs.forEach(k => { const t2 = Object.assign({}, t, { vi: k }), a = numAns(t2);
+        if (!Number.isInteger(a) || a < 0 || a > 100) errs.push(id + ": the answer must be a whole number");
+        if (numWrongs(t2).some(w => w[0] === a)) errs.push(id + ": a planned wrong answer equals the right one");
+        if (t.variants) { const r = pctFrom(t2.variants[k].give, t2.variants[k].p); if (Math.abs(Object.values(r).reduce((s, x) => s + x, 0) - 100) > 1e-9) errs.push(id + ": percentages must total 100"); } });
+      if (t.id0 === "pct" && numAns(Object.assign({}, t, { vi: 0 })) !== 30) errs.push(id + ": exit ticket must give 30% guanine");
+    } else if (t.kind === "goal") {
+      const S0 = stateFor(t); if (goalMet(t, S0)) errs.push(id + ": goal already met at the start");
+      const S1 = stateFor(t); goalFill(t, S1); if (!goalMet(t, S1)) errs.push(id + ": goal can't be reached");
+    }
+  });
+  const h = TASKS.hard[0]; if (comp(h.tmpl) !== "TCGA") errs.push("hard task 1: the hinge must give TCGA (slide 14)");
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { key: false, pair: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+function freshB(o) {
+  return Object.assign({ scene: "nuc", cnum: true, lock: {}, hide: {}, hl: null,
+    nuc: { sugar: "deoxyribose", base: null, phos: 0, hand: null, bad: 0 },
+    poly: { strand: ["A"], next: { base: "G", flip: false, placed: true }, nb: "G", rel: 0, add: 0, fresh: -1 },
+    helix: { tmpl: "ATGCAG", part: ["", "", "", "", "", ""], sel: 0, stack: [], twist: false, tw: 0 },
+    pct: { b: "A", p: 25 } }, o || {});
+}
+function stateFor(t) {
+  const s = t.setup || {}, m = freshB({ scene: s.scene || "nuc", lock: Object.assign({}, s.lock || {}), hide: Object.assign({}, s.hide || {}), hl: s.hl || null });
+  if (s.cnum === false) m.cnum = false;
+  if (s.nuc) Object.assign(m.nuc, s.nuc);
+  if (s.poly) { const p = s.poly; m.poly.strand = p.strand.slice(); m.poly.next = p.next ? { base: p.next, flip: false, placed: !!p.placed } : null; m.poly.nb = p.next || "G"; m.poly.rel = m.poly.strand.length - 1; }
+  if (s.helix) { const tm = s.helix.tmpl; m.helix.tmpl = tm; m.helix.part = tm.split("").map((_, i) => s.helix.part ? s.helix.part[i] : ""); m.helix.sel = s.helix.part ? -1 : 0; }
+  return m;
+}
+let DEMO_B = freshB(), B = DEMO_B;
+let ANIM = null, animId = 0, onScreen = true;
+
+const PKEY = "ks3tools-progress:dna-builder";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+
+/* ===== Drawing (SVG, built as a string and patched in with morph()) ===== */
+const wideNow = () => boxW($("sceneWrap")) >= 600;
+function lay() {
+  const w = wideNow(), H = B.helix, n = H.tmpl.length;
+  if (B.scene === "nuc") return w ? { w, vb: [800, 390], G: [0, 2.4, 2.4, 0, 470, 246], k: 2.4, fs: FS.big, hand: [80, 300], kh: 1.6, hcap: 165 }
+                                  : { w, vb: [400, 380], G: [0, 1.8, 1.8, 0, 202, 282], k: 1.8, fs: FS.mid, hand: [235, 62], kh: 1.25, hr: 22 };
+  if (B.scene === "poly") return w ? { w, vb: [800, 440], G: [1.1, 0, 0, 1.1, 120, 98], k: 1.1, fs: FS.std, nv: 175 } : { w, vb: [360, 790], G: [0, 1, 1, 0, 100, 112], k: 1, fs: FS.std, nv: 150 };
+  return w ? { w, vb: [800, 410], G: [1.1, 0, 0, 1.1, Math.round(400 - (n - 1) * PITCH * 1.1 / 2), 80], k: 1.1, fs: FS.std }
+           : { w, vb: [350, 112 + (n - 1) * PITCH + 120], G: [0, 1, 1, 0, 56, 112], k: 1, fs: FS.std };
+}
+const T_ = (x, y, cls, fs, s, extra) => `<text x="${f1(x)}" y="${f1(y)}" class="${cls}" style="font-size:${fs}px" text-anchor="middle" dominant-baseline="central"${extra || ""}>${s}</text>`;
+const houseC = (x, y, r, cls) => `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" class="${cls}" style="stroke-width:${(r * .145).toFixed(2)}"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${f1(r * .28)}" class="hl"/>`;
+const phosC = (p, k, fs) => houseC(p[0], p[1], GL.PR * k, "pho") + T_(p[0], p[1] + 1, "pl", fs.P, "P");
+function baseShape(b) {
+  if (ringOf(b) === "purine") return `<path class="pur" d="M${PUR.five.map(P2).join("L")}Z M${PUR.six.map(P2).join("L")}Z"/>`;
+  return `<path class="pyr" d="M${PYR.pts.map(P2).join("L")}Z"/>`;
+}
+const baseCentre = b => [ringOf(b) === "purine" ? PUR.c : PYR.c, 0];
+/* one nucleotide: shapes in its own frame (inside a matrix group), labels and round parts upright in the picture's frame */
+function glyph(o) {
+  const M = o.M, A = p => ap(M, p), k = o.k, fs = o.fs;
+  const d = [`M${P2(GL.C4)}L${P2(GL.C5)}`]; if (!o.lite) d.push(`M${P2(GL.C2)}L${P2(GL.X2)}`);
+  if (o.phos) d.push(`M${P2(GL.C5)}L${P2(edgePt(GL.C5, GL.P, GL.PR))}`);
+  if (o.phos >= 2) d.push(`M${P2(edgePt(GL.P2, GL.P, GL.PR))}L${P2(edgePt(GL.P, GL.P2, GL.PR))}`);
+  if (o.phos >= 3) d.push(`M${P2(edgePt(GL.P3, GL.P2, GL.PR))}L${P2(edgePt(GL.P2, GL.P3, GL.PR))}`);
+  if (o.base) d.push(`M${P2(GL.C1)}L${GL.BA} 0`);
+  if (o.free3) d.push(`M${P2(GL.C3)}L${P2(GL.X3)}`);
+  let s = `<g transform="${mstr(M)}"><path class="bd" d="${d.join("")}"/><path class="sug" d="M${[GL.C1, GL.C2, GL.C3, GL.C4, GL.O4].map(P2).join("L")}Z"/>${o.base ? baseShape(o.base) : ""}</g>`;
+  const o4 = A(GL.O4);
+  s += `<circle cx="${f1(o4[0])}" cy="${f1(o4[1])}" r="${f1(6.5 * k)}" class="obg"/>` + T_(o4[0], o4[1] + 1, "ol", fs.O, "O");
+  if (o.phos) s += phosC(A(GL.P), k, fs);
+  if (o.phos >= 2) s += phosC(A(GL.P2), k, fs);
+  if (o.phos >= 3) s += phosC(A(GL.P3), k, fs);
+  if (o.base) { const c = A(baseCentre(o.base)); s += T_(c[0], c[1] + 1, "bl", fs.base, o.base); }
+  if (!o.lite) { const t2 = A(GL.T2); s += T_(t2[0], t2[1], "sm halo", fs.sm, SUGARS[o.sugar].c2); }
+  if (o.free3) { const t3 = A(GL.T3); s += T_(t3[0], t3[1], "sm halo", fs.sm, "OH"); }
+  if (!o.phos) { const t5 = A(GL.T5); s += T_(t5[0], t5[1], "sm halo", fs.sm, "OH"); }   // free sugar or nucleoside: OH on carbon 5′
+  if (o.cset) o.cset.forEach(c => { const p = A(GL.CL[c]); s += T_(p[0], p[1], "cn halo", fs.c, c + "′"); });
+  return s;
+}
+function ghostGlyph(M, k) {   // an empty place: dashed outline of a sugar and phosphate
+  const A = p => ap(M, p), pc = A(GL.P);
+  return `<g transform="${mstr(M)}"><path class="ghost" d="M${[GL.C1, GL.C2, GL.C3, GL.C4, GL.O4].map(P2).join("L")}Z M${P2(GL.C4)}L${P2(GL.C5)}L${P2(edgePt(GL.C5, GL.P, GL.PR))}"/></g><circle class="ghost" cx="${f1(pc[0])}" cy="${f1(pc[1])}" r="${f1(GL.PR * k)}"/>`;
+}
+function waterSVG(x, y, id, op) {   // a water molecule in the house look: O with two H, and its formula (beside it, or above it in the tall layout)
+  const w = wideNow();
+  return `<g id="${id}" transform="translate(${f1(x)} ${f1(y)})" opacity="${op == null ? 1 : op}">${houseC(-7, 4, 6, "wh")}${houseC(7, 4, 6, "wh")}${houseC(0, -2, 10, "wo")}${T_(w ? 30 : 0, w ? 0 : -24, "sm halo", 15, "H₂O")}</g>`;
+}
+const link = (a, b, cls, k) => `<path class="bd${cls ? " " + cls : ""}" d="M${P2(a)}L${P2(edgePt(a, b, GL.PR * (k || 1)))}"/>`;
+const off = (p, d) => [p[0] + d[0], p[1] + d[1]];
+
+function drawNuc(L) {
+  const n = B.nuc, M = mul(L.G, LT(0)), A = p => ap(M, p);
+  let s = "";
+  if (B.hl === "c2") { const c = A(GL.C2); s += `<circle class="hlc" cx="${f1(c[0])}" cy="${f1(c[1] + 8 * L.k)}" r="${f1(19 * L.k)}"/>`; }
+  const hp = L.hand, hot = n.hand && !B.lock.all, cs = B.cnum ? [1, 2, 3, 4, 5] : null;
+  s += glyph({ M, k: L.k, fs: L.fs, base: n.base, sugar: n.sugar, phos: n.phos, free3: true, cset: hot ? null : cs });
+  if (hot) {
+    [1, 2, 3, 4, 5].forEach(c => { const p = A(GL["C" + c]); s += `<circle class="hot${n.bad === c ? " bad" : ""}" data-c="${c}" cx="${f1(p[0])}" cy="${f1(p[1])}" r="${L.hr || 24}" tabindex="0" role="button" aria-label="Attach to carbon ${c}′"/>`; });
+    if (cs) cs.forEach(c => { const p = A(GL.CL[c]); s += T_(p[0], p[1], "cn halo", L.fs.c, c + "′"); });   // carbon numbers drawn over the targets
+    const kh = L.kh, inner = n.hand === "P" ? phosC([0, 0], kh, L.fs)
+      : `<g transform="matrix(${kh} 0 0 ${kh} ${f1(-GL.BA * kh)} 0)"><path class="bd" d="M${GL.BA - 8} 0L${GL.BA} 0"/>${baseShape(n.hand)}</g>` + T_((baseCentre(n.hand)[0] - GL.BA) * kh, 1, "bl", L.fs.base, n.hand);
+    const w = n.hand === "P" ? GL.PR * kh : 66 * kh;
+    s += `<g id="handG" class="grab" transform="translate(${hp[0]} ${hp[1]})" data-drag="hand"><rect x="${f1(n.hand === "P" ? -w - 8 : -12)}" y="${f1(-26 * kh)}" width="${f1(n.hand === "P" ? 2 * w + 16 : w + 24)}" height="${f1(52 * kh)}" fill="transparent"/>${inner}</g>`;
+    s += T_(L.hcap || hp[0] + (n.hand === "P" ? 0 : 33 * L.kh), hp[1] - 30 * L.kh - 4, "capt", L.fs.cap, "In hand: drag it to a carbon");
+  } else if (!B.lock.all) s += T_(L.w ? 150 : 200, L.w ? 372 : 26, "capt", L.fs.cap, "Pick up a part below");
+  return s;
+}
+const polyPt = (L, i, p) => ap(mul(L.G, LT(i * PITCH)), p);
+function nextM(L) {   // the next nucleotide: lined up at the 3′ end, or waiting beside it
+  const P = B.poly, U = P.strand.length * PITCH + LGAP, v = P.next.placed ? 0 : L.nv;
+  return mul(L.G, P.next.flip ? LF(U, v) : LT(U, v));
+}
+function drawPoly(L) {
+  const P = B.poly, n = P.strand.length, fs = L.fs, w = L.w;
+  let s = "", lab = "";
+  if (B.hl === "pde" && n >= 2) { const a = polyPt(L, 0, GL.C3), b = polyPt(L, 1, GL.P), c = polyPt(L, 1, GL.C5); s += `<path class="hlite" d="M${P2(a)}L${P2(b)}L${P2(c)}"/>`; }
+  P.strand.forEach((b, i) => {
+    s += glyph({ M: mul(L.G, LT(i * PITCH)), k: L.k, fs, base: b, sugar: "deoxyribose", phos: 1, free3: i === n - 1 && !P.joining, cset: B.cnum ? [1, 2, 3, 4, 5] : null });
+    if (i < n - 1) s += link(polyPt(L, i, GL.C3), polyPt(L, i + 1, GL.P), P.fresh === i ? "fresh" : "", L.k);
+  });
+  const p5 = polyPt(L, 0, GL.P); lab += T_(p5[0], p5[1] - 27, "endl halo", fs.end, "5′ end");
+  const o3 = polyPt(L, n - 1, GL.T3); if (!P.joining) lab += w ? T_(o3[0], o3[1] - 24, "endl halo", fs.end, "3′ end") : T_(o3[0] - 42, o3[1], "endl halo", fs.end, "3′ end");
+  if (P.next) {
+    const U = n * PITCH + LGAP;
+    if (!P.next.placed) {
+      s += `<g id="tgt">${ghostGlyph(mul(L.G, LT(U, 0)), L.k)}</g>`;
+      const g = ap(L.G, w ? [U, 66] : [U + 52, 8]); lab += T_(g[0], g[1], "capt halo", fs.cap, "Line up here");
+    }
+    const M = nextM(L), ctr = ap(M, [40, 0]);
+    s += `<g id="nextG" class="grab" data-drag="next" transform="translate(0 0)"><rect x="${f1(ctr[0] - 70)}" y="${f1(ctr[1] - 70)}" width="140" height="140" fill="transparent"/>${glyph({ M, k: L.k, fs, base: P.next.base, sugar: "deoxyribose", phos: 1, free3: true, cset: B.cnum ? [1, 2, 3, 4, 5] : null })}</g>`;
+    if (!P.next.placed) { const c = w ? [ap(L.G, [U, L.nv + 64])[0], L.vb[1] - 14] : ap(L.G, [U + 96, L.nv]); lab += T_(c[0], c[1], "capt", fs.cap, P.next.flip ? "Next nucleotide (flipped)" : "Next nucleotide"); }
+  } else if (n >= MAXN) lab += T_(L.vb[0] / 2, L.vb[1] - 18, "capt", fs.cap, `The strand is full: ${MAXN} nucleotides.`);
+  if (P.wstill) s += waterSVG(P.wstill[0], P.wstill[1], "waterS", 1);
+  s += `<g id="animL"></g>`;
+  return s + lab;
+}
+function helixMs(L) {
+  const H = B.helix, T = H.tmpl;
+  return T.split("").map((b, i) => { const ps = pairStatus(b, H.part[i]); return { t: mul(L.G, LT(i * PITCH)), p: mul(L.G, LP(i * PITCH, DW + (ps === "wide" ? BULGE : 0))), ps }; });
+}
+function drawHelix(L) {
+  const H = B.helix, T = H.tmpl, n = T.length, fs = L.fs, w = L.w, Ms = helixMs(L), any = H.part.some(Boolean);
+  if (H.tw > 0) return drawTwist(L, H.tw);
+  let s = "", lab = "";
+  /* hydrogen bonds (behind) and mismatch boxes */
+  T.split("").forEach((b, i) => {
+    const p = H.part[i], ps = Ms[i].ps, U = i * PITCH;
+    if (ps === "ok") {
+      const offs = HBONDS[b] === 2 ? [-6, 6] : [-9, 0, 9];
+      s += `<path class="hb" d="${offs.map(o => `M${P2(ap(L.G, [U + o, bFar(b, o) + 3]))}L${P2(ap(L.G, [U + o, DW - bFar(p, o) - 3]))}`).join("")}"/>`;
+    } else if (ps !== "empty") {
+      const dv = ps === "wide" ? BULGE : 0, a = ap(L.G, [U - 27, GL.BA - 6]), c = ap(L.G, [U + 27, DW + dv - GL.BA + 6]);
+      s += `<rect class="badbox" x="${f1(Math.min(a[0], c[0]))}" y="${f1(Math.min(a[1], c[1]))}" width="${f1(Math.abs(c[0] - a[0]))}" height="${f1(Math.abs(c[1] - a[1]))}" rx="8"/>`;
+      const tg = ap(L.G, [U + (w && i === 0 ? 18 : 0), DW + dv + (w ? 62 : 52)]);   // first place: keep clear of the 3′ end label
+      lab += w ? T_(tg[0], tg[1], "badt halo", 15, ps === "wide" ? "✗ too wide" : ps === "narrow" ? "✗ gap" : "✗ not a pair") : T_(tg[0], tg[1], "badt halo", 20, "✗");
+    }
+  });
+  /* template strand */
+  T.split("").forEach((b, i) => {
+    s += glyph({ M: Ms[i].t, k: L.k, fs, base: b, sugar: "deoxyribose", phos: 1, free3: i === n - 1, cset: B.cnum ? [3, 5] : null });
+    if (i < n - 1) s += link(ap(Ms[i].t, GL.C3), ap(Ms[i + 1].t, GL.P), "", L.k);
+  });
+  /* new strand: drawn turned round (antiparallel) */
+  T.split("").forEach((b, i) => {
+    const p = H.part[i], M = Ms[i].p;
+    if (p) s += glyph({ M, k: L.k, fs, base: p, sugar: "deoxyribose", phos: 1, free3: i === 0 || !H.part[i - 1], cset: B.cnum && Ms[i].ps !== "wide" ? [3, 5] : null, lite: Ms[i].ps === "wide" });
+    else s += ghostGlyph(M, L.k);
+    if (i < n - 1 && p && H.part[i + 1]) s += link(ap(Ms[i + 1].p, GL.C3), ap(M, GL.P), "", L.k);
+  });
+  /* places on the new strand: choose one, then add a base */
+  if (!B.lock.all) T.split("").forEach((b, i) => {
+    const U = i * PITCH, dv = Ms[i].ps === "wide" ? BULGE : 0, a = ap(L.G, [U - 50, DW + dv - 104]), c = ap(L.G, [U + 50, DW + dv + 46]);
+    s += `<rect class="slot${H.sel === i ? " sel" : ""}" data-slot="${i}" x="${f1(Math.min(a[0], c[0]))}" y="${f1(Math.min(a[1], c[1]))}" width="${f1(Math.abs(c[0] - a[0]))}" height="${f1(Math.abs(c[1] - a[1]))}" rx="10" tabindex="0" role="button" aria-label="New strand, place ${i + 1}: ${H.part[i] ? "base " + H.part[i] : "empty"}, opposite ${b}"/>`;
+  });
+  /* ends */
+  const t5 = ap(Ms[0].t, GL.P), t3 = ap(Ms[n - 1].t, GL.T3);
+  lab += T_(t5[0], t5[1] - 27, "endl halo", fs.end, "5′") + T_(t3[0], t3[1] + (w ? -24 : 24), "endl halo", fs.end, "3′");
+  if (any) {
+    const p3 = ap(Ms[0].p, GL.T3), p5 = ap(Ms[n - 1].p, GL.P);
+    lab += T_(p3[0], p3[1] + (w ? 24 : -24), "endl halo", fs.end, "3′") + T_(p5[0], p5[1] + 27, "endl halo", fs.end, "5′");
+  }
+  return s + lab;
+}
+function drawTwist(L, sv) {   // stylised helix: two backbones as ribbons that cross, rungs between them (still a flat drawing)
+  const H = B.helix, T = H.tmpl, n = T.length, u0 = -64, u1 = (n - 1) * PITCH + 64, vc = DW / 2, hw = DW / 2;
+  const turns = n <= 3 ? .75 : 1, ph = u => sv * 2 * Math.PI * turns * (u - u0) / (u1 - u0), h = u => hw * Math.cos(ph(u));
+  const N = 64, pts = [...Array(N + 1).keys()].map(j => { const u = u0 + (u1 - u0) * j / N; return { u, h: h(u), z: Math.sin(ph(u)) }; });
+  const run = (sgn, front) => { let d = "", on = false;
+    pts.forEach(q => { const vis = front ? sgn * q.z >= -1e-6 : sgn * q.z < 1e-6, p = ap(L.G, [q.u, vc - sgn * q.h]);
+      if (vis) { d += (on ? "L" : "M") + P2(p); on = true; } else on = false; });
+    return d; };
+  let s = `<path class="rib1 back" d="${run(1, false)}"/><path class="rib2 back" d="${run(-1, false)}"/>`;
+  const any = H.part.some(Boolean);
+  T.split("").forEach((b, i) => {
+    const u = i * PITCH, hh = h(u), p = H.part[i], ft = farOf(b), fp = p ? farOf(p) : PYR.far, split = vc - hh + 2 * hh * ft / (ft + fp);
+    const a = ap(L.G, [u, vc - hh]), m = ap(L.G, [u, p ? split : vc]), c = ap(L.G, [u, vc + hh]);
+    s += `<path class="rung ${ringOf(b) === "purine" ? "pur" : "pyr"}" d="M${P2(a)}L${P2(m)}"/>`;
+    if (p) s += `<path class="rung ${ringOf(p) === "purine" ? "pur" : "pyr"}" d="M${P2(ap(L.G, [u, split]))}L${P2(c)}"/>`;
+    if (Math.abs(hh) > 40) { const la = ap(L.G, [u, vc - hh * .68]); s += T_(la[0], la[1], "bl halo", 17, b); if (p) { const lb = ap(L.G, [u, vc + hh * .68]); s += T_(lb[0], lb[1], "bl halo", 17, p); } }
+  });
+  s += `<path class="rib1" d="${run(1, true)}"/><path class="rib2" d="${run(-1, true)}"/>`;
+  const e = (u, sg, t, dd) => { const p = ap(L.G, [u + dd, vc - sg * h(u)]); return T_(p[0], p[1], "endl halo", 18, t); };
+  s += e(u0, 1, "5′", -18) + e(u1, 1, "3′", 18);
+  if (any) s += e(u0, -1, "3′", -18) + e(u1, -1, "5′", 18);
+  const cp = L.w ? [L.vb[0] / 2, L.vb[1] - 14] : [L.vb[0] / 2, L.vb[1] - 16];
+  s += T_(cp[0], cp[1], "capt", L.fs.cap, "Stylised double helix (flat drawing)");
+  return s;
+}
+function renderScene() {
+  const L = lay(), svg = $("scene"), vb = `0 0 ${L.vb[0]} ${L.vb[1]}`;
+  setAttr(svg, "viewBox", vb);
+  const html = B.scene === "nuc" ? drawNuc(L) : B.scene === "poly" ? drawPoly(L) : drawHelix(L);
+  morph($("world"), html);
+  setAttr(svg, "aria-label", sceneLabel());
+}
+function sceneLabel() {
+  if (B.scene === "nuc") return "Nucleotide model: " + nucDesc(B.nuc).t;
+  if (B.scene === "poly") return `Polynucleotide model: ${seqW(B.poly.strand.join(""), 5, 3)}, ${B.poly.strand.length - 1} phosphodiester bonds.`;
+  const H = B.helix; return `Double helix model. Template ${seqW(H.tmpl, 5, 3)}. New strand ${seqW(H.part.map(x => x || "?").join(""), 3, 5)}.`;
+}
+
+/* ===== Readouts and controls ===== */
+function note(id, cls, html) { const e = $(id); e.className = "mnote" + (cls ? " " + cls : ""); e.innerHTML = html || ""; }
+function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }
+const quiz = () => mode !== "demo";
+function renderReadouts() {
+  const n = B.nuc, d = nucDesc(n);
+  setText("nucWhat", d.t);
+  $("nucRead").hidden = !!B.hide.nucRead; $("nucHidden").hidden = !B.hide.nucRead;
+  const P = B.poly, nb = P.strand.length - 1;
+  setText("roSeq", seqW(P.strand.join(""), 5, 3)); setText("roN", P.strand.length); setText("roB", nb);
+  setText("roW", `${P.rel} released · ${P.add} added`);
+  const H = B.helix, T = H.tmpl, full = H.part.every(Boolean);
+  setText("roT", seqW(T, 5, 3)); setText("roP", seqW(H.part.map(x => x || "?").join(""), 3, 5));
+  const okN = T.split("").filter((b, i) => pairStatus(b, H.part[i]) === "ok").length;
+  setText("roHb", T.split("").reduce((s2, b, i) => s2 + (pairStatus(b, H.part[i]) === "ok" ? HBONDS[b] : 0), 0) + (okN < T.length ? ` (${okN} correct pair${okN === 1 ? "" : "s"})` : ""));
+  if (full) {
+    const all = T + H.part.join(""), cnt = b => [...all].filter(x => x === b).length, pc = b => f1(100 * cnt(b) / all.length) + "%";
+    const allOk = okN === T.length;
+    setText("roPct", "ATGCU".split("").filter(b => cnt(b) || "ATGC".includes(b)).map(b => `${b} ${pc(b)}`).join(" · ") + (allOk ? "  (A = T, G = C)" : ""));
+  } else setText("roPct", "Fill every place to see them.");
+  $("helixRead").hidden = !!B.hide.helixRead; $("roHbBox").hidden = !!B.hide.hb; $("helixHidden").hidden = !(B.hide.helixRead || B.hide.hb);
+  $("pctBox").hidden = !!B.hide.pct; $("pctHidden").hidden = !B.hide.pct;
+  renderPct();
+}
+function renderPct() {
+  const c = B.pct, r = pctFrom(c.b, c.p), pr = PAIR[c.b], ot = "ATGC".split("").filter(x => x !== c.b && x !== pr);
+  $("pctIn").value = c.p; setText("pctOut", c.p + "%"); setText("pctLbl", cap(BASES[c.b].name) + ":");
+  document.querySelectorAll("#pctSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pb === c.b)));
+  $("pctBars").innerHTML = "ATGC".split("").map(b => `<div class="pbar"><span class="t">${cap(BASES[b].name)} (${b})</span><span class="n">${f1(r[b])}%</span><div class="track" aria-hidden="true"><div class="fill${ringOf(b) === "pyrimidine" ? " py" : ""}" style="width:${2 * r[b]}%"></div></div></div>`).join("");
+  $("pctWork").innerHTML = [`${c.b} pairs with ${pr}, so ${pr} = ${c.p}%.`, `${c.b} + ${pr} = ${2 * c.p}%.`, `${ot[0]} + ${ot[1]} = 100 − ${2 * c.p} = ${100 - 2 * c.p}%.`, `${ot[0]} pairs with ${ot[1]}, so each is ${100 - 2 * c.p} ÷ 2 = ${f1(r[ot[0]])}%.`].map(x => `<li>${x}</li>`).join("");
+}
+function syncCtl() {
+  const all = !!B.lock.all, n = B.nuc, H = B.helix, P = B.poly;
+  document.querySelectorAll("#sceneTabs button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.scene === B.scene)); b.disabled = all || !!B.lock.tabs; });
+  $("ctlNuc").hidden = B.scene !== "nuc"; $("ctlPoly").hidden = B.scene !== "poly"; $("ctlHelix").hidden = B.scene !== "helix";
+  document.querySelectorAll("#ctlNuc button, #ctlPoly button, #ctlHelix button, #ctlHelix input").forEach(el => { el.disabled = all; });
+  ["tmplIn", "tmplSet", "tmplNew"].forEach(id => { if (B.lock.tmpl) $(id).disabled = true; });
+  note("lockNote", "", all ? "The model is fixed for this question." : "");
+  document.querySelectorAll("#sugSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.sugar === n.sugar)));
+  document.querySelectorAll("#partSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.part === n.hand)));
+  $("attachRow").hidden = !n.hand;
+  setText("attL", n.hand ? `Attach the ${n.hand === "P" ? "phosphate" : BASES[n.hand].name} to carbon:` : "Attach it to carbon:");
+  $("atpRow").hidden = !isAdenosine(n);
+  if (!all) { $("addP").disabled = n.phos >= 3; $("remP").disabled = n.phos <= 0; }
+  $("cnumBtn").setAttribute("aria-pressed", String(B.cnum)); $("cnumBtn").querySelector(".state").textContent = B.cnum ? "on" : "off";
+  document.querySelectorAll("#nextSeg button").forEach(b => b.setAttribute("aria-pressed", String(!!P.next && b.dataset.nb === P.next.base)));
+  if (!all) { const nx = !P.next; ["lineBtn", "flipBtn"].forEach(id => { $(id).disabled = nx || (id === "lineBtn" && P.next.placed); }); $("condBtn").disabled = nx; $("hydBtn").disabled = P.strand.length < 2; document.querySelectorAll("#nextSeg button").forEach(b => { b.disabled = nx; }); }
+  if (document.activeElement !== $("tmplIn")) $("tmplIn").value = H.tmpl;
+  $("twistBtn").setAttribute("aria-pressed", String(H.twist)); $("twistBtn").querySelector(".state").textContent = H.twist ? "on" : "off";
+  if (!all) $("undoB").disabled = !H.part.some(Boolean);
+  if (!all && H.twist) document.querySelectorAll("#addSeg button, #undoB, #clearB, #fillB, #tmplSet, #tmplNew, #tmplIn").forEach(el => { el.disabled = true; });
+}
+function renderAll() { syncCtl(); renderScene(); renderReadouts(); if (tourI >= 0) tourPlace(); }
+function setScene(sc) {
+  if (B.lock.all || (B.lock.tabs && sc !== B.scene)) return;
+  finishAnim(); B.scene = sc; ["nucNote", "polyNote", "helixNote"].forEach(id => note(id, "", ""));
+  renderAll(); tourSignal("scene-" + sc);
+}
+
+/* ----- view 1: nucleotide ----- */
+function pickUp(part) {
+  const n = B.nuc; if (B.lock.all) return;
+  n.hand = n.hand === part ? null : part; n.bad = 0;
+  note("nucNote", "", n.hand ? `Now attach the ${part === "P" ? "phosphate" : BASES[part].name}: drag it to a carbon, or use the carbon buttons.` : "");
+  renderAll();
+}
+function attach(c) {
+  const n = B.nuc, h = n.hand; if (!h || B.lock.all) return;
+  const isP = h === "P", want = isP ? ATTACH.phosphate : ATTACH.base;
+  if (c !== want) { n.bad = c; note("nucNote", "bad", REFUSE[isP ? "P" : "base"][c]); renderScene(); return; }
+  n.bad = 0; n.hand = null;
+  if (isP) { if (n.phos) { note("nucNote", "", "Carbon 5′ already has its phosphate."); renderAll(); return; } n.phos = 1; }
+  else n.base = h;
+  const d = nucDesc(n);
+  note("nucNote", d.kind === "flag" ? "bad" : "good", d.kind === "flag" ? "Allowed, but check it: thymine is found in DNA; RNA has uracil." : `Attached to carbon ${c}′.`);
+  renderAll(); tourSignal("attach");
+}
+function setSugar(sg) {
+  const n = B.nuc; if (B.lock.all || n.sugar === sg) return;
+  const done = n.base && n.phos;
+  n.sugar = sg; let m = `Carbon 2′ now carries ${SUGARS[sg].c2}: this is ${sg}, the sugar in ${SUGARS[sg].acid}.`;
+  if (n.phos > 1 && !isAdenosine(n)) { n.phos = 1; m += " The extra phosphates belong to ADP and ATP, which are built from ribose and adenine."; }
+  if (nucDesc(n).kind === "flag") m += " Check the base: thymine is found in DNA; RNA has uracil.";
+  note("nucNote", nucDesc(n).kind === "flag" ? "bad" : "", m);
+  renderAll(); tourSignal("sugar"); if (done && mode === "demo") tried(0);
+}
+function phosStep(dn) {
+  const n = B.nuc; if (B.lock.all || !isAdenosine(n)) return;
+  n.phos = Math.max(0, Math.min(3, n.phos + dn)); n.hand = null;
+  note("nucNote", "", n.phos ? `${n.phos} phosphate${n.phos > 1 ? "s" : ""} → ${PHOS[n.phos]}.${n.phos > 1 ? " ‘Phosphorylated’ means phosphate groups have been added." : ""}` : `No phosphate: ${NUCLEOSIDE.name}, a nucleoside.`);
+  renderAll(); if (n.phos === 3 && mode === "demo") tried(1); if (dn > 0) tourSignal("attach");
+}
+
+/* ----- view 2: polynucleotide ----- */
+function setNext(b) { const P = B.poly; if (B.lock.all || !P.next) return; P.next.base = b; P.nb = b; renderAll(); }
+function flipNext() {
+  const P = B.poly; if (B.lock.all || !P.next || ANIM) return;
+  P.next.flip = !P.next.flip; P.next.placed = false;
+  note("polyNote", "", P.next.flip ? "Flipped over: its 3′ end now comes first." : "The right way round: its phosphate comes first.");
+  renderAll();
+}
+function lineUp() {
+  const P = B.poly; if (B.lock.all || ANIM) return;
+  if (!P.next) { note("polyNote", "", `The strand is full: ${MAXN} nucleotides here.`); return; }
+  if (P.next.placed) { note("polyNote", "", "It is already lined up. Press Condense."); return; }
+  if (P.next.flip) { note("polyNote", "bad", "Wrong end. Its carbon 3′ would face carbon 3′ of the strand, with no phosphate between them. The phosphate must sit beside carbon 3′ of the last sugar. Flip it over."); renderScene(); return; }
+  P.next.placed = true; note("polyNote", "", "Lined up: its phosphate is beside carbon 3′ of the last sugar. Press Condense.");
+  renderAll(); tourSignal("line");
+}
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+function condense() {
+  const P = B.poly; if (B.lock.all && !S.reveal) return; if (ANIM) return;
+  if (!P.next) { note("polyNote", "", `The strand is full: ${MAXN} nucleotides here.`); return; }
+  if (!P.next.placed) { note("polyNote", "bad", "Line the next nucleotide up first: its phosphate beside carbon 3′ of the last sugar."); return; }
+  const L = lay(), n = P.strand.length, U = n * PITCH;
+  const gp = ap(L.G, [(n - 1) * PITCH + 42, -24]), out = lin(L.G, [0, L.w ? -78 : -40]), slide = lin(L.G, [-LGAP, 0]);
+  const commit = () => {
+    P.joining = false; P.strand.push(P.next.base); P.rel++; P.fresh = n - 1;
+    P.next = P.strand.length < MAXN ? { base: P.nb, flip: false, placed: false } : null;
+    note("polyNote", "good", "Condensation: a molecule of water is released and a phosphodiester bond forms, linking carbon 5′ (through the phosphate) to carbon 3′ of the sugar before.");
+    renderAll(); clearTimeout(P.ft); P.ft = setTimeout(() => { P.fresh = -1; if (B.poly === P) renderScene(); }, 1600);
+    if (mode === "demo" && P.strand.length >= 3) tried(2);
+    tourSignal("go-condense");
+  };
+  if (reduced()) {   // still version: the water shown beside the new bond for a moment
+    P.wstill = off(gp, lin(L.G, [0, L.w ? -40 : -46])); commit(); setTimeout(() => { P.wstill = null; if (B.poly === P) renderScene(); }, 1400); return;
+  }
+  P.joining = true; renderScene();
+  $("animL").innerHTML = waterSVG(gp[0], gp[1], "waterG", 0);
+  animate(950, p => {
+    const e = ease(p), g = $("nextG"), wg = $("waterG");
+    if (g) setAttr(g, "transform", `translate(${f1(slide[0] * e)} ${f1(slide[1] * e)})`);
+    if (wg) { setAttr(wg, "transform", `translate(${f1(gp[0] + out[0] * e)} ${f1(gp[1] + out[1] * e)})`); setAttr(wg, "opacity", (p < .15 ? p / .15 : p > .75 ? (1 - p) / .25 : 1).toFixed(2)); }
+  }, commit);
+}
+function hydrolyse() {
+  const P = B.poly; if (B.lock.all || ANIM) return;
+  if (P.strand.length < 2) { note("polyNote", "", "There is no phosphodiester bond to break yet."); return; }
+  const L = lay(), n = P.strand.length;
+  P.next = { base: P.strand.pop(), flip: false, placed: true }; P.add++; P.fresh = -1;
+  const gp = ap(L.G, [(n - 2) * PITCH + 42, -24]), out = lin(L.G, [0, L.w ? -78 : -40]), slide = lin(L.G, [-LGAP, 0]);
+  const done = () => { note("polyNote", "good", "Hydrolysis: a molecule of water is added and the phosphodiester bond at the end breaks."); renderAll(); };
+  renderAll();
+  if (reduced()) { done(); return; }
+  const a = ap(L.G, [(n - 2) * PITCH + GL.C3[1], GL.C3[0]]), e2 = edgePt(a, ap(L.G, [(n - 1) * PITCH + GL.P[1], GL.P[0]]), GL.PR * L.k);
+  $("animL").innerHTML = waterSVG(gp[0] + out[0], gp[1] + out[1], "waterG", 0) + `<path id="brkL" class="bd" d=""/>`;
+  const g0 = $("nextG"); if (g0) setAttr(g0, "transform", `translate(${f1(slide[0])} ${f1(slide[1])})`);
+  animate(1000, p => {
+    const g = $("nextG"), wg = $("waterG"), bl = $("brkL"), q = p < .5 ? ease(p / .5) : 1, r = p < .5 ? 0 : ease((p - .5) / .5);
+    if (wg) { setAttr(wg, "transform", `translate(${f1(gp[0] + out[0] * (1 - q))} ${f1(gp[1] + out[1] * (1 - q))})`); setAttr(wg, "opacity", (p < .5 ? q : 1 - r).toFixed(2)); }
+    if (g) setAttr(g, "transform", `translate(${f1(slide[0] * (1 - r))} ${f1(slide[1] * (1 - r))})`);
+    if (bl) setAttr(bl, "d", p < .5 ? `M${P2(a)}L${P2(e2)}` : "");
+  }, done);
+}
+
+/* ----- view 3: double helix ----- */
+function selSlot(i) { const H = B.helix; if (B.lock.all || H.twist) return; H.sel = i; renderScene(); }
+function addBase(b) {
+  const H = B.helix; if (B.lock.all || H.twist) return;
+  let i = H.sel; if (i < 0 || i >= H.tmpl.length) i = H.part.findIndex(x => !x); if (i < 0) { note("helixNote", "", "Every place is filled. Choose a place to change it, or press Clear."); return; }
+  if (b === "U") { note("helixNote", "bad", "Uracil belongs in RNA, not DNA. This is a DNA strand: use A, T, C or G."); return; }
+  H.part[i] = b; H.stack.push(i);
+  const t = H.tmpl[i], ps = pairStatus(t, b), pr = `${t}–${b}`;
+  const msgs = { ok: `✓ ${pr}: a complementary pair, held by ${HBONDS[t]} hydrogen bonds.`,
+    wide: `✗ ${pr}: two purines, both double rings. Too wide: the new strand bulges out. A purine always pairs with a pyrimidine, so DNA stays a constant width.`,
+    narrow: `✗ ${pr}: two pyrimidines, both single rings. Too narrow: a gap is left between them. A purine always pairs with a pyrimidine, so DNA stays a constant width.`,
+    nc: quiz() ? `✗ ${pr}: a purine with a pyrimidine, so the width is right, but they are not a complementary pair.` : `✗ ${pr}: the width is right, but they are not a complementary pair. A pairs with T; G pairs with C.` };
+  note("helixNote", ps === "ok" ? "good" : "bad", msgs[ps]);
+  const nx = H.part.findIndex((x, j) => !x && j > i), nx2 = nx >= 0 ? nx : H.part.findIndex(x => !x); H.sel = nx2;
+  renderAll(); tourSignal("pair");
+  if (mode === "demo" && ps === "wide" && ((t === "A" && b === "G") || (t === "G" && b === "A"))) tried(3);
+}
+function setTmpl(s, quiet) {
+  const H = B.helix; if (B.lock.all || B.lock.tmpl) return false;
+  s = String(s).toUpperCase().replace(/[^A-Z]/g, "");
+  if (/U/.test(s)) { note("helixNote", "bad", "The template is DNA, so no uracil: use A, T, C and G."); return false; }
+  if (!/^[ATCG]{2,6}$/.test(s)) { note("helixNote", "bad", "Type 2 to 6 letters, using only A, T, C and G."); return false; }
+  H.tmpl = s; H.part = s.split("").map(() => ""); H.sel = 0; H.stack = []; H.twist = false; H.tw = 0;
+  if (!quiet) note("helixNote", "", `New template: ${seqW(s, 5, 3)}. Add the new strand.`);
+  renderAll(); return true;
+}
+function twist() {
+  const H = B.helix; if (B.lock.all || ANIM) return;
+  H.twist = !H.twist; syncCtl();
+  const from = H.twist ? 0 : 1, to = H.twist ? 1 : 0;
+  if (H.twist) H.tw = 0.0001;
+  note("helixNote", "", H.twist ? "The two antiparallel strands twist: that twisting gives the double helix. This is a stylised flat drawing; real DNA is a 3D helix." : "");
+  const end = () => { H.tw = to; renderAll(); };
+  if (reduced()) { end(); tourSignal("twist"); return; }
+  animate(1200, p => { H.tw = Math.max(0.0001, from + (to - from) * ease(p)); if (!H.twist && p >= 1) H.tw = 0; renderScene(); }, end);
+  tourSignal("twist");
+}
+
+/* ----- short animations (about a second), drawn with paceFrame; finished at once when hidden or off-screen ----- */
+function animate(dur, step, done) {
+  finishAnim();
+  if (document.hidden || !onScreen) { done(true); return; }
+  ANIM = { t0: null, dur, step, done };
+  const tick = now => {
+    if (!ANIM) return;
+    if (ANIM.t0 == null) ANIM.t0 = now;
+    const p = Math.min(1, (now - ANIM.t0) / ANIM.dur); ANIM.step(p);
+    if (p >= 1) { const d = ANIM.done; ANIM = null; d(false); } else animId = paceFrame(tick);
+  };
+  animId = paceFrame(tick);
+}
+function finishAnim() { if (!ANIM) return; paceCancel(animId); const a = ANIM; ANIM = null; a.step(1); a.done(true); }
+function resume() { if (ANIM && (!onScreen || document.hidden)) finishAnim(); }
+document.addEventListener("visibilitychange", resume);
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Build a nucleotide, then swap ribose ↔ deoxyribose. Watch carbon 2′.", "Add phosphates to adenosine (ribose + adenine): AMP → ADP → ATP.",
+             "Join three nucleotides in the strand and watch the water leave.", "In the double helix, pair A with G and see what goes wrong.", "Set 20% adenine in the percentage panel."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function loadDemo() {
+  finishAnim(); task = { kind: "demo" }; S = {}; B = DEMO_B;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = "";
+  moveSupport(); renderAll(); renderTry();
+}
+function freshS() { return { choice: null, order: shuffled(task.options ? task.options.length : task.items ? task.items.length : 0), tiles: {}, reveal: false }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  const list = LEVELS[level]; task = list[idx];
+  if (task.variants) task.vi = task.vi == null ? 0 : (task.vi + 1) % task.variants.length;
+  S = freshS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = txt(task);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { finishAnim(); B = stateFor(task); ["nucNote", "polyNote", "helixNote"].forEach(id => note(id, "", "")); renderAll(); }
+const selHTML = (id, opts, lab) => `<select class="gsel" id="${id}" aria-label="${esc(lab)}"><option value="">Choose…</option>${shuffled(opts.length).map(i => `<option value="${esc(opts[i])}">${esc(opts[i])}</option>`).join("")}</select>`;
+const narrow = () => window.innerWidth <= 900;
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "tiles") {
+    a.innerHTML = `<div class="tiles" role="group" aria-label="Choices">` + S.order.map(i => `<button type="button" class="tile" data-i="${i}" aria-pressed="${!!S.tiles[i]}">${esc(t.items[i].t)}</button>`).join("") + `</div><p class="small">Choose three.</p>`;
+    a.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.i; S.tiles[i] = !S.tiles[i]; b.setAttribute("aria-pressed", String(S.tiles[i])); }));
+  } else if (t.kind === "sort") {
+    a.innerHTML = `<ul class="sortl">` + t.items.map((it, i) => `<li><b>${esc(it.t)}</b>${selHTML("s" + i, t.cats, it.t)}</li>`).join("") + `</ul>`;
+  } else if (t.kind === "fix") {
+    a.innerHTML = `<ul class="fixl">` + t.items.map((it, i) => `<li><span class="orig">${i + 1}. ‘${esc(it.orig)}’</span><span class="fixed">Fixed: ${esc(it.pre)}${selHTML("s" + i, it.opts, "Fix for line " + (i + 1))}${esc(it.post)}</span></li>`).join("") + `</ul>`;
+  } else if (t.kind === "num") {
+    a.innerHTML = `<div class="numrow"><label for="numIn">Answer:</label><input id="numIn" type="text" inputmode="decimal" autocomplete="off"><span>${esc(t.unit)}</span></div>`;
+    $("numIn").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  } else if (t.kind === "goal") {
+    const where = narrow() ? "in the model below" : "in the model";
+    a.innerHTML = `<p style="margin:0">${t.id0 === "nucC" ? "Use <b>Sugar</b>, <b>Pick up</b> and the carbons" : t.id0 === "join" ? "Use <b>Line it up at the 3′ end</b> and <b>Condense</b>" : "Choose a place on the new strand, then use <b>Add to the new strand</b>"} ${where}.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+/* put the right answer into the answer area, and set the model to show it */
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = t.options.findIndex(o => choiceOk(t, o)); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "tiles") { t.items.forEach((it, i) => { S.tiles[i] = tileOk(it); }); document.querySelectorAll("#answer .tile").forEach(b => b.setAttribute("aria-pressed", String(!!S.tiles[+b.dataset.i]))); }
+  else if (t.kind === "sort") t.items.forEach((it, i) => { $("s" + i).value = sortCat(it); });
+  else if (t.kind === "fix") t.items.forEach((it, i) => { $("s" + i).value = it.ans(); });
+  else if (t.kind === "num") $("numIn").value = numAns(t);
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task;
+  if (t.kind === "goal") { if (!goalMet(t, B)) { goalFill(t, B); renderAll(); } return; }
+  if (S.shown) return; S.shown = true;
+  const pr = t.predict, id = t.id;
+  if (pr === "c2") { B.nuc.sugar = dnaSugar(); note("nucNote", "good", `Deoxyribose: carbon 2′ now carries just ${SUGARS.deoxyribose.c2}.`); renderAll(); }
+  else if (pr === "cond") { S.reveal = true; if (instant) { B.poly.strand.push(B.poly.next.base); B.poly.rel++; B.poly.next = null; renderAll(); } else condense(); }
+  else if (pr === "width") { const H = B.helix; H.part = ["T", "G", "T"]; H.sel = -1; note("helixNote", "bad", `A–T fits. A–G: two purines, too wide, so the strand bulges. C–T: two pyrimidines, a gap. A purine always pairs with a pyrimidine, so DNA stays a constant width.`); renderAll(); }
+  else if (pr === "atp") { B.nuc.phos = 3; B.hide.nucRead = 0; renderAll(); }
+  else if (id === "hard1") { const H = B.helix; H.part = comp(H.tmpl).split(""); B.hide.helixRead = 0; renderAll(); }
+  else if (id === "hard3") { const H = B.helix; H.part = comp(H.tmpl).split(""); B.hide.hb = 0; renderAll(); }
+  else if (id === "hard6") { B.hide.hb = 0; renderAll(); }
+  else if (id === "hard8") { B.hide.nucRead = 0; renderAll(); }
+  else if (id === "hard9") { const v = t.variants[t.vi || 0]; B.pct = { b: v.give, p: v.p }; B.hide.pct = 0; renderAll(); }
+  else if (id === "hard10") { B.cnum = true; B.hl = "pde"; renderAll(); }
+}
+/* goals */
+function goalMet(t, m) {
+  if (t.id0 === "nucC") return m.nuc.sugar === dnaSugar() && m.nuc.base === "C" && m.nuc.phos === 1;
+  if (t.id0 === "join") return m.poly.strand.length >= 2;
+  if (t.id0 === "comp") return m.helix.part.every((p, i) => p === PAIR[m.helix.tmpl[i]]);
+  return false;
+}
+function goalFill(t, m) {
+  if (t.id0 === "nucC") Object.assign(m.nuc, { sugar: dnaSugar(), base: "C", phos: 1, hand: null });
+  if (t.id0 === "join") { const P = m.poly; if (P.strand.length < 2) { P.strand.push(P.next.base); P.rel++; P.next = { base: P.nb, flip: false, placed: false }; } }
+  if (t.id0 === "comp") { m.helix.part = comp(m.helix.tmpl).split(""); m.helix.sel = -1; }
+}
+function goalRight(t) {
+  if (t.id0 === "nucC") return "Correct. Deoxyribose, a phosphate on carbon 5′ and cytosine on carbon 1′: a DNA nucleotide containing cytosine.";
+  if (t.id0 === "join") return "Correct. A condensation reaction released a molecule of water, and a phosphodiester bond now joins carbon 3′ of one sugar to the next phosphate.";
+  const H = B.helix; return `Correct. ${seqW(H.tmpl, 5, 3)} pairs with ${seqW(comp(H.tmpl), 3, 5)}: antiparallel, held by ${hbOf(H.tmpl)} hydrogen bonds.`;
+}
+function goalWhy(t) {
+  if (t.id0 === "nucC") {
+    const n = B.nuc, w = [];
+    if (n.sugar !== dnaSugar()) w.push("Ribose makes an RNA nucleotide. A DNA nucleotide has deoxyribose: just H on carbon 2′.");
+    if (!n.base) w.push("Attach a base at carbon 1′.");
+    else if (n.base !== "C") { const b = BASES[n.base]; w.push(n.base === "U" ? "Uracil is found in RNA, not DNA. The question asks for cytosine." : b.ring === "purine" ? `That's ${b.name}: a purine, with a double ring. Cytosine is a pyrimidine.` : `That's ${b.name}. The question asks for cytosine.`); }
+    if (!n.phos) w.push("Attach a phosphate at carbon 5′.");
+    return w.join(" ");
+  }
+  if (t.id0 === "join") { const P = B.poly; return P.next && P.next.placed ? "It's lined up, but not joined yet. Press Condense." : "First line up the next nucleotide: its phosphate beside carbon 3′ of the last sugar. Then press Condense."; }
+  const H = B.helix, empty = H.part.filter(x => !x).length, bad = [];
+  H.tmpl.split("").forEach((b, i) => { const ps = pairStatus(b, H.part[i]); if (ps !== "ok" && ps !== "empty") bad.push(`place ${i + 1}, ${b}–${H.part[i]}: ${ps === "wide" ? "two purines, too wide" : ps === "narrow" ? "two pyrimidines, a gap" : "not a complementary pair"}`); });
+  return (bad.length ? `Check ${bad.slice(0, 2).join("; ")}.` : "") + (empty ? ` ${empty} place${empty === 1 ? " is" : "s are"} still empty.` : "");
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  $("supKey").hidden = !support.key; $("supPair").hidden = !support.pair;
+  tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const num = s => { s = String(s).trim().replace(/\s/g, "").replace(/%$/, ""); return s === "" || isNaN(+s) ? null : +s; };
+function sortWhy(t, it, v) {
+  if (t.cats.includes("hydrolysis")) return `‘${it.t}’: condensation and hydrolysis mixed up (the mark scheme rejects ‘hydrolysis’ for the joining reaction). Which reaction joins nucleotides, and which breaks them apart?`;
+  if (it.b) return v === "sugar" || v === "bond" ? `${it.t} is a base, not a ${v}. Is it a double ring or a single ring?` : `${it.t} is not a ${v}. Count its rings: purines have a double ring, pyrimidines a single ring.`;
+  if (it.sugar) return `${it.t} is not a base or a bond: it is the pentose sugar in DNA.`;
+  return `${it.t} names the bond that joins one nucleotide to the next.`;
+}
+function evaluate() {
+  const t = task;
+  if (ANIM) return { skip: "Wait for the reaction to finish, then press Check." };
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice];
+    return choiceOk(t, o) ? { ok: true, html: esc("Correct. " + t.explain()) } : { ok: false, html: esc(o.why) };
+  }
+  if (t.kind === "tiles") {
+    const on = t.items.map((_, i) => !!S.tiles[i]), need = t.items.filter(tileOk).length;
+    if (!on.some(Boolean)) return { skip: "Choose your answers first." };
+    const bad = t.items.findIndex((it, i) => on[i] && !tileOk(it)), miss = t.items.filter((it, i) => !on[i] && tileOk(it)).length;
+    if (bad < 0 && !miss) return { ok: true, html: esc("Correct. " + t.explain()) };
+    if (bad >= 0) return { ok: false, html: esc(t.items[bad].why) };
+    return { ok: false, html: `You have ${need - miss} of ${need}. ${miss === 1 ? "One more is" : miss + " more are"} missing.` };
+  }
+  if (t.kind === "sort" || t.kind === "fix") {
+    const vals = t.items.map((_, i) => $("s" + i).value);
+    if (vals.some(v => !v)) return { skip: "Choose an answer for every line first." };
+    const right = it => t.kind === "sort" ? sortCat(it) : it.ans();
+    const wrong = t.items.map((it, i) => vals[i] !== right(it) ? i : -1).filter(i => i >= 0);
+    if (!wrong.length) return { ok: true, html: esc(t.kind === "sort" ? "Correct. " + t.items.map(it => `${it.t}: ${sortCat(it)}`).join("; ") + "." : "Correct. Deoxyribose; a double helix; nucleotides.") };
+    const it = t.items[wrong[0]], v = vals[wrong[0]];
+    const why = t.kind === "sort" ? sortWhy(t, it, v) : it.why[v];
+    return { ok: false, html: `${t.items.length - wrong.length} of ${t.items.length} right. ` + esc(why) + (wrong.length > 1 ? ` Look again at: ${wrong.map(i => t.kind === "sort" ? t.items[i].t.toLowerCase() : "line " + (i + 1)).join(", ")}.` : "") };
+  }
+  if (t.kind === "num") {
+    const v = num($("numIn").value), a = numAns(t);
+    if (v == null) return { skip: "Type a number first." };
+    if (v === a) return { ok: true, html: esc(numRight(t, a)) };
+    const w = numWrongs(t).find(x => Math.abs(x[0] - v) < 1e-9);
+    return { ok: false, html: esc(w ? w[1] : t.id0 === "hb" ? "Pair each base, then add up the hydrogen bonds in each pair." : "Use A = T and G = C, with a total of 100%.") };
+  }
+  if (t.kind === "goal") {
+    if (goalMet(t, B)) return { ok: true, html: esc(goalRight(t)) };
+    return { ok: false, html: esc(goalWhy(t)) };
+  }
+  return { skip: "" };
+}
+function numRight(t, a) {
+  if (t.id0 === "hb") return `Correct. ${[...t.tmpl].map(b => `${b}–${PAIR[b]} ${HBONDS[b]}`).join(", ")}: ${[...t.tmpl].map(b => HBONDS[b]).join(" + ")} = ${a} hydrogen bonds.`;
+  const v = t.variants[t.vi || 0], P = PAIR[v.give];
+  return `Correct. ${v.give} = ${P} = ${v.p}%, so ${v.give} + ${P} = ${2 * v.p}%. The other pair makes 100 − ${2 * v.p} = ${100 - 2 * v.p}%, so ${v.ask} = ${a}%.`;
+}
+function msgStuck() {
+  const t = task;
+  if ((t.kind === "sort" && t.cats.includes("purine") || t.id0 === "nucC") && !support.key) return "Stuck? Turn on <b>Base key</b> under Support.";
+  if ((t.id0 === "comp" || t.id0 === "hb") && !support.pair) return "Stuck? Turn on <b>Pairing rules</b> under Support.";
+  return "";
+}
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => typeof h === "function" ? h(t) : h);
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + t.options.find(o => choiceOk(t, o)).t.replace(/\.$/, "") + ". " + t.explain();
+  if (t.kind === "tiles") return "Answer: " + t.explain();
+  if (t.kind === "sort") return "Answer: " + t.items.map(it => `${it.t}: ${sortCat(it)}`).join("; ") + ".";
+  if (t.kind === "fix") return "Answer: " + t.items.map(it => it.pre + it.ans() + it.post).join(" ");
+  if (t.kind === "num") return "Answer: " + numRight(t, numAns(t)).replace(/^Correct\. /, "");
+  if (t.kind === "goal") return "Answer: the model now shows it. " + goalRight(t).replace(/^Correct\. /, "");
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = freshS();
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Pointer and keyboard on the picture: drag a part to a carbon, drag the next nucleotide, choose a place ===== */
+(function sceneInput() {
+  const svg = $("scene"); let drag = null;
+  const pt = e => { const m = svg.getScreenCTM(); if (!m) return [0, 0]; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return [p.x, p.y]; };
+  svg.addEventListener("pointerdown", e => {
+    if (B.lock.all || ANIM) return;
+    const g = e.target.closest("[data-drag]");
+    if (g && (g.dataset.drag === "hand" || (g.dataset.drag === "next" && B.poly.next && !B.poly.next.placed))) {
+      drag = { g, kind: g.dataset.drag, p0: pt(e), moved: false }; g.classList.add("drag");
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {} e.preventDefault();
+    }
+  });
+  /* on a touch screen the picture lets the page scroll (pan-y), so a finger drag on a part would scroll instead: claim that touch */
+  svg.addEventListener("touchstart", e => {
+    const g = !B.lock.all && !ANIM && e.target.closest && e.target.closest("[data-drag]");
+    if (g && (g.dataset.drag === "hand" || (B.poly.next && !B.poly.next.placed))) e.preventDefault();
+  }, { passive: false });
+  svg.addEventListener("pointermove", e => {
+    if (!drag) return; const p = pt(e), dx = p[0] - drag.p0[0], dy = p[1] - drag.p0[1];
+    if (Math.hypot(dx, dy) > 4) drag.moved = true;
+    setAttr(drag.g, "transform", drag.kind === "hand" ? `translate(${f1(lay().hand[0] + dx)} ${f1(lay().hand[1] + dy)})` : `translate(${f1(dx)} ${f1(dy)})`);
+  });
+  const end = e => {
+    if (!drag) return; const d = drag; drag = null; d.g.classList.remove("drag");
+    const L = lay(), p = pt(e);
+    if (d.kind === "hand") {
+      if (!d.moved) { renderScene(); return; }
+      const M = mul(L.G, LT(0)); let best = 0, bd = 1e9;
+      [1, 2, 3, 4, 5].forEach(c => { const q = ap(M, GL["C" + c]), dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; best = c; } });
+      if (bd < 48) attach(best); else renderScene();
+    } else {
+      const P = B.poly, U = P.strand.length * PITCH + LGAP, tg = ap(L.G, [U + 30, 0]), dd = Math.hypot(tg[0] - p[0], tg[1] - p[1]);
+      if (d.moved && dd < 95) lineUp(); else renderScene();
+    }
+  };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", e => { if (drag) { drag.g.classList.remove("drag"); drag = null; renderScene(); } });
+  svg.addEventListener("click", e => {
+    if (B.lock.all) return;
+    const h = e.target.closest(".hot"); if (h) { attach(+h.dataset.c); return; }
+    const s = e.target.closest(".slot"); if (s) selSlot(+s.dataset.slot);
+  });
+  svg.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const h = e.target.closest && e.target.closest(".hot"), s = e.target.closest && e.target.closest(".slot");
+    if (h) { e.preventDefault(); attach(+h.dataset.c); } else if (s) { e.preventDefault(); selSlot(+s.dataset.slot); requestAnimationFrame(() => { const n = $("scene").querySelector(`.slot[data-slot="${s.dataset.slot}"]`); if (n) n.focus(); }); }
+  });
+})();
+
+/* ===== Controls ===== */
+$("sceneTabs").addEventListener("click", e => { const b = e.target.closest("button[data-scene]"); if (b) setScene(b.dataset.scene); });
+$("sugSeg").addEventListener("click", e => { const b = e.target.closest("button[data-sugar]"); if (b) setSugar(b.dataset.sugar); });
+$("partSeg").addEventListener("click", e => { const b = e.target.closest("button[data-part]"); if (b) pickUp(b.dataset.part); });
+$("attSeg").addEventListener("click", e => { const b = e.target.closest("button[data-c]"); if (b) attach(+b.dataset.c); });
+$("addP").addEventListener("click", () => phosStep(1));
+$("remP").addEventListener("click", () => phosStep(-1));
+$("clearNuc").addEventListener("click", () => { if (B.lock.all) return; Object.assign(B.nuc, { base: null, phos: 0, hand: null, bad: 0 }); note("nucNote", "", ""); renderAll(); });
+$("cnumBtn").addEventListener("click", () => { if (B.lock.all) return; B.cnum = !B.cnum; renderAll(); });
+$("nextSeg").addEventListener("click", e => { const b = e.target.closest("button[data-nb]"); if (b) setNext(b.dataset.nb); });
+$("flipBtn").addEventListener("click", flipNext);
+$("lineBtn").addEventListener("click", lineUp);
+$("condBtn").addEventListener("click", condense);
+$("hydBtn").addEventListener("click", hydrolyse);
+$("addSeg").addEventListener("click", e => { const b = e.target.closest("button[data-ab]"); if (b) addBase(b.dataset.ab); });
+$("undoB").addEventListener("click", () => { const H = B.helix; if (B.lock.all) return; let i = H.stack.pop(); while (i != null && !H.part[i]) i = H.stack.pop(); if (i == null) i = H.part.map(Boolean).lastIndexOf(true); if (i >= 0) { H.part[i] = ""; H.sel = i; } note("helixNote", "", ""); renderAll(); });
+$("clearB").addEventListener("click", () => { const H = B.helix; if (B.lock.all) return; H.part = H.part.map(() => ""); H.sel = 0; H.stack = []; note("helixNote", "", ""); renderAll(); });
+$("fillB").addEventListener("click", () => { const H = B.helix; if (B.lock.all || quiz()) return; H.part = comp(H.tmpl).split(""); H.sel = -1; note("helixNote", "good", `The new strand: ${seqW(comp(H.tmpl), 3, 5)}.`); renderAll(); });
+$("tmplSet").addEventListener("click", () => setTmpl($("tmplIn").value));
+$("tmplIn").addEventListener("keydown", e => { if (e.key === "Enter") setTmpl($("tmplIn").value); });
+$("tmplNew").addEventListener("click", () => { const n = 4 + Math.floor(Math.random() * 3); setTmpl([...Array(n)].map(() => "ATCG"[Math.floor(Math.random() * 4)]).join("")); });
+$("twistBtn").addEventListener("click", twist);
+$("pctSeg").addEventListener("click", e => { const b = e.target.closest("button[data-pb]"); if (!b || B.lock.all) return; B.pct.b = b.dataset.pb; renderPct(); if (mode === "demo" && B.pct.b === "A" && B.pct.p === 20) tried(4); });
+$("pctIn").addEventListener("input", () => { if (B.lock.all) return; B.pct.p = +$("pctIn").value; renderPct(); if (mode === "demo" && B.pct.b === "A" && B.pct.p === 20) tried(4); tourSignal("pct"); });
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#sceneWrap", scene: "nuc", text: "This is the model. It starts with one pentose sugar, deoxyribose: a pentagon with its ring oxygen and carbons 1′ to 5′." },
+  { el: "#sugarRow", scene: "nuc", text: "Choose the sugar. Watch carbon 2′: OH in ribose, just H in deoxyribose.", do: "sugar", doText: "Switch to the other sugar." },
+  { el: "#partBox", scene: "nuc", text: "Pick up a base or the phosphate, then drag it to a carbon (or use the carbon buttons). Wrong carbons are refused, with a reason.", do: "attach", doText: "Attach a base or the phosphate." },
+  { el: "#nucRead", scene: "nuc", text: "The readout names what you have built. Carbon numbers can be switched off with the button above it." },
+  { el: "#sceneTabs", text: "Three views: a nucleotide, a polynucleotide strand and the double helix.", do: "scene-poly", doText: "Press Polynucleotide." },
+  { el: "#polyRow", scene: "poly", text: "The next nucleotide is lined up: its phosphate beside carbon 3′. Condense joins it. Watch the water leave.", do: "go-condense", doText: "Press Condense." },
+  { el: "#sceneTabs", text: "Now pair two strands.", do: "scene-helix", doText: "Press Double helix." },
+  { el: "#pairRow", scene: "helix", text: "Add a base to each place on the new strand. Tap a place in the picture to choose it. A wrong pair shows what goes wrong.", do: "pair", doText: "Add a base to the new strand." },
+  { el: "#twistBtn", scene: "helix", text: "Twist the ladder into a stylised double helix.", do: "twist", doText: "Press Twist into a helix." },
+  { el: "#pctBox", scene: "helix", text: "Set the percentage of one base. The panel works out the other three." },
+  { el: "#supportArea", text: "Support switches add a base key and the pairing rules. They all start off." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:dna-builder", "1"); } catch (e) {}
+  DEMO_B = freshB(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), /^go/.test(name) ? 1800 : 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring ===== */
+const tourGo0 = tourGo;   // tour steps that belong to one view switch to it first (in case a pupil skipped the step that changes view)
+tourGo = function (i) { const s = TOUR[i]; if (s && s.scene && mode === "demo" && B.scene !== s.scene) { finishAnim(); B.scene = s.scene; renderAll(); } tourGo0(i); };
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; resume(); }).observe($("scene"));   // finish any animation while the model is off-screen
+}
+let rsT, lastWide = null;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const w = wideNow(); if (w !== lastWide) { lastWide = w; renderScene(); } }, 80); });
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+lastWide = wideNow();
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:dna-builder")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+</body>
+</html>
