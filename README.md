@@ -11,6 +11,9 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Gas Exchange | Biology | https://drt-tuition.github.io/ks3-tools/gas-exchange.html |
 | Microscope | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
 | Muscle Pairs | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
+| Digestive System | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
+| Pondweed | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
+| Food Web | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
