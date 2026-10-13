@@ -1,0 +1,2057 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Action Potential</title>
+<!--
+  SCIENCE SPEC: Action Potential (action-potential.html)
+  A-level tool; placed in the ks3-tools site under A-level Biology at Dan's request, 13 Oct 2026.
+  Level: A-level Biology, OCR A (H420) 5.1.3 Neuronal communication. Year 12 reading level, OCR terms, charges written
+    properly (Na⁺, K⁺). Serves (SoW): Y12/Y13 OCR A 5.1.3 lessons on resting potential, action potentials, transmission
+    along the axon (myelination, saltatory conduction), the all-or-nothing principle and the refractory period.
+  Source: Save My Exams OCR A notes, "Neuronal Communication" (newtools/src/ks5/neuronal_sme.txt): resting potentials
+    (pp 9–10), action potentials stages 1–5 (pp 11–13), transmission along an axon (p 14), all-or-nothing and
+    frequency not amplitude (pp 15–16), the refractory period (pp 17–18), factors affecting speed of conduction
+    (pp 19–20). There is no department deck yet. Facts and values come from the notes; all wording is written fresh.
+  Corrections to the notes (standard OCR A-level account):
+    1 Refractory period. The notes say "both sodium ion channels are closed (during repolarisation) and potassium ion
+      channels are closed (during hyperpolarisation)". Here: during the refractory period the voltage-gated Na⁺
+      channels are inactivated (closed and cannot reopen yet), drawn with an inactivation ball plugging the channel;
+      the voltage-gated K⁺ channels are open through repolarisation and are slow to close. Absolute and relative
+      refractory periods appear only as an optional "Going further" switch.
+    2 Current. The notes contrast an action potential with "a flow of electrons" and talk of "the current". Here the
+      charge is carried by ions, never electrons: Na⁺ ions move sideways along the axon in local currents, which
+      depolarise the next region (or the next node).
+  What it models (three views, tabs):
+    1 Membrane: a patch of axon membrane (phospholipid bilayer; outside above, inside below) with a Na⁺/K⁺ pump
+      (ATP → ADP while it cycles), a K⁺ leak channel, two voltage-gated Na⁺ channels (closed, open, inactivated) and a
+      voltage-gated K⁺ channel (closed, open; slow to close). House-look ions: Na⁺ circles and K⁺ rounded squares,
+      each with its symbol; 12 Na⁺ + 3 K⁺ outside, 3 Na⁺ + 12 K⁺ inside (more Na⁺ outside, more K⁺ inside).
+      A live trace (membrane potential / mV against time / ms) is linked to the picture: one time cursor drives the
+      channel states, the ion movements and the readout. Stimulus strength 1–10 (threshold 4): below threshold, a
+      blip that dies away; at or above it, the same full spike every time (all-or-nothing). Play/Pause, Step (to the
+      next stage), drag the cursor back along the trace, Faster. Stimulate again during the refractory period gives
+      no action potential (Going further on: late in it, a stimulus of 7 or more works).
+    2 Along the axon: an unmyelinated and a myelinated axon race side by side, stimulus at the left end only. The
+      impulse is a region of reversed charge moving one way, the refractory region behind it is shaded, local-current
+      arrows point ahead. In the myelinated axon (Schwann cells forming the myelin sheath) depolarisation happens only
+      at the nodes of Ranvier and the impulse jumps node to node (saltatory conduction). Controls: axon diameter
+      (thin, thick: faster), temperature (cooler, normal, warmer: faster when warmer, qualitative). Race timer.
+    3 Stimulus and frequency: a 20 ms trace strip. A stronger stimulus above threshold gives more impulses per second,
+      every one the same size (+30 mV). The gap between impulses can never be shorter than about 1 ms (the refractory
+      period plus the rise), so the frequency tops out at about 1000 per second.
+  Model rules (all computed in code): V(t) is an idealised curve through rest −70 mV, threshold −55 mV, peak +30 mV,
+    back to −70 mV, hyperpolarised −80 mV, rest −70 mV (cubic Hermite pieces, checked monotonic). Times after the
+    stimulus: threshold 0.3 ms, peak 0.5 ms, back at −70 mV 0.8 ms, lowest 1.0 ms, resting again 1.3 ms. Refractory
+    period from the peak to resting again (0.8 ms). Ion moves per action potential: 3 Na⁺ in (stimulus 1, then 2 more:
+    positive feedback), 2 K⁺ out (repolarisation and hyperpolarisation), then one pump cycle moves 3 Na⁺ out and
+    2 K⁺ in using ATP, so the counts are restored. Frequency: gap = 1 + 9 × ((10 − s) ÷ 6)² ms for strength s ≥ 4
+    (100 per second at threshold, 1000 per second at most). Speed: myelinated 10× the unmyelinated speed in the model;
+    thick ×1.5; cooler ×0.8, warmer ×1.1.
+  Simplifications: ion numbers are tiny and symbolic, and real concentration changes are small; one pump cycle is
+    shown, though pumps work all the time; the timeline is slowed down (a real action potential lasts about 1–2 ms;
+    the model's lasts 1.3 ms of trace time); channel shapes are schematic; the trace is an idealised curve; the
+    stimulus phase is drawn as part of depolarisation on the trace; myelinated is 10× faster in the race (real
+    saltatory conduction is up to about 50× faster); race times are playback seconds, not real times; the frequency
+    strip starts each impulse from threshold.
+  Misconceptions designed out (feedback names them): electrons flow (charge is carried by ions, in local currents);
+    a stronger stimulus gives a bigger action potential (bigger frequency, same size); K⁺ moves in during
+    depolarisation; the pump causes the spike (it restores and maintains the resting potential); myelin speeds the
+    ions up (it insulates, so depolarisation happens only at the nodes); the impulse travels both ways in a neurone
+    (the region behind is refractory); Na⁺ channels "pump" ions in (it is facilitated diffusion, down the
+    electrochemical gradient); reading an axis time as a duration.
+  Facts and values used: resting potential about −70 mV (inside negative); threshold about −55 mV; peak about +30 mV;
+    hyperpolarised below −70 mV, about −80 mV; Na⁺/K⁺ pump moves 3 Na⁺ out for every 2 K⁺ in, using ATP (active
+    transport); membrane more permeable to K⁺ than Na⁺ at rest; channels allow facilitated diffusion; voltage-gated
+    Na⁺ channels open at threshold, Na⁺ diffuses in, more channels open (positive feedback); voltage-gated K⁺ channels
+    open, K⁺ diffuses out (repolarisation); K⁺ channels slow to close (hyperpolarisation); pump restores the resting
+    potential; impulse travels one way (refractory region behind); all-or-nothing; stronger stimulus → higher
+    frequency, not amplitude; maximum frequency about 500–1000 per second, set by the refractory period; myelin sheath
+    made of Schwann cells; action potentials only at the nodes of Ranvier; saltatory conduction up to about 50×
+    faster; speed depends on myelination, axon diameter (thicker faster) and temperature (colder slower).
+    Conduction-speed questions use made-up exam-style distances and times (speed = distance ÷ time, in m s⁻¹).
+  Checks in code: on load bankCheck() verifies the curve (key values hit exactly, each piece monotonic, highest
+    +30 mV, lowest −80 mV), all-or-nothing (every strength ≥ 4 peaks at +30 mV; every blip stays below −55 mV), the
+    frequency rule (rising with strength, 1000 per second at the top), balanced ion moves (3 Na⁺ in = 3 out, 2 K⁺ out =
+    2 in), the race factors, and every question (one right option, a reason on every wrong one, 3 hints, numbers
+    computed and distinct from the planned wrong answers, tap ranges on the curve, goals reachable and not already met).
+    Any failure shows a visible error box and switches that question off.
+  Drawing: all in code (no images). Membrane: three stacked layers. A canvas holds the cached bilayer, captions and
+    names, the proteins and the still ions (redrawn only when a channel changes state or an ion arrives or leaves);
+    moving ions are a few small sprite canvases moved by CSS transform; state labels sit on a top canvas redrawn only
+    when a state changes. Backing stores capped at 1.5× device pixels. Trace: the curve is drawn once per run in a
+    bottom SVG; a cover slides right (transform) to reveal it; grid, axes and labels are a static SVG on top; the
+    cursor is an HTML line moved by transform. Axons and frequency strip: SVG.
+  Performance: no animation loop at rest (drawn on demand). Playback and the race use paceFrame(), capped at 20 fps
+    here, stepping down to 15 or fewer when drawing takes over a quarter of the time; time-based; paused when the tab
+    is hidden or the model is off-screen; readouts refresh about 2–4 times a second while moving. No CSS filters, no
+    backdrop-filter. Reduced motion: still stages (Play steps one stage at a time; the race shows the result).
+  Review (13 Oct 2026): playback at 6× CPU throttle cut from about 360–380 ms/s to about 220–240 ms/s (layers above);
+    at 1366×768 the controls, membrane and whole trace now fit on screen together (one control row, compact membrane
+    with one-line protein names, shorter trace on short screens, key line moved below the trace). Science fixes: the
+    pump is drawn working all the time (it maintains the resting potential), not only after a spike; the below-threshold
+    text no longer contradicts the picture (a few Na⁺ channels do open); the thick-axon reason is lower resistance of
+    the wider cytoplasm (the notes' "greater surface area" reason was dropped); trace-reading answers accept ±0.1 ms.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF;
+  --na-fill:#D3E3F6;--k-fill:#F9DCC8;--pump-fill:#E4E8EE;--pump-edge:#14243D;--ball:#14243D;
+  --zone-out:#E3ECF6;--zone-in:#F5ECE3;--head:#F1DCA6;--head-edge:#8A6A1E;--tail:#C7AE72;
+  --ph-rest:#5A6472;--ph-dep:#C2571A;--ph-rep:#2D5B8C;--ph-hyp:#6B3FA0;--ph-ret:#1D6B3F;--refr:#14243D;--grid:rgba(20,36,61,.10);--grid2:rgba(20,36,61,.22);
+  --myelin:#F6E7B4;--myelin-edge:#7A5E14;--axon:#FBFAF8;--axon-edge:#5A6472;--depz:#FAD3B8;--refz:#D6DCE6;--cur:#1D6B3F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --na-fill:#5E5024;--k-fill:#244670;--pump-fill:#2B4466;--pump-edge:#E9EDF3;--ball:#E9EDF3;
+  --zone-out:#1A3150;--zone-in:#2A2E44;--head:#6E5E36;--head-edge:#E4C46A;--tail:#8A7A50;
+  --ph-rest:#A9B4C4;--ph-dep:#FFB37A;--ph-rep:#8CC4FF;--ph-hyp:#C9A7F0;--ph-ret:#7FD4A0;--refr:#D9A536;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.24);
+  --myelin:#5E5024;--myelin-edge:#E4C46A;--axon:#192E4B;--axon-edge:#A9B4C4;--depz:#5A3524;--refz:#2B3F5C;--cur:#7FD4A0}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --na-fill:#5E5024;--k-fill:#244670;--pump-fill:#2B4466;--pump-edge:#E9EDF3;--ball:#E9EDF3;
+  --zone-out:#1A3150;--zone-in:#2A2E44;--head:#6E5E36;--head-edge:#E4C46A;--tail:#8A7A50;
+  --ph-rest:#A9B4C4;--ph-dep:#FFB37A;--ph-rep:#8CC4FF;--ph-hyp:#C9A7F0;--ph-ret:#7FD4A0;--refr:#D9A536;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.24);
+  --myelin:#5E5024;--myelin-edge:#E4C46A;--axon:#192E4B;--axon-edge:#A9B4C4;--depz:#5A3524;--refz:#2B3F5C;--cur:#7FD4A0}
+
+h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-bottom:2px}
+.view{display:grid;gap:12px}
+#sceneBox{display:grid;gap:12px}
+.scenewrap{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#memCv{display:block;width:100%;height:auto}
+#trace,#axSvg,#fqSvg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+#trace{touch-action:pan-y;cursor:crosshair}
+#trace:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+#trace text,#axSvg text,#fqSvg text{font-family:var(--f-body);pointer-events:none}
+/* trace */
+.gr{stroke:var(--grid);stroke-width:1}
+.gr2{stroke:var(--grid2);stroke-width:1}
+.ax{stroke:var(--ink);stroke-width:1.6;fill:none}
+.tk{fill:var(--ink);font-size:13px;font-weight:700}
+.tkm{fill:var(--muted);font-size:13px}
+.ttl{fill:var(--muted);font-size:13px;font-weight:700}
+.dash{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:6 5;fill:none}
+.dl{fill:var(--muted);font-size:12.5px;font-weight:700}
+.cv{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.cv.rest{stroke:var(--ph-rest)}.cv.dep{stroke:var(--ph-dep)}.cv.rep{stroke:var(--ph-rep)}.cv.hyp{stroke:var(--ph-hyp)}.cv.ret{stroke:var(--ph-ret)}.cv.sub{stroke:var(--ph-dep);stroke-dasharray:7 4}
+.pl{font-size:14px;font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.pl.rest{fill:var(--ph-rest)}.pl.dep{fill:var(--ph-dep)}.pl.rep{fill:var(--ph-rep)}.pl.hyp{fill:var(--ph-hyp)}.pl.ret{fill:var(--ph-ret)}
+.lead{stroke-width:1.4;fill:none}
+.lead.rest{stroke:var(--ph-rest)}.lead.dep{stroke:var(--ph-dep)}.lead.rep{stroke:var(--ph-rep)}.lead.hyp{stroke:var(--ph-hyp)}.lead.ret{stroke:var(--ph-ret)}
+.pn{stroke-width:2;fill:var(--surface)}
+.pn.rest{stroke:var(--ph-rest)}.pn.dep{stroke:var(--ph-dep)}.pn.rep{stroke:var(--ph-rep)}.pn.hyp{stroke:var(--ph-hyp)}.pn.ret{stroke:var(--ph-ret)}
+.pnt{font-size:12px;font-weight:700;fill:var(--ink)}
+.brk{stroke:var(--refr);stroke-width:2;fill:none}
+.brkt{fill:var(--refr);font-size:13px;font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px}
+/* layers: membrane = static canvas | moving ions | state labels; trace = curve | sliding cover | grid and labels | cursor.
+   Only the small moving layers change while playing, so the browser repaints very little each frame. */
+#memWrap .ov,#traceWrap .ov{position:absolute;left:0;top:0;pointer-events:none}
+#memWrap canvas.ov{display:block;width:100%}
+#memMv canvas{position:absolute;left:0;top:0;will-change:transform}
+#traceC{display:block;width:100%;height:auto}
+#trace.ov{width:100%;height:100%;pointer-events:auto}
+#trCover{width:100%;height:100%;background:var(--sunk);will-change:transform}
+#trCur{width:0;border-left:2px dashed var(--accent);will-change:transform}
+#trDot{width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--sunk)}
+.stim{fill:var(--accent)}
+.stimx{fill:var(--muted)}
+.stl{fill:var(--accent);font-size:12px;font-weight:700}
+.stlx{fill:var(--muted);font-size:12px;font-weight:700}
+.empty{fill:var(--muted);font-size:15px;font-weight:700}
+.tapm{fill:none;stroke:var(--accent);stroke-width:3}
+.tapok{fill:none;stroke:var(--good);stroke-width:4}
+.tapzone{fill:var(--good);opacity:.16}
+.phasekey{margin:0;padding-left:0;list-style:none;display:flex;flex-wrap:wrap;gap:2px 14px;font-size:15px}
+.phasekey li{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.phasekey .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px solid currentColor;font-size:12px;color:var(--ink)}
+.phasekey .rest{color:var(--ph-rest)}.phasekey .dep{color:var(--ph-dep)}.phasekey .rep{color:var(--ph-rep)}.phasekey .hyp{color:var(--ph-hyp)}.phasekey .ret{color:var(--ph-ret)}
+/* axon view */
+.axm{fill:var(--axon);stroke:var(--axon-edge);stroke-width:2}
+.myl{fill:var(--myelin);stroke:var(--myelin-edge);stroke-width:2}
+.sg{fill:var(--muted);font-size:13px;font-weight:700}
+.sgr{fill:var(--ink);font-size:14px;font-weight:700}
+.dz{fill:var(--depz);stroke:var(--ph-dep);stroke-width:2}
+.rz{fill:var(--refz);stroke:var(--muted);stroke-width:1.4;stroke-dasharray:4 3}
+.arr{stroke:var(--cur);stroke-width:2.4;fill:none;stroke-linecap:round}
+.arrh{fill:var(--cur)}
+.axt{fill:var(--ink);font-size:15px;font-weight:700}
+.axl{fill:var(--muted);font-size:13px;font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px}
+.axz{font-size:13px;font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px}
+.axz.d{fill:var(--ph-dep)}.axz.r{fill:var(--muted)}.axz.c{fill:var(--cur)}
+.bolt{fill:var(--accent)}
+.fin{fill:var(--good);font-size:14px;font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px}
+.nodehl{fill:none;stroke:var(--hlite,#D9A536);stroke-width:3}
+/* frequency view */
+.sbar{fill:var(--accent);opacity:.85}
+.fmeter{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:4px 0}
+.ftrack{flex:1 1 200px;height:14px;border-radius:7px;background:var(--surface);border:1px solid var(--line);overflow:hidden;position:relative}
+.ffill{display:block;height:100%;background:var(--accent);width:0}
+.fmax{font-size:14px;font-weight:700;color:var(--muted)}
+.gf{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--accent);background:var(--sunk);border-radius:6px}
+.hl{fill:rgba(255,255,255,.38)}
+.ionna{fill:var(--particle);stroke:var(--particle-edge);stroke-width:1.45}
+.ionk{fill:var(--particle-2);stroke:var(--particle-edge);stroke-width:1.45}
+/* key line + support legends */
+.keyline{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;font-size:15px;color:var(--muted)}
+.keyline span{display:inline-flex;align-items:center;gap:5px}
+.keyline svg{height:20px;width:auto;flex:none}
+.legend{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;display:grid;gap:2px}
+.legend p{margin:0;font-size:16px;line-height:1.45}
+/* controls */
+.ctl{display:grid;gap:10px}
+#ctlMem0{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+#strRow{flex:1 1 280px;flex-wrap:nowrap}
+@media (max-width:480px){#strIn,#fStrIn{min-width:70px}}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.segb.tog{border-style:dashed}
+.segb.tog[aria-pressed="true"]{border-style:solid;border-color:var(--accent)}
+.segb .state{font-weight:400;color:var(--muted)}
+.scenetabs button{font-size:17px}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+.ctlrow .btn{min-height:46px}
+#strIn,#fStrIn{flex:1 1 120px;min-width:110px;min-height:44px;accent-color:var(--accent)}
+#strOut,#fStrOut{font-size:22px;font-weight:700;color:var(--accent);min-width:1.6em;font-variant-numeric:tabular-nums}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;gap:0;min-width:0;align-content:start;contain:layout paint}
+.ro.wide2{grid-column:span 2}.ro.wide4{grid-column:1/-1}
+.ro .k{font-size:14px;font-weight:700;color:var(--muted);line-height:1.3}
+.ro .v{font-size:22px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere}
+.ro .v.sm{font-size:17px;font-weight:400;color:var(--ink);line-height:1.45}
+.ro .v.sm b{color:var(--accent)}
+.hidenote{color:var(--muted);font-size:16px;margin:0}
+body.quiz .demo-only{display:none!important}
+@media (max-width:640px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.ro .v{font-size:20px}}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .btn{padding:10px 14px}
+}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:150px;font:700 20px var(--f-body);min-height:48px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.fixl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.fixl li{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:17px;line-height:2}
+.tapinfo{margin:0}
+.tapinfo b{color:var(--accent)}
+@media (min-width:901px) and (max-height:820px){
+  .fixl li{padding:4px 10px;line-height:1.8}
+  .fixl .gsel{min-height:40px;padding:2px 6px}
+}
+.ro .refr{font-size:15px;font-weight:700;color:var(--refr);line-height:1.3}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:12px 16px 16px;gap:10px}
+  #sceneBox,.view{gap:8px}
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Action Potential<small><b class="lvl">A-level Biology · OCR A 5.1.3</b>Stimulate a patch of axon membrane, watch the channels and the trace, then send an impulse along the axon.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Action Potential</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Action potential model" id="model">
+      <div class="seg scenetabs" id="sceneTabs" role="group" aria-label="View">
+        <button type="button" data-scene="mem" aria-pressed="true">Membrane</button>
+        <button type="button" data-scene="axon" aria-pressed="false">Along the axon</button>
+        <button type="button" data-scene="freq" aria-pressed="false">Stimulus and frequency</button>
+      </div>
+      <div id="sceneBox">
+
+      <!-- View 1: membrane + live trace -->
+      <div class="view" id="vMem">
+        <div class="ctl" id="ctlMem0">
+          <div class="ctlrow" id="strRow"><label class="clbl" for="strIn">Stimulus strength:</label><input type="range" id="strIn" min="1" max="10" step="1" value="6"><output id="strOut" for="strIn">6</output></div>
+          <div class="ctlrow" id="playRow"><button type="button" class="btn primary" id="stimBtn">Stimulate</button><button type="button" class="btn" id="playBtn">Pause</button><button type="button" class="btn" id="stepBtn">Step ▸</button></div>
+        </div>
+        <div class="scenewrap" id="memWrap"><canvas id="memCv" role="img" aria-label="A patch of axon membrane with its channels, pump and ions"></canvas><div id="memMv" class="ov" aria-hidden="true"></div><canvas id="memLb" class="ov" aria-hidden="true"></canvas></div>
+        <div class="scenewrap" id="traceWrap"><svg id="traceC" aria-hidden="true"><g id="trD"></g></svg><div class="ov" id="trCover"></div><svg id="trace" class="ov" role="img" aria-label="Trace of membrane potential against time" tabindex="0"><g id="trS"></g><g id="trL"></g><g id="trU"></g></svg><div class="ov" id="trCur" hidden></div><div class="ov" id="trDot" hidden></div></div>
+        <ol class="phasekey" id="phaseKey" hidden></ol>
+        <p class="keyline" id="memKey"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="ionna"/><circle cx="8.5" cy="8.5" r="2.8" class="hl"/></svg>Na⁺ ion (circle)</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" class="ionk"/><circle cx="8.5" cy="8.5" r="2.8" class="hl"/></svg>K⁺ ion (rounded square)</span><span>The Na⁺ and K⁺ channels are voltage-gated; the K⁺ leak channel is always open.</span></p>
+        <div class="ctl" id="ctlMem">
+          <div class="ctlrow"><button type="button" class="segb tog" id="fastBtn" aria-pressed="false">Faster playback <span class="state">off</span></button><button type="button" class="segb tog" id="gfBtn" aria-pressed="false">Going further: relative refractory period <span class="state">off</span></button></div>
+          <p class="mnote" id="memNote" aria-live="polite"></p>
+          <div class="readouts" id="memRead">
+            <div class="ro" id="roVBox"><span class="k">Membrane potential</span><span class="v" id="roV"></span></div>
+            <div class="ro"><span class="k">Time</span><span class="v" id="roT"></span></div>
+            <div class="ro wide2" id="stageBox"><span class="k">Stage</span><span class="v" id="roStage"></span><span class="refr" id="roRefr"></span></div>
+            <div class="ro wide4" id="roWhatBox"><span class="k">What is happening</span><span class="v sm" id="roWhat"></span></div>
+          </div>
+          <p class="hidenote" id="memHidden" hidden>Some readouts are hidden for this question.</p>
+          <p class="gf" id="gfLine" hidden><b>Going further:</b> early in the refractory period no stimulus can trigger an action potential (absolute refractory period). Later, while the membrane is hyperpolarised, a bigger stimulus can (relative refractory period).</p>
+        </div>
+      </div>
+
+      <!-- View 2: along the axon -->
+      <div class="view" id="vAxon" hidden>
+        <div class="scenewrap" id="axWrap"><svg id="axSvg" role="img" aria-label="An unmyelinated and a myelinated axon"><g id="axS"></g><g id="axD"></g></svg></div>
+        <div class="ctl" id="ctlAxon">
+          <div class="ctlrow" id="raceRow"><button type="button" class="btn primary" id="raceBtn">Race ▸</button><button type="button" class="btn" id="finBtn">Finish now</button></div>
+          <div class="ctlrow" id="axCtl"><span class="clbl" id="diL">Axon diameter:</span><div class="seg" role="group" aria-labelledby="diL" id="diSeg"><button type="button" data-di="thin" aria-pressed="true">Thin</button><button type="button" data-di="thick" aria-pressed="false">Thick</button></div>
+            <span class="clbl" id="teL">Temperature:</span><div class="seg" role="group" aria-labelledby="teL" id="teSeg"><button type="button" data-te="cool" aria-pressed="false">Cooler</button><button type="button" data-te="norm" aria-pressed="true">Normal</button><button type="button" data-te="warm" aria-pressed="false">Warmer</button></div></div>
+          <p class="mnote" id="axNote" aria-live="polite"></p>
+          <div class="readouts" id="axRead">
+            <div class="ro wide2"><span class="k">Unmyelinated: race time</span><span class="v" id="roU"></span></div>
+            <div class="ro wide2"><span class="k">Myelinated: race time</span><span class="v" id="roM"></span></div>
+            <div class="ro wide4"><span class="k">Results so far</span><span class="v sm" id="roRes"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: stimulus strength and frequency -->
+      <div class="view" id="vFreq" hidden>
+        <div class="scenewrap" id="fqWrap"><svg id="fqSvg" role="img" aria-label="Trace strip of impulses"><g id="fqS"></g><g id="fqD"></g></svg></div>
+        <div class="ctl" id="ctlFreq">
+          <div class="ctlrow" id="fStrRow"><label class="clbl" for="fStrIn">Stimulus strength:</label><input type="range" id="fStrIn" min="1" max="10" step="1" value="6"><output id="fStrOut" for="fStrIn">6</output></div>
+          <p class="mnote" id="fqNote" aria-live="polite"></p>
+          <div class="readouts" id="fqRead">
+            <div class="ro"><span class="k">Impulses on the strip</span><span class="v" id="roN"></span></div>
+            <div class="ro"><span class="k">Gap between impulses</span><span class="v" id="roGap"></span></div>
+            <div class="ro wide2"><span class="k">Frequency</span><span class="v" id="roF"></span></div>
+            <div class="ro wide4" id="fMeterBox"><span class="k">Frequency against the maximum</span><span class="fmeter" aria-hidden="true"><span class="ftrack"><span class="ffill" id="fFill"></span></span><span class="fmax">max ≈ 1000 per second</span></span><span class="v sm" id="roWhy"></span></div>
+          </div>
+          <p class="hidenote" id="fqHidden" hidden>Some readouts are hidden for this question.</p>
+        </div>
+      </div>
+      </div>
+      <p class="mnote" id="lockNote"></p>
+
+      <div class="legend" id="supStage" hidden>
+        <p><b>Resting:</b> the pump moves 3 Na⁺ out for 2 K⁺ in; K⁺ leaks out faster than Na⁺ leaks in.</p>
+        <p><b>Depolarisation:</b> voltage-gated Na⁺ channels open; Na⁺ diffuses in.</p>
+        <p><b>Repolarisation:</b> Na⁺ channels inactivated; voltage-gated K⁺ channels open; K⁺ diffuses out.</p>
+        <p><b>Hyperpolarisation:</b> K⁺ channels are slow to close; too much K⁺ diffuses out.</p>
+        <p><b>Return to resting:</b> K⁺ channels close; the pump restores the resting potential.</p>
+      </div>
+      <div class="legend" id="supSpeed" hidden>
+        <p><b>Faster impulses:</b> myelinated (saltatory conduction, node to node); thicker axon; warmer.</p>
+        <p>Myelin insulates the membrane, so ions cannot diffuse across it except at the nodes of Ranvier.</p>
+      </div>
+      <p class="limits" id="limits"><b>Model limits:</b> Ion numbers are tiny and symbolic; real concentration changes are small. Timings are slowed right down: a real action potential lasts about 1–2 ms. Channel shapes are schematic, and the trace is an idealised curve. The pump works all the time; the model only moves ions through it after an action potential. In the race the myelinated axon is 10× faster; real saltatory conduction can be up to about 50× faster.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="stage" aria-pressed="false"><span class="dot"></span>Stage guide <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="speed" aria-pressed="false"><span class="dot"></span>Speed factors <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Save My Exams OCR A notes, "Neuronal Communication", pp 9–20). One table each; everything else is computed. ===== */
+const MV = { rest: -70, thr: -55, peak: 30, hyper: -80 };                 // pp 9, 11, 12; hyperpolarised value from the spec
+const PUMP = { naOut: 3, kIn: 2, uses: "ATP", how: "active transport" };   // p 9
+const PERM = { K: 2, Na: 1 };                                              // p 9: at rest the membrane is more permeable to K⁺ (order only)
+const MOVE = { channel: "facilitated diffusion", pump: "active transport" };   // p 9
+const CARRIER = "ions";                                                    // p 11 (corrected): ions move, not electrons; local currents p 14, p 19
+const STAGE = {                                                            // pp 11–12 (refractory period corrected: Na⁺ channels inactivated)
+  depol: { name: "Depolarisation", ion: "Na⁺", dir: "in", na: "open", k: "closed", loop: "positive feedback" },
+  repol: { name: "Repolarisation", ion: "K⁺", dir: "out", na: "inactivated", k: "open" },
+  hyper: { name: "Hyperpolarisation", ion: "K⁺", dir: "out", na: "inactivated", k: "slow to close" },
+  ret: { name: "Return to resting", na: "inactivated", k: "closed", pump: "restores the resting potential" } };
+const MYELIN = { madeOf: "Schwann cells", apAt: "nodes of Ranvier", upTo: 50 };   // p 19
+const FREQ_RANGE = [500, 1000];                                            // p 18: maximum frequency, per second
+const SPEED = { myelin: 10, thick: 1.5, cool: 0.8, norm: 1, warm: 1.1 };   // model factors (qualitative in the notes, p 19–20)
+const SPEED_UP = ["myelination", "a thicker axon", "a higher temperature"];   // p 19–20
+
+/* ===== Model timings (ms after the stimulus; an idealised curve) ===== */
+const AP = { thr: 0.3, peak: 0.5, rest1: 0.8, trough: 1.0, rest2: 1.3 };
+const STIM_AT = 0.5, T_END = 4, LAST_STIM = 2.6;
+const STHR = 4, SMAX = 10, GF_STR = 7;                      // stimulus strength 1–10; threshold 4; relative refractory needs 7+
+const REFR = AP.rest2 - AP.peak;                            // refractory period: from the peak until resting again
+const MIN_GAP = AP.peak - AP.thr + REFR;                    // shortest gap between impulses, threshold to threshold
+const FMAX = Math.round(1000 / MIN_GAP);                    // per second
+const gapOf = s => s < STHR ? Infinity : MIN_GAP + 9 * ((SMAX - s) / (SMAX - STHR)) ** 2;
+const freqOf = s => s < STHR ? 0 : Math.round(1000 / gapOf(s));
+const KP = [[0, null, 0], [AP.thr, MV.thr, 120], [AP.peak, MV.peak, 0], [AP.rest1, MV.rest, -140], [AP.trough, MV.hyper, 0], [AP.rest2, MV.rest, 0]];
+const BLIP = { top: 0.3, end: 0.9 };
+const blipPeak = s => MV.rest + 14 * s / STHR;               // every strength below 4 stays below threshold
+function herm(p, q, u) { const h = q[0] - p[0], x = (u - p[0]) / h, x2 = x * x, x3 = x2 * x; return (2 * x3 - 3 * x2 + 1) * p[1] + (x3 - 2 * x2 + x) * h * p[2] + (-2 * x3 + 3 * x2) * q[1] + (x3 - x2) * h * q[2]; }
+function apV(u, v0) {
+  if (u <= 0) return v0; if (u >= AP.rest2) return MV.rest;
+  for (let i = 0; i < KP.length - 1; i++) if (u < KP[i + 1][0]) return herm(i ? KP[i] : [0, v0, 0], KP[i + 1], u);
+  return MV.rest;
+}
+function blipV(u, v0, s) {
+  if (u <= 0) return v0; if (u >= BLIP.end) return MV.rest;
+  const pk = blipPeak(s); return u < BLIP.top ? herm([0, v0, 0], [BLIP.top, pk, 0], u) : herm([BLIP.top, pk, 0], [BLIP.end, MV.rest, 0], u);
+}
+/* stages along the curve (u = time after the stimulus) */
+const STAGES = ["rest", "stim", "depol", "repol", "hyper", "ret"];
+function stageOfU(u, full) {
+  if (!full) return u >= 0 && u < BLIP.end ? "sub" : "rest";
+  return u < 0 ? "rest" : u < AP.thr ? "stim" : u < AP.peak ? "depol" : u < AP.rest1 ? "repol" : u < AP.trough ? "hyper" : u < AP.rest2 ? "ret" : "rest";
+}
+const STAGE_START = { stim: 0, depol: AP.thr, repol: AP.peak, hyper: AP.rest1, ret: AP.trough, rest: AP.rest2 };
+const PH_OF = { rest: "rest", stim: "dep", depol: "dep", repol: "rep", hyper: "hyp", ret: "ret", sub: "dep" };   // colour on the trace
+const RATE = { rest: 1.2, stim: 0.15, depol: 0.08, repol: 0.12, hyper: 0.09, ret: 0.1, sub: 0.3 };   // trace ms per real second
+const TEXT = {
+  rest: ["Resting", "The inside is negative. The Na⁺/K⁺ pump moves 3 Na⁺ out for every 2 K⁺ in. K⁺ leaks out faster than Na⁺ leaks in."],
+  stim: ["Stimulus", "The stimulus opens some Na⁺ channels. Na⁺ diffuses in, so the inside becomes less negative."],
+  depol: ["Depolarisation", "Threshold reached: voltage-gated Na⁺ channels open and Na⁺ diffuses in. Positive feedback: more depolarisation opens more Na⁺ channels."],
+  repol: ["Repolarisation", "Na⁺ channels are inactivated: no more Na⁺ enters. Voltage-gated K⁺ channels open and K⁺ diffuses out. The inside becomes negative again."],
+  hyper: ["Hyperpolarisation", "K⁺ channels are slow to close, so too many K⁺ ions diffuse out. The inside dips below the resting potential."],
+  ret: ["Return to resting", "K⁺ channels close. The Na⁺/K⁺ pump, using ATP, restores the resting potential."],
+  sub: ["Below threshold", "A few Na⁺ channels opened and a little Na⁺ diffused in, but not enough to reach threshold. No more channels open: no action potential."] };
+
+/* ===== Small helpers ===== */
+const $ = id => document.getElementById(id);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+const nf = v => String(+(+v).toPrecision(6));
+const p1 = v => (Math.round(v * 10) / 10).toString();
+const sgn = v => (v > 0.05 ? "+" : v < -0.05 ? "−" : "") + p1(Math.abs(v));
+const mvT = v => sgn(Math.round(v)) + " mV";
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = p => p < .5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ===== Proteins in the membrane (left to right) and ion slots ===== */
+const PROTS = [{ k: "na", id: "na1", n1: "Na⁺ channel", n2: "voltage-gated", m1: "Na⁺", m2: "channel" }, { k: "kv", id: "kv", n1: "K⁺ channel", n2: "voltage-gated", m1: "K⁺", m2: "channel" },
+               { k: "pump", id: "pump", n1: "Na⁺/K⁺", n2: "pump", m1: "Na⁺/K⁺", m2: "pump" }, { k: "na", id: "na2", n1: "Na⁺ channel", n2: "voltage-gated", m1: "Na⁺", m2: "channel" },
+               { k: "leak", id: "leak", n1: "K⁺ leak", n2: "channel", m1: "K⁺ leak", m2: "channel" }];
+const PI = Object.fromEntries(PROTS.map((p, i) => [p.id, i]));
+const NSLOT = 24, START = { out: { Na: 12, K: 3 }, in: { Na: 3, K: 12 } };   // more Na⁺ outside, more K⁺ inside
+const SLOTS = (() => {   // relative positions in each zone (2 rows of 12, gently jittered)
+  const r = rng(11), mk = () => [...Array(NSLOT)].map((_, i) => { const row = i % 2, col = (i - row) / 2; return { fx: (col + 0.5 + (row ? 0.25 : -0.25) + (r() - 0.5) * 0.3) / 12, fy: (row ? 0.73 : 0.27) + (r() - 0.5) * 0.14 }; });
+  return { out: mk(), in: mk() };
+})();
+function initialIons() {
+  const r = rng(5), ions = [];
+  for (const z of ["out", "in"]) {
+    const sl = [...Array(NSLOT).keys()]; for (let i = sl.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [sl[i], sl[j]] = [sl[j], sl[i]]; }
+    let k = 0; for (const ty of ["Na", "K"]) for (let n = 0; n < START[z][ty]; n++) ions.push({ ty, zone: z, slot: sl[k++] });
+  }
+  return ions;
+}
+
+/* ===== A run: stimuli on one patch of membrane over 4 ms of trace time. Everything at time t is computed from the
+   run's list of stimuli, so Play, Step and dragging the cursor all show the same thing. ===== */
+function newRun(ions) { return { aps: [], blocked: [], ev: ions.map(() => []), base: ions.map(o => Object.assign({}, o)), t: 0, seen: 0, playing: false, curve: null }; }
+function lastAp(R, t) { let a = null; for (const x of R.aps) if (x.s <= t + 1e-9) a = x; return a; }
+function Vat(R, t) {
+  if (!R) return MV.rest;
+  const a = lastAp(R, t); if (!a) return MV.rest;
+  return a.full ? apV(t - a.s, a.v0) : blipV(t - a.s, a.v0, a.str);
+}
+function stageAt(R, t) { const a = R && lastAp(R, t); if (!a) return { k: "rest", u: -1, a: null }; const u = t - a.s; return { k: stageOfU(u, a.full), u, a }; }
+const firstFull = R => R && R.aps.find(a => a.full);
+/* channel states at time t */
+function chanAt(R, t, gf) {
+  const c = { na1: "closed", na2: "closed", kv: "closed", leak: "open", pump: "ATP → ADP" };   // the pump uses ATP all the time
+  if (!R) return c;
+  const a = lastAp(R, t);
+  if (a) {
+    const u = t - a.s;
+    if (!a.full) { if (u < 0.35) c.na1 = "open"; }
+    else {
+      const inact = u >= AP.peak && u < (gf ? AP.rest1 : AP.rest2);
+      c.na1 = u < AP.peak ? "open" : inact ? "inactivated" : "closed";
+      c.na2 = u >= AP.thr && u < AP.peak ? "open" : inact ? "inactivated" : "closed";
+    }
+  }
+  for (const x of R.aps) { if (!x.full) continue; const u = t - x.s; if (u >= AP.peak && u < AP.trough) c.kv = "open"; }
+  return c;
+}
+const inRefr = (R, t) => !!R && R.aps.some(a => a.full && t - a.s >= AP.peak && t - a.s < AP.rest2);
+
+/* ion bookkeeping: where every ion is at time t, and which ions are free to move */
+function ionAt(R, i, t) {   // {zone, slot} or {move: e, p}
+  let cur = R.base[i];
+  for (const e of R.ev[i]) { if (t < e.t0) break; if (t >= e.t1) { cur = e.to; continue; } return { move: e, p: (t - e.t0) / (e.t1 - e.t0) }; }
+  return cur;
+}
+const busyAt = (R, i, t) => R.ev[i].some(e => e.t1 > t - 1e-9);   // still has a move to make at or after t
+function freeSlot(R, zone, nearFx, tA) {   // a slot in the zone that nobody occupies from time tA on, nearest to a protein
+  const used = new Set();
+  R.base.forEach((b, i) => {
+    let at = b, from = -Infinity;
+    for (const e of R.ev[i]) { if (at.zone === zone && e.t0 > tA) used.add(at.slot); at = e.to; from = e.t1; }
+    if (at.zone === zone) used.add(at.slot);
+  });
+  let best = -1, bd = 9;
+  SLOTS[zone].forEach((s, k) => { if (used.has(k)) return; const d = Math.abs(s.fx - nearFx) + 0.02 * s.fy; if (d < bd) { bd = d; best = k; } });
+  return best;
+}
+const protFx = id => (PI[id] + 0.5) / PROTS.length;
+function pickIon(R, ty, zone, t, nearFx, taken) {
+  let best = -1, bd = 9;
+  R.base.forEach((b, i) => {
+    if (b.ty !== ty || taken.includes(i) || busyAt(R, i, t)) return;
+    const at = ionAt(R, i, t); if (at.move || at.zone !== zone) return;
+    const d = Math.abs(SLOTS[zone][at.slot].fx - nearFx); if (d < bd) { bd = d; best = i; }
+  });
+  return best;
+}
+function addMove(R, i, t0, t1, via, toZone) {
+  const at = ionAt(R, i, t0), to = { zone: toZone, slot: freeSlot(R, toZone, protFx(via), t1) };
+  R.ev[i].push({ t0, t1, from: { zone: at.zone, slot: at.slot }, to, via }); R.ev[i].sort((a, b) => a.t0 - b.t0);
+}
+/* the ion moves of one action potential: 3 Na⁺ in, 2 K⁺ out, then one pump cycle (3 Na⁺ out, 2 K⁺ in) */
+const AP_MOVES = [
+  { ty: "Na", from: "out", to: "in", via: "na1", t0: 0.03, t1: 0.28, tag: "n1" },
+  { ty: "Na", from: "out", to: "in", via: "na2", t0: 0.31, t1: 0.47, tag: "n2" },
+  { ty: "Na", from: "out", to: "in", via: "na1", t0: 0.33, t1: 0.49, tag: "n3" },
+  { ty: "K", from: "in", to: "out", via: "kv", t0: 0.52, t1: 0.78, tag: "k1" },
+  { ty: "K", from: "in", to: "out", via: "kv", t0: 0.80, t1: 0.98, tag: "k2" },
+  { pump: "n1", t0: 1.02, t1: 1.20 }, { pump: "k1", t0: 1.04, t1: 1.22 }, { pump: "n2", t0: 1.07, t1: 1.25 }, { pump: "k2", t0: 1.10, t1: 1.28 }, { pump: "n3", t0: 1.12, t1: 1.29 }];
+function planAP(R, a) {
+  const tag = {}, taken = [];
+  for (const m of AP_MOVES) {
+    const t0 = a.s + m.t0, t1 = a.s + m.t1;
+    if (m.pump) { const i = tag[m.pump]; if (i == null || i < 0) continue; addMove(R, i, t0, t1, "pump", R.base[i].ty === "Na" ? "out" : "in"); continue; }
+    const i = pickIon(R, m.ty, m.from, t0, protFx(m.via), taken); tag[m.tag] = i; if (i < 0) continue; taken.push(i);
+    addMove(R, i, t0, t1, m.via, m.to);
+  }
+}
+/* a stimulus at time t: what happens (all-or-nothing, refractory period) */
+function stimulate(R, t, s, gf) {
+  const a = lastAp(R, t), u = a ? t - a.s : Infinity;
+  if (a && a.full && u < AP.peak) return { k: "busy" };
+  if (a && a.full && u < AP.rest2) {
+    if (gf && u >= AP.rest1 && s >= GF_STR) { const n = { s: t, full: true, str: s, v0: Vat(R, t) }; R.aps.push(n); planAP(R, n); R.curve = null; return { k: "relative" }; }
+    R.blocked.push({ t, why: gf && u >= AP.rest1 ? "rel" : "abs" }); R.curve = null;
+    return { k: gf && u >= AP.rest1 ? "needMore" : "refr" };
+  }
+  const n = { s: t, full: s >= STHR, str: s, v0: Vat(R, t) };
+  R.aps.push(n); if (n.full) planAP(R, n); R.curve = null;
+  return { k: n.full ? "ap" : "sub" };
+}
+function finalIons(R) { return R.base.map((b, i) => { const ev = R.ev[i]; const e = ev.length ? ev[ev.length - 1].to : b; return { ty: b.ty, zone: e.zone, slot: e.slot }; }); }
+
+/* ===== Question bank (facts from the notes; every answer computed from the fact tables or the model's own curve) ===== */
+const SPEED_V = [{ d: 6, t: 1.2 }, { d: 3, t: 1.5 }, { d: 9, t: 1.5 }];   // cm, ms (made-up exam-style numbers)
+const READ_V = ["refr", "repol", "whole"];
+const READ = {   // durations read from the model's own curve (ms), with the planned wrong readings
+  refr: { what: "the refractory period", ans: () => AP.rest2 - AP.peak,
+          wrongs: () => [[AP.rest2, "That's the whole action potential, from the stimulus. The refractory period starts at the peak."], [AP.rest1 - AP.peak, "That's only repolarisation. The refractory period lasts until the resting potential is back, after hyperpolarisation."], [STIM_AT + AP.rest2, "That's the time on the axis when it ends. Subtract the time it starts (the peak)."]] },
+  repol: { what: "repolarisation (from the peak back down to the resting potential)", ans: () => AP.rest1 - AP.peak,
+          wrongs: () => [[AP.trough - AP.peak, "You went down to the lowest point. Repolarisation ends when the potential first gets back to −70 mV."], [AP.rest2 - AP.peak, "That's the whole refractory period. Stop when the curve first crosses −70 mV."], [STIM_AT + AP.rest1, "That's the time on the axis when it ends. Subtract the time of the peak."]] },
+  whole: { what: "the whole action potential (from the stimulus until the potential is back at resting after hyperpolarisation)", ans: () => AP.rest2,
+          wrongs: () => [[AP.rest1, "That stops when the potential first gets back to −70 mV. Include the hyperpolarisation."], [STIM_AT + AP.rest2, "That's the time on the axis when it ends. Subtract the time of the stimulus."], [AP.rest2 - AP.thr, "You started at the threshold. Start at the stimulus arrow."]] } };
+const TAP_V = ["repol", "depol", "hyper"];
+const TAP = {   // which part of the curve counts (u = ms after the stimulus)
+  repol: { ask: "repolarising", ok: u => u >= AP.peak && u <= AP.rest1 },
+  depol: { ask: "depolarising", ok: u => u > 0.05 && u <= AP.peak },
+  hyper: { ask: "hyperpolarised (below the resting potential)", ok: u => u > AP.rest1 + 0.02 && u < AP.rest2 - 0.02 } };
+const TASKS = {
+  easy: [
+    { kind: "choice", setup: { scene: "mem", lock: { all: 1 }, hide: { vals: 1, mv: 1 } },
+      text: "What is the resting potential of an axon membrane?",
+      want: () => MV.rest,
+      options: [{ t: `About ${mvT(MV.rest)}`, v: MV.rest }, { t: `About ${mvT(MV.thr)}`, v: MV.thr, why: `${mvT(MV.thr)} is the threshold: the potential needed to trigger an action potential.` },
+                { t: `About ${mvT(MV.peak)}`, v: MV.peak, why: `${mvT(MV.peak)} is the peak of an action potential, when the inside is briefly positive.` },
+                { t: `About ${mvT(MV.hyper)}`, v: MV.hyper, why: `${mvT(MV.hyper)} is reached during hyperpolarisation, just after an action potential.` }],
+      explain: () => `At rest the inside of the axon is about ${p1(-MV.rest)} mV more negative than the outside: ${mvT(MV.rest)}.`,
+      hints: ["The resting potential is negative: the inside is negative compared with the outside.", "It is more negative than the threshold.", `About ${mvT(MV.rest)}.`] },
+    { kind: "choice", setup: { scene: "mem", lock: { all: 1 }, hide: { what: 1 } },
+      text: "At rest, why is the inside of the axon negative compared with the outside?",
+      want: () => `${PUMP.naOut}:${PUMP.kIn}/${PERM.K > PERM.Na ? "K" : "Na"}`,
+      options: [{ t: "The Na⁺/K⁺ pump moves 3 Na⁺ out for every 2 K⁺ in, and the membrane is more permeable to K⁺, so K⁺ diffuses out", r: "3:2/K" },
+                { t: "The Na⁺/K⁺ pump moves 2 Na⁺ out for every 3 K⁺ in", r: "2:3/K", why: "The ratio is the other way round: 3 Na⁺ out for every 2 K⁺ in. More positive ions leave than enter." },
+                { t: "Electrons collect on the inside of the membrane", r: "electrons", why: "It is not about electrons. The charge difference comes from ions: Na⁺ and K⁺." },
+                { t: "The membrane is more permeable to Na⁺, so Na⁺ diffuses in", r: "3:2/Na", why: "The other way round. At rest the membrane is more permeable to K⁺, so K⁺ diffuses out faster than Na⁺ diffuses in." }],
+      explain: () => `The pump moves ${PUMP.naOut} Na⁺ out for every ${PUMP.kIn} K⁺ in, using ATP. The membrane is more permeable to K⁺, so K⁺ diffuses out faster than Na⁺ diffuses in.`,
+      hints: ["Two things: the pump, and which ion the membrane lets through more easily.", "Count the positive ions the pump moves out and in. Which ion leaks out faster?", "3 Na⁺ out for 2 K⁺ in; more permeable to K⁺, so K⁺ diffuses out."] },
+    { kind: "tap", setup: { scene: "mem", run: "full", lock: { all: 1 }, hide: { phases: 1, what: 1, stage: 1 } }, variants: TAP_V,
+      text: t => `This trace shows one action potential. Tap the curve where the membrane is ${TAP[t.variants[t.vi || 0]].ask}.`,
+      hints: [() => "Follow the curve from the left: resting, up to the peak, back down, a dip, then resting.",
+              t => ({ repol: "Repolarisation is the fall from the peak back down to −70 mV.", depol: "Depolarisation is the steep rise up to the peak.", hyper: "Look for the part of the curve below the dashed resting line." })[t.variants[t.vi || 0]],
+              t => ({ repol: `Between ${f1(STIM_AT + AP.peak)} ms and ${f1(STIM_AT + AP.rest1)} ms.`, depol: `Between ${f1(STIM_AT)} ms and ${f1(STIM_AT + AP.peak)} ms.`, hyper: `Between ${f1(STIM_AT + AP.rest1)} ms and ${f1(STIM_AT + AP.rest2)} ms.` })[t.variants[t.vi || 0]]] },
+    { kind: "fill", setup: { scene: "mem", run: "full" },
+      text: "Choose the words that describe the ion movements.",
+      items: [{ pre: "In depolarisation, ", opts: ["Na⁺", "K⁺"], post: " ions move", ans: () => STAGE.depol.ion, why: { "K⁺": "K⁺ moving in during depolarisation is a common error. The voltage-gated Na⁺ channels open, and Na⁺ diffuses in." } },
+              { pre: "", opts: ["into", "out of"], post: " the axon.", ans: () => STAGE.depol.dir === "in" ? "into" : "out of", why: { "out of": "Na⁺ diffuses into the axon, down its electrochemical gradient: there is more Na⁺ outside." } },
+              { pre: "In repolarisation, ", opts: ["K⁺", "Na⁺"], post: " ions move", ans: () => STAGE.repol.ion, why: { "Na⁺": "In repolarisation the Na⁺ channels are inactivated. It is K⁺ that moves, through voltage-gated K⁺ channels." } },
+              { pre: "", opts: ["out of", "into"], post: " the axon.", ans: () => STAGE.repol.dir === "out" ? "out of" : "into", why: { into: "K⁺ diffuses out of the axon, down its concentration gradient: there is more K⁺ inside." } }],
+      hints: ["Replay the model and watch which ions move in each stage.", "Circles (Na⁺) move first, then rounded squares (K⁺). Which way does each go?", "Depolarisation: Na⁺ into the axon. Repolarisation: K⁺ out of the axon."] },
+    { kind: "num", id0: "thr", unit: "mV", setup: { scene: "mem", lock: { all: 1 }, hide: { vals: 1, mv: 1 } },
+      text: "The membrane must reach a threshold to trigger an action potential. What is the threshold potential?",
+      hints: ["The threshold is between the resting potential and 0 mV.", "It is about 15 mV less negative than the resting potential (−70 mV).", `About ${mvT(MV.thr)}.`] },
+    { kind: "goal", id0: "fire", setup: { scene: "mem", str: 2, lock: { tabs: 1, fresh: 1 } },
+      text: "Do it: trigger an action potential on the model. Then press Check.",
+      hints: ["Set the stimulus strength, then press Stimulate.", "A weak stimulus only gives a blip. Turn the strength up.", `Strength ${STHR} or more, then Stimulate.`] },
+    { kind: "goal", id0: "sub", setup: { scene: "mem", str: 7, lock: { tabs: 1, fresh: 1 } },
+      text: "Do it: give a stimulus that does not trigger an action potential. Then press Check.",
+      hints: ["Not every stimulus triggers an action potential.", "Turn the strength down below the threshold, then Stimulate.", `Strength ${STHR - 1} or less, then Stimulate.`] },
+    { kind: "choice", setup: { scene: "axon", lock: { all: 1 }, hide: { axLabels: 1 } },
+      text: "What is the myelin sheath made of?",
+      want: () => MYELIN.madeOf,
+      options: [{ t: "Schwann cells", r: "Schwann cells" }, { t: "Nodes of Ranvier", r: "nodes", why: "The nodes of Ranvier are the gaps between the Schwann cells, where the axon membrane is not insulated." },
+                { t: "Voltage-gated channel proteins", r: "channels", why: "The channels are in the axon membrane itself. The sheath around it is made of cells." },
+                { t: "Na⁺/K⁺ pumps", r: "pumps", why: "The pumps are carrier proteins in the axon membrane. The sheath is made of Schwann cells." }],
+      explain: () => "Schwann cells wrap around the axon to form the myelin sheath. It insulates the membrane.",
+      hints: ["The sheath is made of whole cells wrapped around the axon.", "The cells are named after a scientist; they start with S.", "Schwann cells."] },
+    { kind: "choice", setup: { scene: "axon", lock: { all: 1 } }, reveal: "nodes",
+      text: "In a myelinated axon, where can action potentials happen?",
+      want: () => MYELIN.apAt,
+      options: [{ t: "Only at the nodes of Ranvier", r: "nodes of Ranvier" },
+                { t: "All along the axon membrane, under the myelin too", r: "all", why: "Myelin insulates the membrane: Na⁺ and K⁺ cannot diffuse across it there, so no depolarisation happens under the sheath." },
+                { t: "Only inside the Schwann cells", r: "schwann", why: "The action potential happens in the axon membrane, not in the Schwann cells that wrap it." },
+                { t: "Only at the end of the axon", r: "end", why: "Action potentials happen all along the axon, at every node, one after another." }],
+      explain: () => "Only at the nodes of Ranvier, where there is no myelin. The impulse jumps from node to node: saltatory conduction. Watch the model.",
+      hints: ["Myelin stops ions diffusing across the membrane.", "Look for the gaps between the Schwann cells.", "Only at the nodes of Ranvier."] }
+  ],
+  hard: [
+    { kind: "choice", setup: { scene: "mem", run: "full", at: "depol", lock: { all: 1 }, hide: { what: 1 } },
+      text: "Why is depolarisation an example of positive feedback?",
+      want: () => STAGE.depol.loop,
+      options: [{ t: "Na⁺ diffusing in depolarises the membrane, which opens more voltage-gated Na⁺ channels, so even more Na⁺ diffuses in", r: "positive feedback" },
+                { t: "The Na⁺/K⁺ pump pushes more and more Na⁺ into the axon", r: "pump", why: "The pump moves Na⁺ out, not in. It restores and maintains the resting potential; it does not cause the spike." },
+                { t: "Na⁺ channels pump Na⁺ in by active transport, faster and faster", r: "active", why: "Channels do not pump. Na⁺ moves through them by facilitated diffusion, down its electrochemical gradient." },
+                { t: "K⁺ moves in, making the inside more positive", r: "K", why: "K⁺ does not move in during depolarisation. Na⁺ diffuses in; K⁺ moves out later, in repolarisation." }],
+      explain: () => "Na⁺ entering makes the inside less negative; that change opens more voltage-gated Na⁺ channels, so more Na⁺ enters: positive feedback.",
+      hints: ["Positive feedback: a change causes more of the same change.", "What does the change in potential do to the voltage-gated Na⁺ channels?", "Depolarisation opens more Na⁺ channels, so more Na⁺ diffuses in."] },
+    { kind: "choice", setup: { scene: "mem", run: "full", at: "hyper", lock: { all: 1 }, hide: { what: 1 } },
+      text: "Why does the membrane become hyperpolarised after repolarisation?",
+      want: () => STAGE.hyper.k,
+      options: [{ t: "The voltage-gated K⁺ channels are slow to close, so too many K⁺ ions diffuse out", r: "slow to close" },
+                { t: "The Na⁺/K⁺ pump moves too much Na⁺ out of the axon", r: "pump", why: "The pump restores the resting potential afterwards. Hyperpolarisation is caused by K⁺ channels staying open too long." },
+                { t: "The Na⁺ channels reopen and Na⁺ diffuses out", r: "Na", why: "The Na⁺ channels are inactivated: they cannot open again yet. And Na⁺ would diffuse in, not out." },
+                { t: "K⁺ diffuses back into the axon", r: "K in", why: "K⁺ diffusing in would make the inside more positive. Hyperpolarisation means more negative: K⁺ is still leaving." }],
+      explain: () => "The K⁺ channels are slow to close, so K⁺ keeps diffusing out and the potential dips below −70 mV.",
+      hints: ["Which channels are still open in the model during the dip?", "Hyperpolarised means more negative than resting: positive ions are still leaving.", "K⁺ channels are slow to close: too many K⁺ diffuse out."] },
+    { kind: "choice", setup: { scene: "axon", race: 0.45, lock: { all: 1 } },
+      text: "Why does an impulse travel in only one direction along an axon?",
+      want: () => "refractory",
+      options: [{ t: "The region behind the action potential is in its refractory period, so it cannot be depolarised again straight away", r: "refractory" },
+                { t: "Ions can only flow one way along the axon", r: "flow", why: "Local currents spread both ways from a depolarised region. The region behind does not respond because it is refractory." },
+                { t: "The myelin sheath is only on one side of each node", r: "myelin", why: "Unmyelinated axons also conduct one way. It is the refractory period behind the impulse that stops it going back." },
+                { t: "It doesn't: impulses travel both ways along a neurone", r: "both", why: "Once an impulse starts at one end it only goes one way: the membrane it has just passed is refractory and cannot fire again yet." }],
+      explain: () => "The membrane just behind is refractory: its Na⁺ channels are inactivated. Only the resting membrane ahead can be depolarised, so the impulse moves one way.",
+      hints: ["Look at the shaded region behind the impulse in the model.", "What state are the Na⁺ channels in, just behind the impulse?", "The region behind is refractory, so it cannot fire again yet."] },
+    { kind: "choice", setup: { scene: "freq", fstr: 6, lock: { all: 1 } }, reveal: "freq",
+      text: "This stimulus is above threshold. Predict: what happens if the stimulus is made stronger?",
+      want: () => "frequency",
+      options: [{ t: "More impulses per second; each action potential stays the same size", r: "frequency" },
+                { t: "Each action potential gets bigger", r: "amplitude", why: "A common error. Action potentials are all-or-nothing: every one peaks at about +30 mV. A stronger stimulus raises the frequency, not the size." },
+                { t: "Each action potential gets bigger and there are more of them", r: "both", why: "The frequency rises, but the size does not: every action potential peaks at about +30 mV (all-or-nothing)." },
+                { t: "Nothing changes at all", r: "none", why: "Something does change: there are more impulses per second. Only their size stays the same." }],
+      explain: () => "The frequency of impulses rises; the size of each stays the same (all-or-nothing). Watch the model: strength 6 → 9.",
+      hints: ["Remember the all-or-nothing principle.", "Every action potential that happens peaks at the same value.", "Higher frequency, same size."] },
+    { kind: "num", id0: "speed", unit: "m s⁻¹", setup: { scene: "axon", lock: { all: 1 } }, variants: SPEED_V,
+      text: t => { const v = t.variants[t.vi || 0]; return `An impulse travels ${v.d} cm along an axon in ${p1(v.t)} ms. Calculate the speed of conduction in m s⁻¹.`; },
+      hints: [() => "Speed = distance ÷ time. Convert to metres and seconds first.", t => { const v = t.variants[t.vi || 0]; return `${v.d} cm = ${nf(v.d / 100)} m, and ${p1(v.t)} ms = ${nf(v.t / 1000)} s.`; },
+              t => { const v = t.variants[t.vi || 0]; return `${nf(v.d / 100)} ÷ ${nf(v.t / 1000)} = ${nf(speedOf(v))} m s⁻¹.`; }] },
+    { kind: "choice", setup: { scene: "axon", lock: { all: 1 }, hide: { axTimes: 1 } }, reveal: "race",
+      text: "Compare conduction in a myelinated axon with an unmyelinated axon of the same diameter.",
+      want: () => "saltatory",
+      options: [{ t: "Myelinated: depolarisation only at the nodes of Ranvier, so the impulse jumps node to node (saltatory conduction), up to about 50× faster", r: "saltatory" },
+                { t: "Myelinated: the myelin speeds the ions up, so they move faster along the axon", r: "speeds ions", why: "Myelin does not speed ions up. It insulates the membrane, so depolarisation only happens at the nodes and the impulse jumps between them." },
+                { t: "Myelinated: the whole membrane depolarises, but faster", r: "whole", why: "Under the myelin the membrane cannot depolarise: ions cannot diffuse across it. Only the nodes depolarise." },
+                { t: "Unmyelinated is faster, because nothing is in the way", r: "unmy", why: "Unmyelinated is slower: depolarisation has to happen along the whole membrane. Myelinated is up to about 50× faster." }],
+      explain: () => `In the myelinated axon depolarisation happens only at the nodes of Ranvier, so the impulse jumps node to node: saltatory conduction, up to about ${MYELIN.upTo}× faster. Watch the race.`,
+      hints: ["Where can depolarisation happen in each axon?", "Myelin insulates. The impulse in the myelinated axon jumps.", "Saltatory conduction: node to node, up to about 50× faster."] },
+    { kind: "choice", setup: { scene: "freq", fstr: 10, lock: { all: 1 }, hide: { fwhy: 1 } },
+      text: "Why does the refractory period limit the maximum frequency of impulses?",
+      want: () => "gap",
+      options: [{ t: "A new action potential cannot start at the same place until the refractory period is over, so there is a minimum gap between impulses", r: "gap" },
+                { t: "A stronger stimulus makes each action potential bigger, so they take longer", r: "bigger", why: "Action potentials don't get bigger: all-or-nothing. The limit comes from the refractory period, when the Na⁺ channels cannot open." },
+                { t: "The impulse must reach the end of the axon before the next one can start", r: "end", why: "Many impulses can travel along an axon at once. The limit is local: each region must recover before it can fire again." },
+                { t: "The Na⁺/K⁺ pump has to stop during the refractory period", r: "pump", why: "The pump keeps working. During the refractory period the Na⁺ channels are inactivated, so no new action potential can start." }],
+      explain: () => `During the refractory period the Na⁺ channels cannot open again, so impulses can't be closer than a minimum gap. That caps the frequency at about ${FMAX} per second here (about ${FREQ_RANGE[0]}–${FREQ_RANGE[1]} per second in real neurones).`,
+      hints: ["What can't the Na⁺ channels do during the refractory period?", "If the channels can't reopen, how soon can the next impulse start?", "There is a minimum gap between impulses, so a maximum frequency."] },
+    { kind: "goal", id0: "thick", setup: { scene: "axon", lock: { tabs: 1 } },
+      text: "Do it: race the axons when they are thin and again when they are thick. Then press Check.",
+      hints: ["Press Race with the axons thin. Wait for the myelinated impulse to arrive.", "Then choose Thick and race again.", "Thin: race. Thick: race. Compare the times."] },
+    { kind: "num", id0: "read", unit: "ms", setup: { scene: "mem", run: "full", lock: { all: 1 }, hide: { stage: 1 } }, variants: READ_V,
+      text: t => `Use the trace in the model. How long does ${READ[t.variants[t.vi || 0]].what} last?`,
+      hints: [() => "Find where it starts and where it ends on the time axis. Each small square is 0.1 ms.", t => { const r = t.variants[t.vi || 0]; return ({ refr: "The bracket shows the refractory period: from the peak until the resting potential is back.", repol: "Start at the peak. Stop where the curve first crosses −70 mV.", whole: "Start at the stimulus arrow. Stop when the curve is back at −70 mV after the dip." })[r]; },
+              t => { const r = t.variants[t.vi || 0], a = { refr: [AP.peak, AP.rest2], repol: [AP.peak, AP.rest1], whole: [0, AP.rest2] }[r]; return `${f1(STIM_AT + a[1])} − ${f1(STIM_AT + a[0])} = ${f1(a[1] - a[0])} ms.`; }] },
+    { kind: "choice", setup: { scene: "axon", race: 0.45, lock: { all: 1 } },
+      text: "What carries the charge along the axon from a depolarised region to the next region?",
+      want: () => CARRIER,
+      options: [{ t: "Ions, mainly Na⁺, moving sideways in local currents", r: "ions" },
+                { t: "Electrons flowing along the axon, like a current in a wire", r: "electrons", why: "An action potential is not a flow of electrons. The charge is carried by ions: Na⁺ moving sideways in local currents." },
+                { t: "Neurotransmitter diffusing along the axon", r: "nt", why: "Neurotransmitters work at synapses, between neurones. Along the axon, ions move in local currents." },
+                { t: "K⁺ moving in from the tissue fluid", r: "K", why: "K⁺ does not move in. Na⁺ that has diffused in moves sideways inside the axon, in local currents." }],
+      explain: () => "Ions carry the charge: Na⁺ that has diffused in moves sideways in local currents, depolarising the next region (or node) to threshold.",
+      hints: ["Look at the green arrows ahead of the impulse.", "It is not electrons: think about what diffused in during depolarisation.", "Na⁺ ions, moving sideways in local currents."] }
+  ]
+};
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });
+const txt = t => typeof t.text === "function" ? t.text(t) : t.text;
+const speedOf = v => (v.d / 100) / (v.t / 1000);
+const choiceOk = (t, o) => (o.v != null ? o.v : o.r) === t.want();
+function numAns(t) {
+  if (t.id0 === "thr") return MV.thr;
+  if (t.id0 === "speed") return speedOf(t.variants[t.vi || 0]);
+  if (t.id0 === "read") return READ[t.variants[t.vi || 0]].ans();
+  return NaN;
+}
+const numTol = t => t.id0 === "read" ? 0.1 + 1e-9 : 1e-6;   // trace reading: within one small square (0.1 ms)
+function numWrongs(t) {   // [value, reason]
+  if (t.id0 === "thr") return [[MV.rest, "−70 mV is the resting potential. Threshold is less negative."], [-MV.thr, "Check the sign: at threshold the inside is still negative."], [MV.peak, "+30 mV is the peak of the action potential."], [MV.hyper, "−80 mV is the hyperpolarised value."]];
+  if (t.id0 === "speed") { const v = t.variants[t.vi || 0];
+    return [[v.d / v.t, "You divided without converting. Change cm to m and ms to s first."], [(v.d / 100) / v.t, "You converted cm to m, but not ms to s (÷ 1000)."], [v.d / (v.t / 1000), "You converted ms to s, but not cm to m (÷ 100)."], [(v.t / 1000) / (v.d / 100), "Upside down: speed is distance ÷ time."], [v.d * v.t, "Speed is distance ÷ time, not distance × time."]]; }
+  return READ[t.variants[t.vi || 0]].wrongs().map(w => [Math.round(w[0] * 10) / 10, w[1]]);
+}
+function numRight(t, a) {
+  if (t.id0 === "thr") return `Correct. The threshold is about ${mvT(MV.thr)}. Reaching it opens the voltage-gated Na⁺ channels.`;
+  if (t.id0 === "speed") { const v = t.variants[t.vi || 0]; return `Correct. ${v.d} cm = ${nf(v.d / 100)} m and ${p1(v.t)} ms = ${nf(v.t / 1000)} s, so ${nf(v.d / 100)} ÷ ${nf(v.t / 1000)} = ${nf(a)} m s⁻¹.`; }
+  const r = t.variants[t.vi || 0], s = { refr: [AP.peak, AP.rest2], repol: [AP.peak, AP.rest1], whole: [0, AP.rest2] }[r];
+  return `Correct. From ${f1(STIM_AT + s[0])} ms to ${f1(STIM_AT + s[1])} ms: ${f1(a)} ms.`;
+}
+
+/* ===== Race along the axon (playback seconds; myelinated 10× faster than unmyelinated of the same diameter) ===== */
+const TM0 = 1.6;   // myelinated, thin, normal temperature: seconds of playback to cross the drawing
+const facOf = ax => (ax.diam === "thick" ? SPEED.thick : 1) * SPEED[ax.temp];
+const tmOf = ax => TM0 / facOf(ax);
+const tuOf = ax => tmOf(ax) * SPEED.myelin;
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [], near = (a, b, e) => Math.abs(a - b) <= (e || 1e-6);
+  /* the curve */
+  [[AP.thr, MV.thr], [AP.peak, MV.peak], [AP.rest1, MV.rest], [AP.trough, MV.hyper], [AP.rest2, MV.rest]].forEach(([u, v]) => { if (!near(apV(u, MV.rest), v)) errs.push("model: the curve misses " + v + " mV"); });
+  let hi = -1e9, lo = 1e9;
+  for (let i = 0; i < KP.length - 1; i++) {
+    const a = KP[i][0], b = KP[i + 1][0], up = (KP[i + 1][1]) > (i ? KP[i][1] : MV.rest); let prev = apV(a, MV.rest);
+    for (let k = 1; k <= 200; k++) { const v = apV(a + (b - a) * k / 200 - 1e-9, MV.rest); if (up ? v < prev - 1e-6 : v > prev + 1e-6) { errs.push("model: the curve wobbles between " + a + " and " + b + " ms"); break; } prev = v; hi = Math.max(hi, v); lo = Math.min(lo, v); }
+  }
+  if (!near(hi, MV.peak, 0.01) || !near(lo, MV.hyper, 0.01)) errs.push("model: the peak or the dip is wrong");
+  /* all-or-nothing, blips below threshold */
+  for (let s = 1; s <= SMAX; s++) {
+    const R = newRun(initialIons()); stimulate(R, STIM_AT, s, false); let m = -1e9;
+    for (let t = 0; t <= T_END; t += 0.005) m = Math.max(m, Vat(R, t));
+    if (s >= STHR ? !near(m, MV.peak, 0.01) : !(m < MV.thr)) errs.push("model: strength " + s + " breaks all-or-nothing");
+  }
+  /* frequency */
+  for (let s = STHR + 1; s <= SMAX; s++) if (!(freqOf(s) > freqOf(s - 1))) errs.push("model: frequency must rise with strength");
+  if (freqOf(SMAX) !== FMAX || FMAX < FREQ_RANGE[0] || FMAX > FREQ_RANGE[1] || freqOf(STHR - 1) !== 0) errs.push("model: the maximum frequency is wrong");
+  /* ion moves balance: 3 Na⁺ in and out, 2 K⁺ out and in; counts restored; no two ions share a slot */
+  const count = (ions, z, ty) => ions.filter(o => o.zone === z && o.ty === ty).length;
+  for (const plan of [[STIM_AT], [STIM_AT, STIM_AT + AP.rest2 + 0.2], [STIM_AT, STIM_AT + AP.rest1 + 0.1]]) {
+    const R = newRun(initialIons()); plan.forEach(t => stimulate(R, t, SMAX, true));
+    const fin = finalIons(R);
+    if (["out", "in"].some(z => count(fin, z, "Na") !== START[z].Na || count(fin, z, "K") !== START[z].K)) errs.push("model: the ion counts are not restored");
+    for (const z of ["out", "in"]) { const sl = fin.filter(o => o.zone === z).map(o => o.slot); if (sl.some(x => x < 0) || new Set(sl).size !== sl.length) errs.push("model: two ions share a place"); }
+    const mid = R.base.map((_, i) => ionAt(R, i, STIM_AT + AP.rest1 - 0.01)), inNa = mid.filter((m, i) => !m.move && m.zone === "in" && R.base[i].ty === "Na").length;
+    if (plan.length === 1 && inNa !== START.in.Na + PUMP.naOut) errs.push("model: 3 Na⁺ must enter in depolarisation");
+  }
+  const moves = AP_MOVES.filter(m => !m.pump);
+  if (moves.filter(m => m.ty === "Na").length !== PUMP.naOut || moves.filter(m => m.ty === "K").length !== PUMP.kIn) errs.push("model: the pump must undo one action potential's moves");
+  if (!(SPEED.myelin > 1 && SPEED.myelin <= MYELIN.upTo && SPEED.thick > 1 && SPEED.warm > SPEED.norm && SPEED.norm > SPEED.cool)) errs.push("model: speed factors");
+  if (T_END < LAST_STIM + AP.rest2) errs.push("model: the trace is too short");
+  /* questions */
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (!t.hints || t.hints.length !== 3) errs.push(id + ": needs 3 hints");
+    const vs = t.variants ? t.variants.map((_, k) => k) : [0];
+    if (t.kind === "choice") {
+      if (t.options.filter(o => choiceOk(t, o)).length !== 1) errs.push(id + ": needs exactly one correct option");
+      if (t.options.some(o => !choiceOk(t, o) && !o.why)) errs.push(id + ": a wrong option has no feedback");
+      if (t.options.some(o => choiceOk(t, o) && o.why)) errs.push(id + ": the right option has wrong-answer feedback");
+    } else if (t.kind === "fill") {
+      t.items.forEach((it, j) => { const a = it.ans(); if (!it.opts.includes(a) || it.opts.some(o => o !== a && !it.why[o])) errs.push(id + ": line " + (j + 1) + " has no answer or no feedback"); });
+    } else if (t.kind === "num") {
+      vs.forEach(k => { const t2 = Object.assign({}, t, { vi: k }), a = numAns(t2);
+        if (!isFinite(a)) errs.push(id + ": the answer must be a number");
+        if (numWrongs(t2).some(w => Math.abs(w[0] - a) <= Math.max(numTol(t2), 0.06))) errs.push(id + ": a planned wrong answer equals the right one"); });
+    } else if (t.kind === "tap") {
+      vs.forEach(k => { const v = TAP[t.variants[k]]; let n = 0; for (let u = 0; u <= AP.rest2; u += 0.01) if (v.ok(u)) n++; if (n < 10) errs.push(id + ": the tap region is too small"); });
+    } else if (t.kind === "goal") {
+      const S0 = stateFor(t); if (goalMet(t, S0)) errs.push(id + ": goal already met at the start");
+      const S1 = stateFor(t); goalFill(t, S1); if (!goalMet(t, S1)) errs.push(id + ": goal can't be reached");
+    }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { stage: false, speed: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+function freshB(o) {
+  return Object.assign({ scene: "mem", lock: {}, hide: {}, str: 6, gf: false, fast: false, ions: initialIons(), run: null,
+    ax: { diam: "thin", temp: "norm", race: null, res: {} }, fstr: 6, tap: null, tapShow: null }, o || {});
+}
+function fullRun(m, at) {
+  const R = newRun(m.ions); stimulate(R, STIM_AT, 6, false);
+  R.t = R.seen = at ? STIM_AT + (STAGE_START[at] + (at === "hyper" ? AP.trough : AP.peak)) / 2 : T_END; return R;
+}
+function stateFor(t) {
+  const s = t.setup || {}, m = freshB({ scene: s.scene || "mem", lock: Object.assign({}, s.lock || {}), hide: Object.assign({}, s.hide || {}) });
+  if (s.str) m.str = s.str; if (s.fstr) m.fstr = s.fstr;
+  if (s.run === "full") m.run = fullRun(m, s.at);
+  if (s.race != null) m.ax.race = { e: 0, on: false, freeze: { pu: s.race, km: 2 } };
+  return m;
+}
+let DEMO_B = freshB(), B = DEMO_B;
+let onScreen = true;
+
+const PKEY = "ks3tools-progress:action-potential";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+
+/* goals (do it on the model) */
+const runHas = (m, full) => !!m.run && m.run.aps.some(a => a.full === full);
+function goalMet(t, m) {
+  if (t.id0 === "fire") return runHas(m, true);
+  if (t.id0 === "sub") return !!m.run && m.run.aps.length > 0 && !m.run.aps[m.run.aps.length - 1].full;
+  if (t.id0 === "thick") return !!(m.ax.res.thin && m.ax.res.thick);
+  return false;
+}
+function goalFill(t, m) {
+  if (t.id0 === "fire" || t.id0 === "sub") { m.str = t.id0 === "fire" ? Math.max(m.str, 6) : Math.min(m.str, STHR - 1); const R = newRun(m.ions); stimulate(R, STIM_AT, m.str, m.gf); R.t = R.seen = T_END; m.run = R; }
+  if (t.id0 === "thick") { for (const d of ["thin", "thick"]) { const a = Object.assign({}, m.ax, { diam: d }); m.ax.res[d] = { m: tmOf(a), u: tuOf(a), temp: m.ax.temp }; } m.ax.diam = "thick"; m.ax.race = { e: tuOf(m.ax), on: false }; }
+}
+function goalRight(t) {
+  if (t.id0 === "fire") return `Correct. The stimulus took the membrane past threshold (${mvT(MV.thr)}), so the voltage-gated Na⁺ channels opened and a full action potential fired, peaking at ${mvT(MV.peak)}.`;
+  if (t.id0 === "sub") return `Correct. Below threshold the potential rose a little, then died away. No action potential: all-or-nothing.`;
+  const r = B.ax.res; return `Correct. Myelinated: thin ${f1(r.thin.m)} s, thick ${f1(r.thick.m)} s. A thicker axon conducts faster: its wider cytoplasm has less electrical resistance, so the local currents spread further along it.`;
+}
+function goalWhy(t) {
+  const R = B.run;
+  if (t.id0 === "fire") return !R ? "Press Stimulate first." : `That stimulus did not reach threshold, so there was only a small blip. Turn the strength up to ${STHR} or more and Stimulate again.`;
+  if (t.id0 === "sub") return !R ? "Press Stimulate first." : runHas(B, true) ? "That stimulus reached threshold: a full action potential fired. Turn the strength down and Stimulate again." : "Press Stimulate.";
+  const r = B.ax.res; return !r.thin && !r.thick ? "Race the axons first: press Race." : !r.thick ? "Now choose Thick and race again." : "Now choose Thin and race again.";
+}
+
+/* ===== Colour tokens (read once, and again when the theme changes) ===== */
+let C = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  C = { na: g("--particle"), k: g("--particle-2"), edge: g("--particle-edge"), naInk: g("--particle-ink"), kInk: g("--particle-2-ink"),
+        naFill: g("--na-fill"), kFill: g("--k-fill"), pumpFill: g("--pump-fill"), pumpEdge: g("--pump-edge"), ball: g("--ball"),
+        zoneOut: g("--zone-out"), zoneIn: g("--zone-in"), head: g("--head"), headEdge: g("--head-edge"), tail: g("--tail"),
+        ink: g("--ink"), muted: g("--muted"), accent: g("--accent"), good: g("--good"), bad: g("--bad"), sunk: g("--sunk"),
+        font: getComputedStyle(document.body).fontFamily };
+}
+
+/* ===== View 1a: the membrane picture (canvas). One coordinate table; static layer cached; ions stamped from sprites. ===== */
+const MEM = { cv: null, ctx: null, w: 0, dpr: 1, bg: null, spr: {}, key: "", lb: null, pool: [] };
+function memLay(w) {   // one coordinate table. Wide: compact (one-line names) so the membrane and the trace fit on a 768 px screen together
+  const nar = w < 560;
+  const Y = nar ? { h: 300, out: [28, 98], lab: [106, 120], y0: 134, y1: 184, st: 202, inn: [212, 278], cap: [17, 294] }
+                : { h: 222, out: [22, 66], lab: [77, 77], y0: 90, y1: 134, st: 155, inn: [167, 199], cap: [11, 212] };
+  return Object.assign(Y, { w, nar, ir: nar ? 11 : 11.5, px: i => w * (i + 0.5) / PROTS.length, sx: fx => 16 + fx * (w - 32) });
+}
+const slotXY = (L, zone, k) => { const s = SLOTS[zone][k], z = zone === "out" ? L.out : L.inn; return [L.sx(s.fx), z[0] + s.fy * (z[1] - z[0])]; };
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function ionSprite(ty) {   // house particle look: solid shape, dark outline ≈ 0.145r, highlight circle at (−0.35r, −0.35r)
+  const r = 11, o = r + 2, k = MEM.dpr, sz = Math.ceil(2 * o * k), c = document.createElement("canvas"); c.width = c.height = sz;
+  const g = c.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);
+  if (ty === "Na") { g.beginPath(); g.arc(o, o, r, 0, 6.2832); } else rr(g, o - r, o - r, 2 * r, 2 * r, 5);
+  g.fillStyle = ty === "Na" ? C.na : C.k; g.fill(); g.lineWidth = Math.max(1, r * 0.145); g.strokeStyle = C.edge; g.stroke();
+  g.beginPath(); g.arc(o - r * 0.35, o - r * 0.35, r * 0.28, 0, 6.2832); g.fillStyle = "rgba(255,255,255,.38)"; g.fill();
+  g.fillStyle = ty === "Na" ? C.naInk : C.kInk; g.textAlign = "center"; g.textBaseline = "middle";
+  g.font = `700 ${ty === "Na" ? 10.5 : 12}px ${C.font}`; g.fillText(ty === "Na" ? "Na⁺" : "K⁺", o, o + 1);
+  return c;
+}
+function memSetup() {
+  const cv = MEM.cv || (MEM.cv = $("memCv")), w = Math.round(boxW($("memCv"))), L = memLay(w), dpr = Math.min(1.5, window.devicePixelRatio || 1);
+  const key = w + "|" + dpr + "|" + document.documentElement.dataset.theme + "|" + (C.na || "");
+  if (key === MEM.key) return L;
+  MEM.key = key; MEM.w = w; MEM.dpr = dpr; MEM.sig = MEM.lsig = MEM.msig = null;
+  for (const c of [cv, $("memLb")]) { c.width = Math.round(w * dpr); c.height = Math.round(L.h * dpr); c.style.height = L.h + "px"; }
+  MEM.ctx = cv.getContext("2d"); MEM.lb = $("memLb").getContext("2d");
+  MEM.spr = { Na: ionSprite("Na"), K: ionSprite("K") };
+  $("memMv").textContent = ""; MEM.pool = [];   // moving ions: small sprite canvases moved by transform (no repaint of the big picture)
+  /* static layer: zones, captions, bilayer, protein names */
+  const bg = MEM.bg || (MEM.bg = document.createElement("canvas")); bg.width = cv.width; bg.height = cv.height;
+  const g = bg.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, L.h);
+  g.fillStyle = C.zoneOut; g.fillRect(0, 0, w, L.y0); g.fillStyle = C.zoneIn; g.fillRect(0, L.y1, w, L.h - L.y1);
+  g.textBaseline = "middle"; g.font = `700 14px ${C.font}`; g.fillStyle = C.muted;
+  g.textAlign = "left"; g.fillText(L.nar ? "Outside the axon" : "Outside the axon (tissue fluid)", 12, L.cap[0]); g.fillText(L.nar ? "Inside the axon" : "Inside the axon (cytoplasm)", 12, L.cap[1]);
+  g.textAlign = "right"; g.fillText("More Na⁺ outside", w - 12, L.cap[0]); g.fillText("More K⁺ inside", w - 12, L.cap[1]);
+  const gaps = PROTS.map((p, i) => [L.px(i) - (p.k === "pump" ? 34 : 30), L.px(i) + (p.k === "pump" ? 34 : 30)]);
+  const free = x => !gaps.some(([a, b]) => x > a && x < b), tl = Math.min(14, (L.y1 - L.y0) / 2 - 11);
+  g.strokeStyle = C.tail; g.lineWidth = 1.6; g.beginPath();
+  for (let x = 6; x < w; x += 11) if (free(x)) {
+    g.moveTo(x - 1.5, L.y0 + 9); g.lineTo(x - 1.5, L.y0 + 9 + tl); g.moveTo(x + 1.5, L.y0 + 9); g.lineTo(x + 1.5, L.y0 + 9 + tl);
+    g.moveTo(x - 1.5, L.y1 - 9); g.lineTo(x - 1.5, L.y1 - 9 - tl); g.moveTo(x + 1.5, L.y1 - 9); g.lineTo(x + 1.5, L.y1 - 9 - tl);
+  }
+  g.stroke();
+  g.fillStyle = C.head; g.strokeStyle = C.headEdge; g.lineWidth = 1.2;
+  for (let x = 6; x < w; x += 11) if (free(x)) for (const y of [L.y0 + 5, L.y1 - 5]) { g.beginPath(); g.arc(x, y, 5, 0, 6.2832); g.fill(); g.stroke(); }
+  g.textAlign = "center"; g.fillStyle = C.ink;
+  PROTS.forEach((p, i) => {
+    if (L.nar) { g.font = `700 12px ${C.font}`; g.fillText(p.m1, L.px(i), L.lab[0]); g.font = `400 12px ${C.font}`; g.fillStyle = C.muted; g.fillText(p.m2, L.px(i), L.lab[1]); g.fillStyle = C.ink; }
+    else { g.font = `700 13px ${C.font}`; g.fillText(p.n1 + (p.k === "pump" ? " " + p.n2 : p.k === "leak" ? " channel" : ""), L.px(i), L.lab[0]); }
+  });
+  return L;
+}
+function drawChannel(c, L, x, kind, state) {
+  const na = kind === "na", fill = na ? C.naFill : C.kFill, edge = na ? C.na : C.k, sw = 15;
+  const gap = kind === "leak" ? 22 : state === "closed" ? 3 : 26, top = L.y0 - 8, h = L.y1 - L.y0 + 16;
+  c.lineWidth = 2; c.fillStyle = fill; c.strokeStyle = edge;
+  rr(c, x - gap / 2 - sw, top, sw, h, 7); c.fill(); c.stroke();
+  rr(c, x + gap / 2, top, sw, h, 7); c.fill(); c.stroke();
+  if (kind !== "leak" && state === "closed") { c.fillStyle = edge; rr(c, x - gap / 2 - 5, L.y1 - 2, gap + 10, 6, 3); c.fill(); }   // the gate across the inner mouth
+  if (state === "inactivated") {   // ball-and-chain plugs the inner mouth
+    c.strokeStyle = C.ball; c.lineWidth = 1.8; c.beginPath(); c.moveTo(x - gap / 2 - sw / 2, L.y1 + 8); c.quadraticCurveTo(x - gap / 2 - 4, L.y1 + 18, x - 6, L.y1 + 6); c.stroke();
+    c.fillStyle = C.ball; c.beginPath(); c.arc(x, L.y1 + 3, 8.5, 0, 6.2832); c.fill();
+  }
+}
+function drawPump(c, L, x) {   // the pump works all the time (it maintains the resting potential), so its arrows are always solid
+  c.lineWidth = 2; c.fillStyle = C.pumpFill; c.strokeStyle = C.pumpEdge; rr(c, x - 27, L.y0 - 6, 54, L.y1 - L.y0 + 12, 14); c.fill(); c.stroke();
+  const arrow = (ax, up, col) => { const y0 = up ? L.y1 + 2 : L.y0 - 2, y1 = up ? L.y0 + 2 : L.y1 - 2, d = up ? 1 : -1; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 2.6;
+    c.beginPath(); c.moveTo(ax, y0); c.lineTo(ax, y1 + 8 * d); c.stroke();
+    c.beginPath(); c.moveTo(ax, y1); c.lineTo(ax - 6, y1 + 9 * d); c.lineTo(ax + 6, y1 + 9 * d); c.closePath(); c.fill(); };
+  arrow(x - 11, true, C.na); arrow(x + 11, false, C.k);
+}
+function memDraw(R, t) {
+  const L = memSetup(), k = MEM.dpr, ch = chanAt(R, t, B.gf), v = Vat(R, t), pos = v > 0;
+  const ions = R ? R.base : B.ions, at = ions.map((b, i) => R ? ionAt(R, i, t) : b);
+  /* 1. static layer + proteins + still ions: redrawn only when a channel changes state, an ion arrives or leaves, or the charge flips */
+  const sig = MEM.key + "|" + Object.values(ch).join() + "|" + pos + "|" + at.map(a => a.move ? "m" : a.zone + a.slot).join();
+  if (sig !== MEM.sig) {
+    MEM.sig = sig; const c = MEM.ctx;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, MEM.cv.width, MEM.cv.height); c.drawImage(MEM.bg, 0, 0); c.setTransform(k, 0, 0, k, 0, 0);
+    PROTS.forEach((p, i) => { const x = L.px(i); if (p.k === "pump") drawPump(c, L, x); else drawChannel(c, L, x, p.k === "na" ? "na" : p.k === "leak" ? "leak" : "kv", ch[p.id]); });
+    /* charge across the membrane, at both ends */
+    c.textAlign = "center"; c.textBaseline = "middle"; c.font = `700 18px ${C.font}`;
+    if (!L.nar) for (const x of [10, L.w - 10]) { c.fillStyle = pos ? C.bad : C.accent; c.fillText(pos ? "−" : "+", x, L.y0 - 10); c.fillStyle = pos ? C.accent : C.bad; c.fillText(pos ? "+" : "−", x, L.y1 + 10); }
+    ions.forEach((b, i) => { const a = at[i]; if (a.move) return; const [x, y] = slotXY(L, a.zone, a.slot); c.drawImage(MEM.spr[b.ty], x - L.ir, y - L.ir, 2 * L.ir, 2 * L.ir); });
+  }
+  /* 2. moving ions: a few small sprite canvases, each moved by a transform */
+  const mv = []; ions.forEach((b, i) => { const a = at[i]; if (a.move) { const p = ionPath(L, a.move, a.p); mv.push([b.ty, Math.round(p[0] * 2) / 2, Math.round(p[1] * 2) / 2]); } });
+  const msig = MEM.key + "|" + mv.join(";");
+  if (msig !== MEM.msig) {
+    MEM.msig = msig;
+    while (MEM.pool.length < mv.length) {
+      const e = document.createElement("canvas"), sp = MEM.spr.Na; e.width = sp.width; e.height = sp.height;
+      e.style.width = e.style.height = 2 * L.ir + "px"; $("memMv").appendChild(e); MEM.pool.push({ e, ty: "" });
+    }
+    MEM.pool.forEach((o, j) => {
+      const m = mv[j];
+      if (!m) { if (!o.e.hidden) o.e.hidden = true; return; }
+      if (o.ty !== m[0]) { o.ty = m[0]; const g = o.e.getContext("2d"); g.clearRect(0, 0, o.e.width, o.e.height); g.drawImage(MEM.spr[m[0]], 0, 0); }
+      if (o.e.hidden) o.e.hidden = false;
+      o.e.style.transform = `translate(${m[1] - L.ir}px,${m[2] - L.ir}px)`;
+    });
+  }
+  /* 3. state labels on top, with a halo, so a passing ion never hides them */
+  const lsig = MEM.key + "|" + Object.values(ch).join();
+  if (lsig !== MEM.lsig) {
+    MEM.lsig = lsig; const c = MEM.lb;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, MEM.cv.width, MEM.cv.height); c.setTransform(k, 0, 0, k, 0, 0);
+    c.textAlign = "center"; c.textBaseline = "middle"; c.font = `700 ${L.nar ? 11 : 13}px ${C.font}`; c.lineJoin = "round"; c.lineWidth = 4; c.strokeStyle = C.zoneIn;
+    PROTS.forEach((p, i) => { const s = p.k === "pump" ? ch.pump : ch[p.id], lab = p.k === "leak" && !L.nar ? "always open" : s, x = L.px(i);
+      c.strokeText(lab, x, L.st); c.fillStyle = s === "open" || s === "ATP → ADP" ? C.good : s === "inactivated" ? C.bad : C.muted; c.fillText(lab, x, L.st); });
+  }
+}
+function ionPath(L, e, p) {   // home → mouth → through the protein → other mouth → new home
+  const x = L.px(PI[e.via]), a = slotXY(L, e.from.zone, e.from.slot), b = slotXY(L, e.to.zone, e.to.slot);
+  const m1 = [x, e.from.zone === "out" ? L.y0 - 16 : L.y1 + 16], m2 = [x, e.to.zone === "out" ? L.y0 - 16 : L.y1 + 16];
+  const lerp = (u, v, q) => [u[0] + (v[0] - u[0]) * q, u[1] + (v[1] - u[1]) * q];
+  return p < 0.38 ? lerp(a, m1, ease(p / 0.38)) : p < 0.62 ? lerp(m1, m2, (p - 0.38) / 0.24) : lerp(m2, b, ease((p - 0.62) / 0.38));
+}
+
+/* ===== View 1b: the live trace (SVG). Static grid built on layout change; the run's curve built once per run and
+   revealed by patching a clip width; labels, cursor and markers patched. ===== */
+const TR = { key: "", ckey: "", L: null };
+const VTOP = 40, VBOT = -105;
+const shortScreen = () => window.innerWidth > 900 && window.innerHeight <= 820;   // laptops and boards at 768 px: a shorter trace
+function trLay(w) {
+  const nar = w < 560, sh = !nar && shortScreen(), L = 50, R = nar ? 10 : 18, T = sh ? 26 : 30, h = nar ? 236 : sh ? 200 : 250, B0 = h - (sh ? 36 : 40);
+  return { w, h, nar, L, R, T, B: B0, x: t => L + (w - L - R) * t / T_END, y: v => T + (B0 - T) * (VTOP - v) / (VTOP - VBOT), tOf: x => (x - L) / (w - L - R) * T_END };
+}
+const P2 = v => Math.round(v * 10) / 10;
+function trStatic() {
+  const w = Math.round(boxW($("traceC"))), L = trLay(w), hv = !!B.hide.vals, key = w + "|" + L.h + "|" + hv;
+  TR.L = L; if (key === TR.key) return L; TR.key = key; TR.ckey = ""; TR.sig = null;
+  for (const id of ["trace", "traceC"]) $(id).setAttribute("viewBox", `0 0 ${w} ${L.h}`);
+  let s = "";
+  for (let i = 0; i <= T_END * 10; i++) { const x = P2(L.x(i / 10)); s += `<line class="${i % 5 ? "gr" : "gr2"}" x1="${x}" y1="${L.T}" x2="${x}" y2="${L.B}"/>`; }
+  if (!hv) for (let v = -100; v <= 40; v += 10) { const y = P2(L.y(v)); s += `<line class="${v % 50 ? "gr" : "gr2"}" x1="${L.L}" y1="${y}" x2="${L.w - L.R}" y2="${y}"/>`; }
+  s += `<path class="ax" d="M${L.L} ${L.T - 6} V${L.B} H${L.w - L.R}"/>`;
+  const step = L.nar ? 1 : 0.5;
+  for (let t = 0; t <= T_END + 1e-9; t += step) s += `<text class="tkm" x="${P2(L.x(t))}" y="${L.B + 18}" text-anchor="middle">${p1(t)}</text>`;
+  s += `<text class="ttl" x="${L.w - L.R}" y="${L.h - 4}" text-anchor="end">Time / ms</text>`;
+  s += `<text class="ttl" transform="translate(13 ${P2((L.T + L.B) / 2)}) rotate(-90)" text-anchor="middle">Membrane potential / mV</text>`;
+  const ticks = hv ? [0] : [MV.peak, 0, MV.thr, MV.rest];
+  for (const v of ticks) s += `<text class="tk" x="${L.L - 6}" y="${P2(L.y(v)) + 4.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`;
+  if (!hv) [[MV.peak, "peak"], [MV.thr, "threshold"], [MV.rest, "resting"]].forEach(([v, n]) => { const y = P2(L.y(v)); s += `<line class="dash" x1="${L.L}" y1="${y}" x2="${L.w - L.R}" y2="${y}"/><text class="dl" x="${L.w - L.R - 4}" y="${y - 5}" text-anchor="end">${n}</text>`; });
+  morph($("trS"), s);
+  return L;
+}
+/* phase labels for the first full action potential: anchor on the curve, then text (wide) or a numbered circle (narrow) */
+const PHL = [{ c: "rest", n: "Resting", u: -0.25 }, { c: "dep", n: "Depolarisation", u: 0.42 }, { c: "rep", n: "Repolarisation", u: 0.62 }, { c: "hyp", n: "Hyperpolarisation", u: AP.trough }, { c: "ret", n: "Return to resting", u: 1.15 }];
+function phaseLabels(L, a) {
+  return PHL.map((p, i) => {
+    const t = a.s + p.u, ax = L.x(t), ay = L.y(Vat(B.run, t));
+    let tx, ty, an = "middle", lead = null;
+    if (p.c === "rest") { tx = ax; ty = L.y(MV.rest) - 9; }
+    else if (p.c === "dep") { tx = ax - (L.nar ? 13 : 9); ty = ay + 4; an = "end"; }
+    else if (p.c === "rep") { tx = ax + (L.nar ? 13 : 9); ty = ay + 4; an = "start"; }
+    else if (p.c === "hyp") { tx = ax; ty = L.nar ? ay + 14 : ay + 15; }
+    else { tx = L.x(a.s + AP.rest2) + (L.nar ? 14 : 8); ty = L.y(MV.rest) - (L.nar ? 14 : 12); an = "start"; lead = [ax, ay]; }
+    return { i, p, t, ax, ay, tx, ty, an, lead };
+  });
+}
+function trCurve() {   // the whole run's curve as coloured pieces, plus the bracket (bottom layer, revealed by sliding the cover right)
+  const L = TR.L, R = B.run, key = TR.key + "|" + (R ? R.aps.map(a => a.s + ":" + a.full).join(",") + "/" + R.blocked.length : "none") + "|" + B.gf + "|" + !!B.hide.phases;
+  if (key === TR.ckey && (!R || R.curve)) return; TR.ckey = key; if (R) R.curve = true;
+  let s = "";
+  if (!R) { morph($("trD"), ""); morph($("trL"), `<text class="empty" x="${P2((L.L + L.w - L.R) / 2)}" y="${P2(L.y(-20))}" text-anchor="middle">Press Stimulate to start.</text>`); $("phaseKey").hidden = true; return; }
+  const f = firstFull(R), pieces = []; let cur = null;
+  for (let t = 0; t <= T_END + 1e-9; t += 0.01) {
+    const g = stageAt(R, t), cls = g.k === "sub" ? "sub" : PH_OF[g.k], pt = `${P2(L.x(t))} ${P2(L.y(Vat(R, t)))}`;
+    if (!cur || cur.c !== cls) { if (cur) cur.p.push(pt); cur = { c: cls, p: [pt] }; pieces.push(cur); } else cur.p.push(pt);
+  }
+  s += pieces.map(q => `<path class="cv ${q.c}" d="M${q.p.join(" L")}"/>`).join("");
+  if (f) {
+    const y = P2(L.y(36)), xa = P2(L.x(f.s + AP.peak)), xb = P2(L.x(f.s + AP.rest2)), xm = P2(L.x(f.s + AP.rest1));
+    s += `<path class="brk" d="M${xa} ${y + 6} V${y} H${xb} V${y + 6}"/>`;
+    if (B.gf) s += `<path class="brk" d="M${xm} ${y - 2} V${y + 6}"/>`;
+  }
+  morph($("trD"), s);
+  /* labels (outside the clip; shown once the cursor has passed them) */
+  let l = "";
+  if (f && !B.hide.phases) phaseLabels(L, f).forEach(q => {
+    const c = q.p.c;
+    if (L.nar) {
+      const nx = q.tx + (q.an === "end" ? -9 : q.an === "start" ? 9 : 0);
+      l += `<g data-pl="${q.i}"><line class="lead ${c}" x1="${P2(q.ax)}" y1="${P2(q.ay)}" x2="${P2(nx)}" y2="${P2(q.ty - 4)}"/><circle class="pn ${c}" cx="${P2(nx)}" cy="${P2(q.ty - 4)}" r="9"/><text class="pnt" x="${P2(nx)}" y="${P2(q.ty)}" text-anchor="middle">${q.i + 1}</text></g>`;
+    } else {
+      l += `<g data-pl="${q.i}">` + (q.lead ? `<line class="lead ${c}" x1="${P2(q.lead[0])}" y1="${P2(q.lead[1])}" x2="${P2(q.tx - 2)}" y2="${P2(q.ty + 2)}"/>` : "") + `<text class="pl ${c}" x="${P2(q.tx)}" y="${P2(q.ty)}" text-anchor="${q.an}">${q.p.n}</text></g>`;
+    }
+  });
+  if (f) { const y = P2(L.y(36)), xm = P2((L.x(f.s + AP.peak) + L.x(f.s + AP.rest2)) / 2); l += `<g data-brk="1">${B.gf ? `<text class="brkt" x="${P2((L.x(f.s + AP.peak) + L.x(f.s + AP.rest1)) / 2)}" y="${y - 6}" text-anchor="middle" style="font-size:12px">absolute</text><text class="brkt" x="${P2((L.x(f.s + AP.rest1) + L.x(f.s + AP.rest2)) / 2)}" y="${y - 6}" text-anchor="middle" style="font-size:12px">relative</text>` : `<text class="brkt" x="${xm}" y="${y - 6}" text-anchor="middle">Refractory period</text>`}</g>`; }
+  let m = "";
+  R.aps.concat(R.blocked.map(b => ({ s: b.t, blocked: b.why }))).forEach((a, k) => {
+    const x = P2(L.x(a.s)), y = L.B - 1, cls = a.blocked ? "stimx" : "stim";
+    m += `<g data-st="${a.s}"><path class="${cls}" d="M${x} ${y - 10} l-5 9 h10 z"/>`;
+    const lab = a.blocked ? "no AP" : k === 0 ? "stimulus" : "";
+    if (lab && !(L.nar && a.blocked)) m += `<text class="${a.blocked ? "stlx" : "stl"}" x="${x + 8}" y="${y - 1}">${lab}</text>`;
+    m += `</g>`;
+  });
+  morph($("trL"), l + m);
+  const q = sel => [...$("trL").querySelectorAll(sel)];
+  TR.pl = q("[data-pl]").map(g => [g, PHL[+g.dataset.pl]]); TR.st = q("[data-st]").map(g => [g, +g.dataset.st]); TR.bk = $("trL").querySelector("[data-brk]");   // kept, so playback doesn't search for them every frame
+  const pk = $("phaseKey"); pk.hidden = !(L.nar && f && !B.hide.phases);
+  if (!pk.hidden && !pk.childElementCount) pk.innerHTML = PHL.map((p, i) => `<li class="${p.c}"><span class="n">${i + 1}</span>${p.n}</li>`).join("");
+}
+function trDraw(t) {
+  const L = trStatic(); trCurve();
+  const R = B.run, sig = TR.ckey + "|" + (R ? Math.round(L.x(t) / 1.5) + ":" + Math.round(L.x(R.seen) / 1.5) : "-") + "|" + B.tap + "|" + !!B.tapShow;
+  if (sig === TR.sig) return; TR.sig = sig;   // move the cursor and reveal the curve only when they have moved a pixel or two
+  /* the cover hides the curve to the right of the furthest time seen; moving it (and the cursor) is a compositor transform, not a repaint */
+  const sc = (TR.sc = boxW($("traceC")) / L.w || 1), cov = $("trCover").style, tf = `translateX(${R ? P2((L.x(R.seen) + 3) * sc) : 0}px)`;
+  if (cov.transform !== tf) cov.transform = tf;
+  if (R) { const f = firstFull(R); (TR.pl || []).forEach(([g, p]) => setAttr(g, "visibility", f && R.seen >= f.s + p.u + (p.c === "rest" ? 0 : 0.02) ? "visible" : "hidden"));
+    (TR.st || []).forEach(([g, t0]) => setAttr(g, "visibility", R.seen >= t0 - 1e-6 ? "visible" : "hidden"));
+    if (TR.bk) setAttr(TR.bk, "visibility", f && R.seen >= f.s + AP.peak + 0.15 ? "visible" : "hidden"); }
+  const cu = $("trCur"), cd = $("trDot");
+  if (cu.hidden !== !R) { cu.hidden = cd.hidden = !R; }
+  if (R) {
+    const x = P2(L.x(t) * sc), h = P2((L.B - L.T) * sc) + "px";
+    if (cu.style.height !== h) cu.style.height = h;
+    cu.style.transform = `translate(${x - 1}px,${P2(L.T * sc)}px)`; cd.style.transform = `translate(${x}px,${P2(L.y(Vat(R, t)) * sc)}px)`;
+  }
+  let u = "";
+  if (B.tapShow) { const [a, b] = B.tapShow; u += `<rect class="tapzone" x="${P2(L.x(a))}" y="${L.T}" width="${P2(L.x(b) - L.x(a))}" height="${L.B - L.T}"/>`; }
+  if (B.tap != null && R) u += `<circle class="${B.tapShow ? "tapok" : "tapm"}" cx="${P2(L.x(B.tap))}" cy="${P2(L.y(Vat(R, B.tap)))}" r="10"/>`;
+  if (u !== TR.u) { TR.u = u; morph($("trU"), u); }
+}
+
+/* ===== View 2: along the axon (SVG). Static axons built on change; the two impulses are groups moved by transform. ===== */
+const AX = { key: "", L: null };
+function axLay(w, diam) {
+  const nar = w < 560, xa = nar ? 42 : 64, xb = w - 18, N = nar ? 4 : 6, hh = diam === "thick" ? 22 : 14;
+  return { w, h: 368, nar, xa, xb, Lx: xb - xa, N, D: (xb - xa) / N, hh, yu: 92, ym: 262, node: i => xa + i * (xb - xa) / N };
+}
+const signs = (x, y, hh, rev, cls) => { const o = rev ? "−" : "+", n = rev ? "+" : "−"; return `<text class="${cls || "sg"}" x="${x}" y="${y - hh - 6}" text-anchor="middle">${o}</text><text class="${cls || "sg"}" x="${x}" y="${y + 5}" text-anchor="middle">${n}</text><text class="${cls || "sg"}" x="${x}" y="${y + hh + 16}" text-anchor="middle">${o}</text>`; };
+const bolt = (x, y) => `<path class="bolt" d="M${x + 4} ${y - 16} l-10 18 h8 l-4 14 l12 -20 h-8 l5 -12 z"/>`;
+const arrowR = (x1, x2, y) => `<path class="arr" d="M${x1} ${y} H${x2 - 7}"/><path class="arrh" d="M${x2} ${y} l-9 -5 v10 z"/>`;
+const arrowL = (x1, x2, y) => `<path class="arr" d="M${x1} ${y} H${x2 + 7}"/><path class="arrh" d="M${x2} ${y} l9 -5 v10 z"/>`;
+function axStatic() {
+  const w = Math.round(boxW($("axWrap"))), L = axLay(w, B.ax.diam), key = w + "|" + B.ax.diam + "|" + !!B.hide.axLabels;
+  AX.L = L; if (key === AX.key) return L; AX.key = key;
+  $("axSvg").setAttribute("viewBox", `0 0 ${w} ${L.h}`);
+  const { xa, xb, hh, yu, ym } = L; let s = `<defs><clipPath id="axClip"><rect x="${xa}" y="0" width="${xb - xa}" height="${L.h}"/></clipPath></defs>`;
+  s += `<text class="axt" x="12" y="22">Unmyelinated axon</text><text class="axl" x="${w - 12}" y="22" text-anchor="end">${L.nar ? "stimulus: left end" : "stimulus at the left end"}</text><text class="axt" x="12" y="184">Myelinated axon</text>`;
+  s += bolt(xa - 24, yu) + bolt(xa - 24, ym);
+  s += `<rect class="axm" x="${xa}" y="${yu - hh}" width="${xb - xa}" height="${2 * hh}" rx="${hh}"/>`;
+  for (let x = xa + 12; x < xb - 6; x += 24) s += signs(P2(x), yu, hh, false);
+  s += `<rect class="axm" x="${xa}" y="${ym - hh}" width="${xb - xa}" height="${2 * hh}" rx="${hh}"/>`;
+  for (let i = 0; i < L.N; i++) s += `<rect class="myl" x="${P2(L.node(i) + 8)}" y="${ym - hh - 9}" width="${P2(L.D - 16)}" height="${2 * hh + 18}" rx="10"/>`;
+  for (let i = 1; i < L.N; i++) s += signs(P2(L.node(i)), ym, hh, false);
+  const n1 = P2(L.node(1)), m0 = P2(L.node(0) + L.D / 2);
+  s += `<line class="lead rest" x1="${n1}" y1="${ym + hh + 16}" x2="${n1}" y2="${ym + hh + 32}"/><text class="axl" x="${n1 + 4}" y="${ym + hh + 46}">node of Ranvier</text>`;
+  s += `<line class="lead rest" x1="${m0}" y1="${ym + hh + 10}" x2="${m0}" y2="${ym + hh + 56}"/><text class="axl" x="${P2(L.node(0) + 6)}" y="${ym + hh + 70}">${B.hide.axLabels ? "myelin sheath" : "Schwann cell (myelin sheath)"}</text>`;
+  /* the two impulses (moved by transform) */
+  s += `<g clip-path="url(#axClip)"><g id="axU" visibility="hidden">`
+    + `<rect class="rz" x="-74" y="${yu - hh - 18}" width="52" height="${2 * hh + 36}" rx="6"/>`
+    + `<rect class="dz" x="-22" y="${yu - hh - 18}" width="44" height="${2 * hh + 36}" rx="6"/>` + signs(-11, yu, hh, true, "sgr") + signs(11, yu, hh, true, "sgr")
+    + arrowR(26, 64, yu) + arrowL(64, 28, yu - hh - 10)
+    + `<text class="axz d" x="0" y="${yu - hh - 26}" text-anchor="middle">action potential</text><text class="axz r" x="-48" y="${yu + hh + 34}" text-anchor="middle">refractory</text>`
+    + (L.nar ? "" : `<text class="axz c" x="48" y="${yu + hh + 34}" text-anchor="middle">local currents</text>`) + `</g>`
+    + `<g id="axM" visibility="hidden"><rect class="rz" id="axMr" x="${P2(-L.D - 10)}" y="${ym - hh - 12}" width="20" height="${2 * hh + 24}" rx="5"/>`
+    + `<rect class="dz" x="-10" y="${ym - hh - 12}" width="20" height="${2 * hh + 24}" rx="5"/>` + signs(0, ym, hh, true, "sgr")
+    + arrowR(12, P2(L.D - 12), ym) + `<path class="arr" d="M8 ${ym - hh - 14} Q${P2(L.D / 2)} ${ym - hh - 56} ${P2(L.D - 8)} ${ym - hh - 14}" stroke-dasharray="6 5"/><path class="arrh" d="M${P2(L.D - 8)} ${ym - hh - 14} l-3 -11 l-7 7 z"/>`
+    + `<text class="axz d" x="0" y="${ym + hh + 26}" text-anchor="middle">${L.nar ? "AP" : "action potential"}</text>`
+    + `<text class="axz c" x="${P2(L.D / 2)}" y="${ym - hh - 40}" text-anchor="middle">${L.nar ? "jumps" : "jumps to the next node"}</text></g></g>`
+    + `<text class="fin" id="axUf" x="${xb - 4}" y="${yu - hh - 30}" text-anchor="end" visibility="hidden"></text><text class="fin" id="axMf" x="${xb - 4}" y="${ym - hh - 48}" text-anchor="end" visibility="hidden"></text>`;
+  morph($("axS"), s);
+  return L;
+}
+function racePos(ax) {   // progress of each impulse: unmyelinated 0–1, myelinated node 0–N
+  const r = ax.race, L = AX.L; if (!r) return null;
+  if (r.freeze) return { pu: r.freeze.pu, km: r.freeze.km, au: false, am: false };
+  const tu = tuOf(ax), tm = tmOf(ax);
+  return { pu: Math.min(1, r.e / tu), km: Math.min(L.N, Math.floor(r.e / tm * L.N + 1e-9)), au: r.e >= tu - 1e-9, am: r.e >= tm - 1e-9 };
+}
+function axDraw() {
+  const L = axStatic(), p = racePos(B.ax), u = $("axU"), m = $("axM");
+  if (!p) { setAttr(u, "visibility", "hidden"); setAttr(m, "visibility", "hidden"); setAttr($("axUf"), "visibility", "hidden"); setAttr($("axMf"), "visibility", "hidden"); return; }
+  setAttr(u, "visibility", p.au ? "hidden" : "visible"); setAttr(u, "transform", `translate(${P2(L.xa + p.pu * L.Lx)} 0)`);
+  setAttr(m, "visibility", p.am ? "hidden" : "visible"); setAttr(m, "transform", `translate(${P2(L.node(p.km))} 0)`);
+  setAttr($("axMr"), "visibility", p.km > 0 ? "visible" : "hidden");
+  const fin = (id, on, t) => { const e = $(id); setAttr(e, "visibility", on ? "visible" : "hidden"); const v = "✓ arrived" + (B.hide.axTimes ? "" : ": " + f1(t) + " s"); if (on && e.textContent !== v) e.textContent = v; };
+  fin("axUf", p.au, tuOf(B.ax)); fin("axMf", p.am, tmOf(B.ax));
+}
+
+/* ===== View 3: stimulus strength and frequency (SVG, drawn on demand) ===== */
+const FW = 20;   // ms shown
+function spikeStarts(s) { if (s < STHR) return []; const g = gapOf(s), a = []; for (let t = 1; t < FW - (AP.rest2 - AP.thr) + 1e-9; t += g) a.push(t); return a; }
+function stripV(s, t, ts) {   // each impulse starts from threshold; a short rise to threshold before it when there is room
+  if (s < STHR) return t < 0.6 ? herm([0, MV.rest, 0], [0.6, blipPeak(s), 0], Math.max(0, t)) : blipPeak(s);
+  let k = -1; for (let i = 0; i < ts.length; i++) if (ts[i] <= t + 1e-9) k = i;
+  const nx = ts[k + 1], end = k >= 0 ? ts[k] + AP.rest2 - AP.thr : 0;
+  if (nx != null && t > nx - 0.3 && t >= end) { const r0 = Math.max(end, nx - 0.3); if (nx - r0 > 0.02) return herm([r0, MV.rest, 0], [nx, MV.thr, 120], t); }
+  return k < 0 ? MV.rest : apV(t - ts[k] + AP.thr, MV.rest);
+}
+function fqDraw() {
+  const w = Math.round(boxW($("fqWrap"))), nar = w < 560, h = nar ? 236 : 250, Lm = 50, Rm = nar ? 10 : 18, T = 40, B0 = h - 40, s = B.fstr;
+  const x = t => Lm + (w - Lm - Rm) * t / FW, y = v => T + (B0 - T) * (VTOP - v) / (VTOP - VBOT);
+  $("fqSvg").setAttribute("viewBox", `0 0 ${w} ${h}`);
+  let o = "";
+  for (let t = 0; t <= FW; t += 1) { const X = P2(x(t)); o += `<line class="${t % 5 ? "gr" : "gr2"}" x1="${X}" y1="${T}" x2="${X}" y2="${B0}"/>`; }
+  o += `<path class="ax" d="M${Lm} ${T - 6} V${B0} H${w - Rm}"/>`;
+  for (let t = 0; t <= FW; t += nar ? 10 : 5) o += `<text class="tkm" x="${P2(x(t))}" y="${B0 + 18}" text-anchor="middle">${t}</text>`;
+  o += `<text class="ttl" x="${w - Rm}" y="${h - 4}" text-anchor="end">Time / ms</text><text class="ttl" transform="translate(13 ${P2((T + B0) / 2)}) rotate(-90)" text-anchor="middle">Potential / mV</text>`;
+  for (const v of [MV.peak, MV.thr, MV.rest]) { const Y = P2(y(v)); o += `<text class="tk" x="${Lm - 6}" y="${Y + 4.5}" text-anchor="end">${v > 0 ? "+" : "−"}${Math.abs(v)}</text><line class="dash" x1="${Lm}" y1="${Y}" x2="${w - Rm}" y2="${Y}"/>`; }
+  o += `<text class="dl" x="${w - Rm - 4}" y="${P2(y(MV.peak)) - 5}" text-anchor="end">every peak ${mvT(MV.peak)}</text><text class="dl" x="${w - Rm - 4}" y="${P2(y(MV.thr)) - 5}" text-anchor="end">threshold</text>`;
+  /* stimulus bar: as long as the stimulus lasts, as thick as it is strong */
+  o += `<rect class="sbar" x="${P2(x(0.5))}" y="${P2(27 - 0.7 * s)}" width="${P2(x(FW) - x(0.5))}" height="${P2(1.4 * s)}" rx="${Math.min(4, 0.7 * s)}"/><text class="stl" x="${Lm}" y="13">${nar ? "Stimulus" : "Stimulus strength"} ${s}</text>`;
+  const ts = spikeStarts(s); let pts = [];
+  for (let t = 0; t <= FW + 1e-9; t += 0.02) pts.push(`${P2(x(t))} ${P2(y(t < 0.5 ? MV.rest : stripV(s, t - 0.5, ts.map(q => q - 0.5))))}`);
+  o += `<path class="cv dep" d="M${pts.join(" L")}"/>`;
+  if (s < STHR) o += `<text class="empty" x="${P2((Lm + w - Rm) / 2)}" y="${P2(y(-20))}" text-anchor="middle">Below threshold: no impulses</text>`;
+  morph($("fqS"), o);
+  const f = freqOf(s), n = ts.length;
+  setText("roN", n); setText("roGap", s < STHR ? "–" : f1(gapOf(s)) + " ms"); setText("roF", f + " per second" + (f === FMAX ? " (the maximum)" : ""));
+  $("fFill").style.width = (100 * f / FMAX) + "%";
+  setText("roWhy", s < STHR ? "Below threshold: too little Na⁺ enters to reach −55 mV, so no action potential starts." : `Every impulse is the same size: all-or-nothing. The refractory period means impulses can never be closer than about ${p1(MIN_GAP)} ms apart, so the maximum is about ${FMAX} per second.`);
+  $("fMeterBox").hidden = !!B.hide.fwhy; $("fqHidden").hidden = !B.hide.fwhy;
+}
+
+/* ===== Readouts and controls ===== */
+function note(id, cls, html) { const e = $(id); e.className = "mnote" + (cls ? " " + cls : ""); e.innerHTML = html || ""; }
+function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }
+const quiz = () => mode !== "demo";
+function memReadouts() {
+  const R = B.run, t = R ? R.t : 0, g = stageAt(R, t), refr = inRefr(R, t);
+  setText("roV", mvT(Vat(R, t))); setText("roT", R ? f1(t) + " ms" : "–");
+  const tx = TEXT[g.k] || TEXT.rest;
+  setText("roStage", tx[0]); setText("roRefr", refr ? (B.gf ? (g.u >= AP.rest1 ? "Relative refractory period" : "Absolute refractory period") : "Refractory period") : "\u00a0");
+  const extra = refr && g.k !== "repol" ? (B.gf && g.u >= AP.rest1 ? " Relative refractory period: a bigger stimulus could trigger an action potential now." : " Refractory period: the Na⁺ channels are inactivated and cannot open again yet.") : "";
+  setText("roWhat", (R ? tx[1] : TEXT.rest[1] + " Press Stimulate.") + extra);
+  $("roVBox").hidden = !!B.hide.mv; $("stageBox").hidden = !!B.hide.stage; $("roWhatBox").hidden = !!B.hide.what;
+  $("memHidden").hidden = !(B.hide.mv || B.hide.stage || B.hide.what);
+  const pb = $("playBtn"); setText("playBtn", R && R.playing ? "Pause" : R && R.t >= T_END - 1e-9 ? "Replay" : "Play");
+  setText("stimBtn", !B.lock.fresh && R && R.t > 0 && R.t <= LAST_STIM && R.t < T_END ? "Stimulate again" : "Stimulate");
+}
+function axReadouts() {
+  const ax = B.ax, r = ax.race, p = racePos(ax), tu = tuOf(ax), tm = tmOf(ax), hideT = !!B.hide.axTimes;
+  setText("roU", !r || r.freeze ? "–" : hideT ? (p.au ? "arrived" : "racing") : f1(Math.min(r.e, tu)) + " s" + (p.au ? " ✓" : ""));
+  setText("roM", !r || r.freeze ? "–" : hideT ? (p.am ? "arrived" : "racing") : f1(Math.min(r.e, tm)) + " s" + (p.am ? " ✓" : ""));
+  const TN = { cool: "cooler", norm: "normal", warm: "warmer" }, res = ax.res;
+  const lines = ["thin", "thick"].filter(d => res[d]).map(d => `${cap(d)}, ${TN[res[d].temp]}: myelinated ${f1(res[d].m)} s; unmyelinated ${f1(res[d].u)} s`);
+  setText("roRes", hideT ? "Hidden for this question." : lines.length ? lines.join(" · ") + " (playback, slowed down)." : "None yet: press Race.");
+}
+function syncCtl() {
+  const all = !!B.lock.all, R = B.run;
+  document.querySelectorAll("#sceneTabs button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.scene === B.scene)); b.disabled = all || !!B.lock.tabs; });
+  $("vMem").hidden = B.scene !== "mem"; $("vAxon").hidden = B.scene !== "axon"; $("vFreq").hidden = B.scene !== "freq";
+  document.querySelectorAll("#ctlMem0 button, #ctlMem0 input, #ctlMem button, #ctlAxon button, #ctlFreq input").forEach(el => { el.disabled = all; });
+  note("lockNote", "", all ? "The model is fixed for this question." : "");
+  $("strIn").value = B.str; setText("strOut", B.str); $("fStrIn").value = B.fstr; setText("fStrOut", B.fstr);
+  if (!all) { $("playBtn").disabled = !R; $("stepBtn").disabled = !!R && R.t >= T_END - 1e-9; $("finBtn").disabled = !B.ax.race || B.ax.race.freeze || B.ax.race.e >= tuOf(B.ax); }
+  $("fastBtn").setAttribute("aria-pressed", String(B.fast)); $("fastBtn").querySelector(".state").textContent = B.fast ? "on" : "off";
+  $("gfBtn").setAttribute("aria-pressed", String(B.gf)); $("gfBtn").querySelector(".state").textContent = B.gf ? "on" : "off"; $("gfLine").hidden = !B.gf;
+  document.querySelectorAll("#diSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.di === B.ax.diam)));
+  document.querySelectorAll("#teSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.te === B.ax.temp)));
+  if (!all && B.ax.race && B.ax.race.on) document.querySelectorAll("#diSeg button, #teSeg button").forEach(b => { b.disabled = true; });
+}
+function renderScene() {
+  if (B.scene === "mem") {
+    const R = B.run, now = performance.now(); memDraw(R, R ? R.t : 0); trDraw(R ? R.t : 0);
+    if (!(R && R.playing && loopOn) || now - (renderScene.ro || 0) > 380) { renderScene.ro = now; memReadouts(); }   // readouts about 2–3 times a second while playing
+  }
+  else if (B.scene === "axon") { axDraw(); const now = performance.now(); if (!(B.ax.race && B.ax.race.on && loopOn) || now - (renderScene.ra || 0) > 240) { renderScene.ra = now; axReadouts(); } }
+  else fqDraw();
+}
+function renderAll() { syncCtl(); renderScene(); if (tourI >= 0) tourPlace(); }
+function setScene(sc) {
+  if (B.lock.all || (B.lock.tabs && sc !== B.scene)) return;
+  B.scene = sc; renderAll(); kick(); tourSignal("scene-" + sc);
+}
+
+/* ===== Playback: one loop for the run and the race, drawn with paceFrame() (30 fps cap, adaptive), time-based,
+   paused while the tab is hidden or the model is off-screen, and stopped when nothing is moving. ===== */
+let loopOn = false, lastNow = 0;
+paceFrame.cap = () => 20;   // this tool's playback and race are drawn at most 20 times a second (smooth enough for slow-moving ions)
+paceFrame.budget = .25;     // and step down to 15 or fewer if drawing takes more than a quarter of the time (lag on school PCs, Oct 2026)
+const moving = () => (B.scene === "mem" && !!B.run && B.run.playing) || (B.scene === "axon" && !!B.ax.race && B.ax.race.on);
+const wantLoop = () => !document.hidden && onScreen && moving();
+function kick() { if (loopOn || !wantLoop()) return; loopOn = true; lastNow = 0; paceFrame(tick); }
+function tick(now) {
+  if (!wantLoop()) { loopOn = false; renderScene(); syncCtl(); return; }
+  const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0; lastNow = now;
+  if (B.scene === "mem") advanceRun(dt); else advanceRace(dt);
+  renderScene();
+  if (wantLoop()) paceFrame(tick); else { loopOn = false; syncCtl(); renderScene(); }
+}
+document.addEventListener("visibilitychange", kick);
+function advanceRun(dt) {
+  const R = B.run; if (!R || !R.playing) return;
+  let left = dt * (B.fast ? 2.5 : 1);
+  while (left > 1e-6 && R.t < T_END) {   // the trace runs slowly through each stage, quickly while resting
+    const g = stageAt(R, R.t), r = RATE[g.k], nxt = nextBoundary(R, R.t), need = (nxt - R.t) / r;
+    if (need >= left) { R.t += left * r; left = 0; } else { R.t = nxt + 1e-6; left -= need; }
+  }
+  if (R.t >= T_END) { R.t = T_END; R.playing = false; }
+  R.seen = Math.max(R.seen, R.t);
+  if (R.pause != null && R.t >= R.pause) { R.t = R.pause; R.seen = Math.max(R.seen, R.t); R.playing = false; R.pause = null; }
+}
+function nextBoundary(R, t) {   // the next time the stage (and so the playback rate) changes
+  let b = T_END;
+  for (const a of R.aps) {
+    const pts = a.full ? [0, AP.thr, AP.peak, AP.rest1, AP.trough, AP.rest2] : [0, BLIP.end];
+    for (const u of pts) { const x = a.s + u; if (x > t + 1e-6 && x < b) b = x; }
+  }
+  return b;
+}
+function stageStarts(R) { const out = []; for (const a of R.aps) (a.full ? [0, AP.thr, AP.peak, AP.rest1, AP.trough, AP.rest2] : [0, BLIP.end]).forEach(u => out.push(a.s + u)); return out.sort((x, y) => x - y); }
+
+/* ----- view 1 controls ----- */
+function startRun() {
+  if (B.run) B.ions = finalIons(B.run);   // the next run starts where the last one finished
+  const R = newRun(B.ions); B.run = R; B.tap = null; B.tapShow = null;
+  const res = stimulate(R, STIM_AT, B.str, B.gf);
+  return { R, res };
+}
+function doStimulate() {
+  if (B.lock.all) return;
+  let R = B.run, res, again = !B.lock.fresh && !!R && R.t > 0 && R.t <= LAST_STIM && R.t < T_END;
+  if (again) res = stimulate(R, R.t, B.str, B.gf); else ({ R, res } = startRun());
+  const N = {
+    ap: ["good", `Stimulus ${B.str}: threshold reached, so a full action potential fires. Every one is the same size (all-or-nothing).`],
+    sub: ["", `Stimulus ${B.str}: below threshold. The potential rises a little, then dies away. No action potential.`],
+    busy: ["", "The membrane is already depolarising: this stimulus makes no difference."],
+    refr: ["bad", "No action potential: refractory period. The Na⁺ channels are inactivated and cannot open again yet."],
+    needMore: ["bad", `No action potential: relative refractory period. The membrane is hyperpolarised; a stimulus of ${GF_STR} or more is needed now.`],
+    relative: ["good", "Relative refractory period: this bigger stimulus was enough, so a new action potential starts."] }[res.k];
+  note("memNote", N[0], N[1]);
+  if (mode === "demo") { if (res.k === "refr" || res.k === "needMore" || res.k === "relative") tried(1); }
+  if (reduced()) {   // still version: jump to the next stage and stop there
+    const s0 = again ? R.t : STIM_AT - 0.01, nx = stageStarts(R).find(x => x > s0 + 1e-4);
+    R.t = res.k === "sub" ? lastAp(R, T_END).s + BLIP.top : Math.min(T_END, (nx == null ? T_END : nx) + 0.001); R.seen = Math.max(R.seen, R.t); R.playing = false;
+  }
+  else R.playing = true;
+  R.pause = null; renderAll(); kick(); tourSignal("stim");
+}
+function doPlay() {
+  const R = B.run; if (!R || B.lock.all) return;
+  if (reduced()) { doStep(); return; }
+  if (R.playing) R.playing = false; else { if (R.t >= T_END - 1e-9) { R.t = 0; } R.playing = true; R.pause = null; }
+  renderAll(); kick();
+}
+function doStep() {
+  if (B.lock.all) return;
+  if (!B.run) { startRun(); B.run.t = B.run.seen = STIM_AT; note("memNote", "", "Step through the stages one at a time."); renderAll(); tourSignal("step"); return; }
+  const R = B.run, nx = stageStarts(R).find(x => x > R.t + 1e-4);
+  const to = nx == null ? T_END : nx + 0.001;
+  if (reduced() || to <= R.seen) { R.t = Math.min(T_END, to); R.seen = Math.max(R.seen, R.t); R.playing = false; }
+  else { R.pause = Math.min(T_END, to); R.playing = true; }   // play smoothly up to the next stage, then pause
+  renderAll(); kick(); tourSignal("step");
+}
+function scrubTo(t) { const R = B.run; if (!R) return; R.playing = false; R.pause = null; R.t = clamp(t, 0, R.seen); renderAll(); }
+
+/* ----- view 2: the race ----- */
+function doRace() {
+  if (B.lock.all) return;
+  B.ax.race = { e: 0, on: !reduced() };
+  if (reduced()) { B.ax.race.e = tuOf(B.ax); recordRace(); }
+  note("axNote", "", reduced() ? "Both impulses have arrived (still version)." : "The myelinated impulse jumps from node to node. The unmyelinated one has to depolarise the whole membrane.");
+  renderAll(); kick(); tourSignal("race");
+}
+function recordRace() { const ax = B.ax; ax.res[ax.diam] = { m: tmOf(ax), u: tuOf(ax), temp: ax.temp }; if (mode === "demo") tried(2); }
+function advanceRace(dt) {
+  const r = B.ax.race; if (!r || !r.on) return;
+  const tm = tmOf(B.ax), before = r.e < tm; r.e += dt;
+  if (before && r.e >= tm) { recordRace(); note("axNote", "good", `Myelinated arrived in ${f1(tm)} s. The unmyelinated impulse takes ${SPEED.myelin}× as long here (${f1(tuOf(B.ax))} s). Press Finish now to skip ahead.`); syncCtl(); }
+  if (r.e >= tuOf(B.ax)) { r.e = tuOf(B.ax); r.on = false; note("axNote", "good", `Both arrived. Myelinated: ${f1(tm)} s. Unmyelinated: ${f1(tuOf(B.ax))} s, ${SPEED.myelin}× as long in this model.`); }
+}
+function finishRace() { const r = B.ax.race; if (!r || B.lock.all || r.freeze) return; const tm = tmOf(B.ax); if (r.e < tm) recordRace(); r.e = tuOf(B.ax); r.on = false; note("axNote", "good", `Both arrived. Myelinated: ${f1(tm)} s. Unmyelinated: ${f1(tuOf(B.ax))} s.`); renderAll(); }
+function setAx(k, v) { if (B.lock.all || (B.ax.race && B.ax.race.on)) return; B.ax[k] = v; B.ax.race = null; note("axNote", "", "Press Race to compare."); renderAll(); }
+
+/* ----- view 3 ----- */
+function setFstr(v) { if (B.lock.all) return; B.fstr = v; renderAll(); if (mode === "demo" && v >= 9) tried(3); tourSignal("fstr"); }
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Increase the stimulus slowly and find the threshold.", "Stimulate again during the refractory period.",
+             "Race the myelinated and unmyelinated axons.", "Turn up the stimulus strength and watch the frequency."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+let lastSub = null;   // threshold hunt: a blip at strength s−1, then a spike at s
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function stopAll() { if (B.run) B.run.playing = false; if (B.ax.race) B.ax.race.on = false; }
+function loadDemo() {
+  stopAll(); task = { kind: "demo" }; S = {}; B = DEMO_B;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = "";
+  ["memNote", "axNote", "fqNote"].forEach(id => note(id, "", ""));
+  moveSupport(); renderAll(); renderTry();
+}
+function freshS() { return { choice: null, order: shuffled(task.options ? task.options.length : 0), shown: false }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  stopAll();
+  const list = LEVELS[level]; task = list[idx];
+  if (task.variants) task.vi = task.vi == null ? 0 : (task.vi + 1) % task.variants.length;
+  S = freshS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = txt(task);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+  if (!narrow() && (task.kind === "tap" || task.id0 === "read")) setTimeout(() => { if (task.kind === "tap" || task.id0 === "read") { const r = $("traceWrap").getBoundingClientRect(); if (r.bottom > innerHeight - 8) window.scrollBy({ top: r.bottom - innerHeight + 16, behavior: reduced() ? "auto" : "smooth" }); } }, 500);   // the trace is the thing to read
+}
+function applyTaskModel() { B = stateFor(task); ["memNote", "axNote", "fqNote"].forEach(id => note(id, "", "")); renderAll(); }
+const selHTML = (id, opts, lab) => `<select class="gsel" id="${id}" aria-label="${esc(lab)}"><option value="">Choose…</option>${shuffled(opts.length).map(i => `<option value="${esc(opts[i])}">${esc(opts[i])}</option>`).join("")}</select>`;
+const narrow = () => window.innerWidth <= 900;
+function renderAnswer() {
+  const a = $("answer"), t = task, where = narrow() ? "in the model below" : "in the model";
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "fill") {
+    a.innerHTML = `<ul class="fixl">` + t.items.map((it, i) => `<li>${esc(it.pre)}${selHTML("s" + i, it.opts, "Gap " + (i + 1))}${esc(it.post)}</li>`).join("") + `</ul>`;
+  } else if (t.kind === "num") {
+    a.innerHTML = `<div class="numrow"><label for="numIn">Answer:</label><input id="numIn" type="text" inputmode="decimal" autocomplete="off"><span>${esc(t.unit)}</span></div>` + (t.id0 === "thr" ? `<p class="small">Include the sign (+ or −).</p>` : "");
+    $("numIn").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  } else if (t.kind === "tap") {
+    a.innerHTML = `<p class="tapinfo" id="tapInfo">Tap the curve on the trace ${where}. You can also use the arrow keys on the trace.</p>`;
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">${t.id0 === "thick" ? "Use <b>Axon diameter</b> and <b>Race ▸</b>" : "Use <b>Stimulus strength</b> and <b>Stimulate</b>"} ${where}.</p>`;
+  }
+}
+function tapInfo() { const e = $("tapInfo"); if (!e) return; e.innerHTML = B.tap == null ? "Tap the curve on the trace in the model." : `You chose <b>${nf(B.tap)} ms</b>. Tap again to change it, then press Check.`; }
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function tapRange(t) { const f = firstFull(B.run), v = TAP[t.variants[t.vi || 0]]; let a = null, b = null; for (let u = 0; u <= AP.rest2; u += 0.005) if (v.ok(u)) { if (a == null) a = u; b = u; } return [f.s + a, f.s + b]; }
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = t.options.findIndex(o => choiceOk(t, o)); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "fill") t.items.forEach((it, i) => { $("s" + i).value = it.ans(); });
+  else if (t.kind === "num") $("numIn").value = p1(numAns(t)).replace("-", "−");
+  else if (t.kind === "tap") { const r = tapRange(t); B.tap = Math.round((r[0] + r[1]) * 50) / 100; B.tapShow = r; tapInfo(); renderAll(); }
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task;
+  if (t.kind === "goal") { if (!goalMet(t, B)) { goalFill(t, B); renderAll(); } return; }
+  if (S.shown) return; S.shown = true;
+  const h = B.hide;
+  if (t.reveal === "freq") { B.fstr = 9; note("fqNote", "good", `Strength 6 → 9: ${freqOf(6)} → ${freqOf(9)} impulses per second. Every peak is still ${mvT(MV.peak)}.`); }
+  else if (t.reveal === "race") { h.axTimes = 0; B.ax.race = { e: tuOf(B.ax), on: false }; recordRace(); note("axNote", "good", `Myelinated ${f1(tmOf(B.ax))} s against unmyelinated ${f1(tuOf(B.ax))} s in this model (real saltatory conduction: up to about ${MYELIN.upTo}× faster).`); }
+  else if (t.reveal === "nodes") { B.ax.race = { e: 0, on: false, freeze: { pu: 0.3, km: 2 } }; note("axNote", "good", "The myelinated impulse is at a node of Ranvier. Under the myelin the membrane cannot depolarise."); }
+  else if (h.what || h.fwhy || h.stage || h.mv || h.vals || h.phases) { h.what = h.fwhy = h.stage = h.mv = h.vals = h.phases = 0; }
+  renderAll();
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  $("supStage").hidden = !support.stage; $("supSpeed").hidden = !support.speed;
+  tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const num = s => { s = String(s).trim().replace(/\s/g, "").replace(/[−–]/g, "-").replace(/^\+/, "").replace(/(mV|ms|ms⁻¹|m\/s)$/i, ""); return s === "" || isNaN(+s) ? null : +s; };
+const TAPNAME = { rest: "the resting potential", stim: "the start of depolarisation", depol: "depolarisation", repol: "repolarisation", hyper: "hyperpolarisation", ret: "the return to resting (still hyperpolarised)" };
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice];
+    return choiceOk(t, o) ? { ok: true, html: esc("Correct. " + t.explain()) } : { ok: false, html: esc(o.why) };
+  }
+  if (t.kind === "fill") {
+    const vals = t.items.map((_, i) => $("s" + i).value);
+    if (vals.some(v => !v)) return { skip: "Choose a word for every gap first." };
+    const wrong = t.items.map((it, i) => vals[i] !== it.ans() ? i : -1).filter(i => i >= 0);
+    if (!wrong.length) return { ok: true, html: esc("Correct. Depolarisation: Na⁺ diffuses into the axon. Repolarisation: K⁺ diffuses out of the axon.") };
+    return { ok: false, html: `${t.items.length - wrong.length} of ${t.items.length} right. ` + esc(t.items[wrong[0]].why[vals[wrong[0]]]) };
+  }
+  if (t.kind === "num") {
+    const v = num($("numIn").value), a = numAns(t);
+    if (v == null) return { skip: "Type a number first." };
+    if (Math.abs(v - a) <= numTol(t) * (t.id0 === "speed" ? Math.max(1, a) : 1)) return { ok: true, html: esc(numRight(t, a)) };
+    const w = numWrongs(t).find(x => Math.abs(x[0] - v) <= Math.max(numTol(t), Math.abs(x[0]) * 0.02));
+    return { ok: false, html: esc(w ? w[1] : t.id0 === "speed" ? "Speed = distance ÷ time, in metres and seconds." : t.id0 === "read" ? "Read the start and end times on the time axis, then subtract." : `Not that value. The threshold is less negative than the resting potential (${mvT(MV.rest)}), but still below 0 mV.`) };
+  }
+  if (t.kind === "tap") {
+    if (B.tap == null) return { skip: "Tap the curve first." };
+    const f = firstFull(B.run), u = B.tap - f.s, v = TAP[t.variants[t.vi || 0]];
+    if (v.ok(u)) return { ok: true, html: esc(`Correct. At ${nf(B.tap)} ms the membrane is ${v.ask}.`) };
+    const k = stageOfU(u, true);
+    return { ok: false, html: esc(`At ${nf(B.tap)} ms the curve shows ${TAPNAME[k]}.` + (k === "stim" && t.variants[t.vi || 0] === "depol" ? " Go a little later, to the steep rise." : " Look again at the shape of the curve.")) };
+  }
+  if (t.kind === "goal") return goalMet(t, B) ? { ok: true, html: esc(goalRight(t)) } : { ok: false, html: esc(goalWhy(t)) };
+  return { skip: "" };
+}
+function msgStuck() {
+  const t = task;
+  if (["fill", "tap"].includes(t.kind) || t.id === "hard1" || t.id === "hard2") return support.stage ? "" : "Stuck? Turn on <b>Stage guide</b> under Support.";
+  if (t.id0 === "thick" || t.reveal === "race") return support.speed ? "" : "Stuck? Turn on <b>Speed factors</b> under Support.";
+  return "";
+}
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => typeof h === "function" ? h(t) : h);
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + t.options.find(o => choiceOk(t, o)).t.replace(/\.$/, "") + "." + (t.reveal ? " Watch the model." : "");
+  if (t.kind === "fill") return "Answer: in depolarisation, Na⁺ ions move into the axon. In repolarisation, K⁺ ions move out of the axon.";
+  if (t.kind === "num") return "Answer: " + numRight(t, numAns(t)).replace(/^Correct\. /, "");
+  if (t.kind === "tap") { const r = tapRange(t); return `Answer: the shaded part of the trace, from ${f1(r[0])} ms to ${f1(r[1])} ms, where the membrane is ${TAP[t.variants[t.vi || 0]].ask}.`; }
+  if (t.kind === "goal") return "Answer: the model now shows it. " + goalRight(t).replace(/^Correct\. /, "");
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = freshS();
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Pointer and keyboard on the trace: drag the cursor back (Demo), or tap the curve (a tap question) ===== */
+(function traceInput() {
+  const svg = $("trace"); let down = false;
+  const tOf = e => { const m = svg.getScreenCTM(); if (!m || !TR.L) return null; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return clamp(TR.L.tOf(p.x), 0, T_END); };
+  const tapMode = () => task.kind === "tap" && !!B.run;
+  const act = t => {
+    if (t == null) return;
+    if (tapMode()) { if (prog().solved || prog().revealed) return; B.tap = Math.round(t * 100) / 100; B.tapShow = null; tapInfo(); renderScene(); return; }
+    if (!B.lock.all && B.run) scrubTo(t);
+  };
+  svg.addEventListener("pointerdown", e => { if (!B.run || (B.lock.all && !tapMode())) return; down = true; try { svg.setPointerCapture(e.pointerId); } catch (err) {} act(tOf(e)); });
+  svg.addEventListener("pointermove", e => { if (down && !tapMode()) act(tOf(e)); });
+  const up = () => { down = false; }; svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("keydown", e => {
+    if (!B.run || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    if (B.lock.all && !tapMode()) return;
+    e.preventDefault();
+    const cur = tapMode() ? (B.tap == null ? STIM_AT : B.tap) : B.run.t, d = e.shiftKey ? 0.5 : 0.05;
+    act(e.key === "Home" ? 0 : e.key === "End" ? T_END : cur + (e.key === "ArrowRight" ? d : -d));
+  });
+})();
+
+/* ===== Controls ===== */
+$("sceneTabs").addEventListener("click", e => { const b = e.target.closest("button[data-scene]"); if (b) setScene(b.dataset.scene); });
+$("strIn").addEventListener("input", () => { if (B.lock.all) return; B.str = +$("strIn").value; setText("strOut", B.str); tourSignal("strength"); });
+$("stimBtn").addEventListener("click", () => {
+  doStimulate();
+  if (mode === "demo" && B.run && B.run.aps.length === 1) { const a = B.run.aps[0]; if (!a.full) lastSub = a.str; else if (lastSub === a.str - 1 && a.str === STHR) tried(0); }
+});
+$("playBtn").addEventListener("click", doPlay);
+$("stepBtn").addEventListener("click", doStep);
+$("fastBtn").addEventListener("click", () => { if (B.lock.all) return; B.fast = !B.fast; syncCtl(); });
+$("gfBtn").addEventListener("click", () => { if (B.lock.all) return; B.gf = !B.gf; if (B.run) B.run.curve = null; renderAll(); });
+$("raceBtn").addEventListener("click", doRace);
+$("finBtn").addEventListener("click", finishRace);
+$("diSeg").addEventListener("click", e => { const b = e.target.closest("button[data-di]"); if (b) setAx("diam", b.dataset.di); });
+$("teSeg").addEventListener("click", e => { const b = e.target.closest("button[data-te]"); if (b) setAx("temp", b.dataset.te); });
+$("fStrIn").addEventListener("input", () => setFstr(+$("fStrIn").value));
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#memWrap", scene: "mem", text: "A patch of axon membrane: outside above, inside below. Na⁺ ions are circles; K⁺ ions are rounded squares." },
+  { el: "#strRow", scene: "mem", text: "Set the stimulus strength. Below threshold you get a blip; at threshold or above, a full action potential.", do: "strength", doText: "Move the slider." },
+  { el: "#stimBtn", scene: "mem", text: "Stimulate the membrane. Watch the channels open and the trace draw itself.", do: "stim", doText: "Press Stimulate." },
+  { el: "#traceWrap", scene: "mem", text: "The trace plots membrane potential against time. Dashed lines mark resting, threshold and peak. Drag along it to look back." },
+  { el: "#playRow", scene: "mem", text: "Pause, or Step to the next stage. During the refractory period, try Stimulate again.", do: "step", doText: "Press Step ▸." },
+  { el: "#stageBox", scene: "mem", text: "The readouts name the stage and say what the channels are doing." },
+  { el: "#sceneTabs", text: "Now send an impulse along an axon.", do: "scene-axon", doText: "Press Along the axon." },
+  { el: "#raceBtn", scene: "axon", text: "Race an unmyelinated axon against a myelinated one. The myelinated impulse jumps from node to node.", do: "race", doText: "Press Race ▸." },
+  { el: "#axCtl", scene: "axon", text: "Change the diameter or the temperature, then race again." },
+  { el: "#sceneTabs", text: "Last view: stimulus strength and frequency.", do: "scene-freq", doText: "Press Stimulus and frequency." },
+  { el: "#fStrRow", scene: "freq", text: "Turn the stimulus up. Are the impulses bigger, or more frequent?", do: "fstr", doText: "Move the slider." },
+  { el: ".kc", text: "Support switches (Stage guide, Speed factors) start off. When you are ready, test yourself: start with Easy." }
+];
+
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:action-potential", "1"); } catch (e) {}
+  DEMO_B = freshB(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), /^go/.test(name) ? 1800 : 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring ===== */
+const tourGo0 = tourGo;   // tour steps that belong to one view switch to it first (in case a pupil skipped the step that changes view)
+tourGo = function (i) { const s = TOUR[i]; if (s && s.scene && mode === "demo" && B.scene !== s.scene) { B.scene = s.scene; renderAll(); } tourGo0(i); };
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe($("sceneBox"));   // pause while the model is off-screen (the top 64 px sit under the sticky bar)
+}
+/* re-read the colour tokens when the theme changes, then redraw */
+const reTheme = () => { readTokens(); MEM.key = ""; renderScene(); };
+new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", reTheme); }
+let rsT;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (!loopOn) renderScene(); }, 80); });
+
+readTokens();
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:action-potential")) $("newHere").hidden = true; } catch (e) {}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { readTokens(); MEM.key = ""; renderScene(); });
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const cap = paceFrame.cap ? paceFrame.cap() : 30, bud = paceFrame.budget || .4;   // optional per-tool frame cap and busy budget
+  while (P.i < P.fps.length - 1 && P.fps[P.i] > cap) P.i++;
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > bud || P.busy / Math.max(1, P.n) > 40) {   // over budget (40 % of the time by default), or frames over 40 ms: aim a little under it
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * bud * .875 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < bud * .375 && P.i > 0 && P.fps[P.i - 1] <= cap) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+</body>
+</html>
