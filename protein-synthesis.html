@@ -31,18 +31,24 @@
     4 A–U pairs are drawn with 2 hydrogen bonds, like A–T (the notes give A–T 2 and G–C 3).
   What it models (one SVG scene, three views as tabs):
     1 Transcription, in the nucleus (nuclear envelope with a pore on the right). A gene of 12–18 bases (3 presets,
-      or type a coding strand 5′ → 3′ starting ATG, with a stop triplet in frame). Unwind: the hydrogen bonds break and the coding strand lifts
-      away. RNA polymerase moves along the template 3′ → 5′; pupils add each free RNA nucleotide (A, U, C, G, or T,
-      which is refused) opposite the template base; a wrong base is refused with a reason. Hydrogen bonds show as
-      dashes; each new phosphodiester bond flashes; the mRNA grows 5′ → 3′. Auto finishes it. Release: the
-      hydrogen bonds to the template break, the mRNA leaves through the nuclear pore and the DNA re-forms. Readout:
+      or type a coding strand 5′ → 3′ starting ATG, with a stop triplet in frame). "RNA polymerase binds": the enzyme
+      (a rounded body with a wedge at its front) binds at the start of the gene and unwinds the DNA just ahead of
+      itself, breaking the hydrogen bonds. It holds a small transcription bubble and moves along the template 3′ → 5′;
+      pupils add each free RNA nucleotide (A, U, C, G, or T, which is refused) at its marked active site, opposite the
+      template base; a wrong base is refused with a reason. RNA polymerase joins each one with a phosphodiester bond
+      (it flashes), so the mRNA grows 5′ → 3′ out of the enzyme; behind it the last few RNA nucleotides stay paired
+      inside, the rest of the mRNA peels away and the DNA rewinds. A note says some textbooks name DNA helicase as the
+      unwinding enzyme; in cells RNA polymerase does it itself. Auto finishes it. Release: RNA polymerase lets go,
+      the hydrogen bonds to the template break, the DNA re-forms and the mRNA leaves through the nuclear pore. Readout:
       coding strand, template strand and mRNA in triplets, T and U marked, so pupils see mRNA = coding strand
       with U for T.
     2 Translation, in the cytoplasm. The gene's mRNA on a ribosome (small and large subunits), codons boxed in
       triplets. Pupils choose the tRNA whose anticodon is complementary to the codon from 4 (distractors: the
       codon copied letter for letter, a triplet one base along, another codon's anticodon), or press Auto. Two
       tRNAs sit on the ribosome; Form the peptide bond (condensation: H₂O leaves, catalysed by rRNA); Move the
-      ribosome on one codon (the first tRNA leaves); at a stop codon, Release the polypeptide. Readout: codons
+      ribosome on one codon (the first tRNA leaves); at a stop codon, Release the polypeptide. When the bond forms, the
+      ribosome's catalytic site lights up: "rRNA catalyses the peptide bond (condensation)" ("peptidyl transferase
+      activity" only under Going further). Readout: codons
       and the amino acid sequence (primary structure).
     3 Genetic code: the 64-codon mRNA table (tap a codon → amino acid, full name, and all its codons). Properties:
       degenerate (synonyms highlighted), non-overlapping (the gene's mRNA read in triplets, with a "What if it
@@ -51,7 +57,7 @@
       (silent, one amino acid changed, an early stop, or a frameshift).
   Simplifications: schematic shapes (pentagon sugar, phosphate circle, purines as fused rings and pyrimidines as
     single rings with the letter inside, as in DNA Builder; tRNA as a simple folded shape; ribosome as two
-    subunits); genes far shorter than real ones; the whole gene unwinds at once; promoters, the modification of
+    subunits); genes far shorter than real ones; the transcription bubble is a few bases long (real ones are about 10–20); promoters, the modification of
     eukaryotic mRNA before it leaves the nucleus, and tRNA charging are not shown; everything is slowed down.
   Misconceptions designed out: DNA polymerase for RNA polymerase; template and coding strand confused; codon and
     anticodon confused; thymine in RNA; "the ribosome makes the amino acids"; translation in the nucleus; reading
@@ -71,10 +77,15 @@
   Performance: drawn on demand (no animation loop at rest; idle 0 rAF/s). Each step (unwinding, adding a nucleotide,
     releasing the mRNA, a tRNA arriving, the peptide bond, the ribosome moving, the release) redraws the picture once
     with morph(); the moving part is drawn once into a small overlay SVG and only that layer's CSS transform/opacity is
-    tweened (Web Animations, off the main thread), so nothing is re-laid-out or repainted per frame. The one
+    tweened (Web Animations, off the main thread), so nothing is re-laid-out or repainted per frame. When RNA polymerase moves on, the
+    whole old picture sits in a layer on top and fades out over the new one (a compositor cross-fade). The one
     frame-by-frame redraw (the chain regrouping on phone-width layouts) uses paceFrame() (30 fps cap, adaptive
     slow-down). Animations finish at once if the tab is hidden or the picture scrolls off-screen, and Auto waits until
     it is back. No CSS filters, no backdrop-filter. Reduced motion: still steps, no movement.
+  Enzymes added (13 Oct 2026, at Dan's request): RNA polymerase drawn as a molecule that binds, unwinds, joins and
+    rewinds; and the ribosome's rRNA catalytic site. Wide translation keeps the whole mRNA in view (the ribosome moves
+    along it). Removed later on 13 Oct 2026 at Dan's request: the optional
+    Going further enzyme that attached amino acids to tRNAs (pupils do not need it).
   Independent review (13 Oct 2026): anticodons written 3′ → 5′ with ends in Easy 5; typed genes need an in-frame stop;
     Hard 1 template distractor given its true ends; Hard 6 options uniform; stop → stop substitution wording; keyboard
     focus kept when the tRNA choices rebuild. The build sources in out_protein/ predate these edits.
@@ -241,10 +252,13 @@ h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-
 .env{fill:none;stroke:var(--env);stroke-width:2.6;stroke-linecap:round}
 .pol{fill:var(--pol);fill-opacity:.6;stroke:var(--pol-edge);stroke-width:2.2}
 .poll{fill:var(--pol-edge);font-weight:700}
+.site{fill:none;stroke:var(--hlite);stroke-width:3}
+.seqrow .v.pv{font-size:15px;letter-spacing:0;font-weight:400}
 .ribo{fill:var(--ribo);fill-opacity:.62;stroke:var(--ribo-edge);stroke-width:2.2}
 .ribl{fill:var(--ribo-edge);font-weight:700}
 .trna{fill:var(--trna);stroke:var(--trna-edge);stroke-width:2.2;stroke-linejoin:round}
 .trl{fill:var(--trna-edge);font-weight:700}
+.cat{fill:var(--hlite);fill-opacity:.22;stroke:var(--hlite);stroke-width:3;stroke-dasharray:7 4}
 .codon{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4}
 .codon.in{stroke:var(--accent);stroke-width:2.4;stroke-dasharray:none}
 .codon.stop{stroke:var(--bad);stroke-width:2.4;stroke-dasharray:none}
@@ -488,7 +502,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <label class="clbl vh" for="geneIn">Coding strand, 5′ → 3′</label>
           <input id="geneIn" type="text" maxlength="18" autocomplete="off" spellcheck="false" aria-describedby="geneHelp"><button type="button" class="segb" id="geneSet">Use it</button>
           <span class="small2" id="geneHelp">Or type a coding strand, 5′ → 3′: 12 to 18 letters (A, T, C, G), starting ATG, with a stop triplet (TAA, TAG or TGA) in frame.</span></div>
-        <div class="ctlrow" id="tcRow"><button type="button" class="btn primary" id="unwindBtn">Unwind</button><button type="button" class="btn demo-only" id="tcAuto">Auto</button><button type="button" class="btn" id="releaseBtn">Release the mRNA</button><button type="button" class="btn" id="toTl">Go to translation →</button></div>
+        <div class="ctlrow" id="tcRow"><button type="button" class="btn primary" id="unwindBtn">RNA polymerase binds</button><button type="button" class="btn demo-only" id="tcAuto">Auto</button><button type="button" class="btn" id="releaseBtn">Release the mRNA</button><button type="button" class="btn" id="toTl">Go to translation →</button></div>
       </div>
       <!-- View 2: translation (controls above the picture) -->
       <div class="ctl" id="ctlTl0" hidden>
@@ -535,7 +549,9 @@ main.layout{min-height:calc(100vh - 70px)}
           <div class="seg" role="group" aria-labelledby="addL" id="addSeg"><button type="button" data-ab="A" aria-label="RNA nucleotide with adenine, A">A</button><button type="button" data-ab="U" aria-label="RNA nucleotide with uracil, U">U</button><button type="button" data-ab="C" aria-label="RNA nucleotide with cytosine, C">C</button><button type="button" data-ab="G" aria-label="RNA nucleotide with guanine, G">G</button><button type="button" data-ab="T" aria-label="Nucleotide with thymine, T">T</button></div></div>
         <div class="ctlrow" id="panRow"><span class="clbl" id="panL">Move along the gene:</span><button type="button" class="segb" id="panL0" aria-label="Move towards the start of the gene">◀</button><button type="button" class="segb" id="panR0" aria-label="Move towards the end of the gene">▶</button><button type="button" class="segb" id="tcRestart">Start again</button></div>
         <p class="mnote" id="tcNote" aria-live="polite"></p>
+        <p class="small2" id="heliNote">Some textbooks say DNA helicase unwinds the DNA here. In cells RNA polymerase does it itself.</p>
         <div class="seqbox" id="tcRead">
+          <p class="seqrow"><span class="k">RNA polymerase</span><span class="v pv" id="sqPol"></span></p>
           <p class="seqrow"><span class="k">Coding strand (5′ → 3′)</span><span class="v" id="sqC"></span></p>
           <p class="seqrow"><span class="k">Template strand (3′ → 5′)</span><span class="v" id="sqT"></span></p>
           <p class="seqrow" id="sqMrow"><span class="k">mRNA (5′ → 3′)</span><span class="v" id="sqM"></span></p>
@@ -564,7 +580,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <p>Codon (mRNA) and anticodon (tRNA) pair the same way, antiparallel: 5′–AUG–3′ pairs with 3′–UAC–5′.</p>
       </div>
 
-      <p class="limits" id="limits"><b>Model limits:</b> Real genes are far longer. In eukaryotes the mRNA is modified before it leaves the nucleus; that is not shown here. Shapes are schematic, not true sizes or bond angles, and everything is slowed down.</p>
+      <p class="limits" id="limits"><b>Model limits:</b> Real genes are far longer. Only the main enzymes are shown, as schematic shapes; the real transcription bubble is longer. In eukaryotes the mRNA is modified before it leaves the nucleus; that is not shown here. Shapes are schematic, not true sizes or bond angles, and everything is slowed down.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -732,10 +748,12 @@ const DW = PUR.far + HG + PYR.far;                       // backbone to backbone
 const bFar = (b, o) => ringOf(b) === "purine" ? PUR.far : PYR.far - Math.abs(o) * Math.tan(rad(30));
 const FS = { base: 19, end: 18, lab: 17, cap: 16, sm: 15, aa: 15 };
 const GEO = {
-  tc: { wide: { W: 800, H: 420, X0: 52, Wn: 14, yCup: 50, yM: 172 }, narrow: { W: 370, H: 420, X0: 50, Wn: 5, yCup: 50, yM: 172 } },
-  tl: { wide: { W: 800, H: 430, X0: 64, xL: 322, yM: 116, row: false }, narrow: { W: 370, H: 504, X0: 40, xL: 113, yM: 116, row: true, rowY: 452 } } };
+  /* transcription rows: yE the mRNA leaving RNA polymerase, yCup the coding strand lifted in the bubble, yM the coding strand
+     (or the mRNA–template hybrid inside the enzyme), yT the template strand */
+  tc: { wide: { W: 800, H: 486, X0: 52, Wn: 14, yE: 44, yCup: 136, yM: 250 }, narrow: { W: 370, H: 486, X0: 50, Wn: 5, yE: 44, yCup: 136, yM: 250 } },
+  tl: { wide: { W: 800, H: 470, X0: 64, xL: 322, yM: 116, row: false }, narrow: { W: 370, H: 524, X0: 40, xL: 113, yM: 116, row: true, rowY: 476 } } };
 for (const k of ["wide", "narrow"]) {
-  const t = GEO.tc[k]; t.yT = t.yM + DW; t.envX = t.X0 + (t.Wn - 1) * PT + 64; t.gy0 = t.yM - 40; t.gy1 = t.yM + 92;
+  const t = GEO.tc[k]; t.yT = t.yM + DW; t.envX = t.X0 + (t.Wn - 1) * PT + 64; t.gy0 = t.yE - 36; t.gy1 = t.yE + 96;
   const l = GEO.tl[k]; l.yA = l.yM + DW; l.xR = l.xL + 3 * PT; l.bY = l.yA + 114; l.rc = (l.xL + l.xR) / 2; }
 const wideNow = () => boxW($("sceneWrap")) >= 600;
 const RIBO_HALF = L => L.row ? 176 : 168;
@@ -743,10 +761,13 @@ const RIBO_HALF = L => L.row ? 176 : 168;
 function lay() {
   const k = wideNow() ? "wide" : "narrow";
   if (B.scene !== "tl") return GEO.tc[k];
-  const g = GEO.tl[k]; if (g.row) return g;
-  const n = B.gene.length, nc = Math.floor(n / 3), cx = c => g.X0 + (3 * c + 1) * PT;
-  const W = Math.ceil(Math.max(800, cx(Math.max(0, nc - 2)) + 1.5 * PT + RIBO_HALF(g) + 12, g.X0 + (n - 1) * PT + 46));
-  return W === g.W ? g : Object.assign({}, g, { W });
+  let g = GEO.tl[k];
+  if (!g.row) {
+    const n = B.gene.length, nc = Math.floor(n / 3), cx = c => g.X0 + (3 * c + 1) * PT;
+    const W = Math.ceil(Math.max(800, cx(Math.max(0, nc - 2)) + 1.5 * PT + RIBO_HALF(g) + 12, g.X0 + (n - 1) * PT + 46));
+    if (W !== g.W) g = Object.assign({}, g, { W });
+  }
+  return g;
 }
 
 const f1 = v => (Math.round(v * 10) / 10).toString();
@@ -764,22 +785,22 @@ function baseSVG(b, X, Y, s) {
 const nucSVG = (X, Y, s, b) => `<path class="bd" d="M${f1(X)} ${f1(Y + s * SR)}L${f1(X)} ${f1(Y + s * BA)}"/>` + baseSVG(b, X, Y, s) + `<path class="sug" d="M${sugarPts(X, Y, s).map(P2).join("L")}Z"/>`;
 /* a strand: o = { seq (letters; "" = not there yet), X0, y, s (+1 bases point down, −1 up), ps (−1: 5′ end on the left, +1: on the right), m (mRNA backbone), fresh } */
 function strandSVG(o) {
-  const n = o.seq.length, X = i => o.X0 + i * PT, pp = i => [X(i) + o.ps * PT / 2, o.y - o.s * PO], has = i => i >= 0 && i < n && !!o.seq[i];
+  const n = o.seq.length, X = i => o.X0 + i * PT, Y = i => o.ys ? o.ys[i] : o.y, pp = i => [X(i) + o.ps * PT / 2, Y(i) - o.s * PO], has = i => i >= 0 && i < n && !!o.seq[i];
   let links = "", fresh = "", parts = "", phos = "";
   for (let i = 0; i < n; i++) {
     if (!has(i)) continue;
-    const sc = [X(i), o.y], p = pp(i);
+    const sc = [X(i), Y(i)], p = pp(i);
     links += `M${P2(edgePt(p, sc, SR))}L${P2(edgePt(sc, p, PR))}`;
     const j = i + o.ps;
-    if (has(j)) { const seg = `M${P2(edgePt([X(j), o.y], p, PR))}L${P2(edgePt(p, [X(j), o.y], SR))}`; if (o.fresh === (o.ps < 0 ? i : j)) fresh += seg; else links += seg; }
-    parts += nucSVG(X(i), o.y, o.s, o.seq[i]); phos += houseC(p[0], p[1], PR, "pho");
+    if (has(j)) { const sj = [X(j), Y(j)], seg = `M${P2(edgePt(sj, p, PR))}L${P2(edgePt(p, sj, SR))}`; if (o.fresh === (o.ps < 0 ? i : j)) fresh += seg; else links += seg; }
+    parts += nucSVG(X(i), Y(i), o.s, o.seq[i]); phos += houseC(p[0], p[1], PR, "pho");
   }
   const idx = [...Array(n).keys()].filter(has), a = idx[0], z = idx[idx.length - 1];
   let ends = "";
   if (idx.length && !o.noEnds) {
     const cls = "endl halo" + (o.halo2 ? "2" : "");
-    if (o.ps < 0) ends = T_(X(a) - PT / 2 - 19, o.y - o.s * PO, cls, FS.end, "5′") + (o.end3Up ? T_(X(z) + 14, o.y - o.s * 26, cls, FS.end, "3′") : T_(X(z) + 23, o.y, cls, FS.end, "3′"));
-    else ends = T_(X(a) - 23, o.y, cls, FS.end, "3′") + T_(X(z) + PT / 2 + 19, o.y - o.s * PO, cls, FS.end, "5′");
+    if (o.ps < 0) ends = T_(X(a) - PT / 2 - 19, Y(a) - o.s * PO, cls, FS.end, "5′") + (o.end3Up ? T_(X(z) + 14, Y(z) - o.s * 26, cls, FS.end, "3′") : T_(X(z) + 23, Y(z), cls, FS.end, "3′"));
+    else ends = T_(X(a) - 23, Y(a), cls, FS.end, "3′") + T_(X(z) + PT / 2 + 19, Y(z) - o.s * PO, cls, FS.end, "5′");
   }
   return `<path class="bd${o.m ? " m" : ""}" d="${links}"/>` + (fresh ? `<path class="bd fresh" d="${fresh}"/>` : "") + parts + phos + ends;
 }
@@ -791,32 +812,51 @@ function waterSVG(x, y, id, op, side) {
   return `<g${id ? ` id="${id}"` : ""} transform="translate(${f1(x)} ${f1(y)})" opacity="${op == null ? 1 : op}">${houseC(-7, 4, 6, "wh")}${houseC(7, 4, 6, "wh")}${houseC(0, -2, 10, "wo")}${side ? TA(16, 2, "sm halo", FS.sm, "H₂O", "start") : T_(0, -24, "sm halo", FS.sm, "H₂O")}</g>`;
 }
 
-/* ===== Transcription view (nucleus) ===== */
+/* ===== Transcription view (nucleus) =====
+   RNA polymerase sits on the gene with its active site at template base m (the next one to copy). It holds a short
+   transcription bubble: the DNA is unwound from HY bases behind the active site to one base ahead of it. Inside the
+   enzyme the newest HY RNA nucleotides stay paired with the template; behind it the mRNA leaves (row yE) and the DNA
+   rewinds. */
+const hyOf = L => L.Wn < 8 ? 2 : 3;   // RNA nucleotides still paired inside the enzyme: 3 (2 on a phone, so the rewound DNA behind stays in view)
 const tcN = () => B.gene.length;
 const camMax = L => Math.max(0, tcN() - L.Wn);
 function tcFollow(L, m) { return Math.max(0, Math.min(camMax(L), m - (L.Wn - 2))); }
 const tcCam = L => B.tc.cam == null ? tcFollow(L, B.tc.m) : Math.max(0, Math.min(camMax(L), B.tc.cam));
-const polX = (L, m) => L.X0 + Math.min(m, tcN() - 1) * PT;
 /* the parts of the transcription picture: gene parts move with the camera, label parts stay at the left edge */
-const TC_CAM = ["pol", "tmpl", "hbD", "cod", "hbM", "mrna", "ghost", "fly"], TC_SCR = ["codL", "mL"];
-function tcOpts() { const T = B.tc, open = T.stage === "open"; return { up: open, pol: open ? T.m : null, m: open ? T.m : null, ghost: open, fresh: T.fresh, hbD: !open }; }
+const TC_CAM = ["pol", "tmpl", "hbD", "cod", "hbM", "mrna", "ghost", "fly", "site"], TC_SCR = ["codL", "mL"];
+/* o: { bound (RNA polymerase on the gene), m (RNA nucleotides made), showM (draw the mRNA), ghost, fresh, fly, ci (camera index) } */
+function tcOpts(T) { T = T || B.tc; const b = T.stage === "open"; return { bound: b, m: b ? T.m : 0, showM: b, ghost: b, fresh: T.fresh }; }
+const tcLift = (o, i) => o.bound && i >= o.m - o.hy && i <= o.m + 1;                        // coding strand lifted (bubble)
+const tcInPol = (o, i) => o.bound && i >= o.m - o.hy;                                        // RNA nucleotide still paired inside the enzyme
+function polSVG(L, o, camPx) {   // RNA polymerase: a rounded body over the bubble with a wedge at its front that prises the DNA apart
+  const n = tcN(), X = i => L.X0 + i * PT, a = Math.max(0, o.m - o.hy), b = Math.min(o.m + 1, n - 1);
+  const x0 = X(a) - PT / 2 - 14, x1 = X(b) + PT / 2 + 6, y0 = L.yCup - 30, y1 = L.yT + 26, ty = L.yM + PUR.far + HG / 2, r = 58;
+  const front = o.m < n ? `V${f1(ty - 40)}L${f1(x1 + 30)} ${f1(ty)}L${f1(x1)} ${f1(ty + 40)}` : "";
+  const d = `M${f1(x0 + r)} ${f1(y0)}H${f1(x1 - r)}Q${f1(x1)} ${f1(y0)} ${f1(x1)} ${f1(y0 + r)}${front}V${f1(y1 - r)}Q${f1(x1)} ${f1(y1)} ${f1(x1 - r)} ${f1(y1)}H${f1(x0 + r)}Q${f1(x0)} ${f1(y1)} ${f1(x0)} ${f1(y1 - r)}V${f1(y0 + r)}Q${f1(x0)} ${f1(y0)} ${f1(x0 + r)} ${f1(y0)}Z`;
+  const px = (x0 + x1) / 2, cp = camPx || 0;
+  return `<path class="pol" d="${d}"/>` + T_(Math.min(Math.max(px, cp + 88), cp + L.X0 + (L.Wn - 1) * PT - 46), L.yT + 66, "poll halo2", FS.cap, "RNA polymerase →");
+}
 function tcParts(L, o) {
-  const g = B.gene, n = g.length, tm = dnaComp(g), mr = toRNA(g), P = {}, yC = o.up ? L.yCup : L.yM;
-  if (o.pol != null) { const px = polX(L, o.pol), cp = o.camPx != null ? o.camPx : tcCam(L) * PT; P.pol = `<rect class="pol" x="${f1(px - 58)}" y="${f1(L.yM - 32)}" width="116" height="${f1(DW + 60)}" rx="44"/>` + T_(Math.min(Math.max(px, cp + 88), cp + L.X0 + (L.Wn - 1) * PT - 46), L.yT + 66, "poll halo2", FS.cap, "RNA polymerase →"); }
+  o = Object.assign({ hy: hyOf(L) }, o);
+  const g = B.gene, n = g.length, tm = dnaComp(g), mr = toRNA(g), P = {}, X = i => L.X0 + i * PT, ci = o.ci || 0;
+  const yC = i => tcLift(o, i) ? L.yCup : L.yM, yR = i => tcInPol(o, i) ? L.yM : L.yE;
+  if (o.bound) P.pol = polSVG(L, o, ci * PT);
   P.tmpl = strandSVG({ seq: tm, X0: L.X0, y: L.yT, s: -1, ps: 1, halo2: 1 });
-  P.hbD = ""; for (let i = 0; i < n; i++) P.hbD += hbSVG(g[i], tm[i], L.X0 + i * PT, L.yM);
-  P.cod = strandSVG({ seq: g, X0: L.X0, y: yC, s: 1, ps: -1, halo2: 1 });
-  P.codL = TA(8, yC - 30, "strl halo2", FS.lab, "Coding strand", "start");
-  if (o.m != null) {
+  P.hbD = ""; for (let i = 0; i < n; i++) if (!tcLift(o, i)) P.hbD += hbSVG(g[i], tm[i], X(i), L.yM);   // DNA paired outside the bubble
+  P.cod = strandSVG({ seq: g, ys: [...g].map((_, i) => yC(i)), X0: L.X0, s: 1, ps: -1, halo2: 1 });
+  P.codL = TA(8, yC(Math.min(ci, n - 1)) - 30, "strl halo2", FS.lab, "Coding strand", "start");
+  if (o.showM) {
     const m = o.m, fl = o.fly ? m - 1 : -1, ms = [...mr].map((b, i) => i < m && i !== fl ? b : "");
-    P.hbM = ""; for (let i = 0; i < m; i++) if (i !== fl) P.hbM += hbSVG(mr[i], tm[i], L.X0 + i * PT, L.yM);
-    P.mrna = strandSVG({ seq: ms, X0: L.X0, y: L.yM, s: 1, ps: -1, m: 1, fresh: o.fly ? -1 : o.fresh, noEnds: m - (fl >= 0 ? 1 : 0) <= 0, end3Up: m < n, halo2: 1 });
-    if (o.ghost && m < n) { const X = L.X0 + m * PT; P.ghost = `<path class="ghost" d="M${sugarPts(X, L.yM, 1).map(P2).join("L")}Z"/><circle class="ghost" cx="${f1(X - PT / 2)}" cy="${f1(L.yM - PO)}" r="${PR}"/>`; }
-    if (fl >= 0) {   // the newest nucleotide, drawn on its own so it can fly in
-      const X = L.X0 + fl * PT, pc = [X - PT / 2, L.yM - PO], sc = [X, L.yM], pv = [X - PT, L.yM];
-      P.fly = `<path class="bd m" d="M${P2(edgePt(pc, sc, SR))}L${P2(edgePt(sc, pc, PR))}"/>` + (fl > 0 ? `<path class="bd fresh" d="M${P2(edgePt(pv, pc, PR))}L${P2(edgePt(pc, pv, SR))}"/>` : "") + nucSVG(X, L.yM, 1, mr[fl]) + houseC(pc[0], pc[1], PR, "pho") + hbSVG(mr[fl], tm[fl], X, L.yM);
+    P.hbM = ""; for (let i = 0; i < m; i++) if (i !== fl && tcInPol(o, i)) P.hbM += hbSVG(mr[i], tm[i], X(i), L.yM);
+    P.mrna = strandSVG({ seq: ms, ys: [...mr].map((_, i) => yR(i)), X0: L.X0, s: 1, ps: -1, m: 1, fresh: o.fly ? -1 : o.fresh, noEnds: m - (fl >= 0 ? 1 : 0) <= 0, end3Up: o.bound, halo2: 1 });
+    if (o.ghost && m < n) { const x = X(m); P.ghost = `<path class="ghost" d="M${sugarPts(x, L.yM, 1).map(P2).join("L")}Z"/><circle class="ghost" cx="${f1(x - PT / 2)}" cy="${f1(L.yM - PO)}" r="${PR}"/>`;
+      P.site = `<circle class="site" cx="${f1(x - PT / 2)}" cy="${f1(L.yM - PO)}" r="15"/>` + TA(x - 8, L.yM - 27, "poll halo2", 13, "active site", "start"); }
+    if (fl >= 0) {   // the newest nucleotide, drawn on its own so it can fly in to the active site
+      const x = X(fl), pc = [x - PT / 2, L.yM - PO], sc = [x, L.yM], pv = [x - PT, yR(fl - 1)];
+      P.fly = `<path class="bd m" d="M${P2(edgePt(pc, sc, SR))}L${P2(edgePt(sc, pc, PR))}"/>` + (fl > 0 ? `<path class="bd fresh" d="M${P2(edgePt(pv, pc, PR))}L${P2(edgePt(pc, pv, SR))}"/>` : "") + nucSVG(x, L.yM, 1, mr[fl]) + houseC(pc[0], pc[1], PR, "pho") + hbSVG(mr[fl], tm[fl], x, L.yM);
     }
-    if (m > 0) P.mL = TA(8, L.yM - 30, "strl halo2", FS.lab, "mRNA", "start");
+    const mi = Math.min(ci, m - 1);
+    if (m > 0) P.mL = TA(8, yR(Math.max(0, mi)) - 30, "strl halo2", FS.lab, "mRNA", "start");
   }
   return P;
 }
@@ -824,25 +864,26 @@ const tcWin = (L, camPx) => [camPx > 0 ? L.X0 - 30 : 0, L.X0 + (L.Wn - 1) * PT +
 function tcBg(L) {
   const gx = L.envX, H = L.H;
   return `<rect class="nucbg" x="0" y="0" width="${gx}" height="${H}"/><path class="env" d="M${gx} 0V${L.gy0}H${gx + 8}V0M${gx} ${H}V${L.gy1}H${gx + 8}V${H}"/>`
-    + TR(gx - 13, L.gy0 - 46, "capt halo2", FS.sm, "Nuclear pore") + TR(gx + 8 + (L.W - gx - 8) / 2, L.yT + 10, "capt", FS.cap, "Cytoplasm")
+    + TR(gx - 13, L.gy1 + 58, "capt halo2", FS.sm, "Nuclear pore") + TR(gx + 8 + (L.W - gx - 8) / 2, L.yT + 10, "capt", FS.cap, "Cytoplasm")
     + TA(gx - 14, H - 14, "capt halo2", FS.cap, "Nucleus", "end") + TA(8, L.yT + 40, "strl halo2", FS.lab, "Template strand", "start");
 }
-const pick = (P, keys, o) => keys.filter(k => P[k] && (k !== "hbD" || !o || o.hbD)).map(k => P[k]).join("");
-function drawTc(L, A) {   // A: { o (what to draw), cam (index), omit: parts drawn in an animation layer instead }
+const pick = (P, keys) => keys.filter(k => P[k]).map(k => P[k]).join("");
+function drawTc(L, A) {   // A: { o (what to draw), cam (index), omit: parts drawn in an animation layer instead, cid: clip id }
   A = A || {};
-  const T = B.tc, o = A.o || tcOpts(), cam = (A.cam != null ? A.cam : tcCam(L)) * PT, P = tcParts(L, o), om = A.omit || {};
+  const T = B.tc, ci = A.cam != null ? A.cam : tcCam(L), o = Object.assign({}, A.o || tcOpts(), { ci }), cam = ci * PT, P = tcParts(L, o), om = A.omit || {}, cid = A.cid || "nclip";
   const [cx0, cx1] = tcWin(L, cam), keep = k => !om[k];
-  let s = `<defs><clipPath id="nclip"><rect x="${cx0}" y="0" width="${cx1 - cx0}" height="${L.H}"/></clipPath></defs>` + tcBg(L);
-  s += `<g clip-path="url(#nclip)"><g transform="translate(${f1(-cam)} 0)">${pick(P, TC_CAM.filter(keep), o)}</g></g>` + pick(P, TC_SCR.filter(keep));
-  if (T.stage === "gone") s += T_(L.envX / 2, L.yM - 52, "capt halo2", FS.cap, "The mRNA has left through the nuclear pore →");
-  if (B.hl === "dir" && T.stage === "open") {   // direction arrows (a question's answer)
+  let s = `<defs><clipPath id="${cid}"><rect x="${cx0}" y="0" width="${cx1 - cx0}" height="${L.H}"/></clipPath></defs>` + tcBg(L);
+  s += `<g clip-path="url(#${cid})"><g transform="translate(${f1(-cam)} 0)">${pick(P, TC_CAM.filter(keep))}</g></g>` + pick(P, TC_SCR.filter(keep));
+  if (T.stage === "gone" && !A.o) s += L.Wn < 8 ? T_(L.envX / 2, L.yCup - 12, "capt halo2", FS.cap, "The mRNA has left through") + T_(L.envX / 2, L.yCup + 10, "capt halo2", FS.cap, "the nuclear pore →")
+                                         : T_(L.envX / 2, L.yCup, "capt halo2", FS.cap, "The mRNA has left through the nuclear pore →");
+  if (B.hl === "dir" && o.bound) {   // direction arrows (a question's answer)
     const arrow = (x0, x1, y, t) => `<path class="dir" d="M${x0} ${f1(y)}H${x1}M${x1 - 10} ${f1(y - 7)}L${x1} ${f1(y)}L${x1 - 10} ${f1(y + 7)}"/>` + TA(x1 + 8, y, "dirt halo2", FS.sm, t, "start");
     const w = L.envX > 500, x1 = w ? 400 : 200;
-    s += arrow(w ? 180 : 150, x1, L.yT + 28, "3′ → 5′") + arrow(80, x1, L.yM - 34, "grows 5′ → 3′");
+    s += arrow(w ? 180 : 150, x1, L.yT + 30, "3′ → 5′") + arrow(w ? 80 : 60, x1, L.yE - 26, "grows 5′ → 3′");
   }
   return s;
 }
-function tcFx(L, o, keys, camIdx) { const P = tcParts(L, o); return `<g transform="translate(${f1(-camIdx * PT)} 0)">${pick(P, TC_CAM.filter(k => keys.includes(k)))}</g>` + pick(P, TC_SCR.filter(k => keys.includes(k))); }
+function tcFx(L, o, keys, camIdx) { const P = tcParts(L, Object.assign({}, o, { ci: camIdx })); return `<g transform="translate(${f1(-camIdx * PT)} 0)">${pick(P, TC_CAM.filter(k => keys.includes(k)))}</g>` + pick(P, TC_SCR.filter(k => keys.includes(k))); }
 
 /* ===== Translation view (cytoplasm, ribosome) ===== */
 const tlM = () => toRNA(B.gene);
@@ -902,8 +943,13 @@ function tlParts(L, T, cam, A) {
   P.mrna = g + strandSVG({ seq: m, X0: L.X0, y: L.yM, s: 1, ps: -1, m: 1 });
   if (T.L) P.trL = trnaSVG(L, T.pos, null, "", null, false, A.noHB);
   if (T.R) P.trR = trnaSVG(L, T.pos + 1, null, "", null, !T.bond, A.noHB);
-  P.riboS = `<ellipse class="ribo" cx="${rc}" cy="56" rx="${half - 6}" ry="40"/>` + T_(rc, 46, "ribl", FS.lab, "Ribosome (rRNA)") + (T.done ? "" : T_(xL, 78, "ribl", 14, "codon") + T_(xR, 78, "ribl", 14, "codon"));
-  if (B.sites) P.sites = T_(xL, L.bY + 50, "ribl halo", FS.sm, "P site") + T_(xR, L.bY + 50, "ribl halo", FS.sm, "A site");
+  if (T.bond && T.freshK >= 0 && !T.done) {   // the ribosome's catalytic site (rRNA) where the peptide bond has just formed
+    P.riboL += `<ellipse class="cat" cx="${f1(rc)}" cy="${f1(L.bY)}" rx="98" ry="34"/>`;
+    const cx = L.row ? L.W / 2 : Math.max(206, Math.min(L.W - 206, rc)), gf = "Going further: peptidyl transferase activity";
+    P.catL = L.row ? T_(cx, L.bY + 44, "ribl halo", 14, "rRNA catalyses the peptide bond") + T_(cx, L.bY + 61, "ribl halo", 14, "(condensation)") + (B.sites ? T_(cx, L.bY + 78, "ribl halo", 13, gf) : "")
+                   : T_(cx, L.bY + 50, "ribl halo", FS.sm, "rRNA catalyses the peptide bond (condensation)") + (B.sites ? T_(cx, L.bY + 68, "ribl halo", 14, gf) : "");
+  }
+  P.riboS = `<ellipse class="ribo" cx="${rc}" cy="56" rx="${half - 6}" ry="40"/>` + T_(rc, 46, "ribl", FS.lab, "Ribosome (rRNA)") + (T.done ? "" : T_(xL, 78, "ribl", 14, B.sites ? "P site" : "codon") + T_(xR, 78, "ribl", 14, B.sites ? "A site" : "codon"));
   const pos = A.chainPos || (T.done ? finalPos(L, T.chain.length) : chainPos(L, T, cam));
   const lab = T.done && !A.chainPos && pos.length ? TA(pos[0][0] - 22, pos[0][1] - 40, "strl halo", FS.lab, "Polypeptide released", "start") : "";
   P.chain = chainSVG(pos, T.chain, T.done || A.chainPos ? -1 : T.freshK, lab);
@@ -912,13 +958,13 @@ function tlParts(L, T, cam, A) {
 function drawTl(L, A) {
   A = A || {};
   const T = A.T || B.tl, cam = A.cam != null ? A.cam : tlCam(L, T.pos), P = tlParts(L, T, cam, A), om = A.omit || {}, k = x => P[x] && !om[x] ? P[x] : "";
-  return k("cyto") + k("riboL") + `<g transform="translate(${f1(-cam)} 0)">${TL_CAM.map(k).join("")}</g>` + k("riboS") + k("sites") + k("chain");
+  return k("cyto") + k("riboL") + `<g transform="translate(${f1(-cam)} 0)">${TL_CAM.map(k).join("")}</g>` + k("riboS") + k("chain") + k("catL");
 }
 function tlFx(L, T, keys, cam, A) { const P = tlParts(L, T, cam, A); return `<g transform="translate(${f1(-cam)} 0)">${TL_CAM.filter(x => keys.includes(x)).map(x => P[x] || "").join("")}</g>` + keys.filter(x => !TL_CAM.includes(x)).map(x => P[x] || "").join(""); }
 
 /* ===== Scene ===== */
 function renderScene(A) {
-  fxClear();   // any animation layer left showing a finished move
+  if (!(A && A.keepFx)) fxClear();   // any animation layer left showing a finished move
   if (B.scene === "code") return;
   const L = lay(), svg = $("scene");
   setAttr(svg, "viewBox", `0 0 ${L.W} ${L.H}`);
@@ -927,7 +973,7 @@ function renderScene(A) {
 }
 function sceneLabel() {
   const g = B.gene;
-  if (B.scene === "tc") { const T = B.tc; return `Transcription in the nucleus. Coding strand ${seqW(g, 5, 3)}, template strand ${seqW(dnaComp(g), 3, 5)}. ` + (T.stage === "wound" ? "The DNA is wound." : T.stage === "gone" ? "The mRNA has left through the nuclear pore." : `mRNA so far: ${seqW(toRNA(g).slice(0, T.m) || "none", 5, 3)}.`); }
+  if (B.scene === "tc") { const T = B.tc; return `Transcription in the nucleus. Coding strand ${seqW(g, 5, 3)}, template strand ${seqW(dnaComp(g), 3, 5)}. ` + (T.stage === "wound" ? "The DNA is wound; RNA polymerase has not bound." : T.stage === "gone" ? "RNA polymerase has let go, the DNA has re-formed and the mRNA has left through the nuclear pore." : `RNA polymerase is on the gene with its active site at template base ${Math.min(T.m + 1, g.length)}; the DNA is unwound around it. mRNA so far: ${seqW(toRNA(g).slice(0, T.m) || "none", 5, 3)}.`); }
   const T = B.tl, c = tlCodons();
   return `Translation at a ribosome. mRNA codons ${c.join(" ")}. ` + (T.done ? `Polypeptide released: ${pep(T.chain)}.` : `Ribosome on codons ${T.pos + 1} and ${T.pos + 2}. Chain so far: ${T.chain.length ? pep(T.chain) : "none"}.`);
 }
@@ -957,8 +1003,8 @@ const TASKS = {
       explain: () => "RNA polymerase joins the RNA nucleotides with phosphodiester bonds. DNA polymerase is the enzyme for DNA replication.",
       hints: ["The product is RNA, not DNA.", "The enzyme is named after the molecule it builds, plus ‘polymerase’.", "RNA polymerase."] },
     { kind: "goal", id0: "tcAll", setup: { scene: "tc", gene: PRESETS[0].gene, lock: { tabs: 1, gene: 1 } },             // pp 25–26
-      text: "Transcribe this gene. Unwind the DNA, then add every RNA nucleotide to the mRNA. Then press Check.",
-      hints: ["Press Unwind. Then look at the template base under RNA polymerase.", "Opposite each template base: A → U, T → A, C → G, G → C.", () => `The mRNA is ${spaced(toRNA(PRESETS[0].gene))}.`] },
+      text: "Transcribe this gene. Let RNA polymerase bind, then add every RNA nucleotide to the mRNA. Then press Check.",
+      hints: ["Press RNA polymerase binds. Then look at the template base at its active site.", "Opposite each template base: A → U, T → A, C → G, G → C.", () => `The mRNA is ${spaced(toRNA(PRESETS[0].gene))}.`] },
     { kind: "choice", setup: { scene: "tc", gene: PRESETS[0].gene, lock: { all: 1 } }, variants: ["CAG", "GAC", "TAC"],   // p 23 examples, as template triplets
       text: t => `A triplet on the DNA template strand reads ${seqW(V(t), 3, 5)}. Which mRNA codon is made from it?`,
       opts: t => { const v = V(t), r = rnaOpp(v);
@@ -1108,7 +1154,7 @@ function goalRight(t) {
   return `Correct. The ribosome read the codons in triplets and the polypeptide ${pep(B.tl.chain)} was released at the stop codon.`;
 }
 function goalWhy(t) {
-  if (t.id0 === "tcAll") { const T = B.tc, n = tcN(); if (T.stage === "wound") return "Press Unwind first: the hydrogen bonds between the DNA strands must break."; return `${n - T.m} template base${n - T.m === 1 ? " still has" : "s still have"} no RNA nucleotide opposite. Keep going.`; }
+  if (t.id0 === "tcAll") { const T = B.tc, n = tcN(); if (T.stage === "wound") return "Press RNA polymerase binds first: it unwinds the DNA, breaking the hydrogen bonds between the strands."; return `${n - T.m} template base${n - T.m === 1 ? " still has" : "s still have"} no RNA nucleotide opposite. Keep going.`; }
   const T = B.tl;
   if (!T.L) return "Start by choosing the tRNA for the first codon, AUG.";
   return `So far: ${pep(T.chain)}. Keep going to the stop codon, then release the polypeptide.`;
@@ -1247,7 +1293,8 @@ function renderReadouts() {
   const g = B.gene, n = g.length, T = B.tc, mr = toRNA(g);
   setHTML("sqC", markTU(g)); setHTML("sqT", trip(dnaComp(g)).join(" "));
   const ms = T.stage === "gone" ? mr : [...mr].map((b, i) => i < T.m ? b : "·").join("");
-  setHTML("sqM", T.stage === "wound" ? "none yet: unwind the DNA first" : markTU(ms));
+  setHTML("sqM", T.stage === "wound" ? "none yet: RNA polymerase has not bound" : markTU(ms));
+  setText("sqPol", T.stage === "wound" ? "not bound yet" : T.stage === "gone" ? "has let go of the gene" : T.m < n ? `active site at template base ${T.m + 1} of ${n}, moving 3′ → 5′` : "at the end of the gene");
   setText("sqCmp", T.m === n && T.stage !== "wound" ? "Same sequence as the coding strand, with U in place of T." : "");
   $("sqMrow").hidden = !!B.hide.mrna; $("sqCmp").hidden = !!B.hide.mrna; $("tcHidden").hidden = !B.hide.mrna;
   const L = B.tl, cods = cOf(B);
@@ -1323,7 +1370,7 @@ function setGene(g, quiet) {
   g = String(g).toUpperCase().replace(/[^A-Z]/g, "");
   const why = geneProblem(g); if (why) { note("tcNote", "bad", why); return false; }
   finishAnim(); autoStop(); B.gene = g; B.tc = tcFresh(); B.tl = tlFresh();
-  if (!quiet) note("tcNote", "", `New gene: coding strand ${seqW(spaced(g), 5, 3)}. Press Unwind to start.`);
+  if (!quiet) note("tcNote", "", `New gene: coding strand ${seqW(spaced(g), 5, 3)}. Press RNA polymerase binds to start.`);
   renderAll(); return true;
 }
 
@@ -1361,22 +1408,25 @@ const seg = (p, a, b) => Math.max(0, Math.min(1, (p - a) / (b - a)));
 const still = () => reduced() || (AUTO && !onScreen) || document.hidden || !onScreen;
 
 /* ----- view 1: transcription ----- */
-function unwind() {
+/* a cross-fade from the old picture (drawn whole into a layer on top) to the new one underneath: compositor-only */
+function tcFadeFrom(L, oOld, camOld, k) { fxShow(k, drawTc(L, { o: oOld, cam: camOld, cid: "nclipF" + k }), null, null, 1); }
+function tcSnap(k) {   // the picture as it is now, copied (not rebuilt) into layer k, before the model changes
+  fxShow(k, "", null, null, 1); const c = $("world").cloneNode(true); c.removeAttribute("id"); fxSvg(k).appendChild(c);
+}
+function unwind() {   // "RNA polymerase binds": it binds at the start of the gene and unwinds the DNA just ahead of itself
   const T = B.tc; if (B.lock.all || ANIM) return;
-  if (T.stage !== "wound") { note("tcNote", "", T.stage === "gone" ? "This gene has been transcribed. Press Start again to transcribe it again." : "The DNA is already unwound."); return; }
+  if (T.stage !== "wound") { note("tcNote", "", T.stage === "gone" ? "This gene has been transcribed. Press Start again to transcribe it again." : "RNA polymerase is already on the gene."); return; }
+  const anim = !still(); if (anim) tcSnap(0);
   T.stage = "open"; T.m = 0; T.cam = null;
-  note("tcNote", "", "The hydrogen bonds between the base pairs break and the two strands separate. RNA polymerase moves along the template strand.");
+  note("tcNote", "", "RNA polymerase binds at the start of the gene. Just ahead of itself it unwinds the DNA: the hydrogen bonds between the base pairs break and the template strand is exposed.");
   syncCtl(); renderReadouts(); tourSignal("unwind");
-  if (still()) { renderScene(); return; }
-  const L = lay(), d = L.yM - L.yCup, o = tcOpts(), c = tcCam(L), win = tcWin(L, c * PT);
-  renderScene({ omit: { cod: 1, codL: 1, pol: 1 } });
-  fxShow(0, tcFx(L, o, ["cod"], c), win, [0, d]); fxShow(1, tcFx(L, o, ["codL"], c), null, [0, d]);
-  fxShow(2, tcFx(L, Object.assign({}, o, { hbD: 1 }), ["hbD"], c), win, null, 1); fxShow(3, tcFx(L, o, ["pol"], c), win, null, 0);
-  animate(900, null, () => { fxClear(); renderScene(); }, [fxTween(0, [0, d], [0, 0], 900), fxTween(1, [0, d], [0, 0], 900), fxKeys(2, [[0, 0, 1], [0, 0, 0, .45], [0, 0, 0]], 900), fxTween(3, [0, 0, 0], [0, 0, 1], 900)]);
+  if (!anim) { renderScene(); return; }
+  renderScene({ keepFx: 1 });
+  animate(800, null, () => fxClear(), [fxKeys(0, [[0, 0, 1], [0, 0, 1, .1], [0, 0, 0]], 800)]);
 }
 function addNuc(b) {
   const T = B.tc, g = B.gene, n = g.length; if (B.lock.all || ANIM) return;
-  if (T.stage !== "open") { note("tcNote", "", T.stage === "wound" ? "Press Unwind first: the hydrogen bonds must break before RNA nucleotides can pair." : "This gene has been transcribed."); return; }
+  if (T.stage !== "open") { note("tcNote", "", T.stage === "wound" ? "Press RNA polymerase binds first: it must unwind the DNA before RNA nucleotides can pair." : "This gene has been transcribed."); return; }
   if (T.m >= n) { note("tcNote", "", "The mRNA is complete. Press Release the mRNA."); return; }
   const t = dnaComp(g)[T.m], want = RNA_OPP[t];
   if (b !== want) {
@@ -1385,45 +1435,37 @@ function addNuc(b) {
     else why = `✗ ${b} does not pair with ${t}. Opposite ${BASES[t].name} (${t}) goes ${BASES[want].name} (${want})${t === "A" ? ": uracil pairs with adenine" : ""}.`;
     note("tcNote", "bad", why); return;
   }
-  const L = lay(), c0 = tcCam(L);
+  const L = lay(), c0 = tcCam(L), anim = !still();
+  if (anim) tcSnap(0);   // the old picture, which fades once the nucleotide is in place
   T.m++; T.fresh = T.m - 1; T.cam = null;
   const done = T.m === n, c1 = tcCam(L);
-  note("tcNote", "good", (T.m === 1 ? `✓ ${b} pairs with ${t}: the first base of the mRNA, at its 5′ end.` : `✓ ${b} pairs with ${t}. RNA polymerase joins it to the mRNA with a phosphodiester bond.`) + (done ? " The mRNA is complete: compare it with the coding strand in the readout." : ""));
+  note("tcNote", "good", (T.m === 1 ? `✓ ${b} pairs with ${t}: the first base of the mRNA, at its 5′ end.` : `✓ ${b} pairs with ${t}. At its active site, RNA polymerase joins it to the mRNA with a phosphodiester bond.`)
+    + (done ? " The mRNA is complete: compare it with the coding strand in the readout." : " RNA polymerase moves on one base: the DNA unwinds ahead of it and rewinds behind it."));
   if (done && mode === "demo") tried(0);
   syncCtl(); renderReadouts(); tourSignal("add"); if (done) tourSignal("tc-done");
-  if (still()) { renderScene(); return; }
-  const o = Object.assign(tcOpts(), { fly: 1, pol: T.m - 1, camPx: c0 * PT }), win = tcWin(L, c0 * PT);
-  renderScene({ o, cam: c0, omit: { fly: 1, pol: 1 } });
-  fxShow(0, tcFx(L, o, ["fly"], c0), win, [70, -64], 0); fxShow(1, tcFx(L, o, ["pol"], c0), win);
-  const pan = () => {   // then the camera follows RNA polymerase along the gene
-    if (c1 === c0 || still()) { fxClear(); renderScene(); return; }
-    const o2 = tcOpts(), w2 = [L.X0 - 30, L.X0 + (L.Wn - 1) * PT + 30];
-    renderScene({ cam: c0, omit: Object.fromEntries(TC_CAM.map(k => [k, 1])) });
-    fxClear(); fxShow(0, tcFx(L, o2, TC_CAM, c0), w2);
-    animate(320, null, () => { fxClear(); renderScene(); }, [fxTween(0, [0, 0], [-(c1 - c0) * PT, 0], 320)]);
-  };
-  const wa = [fxKeys(0, [[70, -64, 0], [35, -32, 1, .4], [0, 0, 1]], 420)]; if (T.m < n) wa.push(fxTween(1, [0, 0], [PT, 0], 420));
-  animate(420, null, inst => { if (inst || c1 === c0) { if (inst) { fxClear(); renderScene(); } return; } pan(); }, wa);
+  if (!anim) { fxClear(); renderScene(); return; }
+  /* underneath: the new state, already at the new camera (it follows RNA polymerase); hidden until the old picture fades */
+  const oF = Object.assign(tcOpts(), { fly: 1 }), win = tcWin(L, c1 * PT);
+  renderScene({ cam: c1, keepFx: 1 });
+  fxShow(1, tcFx(L, oF, ["fly"], c1), win, [70, -64], 0);              // the RNA nucleotide flying in to the active site
+  animate(600, null, () => fxClear(), [fxKeys(0, [[0, 0, 1], [0, 0, 1, .5], [0, 0, 0]], 600), fxKeys(1, [[70, -64, 0], [35, -32, 1, .3], [0, 0, 1, .55], [0, 0, 1]], 600)]);
 }
 function panTc(d) { const T = B.tc, L = lay(); if (ANIM) return; const c0 = tcCam(L); T.cam = Math.max(0, Math.min(camMax(L), c0 + d)); renderAll(); }
 function releaseMrna() {
   const T = B.tc, n = tcN(); if (B.lock.all || ANIM) return;
   if (!(T.stage === "open" && T.m === n)) { note("tcNote", "", "Finish the mRNA first."); return; }
   autoStop();
-  const L = lay(), c0 = tcCam(L), c1 = camMax(L), d = L.yM - L.yCup, o = Object.assign(tcOpts(), { pol: null }), dx = L.W - L.X0 + 64 + c1 * PT;
-  const fin = () => { fxClear(); T.stage = "gone"; T.cam = null; T.fresh = -1; note("tcNote", "good", "The hydrogen bonds between the mRNA and the template break. The mRNA leaves the nucleus through a nuclear pore, and the DNA double helix re-forms."); renderAll(); tourSignal("release"); };
+  const L = lay(), c0 = tcCam(L), c1 = camMax(L), oB = tcOpts(), oD = { bound: false, m: n, showM: true, ghost: false, fresh: -1 }, dx = L.W - L.X0 + 64 + c1 * PT;
+  const fin = () => { fxClear(); T.stage = "gone"; T.cam = null; T.fresh = -1; note("tcNote", "good", "RNA polymerase detaches. The hydrogen bonds between the mRNA and the template break, and the DNA double helix re-forms. The mRNA leaves the nucleus through a nuclear pore."); renderAll(); tourSignal("release"); };
   if (still()) { fin(); return; }
-  const go = () => {   // the camera is at the 3′ end: the mRNA leaves through the pore and the DNA re-forms
-    const win = tcWin(L, c1 * PT);
-    renderScene({ o, cam: c1, omit: { cod: 1, codL: 1, hbM: 1, mrna: 1, mL: 1 } });
-    fxShow(0, tcFx(L, o, ["mrna", "mL"], c1), null); fxShow(1, tcFx(L, o, ["hbM"], c1), win, null, 1);
-    fxShow(2, tcFx(L, o, ["cod"], c1), win); fxShow(3, tcFx(L, Object.assign({}, o, { hbD: 1 }), ["hbD"], c1), win, null, 0); fxShow(4, tcFx(L, o, ["codL"], c1), null);
-    animate(2100, null, fin, [fxKeys(1, [[0, 0, 1], [0, 0, 0, .22], [0, 0, 0]], 2100), fxKeys(0, [[0, 0], [0, -10, 1, .2], [dx, -10, 1, .72], [dx, -10]], 2100),
-      fxKeys(2, [[0, 0], [0, 0, 1, .58], [0, d]], 2100), fxKeys(4, [[0, 0], [0, 0, 1, .58], [0, d]], 2100), fxKeys(3, [[0, 0, 0], [0, 0, 0, .85], [0, 0, 1]], 2100)]);
+  const go = () => {   // at the 3′ end: RNA polymerase lets go, the DNA re-forms, then the mRNA leaves through the pore
+    renderScene({ o: oD, cam: c1, omit: { mrna: 1, mL: 1 } });
+    fxShow(0, tcFx(L, oD, ["mrna", "mL"], c1), null); tcFadeFrom(L, oB, c1, 1);
+    animate(2000, null, fin, [fxKeys(1, [[0, 0, 1], [0, 0, 1, .08], [0, 0, 0, .35], [0, 0, 0]], 2000), fxKeys(0, [[0, 0], [0, 0, 1, .38], [dx, 0, 1, .85], [dx, 0]], 2000)]);
   };
   if (c1 === c0) { go(); return; }
-  renderScene({ o, cam: c0, omit: Object.fromEntries(TC_CAM.map(k => [k, 1])) });
-  fxShow(0, tcFx(L, o, TC_CAM, c0), [L.X0 - 30, L.X0 + (L.Wn - 1) * PT + 30]);
+  renderScene({ o: oB, cam: c0, omit: Object.fromEntries(TC_CAM.map(k => [k, 1])) });
+  fxShow(0, tcFx(L, oB, TC_CAM, c0), [L.X0 - 30, L.X0 + (L.Wn - 1) * PT + 30]);
   animate(450, null, inst => { fxClear(); if (inst) fin(); else go(); }, [fxTween(0, [0, 0], [-(c1 - c0) * PT, 0], 450)]);
 }
 function tcRestart() { if (B.lock.all) return; finishAnim(); autoStop(); B.tc = tcFresh(); note("tcNote", "", ""); renderAll(); }
@@ -1458,7 +1500,7 @@ function tlStep(force) {
     syncCtl(); renderReadouts(); renderScene();
     if (still()) return;
     fxShow(0, waterSVG(mid, L.bY + 4, "", 1, true), null, null, 0);
-    animate(900, null, () => fxClear(), [fxKeys(0, [[0, 0, 0], [1.5, 6, 1, .15], [7, 28, 1, .7], [10, 40, 0]], 900)]);
+    animate(900, null, () => fxClear(), [fxKeys(0, [[0, 0, 0], [1.5, 5, 1, .15], [6, 20, 1, .7], [8, 26, 0]], 900)]);
     return;
   }
   const cam0 = tlCam(L, T.pos), pos0 = chainPos(L, T, cam0), oldPos = T.pos;
@@ -1662,7 +1704,7 @@ function renderAnswer() {
     a.innerHTML = `<ol class="aaseq" aria-label="Amino acid sequence">` + [...Array(n).keys()].map(k => `<li>${k ? "– " : ""}${sel(k)}</li>`).join("") + `</ol><p class="small">Three-letter names, in order from the start codon.</p>`;
   } else if (t.kind === "goal") {
     const where = narrow() ? "in the model below" : "in the model";
-    a.innerHTML = `<p style="margin:0">${t.id0 === "tcAll" ? "Use <b>Unwind</b>, then <b>Add a free RNA nucleotide</b>" : "Use <b>Choose the tRNA</b> and the step button"} ${where}.</p>`;
+    a.innerHTML = `<p style="margin:0">${t.id0 === "tcAll" ? "Use <b>RNA polymerase binds</b>, then <b>Add a free RNA nucleotide</b>" : "Use <b>Choose the tRNA</b> and the step button"} ${where}.</p>`;
   }
 }
 function showFinished(p) {
@@ -1820,13 +1862,13 @@ function mutTried() { if (mode === "demo") tried(3); }
 /* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
 const TOUR = [
   { el: "#sceneWrap", scene: "tc", text: "This is the nucleus. The gene is part of a DNA molecule: the coding strand on top, the template strand below, joined by hydrogen bonds. Choose another gene above, or type your own." },
-  { el: "#unwindBtn", scene: "tc", text: "First the DNA unwinds: the hydrogen bonds between the base pairs break.", do: "unwind", doText: "Press Unwind." },
-  { el: "#addRow", scene: "tc", text: "Add the free RNA nucleotide that pairs with the template base under RNA polymerase. A wrong one is refused, with a reason.", do: "add", doText: "Add one RNA nucleotide." },
+  { el: "#unwindBtn", scene: "tc", text: "The enzyme RNA polymerase binds at the start of the gene. It unwinds the DNA just ahead of itself: the hydrogen bonds between the base pairs break.", do: "unwind", doText: "Press RNA polymerase binds." },
+  { el: "#addRow", scene: "tc", text: "Add the free RNA nucleotide that pairs with the template base at the active site. RNA polymerase joins it on and moves along: the DNA rewinds behind it. A wrong one is refused, with a reason.", do: "add", doText: "Add one RNA nucleotide." },
   { el: "#tcAuto", scene: "tc", text: "Auto adds the rest, one at a time. The readout then compares the coding strand with the mRNA.", do: "tc-done", doText: "Press Auto and wait for the mRNA." },
   { el: "#releaseBtn", scene: "tc", text: "Release the mRNA: it leaves the nucleus through a nuclear pore, and the DNA re-forms.", do: "release", doText: "Press Release the mRNA." },
   { el: "#sceneTabs", text: "Translation happens in the cytoplasm, at a ribosome.", do: "scene-tl", doText: "Press Translation." },
   { el: "#poolRow", scene: "tl", text: "Choose the tRNA whose anticodon pairs with the codon. Two tRNAs fit on the ribosome, so choose the second one too.", do: "pick2", doText: "Put two tRNAs on the ribosome." },
-  { el: "#stepBtn", scene: "tl", text: "This button forms the peptide bond, moves the ribosome on, and releases the polypeptide at the stop codon.", do: "step", doText: "Form the peptide bond." },
+  { el: "#stepBtn", scene: "tl", text: "This button forms the peptide bond (rRNA in the ribosome catalyses it), moves the ribosome on, and releases the polypeptide at the stop codon.", do: "step", doText: "Form the peptide bond." },
   { el: "#sceneTabs", text: "Now look at the genetic code itself.", do: "scene-code", doText: "Press Genetic code." },
   { el: "#codeGrid", scene: "code", text: "Tap a codon to see the amino acid it codes for, and every other codon for it.", do: "codon", doText: "Tap a codon." },
   { el: "#supportArea", text: "Support switches add a base key and the pairing rules. They all start off." },
