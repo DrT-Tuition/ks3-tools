@@ -35,6 +35,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 | DNA Builder | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 | Action Potential | A-level Biology | https://drt-tuition.github.io/ks3-tools/action-potential.html |
+| Protein Synthesis | A-level Biology | https://drt-tuition.github.io/ks3-tools/protein-synthesis.html |
 
 ## Credits
 

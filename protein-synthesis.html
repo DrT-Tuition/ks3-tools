@@ -1,0 +1,2034 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein Synthesis</title>
+<!--
+  SCIENCE SPEC: Protein Synthesis (protein-synthesis.html)
+  A-level tool; ks3-tools site, A-level Biology section, at Dan's request, 13 Oct 2026.
+  Level: A-level Biology, OCR A (H420) 2.1.3 (e)–(g). Year 12 reading level, OCR terms, primes (5′, 3′).
+  Serves (SoW): Y12 OCR A 2.1.3 lessons on the genetic code, transcription and translation (after "Nucleotides and
+    DNA structure", which DNA Builder serves). Mutations are a "Going further" link to Module 6 (6.1.1).
+  Source: Save My Exams OCR A notes, "Nucleotides & Nucleic Acids" (newtools/src/ks5/nucleic_sme.txt): the genetic
+    code (pp 22–24: gene, triplet code, 20 amino acids, start/stop, non-overlapping, 4³ = 64, degenerate, universal,
+    genetic engineering, codons and anticodons), transcription (pp 25–27: nucleus, unwinding, template and coding
+    strands, free RNA nucleotides, RNA polymerase, phosphodiester bonds, 3′ → 5′ along the template so mRNA grows
+    5′ → 3′, mRNA leaves by a nuclear pore, DNA polymerase warning), translation (pp 28–31: cytoplasm, ribosome of
+    rRNA, tRNA anticodon + specific amino acid, two tRNAs at a time, peptide bond by condensation catalysed by rRNA,
+    stop codon, polypeptide). Base pairing and hydrogen bonds (A–T 2, G–C 3) and purines/pyrimidines: pp 4–12 of
+    the same notes. There is no department deck. Facts come from the notes; all wording is written fresh.
+  Corrections and clarifications to the notes:
+    1 The notes' examples ("CAG codes for valine", "TTC lysine", "GAC leucine", "CCG glycine", "TAC – methionine")
+      are DNA template-strand triplets. The tool always names the strand or molecule a triplet is on, and its
+      normal wording is mRNA codons (AUG = start, methionine). The notes' examples are used as template triplets
+      (3′–CAG–5′ → mRNA GUC → Val, etc.) and bankCheck() confirms each one against the codon table.
+    2 The ribosome holds two tRNAs at a time, as the notes say. The A and P sites appear only under an optional
+      "Going further" switch.
+    3 The codon table is the standard (universal) mRNA code: 64 codons, 3 stop codons (UAA, UAG, UGA). It is not in
+      the notes; it is embedded as data with a load-time check (64 entries, 20 amino acids plus stop, AUG = Met).
+      Amino acids are shown by three-letter abbreviation (Met, Val, Lys …); tapping a codon gives the full name.
+    4 A–U pairs are drawn with 2 hydrogen bonds, like A–T (the notes give A–T 2 and G–C 3).
+  What it models (one SVG scene, three views as tabs):
+    1 Transcription, in the nucleus (nuclear envelope with a pore on the right). A gene of 12–18 bases (3 presets,
+      or type a coding strand 5′ → 3′ starting ATG, with a stop triplet in frame). Unwind: the hydrogen bonds break and the coding strand lifts
+      away. RNA polymerase moves along the template 3′ → 5′; pupils add each free RNA nucleotide (A, U, C, G, or T,
+      which is refused) opposite the template base; a wrong base is refused with a reason. Hydrogen bonds show as
+      dashes; each new phosphodiester bond flashes; the mRNA grows 5′ → 3′. Auto finishes it. Release: the
+      hydrogen bonds to the template break, the mRNA leaves through the nuclear pore and the DNA re-forms. Readout:
+      coding strand, template strand and mRNA in triplets, T and U marked, so pupils see mRNA = coding strand
+      with U for T.
+    2 Translation, in the cytoplasm. The gene's mRNA on a ribosome (small and large subunits), codons boxed in
+      triplets. Pupils choose the tRNA whose anticodon is complementary to the codon from 4 (distractors: the
+      codon copied letter for letter, a triplet one base along, another codon's anticodon), or press Auto. Two
+      tRNAs sit on the ribosome; Form the peptide bond (condensation: H₂O leaves, catalysed by rRNA); Move the
+      ribosome on one codon (the first tRNA leaves); at a stop codon, Release the polypeptide. Readout: codons
+      and the amino acid sequence (primary structure).
+    3 Genetic code: the 64-codon mRNA table (tap a codon → amino acid, full name, and all its codons). Properties:
+      degenerate (synonyms highlighted), non-overlapping (the gene's mRNA read in triplets, with a "What if it
+      overlapped?" comparison) and universal (one line + genetic engineering). Going further (Module 6):
+      substitution, insertion or deletion in the gene, with the new mRNA and polypeptide computed from the table
+      (silent, one amino acid changed, an early stop, or a frameshift).
+  Simplifications: schematic shapes (pentagon sugar, phosphate circle, purines as fused rings and pyrimidines as
+    single rings with the letter inside, as in DNA Builder; tRNA as a simple folded shape; ribosome as two
+    subunits); genes far shorter than real ones; the whole gene unwinds at once; promoters, the modification of
+    eukaryotic mRNA before it leaves the nucleus, and tRNA charging are not shown; everything is slowed down.
+  Misconceptions designed out: DNA polymerase for RNA polymerase; template and coding strand confused; codon and
+    anticodon confused; thymine in RNA; "the ribosome makes the amino acids"; translation in the nucleus; reading
+    the code with overlaps; one codon = one base (counting bases for amino acids).
+  Facts and values used: transcription in the nucleus, translation in the cytoplasm at ribosomes; RNA polymerase
+    joins RNA nucleotides with phosphodiester bonds; template strand read 3′ → 5′, mRNA grows 5′ → 3′; mRNA has the
+    coding strand's sequence with U for T; uracil pairs with adenine; A–T 2 and G–C 3 hydrogen bonds; 4 bases →
+    4³ = 64 codons, 20 amino acids, degenerate, non-overlapping, universal; start AUG (template TAC, methionine);
+    stop codons; tRNA anticodon complementary to the codon, one specific amino acid; two tRNAs on the ribosome at
+    once; peptide bond by condensation (water released), catalysed by rRNA; rRNA holds the mRNA in place.
+  Checks in code: complements, codons, anticodons, translations, mutation outcomes, distractors and every question
+    answer are computed from the fact tables; on load bankCheck() verifies the codon table, the notes' template
+    examples, the presets (start ATG, stop in frame), every question (one right option, a reason on every wrong
+    one, distinct options for every variant, 3 hints, goals reachable and not already met, numbers whole and
+    distinct from the planned wrong answers). Any failure shows a visible error box and switches that question off.
+  Drawing: everything is drawn by code in SVG (no images); labels in code; colours from CSS tokens (light and dark).
+  Performance: drawn on demand (no animation loop at rest; idle 0 rAF/s). Each step (unwinding, adding a nucleotide,
+    releasing the mRNA, a tRNA arriving, the peptide bond, the ribosome moving, the release) redraws the picture once
+    with morph(); the moving part is drawn once into a small overlay SVG and only that layer's CSS transform/opacity is
+    tweened (Web Animations, off the main thread), so nothing is re-laid-out or repainted per frame. The one
+    frame-by-frame redraw (the chain regrouping on phone-width layouts) uses paceFrame() (30 fps cap, adaptive
+    slow-down). Animations finish at once if the tab is hidden or the picture scrolls off-screen, and Auto waits until
+    it is back. No CSS filters, no backdrop-filter. Reduced motion: still steps, no movement.
+  Independent review (13 Oct 2026): anticodons written 3′ → 5′ with ends in Easy 5; typed genes need an in-frame stop;
+    Hard 1 template distractor given its true ends; Hard 6 options uniform; stop → stop substitution wording; keyboard
+    focus kept when the tRNA choices rebuild. The build sources in out_protein/ predate these edits.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+/* Same drawing tokens as DNA Builder (bases, sugars, phosphates, hydrogen bonds), plus the cell parts. */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF;
+  --sugar:#F6E7B4;--sugar-edge:#7A5E14;--pur:#D3E3F6;--pur-edge:#2D5B8C;--pyr:#F9DCC8;--pyr-edge:#A8460F;--bond:#1E252E;
+  --hb:#2D5B8C;--s1:#2D5B8C;--s2:#C2571A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#5A6472;--fresh:#1D6B3F;
+  --nuc:#E2E8F1;--env:#5A6472;--pol:#BFE3E6;--pol-edge:#1F6F78;--ribo:#DCD5EA;--ribo-edge:#5B4B8A;--trna:#DDF0E4;--trna-edge:#1D6B3F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --sugar:#5E5024;--sugar-edge:#E4C46A;--pur:#244670;--pur-edge:#8CC4FF;--pyr:#5A3524;--pyr-edge:#FFB37A;--bond:#E9EDF3;
+  --hb:#8CC4FF;--s1:#8CC4FF;--s2:#FFB37A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#A9B4C4;--fresh:#7FD4A0;
+  --nuc:#1A3150;--env:#A9B4C4;--pol:#1E4A50;--pol-edge:#7FD0DA;--ribo:#37325C;--ribo-edge:#B9A2DD;--trna:#1B3A2E;--trna-edge:#7FD4A0}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D;
+  --sugar:#5E5024;--sugar-edge:#E4C46A;--pur:#244670;--pur-edge:#8CC4FF;--pyr:#5A3524;--pyr-edge:#FFB37A;--bond:#E9EDF3;
+  --hb:#8CC4FF;--s1:#8CC4FF;--s2:#FFB37A;--hcol:#E9EDF3;--hlite:#D9A536;--slot:#A9B4C4;--fresh:#7FD4A0;
+  --nuc:#1A3150;--env:#A9B4C4;--pol:#1E4A50;--pol-edge:#7FD0DA;--ribo:#37325C;--ribo-edge:#B9A2DD;--trna:#1B3A2E;--trna-edge:#7FD4A0}
+
+h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-bottom:2px}
+.scenewrap{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#scene{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+#scene text{font-family:var(--f-body);pointer-events:none}
+/* drawing (shapes as in DNA Builder) */
+.bd{stroke:var(--bond);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bd.m{stroke:var(--s2);stroke-width:2.6}
+.bd.fresh{stroke:var(--fresh);stroke-width:4.5}
+.sug{fill:var(--sugar);stroke:var(--sugar-edge);stroke-width:2;stroke-linejoin:round}
+.pur{fill:var(--pur);stroke:var(--pur-edge);stroke-width:2;stroke-linejoin:round}
+.pyr{fill:var(--pyr);stroke:var(--pyr-edge);stroke-width:2;stroke-linejoin:round}
+.pho{fill:var(--particle);stroke:var(--particle-edge)}
+.aa{fill:var(--particle);stroke:var(--particle-edge)}
+.hl{fill:rgba(255,255,255,.38)}
+.wo{fill:var(--particle-2);stroke:var(--particle-edge)}
+.wh{fill:var(--hcol);stroke:var(--particle-edge)}
+.pl{fill:var(--particle-ink);font-weight:700}
+.bl{fill:var(--ink);font-weight:700}
+.sm{fill:var(--ink);font-weight:700}
+.tx{fill:var(--ink)}
+.halo{paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.halo2{paint-order:stroke;stroke:var(--nuc);stroke-width:4px;stroke-linejoin:round}
+.endl{fill:var(--accent);font-weight:700}
+.capt{fill:var(--muted);font-weight:700}
+.strl{fill:var(--ink);font-weight:700}
+.hb{stroke:var(--hb);stroke-width:2.4;stroke-dasharray:3.5 3;fill:none}
+.ghost{fill:none;stroke:var(--slot);stroke-width:1.8;stroke-dasharray:5 4}
+.badt{fill:var(--bad);font-weight:700}
+.nucbg{fill:var(--nuc)}
+.env{fill:none;stroke:var(--env);stroke-width:2.6;stroke-linecap:round}
+.pol{fill:var(--pol);fill-opacity:.6;stroke:var(--pol-edge);stroke-width:2.2}
+.poll{fill:var(--pol-edge);font-weight:700}
+.ribo{fill:var(--ribo);fill-opacity:.62;stroke:var(--ribo-edge);stroke-width:2.2}
+.ribl{fill:var(--ribo-edge);font-weight:700}
+.trna{fill:var(--trna);stroke:var(--trna-edge);stroke-width:2.2;stroke-linejoin:round}
+.trl{fill:var(--trna-edge);font-weight:700}
+.codon{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4}
+.codon.in{stroke:var(--accent);stroke-width:2.4;stroke-dasharray:none}
+.codon.stop{stroke:var(--bad);stroke-width:2.4;stroke-dasharray:none}
+.codon.cur{stroke:var(--hlite);stroke-width:4;stroke-dasharray:none}
+.trip{fill:none;stroke:var(--muted);stroke-width:1.6}
+.dir{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dirt{fill:var(--accent);font-weight:700}
+/* key line + support legends */
+.keyline{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;font-size:15px;color:var(--muted)}
+.keyline span{display:inline-flex;align-items:center;gap:5px}
+.keyline svg{height:20px;width:auto;flex:none}
+.legend{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;display:grid;gap:2px}
+.legend p{margin:0;font-size:16px;line-height:1.45}
+/* controls */
+.ctl{display:grid;gap:10px}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.segb.tog{border-style:dashed}
+.segb.tog[aria-pressed="true"]{border-style:solid;border-color:var(--accent)}
+.segb .state{font-weight:400;color:var(--muted)}
+.scenetabs button{font-size:17px}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+#geneIn{font:700 18px var(--f-body);letter-spacing:.12em;text-transform:uppercase;width:13.5em;max-width:100%;min-height:44px;padding:4px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+#poolSeg button{font-size:17px;letter-spacing:.04em;padding:6px 12px}
+#poolSeg button .aa3{font-weight:400;color:var(--muted);letter-spacing:0}
+#poolSeg button[data-no="1"]{border-color:var(--bad);color:var(--bad)}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.readline{margin:0;font-size:18px;line-height:1.45;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.readline b{color:var(--accent)}
+.seqbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:4px;min-width:0}
+.seqrow{margin:0;display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr);gap:2px 12px;align-items:baseline}
+.seqrow .k{font-size:15px;font-weight:700;color:var(--muted);line-height:1.3}
+.seqrow .v{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:.06em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.4}
+.seqrow .v .tu{color:var(--accent);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.seqrow .v .on{background:rgba(217,165,54,.28);border-radius:4px}
+.seqrow .v .gap{color:var(--muted);font-weight:400}
+.seqcmp{margin:2px 0 0;font-size:16px;color:var(--good);font-weight:700}
+.seqcmp:empty{display:none}
+.rbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;min-width:0}
+.rbox h2{font:700 16px var(--f-body);color:var(--muted);margin:0}
+.small2{font-size:15px;color:var(--muted)}
+.hidenote{color:var(--muted);font-size:16px;margin:0}
+body.quiz .demo-only{display:none!important}
+/* genetic code view */
+#codeView{display:grid;gap:10px}
+.propbox{display:grid;gap:8px}
+.propbox p{margin:0;font-size:16px;line-height:1.45}
+.codegrid{display:grid;grid-template-columns:28px repeat(4,minmax(0,1fr)) 24px;gap:3px;align-items:stretch}
+.codegrid .hd{font-weight:700;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2}
+.codegrid .hd.b1{font-size:20px;color:var(--accent);background:var(--sunk);border-radius:8px}
+.codegrid .hd.top{padding:2px 0}
+.codegrid .sep{grid-column:1/-1;height:3px}
+.cod{font:700 16px var(--f-body);min-height:44px;padding:2px 4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 6px;line-height:1.2;letter-spacing:.03em}
+.cod .a3{font-weight:400;color:var(--muted);letter-spacing:0}
+.cod.stop .a3{color:var(--bad);font-weight:700}
+.cod.syn{background:rgba(217,165,54,.26);border-color:var(--hlite)}
+.cod[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cod[aria-pressed="true"] .a3{color:var(--accent-ink)}
+.cod:hover{border-color:var(--accent)}
+.frame{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
+.fc{display:grid;justify-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px 8px;min-width:52px}
+.fc b{font-size:18px;letter-spacing:.06em}
+.fc span{font-size:15px;color:var(--muted)}
+.fc.stop span{color:var(--bad);font-weight:700}
+.fc.chg{border:2px solid var(--bad)}
+.fc.same{border:2px solid var(--good)}
+.frame .fl{flex-basis:100%;font-size:15px;font-weight:700;color:var(--muted);margin:0}
+.mutbases{gap:4px}
+.mutbases button{min-width:44px;padding:6px 8px;font-size:17px}
+.mutbases button.cdn1{margin-left:8px}
+.mres{margin:0;font-size:17px;font-weight:700}
+.mres.good{color:var(--good)}.mres.bad{color:var(--bad)}
+@media (max-width:640px){.seqrow{grid-template-columns:minmax(0,1fr)}.seqrow .v{font-size:18px}}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .btn{padding:10px 14px}
+  .codegrid{grid-template-columns:22px repeat(4,minmax(0,1fr)) 18px;gap:2px}
+  .cod{font-size:15px;flex-direction:column;gap:0;padding:2px 1px}
+  .cod .a3{font-size:14px}
+  .codegrid .hd{font-size:14px}
+}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:150px;font:700 20px var(--f-body);min-height:48px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.aaseq{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.aaseq li{display:flex;align-items:center;gap:4px;font-size:16px;color:var(--muted);font-weight:700}
+.qseq{font-weight:700;letter-spacing:.06em;white-space:nowrap}
+@media (min-width:901px) and (max-height:820px){
+  .cod{min-height:40px}
+  .qpanel .gsel{min-height:40px;padding:2px 6px}
+}
+/* animation layers (moving parts only; see fxShow) */
+.fxw{position:absolute;top:0;bottom:0;overflow:hidden;pointer-events:none}
+.fxm{position:absolute;top:0;height:100%;will-change:transform,opacity}
+.fx{display:block;width:100%;height:100%}
+.fx text{font-family:var(--f-body)}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Protein Synthesis<small><b class="lvl">A-level Biology · OCR A 2.1.3</b>Transcribe a gene into mRNA in the nucleus, then translate it at a ribosome, one codon at a time.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Protein Synthesis</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Protein synthesis model" id="model">
+      <div class="seg scenetabs" id="sceneTabs" role="group" aria-label="View">
+        <button type="button" data-scene="tc" aria-pressed="true">Transcription</button>
+        <button type="button" data-scene="tl" aria-pressed="false">Translation</button>
+        <button type="button" data-scene="code" aria-pressed="false">Genetic code</button>
+      </div>
+      <p class="mnote" id="lockNote"></p>
+
+      <!-- View 1: transcription (controls above the picture) -->
+      <div class="ctl" id="ctlTc0">
+        <div class="ctlrow" id="geneRow"><span class="clbl" id="genL">Gene:</span>
+          <div class="seg" role="group" aria-labelledby="genL" id="geneSeg"></div>
+          <label class="clbl vh" for="geneIn">Coding strand, 5′ → 3′</label>
+          <input id="geneIn" type="text" maxlength="18" autocomplete="off" spellcheck="false" aria-describedby="geneHelp"><button type="button" class="segb" id="geneSet">Use it</button>
+          <span class="small2" id="geneHelp">Or type a coding strand, 5′ → 3′: 12 to 18 letters (A, T, C, G), starting ATG, with a stop triplet (TAA, TAG or TGA) in frame.</span></div>
+        <div class="ctlrow" id="tcRow"><button type="button" class="btn primary" id="unwindBtn">Unwind</button><button type="button" class="btn demo-only" id="tcAuto">Auto</button><button type="button" class="btn" id="releaseBtn">Release the mRNA</button><button type="button" class="btn" id="toTl">Go to translation →</button></div>
+      </div>
+      <!-- View 2: translation (controls above the picture) -->
+      <div class="ctl" id="ctlTl0" hidden>
+        <div class="ctlrow" id="poolRow"><span class="clbl" id="poolL">Choose the tRNA:</span>
+          <div class="seg" role="group" aria-labelledby="poolL" id="poolSeg"></div></div>
+        <div class="ctlrow" id="tlRow"><button type="button" class="btn primary" id="stepBtn">Form the peptide bond</button><button type="button" class="btn demo-only" id="tlAuto">Auto</button><button type="button" class="segb" id="tlRestart">Start again</button></div>
+      </div>
+
+      <div class="scenewrap" id="sceneWrap">
+        <svg id="scene" viewBox="0 0 800 400" role="img" aria-label="Protein synthesis model"><g id="world"></g></svg>
+      </div>
+
+      <!-- View 3: the genetic code -->
+      <div id="codeView" hidden>
+        <div class="seg" role="group" aria-label="Property" id="propSeg">
+          <button type="button" data-prop="deg" aria-pressed="true">Degenerate</button>
+          <button type="button" data-prop="non" aria-pressed="false">Non-overlapping</button>
+          <button type="button" data-prop="uni" aria-pressed="false">Universal</button>
+        </div>
+        <p class="readline" id="codeRead" aria-live="polite"></p>
+        <div class="propbox" id="propDeg"><p>Tap a codon. Every codon for the same amino acid lights up.</p>
+          <div class="ctlrow"><span class="clbl" id="qkL">Show:</span><div class="seg" role="group" aria-labelledby="qkL" id="quickSeg"><button type="button" class="segb" data-q="GGC">Gly</button><button type="button" class="segb" data-q="CUG">Leu</button><button type="button" class="segb" data-q="AUG">Met</button><button type="button" class="segb" data-q="UAA">Stop</button></div></div></div>
+        <div class="propbox" id="propNon" hidden><p>This gene's mRNA, read in triplets from the start codon. Each base is read once.</p>
+          <div class="frame" id="frameReal"></div>
+          <div class="ctlrow"><button type="button" class="segb tog" id="overBtn" aria-pressed="false">What if it overlapped? <span class="state">off</span></button></div>
+          <div class="frame" id="frameOver" hidden></div></div>
+        <div class="propbox" id="propUni" hidden><p><b>Universal:</b> almost every organism uses the same code, so a codon codes for the same amino acid in all of them. That is why a gene from one species can be transferred to another and still work (genetic engineering).</p></div>
+        <div class="codegrid" id="codeGrid" role="group" aria-label="Codon table: mRNA codons"></div>
+        <p class="small2">mRNA codons, 5′ → 3′. First base: row group. Second base: column. Third base: row inside each group.</p>
+        <div class="ctlrow"><button type="button" class="segb tog" id="mutBtn" aria-pressed="false">Going further (Module 6): mutations <span class="state">off</span></button></div>
+        <div class="rbox" id="mutBox" hidden>
+          <h2>Change the gene (Module 6 link)</h2>
+          <div class="ctlrow"><span class="clbl" id="mtL">Change:</span><div class="seg" role="group" aria-labelledby="mtL" id="mtSeg"><button type="button" data-mt="sub" aria-pressed="true">Substitution</button><button type="button" data-mt="ins" aria-pressed="false">Insertion</button><button type="button" data-mt="del" aria-pressed="false">Deletion</button></div></div>
+          <div class="ctlrow"><span class="clbl" id="mpL">Base on the coding strand:</span></div>
+          <div class="seg mutbases" role="group" aria-labelledby="mpL" id="mpSeg"></div>
+          <div class="ctlrow" id="mbRow"><span class="clbl" id="mbL">New base:</span><div class="seg" role="group" aria-labelledby="mbL" id="mbSeg"><button type="button" data-mb="A">A</button><button type="button" data-mb="T">T</button><button type="button" data-mb="C">C</button><button type="button" data-mb="G">G</button></div></div>
+          <div id="mutOut" aria-live="polite"></div>
+        </div>
+        <p class="hidenote" id="mutHidden" hidden>The mutations panel is hidden for this question.</p>
+      </div>
+
+      <div class="ctl" id="ctlTc">
+        <div class="ctlrow" id="addRow"><span class="clbl" id="addL">Add a free RNA nucleotide:</span>
+          <div class="seg" role="group" aria-labelledby="addL" id="addSeg"><button type="button" data-ab="A" aria-label="RNA nucleotide with adenine, A">A</button><button type="button" data-ab="U" aria-label="RNA nucleotide with uracil, U">U</button><button type="button" data-ab="C" aria-label="RNA nucleotide with cytosine, C">C</button><button type="button" data-ab="G" aria-label="RNA nucleotide with guanine, G">G</button><button type="button" data-ab="T" aria-label="Nucleotide with thymine, T">T</button></div></div>
+        <div class="ctlrow" id="panRow"><span class="clbl" id="panL">Move along the gene:</span><button type="button" class="segb" id="panL0" aria-label="Move towards the start of the gene">◀</button><button type="button" class="segb" id="panR0" aria-label="Move towards the end of the gene">▶</button><button type="button" class="segb" id="tcRestart">Start again</button></div>
+        <p class="mnote" id="tcNote" aria-live="polite"></p>
+        <div class="seqbox" id="tcRead">
+          <p class="seqrow"><span class="k">Coding strand (5′ → 3′)</span><span class="v" id="sqC"></span></p>
+          <p class="seqrow"><span class="k">Template strand (3′ → 5′)</span><span class="v" id="sqT"></span></p>
+          <p class="seqrow" id="sqMrow"><span class="k">mRNA (5′ → 3′)</span><span class="v" id="sqM"></span></p>
+          <p class="seqcmp" id="sqCmp"></p>
+        </div>
+        <p class="hidenote" id="tcHidden" hidden>The mRNA readout is hidden for this question.</p>
+      </div>
+
+      <div class="ctl" id="ctlTl" hidden>
+        <div class="ctlrow"><button type="button" class="segb tog" id="siteBtn" aria-pressed="false">Going further: A and P sites <span class="state">off</span></button></div>
+        <p class="mnote" id="tlNote" aria-live="polite"></p>
+        <div class="seqbox" id="tlRead">
+          <p class="seqrow"><span class="k">mRNA codons (5′ → 3′)</span><span class="v" id="sqCod"></span></p>
+          <p class="seqrow" id="sqProw"><span class="k">Polypeptide (primary structure)</span><span class="v" id="sqP"></span></p>
+        </div>
+        <p class="hidenote" id="tlHidden" hidden>The polypeptide readout is hidden for this question.</p>
+      </div>
+      <p class="keyline" id="keyLine"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" class="pho" style="stroke-width:1.3"/><circle cx="8.8" cy="8.8" r="2.5" class="hl"/></svg>Phosphate</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L21.5 9.4 L17.9 20.6 H6.1 L2.5 9.4 Z" class="sug"/></svg>Sugar (deoxyribose in DNA, ribose in RNA)</span><span><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M3 12 L9 4 L16 7 L16 17 L9 20 Z M16 7 L22.5 3 L28.5 7 L28.5 17 L22.5 21 L16 17" class="pur"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12 L7 3.3 H17 L22 12 L17 20.7 H7 Z" class="pyr"/></svg>Bases: purines (A, G) double ring, pyrimidines (C, T, U) single ring</span><span id="keyAa" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="aa" style="stroke-width:1.45"/><circle cx="8.5" cy="8.5" r="2.8" class="hl"/></svg>Amino acid (three-letter name)</span></p>
+      <div class="legend" id="supKey" hidden>
+        <p><b>Purines</b> have a double ring: adenine (A) and guanine (G).</p>
+        <p><b>Pyrimidines</b> have a single ring: cytosine (C), thymine (T, DNA only) and uracil (U, RNA only).</p>
+      </div>
+      <div class="legend" id="supPair" hidden>
+        <p><b>DNA with DNA:</b> A–T and G–C.</p>
+        <p><b>RNA with DNA or RNA:</b> U opposite A, A opposite T (or U), G–C. RNA has no thymine.</p>
+        <p>Codon (mRNA) and anticodon (tRNA) pair the same way, antiparallel: 5′–AUG–3′ pairs with 3′–UAC–5′.</p>
+      </div>
+
+      <p class="limits" id="limits"><b>Model limits:</b> Real genes are far longer. In eukaryotes the mRNA is modified before it leaves the nucleus; that is not shown here. Shapes are schematic, not true sizes or bond angles, and everything is slowed down.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="key" aria-pressed="false"><span class="dot"></span>Base key <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="pair" aria-pressed="false"><span class="dot"></span>Pairing rules <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Save My Exams OCR A notes, pp 4–12 and 22–31). One table each; everything else is computed. ===== */
+const BASES = {                                                   // pp 4–5: purines double ring, pyrimidines single ring; T in DNA, U in RNA
+  A: { name: "adenine", ring: "purine", dna: true, rna: true },
+  G: { name: "guanine", ring: "purine", dna: true, rna: true },
+  C: { name: "cytosine", ring: "pyrimidine", dna: true, rna: true },
+  T: { name: "thymine", ring: "pyrimidine", dna: true, rna: false },
+  U: { name: "uracil", ring: "pyrimidine", dna: false, rna: true } };
+const DNA_PAIR = { A: "T", T: "A", G: "C", C: "G" };              // p 12: A–T, G–C
+const RNA_OPP = { A: "U", T: "A", U: "A", G: "C", C: "G" };       // pp 25–26: the RNA base that pairs with each base (uracil opposite adenine)
+const HBONDS = { A: 2, T: 2, U: 2, G: 3, C: 3 };                  // p 12: A–T 2, G–C 3 (A–U drawn like A–T)
+const PLACE = { transcription: "nucleus", translation: "cytoplasm" };          // pp 25, 28, 31
+const ENZYME = { transcription: "RNA polymerase", replication: "DNA polymerase" };   // p 27: don't confuse them
+const CATALYST = "rRNA";                                          // p 28: rRNA catalyses the peptide bond
+const READS = { template: "3′ → 5′", mrna: "5′ → 3′" };           // p 26: polymerase moves 3′ → 5′ along the template; mRNA grows 5′ → 3′
+const TRNA_ON = 2;                                                // p 28: two tRNAs on the ribosome at once
+const NB = 4, TRIPLET = 3;                                        // p 23: 4 bases, read in triplets → 4³ = 64 codons
+const NAA = 20;                                                   // p 23: 20 amino acids
+const START = "AUG";                                              // p 23: start (template TAC – methionine)
+const NOTES_EX = [["CAG", "Val"], ["TTC", "Lys"], ["GAC", "Leu"], ["CCG", "Gly"], ["TAC", "Met"]];   // p 23: template-strand triplets
+/* The standard (universal) mRNA code. Not in the notes; checked on load (64 codons, 20 amino acids + stop). Order U, C, A, G. */
+const ORDER = "UCAG";
+const CODE_STR = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+const AA = { F: ["Phe", "phenylalanine"], L: ["Leu", "leucine"], S: ["Ser", "serine"], Y: ["Tyr", "tyrosine"], C: ["Cys", "cysteine"],
+  W: ["Trp", "tryptophan"], P: ["Pro", "proline"], H: ["His", "histidine"], Q: ["Gln", "glutamine"], R: ["Arg", "arginine"],
+  I: ["Ile", "isoleucine"], M: ["Met", "methionine"], T: ["Thr", "threonine"], N: ["Asn", "asparagine"], K: ["Lys", "lysine"],
+  V: ["Val", "valine"], A: ["Ala", "alanine"], D: ["Asp", "aspartic acid"], E: ["Glu", "glutamic acid"], G: ["Gly", "glycine"], "*": ["Stop", "stop"] };
+const STOP = "Stop";
+const CODON = {}, AANAME = {};
+[...ORDER].forEach((a, i) => [...ORDER].forEach((b, j) => [...ORDER].forEach((c, k) => { CODON[a + b + c] = AA[CODE_STR[16 * i + 4 * j + k]][0]; })));
+Object.values(AA).forEach(v => { AANAME[v[0]] = v[1]; });
+const PRESETS = [{ name: "Gene 1", gene: "ATGGTCAAGTAA" },        // template TAC CAG TTC: the notes' start, valine and lysine triplets
+                 { name: "Gene 2", gene: "ATGCTGGGCAAATGA" },     // template TAC GAC CCG: the notes' leucine and glycine triplets
+                 { name: "Gene 3", gene: "ATGGGTGGCCTATTTTAG" }]; // two different codons for glycine (degenerate)
+const GMIN = 12, GMAX = 18;
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const toRNA = s => s.replace(/T/g, "U");                           // mRNA = coding strand with U for T
+const dnaComp = s => [...s].map(b => DNA_PAIR[b]).join("");        // template strand, written 3′ → 5′ under the coding strand
+const rnaOpp = s => [...s].map(b => RNA_OPP[b]).join("");          // the RNA made opposite a strand: template → mRNA, codon → anticodon
+const trip = s => s.match(/.{1,3}/g) || [];
+const fullCodons = s => trip(s).filter(c => c.length === 3);
+const spaced = s => trip(s).join(" ");
+const pep = a => a.join("–");
+const seqW = (s, a, b) => `${a}′–${s}–${b}′`;
+const aaFull = a => a === STOP ? "stop codon: no amino acid" : `${a} (${AANAME[a]})`;
+const synonyms = a => Object.keys(CODON).filter(c => CODON[c] === a);
+function translate(m) {                       // from the first base, in triplets, until a stop codon
+  const aas = [];
+  for (const c of fullCodons(m)) { const a = CODON[c]; if (a === STOP) return { aas, stop: true, codons: aas.length + 1 }; aas.push(a); }
+  return { aas, stop: false, codons: aas.length };
+}
+const ringOf = b => BASES[b].ring;
+function geneProblem(s) {                     // why a typed coding strand can't be used ("" if it can)
+  if (/U/.test(s)) return "This is DNA, so no uracil: use A, T, C and G.";
+  if (!/^[ATCG]+$/.test(s)) return "Use only the letters A, T, C and G.";
+  if (s.length < GMIN || s.length > GMAX) return `Type ${GMIN} to ${GMAX} bases (you have ${s.length}).`;
+  if (toRNA(s.slice(0, 3)) !== START) return "Start with ATG: on the template strand that is TAC, the start triplet (methionine).";
+  if (!translate(toRNA(s)).stop) return "Add a stop triplet in frame (TAA, TAG or TGA on the coding strand), so translation can stop.";
+  return "";
+}
+/* mutations (Going further, Module 6): computed from the table */
+function mutate(g, type, pos, base) {
+  if (type === "sub") return g.slice(0, pos) + base + g.slice(pos + 1);
+  if (type === "ins") return g.slice(0, pos) + base + g.slice(pos);   // inserted before base pos
+  return g.slice(0, pos) + g.slice(pos + 1);
+}
+function mutOutcome(g0, type, pos, base) {
+  const g1 = mutate(g0, type, pos, base), m0 = toRNA(g0), m1 = toRNA(g1), a = translate(m0), b = translate(m1);
+  const ci = Math.floor(pos / 3), c0 = fullCodons(m0)[ci] || "", c1 = fullCodons(m1)[ci] || "";
+  const r = { g1, m0, m1, a, b, ci, c0, c1 };
+  if (fullCodons(m1)[0] !== START) { r.kind = "nostart"; return r; }
+  if (type === "sub") {
+    if (c0 === c1) r.kind = "same";
+    else if (CODON[c0] === CODON[c1]) r.kind = "silent";
+    else if (CODON[c1] === STOP) r.kind = "early";
+    else if (CODON[c0] === STOP) r.kind = "lost";
+    else r.kind = "one";
+  } else r.kind = "frame";
+  return r;
+}
+
+/* ===== Drawing geometry (one coordinate table). Compact nucleotides in DNA Builder's shapes: pentagon sugar on the
+   backbone, phosphate circle on its 5′ side, base ring pointing across to its partner. ===== */
+const PT = 48, SR = 11, PR = 8, PO = 8, BA = 16, HG = 14;     // pitch, sugar radius, phosphate radius and offset, base start, hydrogen-bond gap
+const rad = a => a * Math.PI / 180;
+const PYR = (() => { const r = 17, c = BA + r; return { c, far: c + r, pts: [180, 240, 300, 0, 60, 120].map(a => [c + r * Math.cos(rad(a)), r * Math.sin(rad(a))]) }; })();
+const PUR = (() => { const s = 17, r5 = s / (2 * Math.sin(Math.PI / 5)), a5 = r5 * Math.cos(Math.PI / 5), a6 = s * Math.sqrt(3) / 2;
+  const c5 = BA + r5, e = c5 + a5, c6 = e + a6;
+  return { c: c6, far: c6 + a6, five: [180, 108, 36, -36, -108].map(a => [c5 + r5 * Math.cos(rad(a)), r5 * Math.sin(rad(a))]),
+           six: [150, 90, 30, -30, -90, -150].map(a => [c6 + s * Math.cos(rad(a)), s * Math.sin(rad(a))]) }; })();
+const DW = PUR.far + HG + PYR.far;                       // backbone to backbone across a purine–pyrimidine pair
+const bFar = (b, o) => ringOf(b) === "purine" ? PUR.far : PYR.far - Math.abs(o) * Math.tan(rad(30));
+const FS = { base: 19, end: 18, lab: 17, cap: 16, sm: 15, aa: 15 };
+const GEO = {
+  tc: { wide: { W: 800, H: 420, X0: 52, Wn: 14, yCup: 50, yM: 172 }, narrow: { W: 370, H: 420, X0: 50, Wn: 5, yCup: 50, yM: 172 } },
+  tl: { wide: { W: 800, H: 430, X0: 64, xL: 322, yM: 116, row: false }, narrow: { W: 370, H: 504, X0: 40, xL: 113, yM: 116, row: true, rowY: 452 } } };
+for (const k of ["wide", "narrow"]) {
+  const t = GEO.tc[k]; t.yT = t.yM + DW; t.envX = t.X0 + (t.Wn - 1) * PT + 64; t.gy0 = t.yM - 40; t.gy1 = t.yM + 92;
+  const l = GEO.tl[k]; l.yA = l.yM + DW; l.xR = l.xL + 3 * PT; l.bY = l.yA + 114; l.rc = (l.xL + l.xR) / 2; }
+const wideNow = () => boxW($("sceneWrap")) >= 600;
+const RIBO_HALF = L => L.row ? 176 : 168;
+/* translation, wide: the whole mRNA stays in view and the ribosome moves along it; the picture widens for long genes */
+function lay() {
+  const k = wideNow() ? "wide" : "narrow";
+  if (B.scene !== "tl") return GEO.tc[k];
+  const g = GEO.tl[k]; if (g.row) return g;
+  const n = B.gene.length, nc = Math.floor(n / 3), cx = c => g.X0 + (3 * c + 1) * PT;
+  const W = Math.ceil(Math.max(800, cx(Math.max(0, nc - 2)) + 1.5 * PT + RIBO_HALF(g) + 12, g.X0 + (n - 1) * PT + 46));
+  return W === g.W ? g : Object.assign({}, g, { W });
+}
+
+const f1 = v => (Math.round(v * 10) / 10).toString();
+const P2 = p => f1(p[0]) + " " + f1(p[1]);
+const T_ = (x, y, cls, fs, s, extra) => `<text x="${f1(x)}" y="${f1(y)}" class="${cls}" style="font-size:${fs}px" text-anchor="middle" dominant-baseline="central"${extra || ""}>${s}</text>`;
+const TA = (x, y, cls, fs, s, anc) => T_(x, y, cls, fs, s, ` text-anchor="${anc}"`).replace(' text-anchor="middle"', "");
+const TR = (x, y, cls, fs, s) => T_(x, y, cls, fs, s, ` transform="rotate(-90 ${f1(x)} ${f1(y)})"`);
+const houseC = (x, y, r, cls) => `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" class="${cls}" style="stroke-width:${(r * .145).toFixed(2)}"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${f1(r * .28)}" class="hl"/>`;
+function edgePt(a, b, r) { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [b[0] - dx * r / L, b[1] - dy * r / L]; }
+const sugarPts = (X, Y, s) => [0, 1, 2, 3, 4].map(k => { const a = rad(90 * s + 72 * k); return [X + SR * Math.cos(a), Y + SR * Math.sin(a)]; });
+function baseSVG(b, X, Y, s) {
+  const sh = ringOf(b) === "purine" ? `<path class="pur" d="M${PUR.five.map(P2).join("L")}Z M${PUR.six.map(P2).join("L")}Z"/>` : `<path class="pyr" d="M${PYR.pts.map(P2).join("L")}Z"/>`;
+  return `<g transform="matrix(0 ${s} 1 0 ${f1(X)} ${f1(Y)})">${sh}</g>` + T_(X, Y + s * (ringOf(b) === "purine" ? PUR.c : PYR.c) + 1, "bl", FS.base, b);
+}
+const nucSVG = (X, Y, s, b) => `<path class="bd" d="M${f1(X)} ${f1(Y + s * SR)}L${f1(X)} ${f1(Y + s * BA)}"/>` + baseSVG(b, X, Y, s) + `<path class="sug" d="M${sugarPts(X, Y, s).map(P2).join("L")}Z"/>`;
+/* a strand: o = { seq (letters; "" = not there yet), X0, y, s (+1 bases point down, −1 up), ps (−1: 5′ end on the left, +1: on the right), m (mRNA backbone), fresh } */
+function strandSVG(o) {
+  const n = o.seq.length, X = i => o.X0 + i * PT, pp = i => [X(i) + o.ps * PT / 2, o.y - o.s * PO], has = i => i >= 0 && i < n && !!o.seq[i];
+  let links = "", fresh = "", parts = "", phos = "";
+  for (let i = 0; i < n; i++) {
+    if (!has(i)) continue;
+    const sc = [X(i), o.y], p = pp(i);
+    links += `M${P2(edgePt(p, sc, SR))}L${P2(edgePt(sc, p, PR))}`;
+    const j = i + o.ps;
+    if (has(j)) { const seg = `M${P2(edgePt([X(j), o.y], p, PR))}L${P2(edgePt(p, [X(j), o.y], SR))}`; if (o.fresh === (o.ps < 0 ? i : j)) fresh += seg; else links += seg; }
+    parts += nucSVG(X(i), o.y, o.s, o.seq[i]); phos += houseC(p[0], p[1], PR, "pho");
+  }
+  const idx = [...Array(n).keys()].filter(has), a = idx[0], z = idx[idx.length - 1];
+  let ends = "";
+  if (idx.length && !o.noEnds) {
+    const cls = "endl halo" + (o.halo2 ? "2" : "");
+    if (o.ps < 0) ends = T_(X(a) - PT / 2 - 19, o.y - o.s * PO, cls, FS.end, "5′") + (o.end3Up ? T_(X(z) + 14, o.y - o.s * 26, cls, FS.end, "3′") : T_(X(z) + 23, o.y, cls, FS.end, "3′"));
+    else ends = T_(X(a) - 23, o.y, cls, FS.end, "3′") + T_(X(z) + PT / 2 + 19, o.y - o.s * PO, cls, FS.end, "5′");
+  }
+  return `<path class="bd${o.m ? " m" : ""}" d="${links}"/>` + (fresh ? `<path class="bd fresh" d="${fresh}"/>` : "") + parts + phos + ends;
+}
+function hbSVG(bu, bl, X, yU) {                // hydrogen bonds between a base pointing down from yU and one pointing up from yU + DW
+  const offs = HBONDS[bu] === 2 ? [-5, 5] : [-8, 0, 8];
+  return `<path class="hb" d="${offs.map(o => `M${f1(X + o)} ${f1(yU + bFar(bu, o) + 2)}L${f1(X + o)} ${f1(yU + DW - bFar(bl, o) - 2)}`).join("")}"/>`;
+}
+function waterSVG(x, y, id, op, side) {
+  return `<g${id ? ` id="${id}"` : ""} transform="translate(${f1(x)} ${f1(y)})" opacity="${op == null ? 1 : op}">${houseC(-7, 4, 6, "wh")}${houseC(7, 4, 6, "wh")}${houseC(0, -2, 10, "wo")}${side ? TA(16, 2, "sm halo", FS.sm, "H₂O", "start") : T_(0, -24, "sm halo", FS.sm, "H₂O")}</g>`;
+}
+
+/* ===== Transcription view (nucleus) ===== */
+const tcN = () => B.gene.length;
+const camMax = L => Math.max(0, tcN() - L.Wn);
+function tcFollow(L, m) { return Math.max(0, Math.min(camMax(L), m - (L.Wn - 2))); }
+const tcCam = L => B.tc.cam == null ? tcFollow(L, B.tc.m) : Math.max(0, Math.min(camMax(L), B.tc.cam));
+const polX = (L, m) => L.X0 + Math.min(m, tcN() - 1) * PT;
+/* the parts of the transcription picture: gene parts move with the camera, label parts stay at the left edge */
+const TC_CAM = ["pol", "tmpl", "hbD", "cod", "hbM", "mrna", "ghost", "fly"], TC_SCR = ["codL", "mL"];
+function tcOpts() { const T = B.tc, open = T.stage === "open"; return { up: open, pol: open ? T.m : null, m: open ? T.m : null, ghost: open, fresh: T.fresh, hbD: !open }; }
+function tcParts(L, o) {
+  const g = B.gene, n = g.length, tm = dnaComp(g), mr = toRNA(g), P = {}, yC = o.up ? L.yCup : L.yM;
+  if (o.pol != null) { const px = polX(L, o.pol), cp = o.camPx != null ? o.camPx : tcCam(L) * PT; P.pol = `<rect class="pol" x="${f1(px - 58)}" y="${f1(L.yM - 32)}" width="116" height="${f1(DW + 60)}" rx="44"/>` + T_(Math.min(Math.max(px, cp + 88), cp + L.X0 + (L.Wn - 1) * PT - 46), L.yT + 66, "poll halo2", FS.cap, "RNA polymerase →"); }
+  P.tmpl = strandSVG({ seq: tm, X0: L.X0, y: L.yT, s: -1, ps: 1, halo2: 1 });
+  P.hbD = ""; for (let i = 0; i < n; i++) P.hbD += hbSVG(g[i], tm[i], L.X0 + i * PT, L.yM);
+  P.cod = strandSVG({ seq: g, X0: L.X0, y: yC, s: 1, ps: -1, halo2: 1 });
+  P.codL = TA(8, yC - 30, "strl halo2", FS.lab, "Coding strand", "start");
+  if (o.m != null) {
+    const m = o.m, fl = o.fly ? m - 1 : -1, ms = [...mr].map((b, i) => i < m && i !== fl ? b : "");
+    P.hbM = ""; for (let i = 0; i < m; i++) if (i !== fl) P.hbM += hbSVG(mr[i], tm[i], L.X0 + i * PT, L.yM);
+    P.mrna = strandSVG({ seq: ms, X0: L.X0, y: L.yM, s: 1, ps: -1, m: 1, fresh: o.fly ? -1 : o.fresh, noEnds: m - (fl >= 0 ? 1 : 0) <= 0, end3Up: m < n, halo2: 1 });
+    if (o.ghost && m < n) { const X = L.X0 + m * PT; P.ghost = `<path class="ghost" d="M${sugarPts(X, L.yM, 1).map(P2).join("L")}Z"/><circle class="ghost" cx="${f1(X - PT / 2)}" cy="${f1(L.yM - PO)}" r="${PR}"/>`; }
+    if (fl >= 0) {   // the newest nucleotide, drawn on its own so it can fly in
+      const X = L.X0 + fl * PT, pc = [X - PT / 2, L.yM - PO], sc = [X, L.yM], pv = [X - PT, L.yM];
+      P.fly = `<path class="bd m" d="M${P2(edgePt(pc, sc, SR))}L${P2(edgePt(sc, pc, PR))}"/>` + (fl > 0 ? `<path class="bd fresh" d="M${P2(edgePt(pv, pc, PR))}L${P2(edgePt(pc, pv, SR))}"/>` : "") + nucSVG(X, L.yM, 1, mr[fl]) + houseC(pc[0], pc[1], PR, "pho") + hbSVG(mr[fl], tm[fl], X, L.yM);
+    }
+    if (m > 0) P.mL = TA(8, L.yM - 30, "strl halo2", FS.lab, "mRNA", "start");
+  }
+  return P;
+}
+const tcWin = (L, camPx) => [camPx > 0 ? L.X0 - 30 : 0, L.X0 + (L.Wn - 1) * PT + 30];   // the window onto the gene
+function tcBg(L) {
+  const gx = L.envX, H = L.H;
+  return `<rect class="nucbg" x="0" y="0" width="${gx}" height="${H}"/><path class="env" d="M${gx} 0V${L.gy0}H${gx + 8}V0M${gx} ${H}V${L.gy1}H${gx + 8}V${H}"/>`
+    + TR(gx - 13, L.gy0 - 46, "capt halo2", FS.sm, "Nuclear pore") + TR(gx + 8 + (L.W - gx - 8) / 2, L.yT + 10, "capt", FS.cap, "Cytoplasm")
+    + TA(gx - 14, H - 14, "capt halo2", FS.cap, "Nucleus", "end") + TA(8, L.yT + 40, "strl halo2", FS.lab, "Template strand", "start");
+}
+const pick = (P, keys, o) => keys.filter(k => P[k] && (k !== "hbD" || !o || o.hbD)).map(k => P[k]).join("");
+function drawTc(L, A) {   // A: { o (what to draw), cam (index), omit: parts drawn in an animation layer instead }
+  A = A || {};
+  const T = B.tc, o = A.o || tcOpts(), cam = (A.cam != null ? A.cam : tcCam(L)) * PT, P = tcParts(L, o), om = A.omit || {};
+  const [cx0, cx1] = tcWin(L, cam), keep = k => !om[k];
+  let s = `<defs><clipPath id="nclip"><rect x="${cx0}" y="0" width="${cx1 - cx0}" height="${L.H}"/></clipPath></defs>` + tcBg(L);
+  s += `<g clip-path="url(#nclip)"><g transform="translate(${f1(-cam)} 0)">${pick(P, TC_CAM.filter(keep), o)}</g></g>` + pick(P, TC_SCR.filter(keep));
+  if (T.stage === "gone") s += T_(L.envX / 2, L.yM - 52, "capt halo2", FS.cap, "The mRNA has left through the nuclear pore →");
+  if (B.hl === "dir" && T.stage === "open") {   // direction arrows (a question's answer)
+    const arrow = (x0, x1, y, t) => `<path class="dir" d="M${x0} ${f1(y)}H${x1}M${x1 - 10} ${f1(y - 7)}L${x1} ${f1(y)}L${x1 - 10} ${f1(y + 7)}"/>` + TA(x1 + 8, y, "dirt halo2", FS.sm, t, "start");
+    const w = L.envX > 500, x1 = w ? 400 : 200;
+    s += arrow(w ? 180 : 150, x1, L.yT + 28, "3′ → 5′") + arrow(80, x1, L.yM - 34, "grows 5′ → 3′");
+  }
+  return s;
+}
+function tcFx(L, o, keys, camIdx) { const P = tcParts(L, o); return `<g transform="translate(${f1(-camIdx * PT)} 0)">${pick(P, TC_CAM.filter(k => keys.includes(k)))}</g>` + pick(P, TC_SCR.filter(k => keys.includes(k))); }
+
+/* ===== Translation view (cytoplasm, ribosome) ===== */
+const tlM = () => toRNA(B.gene);
+const tlCodons = () => fullCodons(tlM());
+const codX = (L, c) => L.X0 + (3 * c + 1) * PT;               // centre of codon c, on the mRNA
+const tlCam = (L, pos) => L.row ? codX(L, pos) - L.xL : 0;   // phone: the mRNA slides under a fixed ribosome; wide: no camera
+function trnaSVG(L, c, id, tf, op, bead, noHB) {         // a tRNA on codon c: anticodon bases up, its amino acid below
+  const xc = codX(L, c), yA = L.yA, ac = rnaOpp(tlCodons()[c]), aa = CODON[tlCodons()[c]];
+  const body = `M${xc - 62} ${f1(yA + 12)}C${xc - 72} ${f1(yA + 54)} ${xc - 30} ${f1(yA + 64)} ${xc - 16} ${f1(yA + 72)}L${xc - 12} ${f1(yA + 90)}H${xc + 12}L${xc + 16} ${f1(yA + 72)}C${xc + 30} ${f1(yA + 64)} ${xc + 72} ${f1(yA + 54)} ${xc + 62} ${f1(yA + 12)}Z`;
+  let s = `<path class="trna" d="${body}"/>` + strandSVG({ seq: ac, X0: xc - PT, y: yA, s: -1, ps: 1, noEnds: 1 });
+  const cd = tlCodons()[c]; if (!noHB) for (let k = 0; k < 3; k++) s += hbSVG(cd[k], ac[k], xc + (k - 1) * PT, L.yM);   // codon–anticodon hydrogen bonds
+  s += T_(xc, yA + 30, "trl", 14, "anticodon") + T_(xc, yA + 52, "trl", FS.sm, "tRNA");
+  if (bead) s += aaBead(xc, L.bY, aa);   // its own amino acid, before the peptide bond
+  if (id === undefined || id === null) return s;
+  return `<g id="${id}"${tf ? ` transform="${tf}"` : ""}${op != null ? ` opacity="${op}"` : ""}>${s}</g>`;
+}
+const aaBead = (x, y, a, fresh) => houseC(x, y, 22, "aa") + T_(x, y + 1, "pl", FS.aa, a);
+/* where each amino acid of the chain sits (screen), for a translation state */
+function chainPos(L, T, cam) {
+  const out = [], n = T.chain.length; if (!n) return out;
+  const xs = c => codX(L, c) - cam;
+  let k = n - 1, held;
+  if (T.hold === "R") { out[k] = [xs(T.pos + 1), L.bY]; k--; out[k] = [xs(T.pos), L.bY]; held = k; k--; }
+  else if (T.L) { out[k] = [xs(T.pos), L.bY]; held = k; k--; }
+  else held = n;
+  for (let j = 1; k >= 0; k--, j++) {
+    if (L.row) out[k] = [34 + 56 * k, L.rowY];
+    else out[k] = [xs(T.pos) - 60 * j, L.bY];
+  }
+  return out;
+}
+function finalPos(L, n) { return [...Array(n).keys()].map(k => L.row ? [34 + 56 * k, L.rowY] : [48 + 60 * k, L.bY]); }
+function chainSVG(pos, aas, freshK, label) {   // beads joined by peptide bonds; freshK: index of the newest bond
+  let s = "", lab = "";
+  for (let k = 1; k < pos.length; k++) {
+    const a = pos[k - 1], b = pos[k];
+    s += `<path class="bd${k === freshK ? " fresh" : ""}" d="M${P2(edgePt(b, a, 22))}L${P2(edgePt(a, b, 22))}"/>`;
+    if (k === freshK) lab = T_((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 30, "sm halo", FS.sm, "peptide bond");
+  }
+  pos.forEach((p, k) => { s += aaBead(p[0], p[1], aas[k]); });
+  if (label) s += label;
+  return s + lab;
+}
+/* the parts of the translation picture: mRNA and tRNAs move with the camera; ribosome, chain and labels are fixed */
+const TL_CAM = ["mrna", "trL", "trR"];
+function tlParts(L, T, cam, A) {
+  A = A || {};
+  const m = tlM(), cods = tlCodons(), xL = codX(L, T.pos) - cam, xR = xL + 3 * PT, rc = (xL + xR) / 2, half = RIBO_HALF(L), P = {};
+  P.cyto = TA(10, L.H - 14, "capt", FS.cap, "Cytoplasm", "start");
+  P.riboL = `<path class="ribo" d="M${rc - half} ${f1(L.yM + 22)}Q${rc - half} ${f1(L.yM + 14)} ${rc - half + 14} ${f1(L.yM + 14)}H${rc + half - 14}Q${rc + half} ${f1(L.yM + 14)} ${rc + half} ${f1(L.yM + 22)}V${f1(L.bY + 8)}Q${rc + half} ${f1(L.bY + 34)} ${rc + half - 26} ${f1(L.bY + 34)}H${rc - half + 26}Q${rc - half} ${f1(L.bY + 34)} ${rc - half} ${f1(L.bY + 8)}Z"/>`;
+  let g = "";
+  cods.forEach((c, i) => {   // codon boxes, read in triplets without overlapping
+    const x = codX(L, i), inR = !T.done && (i === T.pos || i === T.pos + 1), st = CODON[c] === STOP;
+    g += `<rect class="codon${inR ? " in" : ""}${st ? " stop" : ""}" x="${f1(x - 1.5 * PT + 3)}" y="${f1(L.yM - 22)}" width="${3 * PT - 6}" height="${f1(PUR.far + 30)}" rx="10"/>`;
+    if (st) g += T_(x, L.yM + PUR.far + 22, "badt halo", FS.sm, "stop");
+  });
+  P.mrna = g + strandSVG({ seq: m, X0: L.X0, y: L.yM, s: 1, ps: -1, m: 1 });
+  if (T.L) P.trL = trnaSVG(L, T.pos, null, "", null, false, A.noHB);
+  if (T.R) P.trR = trnaSVG(L, T.pos + 1, null, "", null, !T.bond, A.noHB);
+  P.riboS = `<ellipse class="ribo" cx="${rc}" cy="56" rx="${half - 6}" ry="40"/>` + T_(rc, 46, "ribl", FS.lab, "Ribosome (rRNA)") + (T.done ? "" : T_(xL, 78, "ribl", 14, "codon") + T_(xR, 78, "ribl", 14, "codon"));
+  if (B.sites) P.sites = T_(xL, L.bY + 50, "ribl halo", FS.sm, "P site") + T_(xR, L.bY + 50, "ribl halo", FS.sm, "A site");
+  const pos = A.chainPos || (T.done ? finalPos(L, T.chain.length) : chainPos(L, T, cam));
+  const lab = T.done && !A.chainPos && pos.length ? TA(pos[0][0] - 22, pos[0][1] - 40, "strl halo", FS.lab, "Polypeptide released", "start") : "";
+  P.chain = chainSVG(pos, T.chain, T.done || A.chainPos ? -1 : T.freshK, lab);
+  return P;
+}
+function drawTl(L, A) {
+  A = A || {};
+  const T = A.T || B.tl, cam = A.cam != null ? A.cam : tlCam(L, T.pos), P = tlParts(L, T, cam, A), om = A.omit || {}, k = x => P[x] && !om[x] ? P[x] : "";
+  return k("cyto") + k("riboL") + `<g transform="translate(${f1(-cam)} 0)">${TL_CAM.map(k).join("")}</g>` + k("riboS") + k("sites") + k("chain");
+}
+function tlFx(L, T, keys, cam, A) { const P = tlParts(L, T, cam, A); return `<g transform="translate(${f1(-cam)} 0)">${TL_CAM.filter(x => keys.includes(x)).map(x => P[x] || "").join("")}</g>` + keys.filter(x => !TL_CAM.includes(x)).map(x => P[x] || "").join(""); }
+
+/* ===== Scene ===== */
+function renderScene(A) {
+  fxClear();   // any animation layer left showing a finished move
+  if (B.scene === "code") return;
+  const L = lay(), svg = $("scene");
+  setAttr(svg, "viewBox", `0 0 ${L.W} ${L.H}`);
+  morph($("world"), B.scene === "tc" ? drawTc(L, A) : drawTl(L, A));
+  setAttr(svg, "aria-label", sceneLabel());
+}
+function sceneLabel() {
+  const g = B.gene;
+  if (B.scene === "tc") { const T = B.tc; return `Transcription in the nucleus. Coding strand ${seqW(g, 5, 3)}, template strand ${seqW(dnaComp(g), 3, 5)}. ` + (T.stage === "wound" ? "The DNA is wound." : T.stage === "gone" ? "The mRNA has left through the nuclear pore." : `mRNA so far: ${seqW(toRNA(g).slice(0, T.m) || "none", 5, 3)}.`); }
+  const T = B.tl, c = tlCodons();
+  return `Translation at a ribosome. mRNA codons ${c.join(" ")}. ` + (T.done ? `Polypeptide released: ${pep(T.chain)}.` : `Ribosome on codons ${T.pos + 1} and ${T.pos + 2}. Chain so far: ${T.chain.length ? pep(T.chain) : "none"}.`);
+}
+
+/* ===== Question bank (every answer computed from the fact tables) ===== */
+const V = t => t.variants ? t.variants[t.vi || 0] : null;
+const rev = s => [...s].reverse().join("");
+const H5V = [["GGU", "GGC"], ["CUA", "CUG"], ["GCU", "GCA"]];
+const H6G = "ATGGTCAAGCTGTAA";
+const H9G = "ATGAAGGGCTAA";
+const TASKS = {
+  easy: [
+    { kind: "choice", setup: { scene: "tc", tc: { stage: "gone" }, lock: { all: 1 } },                                  // pp 25, 28, 31
+      text: "In a eukaryotic cell, where do transcription and translation happen?",
+      options: [{ t: "Transcription in the nucleus; translation in the cytoplasm, at a ribosome", ok: () => PLACE.transcription === "nucleus" && PLACE.translation === "cytoplasm" },
+                { t: "Both in the nucleus", ok: () => PLACE.translation === "nucleus", why: "Translation is not in the nucleus. The mRNA leaves through a nuclear pore, and translation happens in the cytoplasm, at a ribosome." },
+                { t: "Transcription in the cytoplasm; translation in the nucleus", ok: () => PLACE.transcription === "cytoplasm", why: "The other way round. The DNA stays in the nucleus, so transcription happens there. Translation happens in the cytoplasm." },
+                { t: "Both in the cytoplasm, at a ribosome", ok: () => PLACE.transcription === "cytoplasm", why: "Transcription needs the gene, and the DNA stays in the nucleus. Only translation happens at a ribosome, in the cytoplasm." }],
+      explain: () => "Transcription happens in the nucleus. The mRNA leaves through a nuclear pore, and translation happens in the cytoplasm, at a ribosome.",
+      hints: ["Where is the DNA kept?", "The mRNA has to leave through a nuclear pore before it reaches a ribosome.", "Nucleus, then cytoplasm."] },
+    { kind: "choice", setup: { scene: "tc", tc: { stage: "open", m: 4 }, lock: { all: 1 } },                            // pp 25, 27
+      text: "Which enzyme joins the RNA nucleotides together in transcription?",
+      options: [{ t: "RNA polymerase", ok: () => ENZYME.transcription === "RNA polymerase" },
+                { t: "DNA polymerase", ok: () => ENZYME.transcription === "DNA polymerase", why: "Careful: DNA polymerase is the enzyme in DNA replication. Transcription makes RNA, using RNA polymerase." },
+                { t: "rRNA in the ribosome", ok: () => ENZYME.transcription === CATALYST, why: "rRNA catalyses peptide bonds in translation, at the ribosome. In transcription the enzyme is RNA polymerase." },
+                { t: "No enzyme: the nucleotides join on their own", ok: () => !ENZYME.transcription, why: "An enzyme joins them: RNA polymerase forms the phosphodiester bonds of the mRNA's sugar–phosphate backbone." }],
+      explain: () => "RNA polymerase joins the RNA nucleotides with phosphodiester bonds. DNA polymerase is the enzyme for DNA replication.",
+      hints: ["The product is RNA, not DNA.", "The enzyme is named after the molecule it builds, plus ‘polymerase’.", "RNA polymerase."] },
+    { kind: "goal", id0: "tcAll", setup: { scene: "tc", gene: PRESETS[0].gene, lock: { tabs: 1, gene: 1 } },             // pp 25–26
+      text: "Transcribe this gene. Unwind the DNA, then add every RNA nucleotide to the mRNA. Then press Check.",
+      hints: ["Press Unwind. Then look at the template base under RNA polymerase.", "Opposite each template base: A → U, T → A, C → G, G → C.", () => `The mRNA is ${spaced(toRNA(PRESETS[0].gene))}.`] },
+    { kind: "choice", setup: { scene: "tc", gene: PRESETS[0].gene, lock: { all: 1 } }, variants: ["CAG", "GAC", "TAC"],   // p 23 examples, as template triplets
+      text: t => `A triplet on the DNA template strand reads ${seqW(V(t), 3, 5)}. Which mRNA codon is made from it?`,
+      opts: t => { const v = V(t), r = rnaOpp(v);
+        return [{ t: seqW(r, 5, 3), ok: true },
+                { t: seqW(r.replace(/U/g, "T"), 5, 3), why: `That has thymine, which is not in RNA. Opposite adenine, RNA has uracil: ${seqW(r, 5, 3)}.` },
+                { t: seqW(v, 5, 3), why: "That copies the template base for base. The codon is complementary to the template: C → G, A → U, G → C, T → A." },
+                { t: seqW(rev(r), 5, 3), why: `The bases are in the wrong order. Pair them in order along the strand: ${seqW(v, 3, 5)} gives ${seqW(r, 5, 3)}.` }]; },
+      explain: t => { const v = V(t), r = rnaOpp(v); return `Pair each base: ${[...v].map(b => b + " → " + RNA_OPP[b]).join(", ")}. The codon is ${seqW(r, 5, 3)}, which codes for ${aaFull(CODON[r])}.`; },
+      hints: ["The codon is complementary to the template, base by base.", "RNA has uracil, not thymine: an A on the template pairs with U.", t => `${seqW(rnaOpp(V(t)), 5, 3)}.`] },
+    { kind: "choice", setup: { scene: "tl", lock: { all: 1 } }, variants: ["AUG", "AAG", "GAU"],                          // p 23: anticodons complementary to codons
+      text: t => `An mRNA codon reads ${seqW(V(t), 5, 3)}. What is the anticodon of the tRNA that pairs with it, written 3′ → 5′ under the codon?`,
+      opts: t => { const v = V(t), r = rnaOpp(v), w = s => seqW(s, 3, 5);
+        return [{ t: w(r), ok: true },
+                { t: w(v), why: "That is the codon itself, copied letter for letter. The anticodon is complementary to the codon: A–U and G–C." },
+                { t: w(r.replace(/U/g, "T")), why: "tRNA is RNA, so it has no thymine. Opposite adenine it has uracil." },
+                { t: w(rev(r)), why: `Right bases, wrong order. The anticodon is antiparallel: its 3′ end pairs with the codon's 5′ end, so pair the bases in order: ${seqW(v, 5, 3)} over ${w(r)}.` }]; },
+      explain: t => { const v = V(t), r = rnaOpp(v); return `${seqW(v, 5, 3)} pairs with the anticodon ${seqW(r, 3, 5)} (A–U, G–C). That tRNA carries ${aaFull(CODON[v])}.`; },
+      hints: ["An anticodon is complementary to the codon.", "In RNA, A pairs with U and G pairs with C. There is no T.", t => `${seqW(rnaOpp(V(t)), 3, 5)}.`] },
+    { kind: "choice", setup: { scene: "code", lock: { tabs: 1 } }, variants: ["GGC", "AAG", "CAG"],                       // the codon table
+      text: t => `Use the codon table. Which amino acid does the mRNA codon ${V(t)} code for?`,
+      opts: t => { const v = V(t), c = rnaOpp(v), r = rev(v);
+        return [{ t: aaFull(CODON[v]), ok: true },
+                { t: aaFull(CODON[c]), why: `That is the amino acid for ${c}, the complementary triplet. The table uses the mRNA codon itself: look up ${v}.` },
+                { t: aaFull(CODON[r]), why: `That is ${r}: the bases read backwards. Read them in order: first base (row group), second (column), third (row inside the group).` },
+                { t: "Stop", why: `${v} is not a stop codon. The stop codons are UAA, UAG and UGA.` }]; },
+      explain: t => `${V(t)} codes for ${aaFull(CODON[V(t)])}. First base ${V(t)[0]}, second ${V(t)[1]}, third ${V(t)[2]}.`,
+      hints: ["Find the first base at the left of the table.", "Then the second base along the top, then the third base inside the box.", t => `${CODON[V(t)]}.`],
+      reveal: t => { B.code.sel = V(t); } },
+    { kind: "choice", setup: { scene: "code", code: { prop: "deg" }, lock: { tabs: 1 } },                                    // p 23
+      text: "The genetic code is degenerate. What does that mean?",
+      options: [{ t: "Most amino acids have more than one codon: 64 codons code for 20 amino acids", ok: () => Object.keys(CODON).length === Math.pow(NB, TRIPLET) && new Set(Object.values(CODON).filter(a => a !== STOP)).size === NAA },
+                { t: "Each codon codes for more than one amino acid", ok: () => false, why: "The other way round. Each codon codes for just one amino acid, but most amino acids have several codons." },
+                { t: "The code changes from one species to another", ok: () => false, why: "No: the code is universal. The same codons code for the same amino acids in almost every organism." },
+                { t: "Each base is read in more than one codon", ok: () => false, why: "That would be an overlapping code. The code is non-overlapping: each base is read once, in one codon." }],
+      explain: () => `${NB} bases read in triplets give ${NB}³ = ${Math.pow(NB, TRIPLET)} codons, but there are only ${NAA} amino acids. So most have more than one codon: glycine has ${synonyms("Gly").length} (${synonyms("Gly").join(", ")}).`,
+      hints: ["Count the codons: 4 bases, read three at a time.", "How many amino acids are there? Compare the two numbers.", "64 codons, 20 amino acids: most amino acids have several codons."],
+      reveal: () => { B.code.prop = "deg"; B.code.sel = "GGC"; } },
+    { kind: "choice", setup: { scene: "tl", tl: 2, lock: { all: 1 } },                                                    // p 28
+      text: "Two tRNAs are on the ribosome. Which bond joins their amino acids, and how does it form?",
+      options: [{ t: "A peptide bond, by condensation: a molecule of water is released", ok: () => true },
+                { t: "A phosphodiester bond, by condensation", ok: () => false, why: "Phosphodiester bonds join nucleotides in DNA and RNA. Amino acids are joined by peptide bonds." },
+                { t: "A peptide bond, by hydrolysis: water is added", ok: () => false, why: "Hydrolysis adds water and breaks bonds. A peptide bond forms by condensation, which releases water." },
+                { t: "A hydrogen bond between the codon and the anticodon", ok: () => false, why: "Hydrogen bonds hold each anticodon to its codon. They don't join the amino acids." }],
+      explain: () => `A peptide bond forms between the two amino acids by condensation, releasing a molecule of water. ${CATALYST} in the ribosome catalyses it. Watch the model.`,
+      hints: ["Amino acids join in a chain called a polypeptide.", "The joining reaction releases a small molecule.", "A peptide bond, by condensation."],
+      reveal: () => { tlStep(true); } }
+  ],
+  hard: [
+    { kind: "choice", setup: { scene: "tc", gene: t => V(t) + "TAA", lock: { all: 1 }, hide: { mrna: 1 } }, variants: ["ATGGTCAAG", "ATGCTGGGC", "ATGGGTGGC"],   // pp 26–27
+      text: t => `The coding strand of a gene reads ${seqW(spaced(V(t)), 5, 3)}. What is the mRNA made from this gene?`,
+      opts: t => { const v = V(t), w = s => seqW(spaced(s), 5, 3);
+        return [{ t: w(toRNA(v)), ok: true },
+                { t: w(rnaOpp(v)), why: "That is complementary to the coding strand. The mRNA pairs with the template strand, so it matches the coding strand, with U for T." },
+                { t: w(v), why: "The sequence is right, but mRNA has uracil, not thymine." },
+                { t: seqW(spaced(dnaComp(v)), 3, 5), why: "That is the template strand: DNA, with thymine. The mRNA is complementary to it, so it matches the coding strand, with U in place of T." }]; },
+      explain: t => `The mRNA is complementary to the template strand, so it has the same sequence as the coding strand, with U for T: ${seqW(spaced(toRNA(V(t))), 5, 3)}.`,
+      hints: ["The mRNA pairs with the template strand, not the coding strand.", "So the mRNA has the same sequence as the coding strand, apart from one base.", t => `${spaced(toRNA(V(t)))}.`],
+      reveal: () => { B.hide.mrna = 0; B.tc.stage = "open"; B.tc.m = tcN(); } },
+    { kind: "aaseq", setup: { scene: "code", lock: { tabs: 1 } }, variants: ["TACCAGTTC", "TACGACCCG", "TACTTCCAGGAC"],   // p 23 template triplets
+      text: t => `A DNA template strand reads ${seqW(spaced(V(t)), 3, 5)}. What amino acid sequence does it code for? Use the codon table.`,
+      right: t => translate(rnaOpp(V(t))).aas, wrongRead: t => fullCodons(toRNA(V(t))).map(c => CODON[c]),
+      hints: ["First make the mRNA: it is complementary to the template.", "Pair each base (T → A, A → U, C → G, G → C), split it into codons, then use the table.", t => `mRNA ${spaced(rnaOpp(V(t)))} → ${pep(translate(rnaOpp(V(t))).aas)}.`],
+      reveal: t => { B.code.sel = rnaOpp(V(t)).slice(3, 6); } },
+    { kind: "choice", setup: { scene: "tc", tc: { stage: "open", m: 5 }, lock: { all: 1 } },                                // p 26
+      text: "Which way does RNA polymerase move along the DNA, and which way does the mRNA grow?",
+      options: [{ t: "Along the template strand 3′ → 5′; the mRNA grows 5′ → 3′", ok: () => READS.template === "3′ → 5′" && READS.mrna === "5′ → 3′" },
+                { t: "Along the template strand 5′ → 3′; the mRNA grows 5′ → 3′", ok: () => READS.template === "5′ → 3′", why: "RNA polymerase moves along the template 3′ → 5′. The mRNA is antiparallel to the template, so it grows 5′ → 3′." },
+                { t: "Along the template strand 3′ → 5′; the mRNA grows 3′ → 5′", ok: () => READS.mrna === "3′ → 5′", why: "The mRNA is antiparallel to the template. The template is read 3′ → 5′, so the mRNA grows 5′ → 3′." },
+                { t: "Along the coding strand 5′ → 3′; the mRNA grows 5′ → 3′", ok: () => false, why: "RNA polymerase reads the template strand, not the coding strand. The coding strand is not transcribed." }],
+      explain: () => "RNA polymerase moves along the template strand 3′ → 5′, so the mRNA grows 5′ → 3′. The arrows on the model show both.",
+      hints: ["Which strand does RNA polymerase read: template or coding?", "The mRNA and the template are antiparallel.", "Template 3′ → 5′; mRNA 5′ → 3′."],
+      reveal: () => { B.hl = "dir"; } },
+    { kind: "num", id0: "count", unit: "amino acids", setup: { scene: "tl", tl: 4, lock: { all: 1 }, hide: { pep: 1 } }, variants: [90, 147, 204],   // p 23: triplets
+      text: t => `An mRNA has ${V(t)} bases from the start codon up to its stop codon (not counting the stop codon). How many amino acids does it code for?`,
+      hints: ["How many bases make one codon?", "Each codon codes for one amino acid, and the start codon counts.", t => `${V(t)} ÷ 3 = ${V(t) / 3}.`] },
+    { kind: "choice", setup: { scene: "code", lock: { tabs: 1 }, hide: { mut: 1 } }, variants: H5V,                       // p 23: degeneracy limits mutations
+      text: t => `A substitution in the gene changes one mRNA codon from ${V(t)[0]} to ${V(t)[1]}. What is the effect on the polypeptide?`,
+      opts: t => { const [a, b] = V(t);
+        return [{ t: `No change: ${a} and ${b} code for the same amino acid`, ok: CODON[a] === CODON[b] },
+                { t: "One amino acid changes", ok: CODON[a] !== CODON[b] && CODON[b] !== STOP, why: `Look both up: ${a} and ${b} both code for ${aaFull(CODON[a])}.` },
+                { t: "Every amino acid after it changes", ok: false, why: "That is a frameshift, from an insertion or a deletion. A substitution changes only one codon." },
+                { t: "The polypeptide stops early", ok: CODON[b] === STOP, why: `${b} is not a stop codon (UAA, UAG, UGA).` }]; },
+      explain: t => { const [a, b] = V(t), x = CODON[a]; return `The code is degenerate: ${a} and ${b} both code for ${aaFull(x)}, so the primary structure is unchanged. ${cap(AANAME[x])} has ${synonyms(x).length} codons: ${synonyms(x).join(", ")}.`; },
+      hints: ["Look up both codons in the table.", "The code is degenerate: many amino acids have more than one codon.", t => `Both code for ${CODON[V(t)[0]]}: no change.`],
+      reveal: t => { B.code.prop = "deg"; B.code.sel = V(t)[1]; } },
+    { kind: "choice", setup: { scene: "code", gene: H6G, lock: { tabs: 1 }, hide: { mut: 1 } }, variants: [3, 4, 7],        // Module 6 link, computed
+      text: t => `This mRNA codes for ${pep(translate(toRNA(H6G)).aas)}: ${spaced(toRNA(H6G))}. A deletion in the gene removes the base that gives mRNA base ${V(t) + 1}. What does the mRNA code for now?`,
+      opts: t => { const p = V(t), o = translate(toRNA(H6G)).aas, r = mutOutcome(H6G, "del", p), nw = r.b.aas, ci = Math.floor(p / 3);
+        const lost = o.filter((_, i) => i !== ci), one = o.map((a, i) => i === ci ? nw[ci] : a);
+        const end = ", then a stop codon";
+        return [{ t: pep(nw) + (r.b.stop ? end : ", and no stop codon in frame"), ok: true },
+                { t: pep(lost) + end, why: "One base lost is not one codon lost. Every codon after the deletion is read in a new frame: a frameshift." },
+                { t: pep(o) + end, why: "Degeneracy can hide a substitution, not a deletion. Here the reading frame shifts, so every later codon changes." },
+                { t: pep(one) + end, why: "Only one codon changes after a substitution. After a deletion, every codon after it changes: a frameshift." }]; },
+      explain: t => { const p = V(t), r = mutOutcome(H6G, "del", p); return `Frameshift: the new mRNA reads ${spaced(r.m1)}, so every codon after the deletion changes. It codes for ${pep(r.b.aas)}${r.b.stop ? "" : ", and the stop codon UAA is no longer in frame, so the ribosome would read on past it"}.`; },
+      hints: ["Write the mRNA again without that base.", "Split the new sequence into codons from the start: they all shift by one base.", t => `${spaced(mutOutcome(H6G, "del", V(t)).m1)}.`],
+      reveal: t => { Object.assign(B.code, { mut: true, mt: "del", mp: V(t) }); B.hide.mut = 0; } },
+    { kind: "choice", setup: { scene: "tl", tl: 3, lock: { all: 1 } },                                                    // p 28
+      text: "What is the role of rRNA in translation?",
+      options: [{ t: "It catalyses peptide bond formation, and holds the mRNA in place on the ribosome", ok: () => CATALYST === "rRNA" },
+                { t: "It carries amino acids to the ribosome", ok: () => false, why: "That is tRNA. Each tRNA brings one specific amino acid to the ribosome." },
+                { t: "It makes the amino acids", ok: () => false, why: "The ribosome doesn't make amino acids. They are already in the cytoplasm; tRNA brings them and the ribosome joins them." },
+                { t: "It copies the gene into mRNA", ok: () => false, why: "That is transcription, by RNA polymerase in the nucleus." }],
+      explain: () => "Ribosomes are made of rRNA. It holds the mRNA in place, lined up correctly, and catalyses the peptide bond between amino acids.",
+      hints: ["The ribosome is made of rRNA.", "Think about what the ribosome does to the two amino acids side by side.", "It catalyses the peptide bond and holds the mRNA."] },
+    { kind: "choice", setup: { scene: "tl", tl: 1, lock: { all: 1 } },                                                    // pp 23, 28
+      text: "Why must each tRNA have a specific anticodon?",
+      options: [{ t: "Each anticodon pairs only with its complementary codon, and each tRNA carries one specific amino acid, so each codon gets the right amino acid", ok: () => true },
+                { t: "So the tRNA can bind to the DNA in the nucleus", ok: () => false, why: "tRNA works in the cytoplasm, at the ribosome. It pairs with the mRNA codon, not with DNA." },
+                { t: "So the anticodon can code for the amino acid", ok: () => false, why: "The codon on the mRNA codes for the amino acid. The anticodon pairs with that codon." },
+                { t: "So the tRNA can form the peptide bond", ok: () => false, why: "rRNA in the ribosome catalyses the peptide bond. The anticodon's job is to pair with the codon." }],
+      explain: () => "The anticodon pairs only with its complementary codon, and that tRNA carries one specific amino acid. So the amino acids join in the order the codons give.",
+      hints: ["What does the anticodon pair with?", "Each tRNA carries one particular amino acid.", "Right codon → right anticodon → right amino acid."] },
+    { kind: "goal", id0: "tlAll", setup: { scene: "tl", gene: H9G, lock: { tabs: 1, gene: 1 } },                            // pp 28–31
+      text: () => `Translate this mRNA on the model: ${spaced(toRNA(H9G))}. Make the polypeptide ${pep(translate(toRNA(H9G)).aas)}, then press Check.`,
+      hints: ["Choose the tRNA whose anticodon pairs with the codon.", "With two tRNAs on, form the peptide bond, then move the ribosome on. Repeat.", "Anticodons UAC, UUC, CCG; at the stop codon, release the polypeptide."] }
+  ]
+};
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });
+const txt = t => typeof t.text === "function" ? t.text(t) : t.text;
+const getOpts = t => t.opts ? t.opts(t) : t.options;
+const choiceOk = (t, o) => typeof o.ok === "function" ? !!o.ok() : !!o.ok;
+function numAns(t) { if (t.id0 === "count") return V(t) / TRIPLET; return NaN; }
+function numWrongs(t) {
+  const n = V(t), a = n / TRIPLET;
+  return [[n, "One base doesn't code for one amino acid. A codon is three bases, so divide by 3."],
+          [n * TRIPLET, "Divide by 3, don't multiply: each amino acid needs one codon of three bases."],
+          [a - 1, "The start codon AUG codes for methionine, so it counts. The stop codon is not in these bases."],
+          [a + 1, "The stop codon is not in these bases, and it codes for no amino acid anyway."],
+          [n - 2, "That counts overlapping triplets. The code is non-overlapping: each base is read once."]];
+}
+function aaOpts(t) {   // the choices in each place of an amino-acid sequence answer
+  const set = new Set([...t.right(t), ...t.wrongRead(t)]); return [...set];
+}
+/* goals */
+function goalMet(t, m) {
+  if (t.id0 === "tcAll") return (m.tc.stage === "open" || m.tc.stage === "gone") && m.tc.m === m.gene.length;
+  if (t.id0 === "tlAll") return m.tl.done && pep(m.tl.chain) === pep(translate(toRNA(m.gene)).aas);
+  return false;
+}
+function goalFill(t, m) {
+  if (t.id0 === "tcAll") { if (m.tc.stage === "wound") m.tc.stage = "open"; m.tc.m = m.gene.length; m.tc.fresh = -1; }
+  if (t.id0 === "tlAll") tlRun(m, 99);
+}
+function goalRight(t) {
+  if (t.id0 === "tcAll") return `Correct. The mRNA reads ${seqW(spaced(toRNA(B.gene)), 5, 3)}: the coding strand's sequence, with U in place of T.`;
+  return `Correct. The ribosome read the codons in triplets and the polypeptide ${pep(B.tl.chain)} was released at the stop codon.`;
+}
+function goalWhy(t) {
+  if (t.id0 === "tcAll") { const T = B.tc, n = tcN(); if (T.stage === "wound") return "Press Unwind first: the hydrogen bonds between the DNA strands must break."; return `${n - T.m} template base${n - T.m === 1 ? " still has" : "s still have"} no RNA nucleotide opposite. Keep going.`; }
+  const T = B.tl;
+  if (!T.L) return "Start by choosing the tRNA for the first codon, AUG.";
+  return `So far: ${pep(T.chain)}. Keep going to the stop codon, then release the polypeptide.`;
+}
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  /* the codon table */
+  const cods = Object.keys(CODON), aas = new Set(Object.values(CODON)), stops = cods.filter(c => CODON[c] === STOP).sort().join(",");
+  if (cods.length !== 64 || cods.length !== Math.pow(NB, TRIPLET)) errs.push("code: the table must have 64 codons");
+  if (aas.size !== NAA + 1 || !aas.has(STOP)) errs.push("code: the table must code for 20 amino acids plus stop");
+  if (stops !== "UAA,UAG,UGA") errs.push("code: the stop codons must be UAA, UAG, UGA");
+  if (CODON[START] !== "Met" || synonyms("Gly").length !== 4 || synonyms("Leu").length !== 6 || synonyms("Met").length !== 1 || synonyms("Trp").length !== 1) errs.push("code: table values are wrong");
+  if ([...aas].some(a => !AANAME[a])) errs.push("code: an amino acid has no full name");
+  NOTES_EX.forEach(([tp, a]) => { if (CODON[rnaOpp(tp)] !== a) errs.push(`facts: template ${tp} should give ${a}`); });
+  PRESETS.forEach(p => { const g = p.gene; if (geneProblem(g) || !translate(toRNA(g)).stop || CODON[fullCodons(toRNA(g)).slice(-1)[0]] !== STOP) errs.push("facts: preset " + p.name + " is not a valid gene"); });
+  if (Math.abs(DW - PUR.far - PYR.far - HG) > 1e-9 || !(PUR.far > PYR.far)) errs.push("geometry: base pair widths are wrong");
+  for (const b of "ATGC") if (rnaOpp(dnaComp(b)) !== toRNA(b) || HBONDS[b] !== HBONDS[DNA_PAIR[b]]) errs.push("facts: pairing of " + b);
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    const vs = t.variants ? t.variants.map((_, k) => k) : [0];
+    vs.forEach(k => {
+      const t2 = Object.assign({}, t, { vi: k }), hs = t2.hints.map(h => typeof h === "function" ? h(t2) : h);
+      if (hs.length !== 3 || hs.some(h => !h)) errs.push(id + ": needs 3 hints");
+      if (t.setup && t.setup.gene) { const g = typeof t.setup.gene === "function" ? t.setup.gene(t2) : t.setup.gene; if (geneProblem(g)) errs.push(id + ": the model gene is not valid"); }
+      if (t.kind === "choice") {
+        const os = getOpts(t2);
+        if (os.filter(o => choiceOk(t2, o)).length !== 1) errs.push(id + ": needs exactly one correct option");
+        if (os.some(o => !choiceOk(t2, o) && !o.why)) errs.push(id + ": a wrong option has no feedback");
+        if (os.some(o => choiceOk(t2, o) && o.why)) errs.push(id + ": the right option has wrong-answer feedback");
+        if (new Set(os.map(o => o.t)).size !== os.length) errs.push(id + ": two options read the same (variant " + (k + 1) + ")");
+        if (!t.explain) errs.push(id + ": needs an explanation");
+      } else if (t.kind === "num") {
+        const a = numAns(t2);
+        if (!Number.isInteger(a) || a <= 0) errs.push(id + ": the answer must be a whole number");
+        if (numWrongs(t2).some(w => w[0] === a)) errs.push(id + ": a planned wrong answer equals the right one");
+      } else if (t.kind === "aaseq") {
+        const r = t.right(t2), w = t.wrongRead(t2);
+        if (!r.length || r.some(a => !AANAME[a] || a === STOP) || r.length !== w.length || pep(r) === pep(w)) errs.push(id + ": the sequence answer is not well formed");
+        if (aaOpts(t2).length < 4) errs.push(id + ": too few choices");
+      } else if (t.kind === "goal") {
+        const S0 = stateFor(t2); if (goalMet(t2, S0)) errs.push(id + ": goal already met at the start");
+        const S1 = stateFor(t2); goalFill(t2, S1); if (!goalMet(t2, S1)) errs.push(id + ": goal can't be reached");
+      }
+    });
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { key: false, pair: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+const tcFresh = () => ({ stage: "wound", m: 0, cam: null, fresh: -1 });
+const tlFresh = () => ({ pos: 0, L: false, R: false, bond: false, chain: [], hold: "L", done: false, pool: null, poolC: -1, freshK: -1, bad: null });
+function freshB(o) {
+  const b = Object.assign({ scene: "tc", lock: {}, hide: {}, hl: null, gene: PRESETS[0].gene, sites: false,
+    code: { prop: "deg", sel: null, over: false, mut: false, mt: "sub", mp: 4, mb: "A" } }, o || {});
+  b.tc = tcFresh(); b.tl = tlFresh(); return b;
+}
+function stateFor(t) {
+  const s = t.setup || {}, m = freshB({ scene: s.scene || "tc", lock: Object.assign({}, s.lock || {}), hide: Object.assign({}, s.hide || {}), hl: s.hl || null });
+  if (s.gene) m.gene = typeof s.gene === "function" ? s.gene(t) : s.gene;
+  if (s.tc) Object.assign(m.tc, s.tc);
+  if (s.tl) tlRun(m, s.tl);
+  if (s.code) Object.assign(m.code, s.code);
+  return m;
+}
+let DEMO_B = freshB(), B = DEMO_B;
+let ANIM = null, animId = 0, onScreen = true, AUTO = null;
+
+const PKEY = "ks3tools-progress:protein-synthesis";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+
+/* ===== Translation rules (pure: work on any model state) ===== */
+const cOf = bx => fullCodons(toRNA(bx.gene));
+function tlNext(bx) {
+  const T = bx.tl, c = cOf(bx);
+  if (T.done) return "done";
+  if (!T.L) return "pick";
+  if (T.pos + 1 >= c.length) return "end";
+  if (CODON[c[T.pos + 1]] === STOP) return "stop";
+  if (!T.R) return "pick";
+  if (!T.bond) return "bond";
+  return "move";
+}
+const tlPickC = bx => bx.tl.L ? bx.tl.pos + 1 : bx.tl.pos;
+function tlCommit(bx, act) {
+  const T = bx.tl, c = cOf(bx);
+  if (act === "pick") { const k = tlPickC(bx); if (!T.L) { T.L = true; T.chain = [CODON[c[k]]]; T.hold = "L"; } else T.R = true; T.pool = null; T.bad = null; T.freshK = -1; }
+  else if (act === "bond") { T.bond = true; T.chain.push(CODON[c[T.pos + 1]]); T.hold = "R"; T.freshK = T.chain.length - 1; }
+  else if (act === "move") { T.pos++; T.R = false; T.bond = false; T.hold = "L"; T.freshK = -1; }
+  else if (act === "stop" || act === "end") { T.done = true; T.L = false; T.R = false; T.freshK = -1; }
+}
+function tlRun(bx, k) { for (let i = 0; i < k; i++) { const a = tlNext(bx); if (a === "done") break; tlCommit(bx, a); } }
+function tlPool(bx) {   // 4 tRNAs to choose from: the right one, the codon copied, a triplet one base along, another codon's anticodon
+  const T = bx.tl, k = tlPickC(bx);
+  if (T.pool && T.poolC === k) return T.pool;
+  const m = toRNA(bx.gene), cod = fullCodons(m)[k], right = rnaOpp(cod), out = [{ ac: right, ok: true }];
+  const add = (ac, kind) => { if (ac.length === 3 && !out.some(o => o.ac === ac) && CODON[rnaOpp(ac)] !== STOP && out.length < 4) out.push({ ac, kind }); };
+  add(cod, "copy");
+  add(rnaOpp(m.slice(3 * k + 1, 3 * k + 4)), "shift");
+  fullCodons(m).forEach(c => add(rnaOpp(c), "other"));
+  ["UUC", "CCG", "GUA", "CAU", "GAC"].forEach(a => add(a, "other"));
+  T.pool = shuffled(out.length).map(i => out[i]); T.poolC = k;
+  return T.pool;
+}
+function poolWhy(bx, o) {
+  const k = tlPickC(bx), m = toRNA(bx.gene), cod = fullCodons(m)[k], right = rnaOpp(cod);
+  if (o.kind === "copy") return `✗ ${o.ac} is the codon itself, copied letter for letter. An anticodon is complementary to the codon (A–U, G–C), so ${cod} needs ${right}.`;
+  if (o.kind === "shift") return `✗ ${o.ac} pairs with ${rnaOpp(o.ac)}, which starts one base along. The code is non-overlapping: codons are read in triplets, one after another.`;
+  return `✗ ${o.ac} pairs with the codon ${rnaOpp(o.ac)}, not ${cod}. Pair each base: ${[...cod].map(b => b + "–" + RNA_OPP[b]).join(", ")}.`;
+}
+
+/* ===== Readouts and controls ===== */
+function note(id, cls, html) { const e = $(id); e.className = "mnote" + (cls ? " " + cls : ""); e.innerHTML = html || ""; }
+function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }
+function setHTML(id, v) { const e = $(id); if (e.innerHTML !== v) e.innerHTML = v; }
+const quiz = () => mode !== "demo";
+const markTU = s => trip(s).map(c => [...c].map(b => b === "T" || b === "U" ? `<span class="tu">${b}</span>` : b === "·" ? `<span class="gap">·</span>` : b).join("")).join(" ");
+function renderReadouts() {
+  const g = B.gene, n = g.length, T = B.tc, mr = toRNA(g);
+  setHTML("sqC", markTU(g)); setHTML("sqT", trip(dnaComp(g)).join(" "));
+  const ms = T.stage === "gone" ? mr : [...mr].map((b, i) => i < T.m ? b : "·").join("");
+  setHTML("sqM", T.stage === "wound" ? "none yet: unwind the DNA first" : markTU(ms));
+  setText("sqCmp", T.m === n && T.stage !== "wound" ? "Same sequence as the coding strand, with U in place of T." : "");
+  $("sqMrow").hidden = !!B.hide.mrna; $("sqCmp").hidden = !!B.hide.mrna; $("tcHidden").hidden = !B.hide.mrna;
+  const L = B.tl, cods = cOf(B);
+  setHTML("sqCod", cods.map((c, i) => `<span${!L.done && (i === L.pos || i === L.pos + 1) ? ' class="on"' : ""}>${c}</span>`).join(" "));
+  setText("sqP", L.chain.length ? pep(L.chain) + (L.done ? " (released)" : "") : "none yet");
+  $("sqProw").hidden = !!B.hide.pep; $("tlHidden").hidden = !B.hide.pep;
+  renderCode();
+}
+const NEXT_LBL = { pick: "Choose a tRNA first", bond: "Form the peptide bond", move: "Move the ribosome on", stop: "Release the polypeptide", end: "Release the polypeptide", done: "Finished" };
+function syncCtl() {
+  const fa = document.activeElement, fIn = fa && fa.closest && fa.closest("#ctlTc0, #ctlTl0, #ctlTc, #ctlTl") ? fa : null, fAc = fIn && fIn.dataset.ac;
+  syncCtl0();
+  if (fIn && (!document.contains(fIn) || fIn.disabled || fIn.hidden)) {   // keyboard users keep their place when the focused control is rebuilt or switched off
+    const ok = e => e && !e.disabled && e.getClientRects().length;
+    const c = [fAc && $("poolSeg").querySelector(`[data-ac="${fAc}"]`), $("poolSeg").querySelector("button:not([disabled])"), $("stepBtn"),
+               $("addSeg").querySelector("button:not([disabled])"), $("releaseBtn"), $("toTl"), $("unwindBtn")].find(ok);
+    if (c) c.focus({ preventScroll: true });
+  }
+}
+function syncCtl0() {
+  const all = !!B.lock.all, sc = B.scene, T = B.tc, n = tcN(), L = lay();
+  document.querySelectorAll("#sceneTabs button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.scene === sc)); b.disabled = all || !!B.lock.tabs; });
+  $("ctlTc0").hidden = $("ctlTc").hidden = sc !== "tc"; $("ctlTl0").hidden = $("ctlTl").hidden = sc !== "tl";
+  $("sceneWrap").hidden = sc === "code"; $("codeView").hidden = sc !== "code"; $("keyAa").hidden = sc !== "tl"; $("keyLine").hidden = sc === "code";
+  document.querySelectorAll("#ctlTc0 button, #ctlTc0 input, #ctlTc button, #ctlTl0 button, #ctlTl button, #codeView button").forEach(el => { el.disabled = all; });
+  note("lockNote", "", all ? "The model is fixed for this question." : "");
+  /* transcription */
+  if (!$("geneSeg").children.length) $("geneSeg").innerHTML = PRESETS.map((p, i) => `<button type="button" data-g="${i}" aria-pressed="false">${p.name}</button>`).join("");
+  $("geneSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(PRESETS[+b.dataset.g].gene === B.gene)));
+  if (all || B.lock.gene) { $("geneSeg").querySelectorAll("button").forEach(b => { b.disabled = true; }); $("geneIn").disabled = $("geneSet").disabled = true; }
+  if (document.activeElement !== $("geneIn")) $("geneIn").value = B.gene;
+  const autoTc = AUTO && AUTO.kind === "tc", autoTl = AUTO && AUTO.kind === "tl";
+  if (!all) {
+    $("unwindBtn").disabled = T.stage !== "wound";
+    document.querySelectorAll("#addSeg button").forEach(b => { b.disabled = T.stage !== "open" || T.m >= n || autoTc; });
+    $("releaseBtn").disabled = !(T.stage === "open" && T.m === n);
+    $("tcAuto").disabled = !(T.stage === "wound" || (T.stage === "open" && T.m < n)) && !autoTc;
+    const c = tcCam(L); $("panL0").disabled = c <= 0; $("panR0").disabled = c >= camMax(L);
+  }
+  $("tcAuto").textContent = autoTc ? "Pause" : "Auto";
+  $("panRow").querySelectorAll("#panL0, #panR0, #panL").forEach(e => { e.hidden = n <= L.Wn; });
+  /* translation */
+  const nx = tlNext(B);
+  $("stepBtn").textContent = NEXT_LBL[nx];
+  if (!all) { $("stepBtn").disabled = nx === "pick" || nx === "done" || autoTl; $("tlAuto").disabled = nx === "done" && !autoTl; }
+  $("tlAuto").textContent = autoTl ? "Pause" : "Auto";
+  if (nx === "pick") {
+    const k = tlPickC(B), cod = cOf(B)[k], pool = tlPool(B);
+    setText("poolL", `Choose the tRNA for codon ${k + 1} (${cod}). Anticodons read 3′ → 5′:`);
+    setHTML("poolSeg", pool.map(o => `<button type="button" data-ac="${o.ac}" data-no="${B.tl.bad === o.ac ? 1 : 0}" aria-label="tRNA with anticodon ${o.ac}, carrying ${aaFull(CODON[rnaOpp(o.ac)])}"><b>${o.ac}</b> <span class="aa3">${CODON[rnaOpp(o.ac)]}</span></button>`).join(""));
+    $("poolSeg").querySelectorAll("button").forEach(b => { b.disabled = false; });
+    if (all || autoTl) $("poolSeg").querySelectorAll("button").forEach(b => { b.disabled = true; });
+  } else { setText("poolL", nx === "done" ? "Translation has finished." : "No tRNA is needed now:"); setHTML("poolSeg", nx === "done" ? "" : `<span class="small2">use ${NEXT_LBL[nx]}.</span>`); }
+  $("siteBtn").setAttribute("aria-pressed", String(B.sites)); $("siteBtn").querySelector(".state").textContent = B.sites ? "on" : "off";
+  /* code */
+  const C = B.code;
+  document.querySelectorAll("#propSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.prop === C.prop)));
+  $("propDeg").hidden = C.prop !== "deg"; $("propNon").hidden = C.prop !== "non"; $("propUni").hidden = C.prop !== "uni";
+  $("overBtn").setAttribute("aria-pressed", String(C.over)); $("overBtn").querySelector(".state").textContent = C.over ? "on" : "off";
+  $("mutBtn").setAttribute("aria-pressed", String(C.mut)); $("mutBtn").querySelector(".state").textContent = C.mut ? "on" : "off";
+  $("mutBox").hidden = !C.mut || !!B.hide.mut; $("mutHidden").hidden = !B.hide.mut; $("mutBtn").parentNode.hidden = !!B.hide.mut;
+  document.querySelectorAll("#mtSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mt === C.mt)));
+  $("mbRow").hidden = C.mt === "del";
+}
+function renderAll() { syncCtl(); renderScene(); renderReadouts(); if (tourI >= 0) tourPlace(); }
+function setScene(sc) {
+  if (B.lock.all || (B.lock.tabs && sc !== B.scene)) return;
+  finishAnim(); autoStop(); B.scene = sc; ["tcNote", "tlNote"].forEach(id => note(id, "", ""));
+  renderAll(); tourSignal("scene-" + sc);
+}
+function setGene(g, quiet) {
+  if (B.lock.all || B.lock.gene) return false;
+  g = String(g).toUpperCase().replace(/[^A-Z]/g, "");
+  const why = geneProblem(g); if (why) { note("tcNote", "bad", why); return false; }
+  finishAnim(); autoStop(); B.gene = g; B.tc = tcFresh(); B.tl = tlFresh();
+  if (!quiet) note("tcNote", "", `New gene: coding strand ${seqW(spaced(g), 5, 3)}. Press Unwind to start.`);
+  renderAll(); return true;
+}
+
+/* ----- animation layers: the moving part is drawn once into its own small SVG on top of the picture, and only that
+   layer's CSS transform or opacity changes each frame, so the rest of the picture is not repainted ----- */
+const FXN = 5, FX = { sc: 1 };
+function fxInit() { const w = $("sceneWrap"); for (let k = 0; k < FXN; k++) { const d = document.createElement("div"); d.className = "fxw"; d.hidden = true; d.innerHTML = '<div class="fxm"><svg class="fx" aria-hidden="true" focusable="false"></svg></div>'; w.appendChild(d); } }
+const fxW = k => $("sceneWrap").querySelectorAll(".fxw")[k], fxM = k => fxW(k).firstChild, fxSvg = k => fxM(k).firstChild;
+function fxShow(k, html, clip, tf, op) {   // clip: [x0, x1] in picture units (the layer is cut to that window), or null
+  const L = lay(), d = fxW(k), mv = d.firstChild, s = mv.firstChild, x0 = clip ? clip[0] : 0, x1 = clip ? clip[1] : L.W;
+  d.style.left = (100 * x0 / L.W) + "%"; d.style.width = (100 * (x1 - x0) / L.W) + "%";
+  const pad = 320;   // the layer reaches past both sides of the picture, so a strand sliding in from the edge is already drawn
+  mv.style.left = (100 * (-pad - x0) / (x1 - x0)) + "%"; mv.style.width = (100 * (L.W + 2 * pad) / (x1 - x0)) + "%";
+  s.setAttribute("viewBox", `${-pad} 0 ${L.W + 2 * pad} ${L.H}`); s.innerHTML = html; d.hidden = false;
+  FX.sc = boxW($("scene")) / L.W; fxMove(k, tf ? tf[0] : 0, tf ? tf[1] : 0, op);
+}
+function fxMove(k, dx, dy, op) {   // only the layer's CSS transform and opacity change: no re-layout, no repaint
+  const s = fxM(k), t = `translate(${(dx * FX.sc).toFixed(1)}px,${(dy * FX.sc).toFixed(1)}px)`;
+  if (s.style.transform !== t) s.style.transform = t;
+  if (op != null) { const o = (+op).toFixed(2); if (s.style.opacity !== o) s.style.opacity = o; }
+}
+function fxSet(k, html) { fxSvg(k).innerHTML = html; }
+function fxClear() { $("sceneWrap").querySelectorAll(".fxw").forEach(d => { if (!d.hidden) { d.hidden = true; const m = d.firstChild; m.firstChild.innerHTML = ""; m.style.transform = m.style.opacity = m.style.transformOrigin = ""; if (m.getAnimations) m.getAnimations().forEach(x => x.cancel()); } }); }
+/* a layer tween: frames are [dx, dy, opacity, offset] in picture units; the browser runs it off the main thread */
+function fxKeys(k, frames, dur) {
+  const s = fxM(k), sc = FX.sc, f0 = frames[0];
+  fxMove(k, f0[0], f0[1], f0[2] == null ? 1 : f0[2]);
+  if (!s.animate) return { finish() { const f = frames[frames.length - 1]; fxMove(k, f[0], f[1], f[2] == null ? 1 : f[2]); } };
+  return s.animate(frames.map(f => { const o = { transform: `translate(${(f[0] * sc).toFixed(1)}px,${(f[1] * sc).toFixed(1)}px)`, opacity: f[2] == null ? 1 : f[2] }; if (f[3] != null) o.offset = f[3]; return o; }),
+                   { duration: dur, easing: "ease-in-out", fill: "both" });
+}
+const fxTween = (k, a, b, dur) => fxKeys(k, [a, b], dur);
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const seg = (p, a, b) => Math.max(0, Math.min(1, (p - a) / (b - a)));
+const still = () => reduced() || (AUTO && !onScreen) || document.hidden || !onScreen;
+
+/* ----- view 1: transcription ----- */
+function unwind() {
+  const T = B.tc; if (B.lock.all || ANIM) return;
+  if (T.stage !== "wound") { note("tcNote", "", T.stage === "gone" ? "This gene has been transcribed. Press Start again to transcribe it again." : "The DNA is already unwound."); return; }
+  T.stage = "open"; T.m = 0; T.cam = null;
+  note("tcNote", "", "The hydrogen bonds between the base pairs break and the two strands separate. RNA polymerase moves along the template strand.");
+  syncCtl(); renderReadouts(); tourSignal("unwind");
+  if (still()) { renderScene(); return; }
+  const L = lay(), d = L.yM - L.yCup, o = tcOpts(), c = tcCam(L), win = tcWin(L, c * PT);
+  renderScene({ omit: { cod: 1, codL: 1, pol: 1 } });
+  fxShow(0, tcFx(L, o, ["cod"], c), win, [0, d]); fxShow(1, tcFx(L, o, ["codL"], c), null, [0, d]);
+  fxShow(2, tcFx(L, Object.assign({}, o, { hbD: 1 }), ["hbD"], c), win, null, 1); fxShow(3, tcFx(L, o, ["pol"], c), win, null, 0);
+  animate(900, null, () => { fxClear(); renderScene(); }, [fxTween(0, [0, d], [0, 0], 900), fxTween(1, [0, d], [0, 0], 900), fxKeys(2, [[0, 0, 1], [0, 0, 0, .45], [0, 0, 0]], 900), fxTween(3, [0, 0, 0], [0, 0, 1], 900)]);
+}
+function addNuc(b) {
+  const T = B.tc, g = B.gene, n = g.length; if (B.lock.all || ANIM) return;
+  if (T.stage !== "open") { note("tcNote", "", T.stage === "wound" ? "Press Unwind first: the hydrogen bonds must break before RNA nucleotides can pair." : "This gene has been transcribed."); return; }
+  if (T.m >= n) { note("tcNote", "", "The mRNA is complete. Press Release the mRNA."); return; }
+  const t = dnaComp(g)[T.m], want = RNA_OPP[t];
+  if (b !== want) {
+    let why;
+    if (b === "T") why = t === "A" ? "✗ T is not in RNA: uracil (U) pairs with A." : `✗ T is not in RNA: RNA has uracil instead of thymine. And opposite ${BASES[t].name} (${t}) goes ${BASES[want].name} (${want}).`;
+    else why = `✗ ${b} does not pair with ${t}. Opposite ${BASES[t].name} (${t}) goes ${BASES[want].name} (${want})${t === "A" ? ": uracil pairs with adenine" : ""}.`;
+    note("tcNote", "bad", why); return;
+  }
+  const L = lay(), c0 = tcCam(L);
+  T.m++; T.fresh = T.m - 1; T.cam = null;
+  const done = T.m === n, c1 = tcCam(L);
+  note("tcNote", "good", (T.m === 1 ? `✓ ${b} pairs with ${t}: the first base of the mRNA, at its 5′ end.` : `✓ ${b} pairs with ${t}. RNA polymerase joins it to the mRNA with a phosphodiester bond.`) + (done ? " The mRNA is complete: compare it with the coding strand in the readout." : ""));
+  if (done && mode === "demo") tried(0);
+  syncCtl(); renderReadouts(); tourSignal("add"); if (done) tourSignal("tc-done");
+  if (still()) { renderScene(); return; }
+  const o = Object.assign(tcOpts(), { fly: 1, pol: T.m - 1, camPx: c0 * PT }), win = tcWin(L, c0 * PT);
+  renderScene({ o, cam: c0, omit: { fly: 1, pol: 1 } });
+  fxShow(0, tcFx(L, o, ["fly"], c0), win, [70, -64], 0); fxShow(1, tcFx(L, o, ["pol"], c0), win);
+  const pan = () => {   // then the camera follows RNA polymerase along the gene
+    if (c1 === c0 || still()) { fxClear(); renderScene(); return; }
+    const o2 = tcOpts(), w2 = [L.X0 - 30, L.X0 + (L.Wn - 1) * PT + 30];
+    renderScene({ cam: c0, omit: Object.fromEntries(TC_CAM.map(k => [k, 1])) });
+    fxClear(); fxShow(0, tcFx(L, o2, TC_CAM, c0), w2);
+    animate(320, null, () => { fxClear(); renderScene(); }, [fxTween(0, [0, 0], [-(c1 - c0) * PT, 0], 320)]);
+  };
+  const wa = [fxKeys(0, [[70, -64, 0], [35, -32, 1, .4], [0, 0, 1]], 420)]; if (T.m < n) wa.push(fxTween(1, [0, 0], [PT, 0], 420));
+  animate(420, null, inst => { if (inst || c1 === c0) { if (inst) { fxClear(); renderScene(); } return; } pan(); }, wa);
+}
+function panTc(d) { const T = B.tc, L = lay(); if (ANIM) return; const c0 = tcCam(L); T.cam = Math.max(0, Math.min(camMax(L), c0 + d)); renderAll(); }
+function releaseMrna() {
+  const T = B.tc, n = tcN(); if (B.lock.all || ANIM) return;
+  if (!(T.stage === "open" && T.m === n)) { note("tcNote", "", "Finish the mRNA first."); return; }
+  autoStop();
+  const L = lay(), c0 = tcCam(L), c1 = camMax(L), d = L.yM - L.yCup, o = Object.assign(tcOpts(), { pol: null }), dx = L.W - L.X0 + 64 + c1 * PT;
+  const fin = () => { fxClear(); T.stage = "gone"; T.cam = null; T.fresh = -1; note("tcNote", "good", "The hydrogen bonds between the mRNA and the template break. The mRNA leaves the nucleus through a nuclear pore, and the DNA double helix re-forms."); renderAll(); tourSignal("release"); };
+  if (still()) { fin(); return; }
+  const go = () => {   // the camera is at the 3′ end: the mRNA leaves through the pore and the DNA re-forms
+    const win = tcWin(L, c1 * PT);
+    renderScene({ o, cam: c1, omit: { cod: 1, codL: 1, hbM: 1, mrna: 1, mL: 1 } });
+    fxShow(0, tcFx(L, o, ["mrna", "mL"], c1), null); fxShow(1, tcFx(L, o, ["hbM"], c1), win, null, 1);
+    fxShow(2, tcFx(L, o, ["cod"], c1), win); fxShow(3, tcFx(L, Object.assign({}, o, { hbD: 1 }), ["hbD"], c1), win, null, 0); fxShow(4, tcFx(L, o, ["codL"], c1), null);
+    animate(2100, null, fin, [fxKeys(1, [[0, 0, 1], [0, 0, 0, .22], [0, 0, 0]], 2100), fxKeys(0, [[0, 0], [0, -10, 1, .2], [dx, -10, 1, .72], [dx, -10]], 2100),
+      fxKeys(2, [[0, 0], [0, 0, 1, .58], [0, d]], 2100), fxKeys(4, [[0, 0], [0, 0, 1, .58], [0, d]], 2100), fxKeys(3, [[0, 0, 0], [0, 0, 0, .85], [0, 0, 1]], 2100)]);
+  };
+  if (c1 === c0) { go(); return; }
+  renderScene({ o, cam: c0, omit: Object.fromEntries(TC_CAM.map(k => [k, 1])) });
+  fxShow(0, tcFx(L, o, TC_CAM, c0), [L.X0 - 30, L.X0 + (L.Wn - 1) * PT + 30]);
+  animate(450, null, inst => { fxClear(); if (inst) fin(); else go(); }, [fxTween(0, [0, 0], [-(c1 - c0) * PT, 0], 450)]);
+}
+function tcRestart() { if (B.lock.all) return; finishAnim(); autoStop(); B.tc = tcFresh(); note("tcNote", "", ""); renderAll(); }
+
+/* ----- view 2: translation ----- */
+function pickTrna(ac) {
+  const T = B.tl; if (B.lock.all || ANIM) return;
+  if (tlNext(B) !== "pick") return;
+  const o = tlPool(B).find(x => x.ac === ac); if (!o) return;
+  if (!o.ok) { T.bad = ac; note("tlNote", "bad", poolWhy(B, o)); if (mode === "demo") tried(1); syncCtl(); return; }
+  const L = lay(), k = tlPickC(B), cod = cOf(B)[k], first = !T.L;
+  tlCommit(B, "pick");
+  note("tlNote", "good", `✓ The anticodon ${ac} pairs with the codon ${cod}. This tRNA carries ${aaFull(CODON[cod])}.` + (first ? "" : ` ${cap(cnt(TRNA_ON))} tRNAs now sit on the ribosome, side by side.`));
+  syncCtl(); renderReadouts(); tourSignal("pick"); if (!first) tourSignal("pick2");
+  if (still()) { renderScene(); return; }
+  const cam = tlCam(L, T.pos), keys = first ? ["trL", "chain"] : ["trR"];
+  renderScene({ omit: Object.fromEntries(keys.map(x => [x, 1])) });
+  fxShow(0, tlFx(L, T, keys, cam, { noHB: 1 }), null, [90, 150], 0);
+  animate(600, null, () => { fxClear(); renderScene(); }, [fxKeys(0, [[90, 150, 0], [45, 75, 1, .5], [0, 0, 1]], 600)]);
+}
+const cnt = n => ["no", "one", "two", "three", "four"][n] || String(n);
+function tlStep(force) {
+  const T = B.tl; if ((B.lock.all && !force) || ANIM) return;
+  const a = tlNext(B), L = lay(), cods = cOf(B);
+  if (a === "pick") { note("tlNote", "", "Choose the tRNA whose anticodon pairs with the codon first."); return; }
+  if (a === "done") return;
+  tourSignal("step");
+  if (a === "bond") {
+    const mid = codX(L, T.pos) - tlCam(L, T.pos) + 1.5 * PT;
+    tlCommit(B, "bond");
+    note("tlNote", "good", `Condensation: a peptide bond forms between ${T.chain[T.chain.length - 2]} and ${T.chain[T.chain.length - 1]}, and a molecule of water is released. rRNA in the ribosome catalyses it.`);
+    syncCtl(); renderReadouts(); renderScene();
+    if (still()) return;
+    fxShow(0, waterSVG(mid, L.bY + 4, "", 1, true), null, null, 0);
+    animate(900, null, () => fxClear(), [fxKeys(0, [[0, 0, 0], [1.5, 6, 1, .15], [7, 28, 1, .7], [10, 40, 0]], 900)]);
+    return;
+  }
+  const cam0 = tlCam(L, T.pos), pos0 = chainPos(L, T, cam0), oldPos = T.pos;
+  const leave = (cam, pos1, fin) => {   // the first tRNA leaves; the chain stays on the remaining tRNA (or is released)
+    const T0 = { pos: oldPos, L: true, R: false, bond: false, chain: [], done: false };
+    renderScene({ omit: { chain: 1 } });
+    fxShow(0, tlFx(L, T0, ["trL"], cam), null); fxShow(1, "", null);
+    const from = pos0.map(q => [q[0] - (cam - cam0), q[1]]);
+    const dur = a === "move" ? 650 : 1000, n = T.chain.length, wa = [fxTween(0, [0, 0, 1], [-70, 150, 0], dur)], end = () => { fxClear(); fin(); };
+    if (!L.row && n) {   // wide picture: the chain slides as one piece (and the stretched bond shortens), all as compositor tweens
+      const dx = pos1[0][0] - from[0][0];
+      if (a !== "move" || n === 1) { fxShow(1, chainSVG(from, T.chain, -1, ""), null); wa.push(fxTween(1, [0, 0], [dx, 0], dur)); }
+      else {
+        const h = from[n - 1], q = from[n - 2], line = `<path class="bd" d="M${P2(edgePt(h, q, 22))}L${P2(edgePt(q, h, 22))}"/>`;
+        fxShow(1, line, null); fxShow(2, chainSVG(from.slice(0, n - 1), T.chain.slice(0, n - 1), -1, ""), null); fxShow(3, aaBead(h[0], h[1], T.chain[n - 1]), null);
+        const m = fxM(1), k1 = (h[0] - pos1[n - 2][0] - 44) / (h[0] - q[0] - 44);
+        m.style.transformOrigin = `${(h[0] - 22 + 320) * FX.sc}px 0`;
+        if (m.animate) wa.push(m.animate([{ transform: "scaleX(1)" }, { transform: `scaleX(${k1.toFixed(4)})` }], { duration: dur, easing: "ease-in-out", fill: "both" }));
+        wa.push(fxTween(2, [0, 0], [dx, 0], dur));
+      }
+      animate(dur, null, end, wa); return;
+    }
+    animate(dur, p => { const e = ease(p); fxSet(1, chainSVG(from.map((q, k) => [q[0] + (pos1[k][0] - q[0]) * e, q[1] + (pos1[k][1] - q[1]) * e]), T.chain, -1, "")); }, end, wa);
+  };
+  if (a === "move") {
+    const cam1 = tlCam(L, T.pos + 1);
+    const fin = () => { note("tlNote", "", `The ribosome moves on one codon. The first tRNA leaves, and the next codon (${cods[T.pos + 1] || "none"}) is ready.`); renderAll(); };
+    if (still()) { tlCommit(B, "move"); fin(); return; }
+    if (cam1 === cam0) {   // wide: the mRNA stays put and the ribosome moves on one codon (ribosome layers below and above the strands)
+      renderScene({ omit: { riboL: 1, riboS: 1, sites: 1, mrna: 1, trL: 1, trR: 1, chain: 1 } });
+      fxShow(0, tlFx(L, T, ["riboL"], cam0), null); fxShow(1, tlFx(L, T, ["mrna", "trL", "trR", "chain"], cam0), null); fxShow(2, tlFx(L, T, ["riboS", "sites"], cam0), null);
+      animate(650, null, inst => {
+        fxClear(); tlCommit(B, "move"); syncCtl(); renderReadouts();
+        if (inst) { fin(); return; }
+        leave(cam1, chainPos(L, T, cam1), fin);
+      }, [fxTween(0, [0, 0], [3 * PT, 0], 650), fxTween(2, [0, 0], [3 * PT, 0], 650)]);
+      return;
+    }
+    renderScene({ omit: { mrna: 1, trL: 1, trR: 1, chain: 1 } });
+    fxShow(0, tlFx(L, T, ["mrna", "trL", "trR", "chain"], cam0), null);
+    animate(650, null, inst => {
+      fxClear(); tlCommit(B, "move"); syncCtl(); renderReadouts();
+      if (inst) { fin(); return; }
+      leave(cam1, chainPos(L, T, cam1), fin);
+    }, [fxTween(0, [0, 0], [-(cam1 - cam0), 0], 650)]);
+    return;
+  }
+  /* stop codon (or the end of a short mRNA): release */
+  const sc = cods[T.pos + 1];
+  tlCommit(B, a);
+  const fin = () => { note("tlNote", "good", (a === "stop" ? `${sc} is a stop codon: no tRNA pairs with it, so translation stops.` : "The ribosome has reached the end of this short mRNA without a stop codon.") + ` The polypeptide ${pep(B.tl.chain)} is released: its primary structure.`); if (mode === "demo") tried(4); renderAll(); tourSignal("release-p"); };
+  syncCtl(); renderReadouts();
+  if (still()) { fin(); return; }
+  leave(cam0, finalPos(L, T.chain.length), fin);
+}
+function tlRestart() { if (B.lock.all) return; finishAnim(); autoStop(); B.tl = tlFresh(); note("tlNote", "", ""); renderAll(); }
+
+/* ----- Auto: one step at a time; waits while the tab is hidden or the model is off-screen ----- */
+function autoStart(kind) { autoStop(); AUTO = { kind, t: 0 }; syncCtl(); autoKick(); }
+function autoStop() { if (!AUTO) return; clearTimeout(AUTO.t); AUTO = null; syncCtl(); }
+function autoKick() { if (!AUTO) return; clearTimeout(AUTO.t); if (document.hidden || !onScreen) return; AUTO.t = setTimeout(autoStep, ANIM ? 120 : reduced() ? 700 : 320); }
+function autoStep() {
+  if (!AUTO) return;
+  if (ANIM || document.hidden || !onScreen) { autoKick(); return; }
+  if (AUTO.kind === "tc") {
+    const T = B.tc;
+    if (T.stage === "wound") unwind();
+    else if (T.stage === "open" && T.m < tcN()) addNuc(RNA_OPP[dnaComp(B.gene)[T.m]]);
+    if (!(T.stage === "open" && T.m < tcN())) { autoStop(); return; }
+  } else {
+    const a = tlNext(B);
+    if (a === "done") { autoStop(); return; }
+    if (a === "pick") pickTrna(rnaOpp(cOf(B)[tlPickC(B)])); else tlStep();
+    if (B.tl.done) { autoStop(); return; }
+  }
+  autoKick();
+}
+
+/* ----- short animations: layer moves run as compositor tweens (wa); anything drawn frame by frame uses paceFrame.
+   Finished at once when the tab is hidden or the picture is off-screen. ----- */
+function animate(dur, step, done, wa) {
+  finishAnim();
+  wa = wa || [];
+  if (document.hidden || !onScreen) { wa.forEach(a => { try { a.finish(); } catch (e) {} }); if (step) step(1); done(true); return; }
+  ANIM = { t0: null, dur, step, done, wa };
+  if (!step) { ANIM.tm = setTimeout(() => { const A = ANIM; if (!A || A.wa !== wa) return; ANIM = null; done(false); }, dur + 20); return; }
+  const tick = now => {
+    if (!ANIM) return;
+    if (ANIM.t0 == null) ANIM.t0 = now;
+    const p = Math.min(1, (now - ANIM.t0) / ANIM.dur); ANIM.step(p);
+    if (p >= 1) { const d = ANIM.done; ANIM = null; d(false); } else animId = paceFrame(tick);
+  };
+  animId = paceFrame(tick);
+}
+function finishAnim() { if (!ANIM) return; paceCancel(animId); clearTimeout(ANIM.tm); const a = ANIM; ANIM = null; a.wa.forEach(x => { try { x.finish(); } catch (e) {} }); if (a.step) a.step(1); a.done(true); }
+function resume() { if (ANIM && (!onScreen || document.hidden)) finishAnim(); autoKick(); }
+document.addEventListener("visibilitychange", resume);
+
+/* ----- view 3: the genetic code ----- */
+function buildGrid() {
+  let h = `<span class="hd top">1st</span><span class="hd top" style="grid-column:2/6">2nd base</span><span class="hd top">3rd</span>`;
+  h += `<span class="hd"></span>` + [...ORDER].map(b => `<span class="hd">${b}</span>`).join("") + `<span class="hd"></span>`;
+  [...ORDER].forEach((b1, i) => {
+    if (i) h += `<span class="sep"></span>`;
+    h += `<span class="hd b1" style="grid-row:span 4">${b1}</span>`;
+    [...ORDER].forEach(b3 => {
+      h += [...ORDER].map(b2 => { const c = b1 + b2 + b3, a = CODON[c]; return `<button type="button" class="cod${a === STOP ? " stop" : ""}" data-c="${c}" aria-pressed="false" aria-label="Codon ${c}: ${a === STOP ? "stop" : a + ", " + AANAME[a]}"><span>${c}</span><span class="a3">${a}</span></button>`; }).join("");
+      h += `<span class="hd">${b3}</span>`;
+    });
+  });
+  $("codeGrid").innerHTML = h;
+}
+const chip = (c, cls) => `<span class="fc${CODON[c] === STOP ? " stop" : ""}${cls ? " " + cls : ""}"><b>${c}</b><span>${c.length === 3 ? CODON[c] : "–"}</span></span>`;
+function renderCode() {
+  const C = B.code, sel = C.sel, a = sel ? CODON[sel] : null;
+  document.querySelectorAll("#codeGrid .cod").forEach(b => { const c = b.dataset.c, on = c === sel; if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); b.classList.toggle("syn", !!a && !on && C.prop === "deg" && CODON[c] === a); });
+  let r;
+  if (!sel) r = `Tap a codon to see the amino acid it codes for. ${NB} bases in triplets: ${NB}³ = ${Math.pow(NB, TRIPLET)} codons, for ${NAA} amino acids.`;
+  else if (a === STOP) r = `<b>${sel}</b> → stop codon: no amino acid, so translation stops here. There are ${synonyms(STOP).length} stop codons: ${synonyms(STOP).join(", ")}.`;
+  else { const sy = synonyms(a); r = `<b>${sel}</b> → ${a} (${AANAME[a]})${sel === START ? ", also the start codon" : ""}. ${cap(AANAME[a])} has ${cnt(sy.length)} codon${sy.length > 1 ? "s" : ""}: ${sy.join(", ")}.`; }
+  setHTML("codeRead", r);
+  const m = toRNA(B.gene), tr = translate(m), real = fullCodons(m).slice(0, tr.codons);
+  setHTML("frameReal", `<p class="fl">Read in triplets (the real code): ${pep(tr.aas)}</p>` + real.map(c => chip(c)).join(""));
+  $("frameOver").hidden = !C.over;
+  if (C.over) { const ov = [...Array(m.length - 2).keys()].map(i => m.slice(i, i + 3)); setHTML("frameOver", `<p class="fl">If it overlapped (wrong): ${ov.length} triplets from ${m.length} bases, a different chain</p>` + ov.map(c => chip(c, "chg")).join("")); }
+  renderMut();
+}
+function renderMut() {
+  const C = B.code, g = B.gene; if (!C.mut || B.hide.mut) return;
+  if (C.mp >= g.length) C.mp = g.length - 1;
+  setHTML("mpSeg", [...g].map((b, i) => `<button type="button" data-mp="${i}" class="${i && i % 3 === 0 ? "cdn1" : ""}" aria-pressed="${i === C.mp}" aria-label="Base ${i + 1}, ${b}">${b}</button>`).join(""));
+  if (B.lock.all) $("mpSeg").querySelectorAll("button").forEach(b => { b.disabled = true; });
+  document.querySelectorAll("#mbSeg button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.mb === C.mb)); });
+  const r = mutOutcome(g, C.mt, C.mp, C.mb), o = fullCodons(r.m0), nw = fullCodons(r.m1);
+  const k1 = r.b.codons, k0 = r.a.codons;
+  const row1 = o.slice(0, k0).map(c => chip(c)).join(""), row2 = nw.slice(0, Math.max(k1, 1)).map((c, i) => chip(c, c === o[i] ? "" : "chg")).join("");
+  const word = { sub: "substitution", ins: "insertion", del: "deletion" }[C.mt];
+  let res, cls = "bad";
+  if (r.kind === "nostart") res = `The start codon AUG has changed, so translation would not start here.`;
+  else if (r.kind === "same") { res = "That is the same base: nothing changes. Choose a different new base."; cls = ""; }
+  else if (r.kind === "silent" && CODON[r.c0] === STOP) { res = `Silent: ${r.c0} → ${r.c1}, and both are stop codons, so translation still stops here. The primary structure is unchanged.`; cls = "good"; }
+  else if (r.kind === "silent") { res = `Silent: ${r.c0} → ${r.c1}, and both code for ${CODON[r.c0]}. The code is degenerate, so the primary structure is unchanged.`; cls = "good"; }
+  else if (r.kind === "one") res = `One amino acid changes: ${r.c0} (${CODON[r.c0]}) → ${r.c1} (${CODON[r.c1]}). The rest of the polypeptide is the same.`;
+  else if (r.kind === "early") res = `${r.c1} is a stop codon, so the polypeptide stops early: ${r.b.aas.length} amino acid${r.b.aas.length === 1 ? "" : "s"} instead of ${r.a.aas.length}.`;
+  else if (r.kind === "lost") res = `The stop codon is lost (${r.c0} → ${r.c1}), so the ribosome reads on past it.`;
+  else { const same = pep(r.a.aas.slice(r.ci)) === pep(r.b.aas.slice(r.ci)); res = `Frameshift: after the ${word}, the bases are regrouped into new triplets, so every codon from codon ${r.ci + 1} on is read in a new frame. ` + (same ? "By chance, the amino acids come out the same here." : `The amino acid sequence from there on is different${r.b.stop ? "" : ", and there is no stop codon in frame"}.`); }
+  setHTML("mutOut", `<div class="frame"><p class="fl">Before: ${pep(r.a.aas)}</p>${row1}</div><div class="frame"><p class="fl">After the ${word}: ${pep(r.b.aas) || "none"}${r.b.stop ? "" : " (no stop codon in frame)"}</p>${row2}</div><p class="mres ${cls}">${res}</p>`);
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Transcribe a gene, then compare the mRNA with the coding strand.", "In Translation, pick a wrong tRNA and read why it is refused.",
+             "In Genetic code, find all the codons for leucine.", "Change one base (Going further: mutations) and see whether the protein changes.",
+             "Translate all the way to the stop codon and release the polypeptide."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function loadDemo() {
+  finishAnim(); autoStop(); task = { kind: "demo" }; S = {}; B = DEMO_B;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = "";
+  moveSupport(); renderAll(); renderTry();
+}
+function freshS() {
+  const t = task, o = t.kind === "choice" ? getOpts(t) : null;
+  return { choice: null, opts: o, order: shuffled(o ? o.length : 0), aa: t.kind === "aaseq" ? aaOpts(t) : null, reveal: false };
+}
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  const list = LEVELS[level]; task = list[idx];
+  if (task.variants) task.vi = task.vi == null ? 0 : (task.vi + 1) % task.variants.length;
+  S = freshS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = txt(task);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { finishAnim(); autoStop(); B = stateFor(task); ["tcNote", "tlNote"].forEach(id => note(id, "", "")); renderAll(); }
+const narrow = () => window.innerWidth <= 900;
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(S.opts[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "num") {
+    a.innerHTML = `<div class="numrow"><label for="numIn">Answer:</label><input id="numIn" type="text" inputmode="numeric" autocomplete="off"><span>${esc(t.unit)}</span></div>`;
+    $("numIn").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  } else if (t.kind === "aaseq") {
+    const n = t.right(t).length, sel = k => `<select class="gsel" id="s${k}" aria-label="Amino acid ${k + 1}"><option value="">Choose…</option>${shuffled(S.aa.length).map(i => `<option value="${S.aa[i]}">${S.aa[i]}</option>`).join("")}</select>`;
+    a.innerHTML = `<ol class="aaseq" aria-label="Amino acid sequence">` + [...Array(n).keys()].map(k => `<li>${k ? "– " : ""}${sel(k)}</li>`).join("") + `</ol><p class="small">Three-letter names, in order from the start codon.</p>`;
+  } else if (t.kind === "goal") {
+    const where = narrow() ? "in the model below" : "in the model";
+    a.innerHTML = `<p style="margin:0">${t.id0 === "tcAll" ? "Use <b>Unwind</b>, then <b>Add a free RNA nucleotide</b>" : "Use <b>Choose the tRNA</b> and the step button"} ${where}.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+/* put the right answer into the answer area, and set the model to show it */
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = S.opts.findIndex(o => choiceOk(t, o)); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "num") $("numIn").value = numAns(t);
+  else if (t.kind === "aaseq") t.right(t).forEach((a, k) => { $("s" + k).value = a; });
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task;
+  if (t.kind === "goal") { if (!goalMet(t, B)) { finishAnim(); goalFill(t, B); renderAll(); } return; }
+  if (S.shown) return; S.shown = true;
+  if (t.reveal) { S.reveal = true; if (instant && t.id === "easy8") { tlCommit(B, "bond"); renderAll(); return; } t.reveal(t); if (!ANIM) renderAll(); else { syncCtl(); renderReadouts(); } }
+  else if (t.kind === "num") { B.hide.pep = 0; renderAll(); }
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  $("supKey").hidden = !support.key; $("supPair").hidden = !support.pair;
+  tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const num = s => { s = String(s).trim().replace(/\s/g, ""); return s === "" || isNaN(+s) ? null : +s; };
+function evaluate() {
+  const t = task;
+  if (ANIM) return { skip: "Wait for the model to finish moving, then press Check." };
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = S.opts[S.choice];
+    return choiceOk(t, o) ? { ok: true, html: esc("Correct. " + t.explain(t)) } : { ok: false, html: esc(o.why) };
+  }
+  if (t.kind === "num") {
+    const v = num($("numIn").value), a = numAns(t);
+    if (v == null) return { skip: "Type a number first." };
+    if (v === a) return { ok: true, html: esc(`Correct. Each codon is three bases and codes for one amino acid: ${V(t)} ÷ 3 = ${a} amino acids.`) };
+    const w = numWrongs(t).find(x => Math.abs(x[0] - v) < 1e-9);
+    return { ok: false, html: esc(w ? w[1] : "Each amino acid needs one codon of three bases. How many codons are there?") };
+  }
+  if (t.kind === "aaseq") {
+    const r = t.right(t), w = t.wrongRead(t), vals = r.map((_, k) => $("s" + k).value);
+    if (vals.some(v => !v)) return { skip: "Choose an amino acid for every place first." };
+    if (vals.every((v, k) => v === r[k])) return { ok: true, html: esc(`Correct. The mRNA is ${spaced(rnaOpp(V(t)))}, which codes for ${pep(r)}.`) };
+    const bad = vals.map((v, k) => v !== r[k] ? k : -1).filter(k => k >= 0), tr = trip(V(t));
+    if (bad.length === r.length && bad.every(k => vals[k] === w[k])) return { ok: false, html: esc("You read the template triplets straight off the table. The table is for mRNA codons: first make the mRNA (T → A, A → U, C → G, G → C).") };
+    const k = bad[0];
+    if (vals[k] === w[k]) return { ok: false, html: esc(`${r.length - bad.length} of ${r.length} right. In place ${k + 1} you read the template triplet ${tr[k]} straight off the table. The table is for mRNA codons: pair it first.`) };
+    return { ok: false, html: esc(`${r.length - bad.length} of ${r.length} right. Check place ${k + 1}: the template triplet ${tr[k]} pairs with the mRNA codon ${rnaOpp(tr[k])}. Look that codon up.`) };
+  }
+  if (t.kind === "goal") {
+    if (goalMet(t, B)) return { ok: true, html: esc(goalRight(t)) };
+    return { ok: false, html: esc(goalWhy(t)) };
+  }
+  return { skip: "" };
+}
+function msgStuck() {
+  const t = task;
+  if ((t.id0 === "tcAll" || t.id === "easy4" || t.id === "easy5" || t.id === "hard1" || t.id === "hard2") && !support.pair) return "Stuck? Turn on <b>Pairing rules</b> under Support.";
+  return "";
+}
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => typeof h === "function" ? h(t) : h);
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + S.opts.find(o => choiceOk(t, o)).t.replace(/\.$/, "") + ". " + t.explain(t);
+  if (t.kind === "num") return `Answer: ${numAns(t)} amino acids. ${V(t)} bases ÷ 3 bases per codon = ${numAns(t)} codons, one amino acid each.`;
+  if (t.kind === "aaseq") return `Answer: ${pep(t.right(t))}. The mRNA is ${spaced(rnaOpp(V(t)))}.`;
+  if (t.kind === "goal") return "Answer: the model now shows it. " + goalRight(t).replace(/^Correct\. /, "");
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = freshS();
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Controls ===== */
+$("sceneTabs").addEventListener("click", e => { const b = e.target.closest("button[data-scene]"); if (b) setScene(b.dataset.scene); });
+$("geneSeg").addEventListener("click", e => { const b = e.target.closest("button[data-g]"); if (b) setGene(PRESETS[+b.dataset.g].gene); });
+$("geneSet").addEventListener("click", () => setGene($("geneIn").value));
+$("geneIn").addEventListener("keydown", e => { if (e.key === "Enter") setGene($("geneIn").value); });
+$("unwindBtn").addEventListener("click", unwind);
+$("tcAuto").addEventListener("click", () => { if (AUTO && AUTO.kind === "tc") autoStop(); else if (!B.lock.all && !quiz()) autoStart("tc"); });
+$("releaseBtn").addEventListener("click", releaseMrna);
+$("toTl").addEventListener("click", () => setScene("tl"));
+$("addSeg").addEventListener("click", e => { const b = e.target.closest("button[data-ab]"); if (b) addNuc(b.dataset.ab); });
+$("panL0").addEventListener("click", () => panTc(-3));
+$("panR0").addEventListener("click", () => panTc(3));
+$("tcRestart").addEventListener("click", tcRestart);
+$("poolSeg").addEventListener("click", e => { const b = e.target.closest("button[data-ac]"); if (b && !b.disabled) pickTrna(b.dataset.ac); });
+$("stepBtn").addEventListener("click", () => tlStep());
+$("tlAuto").addEventListener("click", () => { if (AUTO && AUTO.kind === "tl") autoStop(); else if (!B.lock.all && !quiz()) autoStart("tl"); });
+$("tlRestart").addEventListener("click", tlRestart);
+$("siteBtn").addEventListener("click", () => { if (B.lock.all) return; B.sites = !B.sites; renderAll(); });
+$("propSeg").addEventListener("click", e => { const b = e.target.closest("button[data-prop]"); if (!b || B.lock.all) return; B.code.prop = b.dataset.prop; renderAll(); });
+function pickCodon(c) { if (B.lock.all) return; B.code.sel = B.code.sel === c ? null : c; if (B.code.sel && CODON[c] === "Leu" && mode === "demo") tried(2); renderReadouts(); tourSignal("codon"); }
+$("codeGrid").addEventListener("click", e => { const b = e.target.closest("button[data-c]"); if (b) pickCodon(b.dataset.c); });
+$("quickSeg").addEventListener("click", e => { const b = e.target.closest("button[data-q]"); if (b) { B.code.sel = null; pickCodon(b.dataset.q); } });
+$("overBtn").addEventListener("click", () => { if (B.lock.all) return; B.code.over = !B.code.over; renderAll(); });
+$("mutBtn").addEventListener("click", () => { if (B.lock.all) return; B.code.mut = !B.code.mut; renderAll(); });
+$("mtSeg").addEventListener("click", e => { const b = e.target.closest("button[data-mt]"); if (!b || B.lock.all) return; B.code.mt = b.dataset.mt; mutTried(); renderAll(); });
+$("mpSeg").addEventListener("click", e => { const b = e.target.closest("button[data-mp]"); if (!b || B.lock.all) return; B.code.mp = +b.dataset.mp; mutTried(); renderAll(); const n = $("mpSeg").querySelector(`[data-mp="${b.dataset.mp}"]`); if (n) n.focus(); });
+$("mbSeg").addEventListener("click", e => { const b = e.target.closest("button[data-mb]"); if (!b || B.lock.all) return; B.code.mb = b.dataset.mb; mutTried(); renderAll(); });
+function mutTried() { if (mode === "demo") tried(3); }
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#sceneWrap", scene: "tc", text: "This is the nucleus. The gene is part of a DNA molecule: the coding strand on top, the template strand below, joined by hydrogen bonds. Choose another gene above, or type your own." },
+  { el: "#unwindBtn", scene: "tc", text: "First the DNA unwinds: the hydrogen bonds between the base pairs break.", do: "unwind", doText: "Press Unwind." },
+  { el: "#addRow", scene: "tc", text: "Add the free RNA nucleotide that pairs with the template base under RNA polymerase. A wrong one is refused, with a reason.", do: "add", doText: "Add one RNA nucleotide." },
+  { el: "#tcAuto", scene: "tc", text: "Auto adds the rest, one at a time. The readout then compares the coding strand with the mRNA.", do: "tc-done", doText: "Press Auto and wait for the mRNA." },
+  { el: "#releaseBtn", scene: "tc", text: "Release the mRNA: it leaves the nucleus through a nuclear pore, and the DNA re-forms.", do: "release", doText: "Press Release the mRNA." },
+  { el: "#sceneTabs", text: "Translation happens in the cytoplasm, at a ribosome.", do: "scene-tl", doText: "Press Translation." },
+  { el: "#poolRow", scene: "tl", text: "Choose the tRNA whose anticodon pairs with the codon. Two tRNAs fit on the ribosome, so choose the second one too.", do: "pick2", doText: "Put two tRNAs on the ribosome." },
+  { el: "#stepBtn", scene: "tl", text: "This button forms the peptide bond, moves the ribosome on, and releases the polypeptide at the stop codon.", do: "step", doText: "Form the peptide bond." },
+  { el: "#sceneTabs", text: "Now look at the genetic code itself.", do: "scene-code", doText: "Press Genetic code." },
+  { el: "#codeGrid", scene: "code", text: "Tap a codon to see the amino acid it codes for, and every other codon for it.", do: "codon", doText: "Tap a codon." },
+  { el: "#supportArea", text: "Support switches add a base key and the pairing rules. They all start off." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:protein-synthesis", "1"); } catch (e) {}
+  DEMO_B = freshB(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), /^go/.test(name) ? 1800 : 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* ===== Wiring ===== */
+const tourGo0 = tourGo;   // tour steps that belong to one view switch to it first (in case a pupil skipped the step that changes view)
+tourGo = function (i) { const s = TOUR[i]; if (s && s.scene && mode === "demo" && B.scene !== s.scene) { finishAnim(); autoStop(); B.scene = s.scene; renderAll(); } tourGo0(i); };
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; resume(); }, { rootMargin: "-64px 0px 0px 0px" }).observe($("sceneWrap"));   // finish any animation and hold Auto while the picture is off-screen
+}
+let rsT, lastWide = null;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const w = wideNow(); if (w !== lastWide) { lastWide = w; finishAnim(); renderAll(); } }, 80); });
+
+buildGrid(); fxInit();
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+lastWide = wideNow();
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:protein-synthesis")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+</body>
+</html>
