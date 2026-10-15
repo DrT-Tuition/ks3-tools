@@ -1,0 +1,1957 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Molecule Builder</title>
+<!--
+  SCIENCE SPEC — Molecule Builder (KS3)
+  Models: atoms, elements, compounds, molecules, mixtures and chemical formulae. Three tabs:
+    Build   — a tray of non-metal atoms (H, O, C, N, Cl). Tap or drag atoms onto the workspace; tap one atom, then
+              another, to join them (tap the pair again to unjoin). Each atom can make a fixed number of joins
+              (H 1, O 2, N 3, C 4, Cl 1); the model works out single, double or triple sticks itself, so only real
+              molecules can be finished. The readout gives the name, the formula (with subscripts), element or
+              compound, atoms in one molecule and the elements present, plus what is on the whole workspace.
+    Sort    — particle-diagram boxes made in code from the rules: atoms of an element (gas or solid), molecules of
+              an element, molecules of a compound, a mixture of two elements, a mixture of two compounds, and a
+              mixture of an element and a compound. Pupils sort each as element, compound or mixture.
+    Formula — a formula from the decks (or one you type): atoms of each element counted by a parser, the elements
+              present, the total, molecules or giant structure, and the name made by the naming rules.
+  Sources: Y7 T3 C1.2 L34 Atoms and elements (atoms_elements.md: slide 5 "an element is a substance that cannot be
+    broken down"; slide 6 "made up of only one type of atom", copper / carbon / helium; slide 7 "many substances are
+    made up of different types of atoms"; slide 10 "the properties of an element come from all the atoms joined
+    together"; slides 13–15 about 100 elements, name and symbol, capital then small letter (N not n, Co not CO);
+    slide 17 Q3 C, Cl, Au, Fe; slide 20 water and carbon dioxide molecules; slide 22 key word definitions).
+    L35/L36 Compounds and chemical formulae (compounds_formulae.md: slide 6 compound definition; slide 7 molecule
+    definition, water molecules differ from hydrogen and oxygen molecules; slide 8 mono = 1, di = 2, tri = 3, and
+    "compounds have very different properties … because the atoms are joined together differently"; slides 11–14
+    naming: metal, then non-metal with "-ide"; two elements plus oxygen → "-ate"; slides 16–24 iron, sulfur, the
+    mixture and iron sulfide (magnet, appearance); slides 25–31 element, compound or mixture; slide 34 fixed
+    composition, H₂O, CO₂; slide 35 formulae are the same in every language; slide 36 the small number goes after
+    the symbol; slide 37 NaOH, NaNO₃, CuSO₄, CaCO₃; slides 38–41 the formula tables and their answers).
+    Particle diagrams support (particle_support.md: slides 2–4 an element, an element in pairs (molecules), a
+    mixture of two elements, a compound; slides 5–8 an atom, a molecule, a molecule of a compound; slides 9–10 a
+    solid element is a load of atoms, not a big molecule; slides 11–24 element / compound / mixture and "a mixture
+    of a compound and an element"; slides 26–27 air: argon as single atoms, oxygen as molecules).
+    Checked against AQA KS3 3.5.4 Elements (KS3 symbols list; "change non-metal to -ide; mono, di, tri prefixes;
+    symbols of hydroxide, nitrate, sulfate and carbonate"; "most non-metals exist either as small or giant
+    molecules"; particle diagrams to classify element, mixture or compound, and molecules or atoms).
+    KS3 strand: NC Chemistry, Atoms, elements and compounds — "differences between atoms, elements and compounds",
+    "chemical symbols and formulae for elements and compounds"; Pure and impure substances — mixtures.
+  Source errors corrected (not repeated anywhere in the tool):
+    - Slide 7 says "Two hydrogen atoms react with one oxygen atom to produce two molecules of water". The reaction is
+      not shown (it is optional; Y7 T4 covers reactions). The tool only says water molecules are different from
+      hydrogen and oxygen molecules.
+    - Slide 10 calls magnesium oxide "molecules" (and slide 16 "one molecule of iron sulfide"). Metal + non-metal
+      compounds appear only in the Formula tab, as formulae and names, labelled "giant structure (not molecules)"; the
+      1 : 1 ones (NaCl, MgO, FeS, ZnS, SnO, AgI) also get a small flat repeating block. They are never built or drawn
+      as molecules.
+    - The decks spell "sulphur"/"sulphide"/"sulphate" in places. The tool uses "sulfur", "sulfide", "sulfate"
+      throughout. (There are no typed name answers, so no "sulph-" spellings need accepting.)
+  Simplifications (shown on screen as "Model limits"):
+    - Atoms are not to scale; real molecules are 3D; joins are drawn as sticks (in the Sort boxes, joined atoms are
+      drawn touching, as in the particle-diagram deck). Metal compounds form giant structures, not molecules; the
+      block is drawn flat and small, and it repeats in every direction. Each atom's number of joins is a rule in
+      code (H 1, O 2, N 3, C 4, Cl 1); the word "valency" is not used.
+    - Sort boxes are laid out twice: fewer, bigger atoms on a phone (symbols at least about 11 px), more on a big screen.
+      Different particles always have a clear gap between them, so they never look joined.
+    - The workspace holds up to 16 atoms. A finished molecule snaps to its textbook shape (water bent, carbon dioxide
+      in a line, methane as a cross, ammonia as a fan).
+    - Atom colours match Balance the Equation (H white, O red, C dark grey, N blue, Cl green, S yellow, metals as
+      there). Atom sizes differ by element (H smallest, Cl largest); the symbol is always printed, and the tray is
+      the key, so colour is never the only clue.
+  Misconceptions designed out (C1.2 decks; BEST diagnostic questions on elements, compounds and mixtures):
+    - A compound is a mixture (E4, H6, H9, H10 feedback; Sort feedback: in a compound the atoms are joined).
+    - CO₂ contains O₂ molecules (H8, H9: both oxygen atoms join the carbon atom, never each other).
+    - H₂O has 2 oxygens: the subscript read as belonging to the wrong element (E2, E3, H3, H8 feedback: the small
+      number comes after the symbol it counts).
+    - A molecule must be a compound (E5, E7, E8: O₂ is an element made of molecules).
+    - Elements are always single atoms (E5, E7; Sort: molecules of an element; a solid element is many atoms).
+    - NaCl is made of molecules (H10; Formula tab: giant structure, not molecules).
+  Facts and values used:
+    - Definitions (L34 s5–6, s22; L35 s6–7, s20): element, atom, compound, molecule, mixture.
+    - Symbols (L34 s14–17; AQA 3.5.4): H, He, C, N, O, Na, Mg, Al, S, Cl, Ar, K, Ca, Fe, Co, Ni, Cu, Zn, Br, Ag, Sn,
+      I, Au, Li; capital first letter, small second letter.
+    - Molecules built (decks: water H₂O, carbon dioxide CO₂, methane CH₄, hydrogen and oxygen molecules; spec:
+      N₂, Cl₂, NH₃ ammonia, HCl hydrogen chloride — these four are not in the decks; see the report).
+    - Formulae and names (L35 s12, s37, s38–41): H₂O water, CO₂ carbon dioxide, CH₄ methane, H₂SO₄ sulfuric acid,
+      MgO, AgI, Al₂O₃, CaCO₃, MgCl₂, NaCl, FeS, Mg₃N₂, SnO, AlBr₃, NiI₂, ZnS, Li₃N, NaOH, NaNO₃, CuSO₄ and their
+      atom counts from the answer slides (checked against the parser on load).
+    - Naming rules (L35 s8, s11–13, s37): metal + non-metal → metal name + non-metal with "-ide" (oxide, chloride,
+      sulfide, nitride, bromide, iodide); a metal + another non-metal + oxygen → "-ate" (sulfate, nitrate,
+      carbonate); hydrogen + oxygen with a metal → hydroxide; carbon + oxygen → carbon monoxide / dioxide only (mono, di);
+      special names water, methane, sulfuric acid, and (spec, as in Build) ammonia and hydrogen chloride. A typed
+      formula that isn't in the lesson gets the note that the tool can't tell if the substance is real.
+    - Iron is magnetic; iron sulfide is not; a magnet separates iron from the mixture (L35 s17–22).
+  SoW lessons served: Y7 Term 3 C1.2 — L34 Elements; L35 Atoms; L36 Compounds; L37 Chemical formula.
+  Support starts OFF on every visit (inside the question panel): Free joins; Atom picture; Naming rules.
+  Idea credit: none (designed from scratch).
+  Checks on load: the parser must give the deck's atom counts for every formula on the answer slides; the naming
+    rules must give every deck name (special names apart); each built molecule's structure must finish with the
+    join rules, give its formula in the standard order and contain no O–O join for CO₂; no unfinished pair of
+    atoms may finish (e.g. H–O); 60 random Sort boxes of each kind and size (both layouts) must classify as their kind, element boxes must
+    hold one type of atom and compound particles must be joined; every choice has exactly one right option
+    (computed) and feedback for each wrong one; goals can be reached and aren't met at the start; every question
+    has 3 hints. Any failure shows a visible error box and switches that question off.
+  Performance: drawn on demand (nothing runs while idle): SVG patched in place with morph(); a drag redraws at most
+    once a frame; the snap-to-shape tween runs with paceFrame() (30 fps cap, adaptive slow-down) for 0.3 s and is
+    skipped with reduced motion or when the tab is hidden; no CSS filters, no backdrop-filter.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+/* house particle look (guide §4c), from Diffusion */
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
+:root{--ws:#F6F8FB;--wsdot:#C9D2DE;--stick:#5A6472;--boxbg:#FBFAF8;--boxedge:#5A6472;--free:#1E3555;--sel:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ws:#172A45;--wsdot:#2E4A70;--stick:#C9D2DD;--boxbg:#172A45;--boxedge:#A9B4C4;--free:#D9A536;--sel:#D9A536}}
+:root[data-theme="dark"]{--ws:#172A45;--wsdot:#2E4A70;--stick:#C9D2DD;--boxbg:#172A45;--boxedge:#A9B4C4;--free:#D9A536;--sel:#D9A536}
+
+.tabs button{min-width:96px}
+.pane{display:grid;gap:12px}
+/* tray: the atoms you can add (also the key) */
+.buildrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.tray{display:flex;flex-direction:column;gap:8px}
+@media (max-width:640px){.buildrow{grid-template-columns:minmax(0,1fr)}.tray{flex-direction:row;flex-wrap:wrap}}
+.tatom{font:700 16px var(--f-body);min-height:48px;padding:4px 14px 4px 6px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:grab;display:inline-flex;align-items:center;gap:8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.tatom:hover:not(:disabled){border-color:var(--accent)}
+.tatom svg{width:38px;height:38px;flex:none;display:block}
+.tatom .nm{font-weight:400;color:var(--muted)}
+.tatom .jn{font-weight:400;font-size:14px;color:var(--muted)}
+/* workspace */
+.wswrap{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ws)}
+#ws{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#ws text{font-family:var(--f-body)}
+.wsbg{fill:var(--ws)}.wsdot{fill:var(--wsdot)}
+.wshint{fill:var(--muted);font-size:20px;font-weight:700}
+.stk{stroke:var(--stick);stroke-width:5;stroke-linecap:round}
+.atg{cursor:grab;outline:none;touch-action:none}
+.atg:focus-visible .fring{display:inline}
+.fring{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.sring{fill:none;stroke:var(--sel);stroke-width:3;stroke-dasharray:7 5}
+.asym{font-weight:700;pointer-events:none}
+.stub{stroke:var(--free);stroke-width:3.5;stroke-linecap:round}
+.stubdot{fill:var(--free)}
+.anm{fill:var(--muted);font-size:13px;font-weight:700;pointer-events:none}
+.wsline{margin:0;font-size:16px;line-height:1.45;color:var(--ink)}
+.wsline:empty{display:none}
+.targets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:16px}
+.targets .tl{font-weight:700;color:var(--muted);margin-right:2px}
+.tgt{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:3px 12px;border-radius:999px;border:1px dashed var(--line);background:var(--surface)}
+.tgt.done{border-style:solid;border-color:var(--good);background:var(--good-bg);color:var(--good);font-weight:700}
+.tgt.done::before{content:"✓"}
+/* readouts */
+.readouts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.readouts .ro{grid-column:span 2}.readouts .ro.ro-h{grid-column:span 3}
+.ro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;align-content:start;gap:0;min-width:0}
+.ro .k{font-size:14px;font-weight:700;color:var(--muted);line-height:1.3}
+.ro .v{font-size:21px;font-weight:700;color:var(--accent);line-height:1.3;overflow-wrap:anywhere}
+.ro .v.sm{font-size:17px}
+.ro .v sub{font-size:.7em;line-height:0}
+@media (max-width:760px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.readouts .ro,.readouts .ro.ro-h{grid-column:span 1}.readouts .ro-wide{grid-column:1 / -1}}
+/* controls */
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"],.segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.small2{font-size:15px;color:var(--muted);margin:0}
+.hidenote{color:var(--muted);font-size:16px;margin:0}
+.rbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;min-width:0;align-content:start}
+.rbox h2{font:700 16px var(--f-body);color:var(--muted);margin:0}
+.rbox p{margin:0;font-size:16px;line-height:1.45}
+/* sort */
+.boxwrap{border-radius:10px;overflow:hidden}
+#sortSvg{display:block;width:100%;height:auto}#sortSvg.nar{max-width:400px;margin:0 auto}
+#sortSvg text{font-family:var(--f-body)}
+.pbox{fill:var(--boxbg);stroke:var(--boxedge);stroke-width:2.5}
+.pbox.hit{stroke:var(--bad);stroke-width:4;stroke-dasharray:9 5}
+.pcap{fill:var(--ink);font-size:15px;font-weight:700}
+.plet{fill:var(--muted);font-size:20px;font-weight:700}
+.keyline{margin:0;font-size:16px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
+.keyline span{display:inline-flex;align-items:center;gap:6px}
+.keyline svg{width:24px;height:24px;flex:none}
+/* formula */
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{font:700 17px var(--f-body);min-height:44px;min-width:56px;padding:4px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.fchip:hover:not(:disabled){border-color:var(--accent)}
+.fchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.fchip sub,.fbig sub,.opt sub,.gapq sub,.feedback sub,.tour sub,.qtext sub,.mnote sub,.wsline sub,.tgt sub,.numrow sub,.rbox sub{font-size:.7em;line-height:0}
+.fin{font:700 18px var(--f-body);min-height:46px;width:10em;max-width:100%;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.fbig{font-size:40px;font-weight:700;color:var(--accent);line-height:1.2;text-align:center;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.fbig .fnm{display:block;font-size:17px;color:var(--muted);font-weight:700}
+.fgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:640px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.fpic{width:100%;height:auto;display:block}
+.fpic text{font-family:var(--f-body)}
+.fgrp{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:6 4}
+.flab{fill:var(--ink);font-size:15px;font-weight:700}
+.fsm{fill:var(--muted);font-size:13px;font-weight:700}
+table.ct{border-collapse:collapse;font-size:17px;background:var(--surface);width:100%;font-variant-numeric:tabular-nums}
+.ct th,.ct td{border:1px solid var(--line);padding:3px 8px;text-align:left;line-height:1.3}
+.ct thead th{background:var(--sunk);font-size:15px}
+.ct td.n{text-align:center;font-weight:700;color:var(--accent)}
+.ct tfoot td,.ct tfoot th{font-weight:700}
+.steps{margin:0;padding-left:22px;display:grid;gap:2px;font-size:16px;line-height:1.45}
+.fans{font-weight:700;color:var(--accent)}
+body.quiz .demo-only{display:none!important}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .tatom{padding:4px 10px 4px 4px}.tatom .nm{display:none}
+  .fbig{font-size:32px}
+}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:90px;font:700 20px var(--f-body);min-height:46px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.cgrid{display:grid;grid-template-columns:auto auto;gap:6px 10px;align-items:center;justify-content:start;font-size:17px}
+.cgrid input{width:80px;font:700 20px var(--f-body);min-height:44px;padding:4px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.sgrid{display:grid;grid-template-columns:auto auto;gap:6px 12px;align-items:center;justify-content:start;font-size:18px}
+@media (min-width:901px) and (max-height:820px){
+  .cgrid,.sgrid{gap:4px 10px}.cgrid input{min-height:40px}.gsel{min-height:40px}
+}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Molecule Builder<small>Join atoms to build molecules. Sort elements, compounds and mixtures. Read formulae.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Molecule Builder</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Molecule Builder model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model">
+        <button type="button" data-tab="build" aria-pressed="true">Build</button>
+        <button type="button" data-tab="sort" aria-pressed="false">Sort</button>
+        <button type="button" data-tab="formula" aria-pressed="false">Formula</button>
+      </div>
+
+      <!-- Build -->
+      <div class="pane" id="pBuild">
+        <div class="buildrow">
+        <div class="tray" id="tray" role="group" aria-label="Atoms: tap one to add it, or drag it onto the workspace"></div>
+        <div class="wswrap" id="wsWrap">
+          <svg id="ws" viewBox="0 0 640 360" role="group" aria-label="Workspace. Tap one atom, then another, to join them.">
+            <defs><pattern id="wsDots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1.3" class="wsdot"/></pattern></defs>
+            <rect class="wsbg" x="0" y="0" width="640" height="360"/>
+            <rect x="0" y="0" width="640" height="360" fill="url(#wsDots)"/>
+            <g id="wsG"></g>
+            <text id="wsHint" class="wshint" x="320" y="186" text-anchor="middle">Tap an atom to add it here.</text>
+          </svg>
+        </div>
+        </div>
+        <div class="ctlrow" id="buildCtl">
+          <button class="btn" type="button" id="rmBtn" disabled>Remove atom</button>
+          <button class="btn" type="button" id="clrBtn">Clear workspace</button>
+          <span class="small2" id="atomCount">0 of 16 atoms</span>
+        </div>
+        <p class="mnote" id="buildNote" aria-live="polite"></p>
+        <div class="readouts" id="readout" aria-live="polite">
+          <div class="ro"><span class="k">Name</span><span class="v" id="roName">–</span></div>
+          <div class="ro"><span class="k">Formula</span><span class="v" id="roF">–</span></div>
+          <div class="ro"><span class="k">Atoms in one molecule</span><span class="v" id="roN">–</span></div>
+          <div class="ro ro-h"><span class="k">Element or compound?</span><span class="v sm" id="roEC">–</span></div>
+          <div class="ro ro-h ro-wide"><span class="k">Elements present</span><span class="v sm" id="roEls">–</span></div>
+        </div>
+        <p class="hidenote" id="roHidden" hidden>The name and formula are hidden for this question.</p>
+        <p class="wsline" id="wsLine"></p>
+        <div class="targets" id="targets"></div>
+      </div>
+
+      <!-- Sort -->
+      <div class="pane" id="pSort" hidden>
+        <div class="boxwrap" id="sortWrap"><svg id="sortSvg" viewBox="0 0 520 250" role="img" aria-label="A box of particles"></svg></div>
+        <p class="keyline" id="sortKey"></p>
+        <div class="ctlrow demo-only" id="sortBtns" role="group" aria-label="Sort this box">
+          <span class="clbl">This box shows:</span>
+          <button class="segb" type="button" data-sort="element">an element</button>
+          <button class="segb" type="button" data-sort="compound">a compound</button>
+          <button class="segb" type="button" data-sort="mixture">a mixture</button>
+        </div>
+        <div class="ctlrow">
+          <button class="btn primary" type="button" id="newBox">New box</button>
+          <span class="small2" id="sortTally"></span>
+        </div>
+        <p class="mnote" id="sortNote" aria-live="polite"></p>
+      </div>
+
+      <!-- Formula -->
+      <div class="pane" id="pForm" hidden>
+        <div class="fchips" id="fChips" role="group" aria-label="Formulae from the lesson"></div>
+        <div class="ctlrow" id="fOwn">
+          <label class="clbl" for="fIn">Your own formula:</label>
+          <input id="fIn" class="fin" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. CaCO3">
+          <button class="btn" type="button" id="fGo">Show it</button>
+        </div>
+        <p class="mnote" id="fNote" aria-live="polite"></p>
+        <div class="fbig" id="fBig" aria-live="polite"></div>
+        <div class="fgrid">
+          <div class="rbox" id="fPicBox"><h2>The atoms in the formula</h2><svg id="fPic" class="fpic" viewBox="0 0 300 170" role="img" aria-label=""></svg><p class="hidenote" id="fPicHidden" hidden>Count the atoms yourself for this question.</p></div>
+          <div class="rbox" id="fCountBox"><h2>Count</h2><div id="fCount"></div><p class="hidenote" id="fCountHidden" hidden>The count is hidden for this question.</p></div>
+        </div>
+        <div class="rbox" id="fTypeBox"><h2>Molecules or a giant structure?</h2><div id="fType"></div><p class="hidenote" id="fTypeHidden" hidden>Hidden for this question.</p></div>
+        <div class="rbox" id="fNameBox"><h2>Naming it</h2><div id="fName"></div><p class="hidenote" id="fNameHidden" hidden>The name is hidden for this question.</p></div>
+      </div>
+
+      <p class="limits" id="limits"><b>Model limits:</b> Atoms are not to scale, and real molecules are 3D. Joins are drawn as sticks; in the Sort boxes, joined atoms touch. Each atom can make a set number of joins: H 1, O 2, N 3, C 4, Cl 1. Colours are only a guide: real atoms have no colour. Metal compounds form giant structures, not molecules.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="joins" aria-pressed="false"><span class="dot"></span>Free joins <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="pic" aria-pressed="false"><span class="dot"></span>Atom picture <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="rules" aria-pressed="false"><span class="dot"></span>Naming rules <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Y7 T3 C1.2: Atoms and elements; Compounds and chemical formulae; Particle diagrams support) ===== */
+/* symbol: [name, metal?, fill, text colour, size]. Colours as Balance the Equation; the symbol is always printed. */
+const EL = {
+  H: ["hydrogen", 0, "#FFFFFF", "#1E252E", .68], He: ["helium", 0, "#F2B8D0", "#1E252E", .8], Li: ["lithium", 1, "#C2477F", "#FFFFFF"],
+  C: ["carbon", 0, "#3A3F47", "#FFFFFF", 1], N: ["nitrogen", 0, "#3B6FD8", "#FFFFFF", .95], O: ["oxygen", 0, "#D64541", "#FFFFFF", .9],
+  Na: ["sodium", 1, "#7E4FC9", "#FFFFFF"], Mg: ["magnesium", 1, "#9CA3AF", "#1E252E"], Al: ["aluminium", 1, "#E2E7EC", "#1E252E"],
+  S: ["sulfur", 0, "#E8C53A", "#1E252E", 1.1], Cl: ["chlorine", 0, "#2E8B4E", "#FFFFFF", 1.18], Ar: ["argon", 0, "#7F6BC8", "#FFFFFF", 1.05],
+  K: ["potassium", 1, "#9446B0", "#FFFFFF"], Ca: ["calcium", 1, "#D9D2BF", "#1E252E"], Fe: ["iron", 1, "#5B3A29", "#FFFFFF"],
+  Co: ["cobalt", 1, "#3F5AA8", "#FFFFFF"], Ni: ["nickel", 1, "#7FA38A", "#1E252E"], Cu: ["copper", 1, "#D2803B", "#1E252E", 1.05],
+  Zn: ["zinc", 1, "#6F7E8C", "#FFFFFF"], Br: ["bromine", 0, "#7A2424", "#FFFFFF"], Ag: ["silver", 1, "#C7CCD3", "#1E252E"],
+  Sn: ["tin", 1, "#8E9AA6", "#1E252E"], I: ["iodine", 0, "#5E2C83", "#FFFFFF"], Au: ["gold", 1, "#E0B43A", "#1E252E", 1.05]
+};
+const elName = s => EL[s][0], isMetal = s => !!EL[s][1], elFill = s => EL[s][2], elInk = s => EL[s][3], elR = s => EL[s][4] || 1;
+const JOINS = { H: 1, O: 2, N: 3, C: 4, Cl: 1 };            // joins each atom can make (usual KS3 bonding; the word "valency" is not used)
+const TRAY = ["H", "O", "C", "N", "Cl"];
+const MAXAT = 16;
+/* definitions, in the decks' words */
+const DEFS = {
+  element: "A substance made of only one type of atom",                                    // L34 s6, s22
+  compound: "A substance made of atoms of two or more elements, strongly joined together", // L35 s6
+  molecule: "A group of two or more atoms strongly joined together",                       // L35 s7
+  atom: "The smallest part of an element that can exist",                                  // L34 s6, s17
+  mixture: "Substances mixed together but not chemically joined"                           // L35 s20
+};
+/* molecules the Build tab knows: atom 0 is the centre; ang = textbook directions (degrees, y down) of atoms 1, 2 … from atom 0 */
+const MOLS = {
+  H2: { name: "hydrogen", atoms: ["H", "H"], j: [[0, 1]], ang: [0], deck: 1 },               // L35 s7 hydrogen molecules
+  O2: { name: "oxygen", atoms: ["O", "O"], j: [[0, 1]], ang: [0], deck: 1 },                 // L35 s7; support s3, s27
+  N2: { name: "nitrogen", atoms: ["N", "N"], j: [[0, 1]], ang: [0] },                        // spec (not in the decks)
+  Cl2: { name: "chlorine", atoms: ["Cl", "Cl"], j: [[0, 1]], ang: [0] },                     // spec (not in the decks)
+  HCl: { name: "hydrogen chloride", atoms: ["Cl", "H"], j: [[0, 1]], ang: [180] },           // spec (not in the decks)
+  H2O: { name: "water", atoms: ["O", "H", "H"], j: [[0, 1], [0, 2]], ang: [145, 35], deck: 1 },          // L34 s20, L35 s6
+  CO2: { name: "carbon dioxide", atoms: ["C", "O", "O"], j: [[0, 1], [0, 2]], ang: [180, 0], deck: 1 },  // L34 s20, L35 s34
+  CH4: { name: "methane", atoms: ["C", "H", "H", "H", "H"], j: [[0, 1], [0, 2], [0, 3], [0, 4]], ang: [0, 90, 180, 270], deck: 1 },   // L35 s38
+  NH3: { name: "ammonia", atoms: ["N", "H", "H", "H"], j: [[0, 1], [0, 2], [0, 3]], ang: [90, 210, 330] } // spec (not in the decks)
+};
+const TARGETS = ["H2O", "CO2", "CH4", "H2", "O2"];         // the decks' molecules
+/* formulae from L35 (slides 12, 37, 38–41), with the deck's names */
+const DECKF = [["H2O", "water"], ["CO2", "carbon dioxide"], ["CH4", "methane"], ["H2SO4", "sulfuric acid"], ["MgO", "magnesium oxide"],
+  ["NaCl", "sodium chloride"], ["FeS", "iron sulfide"], ["MgCl2", "magnesium chloride"], ["AgI", "silver iodide"], ["Al2O3", "aluminium oxide"],
+  ["Mg3N2", "magnesium nitride"], ["SnO", "tin oxide"], ["AlBr3", "aluminium bromide"], ["NiI2", "nickel iodide"], ["ZnS", "zinc sulfide"],
+  ["Li3N", "lithium nitride"], ["NaOH", "sodium hydroxide"], ["NaNO3", "sodium nitrate"], ["CuSO4", "copper sulfate"], ["CaCO3", "calcium carbonate"]];
+/* atom counts on the answer slides (L35 s39, s41; s37 for NaNO3): checked against the parser on load */
+const DECK_COUNTS = { H2O: { H: 2, O: 1 }, CO2: { C: 1, O: 2 }, CH4: { C: 1, H: 4 }, H2SO4: { H: 2, S: 1, O: 4 }, MgO: { Mg: 1, O: 1 }, AgI: { Ag: 1, I: 1 },
+  Al2O3: { Al: 2, O: 3 }, CaCO3: { Ca: 1, C: 1, O: 3 }, MgCl2: { Mg: 1, Cl: 2 }, NaNO3: { Na: 1, N: 1, O: 3 } };
+const SPECIAL = { H2O: "water", CH4: "methane", H2SO4: "sulfuric acid", NH3: "ammonia" };   // names that don't follow the rules (NH3: spec, as in Build)
+const IDE = { O: "oxide", Cl: "chloride", S: "sulfide", N: "nitride", Br: "bromide", I: "iodide" };   // L35 s11–12
+const ATE = { S: "sulfate", N: "nitrate", C: "carbonate", Br: "bromate" };                          // L35 s13, s37
+const PREFIX = { 1: "mon", 2: "di", 3: "tri" };                                                     // L35 s8: mono = 1, di = 2, tri = 3
+/* particles that can appear in a Sort box (deck examples: helium, argon, copper, carbon, gold atoms; oxygen pairs; water …) */
+const SPECIES = { He: "atom", Ar: "atom", Cu: "solid", Au: "solid", C: "solid", H2: "molecule", O2: "molecule", N2: "molecule", Cl2: "molecule",
+  H2O: "molecule", CO2: "molecule", CH4: "molecule" };
+const SP_ATOM = ["He", "Ar"], SP_SOLID = ["Cu", "Au", "C"], SP_ELMOL = ["H2", "O2", "N2", "Cl2"], SP_ELGAS = ["He", "Ar", "H2", "O2", "N2", "Cl2"], SP_CP = ["H2O", "CO2", "CH4"];
+const BOXKINDS = ["atomsEl", "molEl", "molCp", "mixEl", "mixCp", "mixElCp"];
+const FINE = { atomsEl: "atoms of an element", molEl: "molecules of an element", molCp: "molecules of a compound",
+  mixEl: "a mixture of two elements", mixCp: "a mixture of two compounds", mixElCp: "a mixture of an element and a compound" };
+const MAIN = { atomsEl: "element", molEl: "element", molCp: "compound", mixEl: "mixture", mixCp: "mixture", mixElCp: "mixture" };
+const CONFUSE = { atomsEl: "molEl", molEl: "molCp", molCp: "mixEl", mixEl: "molCp", mixCp: "mixElCp", mixElCp: "mixCp" };   // the likely wrong label for each
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const SUBD = "₀₁₂₃₄₅₆₇₈₉";
+
+/* ===== Formula parser and naming rules (all answers come from here) ===== */
+function parseF(s) {
+  s = String(s).replace(/\s+/g, "").replace(/[₀-₉]/g, d => SUBD.indexOf(d));
+  if (!s) throw new Error("Type a formula first.");
+  if (/[()[\]]/.test(s)) throw new Error("This tool doesn't use brackets. Try a formula from the lesson, like CaCO₃.");
+  if (/^[0-9]/.test(s)) throw new Error("Leave out the big number in front. Type the formula of one substance, like H2O.");
+  const out = []; let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/[a-z]/.test(c)) throw new Error("Each symbol starts with a capital letter, like Cl. The second letter is always small.");
+    if (!/[A-Z]/.test(c)) throw new Error(`"${c}" can't go in a formula. Use symbols and small numbers only.`);
+    let sym = c; i++;
+    if (i < s.length && /[a-z]/.test(s[i])) sym += s[i++];
+    let d = ""; while (i < s.length && /[0-9]/.test(s[i])) d += s[i++];
+    if (!EL[sym]) {
+      const pv = out.length ? out[out.length - 1].el : "";
+      if (sym.length === 1 && pv.length === 1 && EL[pv + sym.toLowerCase()]) throw new Error(`The second letter of a symbol is always small: ${pv + sym.toLowerCase()}, not ${pv + sym}.`);
+      if (sym.length === 2 && sym[0] === sym[1].toUpperCase() && EL[sym[0]]) throw new Error(`"${sym}" isn't a symbol. For two ${elName(sym[0])} atoms, write ${sym[0]}2.`);
+      if (sym.length === 2 && EL[sym[0]] && EL[sym[1].toUpperCase()]) throw new Error(`"${sym}" isn't a symbol here. For two elements, use two capitals: ${sym[0]}${sym[1].toUpperCase()}.`);
+      throw new Error(`"${sym}" isn't one of the element symbols in this lesson.`);
+    }
+    if (d && (/^0/.test(d) || +d > 12)) throw new Error("Use small numbers from 2 to 12 after a symbol.");
+    const n = d ? +d : 1, e = out.find(x => x.el === sym);
+    if (e) e.n += n; else out.push({ el: sym, n });
+  }
+  return out;
+}
+const keyOf = list => list.map(x => x.el + (x.n > 1 ? x.n : "")).join("");
+const fHTML = list => list.map(x => x.el + (x.n > 1 ? `<sub>${x.n}</sub>` : "")).join("");
+const fTxt = list => list.map(x => x.el + (x.n > 1 ? String(x.n).split("").map(d => SUBD[d]).join("") : "")).join("");
+const F = k => fHTML(parseF(k));                            // formula HTML from a key such as "CO2"
+const Ft = k => fTxt(parseF(k));
+const countsOf = list => { const c = {}; list.forEach(x => { c[x.el] = x.n; }); return c; };
+const sameCounts = (a, b) => { const ka = Object.keys(a), kb = Object.keys(b); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
+const totalOf = list => list.reduce((s, x) => s + x.n, 0);
+/* order atom counts the standard way: a known molecule's own order, else carbon, hydrogen, then A–Z */
+function orderCounts(c) {
+  for (const k in MOLS) { const l = parseF(k); if (sameCounts(countsOf(l), c)) return l; }
+  const els = Object.keys(c).sort((a, b) => a < b ? -1 : 1);
+  const ord = c.C ? ["C", ...(c.H ? ["H"] : []), ...els.filter(e => e !== "C" && e !== "H")] : els;
+  return ord.map(e => ({ el: e, n: c[e] }));
+}
+/* naming (L35 s8, s11–13, s37): returns { name, how: [steps], rule } or a null name */
+function nameOf(list) {
+  const k = keyOf(list), els = list.map(x => x.el);
+  if (list.length === 1) return { name: elName(els[0]), rule: "element", how: ["One type of atom: an element.", `Its name is the element's name: ${elName(els[0])}.`] };
+  if (SPECIAL[k]) return { name: SPECIAL[k], rule: "special", how: ["This compound has its own name.", "Learn it: it doesn't follow the naming rules."] };
+  if (k === "HCl") return { name: "hydrogen chloride", rule: "ide", how: ["Write the name of the first element: hydrogen.", "Write chlorine with the ending changed to -ide: chloride."] };   // spec, as in Build
+  const m = els.filter(isMetal);
+  if (m.length === 1 && isMetal(els[0])) {
+    const metal = elName(els[0]), rest = els.slice(1);
+    if (rest.length === 1 && IDE[rest[0]]) return { name: `${metal} ${IDE[rest[0]]}`, rule: "ide",
+      how: [`Write the name of the metal: ${metal}.`, `Write the name of the non-metal, ${elName(rest[0])}, with the ending changed to -ide: ${IDE[rest[0]]}.`] };
+    if (rest.length === 2 && rest.includes("H") && rest.includes("O")) return { name: `${metal} hydroxide`, rule: "hydroxide",
+      how: [`Write the name of the metal: ${metal}.`, "Hydrogen and oxygen together make hydroxide."] };
+    const x = rest.filter(e => e !== "O");
+    if (rest.length === 2 && rest.includes("O") && x.length === 1 && ATE[x[0]]) return { name: `${metal} ${ATE[x[0]]}`, rule: "ate",
+      how: [`Write the name of the metal: ${metal}.`, `There are two more elements, and one is oxygen. Change the ending of ${elName(x[0])} to -ate: ${ATE[x[0]]}.`] };
+  }
+  if (!m.length && list.length === 2 && els[0] === "C" && els[1] === "O" && list[0].n === 1 && list[1].n <= 2) {   // carbon monoxide and carbon dioxide only (CO₃ is not a real substance)
+    const p = PREFIX[list[1].n], ox = (p === "mon" ? "mon" : p) + "oxide";
+    return { name: "carbon " + ox, rule: "prefix", how: ["Write the name of the first element: carbon.", `There ${list[1].n === 1 ? "is 1 oxygen atom" : `are ${list[1].n} oxygen atoms`}: ${p === "mon" ? "mono" : p} = ${list[1].n}. Oxygen becomes oxide: ${ox}.`] };
+  }
+  return { name: null, rule: null, how: [] };
+}
+const isElementF = list => list.length === 1;
+const hasMetal = list => list.some(x => isMetal(x.el));
+
+/* ===== Joins: work out single, double or triple sticks so every atom uses all its joins ===== */
+function solveOrders(atomEl, ids, edges) {   // atomEl(id) → symbol; edges [[a, b], …]; returns the stick counts, or null if it can't be finished
+  if (ids.length < 2) return null;
+  const need = {}; ids.forEach(id => { need[id] = JOINS[atomEl(id)] || 0; });
+  const ord = new Array(edges.length);
+  const go = k => {
+    if (k === edges.length) return ids.every(id => need[id] === 0);
+    const [a, b] = edges[k];
+    for (let o = 1; o <= 3; o++) {
+      if (need[a] < o || need[b] < o) break;
+      need[a] -= o; need[b] -= o; ord[k] = o;
+      if (go(k + 1)) return true;
+      need[a] += o; need[b] += o;
+    }
+    return false;
+  };
+  return go(0) ? ord.slice() : null;
+}
+const MOLORD = {}; for (const k in MOLS) { const m = MOLS[k]; MOLORD[k] = solveOrders(i => m.atoms[i], m.atoms.map((_, i) => i), m.j); }
+
+/* ===== Particle classification (element / compound / mixture), shared by Build and Sort ===== */
+/* items: [{ k: formula key, mol: true if molecules }] — one entry per different substance */
+function classify(items) {
+  const u = []; items.forEach(it => { if (!u.some(x => x.k === it.k)) u.push(it); });
+  const isEl = it => parseF(it.k).length === 1;
+  if (u.length === 1) return isEl(u[0]) ? { main: "element", fine: u[0].mol ? "molEl" : "atomsEl" } : { main: "compound", fine: "molCp" };
+  const ne = u.filter(isEl).length;
+  return { main: "mixture", fine: ne === u.length ? "mixEl" : ne === 0 ? "mixCp" : "mixElCp", n: u.length };
+}
+const boxItems = b => b.keys.map(k => ({ k, mol: SPECIES[k] === "molecule" }));
+const fineText = c => c.n > 2 ? { mixEl: "a mixture of elements", mixCp: "a mixture of compounds", mixElCp: "a mixture of elements and compounds" }[c.fine] : FINE[c.fine];
+
+/* ===== Geometry of a molecule: positions of its atoms around its centre ===== */
+const R0 = 28, GAP = 18;                                    // Build: carbon radius; stick length between atom edges
+function molGeom(k, r0, gapK) {                             // gapK > 0: a stick gap (px); < 0: atoms overlap (touching, as in the particle deck)
+  if (!MOLS[k]) return { at: [{ el: k, x: 0, y: 0, r: r0 * elR(k) }], j: [], ord: [] };
+  const m = MOLS[k], r = e => r0 * elR(e), at = [{ el: m.atoms[0], x: 0, y: 0, r: r(m.atoms[0]) }];
+  m.ang.forEach((a, i) => {
+    const e = m.atoms[i + 1], d = gapK > 0 ? r(m.atoms[0]) + r(e) + gapK : (r(m.atoms[0]) + r(e)) * (1 + gapK), t = a * Math.PI / 180;
+    at.push({ el: e, x: Math.cos(t) * d, y: Math.sin(t) * d, r: r(e) });
+  });
+  const x0 = Math.min(...at.map(p => p.x - p.r)), x1 = Math.max(...at.map(p => p.x + p.r)), y0 = Math.min(...at.map(p => p.y - p.r)), y1 = Math.max(...at.map(p => p.y + p.r));
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  at.forEach(p => { p.x -= cx; p.y -= cy; });
+  return { at, j: m.j, ord: MOLORD[k], w: x1 - x0, h: y1 - y0 };
+}
+function svgParticle(x, y, r, fill) { return `<circle cx="${(+x).toFixed(1)}" cy="${(+y).toFixed(1)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${(x - r * .35).toFixed(1)}" cy="${(y - r * .35).toFixed(1)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>`; }
+function svgAtom(el, x, y, r) {
+  const fs = el.length > 1 ? r * .8 : r * .95;
+  return svgParticle(x, y, +r.toFixed(2), elFill(el)) + `<text class="asym" x="${x.toFixed(1)}" y="${(y + fs * .35).toFixed(1)}" text-anchor="middle" style="fill:${elInk(el)};font-size:${fs.toFixed(1)}px">${el}</text>`;
+}
+const atomIcon = (el, size, rr) => `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true">${svgAtom(el, size / 2, size / 2, rr)}</svg>`;
+
+/* ===== Sort boxes, made in code from the rules ===== */
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+/* Sort-box atoms in one particle overlap by 8 % of their radii: they clearly touch (as in the particle deck), but the
+   shape stays readable: CO₂ in a straight line, H₂O bent, CH₄ a cross, NH₃ a fan (the same shapes as Build). */
+const TOUCH = -.08;
+/* Each box is laid out twice: "wide" for a desktop-sized model, "narrow" (fewer, bigger atoms, drawn about 1 : 1) for phones,
+   so the symbols stay at least about 11 px on screen. one / mix = particles of each kind [fewest, most]. */
+const GEO = { box: { wide: { w: 500, h: 230, r: 17, one: [4, 6], mix: [3, 4] }, narrow: { w: 324, h: 250, r: 20, one: [4, 4], mix: [3, 3] } },
+              quad: { wide: { w: 248, h: 140, r: 13, one: [3, 4], mix: [2, 3] }, narrow: { w: 324, h: 170, r: 20, one: [3, 3], mix: [2, 2] } } };
+function placeParts(keys, rnd, G) {
+  const { w, h, r: r0 } = G, parts = [];
+  if (SPECIES[keys[0]] === "solid") {                       // a solid element: atoms touching in rows (support slides 9–10; L34 s11)
+    const r = r0 * elR(keys[0]), cols = Math.floor((w - 12) / (2 * r)), rows = Math.min(4, Math.floor((h - 12) / (2 * r))), x0 = (w - cols * 2 * r) / 2 + r;
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) parts.push({ k: keys[0], x: x0 + j * 2 * r, y: h - 6 - r - i * 2 * r, rot: 0 });
+    return parts;
+  }
+  const [lo, hi] = keys.length === 1 ? G.one : G.mix;
+  const gap = Math.max(10, r0 * .9), geomOf = {}; keys.forEach(k => { geomOf[k] = molGeom(k, r0, TOUCH).at; });
+  const atomsAt = (k, x, y, rot) => { const t = rot * Math.PI / 180, c = Math.cos(t), s = Math.sin(t); return geomOf[k].map(a => ({ x: x + a.x * c - a.y * s, y: y + a.x * s + a.y * c, r: a.r })); };
+  for (let per = lo + Math.floor(rnd() * (hi - lo + 1)); per >= 2; per--) {   // if the box gets too full, try one fewer of each
+    for (let attempt = 0; attempt < 40; attempt++) {         // place the particles in turn, kind by kind; start again if a box gets too full
+      parts.length = 0; const placedAtoms = [];
+      const want = []; for (let n = 0; n < per; n++) keys.forEach(k => want.push(k));
+      let ok = true;
+      for (const k of want) {
+        let placed = false;
+        for (let tries = 0; tries < 300 && !placed; tries++) {
+          const x = rnd() * w, y = rnd() * h, rot = Math.floor(rnd() * 12) * 30, A = atomsAt(k, x, y, rot);
+          if (!A.every(a => a.x - a.r >= 5 && a.x + a.r <= w - 5 && a.y - a.r >= 5 && a.y + a.r <= h - 5)) continue;   // inside the box
+          if (!A.every(a => placedAtoms.every(b => Math.hypot(a.x - b.x, a.y - b.y) > a.r + b.r + gap))) continue;    // a clear gap from every other particle, so separate particles never look joined
+          parts.push({ k, x, y, rot }); placedAtoms.push(...A); placed = true;
+        }
+        if (!placed) { ok = false; break; }
+      }
+      if (ok) return parts;
+    }
+  }
+  return parts;
+}
+function makeBox(kind, rnd, geo) {   // geo: "box" (one big box) or "quad" (four small boxes)
+  const pick = a => a[Math.floor(rnd() * a.length)], two = a => { const x = pick(a); let y = pick(a); while (y === x) y = pick(a); return [x, y]; };
+  const keys = kind === "atomsEl" ? [pick(rnd() < .5 ? SP_ATOM : SP_SOLID)] : kind === "molEl" ? [pick(SP_ELMOL)] : kind === "molCp" ? [pick(SP_CP)]
+    : kind === "mixEl" ? two(SP_ELGAS) : kind === "mixCp" ? two(SP_CP) : [pick(SP_ELGAS), pick(SP_CP)];
+  const g = GEO[geo || "box"], enough = ps => keys.every(k => ps.filter(p => p.k === k).length >= 2);
+  let parts, partsN;
+  for (let t = 0; t < 6; t++) { parts = placeParts(keys, rnd, g.wide); partsN = placeParts(keys, rnd, g.narrow); if (enough(parts) && enough(partsN)) break; }   // at least 2 of each kind
+  return { kind, keys, geo: geo || "box", parts, partsN };
+}
+const sortNarrow = () => ($("sortWrap").clientWidth || $("model").clientWidth || window.innerWidth) < 640;
+const partsOf = b => sortNarrow() ? b.partsN : b.parts;
+const geoOf = b => GEO[b.geo || "box"][sortNarrow() ? "narrow" : "wide"];
+function partSVG(p, r0) {
+  const g = molGeom(p.k, r0, TOUCH), t = p.rot * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+  const pts = g.at.map(a => ({ el: a.el, r: a.r, x: p.x + a.x * c - a.y * s, y: p.y + a.x * s + a.y * c }));
+  return pts.slice(1).concat(pts.slice(0, 1)).map(a => svgAtom(a.el, a.x, a.y, a.r)).join("");   // centre atom drawn last, on top
+}
+const QCAP = 34;   // room for a two-line caption above each small box
+function makeQuad(rnd) {
+  const ks = BOXKINDS.slice(); for (let i = ks.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ks[i], ks[j]] = [ks[j], ks[i]]; }
+  const boxes = ks.slice(0, 4).map(k => makeBox(k, rnd, "quad")), wrong = Math.floor(rnd() * 4);
+  boxes.forEach((b, i) => { b.cap = i === wrong ? CONFUSE[b.kind] : b.kind; });
+  return { boxes, wrong, hit: -1 };
+}
+function boxWords(b) {   // describe each kind of particle in a box, for feedback
+  return b.keys.map(k => {
+    const l = parseF(k), mol = SPECIES[k] === "molecule";
+    const what = mol ? `${Ft(k)} molecules` : `${elName(k)} atoms`;
+    return l.length === 1 ? (mol ? `The ${what} have one type of atom: an element.` : `The ${what} are all the same type of atom: an element.`) : `The ${what} have ${l.length} types of atom joined together: a compound.`;
+  });
+}
+function fineWhy(pick, b) {   // feedback for a wrong fine label
+  const c = classify(boxItems(b));
+  return `${boxWords(b).join(" ")} ${c.main === "mixture" ? "They are not joined to each other. " : ""}So it is ${FINE[c.fine]}, not ${FINE[pick]}.`;
+}
+function sortWhy(pick, b) {   // feedback for choosing element / compound / mixture for box b
+  const c = classify(boxItems(b)), words = boxWords(b).join(" ");
+  if (pick === c.main) return `Right: ${FINE[c.fine]}. ${words}`;
+  if (c.main === "element" && pick === "compound") return c.fine === "molEl" ? `Each molecule has 2 atoms joined, but they are the same type of atom. A molecule doesn't have to be a compound: this is ${FINE.molEl}.` : "There is only one type of atom here, so it is an element. A compound has atoms of two or more elements joined together.";
+  if (c.main === "compound" && pick === "element") return `Look inside one molecule: it has ${parseF(b.keys[0]).length} types of atom joined together. That makes it a compound, not an element.`;
+  if (pick === "mixture") return `Every particle in the box is the same, so this is one pure substance, not a mixture. It is ${FINE[c.fine]}.`;
+  if (pick === "compound") return `A compound is one substance, with its atoms joined in every particle. Here there are ${b.keys.length} different kinds of particle, not joined to each other: ${FINE[c.fine]}.`;
+  return `There are ${b.keys.length} different kinds of particle here, not joined to each other. That makes it a mixture: ${FINE[c.fine]}.`;
+}
+
+/* ===== Question bank (wording from the decks; answers computed from the rules above) ===== */
+const nameOpts = k => {   // name options for a metal compound, made by the rules
+  const l = parseF(k), metal = elName(l[0].el), right = nameOf(l).name, x = l.slice(1).map(e => e.el).filter(e => e !== "O");
+  if (l.length === 2) { const nm = l[1].el; return [
+    { t: right },
+    { t: `${metal} ${elName(nm)}`, why: `Close. Keep the metal's name, but change the non-metal's ending to -ide: ${elName(nm)} → ${IDE[nm]}.` },
+    { t: `${IDE[nm]} ${metal}`, why: "Write the metal's name first. Then write the non-metal, ending in -ide." },
+    { t: `a mixture of ${metal} and ${elName(nm)}`, why: `The ${metal} and ${elName(nm)} atoms are strongly joined, so it is a compound, not a mixture. A compound gets one name: the metal, then the non-metal ending in -ide.` }]; }
+  return [
+    { t: right },
+    { t: `${metal} ${IDE[x[0]]}`, why: `-ide is for a metal joined to just one non-metal. This compound has oxygen too, so the ending is -ate.` },
+    { t: `${metal} oxide`, why: `That leaves out the ${elName(x[0])}. With two elements plus oxygen, the non-metal's ending changes to -ate.` },
+    { t: `${metal} ${elName(x[0])} oxide`, why: `Use the naming rule. With oxygen there too, ${elName(x[0])} changes its ending to -ate.` }];
+};
+const drawOpts = k => {   // formula options for a drawn molecule (H8)
+  const l = parseF(k), sw = l.length === 2 ? [{ el: l[0].el, n: l[1].n }, { el: l[1].el, n: l[0].n }] : null, dbl = l.map(x => ({ el: x.el, n: x.n * 2 }));
+  const o = [{ h: fHTML(l), f: k },
+    { h: fHTML(sw), f: keyOf(sw), why: `The small number comes after the symbol it counts. Count each kind of atom in the drawing: ${l.map(x => `${x.n} ${elName(x.el)}`).join(", ")}.` },
+    { h: fHTML(dbl), f: keyOf(dbl), why: "That's two molecules' worth of atoms. The formula counts the atoms in one molecule." }];
+  o.push(k === "CO2" ? { h: "C + O<sub>2</sub>", f: "C+O2", why: "There's no oxygen molecule inside. Both oxygen atoms are joined to the carbon atom, not to each other. It is one molecule: CO<sub>2</sub>." }
+                     : { h: l.map(x => x.el).join(""), f: "none", why: "Without small numbers the formula means 1 atom of each. Add a small number after a symbol when there is more than one of that atom." });
+  return o;
+};
+const TASKS = {
+  easy: [
+    { kind: "choice", want: "element", setup: { tab: "sort", box: "atomsEl" },                                   // L34 s5–6, s17 Q1, s22
+      text: "What is an element?",
+      options: [
+        { t: DEFS.element, def: "element" },
+        { t: DEFS.compound, def: "compound", why: "That describes a compound. An element has only one type of atom." },
+        { t: DEFS.molecule, def: "molecule", why: "That describes a molecule. A molecule can be an element, like O<sub>2</sub>, or a compound, like H<sub>2</sub>O." },
+        { t: DEFS.atom, def: "atom", why: "That describes an atom. An element is a substance made of atoms of one type only." }],
+      explain: () => `${DEFS.element}. It cannot be broken down into other substances.`,
+      hints: ["Copper is made of copper atoms only. Carbon is made of carbon atoms only.", "Think about how many types of atom an element has.", "Only one type of atom."] },
+    { kind: "goal", want: "H2O", setup: { tab: "build" },                                                         // L34 s20; L35 s6, s34
+      text: "Build one water molecule, H<sub>2</sub>O. Then press Check.",
+      hints: ["H<sub>2</sub>O has 2 hydrogen atoms and 1 oxygen atom.", "Add 1 O and 2 H atoms. Tap the O, then an H, to join them.", "Join the oxygen atom to both hydrogen atoms."] },
+    { kind: "count", f: "CO2", setup: { tab: "formula", f: "CO2", hide: { count: 1 }, lock: { fm: 1 } },        // L35 s34, s39, s41
+      text: "Carbon dioxide is CO<sub>2</sub>. Count the atoms in its formula.",
+      hints: ["Each symbol is one element. C is carbon and O is oxygen.", "The small number comes after the symbol it counts. No small number means 1.", "1 carbon atom and 2 oxygen atoms: 3 atoms."] },
+    { kind: "choice", nm: true, f: "MgO", gen: () => nameOpts("MgO"), setup: { tab: "formula", f: "MgO", hide: { name: 1 }, lock: { fm: 1 } },   // L35 s11
+      text: "Magnesium joins with oxygen to make a compound. What is its name?",
+      explain: () => `Magnesium oxide: the metal's name, then the non-metal with -ide.`,
+      hints: ["Write the name of the metal first.", "Then the non-metal, with its ending changed to -ide.", "Magnesium oxide."] },
+    { kind: "choice", box: "molEl", setup: { tab: "sort" },                                                       // support s3, s11–14
+      text: "Look at the box in the model. Is the substance an element, a compound or a mixture?",
+      options: ["element", "compound", "mixture"].map(k => ({ t: k === "element" ? "An element" : "A " + k, main: k, why: S => sortWhy(k, S.box) })),
+      explain: () => `Each molecule has two atoms of the same type. One type of atom: an element made of molecules.`,
+      hints: ["Are all the particles the same?", "How many types of atom are in one particle?", "One type of atom: an element. Its atoms go round in pairs."] },
+    { kind: "symbols", items: ["carbon", "chlorine", "iron", "gold"], bank: ["C", "Ca", "Cl", "CL", "Fe", "I", "Au", "Ag", "Go"], setup: { tab: "formula", f: "H2O", lock: { fm: 1 } },   // not Build or Sort: the tray and the key would show C and Cl   // L34 s14–15, s17 Q3
+      text: "Choose the symbol for each element.",
+      hints: ["The first letter is always a capital. A second letter is always small.", "Some symbols aren't what you expect: iron and gold don't use their English names.", "Carbon C, chlorine Cl, iron Fe, gold Au."] },
+    { kind: "choice", predict: "O2", setup: { tab: "build", lock: { build: 1 } },                                 // L35 s7; support s3, s7, s27
+      text: "Predict: is oxygen, O<sub>2</sub>, an element or a compound? Then watch the model.",
+      options: [
+        { t: "An element: it has only one type of atom", ec: "element" },
+        { t: "A compound: it has two atoms joined together", ec: "compound", why: "Two atoms joined together make a molecule. Both are oxygen atoms, so O<sub>2</sub> is an element. Elements aren't always single atoms: oxygen goes round in pairs." },
+        { t: "A mixture: it has two separate atoms", ec: "mixture", why: "The two oxygen atoms are strongly joined, and they are the same type. It is one substance: an element made of molecules." }],
+      explain: () => "O<sub>2</sub> is one type of atom, so it is an element. Its atoms are joined in pairs: molecules.",
+      hints: ["Count the types of atom in O<sub>2</sub>, not the atoms.", "O is the only symbol in the formula.", "An element: only oxygen atoms."] },
+    { kind: "choice", want: "molecule", setup: { tab: "build", pre: ["H2O", "O2"] },                             // L35 s7; support s5–8
+      text: "What is a molecule?",
+      options: [
+        { t: DEFS.molecule, def: "molecule" },
+        { t: "A substance made of two or more elements", def: "compound", why: "That's a compound. A molecule can have just one type of atom: look at the oxygen molecule in the model." },
+        { t: "A single atom on its own", def: "atom", why: "One atom on its own is just an atom. A molecule has two or more atoms joined." },
+        { t: "Two substances mixed but not joined", def: "mixture", why: "That's a mixture. In a molecule the atoms are strongly joined together." }],
+      explain: () => `${DEFS.molecule}. The model shows a water molecule (a compound) and an oxygen molecule (an element).`,
+      hints: ["Look at the model: both groups are molecules.", "One is water and one is oxygen. What do they have in common?", "Two or more atoms strongly joined together."] }
+  ],
+  hard: [
+    { kind: "goal", want: "CH4", setup: { tab: "build" },                                                         // L35 s38–39
+      text: "Build one methane molecule, CH<sub>4</sub>. Then press Check.",
+      hints: ["CH<sub>4</sub> has 1 carbon atom and 4 hydrogen atoms.", "Put the carbon atom in the middle. Each hydrogen atom can make only 1 join.", "Join the carbon atom to all 4 hydrogen atoms."] },
+    { kind: "goal", want: "NH3", setup: { tab: "build" },                                                         // spec: ammonia (not in the decks)
+      text: "Ammonia is NH<sub>3</sub>. Build one ammonia molecule. Then press Check.",
+      hints: ["Read the formula: N is nitrogen. The 3 belongs to the H.", "You need 1 nitrogen atom and 3 hydrogen atoms.", "Join the nitrogen atom to all 3 hydrogen atoms."] },
+    { kind: "count", vars: ["Mg3N2", "CaCO3", "Al2O3", "H2SO4"], setup: { tab: "formula", hide: { count: 1 }, lock: { fm: 1 } },   // L35 s38–41
+      text: S => `Count the atoms in ${F(S.v)}.`,
+      hints: [S => "Each capital letter starts a new symbol. A small letter belongs to the capital just before it." + (S.v === "CaCO3" ? " Ca and C are different symbols." : ""), "The small number counts the atom just before it. No small number means 1.", S => { const l = parseF(S.v); return l.map(x => `${x.el}: ${x.n}`).join(", ") + `. That's ${l.length} elements and ${totalOf(l)} atoms.`; }] },
+    { kind: "choice", nm: true, vars: ["CuSO4", "NaNO3"], gen: S => nameOpts(S.v), setup: { tab: "formula", hide: { name: 1 }, lock: { fm: 1 } },   // L35 s13, s37
+      text: S => `${F(S.v)} contains ${parseF(S.v).map(x => elName(x.el)).join(", ").replace(/, ([^,]*)$/, " and $1")}. What is its name?`,
+      explain: S => `${cap(nameOf(parseF(S.v)).name)}: a metal, another non-metal and oxygen, so the ending is -ate.`,
+      hints: ["Write the name of the metal first.", "There are two more elements, and one is oxygen. That changes the ending to -ate.", S => `${cap(nameOf(parseF(S.v)).name)}.`] },
+    { kind: "choice", box: "mixElCp", setup: { tab: "sort" },                                                     // support s23–24
+      text: "Look at the box in the model. Which label fits it best?",
+      options: ["mixElCp", "mixEl", "mixCp", "molCp"].map(k => ({ t: cap(FINE[k]), fine: k, why: S => fineWhy(k, S.box) })),
+      explain: S => boxWords(S.box).join(" ") + " They are not joined to each other: a mixture.",
+      hints: ["How many different kinds of particle are there?", "For each kind, count the types of atom in one particle.", "One kind is an element and one is a compound."] },
+    { kind: "choice", setup: { tab: "formula", f: "FeS", lock: { fm: 1 } },                                       // L35 s8, s17–22
+      text: "Iron is magnetic, but iron sulfide is not. Why does the compound have different properties?",
+      options: [
+        { t: "The atoms are joined together differently, so it is a new substance", ok: true },
+        { t: "Iron sulfide is a mixture of iron and sulfur", why: "A common mistake. In a mixture the iron keeps its properties, so a magnet would pull it out. In the compound, iron and sulfur atoms are strongly joined: a new substance." },
+        { t: "The iron atoms change into different atoms", why: "The atoms don't change. Iron sulfide still has iron atoms, but now each is joined to sulfur." },
+        { t: "Some iron atoms are lost when it is heated", why: "No atoms are lost. FeS has one iron atom for every sulfur atom." }],
+      explain: () => "Compounds have very different properties to the elements they are made from, because the atoms are joined together differently.",
+      hints: ["In a mixture, each substance keeps its own properties.", "In a compound, the atoms are strongly joined together.", "The atoms are joined together differently: a new substance."] },
+    { kind: "choice", spot: true, setup: { tab: "sort" },                                                         // support s2–24
+      text: "One of the four labels in the model is wrong. Which box has the wrong label?",
+      gen: S => S.quad.boxes.map((b, i) => Object.assign({ t: "Box " + "ABCD"[i], box: i }, i === S.quad.wrong ? {} : { why: `Box ${"ABCD"[i]} is labelled right: it shows ${FINE[b.kind]}. ${boxWords(b).join(" ")}` })),
+      explain: S => { const b = S.quad.boxes[S.quad.wrong]; return `Box ${"ABCD"[S.quad.wrong]} shows ${FINE[b.kind]}, not ${FINE[b.cap]}. ${boxWords(b).join(" ")}`; },
+      hints: ["Check each box: how many kinds of particle, and how many types of atom in each?", "An element has one type of atom. In a compound, different atoms are joined. A mixture has more than one kind of particle.", S => `Look closely at box ${"ABCD"[S.quad.wrong]}.`] },
+    { kind: "choice", draw: true, vars: ["CH4", "NH3", "H2O", "CO2"], gen: S => drawOpts(S.v), setup: { tab: "build", lock: { build: 1 }, hide: { ro: 1 } },   // L35 s36
+      text: "Look at the molecule in the model. What is its formula?",
+      explain: S => `${F(S.v)}: ${parseF(S.v).map(x => `${x.n} ${elName(x.el)} atom${x.n > 1 ? "s" : ""}`).join(" and ")}.`,
+      hints: ["Count each type of atom in the molecule.", "Write each symbol, with a small number after it when there is more than one.", S => `The answer is ${F(S.v)}.`] },
+    { kind: "choice", oo: "CO2", setup: { tab: "build", lock: { build: 1 } },                                     // L35 s34; L34 s20
+      text: "Carbon dioxide is CO<sub>2</sub>. Is there an oxygen molecule, O<sub>2</sub>, inside a carbon dioxide molecule?",
+      options: [
+        { t: "No: each oxygen atom is joined to the carbon atom", oo: false },
+        { t: "Yes: the O₂ in the formula is an oxygen molecule", h: "Yes: the O<sub>2</sub> in the formula is an oxygen molecule", oo: true, why: "A common mistake. The small 2 counts oxygen atoms. Both are joined to the carbon atom, not to each other, so there is no O<sub>2</sub> molecule inside." },
+        { t: "Yes: carbon dioxide is a mixture of carbon and oxygen", oo: "mix", why: "Carbon dioxide is a compound, not a mixture. Its atoms are strongly joined in one molecule. Neither oxygen atom is joined to the other." }],
+      explain: () => "Each oxygen atom is joined to the carbon atom. The oxygen atoms are not joined to each other, so there is no O<sub>2</sub> molecule inside.",
+      hints: ["The small number tells you how many oxygen atoms. It doesn't say how they are joined.", "Each oxygen atom can make 2 joins. Carbon can make 4.", "No. Both oxygen atoms are joined to the carbon atom."] },
+    { kind: "choice", f: "NaCl", setup: { tab: "formula", f: "NaCl", hide: { type: 1 }, lock: { fm: 1 } },     // spec correction; AQA "most non-metals" form molecules; L35 s1, s22
+      text: "Sodium chloride, NaCl, is a compound of a metal and a non-metal. What is it made of?",
+      options: [
+        { t: "A giant structure: a repeating pattern of sodium and chlorine, not molecules", giant: true },
+        { t: "Molecules, each made of one sodium atom and one chlorine atom", giant: false, why: "A common mistake. Compounds of a metal and a non-metal don't form molecules. The sodium and chlorine make one giant repeating pattern." },
+        { t: "A mixture of sodium and chlorine", giant: "mix", why: "It is a compound, not a mixture. Sodium and chlorine are strongly joined. That's why sodium chloride is safe on chips, but sodium and chlorine are not." },
+        { t: "Sodium atoms only", giant: "el", why: "The formula has two symbols: Na for sodium and Cl for chlorine. It is a compound of two elements." }],
+      explain: () => "NaCl contains a metal, so it is a giant structure: a pattern of sodium and chlorine that repeats in every direction. 1 sodium for every 1 chlorine.",
+      hints: ["Which kinds of element usually form molecules?", "Most non-metals form molecules. Sodium is a metal.", "A giant structure, not molecules."] }
+  ]
+};
+/* mark the right option of each choice from the rules and the model, never by hand */
+function choiceOk(t, o, S) {
+  if (o.def) return o.def === t.want;
+  if (o.main) return o.main === classify(boxItems(S.box)).main;
+  if (o.fine) return o.fine === classify(boxItems(S.box)).fine;
+  if ("ec" in o) return o.ec === (isElementF(parseF(t.predict)) ? "element" : "compound");
+  if ("oo" in o) return o.oo === hasOO(t.oo);
+  if ("box" in o) return o.box === S.quad.wrong;
+  if ("f" in o) return o.f === S.v;
+  if ("giant" in o) return o.giant === hasMetal(parseF(t.f));
+  if (t.nm) return o.t === nameOf(parseF(S.v || t.f)).name;
+  return !!o.ok;
+}
+const hasOO = k => { const m = MOLS[k]; return m.j.some(([a, b]) => m.atoms[a] === "O" && m.atoms[b] === "O"); };
+const symOf = name => Object.keys(EL).find(s => elName(s) === name);
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); });
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  for (const k in DECK_COUNTS) { try { if (!sameCounts(countsOf(parseF(k)), DECK_COUNTS[k])) errs.push("parser: " + k + " disagrees with the answer slide"); } catch (e) { errs.push("parser: " + k + " " + e.message); } }
+  DECKF.forEach(([k, nm]) => { const n = nameOf(parseF(k)).name; if (n !== nm) errs.push("naming: " + k + " gives " + n + ", the deck says " + nm); });
+  for (const k in MOLS) {
+    const m = MOLS[k], c = {}; m.atoms.forEach(e => { c[e] = (c[e] || 0) + 1; });
+    if (keyOf(orderCounts(c)) !== k) errs.push("molecules: " + k + " is not in the standard order");
+    if (!MOLORD[k]) errs.push("molecules: " + k + " can't be finished with the join rules");
+    if (m.ang.length !== m.atoms.length - 1 || m.j.length !== m.atoms.length - 1) errs.push("molecules: " + k + " shape is wrong");
+  }
+  if (hasOO("CO2")) errs.push("molecules: CO2 must have no O–O join");
+  if (solveOrders(i => ["H", "O"][i], [0, 1], [[0, 1]]) || solveOrders(i => ["C", "O"][i], [0, 1], [[0, 1]]) || solveOrders(() => "O", [0], [])) errs.push("joins: an unfinished group counts as finished");
+  const rnd = mulberry(7);
+  BOXKINDS.forEach(kind => {
+    for (let n = 0; n < 60; n++) {   // 60 of each kind, both sizes, both layouts (6000 were checked when this was reviewed)
+      const b = makeBox(kind, rnd, "box"), q = makeBox(kind, rnd, "quad");
+      [b, q].flatMap(x => [{ keys: x.keys, parts: x.parts }, { keys: x.keys, parts: x.partsN }]).forEach(x => {
+        if (classify(boxItems(x)).fine !== kind) errs.push("sort: a " + kind + " box classifies wrongly");
+        x.keys.forEach(k => { const np = x.parts.filter(p => p.k === k).length; if (np < 2) errs.push("sort: too few particles of " + k + " in a " + kind + " box"); });
+        if (MAIN[kind] === "element" && new Set(x.parts.flatMap(p => parseF(p.k).map(a => a.el))).size !== 1) errs.push("sort: an element box has two types of atom");
+        x.parts.forEach(p => { if (parseF(p.k).length > 1 && !(MOLS[p.k] && MOLORD[p.k])) errs.push("sort: a compound particle isn't joined"); });
+      });
+      if (errs.length > 20) break;
+    }
+  });
+  for (let n = 0; n < 60; n++) { const Q = makeQuad(rnd); if (Q.boxes.filter(b => b.cap !== b.kind).length !== 1) errs.push("sort: spot-the-wrong needs exactly one wrong label"); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const id = lv + " task " + (i + 1);
+    if (!t.hints || t.hints.length !== 3) errs.push(id + ": needs 3 hints");
+    const Ss = (t.vars || [null]).flatMap(v => [0, 1, 2].map(() => newS(t, v)));
+    Ss.forEach(S => {
+      if (t.kind === "choice") {
+        const os = S.opts;
+        if (os.filter(o => choiceOk(t, o, S)).length !== 1) errs.push(id + ": needs exactly one correct option");
+        if (os.some(o => !choiceOk(t, o, S) && !whyOf(o, S))) errs.push(id + ": a wrong option has no feedback");
+        if (os.some(o => choiceOk(t, o, S) && o.why && typeof o.why !== "function")) errs.push(id + ": the right option has wrong-answer feedback");
+        if (new Set(os.map(o => o.h || o.t)).size !== os.length) errs.push(id + ": two options are the same");
+      } else if (t.kind === "count") { try { parseF(S.v || t.f); } catch (e) { errs.push(id + ": formula doesn't parse"); } }
+      else if (t.kind === "symbols") { t.items.forEach(nm => { const s = symOf(nm); if (!s || !t.bank.includes(s)) errs.push(id + ": " + nm + "'s symbol is missing"); }); }
+      else if (t.kind === "goal") {
+        const M0 = stateFor(t, S); if (goalMet(t, M0)) errs.push(id + ": goal already met at the start");
+        const M1 = stateFor(t, S); goalFill(t, M1); if (!goalMet(t, M1)) errs.push(id + ": goal can't be reached");
+      }
+    });
+  });
+  return [...new Set(errs)];
+}
+const whyOf = (o, S) => typeof o.why === "function" ? o.why(S) : o.why;
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { joins: false, pic: false, rules: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let NID = 1;
+function freshM(o) {
+  return Object.assign({ tab: "build", atoms: [], links: [], sel: null, last: null, made: {},
+    sort: { box: null, pick: null, n: 0, right: 0, quad: null, shown: false }, fm: { key: "H2O", own: null }, lock: {}, hide: {} }, o || {});
+}
+const randKind = r => BOXKINDS[Math.floor(r() * BOXKINDS.length)];
+const DEMO_M = freshM(); DEMO_M.sort.box = makeBox(randKind(Math.random), Math.random);
+let M = DEMO_M;
+function newS(t, v) {
+  const s = { choice: null, v: v !== undefined && v !== null ? v : t.vars ? t.vars[Math.floor(Math.random() * t.vars.length)] : null, tiles: {} };
+  if (t.box) s.box = makeBox(t.box, Math.random);
+  if (t.spot) s.quad = makeQuad(Math.random);
+  s.opts = t.gen ? t.gen(s) : t.options || null;
+  s.order = s.opts ? (t.spot ? s.opts.map((_, i) => i) : shuffled(s.opts.length)) : [];   // boxes A–D stay in order; the wrong box is random
+  return s;
+}
+function stateFor(t, s) {
+  const u = t.setup || {}, m = freshM({ tab: u.tab || "build", lock: Object.assign({}, u.lock || {}), hide: Object.assign({}, u.hide || {}) });
+  m.sort.box = s && s.box ? s.box : makeBox(randKind(Math.random), Math.random);
+  if (s && s.box) m.lock.box = 1;
+  if (s && s.quad) { m.sort.quad = s.quad; m.lock.box = 1; }
+  m.fm.key = s && s.v && (t.kind === "count" || t.nm) ? s.v : u.f || "H2O";
+  if (u.pre) u.pre.forEach(k => buildMol(m, k));
+  if (t.draw && s) buildMol(m, s.v);
+  return m;
+}
+
+const PKEY = "ks3tools-progress:molecule-builder";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+
+/* ===== Build: atoms, joins and molecules ===== */
+const WSW = 640, WSH = 360;
+const rOf = el => R0 * elR(el);
+const atomOf = (m, id) => m.atoms.find(a => a.id === id);
+const linked = (m, a, b) => m.links.some(l => (l[0] === a && l[1] === b) || (l[0] === b && l[1] === a));
+const degree = (m, id) => m.links.filter(l => l[0] === id || l[1] === id).length;
+function comps(m) {
+  const seen = new Set(), out = [];
+  m.atoms.forEach(a => {
+    if (seen.has(a.id)) return;
+    const ids = [], q = [a.id]; seen.add(a.id);
+    while (q.length) { const x = q.shift(); ids.push(x); m.links.forEach(l => { const y = l[0] === x ? l[1] : l[1] === x ? l[0] : null; if (y != null && !seen.has(y)) { seen.add(y); q.push(y); } }); }
+    out.push(ids);
+  });
+  return out;
+}
+function compInfo(m, ids) {
+  const set = new Set(ids), edges = m.links.filter(l => set.has(l[0])), c = {};
+  ids.forEach(id => { const e = atomOf(m, id).el; c[e] = (c[e] || 0) + 1; });
+  const list = orderCounts(c), key = keyOf(list), orders = solveOrders(id => atomOf(m, id).el, ids, edges);
+  return { ids, edges, list, key, orders, done: !!orders, mol: orders ? MOLS[key] || null : null };
+}
+const allInfo = m => comps(m).map(ids => compInfo(m, ids));
+function freeSpot(m, br) {   // a free place for something of radius br
+  let best = null;
+  for (let y = br + 12; y <= WSH - br - 12; y += 22) for (let x = br + 12; x <= WSW - br - 12; x += 22) {
+    const d = Math.min(...m.atoms.map(a => Math.hypot(a.x - x, a.y - y) - rOf(a.el)), 1e9);
+    const score = Math.min(d - br, 60) - Math.hypot(x - WSW * .42, y - WSH / 2) * .02;
+    if (!best || score > best.s) best = { x, y, s: score };
+  }
+  return best;
+}
+function addAtom(m, el, x, y) { const a = { id: NID++, el, x, y }; m.atoms.push(a); return a; }
+function buildMol(m, k) {
+  const g = molGeom(k, R0, GAP), br = Math.max(g.w, g.h) / 2 + 6, p = freeSpot(m, br);
+  const ids = g.at.map(a => addAtom(m, a.el, clampX(p.x + a.x, a.r), clampY(p.y + a.y, a.r)).id);
+  g.j.forEach(([a, b]) => m.links.push([ids[a], ids[b]]));
+  m.last = ids[0];
+  return ids;
+}
+const clampX = (x, r) => Math.max(r + 2, Math.min(WSW - r - 2, x));
+const clampY = (y, r) => Math.max(r + 2, Math.min(WSH - r - 2, y));
+function compOf(m, id) { return comps(m).find(ids => ids.includes(id)) || [id]; }
+function moveComp(m, ids, dx, dy) {
+  const at = ids.map(id => atomOf(m, id));
+  let lo = -1e9, hi = 1e9, lo2 = -1e9, hi2 = 1e9;
+  at.forEach(a => { const r = rOf(a.el); lo = Math.max(lo, r + 2 - a.x); hi = Math.min(hi, WSW - r - 2 - a.x); lo2 = Math.max(lo2, r + 2 - a.y); hi2 = Math.min(hi2, WSH - r - 2 - a.y); });
+  dx = Math.max(lo, Math.min(hi, dx)); dy = Math.max(lo2, Math.min(hi2, dy));
+  at.forEach(a => { a.x += dx; a.y += dy; });
+}
+/* snap a finished molecule to its textbook shape */
+let tween = null, tweenId = 0;
+function shapeTargets(m, ci) {
+  const mol = MOLS[ci.key], at = ci.ids.map(id => atomOf(m, id));
+  if (at.length === 2) {
+    const [a, b] = at[0].x <= at[1].x ? at : [at[1], at[0]], d = rOf(a.el) + rOf(b.el) + GAP, cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    return fitTargets([{ a, x: cx - d / 2, y: cy }, { a: b, x: cx + d / 2, y: cy }]);
+  }
+  const c = at.reduce((x, y) => degree(m, y.id) > degree(m, x.id) ? y : x), nb = at.filter(a => a !== c);
+  const perms = arr => arr.length < 2 ? [arr] : arr.flatMap((x, i) => perms([...arr.slice(0, i), ...arr.slice(i + 1)]).map(p => [x, ...p]));
+  let best = null;
+  perms(nb).forEach(p => {
+    const T = p.map((a, i) => { const t = mol.ang[i] * Math.PI / 180, d = rOf(c.el) + rOf(a.el) + GAP; return { a, x: c.x + Math.cos(t) * d, y: c.y + Math.sin(t) * d }; });
+    const cost = T.reduce((s, q) => s + Math.hypot(q.x - q.a.x, q.y - q.a.y), 0);
+    if (!best || cost < best.cost) best = { T, cost };
+  });
+  return fitTargets([{ a: c, x: c.x, y: c.y }, ...best.T]);
+}
+function fitTargets(T) {   // keep the whole shape inside the workspace
+  const ext = (f, s) => s * Math.max(...T.map(q => s * f(q) + rOf(q.a.el)));
+  const x0 = ext(q => q.x, -1), x1 = ext(q => q.x, 1), y0 = ext(q => q.y, -1), y1 = ext(q => q.y, 1);
+  const dx = x0 < 2 ? 2 - x0 : x1 > WSW - 2 ? WSW - 2 - x1 : 0, dy = y0 < 2 ? 2 - y0 : y1 > WSH - 2 ? WSH - 2 - y1 : 0;
+  T.forEach(q => { q.x += dx; q.y += dy; });
+  return T;
+}
+function snapShape(ci) {
+  const T = shapeTargets(M, ci).map(q => ({ a: q.a, x0: q.a.x, y0: q.a.y, x: q.x, y: q.y }));
+  if (reduced() || document.hidden) { T.forEach(q => { q.a.x = q.x; q.a.y = q.y; }); drawWS(); return; }
+  paceCancel(tweenId); tween = { T, t0: null };
+  const step = now => {
+    if (!tween) return;
+    if (tween.t0 == null) tween.t0 = now;
+    const k = Math.min(1, (now - tween.t0) / 300), e = 1 - (1 - k) * (1 - k);
+    tween.T.forEach(q => { q.a.x = q.x0 + (q.x - q.x0) * e; q.a.y = q.y0 + (q.y - q.y0) * e; });
+    drawWS();
+    if (k < 1) tweenId = paceFrame(step); else tween = null;
+  };
+  tweenId = paceFrame(step);
+}
+function endTween() { if (tween) { paceCancel(tweenId); tween.T.forEach(q => { q.a.x = q.x; q.a.y = q.y; }); tween = null; } }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { endTween(); drawWS(); } });
+
+/* ===== Drawing the workspace (SVG 720 × 330, patched in place) ===== */
+function stubAngles(m, a, n) {
+  const used = m.links.filter(l => l[0] === a.id || l[1] === a.id).map(l => { const b = atomOf(m, l[0] === a.id ? l[1] : l[0]); return Math.atan2(b.y - a.y, b.x - a.x); });
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    let best = null;
+    for (let s = 0; s < 24; s++) {
+      const t = -Math.PI / 2 + s * Math.PI / 12, d = Math.min(...[...used, ...out].map(u => Math.abs(Math.atan2(Math.sin(t - u), Math.cos(t - u)))), 9);
+      if (!best || d > best.d + 1e-6) best = { t, d };
+    }
+    out.push(best.t);
+  }
+  return out;
+}
+function drawWS() {
+  const m = M, infos = allInfo(m), byAtom = {};
+  infos.forEach(ci => ci.ids.forEach(id => { byAtom[id] = ci; }));
+  let s = "<g>";
+  infos.forEach(ci => ci.edges.forEach((l, k) => {
+    const a = atomOf(m, l[0]), b = atomOf(m, l[1]), o = ci.orders ? ci.orders[k] : 1, L = Math.hypot(b.x - a.x, b.y - a.y) || 1, nx = -(b.y - a.y) / L, ny = (b.x - a.x) / L;
+    for (let i = 0; i < o; i++) { const off = (i - (o - 1) / 2) * 9; s += `<line class="stk" x1="${(a.x + nx * off).toFixed(1)}" y1="${(a.y + ny * off).toFixed(1)}" x2="${(b.x + nx * off).toFixed(1)}" y2="${(b.y + ny * off).toFixed(1)}"/>`; }
+  }));
+  s += "</g><g>";
+  m.atoms.forEach(a => {
+    const r = rOf(a.el), ci = byAtom[a.id], free = JOINS[a.el] - degree(m, a.id), lab = `${cap(elName(a.el))} atom${free < JOINS[a.el] ? `, joined to ${JOINS[a.el] - free}` : ""}${a.id === m.sel ? ", chosen" : ""}`;
+    s += `<g class="atg" data-id="${a.id}" tabindex="0" role="button" aria-label="${lab}">`;
+    s += `<circle class="fring" cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="${(r + 9).toFixed(1)}"/>`;
+    if (support.joins && !(ci && ci.done) && free > 0) stubAngles(m, a, free).forEach(t => {
+      const c = Math.cos(t), si = Math.sin(t);
+      s += `<line class="stub" x1="${(a.x + c * (r + 1)).toFixed(1)}" y1="${(a.y + si * (r + 1)).toFixed(1)}" x2="${(a.x + c * (r + 11)).toFixed(1)}" y2="${(a.y + si * (r + 11)).toFixed(1)}"/><circle class="stubdot" cx="${(a.x + c * (r + 13)).toFixed(1)}" cy="${(a.y + si * (r + 13)).toFixed(1)}" r="3.5"/>`;
+    });
+    s += svgAtom(a.el, a.x, a.y, r);
+    if (a.id === m.sel) s += `<circle class="sring" cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="${(r + 6).toFixed(1)}"/>`;
+    s += "</g>";
+  });
+  s += "</g>";
+  morph($("wsG"), s);
+  $("wsHint").style.display = m.atoms.length ? "none" : "";
+}
+let drawQ = 0;
+function wantDraw() { if (!drawQ) drawQ = requestAnimationFrame(() => { drawQ = 0; drawWS(); }); }
+
+/* ===== Build readouts ===== */
+function currentInfo(m) {
+  const infos = allInfo(m); if (!infos.length) return null;
+  return (m.last != null && infos.find(ci => ci.ids.includes(m.last))) || infos[infos.length - 1];
+}
+const listNames = l => { const n = l.map(x => elName(x.el)); return n.length < 2 ? n.join("") : n.slice(0, -1).join(", ") + " and " + n[n.length - 1]; };
+function setRO(id, html) { const e = $(id); if (e.innerHTML !== html) e.innerHTML = html; }
+function renderReadout() {
+  const m = M, ci = currentInfo(m), hide = m.hide.ro;
+  $("roHidden").hidden = !hide;
+  let nm = "–", f = "–", ec = "–", n = "–", els = "–";
+  if (ci && ci.ids.length === 1) { const e = atomOf(m, ci.ids[0]).el; nm = `${cap(elName(e))} atom, not joined`; f = "–"; els = elName(e); }
+  else if (ci && !ci.done) { nm = "Not finished yet"; }
+  else if (ci) {
+    nm = ci.mol ? cap(ci.mol.name) : "Not one of this lesson’s molecules";
+    f = fHTML(ci.list); n = String(ci.ids.length); els = cap(listNames(ci.list));
+    ec = isElementF(ci.list) ? "Element: one type of atom" : "Compound: more than one type of atom";
+  }
+  if (hide) { nm = "Hidden"; f = "Hidden"; }
+  setRO("roName", nm); setRO("roF", f); setRO("roEC", ec); setRO("roN", n); setRO("roEls", els);
+  /* the whole workspace */
+  const infos = allInfo(m), multi = infos.filter(c => c.ids.length > 1), lone = infos.length - multi.length;
+  let line = "";
+  if (infos.length && !hide) {
+    const done = multi.filter(c => c.done), open = multi.length - done.length;
+    if (open || lone) line = `On the workspace: ${done.length} finished molecule${done.length === 1 ? "" : "s"}${open ? `, ${open} still to finish` : ""}${lone ? `, ${lone} atom${lone === 1 ? "" : "s"} not joined` : ""}.`;
+    else {
+      const g = {}; done.forEach(c => { g[c.key] = (g[c.key] || 0) + 1; });
+      const parts = Object.keys(g).map(k => `${g[k]} × ${MOLS[k] ? MOLS[k].name : "molecule"} (${F(k)})`), cl = classify(Object.keys(g).map(k => ({ k, mol: true })));
+      line = `On the workspace: ${parts.join(", ")}. Together: ${fineText(cl)}, so ${cl.main === "mixture" ? "a mixture" : "a pure " + cl.main}.`;
+    }
+  }
+  setRO("wsLine", line);
+  $("atomCount").textContent = `${m.atoms.length} of ${MAXAT} atoms`;
+  $("rmBtn").disabled = m.sel == null;
+  renderTargets();
+}
+function renderTargets() {
+  const m = M, h = m.hide.ro ? "" : `<span class="tl">Lesson molecules:</span>` + TARGETS.map(k => `<span class="tgt${m.made[k] ? " done" : ""}"><span>${F(k)}</span> ${MOLS[k].name}${m.made[k] ? '<span class="vh"> (built)</span>' : ""}</span>`).join("");
+  setRO("targets", h);
+}
+function updateBuild() { drawWS(); renderReadout(); checkTried(); }
+function lockedBuild() { if (M.lock.build) { note("buildNote", "", "The workspace is fixed for this question."); return true; } return false; }
+function note(id, cls, html) { const e = $(id); e.className = "mnote" + (cls ? " " + cls : ""); e.innerHTML = html || ""; }
+
+/* tap one atom, then another, to join or unjoin them */
+function tapAtom(id) {
+  if (lockedBuild()) return;
+  endTween(); M.last = id;
+  const a = atomOf(M, id);
+  if (M.sel == null) { M.sel = id; note("buildNote", "", `${cap(elName(a.el))} atom chosen. Tap another atom to join it, or tap it again to let go.`); }
+  else if (M.sel === id) { M.sel = null; note("buildNote", "", ""); }
+  else { const s0 = M.sel; M.sel = null; toggleJoin(s0, id); }
+  updateBuild();
+}
+function toggleJoin(a, b) {
+  const A = atomOf(M, a), B = atomOf(M, b);
+  if (linked(M, a, b)) { M.links = M.links.filter(l => !((l[0] === a && l[1] === b) || (l[0] === b && l[1] === a))); note("buildNote", "", `Unjoined the ${elName(A.el)} and ${elName(B.el)} atoms.`); return; }
+  for (const X of [A, B]) {
+    if (JOINS[X.el] - degree(M, X.id) <= 0) { note("buildNote", "bad", `Each ${elName(X.el)} atom can make ${JOINS[X.el]} join${JOINS[X.el] === 1 ? "" : "s"}. This one has none left. To unjoin two atoms, tap both of them.`); return; }
+  }
+  const before = compOf(M, b), same = before.includes(a);
+  if (!same) {   // pull the second molecule up to the first
+    const d = rOf(A.el) + rOf(B.el) + GAP, L = Math.hypot(B.x - A.x, B.y - A.y) || 1;
+    if (L > d + 4) { const tx = A.x + (B.x - A.x) / L * d, ty = A.y + (B.y - A.y) / L * d; moveComp(M, before, tx - B.x, ty - B.y); }
+  }
+  M.links.push([a, b]);
+  tourSignal("join");
+  const ci = compInfo(M, compOf(M, a));
+  if (ci.done && ci.mol) {
+    M.made[ci.key] = true;
+    note("buildNote", "good", `You made ${/^[aeiou]/.test(ci.mol.name) ? "an" : "a"} ${ci.mol.name} molecule, ${F(ci.key)}. ${isElementF(ci.list) ? "One type of atom: an element." : "More than one type of atom: a compound."}`);
+    snapShape(ci);
+  } else if (ci.done) note("buildNote", "", `Finished, with every join used: ${F(ci.key)}. This isn't one of the molecules in this lesson.`);
+  else note("buildNote", "", "Joined. Some atoms in this group can still make more joins.");
+}
+function removeAtom(id) {
+  if (lockedBuild()) return;
+  endTween();
+  M.atoms = M.atoms.filter(a => a.id !== id); M.links = M.links.filter(l => l[0] !== id && l[1] !== id);
+  if (M.sel === id) M.sel = null; if (M.last === id) M.last = null;
+  note("buildNote", "", "Atom removed."); updateBuild();
+}
+function addFromTray(el, x, y) {
+  if (lockedBuild()) return null;
+  if (M.atoms.length >= MAXAT) { note("buildNote", "bad", `The workspace holds ${MAXAT} atoms. Remove some first.`); return null; }
+  endTween();
+  let p = { x, y }; if (x == null) p = freeSpot(M, rOf(el) + 14);
+  const a = addAtom(M, el, clampX(p.x, rOf(el)), clampY(p.y, rOf(el))); M.last = a.id;
+  note("buildNote", "", M.atoms.length === 1 ? `${cap(elName(el))} atom added. Add another, then tap one atom and then the other to join them.` : `${cap(elName(el))} atom added.`);
+  tourSignal("add"); updateBuild();
+  return a;
+}
+function renderTray() {
+  $("tray").innerHTML = TRAY.map(el => `<button type="button" class="tatom" data-el="${el}" aria-label="Add a ${elName(el)} atom (${el})">${atomIcon(el, 40, 18 * elR(el) / 1.18)}<span>${el}</span><span class="nm">${elName(el)}</span></button>`).join("");
+}
+
+/* ===== Sort ===== */
+function drawSort() {
+  const s = M.sort, svg = $("sortSvg");
+  let h = "", label = "";
+  const nar = sortNarrow(); drawSort.nar = nar; svg.classList.toggle("nar", nar);
+  if (s.quad) {
+    const QB = GEO.quad[nar ? "narrow" : "wide"], cols = nar ? 1 : 2, rowH = QB.h + QCAP + 8;
+    setAttr(svg, "viewBox", `0 0 ${cols * (QB.w + 8) + 8} ${4 + Math.ceil(4 / cols) * rowH}`);
+    s.quad.boxes.forEach((b, i) => {
+      const ox = 8 + (i % cols) * (QB.w + 8), oy = 4 + Math.floor(i / cols) * rowH, capT = `${"ABCD"[i]}: ${cap(FINE[b.cap])}`;
+      const words = capT.split(" "); let l1 = capT, l2 = "";
+      if (capT.length > 30) { let best = 0; for (let k = 1; k < words.length; k++) { const a = words.slice(0, k).join(" ").length; if (Math.abs(a - capT.length / 2) < Math.abs(best - capT.length / 2)) best = a; } l1 = capT.slice(0, best); l2 = capT.slice(best + 1); }
+      h += `<text class="pcap" x="${ox + 4}" y="${oy + 14}">${esc(l1)}</text>` + (l2 ? `<text class="pcap" x="${ox + 4}" y="${oy + 30}">${esc(l2)}</text>` : "");
+      h += `<rect class="pbox${s.quad.hit === i ? " hit" : ""}" x="${ox}" y="${oy + QCAP}" width="${QB.w}" height="${QB.h}" rx="6"/><g transform="translate(${ox},${oy + QCAP})">` + partsOf(b).map(p => partSVG(p, QB.r)).join("") + "</g>";
+      label += `Box ${"ABCD"[i]}, labelled ${FINE[b.cap]}: ${describe(b)}. `;
+    });
+  } else if (s.box) {
+    const B = geoOf(s.box);
+    setAttr(svg, "viewBox", `0 0 ${B.w + 20} ${B.h + 20}`);
+    h = `<rect class="pbox" x="10" y="10" width="${B.w}" height="${B.h}" rx="8"/><g transform="translate(10,10)">` + partsOf(s.box).map(p => partSVG(p, B.r)).join("") + "</g>";
+    label = "A box with " + describe(s.box) + ".";
+  }
+  morph(svg, h); setAttr(svg, "aria-label", label);
+  const boxes = s.quad ? s.quad.boxes : s.box ? [s.box] : [], els = [...new Set(boxes.flatMap(b => b.keys.flatMap(k => parseF(k).map(x => x.el))))];
+  setRO("sortKey", "<b>Key:</b>" + els.map(e => `<span>${atomIcon(e, 24, 10 * Math.min(1.1, elR(e)))}${e} = ${elName(e)}</span>`).join(""));
+  document.querySelectorAll("#sortBtns .segb").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.sort === s.pick)));
+  $("newBox").disabled = !!M.lock.box;
+  $("sortTally").textContent = mode === "demo" && s.n ? `Sorted right: ${s.right} of ${s.n}` : "";
+}
+window.addEventListener("resize", () => { if (!$("pSort").hidden && sortNarrow() !== drawSort.nar) drawSort(); });   // phone ↔ desktop layout
+function describe(b) {
+  return b.keys.map(k => { const n = partsOf(b).filter(p => p.k === k).length; return SPECIES[k] === "molecule" ? `${n} ${Ft(k)} molecule${n === 1 ? "" : "s"}` : `${n} ${elName(k)} atoms${SPECIES[k] === "solid" ? " in rows, touching" : ""}`; }).join(" and ");
+}
+function sortPick(main) {
+  const s = M.sort; if (!s.box || s.quad) return;
+  if (s.pick) { note("sortNote", "", "Press New box to sort another one."); return; }
+  s.pick = main; s.n++;
+  const ok = classify(boxItems(s.box)).main === main; if (ok) s.right++;
+  note("sortNote", ok ? "good" : "bad", (ok ? "<b>✓</b> " : "<b>✗ Not quite.</b> ") + sortWhy(main, s.box));
+  tourSignal("sort"); drawSort(); checkTried();
+}
+function newBox() {
+  if (M.lock.box) { note("sortNote", "", "The box is fixed for this question."); return; }
+  const s = M.sort, last = s.box ? s.box.kind : null; let k = randKind(Math.random); while (k === last) k = randKind(Math.random);
+  s.box = makeBox(k, Math.random); s.pick = null; note("sortNote", "", ""); drawSort();
+}
+
+/* ===== Formula ===== */
+function fmList() { return M.fm.own || parseF(M.fm.key); }
+function renderChips() {
+  $("fChips").innerHTML = DECKF.map(([k]) => `<button type="button" class="fchip" data-f="${k}" aria-pressed="false" aria-label="${Ft(k)}">${F(k)}</button>`).join("");
+}
+function picSVG(list) {
+  const rows = list.length, per = 7, rr = 13, rowH = 36, H = 26 + rows * rowH;
+  let s = `<rect class="fgrp" x="4" y="4" width="292" height="${H - 8}" rx="10"/>`;
+  list.forEach((x, i) => {
+    const y = 22 + i * rowH + rr / 2, r = rr * Math.min(1.15, elR(x.el));
+    s += `<text class="flab" x="16" y="${y + 5}">${x.el}</text>`;
+    for (let j = 0; j < Math.min(per, x.n); j++) s += svgAtom(x.el, 66 + j * 31, y, r);
+    if (x.n > per) s += `<text class="fsm" x="${66 + per * 31 - 8}" y="${y + 5}">+${x.n - per}</text>`;
+  });
+  return { s, H };
+}
+function latticeSVG(list) {   // a metal + non-metal compound: a small flat block of its repeating pattern (giant structure, not molecules)
+  const a = list[0], b = list[1], n = a.n + b.n, unit = [];
+  for (let i = 0; i < n; i++) unit.push(Math.floor((i + 1) * a.n / n) > Math.floor(i * a.n / n) ? a.el : b.el);   // spread the atoms evenly
+  const cols = unit.length * Math.max(1, Math.ceil(6 / unit.length)), rows = 3, r = 17, W = cols * 2 * r + 20;   // r 17: symbols stay about 12 px or more on a phone
+  let s = "";
+  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) { const e = unit[(j + i) % unit.length]; s += svgAtom(e, 10 + r + j * 2 * r, 10 + r + i * 2 * r, r * (e === a.el ? .9 : 1)); }
+  return `<svg class="fpic" viewBox="0 0 ${W} ${rows * 2 * r + 20}" style="max-width:${Math.min(W, 340)}px" role="img" aria-label="A small part of the repeating pattern of ${elName(a.el)} and ${elName(b.el)}, ${a.n} to ${b.n}">${s}</svg>`;
+}
+function renderFormula() {
+  const m = M, l = fmList(), k = keyOf(l), nm = nameOf(l), lk = !!m.lock.fm;
+  document.querySelectorAll("#fChips .fchip").forEach(b => { setAttr(b, "aria-pressed", String(!m.fm.own && b.dataset.f === m.fm.key)); b.disabled = lk; });
+  $("fIn").disabled = lk; $("fGo").disabled = lk;
+  const hideName = m.hide.name, hideCount = m.hide.count, hideType = m.hide.type;
+  setRO("fBig", fHTML(l) + `<span class="fnm">${hideName ? "Name hidden for this question" : nm.name ? cap(nm.name) : "No naming rule in this lesson for this one"}</span>`);
+  /* picture and count */
+  const showPic = !hideCount || support.pic, pic = picSVG(l), svg = $("fPic");
+  svg.style.display = showPic ? "" : "none"; $("fPicHidden").hidden = showPic;
+  if (showPic) { setAttr(svg, "viewBox", `0 0 300 ${pic.H}`); morph(svg, pic.s); setAttr(svg, "aria-label", l.map(x => `${x.n} ${elName(x.el)} atom${x.n > 1 ? "s" : ""}`).join(", ")); }
+  $("fCount").style.display = hideCount ? "none" : ""; $("fCountHidden").hidden = !hideCount;
+  if (!hideCount) setRO("fCount", `<table class="ct"><thead><tr><th>Element</th><th>Symbol</th><th>Atoms</th></tr></thead><tbody>` + l.map(x => `<tr><td>${cap(elName(x.el))}</td><td>${x.el}</td><td class="n">${x.n}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><th colspan="2">Total atoms</th><td class="n">${totalOf(l)}</td></tr></tfoot></table><p>${l.length === 1 ? "1 element" : l.length + " different elements"}: ${listNames(l)}.</p>`);
+  /* molecules or giant structure */
+  $("fType").style.display = hideType ? "none" : ""; $("fTypeHidden").hidden = !hideType;
+  if (!hideType) {
+    const metals = l.filter(x => isMetal(x.el));
+    let t;
+    if (l.length === 1) t = metals.length ? `<p>One type of atom: an element. A metal element is a giant structure of atoms, not molecules.</p>` : `<p>One type of atom: an element.${MOLS[k] ? " Its atoms are joined in pairs: molecules." : ""}</p>`;
+    else if (!metals.length) t = `<p>Only non-metals, joined together: a compound made of <b>molecules</b>. Each molecule has ${totalOf(l)} atoms.</p>`;
+    else t = `<p>${cap(listNames(metals))} ${metals.length === 1 ? "is a metal" : "are metals"}. A compound of a metal and non-metals is a <b>giant structure (not molecules)</b>. The formula shows how many of each atom there are compared with the others.</p>` + (l.length === 2 && l[0].n === l[1].n ? latticeSVG(l) + `<p class="small2">Giant structure (not molecules): a small, flat part of the pattern. The real one repeats in every direction.</p>` : "");
+    setRO("fType", t);
+  }
+  /* naming */
+  const showRules = !hideName || support.rules;
+  $("fName").style.display = showRules ? "" : "none"; $("fNameHidden").hidden = showRules;
+  if (showRules) setRO("fName", nm.how.length ? `<ol class="steps">${nm.how.map((x, i) => `<li>${hideName && i === nm.how.length - 1 ? ruleOnly(nm.rule) : x}</li>`).join("")}</ol>` + (hideName ? "" : `<p>Name: <span class="fans">${nm.name}</span></p>`)
+    : `<p>The naming rules in this lesson cover a metal with one non-metal (-ide), a metal with another non-metal and oxygen (-ate), and hydroxides.</p>`);
+}
+function ruleOnly(rule) {
+  return rule === "ide" ? "Write the name of the non-metal, changing its ending to -ide." : rule === "ate" ? "Two more elements, and one is oxygen: change the ending of the other non-metal to -ate."
+    : rule === "hydroxide" ? "Hydrogen and oxygen together make hydroxide." : "Use mono = 1, di = 2, tri = 3.";
+}
+function setFormula(k, own) {
+  if (M.lock.fm) { note("fNote", "", "The formula is fixed for this question."); return; }
+  M.fm.key = k; M.fm.own = own || null; note("fNote", "", ""); renderFormula(); tourSignal("formula"); checkTried();
+}
+function ownFormula() {
+  try { const l = parseF($("fIn").value); setFormula(keyOf(l), l); note("fNote", "", `Showing ${fHTML(l)}.` + (keyOf(l) === "Co" ? " Co is cobalt, a metal. For carbon and oxygen, write CO: two capital letters." : keyOf(l) === "CO" ? " CO is carbon and oxygen. Co, with a small o, is cobalt." : "") +
+    (DECKF.some(([f]) => f === keyOf(l)) || MOLS[keyOf(l)] || l.length === 1 ? "" : " The tool counts the atoms in any formula you type. It can't tell you if the substance is real.")); }
+  catch (e) { note("fNote", "bad", esc(e.message).replace(/([A-Z][a-z]?)([0-9]+)/g, (m0, a, d) => a + `<sub>${d}</sub>`)); }
+}
+
+/* ===== Tabs ===== */
+function setTab(t) {
+  M.tab = t;
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  $("pBuild").hidden = t !== "build"; $("pSort").hidden = t !== "sort"; $("pForm").hidden = t !== "formula";
+  if (t === "build") updateBuild(); else if (t === "sort") drawSort(); else renderFormula();
+  tourSignal("tab-" + t);
+}
+function renderAll() { setTab(M.tab); }
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Build water and carbon dioxide.", "Make an oxygen molecule: an element, but a molecule.", "Sort five boxes.", "Count the atoms in CaCO<sub>3</sub>."];
+const TRIED = TRY.map(() => false);
+function checkTried() {
+  if (mode !== "demo") return;
+  const m = DEMO_M, was = TRIED.join();
+  if (m.made.H2O && m.made.CO2) TRIED[0] = true;
+  if (m.made.O2) TRIED[1] = true;
+  if (m.sort.n >= 5) TRIED[2] = true;
+  if (m.tab === "formula" && keyOf(fmList()) === "CaCO3") TRIED[3] = true;
+  if (TRIED.join() !== was) renderTry();
+}
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${x}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+const tx = (x, s) => typeof x === "function" ? x(s) : x;
+function loadDemo() {
+  endTween(); task = { kind: "demo" }; S = {}; M = DEMO_M;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = "";
+  ["buildNote", "sortNote", "fNote"].forEach(id => note(id, "", ""));
+  moveSupport(); renderAll(); renderTry();
+}
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  const list = LEVELS[level]; task = list[idx];
+  S = newS(task);
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").innerHTML = tx(task.text, S);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { endTween(); M = stateFor(task, S); ["buildNote", "sortNote", "fNote"].forEach(id => note(id, "", "")); renderAll(); }
+const selHTML = (id, opts, lab) => `<select class="gsel" id="${id}" aria-label="${esc(lab)}"><option value="">Choose…</option>${shuffled(opts.length).map(i => `<option value="${esc(opts[i])}">${esc(opts[i])}</option>`).join("")}</select>`;
+function countRows(l) {
+  return [{ id: "cE", lab: "Different elements:" }, ...l.map((x, i) => ({ id: "c" + i, lab: `Atoms of ${x.el}:` })), { id: "cT", lab: "Total atoms:" }];
+}
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${S.opts[i].h || esc(S.opts[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "count") {
+    const l = parseF(S.v || t.f);
+    a.innerHTML = `<div class="cgrid">` + countRows(l).map(r => `<label for="${r.id}">${r.lab}</label><input id="${r.id}" type="text" inputmode="numeric" autocomplete="off">`).join("") + `</div>`;
+    a.querySelectorAll("input").forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") check(); }));
+  } else if (t.kind === "symbols") {
+    a.innerHTML = `<div class="sgrid">` + t.items.map((nm, i) => `<label for="g${i}">${cap(nm)}</label>${selHTML("g" + i, t.bank, "Symbol for " + nm)}`).join("") + `</div>`;
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the atoms in <b>Build</b>${narrow() ? " in the model below" : " in the model"}. Tap one atom, then another, to join them.</p>`;
+  }
+}
+const narrow = () => window.innerWidth <= 900;
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+                                          : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+/* put the right answer into the answer area, and set the model to show it */
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = S.opts.findIndex(o => choiceOk(t, o, S)); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "count") {
+    const l = parseF(S.v || t.f); $("cE").value = l.length; l.forEach((x, i) => { $("c" + i).value = x.n; }); $("cT").value = totalOf(l);
+  } else if (t.kind === "symbols") t.items.forEach((nm, i) => { $("g" + i).value = symOf(nm); });
+  revealModel();
+}
+function revealModel() {
+  const t = task;
+  if (t.kind === "goal") { if (!goalMet(t, M)) { goalFill(t, M); M.lock.build = 0; } setTab("build"); return; }
+  if (t.kind === "count") { M.hide.count = 0; setTab("formula"); return; }
+  if (t.nm) { M.hide.name = 0; setTab("formula"); return; }
+  if (t.predict || t.oo) { const k = t.predict || t.oo; if (!allInfo(M).some(c => c.done && c.key === k)) { M.atoms = []; M.links = []; buildMol(M, k); M.made[k] = true; } setTab("build"); return; }
+  if (t.box) { M.sort.shown = true; setTab("sort"); note("sortNote", "good", sortWhy(classify(boxItems(M.sort.box)).main, M.sort.box)); return; }
+  if (t.spot) { M.sort.quad.hit = M.sort.quad.wrong; setTab("sort"); return; }
+  if (t.draw) { M.hide.ro = 0; setTab("build"); return; }
+  if ("f" in t && t.setup.hide && t.setup.hide.type) { M.hide.type = 0; setTab("formula"); }
+}
+/* goals */
+function goalMet(t, m) { return allInfo(m).some(c => c.done && c.key === t.want); }
+function goalFill(t, m) { m.atoms = []; m.links = []; m.sel = null; buildMol(m, t.want); m.made[t.want] = true; }
+function goalWhy(t) {
+  const infos = allInfo(M), want = parseF(t.want), wc = countsOf(want), nm = MOLS[t.want].name;
+  if (!infos.length) return "The workspace is empty. Tap the atoms in the tray to add them.";
+  const score = c => { const cc = countsOf(c.list); return Object.keys(wc).reduce((s, e) => s + Math.min(cc[e] || 0, wc[e]), 0) - c.list.filter(x => !wc[x.el]).length; };
+  const c = infos.slice().sort((a, b) => score(b) - score(a) || b.ids.length - a.ids.length)[0], cc = countsOf(c.list);
+  const extra = c.list.filter(x => !wc[x.el]).map(x => elName(x.el)), diff = want.filter(x => (cc[x.el] || 0) !== x.n);
+  if (extra.length) return `${nm === "water" ? "Water" : cap(nm)}, ${F(t.want)}, has no ${extra.join(" or ")} atoms. Use only ${listNames(want)} atoms.`;
+  if (diff.length) {
+    const x = diff[0], have = cc[x.el] || 0;
+    if (t.want === "H2O" && cc.O === 2) return "That has 2 oxygen atoms. In H<sub>2</sub>O the small 2 comes after the H, so it counts hydrogen: 2 hydrogen atoms and 1 oxygen atom.";
+    return `Your molecule has ${have} ${elName(x.el)} atom${have === 1 ? "" : "s"}. ${F(t.want)} has ${x.n}: the small number after a symbol counts that atom, and no small number means 1.`;
+  }
+  if (!c.done) return "You have the right atoms. Now join them so every atom uses all its joins.";
+  return "Nearly. Check that every atom is joined in the right place.";
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+const SUPWHERE = { joins: ["buildNote", "Free joins shows, on each atom, the joins it can still make."], pic: ["fNote", "Atom picture shows the atoms in the formula, even when the count is hidden."], rules: ["fNote", "Naming rules shows the steps for naming the compound."] };
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  if (k === "joins") drawWS(); else renderFormula();
+  if (support[k] && mode === "demo") note(SUPWHERE[k][0], "", SUPWHERE[k][1]);
+  tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const intOf = s => { s = String(s).trim(); return /^[0-9]+$/.test(s) ? +s : null; };
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = S.opts[S.choice];
+    return choiceOk(t, o, S) ? { ok: true, html: "Correct. " + tx(t.explain, S) } : { ok: false, html: whyOf(o, S) };
+  }
+  if (t.kind === "count") {
+    const l = parseF(S.v || t.f), rows = countRows(l), v = rows.map(r => intOf($(r.id).value));
+    if (v.some(x => x == null)) return { skip: "Type a whole number in every box first." };
+    const ne = v[0], ns = v.slice(1, -1), tot = v[v.length - 1], k = keyOf(l);
+    for (let i = 0; i < l.length; i++) if (ns[i] !== l[i].n) {
+      const x = l[i], nxt = l[i + 1];
+      if (x.n === 1 && nxt && ns[i] === nxt.n && nxt.n > 1) return { ok: false, html: `The small number comes after the symbol it counts. In ${F(k)} the ${nxt.n} is after ${nxt.el}, so it counts ${elName(nxt.el)} atoms. No small number after ${x.el} means 1 ${elName(x.el)} atom.` };
+      if (i > 0 && x.n === 1 && ns[i] === l[i - 1].n) return { ok: false, html: `The small number after ${l[i - 1].el} only counts ${elName(l[i - 1].el)}. No small number after ${x.el} means 1 ${elName(x.el)} atom.` };
+      return { ok: false, html: `Check the ${elName(x.el)} atoms (${x.el}). The small number after a symbol counts that atom. No small number means 1.` };
+    }
+    if (ne !== l.length) {
+      if (ne === totalOf(l)) return { ok: false, html: "That's the number of atoms. How many different symbols are there? Each symbol is one element." };
+      if (l.some(x => x.el.length === 2 && l.some(y => y.el === x.el[0]))) return { ok: false, html: "Ca and C are different symbols: calcium and carbon. Each symbol is one element." };
+      return { ok: false, html: "Count the different symbols in the formula. Each symbol is one element." };
+    }
+    if (tot !== totalOf(l)) return { ok: false, html: `Your counts for each element are right. Add them together for the total: ${l.map(x => x.n).join(" + ")}.` };
+    return { ok: true, html: `Correct. ${F(k)} has ${l.length} elements: ${l.map(x => `${x.n} ${elName(x.el)}`).join(", ")}. That's ${totalOf(l)} atoms.` };
+  }
+  if (t.kind === "symbols") {
+    const g = t.items.map((_, i) => $("g" + i).value);
+    if (g.some(x => !x)) return { skip: "Choose a symbol for every element first." };
+    const i = t.items.findIndex((nm, j) => g[j] !== symOf(nm));
+    if (i < 0) return { ok: true, html: `Correct. ${t.items.map(nm => `${cap(nm)} ${symOf(nm)}`).join(", ")}.` };
+    const nm = t.items[i], x = g[i], right = symOf(nm);
+    if (x.toLowerCase() === right.toLowerCase()) return { ok: false, html: `${cap(nm)}: ${x} isn't right. The first letter is a capital, and the second letter of a symbol is always small: ${right}.` };
+    if (EL[x]) return { ok: false, html: `${cap(nm)}: ${x} is the symbol for ${elName(x)}, not ${nm}.${nm === "iron" || nm === "gold" ? ` The symbol for ${nm} isn't what you'd expect from its English name.` : ""}` };
+    return { ok: false, html: `${cap(nm)}: ${x} isn't an element symbol. Some symbols aren't what you'd expect from the English name.` };
+  }
+  if (t.kind === "goal") {
+    if (goalMet(t, M)) return { ok: true, html: `Correct. That is ${/^[aeiou]/.test(MOLS[t.want].name) ? "an" : "a"} ${MOLS[t.want].name} molecule, ${F(t.want)}: ${parseF(t.want).map(x => `${x.n} ${elName(x.el)}`).join(" and ")}, ${totalOf(parseF(t.want))} atoms. A compound: more than one type of atom.` };
+    return { ok: false, html: goalWhy(t) };
+  }
+  return { skip: "" };
+}
+function msgStuck() {
+  const t = task;
+  if (t.kind === "goal" && !support.joins) return "Stuck? Turn on <b>Free joins</b> under Support.";
+  if (t.kind === "count" && !support.pic) return "Stuck? Turn on <b>Atom picture</b> under Support.";
+  if (t.nm && !support.rules) return "Stuck? Turn on <b>Naming rules</b> under Support.";
+  return "";
+}
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel();
+  } else {
+    p.wrong++; streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => tx(h, S));
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++;
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${hs[p.hints - 1]}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") { const o = S.opts.find(x => choiceOk(t, x, S)); return "Answer: " + (o.h || esc(o.t)) + ". " + tx(t.explain, S); }
+  if (t.kind === "count") { const l = parseF(S.v || t.f); return `Answer: ${l.length} elements; ${l.map(x => `${x.el} ${x.n}`).join(", ")}; ${totalOf(l)} atoms in all. The count is now shown in the model.`; }
+  if (t.kind === "symbols") return "Answer: " + t.items.map(nm => `${nm} ${symOf(nm)}`).join(", ") + ".";
+  if (t.kind === "goal") return `Answer: the model now shows ${/^[aeiou]/.test(MOLS[t.want].name) ? "an" : "a"} ${MOLS[t.want].name} molecule, ${F(t.want)}.`;
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState();
+  msg("tip", answerText(task) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(task);
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  $("taskText").innerHTML = tx(task.text, S);
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Build: pointer and keyboard ===== */
+(function buildInput() {
+  const svg = $("ws"); let drag = null, tdrag = null, eatClick = false;
+  const pt = e => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+  const inWs = e => { const r = svg.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+  svg.addEventListener("pointerdown", e => {
+    const g = e.target.closest(".atg");
+    if (!g) { if (M.sel != null) { M.sel = null; note("buildNote", "", ""); updateBuild(); } return; }
+    const id = +g.dataset.id, p = pt(e);
+    drag = { id, sx: p.x, sy: p.y, cx: e.clientX, cy: e.clientY, moved: false, ids: compOf(M, id) };
+    svg.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  svg.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest(".atg")) e.preventDefault(); }, { passive: false });   // touch on an atom drags it (SVG shapes ignore touch-action); elsewhere the page still scrolls
+  svg.addEventListener("pointermove", e => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy) < 7) return;
+    if (!drag.moved) { if (M.lock.build) { lockedBuild(); drag = null; return; } endTween(); drag.moved = true; }
+    const p = pt(e); moveComp(M, drag.ids, p.x - drag.sx, p.y - drag.sy); drag.sx = p.x; drag.sy = p.y; wantDraw();
+  });
+  const up = () => { if (!drag) return; const d = drag; drag = null; if (d.moved) { M.last = d.id; updateBuild(); } else tapAtom(d.id); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", () => { if (drag && drag.moved) updateBuild(); drag = null; });
+  svg.addEventListener("keydown", e => {
+    const g = e.target.closest && e.target.closest(".atg"); if (!g) return;
+    const id = +g.dataset.id, mv = { ArrowLeft: [-15, 0], ArrowRight: [15, 0], ArrowUp: [0, -15], ArrowDown: [0, 15] }[e.key];
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tapAtom(id); refocus(id); }
+    else if (mv) { e.preventDefault(); if (lockedBuild()) return; endTween(); moveComp(M, compOf(M, id), mv[0], mv[1]); M.last = id; updateBuild(); refocus(id); }
+    else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); removeAtom(id); }
+  });
+  const refocus = id => { const g = svg.querySelector(`.atg[data-id="${id}"]`); if (g) g.focus({ preventScroll: true }); };
+  /* tray: tap to add; drag onto the workspace */
+  const tray = $("tray");
+  tray.addEventListener("pointerdown", e => {
+    const b = e.target.closest(".tatom"); if (!b || b.disabled) return;
+    tdrag = { el: b.dataset.el, cx: e.clientX, cy: e.clientY, a: null, b }; b.setPointerCapture(e.pointerId);
+  });
+  tray.addEventListener("pointermove", e => {
+    if (!tdrag) return;
+    if (!tdrag.a) {
+      if (Math.hypot(e.clientX - tdrag.cx, e.clientY - tdrag.cy) < 10 || !inWs(e)) return;
+      const p = pt(e); tdrag.a = addFromTray(tdrag.el, p.x, p.y); eatClick = true; if (!tdrag.a) { tdrag = null; return; }
+    }
+    const p = pt(e), r = rOf(tdrag.a.el); tdrag.a.x = clampX(p.x, r); tdrag.a.y = clampY(p.y, r); wantDraw();
+  });
+  const tup = () => { if (tdrag && tdrag.a) updateBuild(); tdrag = null; };
+  tray.addEventListener("pointerup", tup); tray.addEventListener("pointercancel", tup);
+  tray.addEventListener("click", e => { const b = e.target.closest(".tatom"); if (!b) return; if (eatClick) { eatClick = false; return; } addFromTray(b.dataset.el); });
+})();
+$("rmBtn").addEventListener("click", () => { if (M.sel != null) removeAtom(M.sel); });
+$("clrBtn").addEventListener("click", () => { if (lockedBuild()) return; endTween(); M.atoms = []; M.links = []; M.sel = null; M.last = null; note("buildNote", "", "Workspace cleared."); updateBuild(); });
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("sortBtns").addEventListener("click", e => { const b = e.target.closest("button[data-sort]"); if (b) sortPick(b.dataset.sort); });
+$("newBox").addEventListener("click", newBox);
+$("fChips").addEventListener("click", e => { const b = e.target.closest(".fchip"); if (b) setFormula(b.dataset.f); });
+$("fGo").addEventListener("click", ownFormula);
+$("fIn").addEventListener("keydown", e => { if (e.key === "Enter") ownFormula(); });
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#tabs", text: "The model has three parts: Build, Sort and Formula. You start in Build." },
+  { el: "#tray", text: "These are the atoms, with their symbols. Tap an atom to add it to the workspace, or drag it on.", do: "add", doText: "Add an atom to the workspace." },
+  { el: "#wsWrap", text: "Tap one atom, then another, to join them. Tap both again to unjoin them. Drag an atom to move its molecule.", do: "join", doText: "Add another atom, then join the two." },
+  { el: "#readout", text: "The readout names your molecule and gives its formula. It says if it is an element or a compound." },
+  { el: "#targets", text: "The molecules from the lesson. Each one gets a tick when you build it." },
+  { el: "#tabs", text: "Now try the Sort part.", do: "tab-sort", doText: "Press Sort." },
+  { el: "#sortBtns", text: "Each box shows particles. Is the substance an element, a compound or a mixture?", do: "sort", doText: "Choose an answer for this box." },
+  { el: "#tabs", text: "The Formula part reads chemical formulae.", do: "tab-formula", doText: "Press Formula." },
+  { el: "#fChips", text: "Choose a formula. The model counts the atoms and shows how to name it.", do: "formula", doText: "Choose a formula." },
+  { el: "#supportArea", text: "Support switches add help, like the joins each atom has left. They all start off." },
+  { el: "#qpanel", text: "This panel suggests things to try in Demo. In the Knowledge check, your questions, answers and Check button appear here." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:molecule-builder", "1"); } catch (e) {}
+  loadDemo(); setTab("build");
+  $("newHere").hidden = true; tourGo(0);
+}
+
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i], el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), /^go/.test(name) ? 1800 : 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+
+/* ===== Wiring ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+renderTray(); renderChips();
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:molecule-builder")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+</body>
+</html>

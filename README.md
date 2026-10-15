@@ -14,6 +14,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Digestive System | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
 | Pondweed | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
 | Food Web | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
+| Molecule Builder | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
