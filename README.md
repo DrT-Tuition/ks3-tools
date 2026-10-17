@@ -39,6 +39,8 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Static Charge | Physics | https://drt-tuition.github.io/ks3-tools/static-charge.html |
 | Circuit Builder | Physics | https://drt-tuition.github.io/ks3-tools/circuit-builder.html |
 | Electromagnet | Physics | https://drt-tuition.github.io/ks3-tools/electromagnet.html |
+| Skate Ramp | Physics | https://drt-tuition.github.io/ks3-tools/skate-ramp.html |
+| Heat Flow | Physics | https://drt-tuition.github.io/ks3-tools/heat-flow.html |
 | Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 | DNA Builder | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 | DNA Replication | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
