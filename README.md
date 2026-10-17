@@ -36,6 +36,9 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Light Rays | Physics | https://drt-tuition.github.io/ks3-tools/light-rays.html |
 | Colour Mixer | Physics | https://drt-tuition.github.io/ks3-tools/colour-mixer.html |
 | Lens and Eye | Physics | https://drt-tuition.github.io/ks3-tools/lens-and-eye.html |
+| Static Charge | Physics | https://drt-tuition.github.io/ks3-tools/static-charge.html |
+| Circuit Builder | Physics | https://drt-tuition.github.io/ks3-tools/circuit-builder.html |
+| Electromagnet | Physics | https://drt-tuition.github.io/ks3-tools/electromagnet.html |
 | Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 | DNA Builder | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 | DNA Replication | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
