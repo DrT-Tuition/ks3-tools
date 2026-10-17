@@ -27,6 +27,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Separate It | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
 | Metal Reactions | Chemistry | https://drt-tuition.github.io/ks3-tools/metal-reactions.html |
 | Displacement Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
+| Spring Stretch | Physics | https://drt-tuition.github.io/ks3-tools/spring-stretch.html |
 | Moon Phases | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
 | Make a Wave | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
 | Sound Waves | Physics | https://drt-tuition.github.io/ks3-tools/sound-waves.html |
