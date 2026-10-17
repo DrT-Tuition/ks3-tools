@@ -16,6 +16,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Food Web | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
 | Natural Selection | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
 | Molecule Builder | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
+| Periodic Table Explorer | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
 | Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
