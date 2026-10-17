@@ -13,6 +13,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Muscle Pairs | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
 | Digestive System | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
 | Pondweed | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
+| Flower Parts | Biology | https://drt-tuition.github.io/ks3-tools/flower-parts.html |
 | Food Web | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
 | Natural Selection | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
 | Molecule Builder | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
