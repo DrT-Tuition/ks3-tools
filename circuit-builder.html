@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circuit Builder</title>
+<!--
+  SCIENCE SPEC — Circuit Builder (KS3)
+  Models: a cell (or cells), identical bulbs, a switch, ammeters and voltmeters in a series circuit
+          and in a parallel circuit. Readings are computed in code from a simple rule set:
+          each cell gives 1.5 V, cells in series add; every bulb has the same fixed resistance;
+          I = V / R is used inside the code only (resistance and Ohm's law are NOT shown to pupils).
+          Series: one loop, same current everywhere, p.d. shared equally between identical bulbs.
+          Parallel: more than one loop, each branch has the cell's p.d., branch currents add up
+          to the current in the main wire.
+  Source: Y7 T6 P2.1 Electricity, SoW lessons 71 (Circuits and current), 72 (Potential difference),
+          73 (Series and parallel), 74 (Investigating series and parallel); department source PPTs.
+          KS3 National Curriculum, Physics, Electricity: "electric current, measured in amperes, in
+          circuits, series and parallel circuits, currents add where branches meet and current as
+          flow of charge"; "potential difference, measured in volts, battery and bulb ratings".
+          AQA KS3 syllabus, electrical circuits.
+  Which questions fit which lesson (use these numbers in the Check it slide):
+    Easy 1–3 = lesson 71 (series current, ammeter).      Easy 4–6 = lesson 72 (cell p.d., p.d. shared in series).
+    Easy 7–10 = lesson 73 (series v parallel, bulb out).  Hard 1–8 = lesson 74 (readings in both circuits).
+    Easy 1–6 only use series circuits. Parallel readings appear only from Easy 7 and in Hard.
+  Simplifications (shown on screen as "Model limits"):
+    - Wires, cells and ammeters are ideal: no resistance, no energy transferred in them.
+    - Every bulb is identical and does not change as it heats. Brightness shows the p.d. across the bulb.
+    - Cells give 1.5 V each and add in series. Readings are rounded to 2 decimal places.
+    - The switch and unscrewed bulb break a loop. A voltmeter across an open switch is not shown.
+  Misconceptions designed out (BEST / common KS3 current-and-circuits misconceptions):
+    - "Current is used up by the bulbs" (clashing models): all ammeters in a series loop read the same.
+    - "Each bulb in series gets the whole cell p.d.": the voltmeters show the p.d. shared.
+    - "Parallel branches share the p.d.": each branch reads the full cell p.d.
+    - "The current in a parallel main wire equals one branch": the main ammeter reads the sum.
+    - "One bulb out puts every bulb out": true in series, false in parallel (the model shows both).
+  Support (Rule card, Meter key) starts OFF on every visit. Meter readings the question asks for show
+  "?" until Check or Show answer.
+  Checks: every answer is recomputed from the circuit rule in code (TOOL.check) and the bank is
+  verified on load.
+
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.word{margin:-6px 0 0;font-size:clamp(18px,2vw,21px);color:var(--ink)}
+.word .lbl{color:var(--muted);font-size:15px;margin-right:6px}
+
+.eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;padding:4px 0}
+.sp{display:flex;align-items:center;gap:6px}
+.step{display:grid;justify-items:center}
+.step button{width:46px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-size:16px;cursor:pointer;line-height:1}
+.step button:hover{border-color:var(--accent)}
+.coef{font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.15;min-width:1.2ch;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
+.coef.one{color:var(--muted);opacity:.6}
+.formula{font-family:var(--f-body);font-weight:700;font-size:clamp(34px,5vw,52px);background:none;border:0;color:var(--ink);cursor:help;padding:0 2px;border-radius:6px}
+.formula sub{font-size:.55em;vertical-align:-.25em;line-height:0}
+.op{font-size:clamp(28px,4vw,42px);color:var(--muted);padding:0 2px}
+.op.arrow{color:var(--ink)}
+
+/* particle picture */
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.side{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:40px}
+.side .tag{width:100%;text-align:center;font-size:14px;color:var(--muted)}
+.parrow{font-size:28px;color:var(--ink)}
+.plus{color:var(--muted);font-size:20px}
+.mol{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1.5px dashed var(--line);border-radius:10px;max-width:150px;justify-content:center}
+.atom{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font:700 11px var(--f-body);border:1.5px solid #14243D;letter-spacing:0;position:relative}
+/* house particle look (same as Particle Model): dark outline and a small white highlight up and to the left */
+.atom::after{content:"";position:absolute;left:14%;top:12%;width:28%;height:28%;border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none}
+:root[data-theme="dark"] .atom{border-color:#0E1A2C}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .atom{border-color:#0E1A2C}}
+.more{font-size:14px;color:var(--muted)}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+@media (max-width:640px){.prow{grid-template-columns:minmax(0,1fr)}.parrow{text-align:center;transform:rotate(90deg)}}
+
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font:700 15px var(--f-body);color:var(--muted);text-align:center;padding:0 6px 6px}
+th:first-child{text-align:left}
+td{padding:6px;text-align:center;border-top:1px solid var(--line);font-size:20px}
+td:first-child{text-align:left}
+.tile{display:inline-grid;place-items:center;min-width:42px;height:42px;padding:0 6px;border-radius:6px;font:700 17px var(--f-body);border:1.5px solid var(--atom-edge)}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+details.custom{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details.custom summary{font-weight:700;cursor:pointer}
+.crow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.crow input{flex:1 1 260px;min-width:0;font:400 18px var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.cnote{color:var(--muted);font-size:15px;margin:8px 0 0}
+.cerr{color:var(--bad);font-size:16px;margin:8px 0 0}
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.coef,.atom{transition:color .15s,transform .15s}}
+
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+main.layout{min-height:calc(100vh - 70px)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow[hidden]{display:none}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+
+/* ---- shared tool pieces ---- */
+.mctx{margin:0;font-weight:700;font-size:clamp(19px,2vw,22px)}
+.opts{display:grid;gap:8px}
+.opt{font:400 18px var(--f-body);text-align:left;padding:10px 14px;min-height:46px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;letter-spacing:.01em;word-spacing:.06em}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);font-weight:700}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.opt:disabled{cursor:default}
+.small{font-size:16px;color:var(--muted);margin:0}
+.model .panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px}
+.limits{font-size:15px;color:var(--muted);margin:4px 0 0}
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.seg button,.mbtn{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mbtn:disabled{opacity:.45;cursor:default}
+.mrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mrow label{font-weight:700;font-size:16px;color:var(--muted)}
+svg.scene{width:100%;height:auto;display:block;background:var(--sunk);border:1px solid var(--line);border-radius:10px}
+svg.scene text{font-family:var(--f-body);fill:var(--ink)}
+.readout{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:17px}
+.readout b{color:var(--accent);font-variant-numeric:tabular-nums}
+input[type=range]{width:min(320px,100%);height:32px;accent-color:var(--accent)}
+.answer-line{font-weight:700}
+@media (prefers-reduced-motion:no-preference){.mv{transition:transform .5s ease}}
+
+
+.wire{stroke:var(--ink);fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.thin{stroke:var(--ink);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.sym{stroke:var(--ink);stroke-width:4;fill:var(--surface)}
+.mid{font:700 18px var(--f-body)}
+.mlab{font:400 14px var(--f-body);fill:var(--muted)!important;paint-order:stroke;stroke:var(--sunk);stroke-width:6px;stroke-linejoin:round}
+.mread{font:700 19px var(--f-body);paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+.rm{stroke:var(--muted);stroke-dasharray:5 5;fill:none;stroke-width:2.5}
+.mrow .mbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mrow .mbtn[aria-pressed="false"].tgl{background:var(--surface)}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Circuit Builder<small>Build series and parallel circuits. Read the ammeters and voltmeters.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Circuit Builder</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="bankerr" id="bankErr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Circuit Builder model">
+
+      <div class="mctx" id="mctx"></div>
+      <svg class="scene" id="scene" viewBox="-60 0 860 420" role="img" aria-label="Circuit diagram"></svg>
+      <p class="small" id="cap" aria-live="polite"></p>
+      <div id="ctl">
+        <div class="mrow">
+          <label id="lT">Circuit</label>
+          <span class="seg" id="typeSeg" role="group" aria-labelledby="lT">
+            <button type="button" data-t="series" aria-pressed="true">Series</button>
+            <button type="button" data-t="parallel" aria-pressed="false">Parallel</button>
+          </span>
+          <button class="mbtn" type="button" id="sw" aria-pressed="true">Switch: closed</button>
+        </div>
+        <div class="mrow">
+          <label>Cells</label>
+          <button class="mbtn" type="button" id="cMinus" aria-label="Fewer cells">−</button>
+          <b id="cN" style="min-width:1.5ch;text-align:center">1</b>
+          <button class="mbtn" type="button" id="cPlus" aria-label="More cells">+</button>
+          <label style="margin-left:14px">Bulbs</label>
+          <button class="mbtn" type="button" id="bMinus" aria-label="Fewer bulbs">−</button>
+          <b id="bN" style="min-width:1.5ch;text-align:center">2</b>
+          <button class="mbtn" type="button" id="bPlus" aria-label="More bulbs">+</button>
+        </div>
+        <div class="mrow">
+          <label>Meters</label>
+          <button class="mbtn" type="button" id="amBtn" aria-pressed="true">Ammeters</button>
+          <button class="mbtn" type="button" id="vmBtn" aria-pressed="false">Voltmeters</button>
+          <label style="margin-left:14px">Unscrew</label>
+          <span class="seg" id="remSeg" role="group" aria-label="Unscrew a bulb">
+            <button type="button" data-b="0" aria-pressed="false">Bulb 1</button>
+            <button type="button" data-b="1" aria-pressed="false">Bulb 2</button>
+            <button type="button" data-b="2" aria-pressed="false">Bulb 3</button>
+          </span>
+        </div>
+      </div>
+      <div class="feedback demo-msg" id="demoMsg" aria-live="polite"></div>
+      <div class="panel" id="ruleCard" hidden>
+        <h2>Rule card</h2>
+        <p style="margin:0"><b>Series:</b> one loop. The current is the same everywhere. The p.d. is shared between the bulbs. If one bulb goes out, they all go out.</p>
+        <p style="margin:6px 0 0"><b>Parallel:</b> more than one loop. The current splits between the branches and adds up again. Each branch has the cell's p.d. If one bulb goes out, the others stay lit.</p>
+        <p style="margin:6px 0 0"><b>Cells in series</b> add their p.d.s: each cell is 1.5 V.</p>
+      </div>
+      <div class="panel" id="keyCard" hidden>
+        <h2>Meter key</h2>
+        <p style="margin:0"><b>A</b> is an ammeter. It measures <b>current</b> in amps (A) and sits <b>in</b> the loop.</p>
+        <p style="margin:6px 0 0"><b>V</b> is a voltmeter. It measures <b>potential difference</b> in volts (V) and sits <b>across</b> a part, on its own side branch.</p>
+      </div>
+
+      <p class="limits"><b>Model limits:</b> wires, cells and meters are ideal. All the bulbs are identical. Each cell gives 1.5 V and cells in series add. A bulb's brightness shows the p.d. across it. Readings are rounded to 2 decimal places. Real batteries and bulbs are less tidy.</p>
+      <p class="rule"><b>Remember:</b> in a series circuit the current is the same everywhere and the p.d. is shared. In a parallel circuit the branch currents add up and each branch has the cells' p.d. An ammeter goes in the loop. A voltmeter goes across a part.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div class="support" role="group" aria-label="Support" id="supportRow"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const NB = "\u00A0";
+const TOOL_ID = 'circuit-builder';
+
+
+const SVGNS = "http://www.w3.org/2000/svg";
+function mk(tag, attrs, parent, cls) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (cls) e.setAttribute("class", cls); if (parent) parent.appendChild(e); return e; }
+const CELL_V = 1.5, BULB_R = 3, RATING = 3;   // R is used in code only
+const S = { type: "series", cells: 1, bulbs: 2, closed: true, am: true, vm: false, rem: [false, false, false], reveal: true, hide: [], locked: false };
+
+/* ----- the physics: computed, never typed in ----- */
+function solve(s) {
+  const V = CELL_V * s.cells, n = s.bulbs, out = { V, n, I: [], Vb: [], bright: [], main: 0 };
+  if (s.type === "series") {
+    const open = !s.closed || s.rem.slice(0, n).some(Boolean);
+    const I = open ? 0 : V / (BULB_R * n);
+    for (let j = 0; j < n; j++) { out.I.push(I); out.Vb.push(open ? 0 : V / n); }
+    out.main = I; out.amm = { A1: I, A2: I, A3: I };
+  } else {
+    let tot = 0;
+    for (let j = 0; j < n; j++) { const on = s.closed && !s.rem[j]; const I = on ? V / BULB_R : 0; out.I.push(I); out.Vb.push(on ? V : 0); tot += I; }
+    out.main = tot; out.amm = { A1: tot }; for (let j = 0; j < n; j++) out.amm["A" + (j + 2)] = out.I[j];
+  }
+  out.bright = out.Vb.map(v => Math.min(1, v / RATING));
+  return out;
+}
+const r2 = x => Math.round(x * 100) / 100;
+const fmt = x => { const v = r2(x); return Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? v.toFixed(1) : v.toFixed(2); };
+function meterVal(id, s) {
+  const m = solve(s);
+  if (id === "V0") return fmt(m.V) + NB + "V";
+  if (id[0] === "V") return fmt(m.Vb[+id.slice(1) - 1]) + NB + "V";
+  return fmt(m.amm[id]) + NB + "A";
+}
+
+/* ----- drawing ----- */
+let svg;
+function run(x1, y1, x2, y2, items) {   // wire with components; items = [{at (0..1), half, draw(cx, cy)}]
+  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  let cur = 0;
+  items.sort((a, b) => a.at - b.at);
+  for (const it of items) {
+    const c = it.at * L, a = c - it.half, b = c + it.half;
+    mk("line", { x1: x1 + ux * cur, y1: y1 + uy * cur, x2: x1 + ux * a, y2: y1 + uy * a }, svg, "wire");
+    it.draw(x1 + ux * c, y1 + uy * c, ux, uy);
+    cur = b;
+  }
+  mk("line", { x1: x1 + ux * cur, y1: y1 + uy * cur, x2, y2 }, svg, "wire");
+}
+function text(x, y, s, cls, anchor) { const t = mk("text", { x, y, "text-anchor": anchor || "middle" }, svg, cls); t.textContent = s; return t; }
+let LATE = [];
+function label(id, x, y, anchor, s) {   // two-line label: meter name, reading (drawn last so a bulb's glow never covers it)
+  const hidden = !S.reveal && S.hide.includes(id);
+  LATE.push(() => { text(x, y - 3, id, "mlab", anchor); text(x, y + 18, hidden ? "?" : meterVal(id, s), "mread", anchor); });
+}
+function meterCircle(kind, x, y, id, s, lp) {
+  mk("circle", { cx: x, cy: y, r: 22 }, svg, "sym");
+  text(x, y + 7, kind, "mid");
+  if (lp === "below") label(id, x, y + 46, "middle", s);
+  else if (lp === "right") label(id, x + 32, y - 2, "start", s);
+  else label(id, x, y - 44, "middle", s);
+}
+function ammeter(id, lp, s) { return { half: 22, draw: (x, y) => meterCircle("A", x, y, id, s, lp) }; }
+function bulbItem(j, vertical, s, m) {
+  return { half: 26, draw: (x, y) => {
+    const b = m.bright[j], gone = s.rem[j];
+    if (gone) { mk("circle", { cx: x, cy: y, r: 26 }, svg, "rm"); text(x, y + 5, "out", "mlab"); return; }
+    if (b > 0.04) mk("circle", { cx: x, cy: y, r: 26 + 14 * b, fill: "#ffe27a", opacity: 0.4 * b }, svg);
+    mk("circle", { cx: x, cy: y, r: 26, fill: "#ffe27a", "fill-opacity": 0.12 + 0.88 * b }, svg, "wire");
+    const d = 18.4;
+    mk("line", { x1: x - d, y1: y - d, x2: x + d, y2: y + d }, svg, "thin"); mk("line", { x1: x - d, y1: y + d, x2: x + d, y2: y - d }, svg, "thin");
+    if (vertical) text(x - 32, y + 5, "Bulb " + (j + 1), "mlab", "end"); else text(x, y + 52, "Bulb " + (j + 1), "mlab");
+  } };
+}
+function switchItem(s) {
+  return { half: 34, draw: (x, y) => {
+    mk("circle", { cx: x - 28, cy: y, r: 5, fill: "var(--ink)" }, svg); mk("circle", { cx: x + 28, cy: y, r: 5, fill: "var(--ink)" }, svg);
+    if (s.closed) mk("line", { x1: x - 28, y1: y, x2: x + 28, y2: y }, svg, "wire");
+    else mk("line", { x1: x - 28, y1: y, x2: x + 22, y2: y - 22 }, svg, "wire");
+    text(x, y + 38, "Switch", "mlab");
+  } };
+}
+function batteryItem(n) {
+  return { half: 12 * n, draw: (x, y) => {
+    for (let i = 0; i < n; i++) {
+      const t = y - 12 * n + 24 * i;
+      mk("line", { x1: x - 22, y1: t + 4, x2: x + 22, y2: t + 4 }, svg, "wire");
+      mk("line", { x1: x - 12, y1: t + 16, x2: x + 12, y2: t + 16, "stroke-width": 8 }, svg, "wire");
+    }
+    text(x + 30, y - 12 * n + 2, "+", "mid", "start"); text(x + 30, y + 12 * n + 16, "−", "mid", "start");
+    text(x + 30, y + 5, n + (n === 1 ? " cell" : " cells"), "mlab", "start");
+  } };
+}
+function voltAcross(id, cx, cy, p1, p2, s, lp) {   // voltmeter circle with two leads to wire points p1, p2
+  mk("path", { d: `M${cx} ${cy - 22} V${p1[1]} H${p1[0]}` }, svg, "thin");
+  mk("path", { d: `M${cx} ${cy + 22} V${p2[1]} H${p2[0]}` }, svg, "thin");
+  mk("circle", { cx: p1[0], cy: p1[1], r: 4, fill: "var(--ink)" }, svg); mk("circle", { cx: p2[0], cy: p2[1], r: 4, fill: "var(--ink)" }, svg);
+  meterCircle("V", cx, cy, id, s, lp);
+}
+function draw() {
+  svg = $("scene"); svg.innerHTML = ""; LATE = [];
+  const s = S, m = solve(s), n = s.bulbs, nc = s.cells;
+  const bat = batteryItem(nc);
+  if (s.type === "series") {
+    const X0 = 90, X1 = 670, Y0 = 130, Y1 = 340;
+    // left wire: bottom to top, so "before the bulbs" is up the left side
+    const left = [{ at: (Y1 - 240) / (Y1 - Y0), half: bat.half, draw: bat.draw }];
+    if (s.am) left.push(Object.assign({ at: (Y1 - 160) / (Y1 - Y0) }, ammeter("A1", "right", s)));
+    run(X0, Y1, X0, Y0, left);
+    const top = []; for (let j = 0; j < n; j++) top.push(Object.assign({ at: (j + 1) / (n + 1) }, bulbItem(j, false, s, m)));
+    run(X0, Y0, X1, Y0, top);
+    run(X1, Y0, X1, Y1, s.am ? [Object.assign({ at: 0.5 }, ammeter("A2", "right", s))] : []);
+    const bot = [Object.assign({ at: (X1 - 380) / (X1 - X0) }, switchItem(s))];
+    if (s.am) bot.push(Object.assign({ at: (X1 - 200) / (X1 - X0) }, ammeter("A3", "below", s)));
+    run(X1, Y1, X0, Y1, bot);
+    if (s.vm) {
+      voltAcross("V0", -22, 240, [X0, 186], [X0, 294], s, "right");
+      for (let j = 0; j < n; j++) { if (s.rem[j]) continue; const x = X0 + (X1 - X0) * (j + 1) / (n + 1); voltAcross("V" + (j + 1), x, 62, [x - 45, Y0], [x + 45, Y0], s, "above"); }
+    }
+  } else {
+    const X0 = 90, Y0 = 100, Y1 = 340, xs = n === 2 ? [320, 540] : [230, 420, 610], XE = xs[xs.length - 1];
+    const left = [{ at: (Y1 - 240) / (Y1 - Y0), half: bat.half, draw: bat.draw }];
+    run(X0, Y1, X0, Y0, left);
+    const mx = (X0 + xs[0]) / 2;
+    const top = s.am ? [Object.assign({ at: (mx - X0) / (XE - X0) }, ammeter("A1", "below", s))] : [];
+    run(X0, Y0, XE, Y0, top);
+    run(XE, Y1, X0, Y1, [Object.assign({ at: (XE - mx) / (XE - X0) }, switchItem(s))]);
+    for (let j = 0; j < n; j++) {
+      const x = xs[j], it = [Object.assign({ at: (250 - Y0) / (Y1 - Y0) }, bulbItem(j, true, s, m))];
+      if (s.am) it.push(Object.assign({ at: (172 - Y0) / (Y1 - Y0) }, ammeter("A" + (j + 2), "right", s)));
+      run(x, Y0, x, Y1, it);
+      mk("circle", { cx: x, cy: Y0, r: 6, fill: "var(--ink)" }, svg); mk("circle", { cx: x, cy: Y1, r: 6, fill: "var(--ink)" }, svg);
+      if (s.vm && !s.rem[j]) voltAcross("V" + (j + 1), x + 76, 250, [x, 210], [x, 290], s, "right");
+    }
+    if (s.vm) voltAcross("V0", -22, 240, [X0, 186], [X0, 294], s, "right");
+  }
+}
+function flushLate() { LATE.forEach(f => f()); LATE = []; }
+function caption() {
+  const m = solve(S), n = S.bulbs;
+  if (mode !== "demo") { $("cap").textContent = ""; return; }
+  const parts = [`${S.cells} cell${S.cells > 1 ? "s" : ""} give ${fmt(m.V)}${NB}V.`];
+  if (!S.closed) parts.push("The switch is open, so there is no current.");
+  else if (S.type === "series" && S.rem.slice(0, n).some(Boolean)) parts.push("A bulb is unscrewed. The loop is broken, so every bulb is out.");
+  else if (S.type === "series") parts.push(`The same current, ${fmt(m.main)}${NB}A, flows through every part. Each bulb gets ${fmt(m.V / n)}${NB}V.`);
+  else parts.push(`Each branch has ${fmt(m.V)}${NB}V. The branch currents add up to ${fmt(m.main)}${NB}A in the main wire.`);
+  $("cap").textContent = parts.join(" ");
+}
+function sync() {
+  document.querySelectorAll("#typeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.t === S.type)));
+  $("cN").textContent = S.cells; $("bN").textContent = S.bulbs;
+  $("sw").setAttribute("aria-pressed", String(S.closed)); $("sw").textContent = "Switch: " + (S.closed ? "closed" : "open");
+  $("amBtn").setAttribute("aria-pressed", String(S.am)); $("vmBtn").setAttribute("aria-pressed", String(S.vm));
+  document.querySelectorAll("#remSeg button").forEach(b => { const j = +b.dataset.b; b.setAttribute("aria-pressed", String(!!S.rem[j])); b.hidden = j >= S.bulbs; });
+  $("mctx").textContent = S.type === "series" ? "A series circuit: one loop." : "A parallel circuit: more than one loop.";
+  $("cMinus").disabled = S.locked || S.cells <= 1; $("cPlus").disabled = S.locked || S.cells >= 4;
+  const min = S.type === "parallel" ? 2 : 1;
+  $("bMinus").disabled = S.locked || S.bulbs <= min; $("bPlus").disabled = S.locked || S.bulbs >= 3;
+  for (const id of ["sw", "amBtn", "vmBtn"]) $(id).disabled = S.locked;
+  document.querySelectorAll("#typeSeg button, #remSeg button").forEach(b => b.disabled = S.locked);
+  draw(); flushLate(); caption();
+}
+function change(fn, sig) { if (S.locked) return; fn(); sync(); if (sig) sig(); }
+document.querySelectorAll("#typeSeg button").forEach(b => b.onclick = () => change(() => { S.type = b.dataset.t; if (S.type === "parallel" && S.bulbs < 2) S.bulbs = 2; S.rem = [false, false, false]; }, () => { signal("type"); if (S.type === "parallel") signal("par"); }));
+$("cPlus").onclick = () => change(() => S.cells++, () => signal("cells"));
+$("cMinus").onclick = () => change(() => S.cells--, () => signal("cells"));
+$("bPlus").onclick = () => change(() => S.bulbs++, () => signal("bulbs"));
+$("bMinus").onclick = () => change(() => { S.bulbs--; S.rem[S.bulbs] = false; }, () => signal("bulbs"));
+$("sw").onclick = () => change(() => S.closed = !S.closed, () => signal("switch"));
+$("amBtn").onclick = () => change(() => S.am = !S.am);
+$("vmBtn").onclick = () => change(() => S.vm = !S.vm, () => signal("vm"));
+document.querySelectorAll("#remSeg button").forEach(b => b.onclick = () => change(() => S.rem[+b.dataset.b] = !S.rem[+b.dataset.b], () => signal("unscrew")));
+
+/* ----- TOOL object for the shared engine ----- */
+const TOOL = {
+  id: TOOL_ID,
+  supports: [{ k: "rule", label: "Rule card" }, { k: "key", label: "Meter key" }],
+  tries: [
+    { id: "cells", text: "Add a cell. Which readings change?" },
+    { id: "bulbs", text: "Add a bulb in series. Watch the ammeters." },
+    { id: "unscrew", text: "Unscrew a bulb in a series circuit, then in a parallel one." },
+    { id: "vm", text: "Switch on the voltmeters. Compare series and parallel." },
+    { id: "par", text: "Parallel: read the main ammeter and the branch ammeters." }
+  ],
+  tour: [
+    { el: "#scene", text: "This is a circuit. Cells push charge round. Bulbs light. A is an ammeter. V is a voltmeter." },
+    { el: "#typeSeg", text: "Choose Series or Parallel.", do: "type", doText: "Press Parallel, then Series." },
+    { el: "#cPlus", text: "Add or take away cells. Each cell is 1.5 V.", do: "cells", doText: "Add a cell." },
+    { el: "#bPlus", text: "Add or take away bulbs. A parallel circuit needs at least 2.", do: "bulbs", doText: "Change the bulbs." },
+    { el: "#sw", text: "Open or close the switch.", do: "switch", doText: "Press the switch." },
+    { el: "#amBtn", text: "Ammeters measure current in amps. Turn them on and off here." },
+    { el: "#vmBtn", text: "Voltmeters measure potential difference (p.d.) in volts. Each sits across one part.", do: "vm", doText: "Turn on the voltmeters." },
+    { el: "#remSeg", text: "Unscrew a bulb to see what happens to the others.", do: "unscrew", doText: "Unscrew a bulb." },
+    { el: "#qpanel", text: "In Demo this panel suggests things to try. In the Knowledge check your questions appear here." },
+    { el: ".kc", text: "When you are ready, test yourself. Start with Easy." }
+  ],
+  onDemo() { S.locked = false; S.reveal = true; S.hide = []; $("ruleCard").hidden = true; $("keyCard").hidden = true; $("demoMsg").innerHTML = ""; sync(); },
+  onSupport(k, on) { if (mode === "demo") return; if (k === "rule") $("ruleCard").hidden = !on; if (k === "key") $("keyCard").hidden = !on; },
+  onQuestion(q, f) {
+    const sc = Object.assign({ type: "series", cells: 1, bulbs: 2, closed: true, am: true, vm: false, rem: [false, false, false] }, q.scene);
+    Object.assign(S, sc, { locked: true, reveal: !!f.finished, hide: q.hide || [] });
+    if (f.finished && q.after) Object.assign(S, q.after);
+    $("ruleCard").hidden = !hasSupport("rule"); $("keyCard").hidden = !hasSupport("key");
+    sync();
+  },
+  onResult(q) { S.reveal = true; if (q.after) Object.assign(S, q.after); sync(); },
+  levels: { easy: [], hard: [] }
+};
+
+/* ----- questions: numbers computed from solve() ----- */
+const O = (t, ok, fb) => ({ t, ok: !!ok, fb });
+const Qn = (id, scene, hide, text, optsFn, hints, why, extra) => ({ id, make: () => Object.assign({ scene, hide, text: typeof text === "function" ? text() : text, opts: optsFn(), hints, why }, extra || {}) });
+const sc = (type, cells, bulbs, o) => Object.assign({ type, cells, bulbs, closed: true, am: true, vm: false, rem: [false, false, false] }, o || {});
+const val = (scene, id) => meterVal(id, Object.assign({ rem: [false, false, false] }, scene));
+const rd = (scene, id) => fmt(solve(Object.assign({ rem: [false, false, false] }, scene)).amm[id]);
+const USED = "The current is not used up. It is the same everywhere in a series loop.";
+
+const E = [];
+{   // lesson 71: series circuits and current
+  const s1 = sc("series", 2, 2);
+  E.push(Qn("e1", s1, ["A2", "A3"], () => `The cells push ${rd(s1, "A1")}${NB}A through ammeter A1, before the bulbs. What does A2 read, after the bulbs?`,
+    () => { const I = solve(s1).main; return [O(fmt(I) + NB + "A, the same", true), O(fmt(I / 2) + NB + "A, because the bulbs use up current", false, USED), O(fmt(I * 2) + NB + "A, because the current builds up", false, "The current does not grow. It is the same everywhere in a series loop."), O("0" + NB + "A, because the bulbs stop it", false, "The bulbs are lit, so charge is flowing. The same current passes every part.")]; },
+    ["Read A1. Charge has to get all the way round the loop.", "Is any charge used up by a bulb? Compare A1 and A3 in the model.", "A series loop has one path, so the current is the same everywhere. A2 reads the same as A1."],
+    "In a series loop the current is the same everywhere. A bulb does not use up the current.", { expect: { id: "A2", scene: s1 } }));
+  const s2 = sc("series", 3, 3);
+  E.push(Qn("e2", s2, [], "Look at the three ammeters. Which statement is correct?",
+    () => [O("The current is the same at A1, A2 and A3", true), O("The bulbs use up current, so it is smaller after each bulb", false, USED), O("The current is biggest next to the cell", false, "The current is the same at every point in a series loop."), O("The current is smallest next to the cell", false, "The current is the same at every point in a series loop.")],
+    ["Read all three ammeters.", "Compare the three numbers.", "They are the same: the current is the same everywhere."],
+    "All three ammeters read the same. Current is the same everywhere in a series loop."));
+  E.push(Qn("e3", sc("series", 1, 1), [], "What does an ammeter measure?",
+    () => [O("Current, in amps (A)", true), O("Potential difference, in volts (V)", false, "That is a voltmeter. An ammeter measures current."), O("The charge stored in the cell", false, "An ammeter measures how much charge flows each second: the current."), O("How bright a bulb is", false, "An ammeter measures current, in amps.")],
+    ["Look at the letter on the meter.", "A stands for amps.", "An ammeter measures current, in amps."],
+    "An ammeter measures current, in amps (A)."));
+}
+{   // lesson 72: potential difference
+  const s4 = sc("series", 3, 1, { am: false, vm: true });
+  E.push(Qn("e4", s4, ["V0", "V1"], "Each cell gives 1.5 V. Three cells are joined in series. What does the voltmeter V0 across the cells read?",
+    () => [O(val(s4, "V0"), true), O("1.5" + NB + "V, the p.d. of one cell", false, "Cells in series add their p.d.s."), O("3" + NB + "V", false, "That is two cells. Count all three: 3 × 1.5."), O("6" + NB + "V", false, "That is four cells. Count the cells in the model.")],
+    ["Count the cells.", "Each cell is 1.5 V. Cells in series add up.", "3 × 1.5 = 4.5 V."],
+    "Cells in series add: 3 × 1.5 = 4.5 V.", { expect: { id: "V0", scene: s4 } }));
+  const s5 = sc("series", 2, 2, { am: false, vm: true });
+  E.push(Qn("e5", s5, ["V1", "V2"], "The two cells give 3 V. The two bulbs are identical. What does the voltmeter across one bulb read?",
+    () => [O(val(s5, "V1"), true), O("3" + NB + "V, the whole p.d.", false, "In a series circuit the p.d. is shared between the bulbs. Each one does not get all of it."), O("6" + NB + "V", false, "A bulb cannot have more p.d. than the cells give."), O("0" + NB + "V", false, "The bulbs are lit, so there is a p.d. across each one.")],
+    ["The p.d. is shared between the bulbs.", "Two identical bulbs share the 3 V equally.", "3 ÷ 2 = 1.5 V each."],
+    "The p.d. is shared between identical bulbs: 3 ÷ 2 = 1.5 V each.", { expect: { id: "V1", scene: s5 } }));
+  const s6 = sc("series", 4, 3, { am: false, vm: true });
+  E.push(Qn("e6", s6, ["V1", "V2", "V3"], "The cells give 6 V. Three identical bulbs are in series. What does each bulb's voltmeter read?",
+    () => [O(val(s6, "V1"), true), O("6" + NB + "V", false, "The 6 V is shared between the three bulbs. Each one does not get all of it."), O("3" + NB + "V", false, "3 V would be right for two bulbs. There are three: share 6 V three ways."), O("18" + NB + "V", false, "The bulbs cannot add p.d. to the cells' 6 V. They share it.")],
+    ["The p.d. is shared between the bulbs.", "Share 6 V equally between three bulbs.", "6 ÷ 3 = 2 V each."],
+    "6 ÷ 3 = 2 V across each bulb. The p.d.s add up to the cells' 6 V.", { expect: { id: "V1", scene: s6 } }));
+}
+{   // lesson 73: series and parallel
+  const s7 = sc("parallel", 1, 2, { rem: [true, false, false], am: false });
+  E.push(Qn("e7", s7, [], "Bulb 1 has been unscrewed from this parallel circuit. What does bulb 2 do?",
+    () => [O("It stays lit", true), O("It goes out", false, "Each branch is its own loop. Bulb 2's loop is not broken."), O("It gets dimmer", false, "Bulb 2 is still joined straight to the cells, so it stays just as bright.")],
+    ["Is bulb 2's loop still complete?", "In a parallel circuit each bulb has its own loop.", "Bulb 2 stays lit."],
+    "In a parallel circuit each bulb has its own loop, so the others stay lit."));
+  const s8 = sc("series", 1, 2, { rem: [true, false, false], am: false });
+  E.push(Qn("e8", s8, [], "Bulb 1 has been unscrewed from this series circuit. What does bulb 2 do?",
+    () => [O("It goes out, because the loop is broken", true), O("It stays lit", false, "In a series circuit there is only one loop. A gap breaks it for every bulb."), O("It gets brighter", false, "There is no current at all. The loop is broken.")],
+    ["How many loops does a series circuit have?", "Is the loop complete without bulb 1?", "The loop is broken, so bulb 2 goes out."],
+    "A series circuit has one loop. A gap anywhere breaks it, so every bulb goes out."));
+  const s9 = sc("parallel", 1, 2, { am: false });
+  E.push(Qn("e9", s9, [], "Look at the circuit. How many loops can charge flow round?",
+    () => [O("More than one: it is a parallel circuit", true), O("One: it is a series circuit", false, "Count the paths. Each branch gives charge another loop."), O("None, because the switch is a gap", false, "The switch is closed, so charge can flow.")],
+    ["Trace the wire from the cell with your finger.", "Does the wire split?", "It splits into branches. More than one loop means parallel."],
+    "A parallel circuit has more than one loop."));
+  E.push(Qn("e10", sc("parallel", 1, 3, { am: false }), [], "Why are the lights in a house joined in parallel?",
+    () => [O("So that one broken bulb leaves the others on", true), O("So that the bulbs share the p.d. between them", false, "That happens in series, not in parallel."), O("So that the current is used up more slowly", false, "Current is never used up in either type of circuit.")],
+    ["Think about one bulb blowing at home.", "Do you want every light to go out?", "In parallel, each bulb has its own loop. One breaking leaves the others on."],
+    "Each bulb has its own loop, so one broken bulb leaves the others lit."));
+}
+const H = [];
+{   // lesson 74
+  const h1 = sc("parallel", 1, 2, { vm: false });
+  H.push(Qn("h1", h1, ["A1"], () => `Two identical bulbs are in parallel. Branch ammeters A2 and A3 each read ${rd(h1, "A2")}${NB}A. What does A1 read?`,
+    () => { const t = solve(h1).main; return [O(fmt(t) + NB + "A", true), O(rd(h1, "A2") + NB + "A, the same as one branch", false, "A1 carries the current for both branches. The branch currents add up."), O(fmt(t / 4) + NB + "A", false, "A1 is the total. It is bigger than a branch, not smaller."), O(fmt(t * 2) + NB + "A", false, "Just add the two branch currents. Do not double the total.")]; },
+    ["A1 is in the main wire, before the circuit splits.", "The branch currents add up to the current in the main wire.", `${rd(h1, "A2")} + ${rd(h1, "A3")} = ${rd(h1, "A1")} A.`],
+    "The branch currents add up to the main current.", { expect: { id: "A1", scene: h1 } }));
+  const h2 = sc("parallel", 2, 3);
+  H.push(Qn("h2", h2, ["A2", "A3", "A4"], () => `Three identical bulbs are in parallel. The main ammeter A1 reads ${rd(h2, "A1")}${NB}A. What does branch ammeter A2 read?`,
+    () => { const b = solve(h2).I[0]; return [O(fmt(b) + NB + "A", true), O(rd(h2, "A1") + NB + "A, the same as A1", false, "A1 is the total. The three branches share it."), O(fmt(solve(h2).main / 2) + NB + "A", false, "There are three identical branches, not two."), O(fmt(solve(h2).main * 3) + NB + "A", false, "A branch carries less than the total, not more.")]; },
+    ["A1 is the total current. It splits between the branches.", "The bulbs are identical, so each branch gets the same.", `Share ${rd(h2, "A1")} A between three branches.`],
+    "The total splits equally between three identical branches.", { expect: { id: "A2", scene: h2 } }));
+  const h3 = sc("parallel", 3, 2, { am: false, vm: true });
+  H.push(Qn("h3", h3, ["V1", "V2"], () => `The three cells give ${val(h3, "V0")}. The bulbs are in parallel. What does the voltmeter across each bulb read?`,
+    () => [O(val(h3, "V1"), true), O(fmt(solve(h3).V / 2) + NB + "V, the p.d. shared between two bulbs", false, "Sharing the p.d. happens in series. Each parallel branch is joined straight to the cells."), O(fmt(solve(h3).V * 2) + NB + "V", false, "A bulb cannot have more p.d. than the cells give."), O("0" + NB + "V", false, "The bulbs are lit, so there is a p.d. across each one.")],
+    ["Is each bulb in its own branch, joined straight to the cells?", "In parallel each branch has the same p.d. as the cells.", `Each bulb reads ${val(h3, "V0")}.`],
+    "In a parallel circuit each branch has the same p.d. as the cells.", { expect: { id: "V1", scene: h3 } }));
+  const h4 = sc("series", 4, 2, { am: false, vm: true });
+  H.push(Qn("h4", h4, ["V1", "V2"], () => `A series circuit has cells giving ${val(h4, "V0")} and two identical bulbs. What does each bulb's voltmeter read?`,
+    () => [O(val(h4, "V1"), true), O(val(h4, "V0") + ", the whole p.d.", false, "In series the p.d. is shared between the bulbs."), O(fmt(solve(h4).V / 3) + NB + "V", false, "There are two bulbs, so share the p.d. two ways."), O(fmt(solve(h4).V * 2) + NB + "V", false, "A bulb cannot have more p.d. than the cells give.")],
+    ["The bulbs are in series, so they share the p.d.", "Two identical bulbs share it equally.", `${val(h4, "V0").replace(NB + "V", "")} ÷ 2 = ${fmt(solve(h4).V / 2)} V.`],
+    "The p.d. is shared equally: each bulb gets half.", { expect: { id: "V1", scene: h4 } }));
+  const h5 = sc("series", 3, 3);
+  H.push(Qn("h5", h5, ["A2", "A3"], () => `Three bulbs are in series. A1 reads ${rd(h5, "A1")}${NB}A. What does A2 read, after the bulbs?`,
+    () => { const I = solve(h5).main; return [O(fmt(I) + NB + "A", true), O(fmt(I * 2 / 3) + NB + "A", false, USED), O(fmt(I / 3) + NB + "A", false, "The current is not shared out in a series circuit. It is the same everywhere."), O(fmt(I * 3) + NB + "A", false, "The current does not grow. It is the same everywhere.")]; },
+    ["This is a series circuit: one loop.", "Is any charge used up on the way round?", "The current is the same everywhere."],
+    "In a series circuit the current is the same everywhere.", { expect: { id: "A2", scene: h5 } }));
+  const h6 = sc("parallel", 1, 2, { vm: false });
+  H.push(Qn("h6", h6, [], () => `A1 reads ${rd(h6, "A1")}${NB}A with two identical bulbs in parallel. A third identical bulb is added in parallel. What will A1 read?`,
+    () => { const t3 = solve(Object.assign({}, h6, { bulbs: 3 })).main; return [O(fmt(t3) + NB + "A", true), O(rd(h6, "A1") + NB + "A, the same", false, "The new bulb has its own branch and takes its own current. The total gets bigger."), O(fmt(solve(h6).main * 2) + NB + "A", false, "Each new branch adds its own current to the total. It does not double the total."), O(fmt(t3 / 2) + NB + "A", false, "The total gets bigger when a branch is added, not smaller.")]; },
+    ["Each branch takes the same current.", "Add a branch: the total current gets bigger.", `Each branch is ${rd(h6, "A2")} A. Three branches add up to ${fmt(solve(Object.assign({}, h6, { bulbs: 3 })).main)} A.`],
+    "Each extra branch adds its own current to the total.", { after: { bulbs: 3 }, expect: { id: "A1", scene: Object.assign({}, h6, { bulbs: 3 }) } }));
+  const h7 = sc("parallel", 1, 2, { rem: [false, true, false] });
+  H.push(Qn("h7", h7, ["A1"], () => `Bulb 2 has been unscrewed from this parallel circuit. Before that, A1 read ${fmt(solve(Object.assign({}, h7, { rem: [false, false, false] })).main)}${NB}A. What does A1 read now?`,
+    () => { const now = solve(h7).main, was = solve(Object.assign({}, h7, { rem: [false, false, false] })).main; return [O(fmt(now) + NB + "A", true), O(fmt(was) + NB + "A, the same as before", false, "Bulb 2's branch carries no current now, so the total falls."), O("0" + NB + "A", false, "Bulb 1 is still lit, so its branch still carries current."), O(fmt(was * 2) + NB + "A", false, "Removing a bulb cannot make the total bigger.")]; },
+    ["Is bulb 1's branch still complete?", "Each branch carries its own current. Which branches still carry current?", "Only bulb 1's branch is left, so A1 equals its branch current."],
+    "The branch currents add up to the main current. With one branch gone, the total falls.", { expect: { id: "A1", scene: Object.assign({}, h7) } }));
+  const h8 = sc("parallel", 4, 2, { am: false, vm: true });
+  H.push(Qn("h8", h8, ["V1", "V2"], () => `The cells give ${val(h8, "V0")}. Tia says: 'Each parallel bulb has half of that.' What does the voltmeter across bulb 1 really read?`,
+    () => [O(val(h8, "V1"), true), O(fmt(solve(h8).V / 2) + NB + "V, as Tia says", false, "Tia is thinking of a series circuit. In parallel each branch has the cells' full p.d."), O(fmt(solve(h8).V / 4) + NB + "V", false, "The p.d. is not split between the branches."), O("0" + NB + "V", false, "The bulb is lit, so there is a p.d. across it.")],
+    ["Is each branch joined straight to the cells?", "Tia's idea works for series, not parallel.", `Each branch has ${val(h8, "V0")}.`],
+    "Each parallel branch has the same p.d. as the cells.", { expect: { id: "V1", scene: h8 } }));
+}
+TOOL.levels.easy = E; TOOL.levels.hard = H;
+TOOL.check = (q) => {   // recompute each numeric answer from the circuit rule
+  if (!q.expect) return null;
+  const want = meterVal(q.expect.id, Object.assign({ rem: [false, false, false] }, q.expect.scene));
+  const ok = q.opts.find(o => o.ok).t.split(",")[0];
+  return ok === want ? null : `answer "${ok}" but the model gives "${want}"`;
+};
+TOOL.verify = () => {
+  const bad = [];
+  for (const [t, c, b] of [["series", 1, 1], ["series", 4, 3], ["parallel", 4, 3], ["parallel", 2, 2]]) {
+    const s = { type: t, cells: c, bulbs: b, closed: true, rem: [false, false, false] }, m = solve(s);
+    if (t === "series" && !(Math.abs(m.Vb.reduce((a, x) => a + x, 0) - m.V) < 1e-9)) bad.push("series p.d.s do not add to the cells");
+    if (t === "parallel" && !(Math.abs(m.I.reduce((a, x) => a + x, 0) - m.main) < 1e-9)) bad.push("branch currents do not add to the main current");
+  }
+  return bad;
+};
+
+
+
+/* ================= shared engine (Demo, Knowledge check, progress, support, tour) ================= */
+const TOUR = TOOL.tour;
+const support = {};   // every support option starts OFF on every visit
+let mode = "demo", level = "easy", idx = 0, streak = 0, cur = null, sel = -1, order = [];
+const st = {};
+const PKEY = "ks3tools-progress:" + TOOL_ID;
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, q) => lv + ":" + q.id;
+function prog() {
+  const k = qkey(level, cur), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function bumpScore() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function setFeedback(items) {
+  $("fb").innerHTML = items.map(i => `<div class="msg ${i.cls || ""}">${i.html}</div>`).join("");
+  keepInView();
+}
+const LEVELS = TOOL.levels;
+const hasSupport = k => !!support[k];
+
+/* ----- Things to try ----- */
+const tried = {};
+function renderTries() {
+  $("tryList").innerHTML = TOOL.tries.map(t => `<li id="try-${t.id}"${tried[t.id] ? ' class="done"' : ""}>${t.text}</li>`).join("");
+}
+function signal(name) {
+  if (!tried[name]) { tried[name] = true; const e = $("try-" + name); if (e) e.classList.add("done"); }
+  tourSignal(name);
+}
+
+/* ----- Support row ----- */
+function buildSupport() {
+  $("supportRow").innerHTML = '<span class="lbl">Support:</span>' + TOOL.supports.map(s =>
+    `<button class="sw" type="button" data-support="${s.k}" aria-pressed="false"><span class="dot"></span>${s.label} <span class="state">off</span></button>`).join("");
+  document.querySelectorAll(".sw").forEach(b => b.onclick = () => {
+    const k = b.dataset.support, on = !support[k]; support[k] = on;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.querySelector(".state").textContent = on ? "on" : "off";
+    TOOL.onSupport && TOOL.onSupport(k, on);
+  });
+}
+
+/* ----- Questions ----- */
+function openQuestion() {
+  const list = LEVELS[level], raw = list[idx];
+  cur = Object.assign({ id: raw.id }, raw.make ? raw.make() : raw);
+  sel = -1; order = shuffle(cur.opts.map((_, i) => i));
+  const p = prog();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").innerHTML = cur.text;
+  $("fb").innerHTML = "";
+  $("doneBadge").hidden = !p.solved;
+  hintLabel(); renderDots();
+  TOOL.onQuestion(cur, { finished: p.solved || p.revealed });
+  renderOpts();
+  if (p.solved || p.revealed) showFinished(p);
+  keepInView();
+}
+function renderOpts() {
+  const p = prog(), done = p.solved || p.revealed;
+  $("answer").innerHTML = (cur.prompt ? `<p class="small">${cur.prompt}</p>` : "") + '<div class="opts" role="radiogroup" aria-label="Answers">' +
+    order.map((oi, k) => `<button type="button" class="opt${done && cur.opts[oi].ok ? " done-ok" : ""}" role="radio" aria-checked="${sel === oi}" data-o="${oi}"${done ? " disabled" : ""}>${cur.opts[oi].t}</button>`).join("") + "</div>";
+  $("answer").querySelectorAll(".opt").forEach(b => b.onclick = () => { sel = +b.dataset.o; renderOpts(); });
+}
+function okText() { return cur.opts.find(o => o.ok).t; }
+function showFinished(p) {
+  renderOpts();
+  setFeedback([{ cls: p.solved ? "good" : "tip", html: p.solved
+    ? `<b>✓ You got this one right earlier.</b> ${cur.why}<br>Choose another question number above, or Reset this question to try it again.`
+    : `The answer was shown for this one: <b>${okText()}</b><br>${cur.why}<br>Choose another question number above, or Reset this question to try it again.` }]);
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; openQuestion(); }));
+}
+function check() {
+  if (mode === "demo") return;
+  const p = prog();
+  if (p.solved || p.revealed) { setFeedback([{ cls: "tip", html: "This question is finished. Choose another question number above, or Reset this question to try it again." }]); return; }
+  if (sel < 0) { setFeedback([{ cls: "tip", html: "Choose an answer first, then press <b>Check</b>." }]); return; }
+  const o = cur.opts[sel];
+  if (o.ok) {
+    mark(qkey(level, cur), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bumpScore(); $("doneBadge").hidden = false; renderDots(); renderOpts();
+    TOOL.onResult && TOOL.onResult(cur, true);
+    setFeedback([{ cls: "good", html: `<b>✓ Correct.</b> ${cur.why}<br>Choose another question number above.` }]);
+  } else {
+    p.wrong++; streak = 0; bumpScore();
+    setFeedback([{ cls: "bad", html: `<b>✗ Not quite.</b> ${o.fb || "Look at the model again and try another answer."}` }]);
+  }
+}
+function hintLabel() { if (!cur) return; const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  if (mode === "demo" || !cur) return;
+  const p = prog();
+  if (p.solved || p.revealed) { setFeedback([{ cls: "tip", html: "This question is finished. Choose another question number above, or Reset this question to try it again." }]); return; }
+  if (p.hints < 3) p.hints++;
+  hintLabel();
+  setFeedback([{ cls: "tip", html: `<b>Hint ${p.hints} of 3:</b> ${cur.hints[p.hints - 1]}` }]);
+}
+function reveal() {
+  if (mode === "demo" || !cur) return;
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, cur), "shown"); renderDots(); }
+  renderOpts();
+  TOOL.onResult && TOOL.onResult(cur, false);
+  setFeedback([{ cls: "tip", html: `Answer: <b>${okText()}</b><br>${cur.why}` + (p.solved ? "" : " (No score for this one.)") }]);
+}
+function resetTask() {
+  if (mode === "demo") return;
+  delete DONE[qkey(level, cur)]; saveDone(); delete st[qkey(level, cur)]; bumpScore();
+  openQuestion();
+}
+
+/* ----- Instructions tour ----- */
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart(){
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:circuit-builder", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd(){
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i){
+  if (i >= TOUR.length){ tourEnd(); return; }
+  tourI = i; const st = TOUR[i]; if (st.pre) st.pre(); const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length){ tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+  if (st.do && st.already && st.already()) tourSignal(st.do);   // already done before this step
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minT = Math.max(8, $("topbar").getBoundingClientRect().bottom + 8), maxT = Math.max(minT, vh - 8 - h);
+  const fitsBelow = r.bottom + 14 + h <= vh - 8, fitsAbove = r.top - 14 - h >= minT;
+  const side = !fitsBelow && !fitsAbove && r.left - w - 22 >= 8;   // a tall target (e.g. the question panel): sit to its left
+  const visMid = (Math.max(r.top, minT) + Math.min(r.bottom, vh - 8)) / 2;
+  let left, top, dir;
+  if (side) { left = r.left - w - 16; top = visMid - h / 2; dir = "right"; }
+  else {
+    const below = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top - minT);
+    left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), vw - w - 8);
+    top = below ? r.bottom + 14 : r.top - h - 14; dir = below ? "up" : "down";
+  }
+  top = Math.min(Math.max(top, minT), maxT);   // the whole pop-up always stays on screen
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const ar = $("tourArrow"); ar.className = "tour-arrow " + dir;
+  if (dir === "right") { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, visMid - top - 8), h - 30) + "px"; }
+  else { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap;   // no arrow if the pop-up has had to sit on top of the target
+}
+function tourSignal(name){
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+
+
+/* ----- wiring ----- */
+$("check").onclick = check; $("hint").onclick = hint; $("reveal").onclick = reveal; $("reset").onclick = resetTask;
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bumpScore(); back(); if (mode !== "demo") { openQuestion(); setFeedback([{ cls: "tip", html: "Progress reset. Every question is fresh again." }]); } });
+  $("rpNo").addEventListener("click", back);
+});
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  if (mode === "demo") TOOL.onDemo(); else openQuestion();
+  fitPanel();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+let kivRaf = 0, kivTimer = 0;
+
+function keepInView() {
+  if (mode === "demo") return;
+  cancelAnimationFrame(kivRaf); clearTimeout(kivTimer);
+  kivRaf = requestAnimationFrame(() => {
+    const q = $("qpanel"), fb = $("fb");
+    if (window.innerWidth <= 900) { if (fb.textContent.trim()) fb.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" }); return; }
+    const stick = parseFloat(getComputedStyle(q).top) || 72, t = q.getBoundingClientRect().top;
+    if (t > stick + 1) window.scrollTo({ top: window.scrollY + t - stick, behavior: reduced() ? "instant" : "smooth" });
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    panelToFb();
+    kivTimer = setTimeout(() => { fitPanel(); panelToFb(); }, reduced() ? 30 : 450);
+  });
+}
+function panelToFb() {
+  const q = $("qpanel"), fb = $("fb"), qt = q.getBoundingClientRect().top;
+  const rel = e => e.getBoundingClientRect().top - qt + q.scrollTop;
+  const cap = Math.max(0, rel($("taskText")) - 8);
+  const want = fb.textContent.trim() ? rel(fb) + fb.offsetHeight + 12 - q.clientHeight : 0;
+  q.scrollTop = Math.max(0, Math.min(want, cap));
+}
+/* keep the question panel within the screen, so Check and the feedback are always visible (desktop) */
+function fitPanel(){
+  const q = $("qpanel");
+  if (window.innerWidth <= 900){ q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+
+level = null;
+(function verify() {
+  const bad = [];
+  for (const lv of ["easy", "hard"]) LEVELS[lv].forEach(raw => {
+    try {
+      const q = raw.make ? raw.make() : raw;
+      const oks = q.opts.filter(o => o.ok).length;
+      if (oks !== 1) bad.push(raw.id + " has " + oks + " correct answers");
+      if (!q.hints || q.hints.length < 3) bad.push(raw.id + " needs 3 hints");
+      if (TOOL.check) { const e = TOOL.check(q, raw); if (e) bad.push(raw.id + ": " + e); }
+    } catch (e) { bad.push(raw.id + " (" + e.message + ")"); }
+  });
+  if (TOOL.verify) bad.push(...TOOL.verify());
+  if (bad.length) { const el = $("bankErr"); el.hidden = false; el.textContent = "These questions have a mistake and may be wrong: " + bad.join("; "); }
+})();
+renderTries(); buildSupport(); bumpScore(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:circuit-builder")) $("newHere").hidden = true; } catch (e) {}
+
+</script>
+</body>
+</html>

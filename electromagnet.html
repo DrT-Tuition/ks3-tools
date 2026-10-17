@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Electromagnet</title>
+<!--
+  SCIENCE SPEC — Electromagnet (KS3)
+  Models: a solenoid (coil of insulated wire) with a core, joined to a cell and a switch. A current
+          makes the coil a magnet. Pupils change the number of turns, the size of the current and the
+          core material, then count the paper clips it picks up and record the results in a table.
+          More turns and more current make it stronger. Only a magnetic core (iron) strengthens it
+          much; aluminium and wood do nothing. An iron core loses its magnetism when the switch opens;
+          a steel core keeps some.
+  Source: Y7 T6 P2.1 Electricity, SoW lessons 77 (Electromagnets) and 78 (Investigating electromagnets),
+          department source PPTs. Sample data for the iron core at medium current: 0, 20, 40, 60, 80 turns
+          pick up 0, 8, 18, 31, 46 clips (Investigating Electromagnets PPT, results slide). KS3 National
+          Curriculum, Physics, Magnetism: "magnetic effects of a current, electromagnets, D.C. motors
+          (principles only)"; "the magnetic field of a solenoid". AQA KS3 syllabus, magnetism and
+          electromagnetism. Working scientifically: variables, fair test, trends, prediction.
+  Which questions fit which lesson (use these numbers in the Check it slides):
+    Easy 1–5 = lesson 77 (switching off, iron v steel core, core).
+    Easy 6–10 and Hard 1–8 = lesson 78 (variables, fair test, trend, prediction).
+    Hard 7 uses iron v steel after switch-off (taught in 77).
+  Numbers (computed in code, not typed in): medium current and iron core use the sample data above.
+    Low current is 0.5 times and high current 1.5 times the medium result (rounded). Steel picks up
+    half as many clips as iron while on, and keeps half of them after switch-off. Aluminium and
+    wood pick up none.
+  Simplifications (shown on screen as "Model limits"):
+    - The clip counts are a model built from one set of sample results. Real results vary.
+    - Each loop drawn stands for 5 turns. Current is shown as low, medium or high, not as amps.
+    - Wires and cell are drawn as a simple loop.
+  Misconceptions designed out:
+    - "The magnet stays magnetised after the switch opens" (true only for steel): iron drops every clip.
+    - "Any core metal works": aluminium and wood pick up none.
+    - "Changing two things is fine": the table checker names the problem when two settings change.
+    - "Double the turns doubles the clips": the sample data is not proportional (20 → 8, 40 → 18).
+  Support (Rule card, Variables key) starts OFF on every visit. Clip counts the question asks for show
+  "?" until Check or Show answer.
+  Checks: every answer is recomputed from the clip model in code (TOOL.check) and the bank is verified
+  on load.
+
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.word{margin:-6px 0 0;font-size:clamp(18px,2vw,21px);color:var(--ink)}
+.word .lbl{color:var(--muted);font-size:15px;margin-right:6px}
+
+.eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;padding:4px 0}
+.sp{display:flex;align-items:center;gap:6px}
+.step{display:grid;justify-items:center}
+.step button{width:46px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-size:16px;cursor:pointer;line-height:1}
+.step button:hover{border-color:var(--accent)}
+.coef{font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.15;min-width:1.2ch;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
+.coef.one{color:var(--muted);opacity:.6}
+.formula{font-family:var(--f-body);font-weight:700;font-size:clamp(34px,5vw,52px);background:none;border:0;color:var(--ink);cursor:help;padding:0 2px;border-radius:6px}
+.formula sub{font-size:.55em;vertical-align:-.25em;line-height:0}
+.op{font-size:clamp(28px,4vw,42px);color:var(--muted);padding:0 2px}
+.op.arrow{color:var(--ink)}
+
+/* particle picture */
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.side{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:40px}
+.side .tag{width:100%;text-align:center;font-size:14px;color:var(--muted)}
+.parrow{font-size:28px;color:var(--ink)}
+.plus{color:var(--muted);font-size:20px}
+.mol{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1.5px dashed var(--line);border-radius:10px;max-width:150px;justify-content:center}
+.atom{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font:700 11px var(--f-body);border:1.5px solid #14243D;letter-spacing:0;position:relative}
+/* house particle look (same as Particle Model): dark outline and a small white highlight up and to the left */
+.atom::after{content:"";position:absolute;left:14%;top:12%;width:28%;height:28%;border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none}
+:root[data-theme="dark"] .atom{border-color:#0E1A2C}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .atom{border-color:#0E1A2C}}
+.more{font-size:14px;color:var(--muted)}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+@media (max-width:640px){.prow{grid-template-columns:minmax(0,1fr)}.parrow{text-align:center;transform:rotate(90deg)}}
+
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font:700 15px var(--f-body);color:var(--muted);text-align:center;padding:0 6px 6px}
+th:first-child{text-align:left}
+td{padding:6px;text-align:center;border-top:1px solid var(--line);font-size:20px}
+td:first-child{text-align:left}
+.tile{display:inline-grid;place-items:center;min-width:42px;height:42px;padding:0 6px;border-radius:6px;font:700 17px var(--f-body);border:1.5px solid var(--atom-edge)}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+details.custom{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details.custom summary{font-weight:700;cursor:pointer}
+.crow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.crow input{flex:1 1 260px;min-width:0;font:400 18px var(--f-body);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.cnote{color:var(--muted);font-size:15px;margin:8px 0 0}
+.cerr{color:var(--bad);font-size:16px;margin:8px 0 0}
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.coef,.atom{transition:color .15s,transform .15s}}
+
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+main.layout{min-height:calc(100vh - 70px)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow[hidden]{display:none}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+
+/* ---- shared tool pieces ---- */
+.mctx{margin:0;font-weight:700;font-size:clamp(19px,2vw,22px)}
+.opts{display:grid;gap:8px}
+.opt{font:400 18px var(--f-body);text-align:left;padding:10px 14px;min-height:46px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;letter-spacing:.01em;word-spacing:.06em}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);font-weight:700}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.opt:disabled{cursor:default}
+.small{font-size:16px;color:var(--muted);margin:0}
+.model .panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px}
+.limits{font-size:15px;color:var(--muted);margin:4px 0 0}
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.seg button,.mbtn{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mbtn:disabled{opacity:.45;cursor:default}
+.mrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mrow label{font-weight:700;font-size:16px;color:var(--muted)}
+svg.scene{width:100%;height:auto;display:block;background:var(--sunk);border:1px solid var(--line);border-radius:10px}
+svg.scene text{font-family:var(--f-body);fill:var(--ink)}
+.readout{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:17px}
+.readout b{color:var(--accent);font-variant-numeric:tabular-nums}
+input[type=range]{width:min(320px,100%);height:32px;accent-color:var(--accent)}
+.answer-line{font-weight:700}
+@media (prefers-reduced-motion:no-preference){.mv{transition:transform .5s ease}}
+
+
+.cu{stroke:#C2571A;fill:none;stroke-width:4.5}
+.wire{stroke:var(--ink);fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.sym{stroke:var(--ink);stroke-width:4;fill:var(--surface)}
+.clip{stroke:var(--accent);stroke-width:1.8;fill:none;stroke-linecap:round}
+.mlab{font:400 15px var(--f-body);fill:var(--muted)!important;paint-order:stroke;stroke:var(--sunk);stroke-width:5px}
+.mread{font:700 22px var(--f-body);paint-order:stroke;stroke:var(--sunk);stroke-width:5px}
+#tbl td,#tbl th{font-size:16px;padding:5px 6px}
+#tbl tr.fair td{background:var(--good-bg)}
+.mrow .seg button{min-width:44px}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Electromagnet<small>Build an electromagnet. Change one thing at a time and count the paper clips.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Electromagnet</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div class="bankerr" id="bankErr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Electromagnet model">
+
+      <p class="mctx" id="mctx">An electromagnet. Change it, then count the clips.</p>
+      <svg class="scene" id="scene" viewBox="0 0 760 360" role="img" aria-label="Electromagnet picking up paper clips"></svg>
+      <div class="readout" aria-live="polite"><span>Clips picked up: <b id="clipN">0</b></span><span id="state"></span></div>
+      <div id="ctl">
+        <div class="mrow">
+          <label id="lN">Turns</label>
+          <span class="seg" id="turnSeg" role="group" aria-labelledby="lN">
+            <button type="button" data-n="0" aria-pressed="false">0</button>
+            <button type="button" data-n="20" aria-pressed="false">20</button>
+            <button type="button" data-n="40" aria-pressed="true">40</button>
+            <button type="button" data-n="60" aria-pressed="false">60</button>
+            <button type="button" data-n="80" aria-pressed="false">80</button>
+          </span>
+        </div>
+        <div class="mrow">
+          <label id="lC">Current</label>
+          <span class="seg" id="curSeg" role="group" aria-labelledby="lC">
+            <button type="button" data-c="1" aria-pressed="false">Low</button>
+            <button type="button" data-c="2" aria-pressed="true">Medium</button>
+            <button type="button" data-c="3" aria-pressed="false">High</button>
+          </span>
+        </div>
+        <div class="mrow">
+          <label id="lK">Core</label>
+          <span class="seg" id="coreSeg" role="group" aria-labelledby="lK">
+            <button type="button" data-k="iron" aria-pressed="true">Iron</button>
+            <button type="button" data-k="steel" aria-pressed="false">Steel</button>
+            <button type="button" data-k="aluminium" aria-pressed="false">Aluminium</button>
+            <button type="button" data-k="wood" aria-pressed="false">Wood</button>
+          </span>
+          <button class="mbtn" type="button" id="sw" aria-pressed="false">Switch: off</button>
+        </div>
+      </div>
+      <div class="panel" id="recBox">
+        <h2>Results table</h2>
+        <div class="mrow"><button class="mbtn primary" type="button" id="rec">Record this result</button><button class="mbtn" type="button" id="clr">Clear table</button></div>
+        <table id="tbl" style="margin-top:8px"></table>
+        <div class="feedback demo-msg" id="demoMsg" aria-live="polite"></div>
+      </div>
+      <div class="panel" id="ruleCard" hidden>
+        <h2>Rule card</h2>
+        <p style="margin:0">More turns and more current make an electromagnet stronger. Only a magnetic core (iron) helps. An iron core stops being a magnet when the current stops. A steel core keeps its magnetism. For a fair test, change <b>one</b> thing at a time.</p>
+      </div>
+      <div class="panel" id="keyCard" hidden>
+        <h2>Variables key</h2>
+        <p style="margin:0"><b>Change</b> one variable (for example the turns). <b>Measure</b> the clips. <b>Keep the rest the same</b> (current and core).</p>
+      </div>
+
+      <p class="limits"><b>Model limits:</b> the clip counts come from one set of sample results and real results vary. Each loop drawn stands for 5 turns. Current is shown as low, medium or high, not in amps. Real electromagnets also heat up.</p>
+      <p class="rule"><b>Remember:</b> an electromagnet is a magnet only while a current flows. More turns and more current make it stronger. Only a magnetic core helps. Iron switches off. Steel keeps its magnetism. In a fair test you change one thing.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div class="support" role="group" aria-label="Support" id="supportRow"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const NB = "\u00A0";
+const TOOL_ID = 'electromagnet';
+
+
+const SVGNS = "http://www.w3.org/2000/svg";
+function mk(tag, attrs, parent, cls) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (cls) e.setAttribute("class", cls); if (parent) parent.appendChild(e); return e; }
+
+/* ----- the model: built from the sample results, computed not typed ----- */
+const SAMPLE = { 0: 0, 20: 8, 40: 18, 60: 31, 80: 46 };      // iron core, medium current (source PPT)
+const CURF = { 1: 0.5, 2: 1, 3: 1.5 }, CURN = { 1: "low", 2: "medium", 3: "high" };
+const COREF = { iron: 1, steel: 0.5, aluminium: 0, wood: 0 };
+const CORENAME = { iron: "iron", steel: "steel", aluminium: "aluminium", wood: "wood" };
+const clipsOn = (n, c, k) => Math.round(SAMPLE[n] * CURF[c] * COREF[k]);
+const S = { n: 40, c: 2, k: "iron", on: false, last: 0, reveal: true, hide: false, locked: false };
+function clipsNow() {
+  if (S.on) return clipsOn(S.n, S.c, S.k);
+  return S.k === "steel" ? Math.round(S.last * 0.5) : 0;     // steel keeps half; iron drops everything
+}
+
+/* ----- drawing ----- */
+let svg;
+function T(x, y, s, cls, anchor) { const t = mk("text", { x, y, "text-anchor": anchor || "middle" }, svg, cls); t.textContent = s; return t; }
+const CORECOL = { iron: "#8D97A3", steel: "#B9C3CF", aluminium: "#D7DBE0", wood: "#C79A64" };
+function draw() {
+  svg = $("scene"); svg.innerHTML = "";
+  const CY = 120, coreOn = S.on;
+  // wires and circuit
+  mk("path", { d: "M230 150 V300 H300" }, svg, "wire"); mk("path", { d: "M500 150 V300 H420" }, svg, "wire");
+  // cell
+  mk("line", { x1: 300, y1: 300, x2: 336, y2: 300 }, svg, "wire");
+  mk("line", { x1: 336, y1: 278, x2: 336, y2: 322 }, svg, "wire"); mk("line", { x1: 350, y1: 288, x2: 350, y2: 312, "stroke-width": 8 }, svg, "wire");
+  mk("line", { x1: 350, y1: 300, x2: 372, y2: 300 }, svg, "wire");
+  // switch (on = closed)
+  mk("circle", { cx: 372, cy: 300, r: 5, fill: "var(--ink)" }, svg); mk("circle", { cx: 420, cy: 300, r: 5, fill: "var(--ink)" }, svg);
+  mk("line", S.on ? { x1: 372, y1: 300, x2: 420, y2: 300 } : { x1: 372, y1: 300, x2: 414, y2: 280 }, svg, "wire");
+  T(336, 345, "Cell", "mlab"); T(396, 345, "Switch", "mlab");
+  // current level bars
+  for (let i = 1; i <= 3; i++) mk("rect", { x: 300 + (i - 1) * 16, y: 252 - i * 5, width: 11, height: i * 5 + 4, rx: 2, fill: i <= S.c ? "#C2571A" : "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
+  T(332, 226, "Current: " + CURN[S.c], "mlab");
+  // core
+  mk("rect", { x: 140, y: CY - 14, width: 480, height: 28, rx: 6, fill: CORECOL[S.k], stroke: "var(--ink)", "stroke-width": 3 }, svg);
+  T(160, CY + 44, CORENAME[S.k][0].toUpperCase() + CORENAME[S.k].slice(1) + " core", "mlab", "start");
+  // coil loops: each loop drawn = 5 turns
+  const loops = S.n / 5;
+  if (loops) {
+    const x0 = 230, x1 = 500, step = (x1 - x0) / Math.max(loops - 1, 1);
+    for (let i = 0; i < loops; i++) { const x = loops === 1 ? 365 : x0 + i * step; mk("ellipse", { cx: x, cy: CY, rx: 7, ry: 34 }, svg, "cu"); }
+    mk("line", { x1: 230, y1: CY + 34, x2: 230, y2: 150 }, svg, "wire"); mk("line", { x1: 500, y1: CY + 34, x2: 500, y2: 150 }, svg, "wire");
+    T(365, CY - 52, S.n + " turns", "mlab");
+  } else {
+    T(365, CY - 52, "No coil: 0 turns", "mlab");
+  }
+  // clips hanging from the right end
+  const k = clipsNow(), hide = !S.reveal && S.hide;
+  if (!hide) for (let i = 0; i < k; i++) {
+    const col = i % 10, row = Math.floor(i / 10), x = 540 + col * 15, y = 150 + row * 24;
+    mk("path", { d: `M${x} ${y + 3} V${y + 13} A3.5 3.5 0 0 0 ${x + 7} ${y + 13} V${y + 3} A2.5 2.5 0 0 0 ${x + 2} ${y + 3} V${y + 11}`, transform: `translate(${x} ${y}) scale(1.35) translate(${-x} ${-y})` }, svg, "clip");
+  }
+  T(620, 340, hide ? "Clips: ?" : "Clips: " + k, "mread");
+  $("clipN").textContent = hide ? "?" : k;
+  T(160, 340, S.on ? "Switch on" : "Switch off", "mlab", "start");
+}
+function describe() {
+  if (mode !== "demo") { $("state").textContent = ""; return; }
+  $("state").textContent = S.on ? "The current makes the coil a magnet." : (S.k === "steel" && S.last ? "No current, but the steel core keeps some magnetism." : "No current: no magnetic field.");
+}
+function sync() {
+  document.querySelectorAll("#turnSeg button").forEach(b => { b.setAttribute("aria-pressed", String(+b.dataset.n === S.n)); b.disabled = S.locked; });
+  document.querySelectorAll("#curSeg button").forEach(b => { b.setAttribute("aria-pressed", String(+b.dataset.c === S.c)); b.disabled = S.locked; });
+  document.querySelectorAll("#coreSeg button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.k === S.k)); b.disabled = S.locked; });
+  $("sw").setAttribute("aria-pressed", String(S.on)); $("sw").textContent = "Switch: " + (S.on ? "on" : "off"); $("sw").disabled = S.locked;
+  draw(); describe();
+}
+const REC = [];
+function renderTable() {
+  $("tbl").innerHTML = `<tr><th>Turns</th><th>Current</th><th>Core</th><th>Clips</th></tr>` +
+    (REC.length ? REC.map((r, i) => `<tr class="${r.fair ? "fair" : ""}"><td>${r.n}</td><td>${CURN[r.c]}</td><td>${r.k}</td><td><b>${r.clips}</b></td></tr>`).join("") : `<tr><td colspan="4" class="small">Nothing recorded yet.</td></tr>`);
+}
+function record() {
+  if (S.locked) return;
+  if (!S.on) { $("demoMsg").innerHTML = '<div class="msg tip">Switch on first, so the clips are picked up. Then record.</div>'; return; }
+  if (REC.length >= 8) { $("demoMsg").innerHTML = '<div class="msg tip">The table is full. Press Clear table.</div>'; return; }
+  const r = { n: S.n, c: S.c, k: S.k, clips: clipsNow() }, p = REC[REC.length - 1];
+  let msg;
+  if (p) {
+    const ch = [p.n !== r.n && "the turns", p.c !== r.c && "the current", p.k !== r.k && "the core"].filter(Boolean);
+    if (ch.length === 0) msg = { cls: "tip", html: "Same settings as the row above. Change <b>one</b> thing, then record again." };
+    else if (ch.length === 1) { r.fair = true; msg = { cls: "good", html: `<b>✓ A fair test.</b> You changed only ${ch[0]}. The clips went from ${p.clips} to ${r.clips}.` }; }
+    else msg = { cls: "bad", html: `<b>Not a fair test.</b> You changed ${ch.join(" and ")} at once. You cannot tell which change made the difference.` };
+  } else msg = { cls: "tip", html: "First result recorded. Now change <b>one</b> setting and record again." };
+  REC.push(r); renderTable(); $("demoMsg").innerHTML = `<div class="msg ${msg.cls}">${msg.html}</div>`; signal("record"); if (r.fair) signal("fair");
+}
+function change(fn, sig) { if (S.locked) return; fn(); if (S.on) S.last = clipsOn(S.n, S.c, S.k); sync(); if (sig) signal(sig); }
+document.querySelectorAll("#turnSeg button").forEach(b => b.onclick = () => change(() => S.n = +b.dataset.n, "turns"));
+document.querySelectorAll("#curSeg button").forEach(b => b.onclick = () => change(() => S.c = +b.dataset.c, "cur"));
+document.querySelectorAll("#coreSeg button").forEach(b => b.onclick = () => change(() => S.k = b.dataset.k, "core"));
+$("sw").onclick = () => change(() => { S.on = !S.on; if (S.on) S.last = clipsOn(S.n, S.c, S.k); }, "switch");
+$("rec").onclick = record;
+$("clr").onclick = () => { REC.length = 0; renderTable(); $("demoMsg").innerHTML = ""; };
+
+const TOOL = {
+  id: TOOL_ID,
+  supports: [{ k: "rule", label: "Rule card" }, { k: "key", label: "Variables key" }],
+  tries: [
+    { id: "switch", text: "Press the switch on. Count the clips." },
+    { id: "core", text: "Switch off with an iron core, then with a steel core. What differs?" },
+    { id: "turns", text: "Change the turns. Does the number of clips follow?" },
+    { id: "fair", text: "Record two results that change only one thing." },
+    { id: "cur", text: "Try an aluminium core with high current. What happens?" }
+  ],
+  tour: [
+    { el: "#scene", text: "An electromagnet: a coil of wire round a core, joined to a cell and a switch. Paper clips cling to its end." },
+    { el: "#sw", text: "Switch the current on. The coil becomes a magnet.", do: "switch", doText: "Press the switch." },
+    { el: "#turnSeg", text: "Choose the number of turns of wire in the coil. Each loop drawn is 5 turns.", do: "turns", doText: "Change the turns." },
+    { el: "#curSeg", text: "Choose a low, medium or high current.", do: "cur", doText: "Change the current." },
+    { el: "#coreSeg", text: "Swap the core. Try steel, then switch off.", do: "core", doText: "Change the core." },
+    { el: ".readout", text: "This counts the paper clips the electromagnet is holding." },
+    { el: "#rec", text: "Press Record to add a result to the table. The table tells you if it was a fair test.", do: "record", doText: "Record a result." },
+    { el: "#qpanel", text: "In Demo this panel suggests things to try. In the Knowledge check your questions appear here." },
+    { el: ".kc", text: "When you are ready, test yourself. Start with Easy." }
+  ],
+  onDemo() { S.locked = false; S.reveal = true; S.hide = false; $("recBox").hidden = false; $("ruleCard").hidden = true; $("keyCard").hidden = true; $("demoMsg").innerHTML = ""; renderTable(); sync(); },
+  onSupport(k, on) { if (mode === "demo") return; if (k === "rule") $("ruleCard").hidden = !on; if (k === "key") $("keyCard").hidden = !on; },
+  onQuestion(q, f) {
+    const sc = Object.assign({ n: 40, c: 2, k: "iron", on: true }, q.scene);
+    Object.assign(S, sc, { locked: true, reveal: !!f.finished, hide: !!q.hideClips });
+    S.last = S.on ? clipsOn(S.n, S.c, S.k) : (q.scene.last || 0);
+    if (f.finished && q.after) this.applyAfter(q.after);
+    $("recBox").hidden = true; $("ruleCard").hidden = !hasSupport("rule"); $("keyCard").hidden = !hasSupport("key");
+    sync();
+  },
+  applyAfter(a) { Object.assign(S, a); if (S.on) S.last = clipsOn(S.n, S.c, S.k); },
+  onResult(q) { S.reveal = true; if (q.after) this.applyAfter(q.after); sync(); },
+  levels: { easy: [], hard: [] }
+};
+
+/* ----- questions ----- */
+const O = (t, ok, fb) => ({ t, ok: !!ok, fb });
+const Qn = (id, scene, text, optsFn, hints, why, extra) => ({ id, make: () => Object.assign({ scene, text: typeof text === "function" ? text() : text, opts: optsFn(), hints, why }, extra || {}) });
+const cl = (n, c, k) => clipsOn(n, c, k);
+const SET = (n, c, k) => `${n} turns, ${CURN[c]} current, ${k} core`;
+const E = [], H = [];
+{ // lesson 77
+  E.push(Qn("e1", { n: 40, c: 2, k: "iron", on: true },
+    "An iron-core electromagnet is holding clips. The switch is opened. What happens to the clips?",
+    () => [O("They all drop", true), O("They all stay on", false, "Iron loses its magnetism as soon as the current stops. The magnet turns off."), O("About half of them stay on", false, "That is more like steel. An iron core loses its magnetism quickly, so all the clips drop.")],
+    ["What does the current do to the coil?", "What happens to the magnetic field when the current stops?", "No current means no magnetic field in an iron core, so every clip drops."],
+    "With no current there is no field. An iron core loses its magnetism quickly, so all the clips drop.", { after: { on: false } }));
+  E.push(Qn("e2", { n: 40, c: 2, k: "steel", on: true },
+    "A steel-core electromagnet is holding clips. The switch is opened. What happens to the clips?",
+    () => [O("Some stay on, because steel keeps its magnetism", true), O("They all drop, like an iron core", false, "Steel is hard to magnetise, but it keeps its magnetism. Some clips stay on."), O("More clips jump on", false, "With no current the electromagnet cannot pick up more clips.")],
+    ["Remember: iron loses its magnetism quickly. What about steel?", "Steel is hard to magnetise. Is it also hard to demagnetise?", "Steel keeps its magnetism, so some clips stay on."],
+    "Steel keeps its magnetism after the current stops, so it cannot be switched off properly.", { after: { on: false } }));
+  E.push(Qn("e3", { n: 40, c: 2, k: "iron", on: false }, "Why is the core of an electromagnet iron, and not steel?",
+    () => [O("Iron stops being a magnet when the current stops", true), O("Steel is not a magnetic material", false, "Steel is magnetic. It can be magnetised, but it keeps its magnetism, so the electromagnet could not be switched off."), O("Steel cannot be magnetised at all", false, "Steel can be magnetised, but it keeps its magnetism. That is the problem."), O("Iron is cheaper than every other metal", false, "The reason is about switching off, not cost.")],
+    ["An electromagnet must be able to switch off.", "Which core keeps its magnetism when the current stops?", "Steel keeps it. Iron does not. So use iron."],
+    "An iron core switches off with the current. A steel core stays magnetised."));
+  E.push(Qn("e4", { n: 40, c: 2, k: "iron", on: false }, "The switch is open. The coil has an iron core. Is the iron core a magnet?",
+    () => [O("No: with no current there is no magnetic field", true), O("Yes, a weak one", false, "With no current there is no field, so an iron core is not a magnet."), O("Yes, because it is iron", false, "Iron is a magnetic material, but it is only a magnet while the current flows.")],
+    ["What makes the magnetic field in an electromagnet?", "Is there a current now?", "No current, no field. The core is not a magnet."],
+    "An electromagnet is a magnet only while a current flows."));
+  E.push(Qn("e5", { n: 40, c: 2, k: "iron", on: true }, "The rod in the middle of the coil has a name. What is it?",
+    () => [O("The core", true), O("The solenoid", false, "The solenoid is the coil of wire, not the rod inside it."), O("The switch", false, "The switch is the part that opens and closes the circuit."), O("The cell", false, "The cell pushes the current round. It is not in the middle of the coil.")],
+    ["Look for the grey rod.", "The coil of wire is the solenoid. What is inside it?", "The rod in the middle is the core."],
+    "The rod in the middle of the coil is the core."));
+}
+{ // lesson 78
+  E.push(Qn("e6", { n: 20, c: 2, k: "iron", on: true }, () => `Test 1 used 20 turns and picked up ${cl(20, 2, "iron")} clips. Test 2 used 60 turns and picked up ${cl(60, 2, "iron")} clips. Which variable was changed?`,
+    () => [O("The number of turns", true), O("The number of clips", false, "The clips are what you measure. You did not set them."), O("The core", false, "Both tests used an iron core."), O("The current", false, "Both tests used a medium current.")],
+    ["Compare the two tests. What is different?", "What stayed the same: the current and the core?", "Only the number of turns changed."],
+    "Only the turns changed. The clips are what you measure."));
+  E.push(Qn("e7", { n: 40, c: 2, k: "iron", on: true }, "A coil has 40 turns, a medium current and an iron core. You change only the turns. Which change picks up the most clips?",
+    () => { const best = [20, 60, 0].map(n => [n, cl(n, 2, "iron")]); return [O("60 turns", true), O("20 turns", false, "Fewer turns pick up fewer clips."), O("0 turns", false, "With no coil there is no electromagnet.")]; },
+    ["More turns make an electromagnet stronger.", "Which choice has the most turns?", "60 turns picks up the most."],
+    `More turns pick up more clips: 20 turns ${cl(20, 2, "iron")}, 40 turns ${cl(40, 2, "iron")}, 60 turns ${cl(60, 2, "iron")}.`, { hideClips: true, after: { n: 60 }, expectText: "60 turns" }));
+  E.push(Qn("e8", { n: 40, c: 1, k: "iron", on: true }, "The current is changed from low to high. Nothing else changes. What happens to the number of clips?",
+    () => [O("More clips are picked up", true), O("Fewer clips are picked up", false, "More current makes the electromagnet stronger, so more clips."), O("The same number of clips", false, "The current matters. A bigger current makes a stronger magnet.")],
+    ["Does more current make an electromagnet stronger or weaker?", "Look at the clips with a low current first.", "More current: stronger magnet, more clips."],
+    "A bigger current makes a stronger electromagnet.", { hideClips: true, after: { c: 3 } }));
+  E.push(Qn("e9", { n: 20, c: 2, k: "iron", on: true }, "Lena tests 20 turns with an iron core. Then she tests 60 turns with an aluminium core. Why is this not a fair test?",
+    () => [O("She changed two things: the turns and the core", true), O("She used too many clips", false, "The number of clips is what you count. The problem is what she changed."), O("She should only have used iron", false, "Using iron is fine. The problem is that she changed two things at once."), O("It is a fair test", false, "She changed the turns and the core, so she cannot tell which one made the difference.")],
+    ["List what changed between her two tests.", "How many things should change in a fair test?", "Only one. She changed two: turns and core."],
+    "A fair test changes one variable. Lena changed the turns and the core."));
+  E.push(Qn("e10", { n: 80, c: 3, k: "aluminium", on: true }, "The coil has 80 turns and a high current, but the core is aluminium. How many clips will it pick up?",
+    () => [O(cl(80, 3, "aluminium") === 0 ? "None: aluminium is not magnetic" : "?", true), O("About 69: high current and 80 turns make it strong", false, "Turns and current only help with a magnetic core. Aluminium is not magnetic."), O("A few", false, "Aluminium is not a magnetic material, so it adds nothing.")],
+    ["Is aluminium a magnetic material?", "Which core strengthened the electromagnet before?", "Aluminium is not magnetic, so no clips are picked up."],
+    "Aluminium is not magnetic. More turns and more current do not help.", { hideClips: true }));
+}
+{ // hard
+  H.push(Qn("h1", { n: 40, c: 2, k: "iron", on: true }, "Sample results: 0, 20, 40, 60 and 80 turns pick up 0, 8, 18, 31 and 46 clips. What is the trend?",
+    () => [O("As the turns increase, the clips increase", true), O("As the turns increase, the clips stay the same", false, "Look at the numbers: 8, 18, 31, 46. They go up."), O("As the turns increase, the clips decrease", false, "The numbers go up, not down."), O("When the turns double, the clips double", false, "20 turns picked up 8 clips, but 40 turns picked up 18. That is more than double.")],
+    ["Look at how the clips change as the turns go up.", "Do the numbers rise, fall or stay the same?", "They rise: more turns, more clips."],
+    "More turns pick up more clips, but the clips do not simply double when the turns double."));
+  H.push(Qn("h2", { n: 40, c: 2, k: "iron", on: true }, "Use the sample results: 40 turns pick up 18 clips and 60 turns pick up 31. Predict the clips for 50 turns.",
+    () => [O("Between 18 and 31 clips", true), O("Fewer than 18 clips", false, "50 turns is more than 40, so it picks up more than 18."), O("More than 31 clips", false, "50 turns is fewer than 60, so it picks up fewer than 31."), O("Exactly 46 clips", false, "46 clips is the result for 80 turns.")],
+    ["50 turns is between 40 and 60.", "So the clips should be between their two results.", "Between 18 and 31."],
+    "50 turns lies between 40 and 60, so the clips lie between 18 and 31."));
+  H.push(Qn("h3", { n: 60, c: 2, k: "aluminium", on: true }, "Rosie's electromagnet picks up no clips. Her core is aluminium. What should she change first?",
+    () => [O("Swap the core for iron", true), O("Add more turns", false, "More turns do not help while the core is not magnetic."), O("Use a longer aluminium core", false, "Aluminium is not magnetic, whatever its length."), O("Wait for the clips to come", false, "Nothing will change. The core is the problem.")],
+    ["Which variable stops the electromagnet working?", "Is aluminium a magnetic material?", "Swap the core for iron."],
+    "Only a magnetic core such as iron strengthens the electromagnet.", { hideClips: true, after: { k: "iron" } }));
+  H.push(Qn("h4", { n: 20, c: 2, k: "iron", on: true }, "Ben changes the turns from 20 to 60 and the current from medium to low. He picks up more clips. Can he say that the turns caused it?",
+    () => [O("No: he changed two things, so he cannot tell which one mattered", true), O("Yes: more turns always pick up more clips", false, "More turns do help, but Ben also changed the current. He cannot tell which change caused the result."), O("Yes: it is a fair test", false, "A fair test changes only one thing. Ben changed two.")],
+    ["How many things did Ben change?", "Can you tell which change made the difference?", "He changed two things, so no."],
+    "Change one variable at a time, or you cannot tell which change caused the result."));
+  H.push(Qn("h5", { n: 40, c: 2, k: "iron", on: true }, "You want to test the effect of the current. Which variables must you keep the same?",
+    () => [O("The turns and the core", true), O("The current and the clips", false, "The current is the variable you change. The clips are what you count."), O("Nothing", false, "The turns and the core must stay the same, or the test is not fair."), O("Only the core", false, "The turns must stay the same too.")],
+    ["Which variable are you changing?", "Everything else is a control variable.", "Keep the turns and the core the same."],
+    "To test the current, change only the current. Keep the turns and the core the same."));
+  { const opts = [[20, 2, "iron"], [80, 2, "iron"], [40, 2, "iron"], [80, 2, "aluminium"]];
+    H.push(Qn("h6", { n: 20, c: 2, k: "iron", on: true }, "All four electromagnets use a medium current. Which picks up the most clips?",
+      () => { const v = opts.map(o => cl(...o)); const best = v.indexOf(Math.max(...v)); return opts.map((o, i) => O(SET(...o), i === best, i === best ? "" : (o[2] === "aluminium" ? "Aluminium is not magnetic, so it picks up none." : "An iron core with more turns picks up more clips than this one."))); },
+      ["One core is not magnetic. Which one?", "Of the iron ones, which has the most turns?", "More turns pick up more clips, so choose the iron core with the most turns."],
+      "A magnetic core and the most turns win. Aluminium picks up none.", { hideClips: true, expectBest: opts }));
+  }
+  H.push(Qn("h7", { n: 40, c: 3, k: "steel", on: true }, "A coil has 40 turns and a high current. The switch is opened. Which core still holds clips?",
+    () => [O("Steel", true), O("Iron", false, "Iron loses its magnetism quickly when the current stops."), O("Aluminium", false, "Aluminium is not magnetic, so it never held any clips."), O("All three", false, "Only one of them keeps its magnetism.")],
+    ["Which core loses its magnetism quickly?", "Which core keeps its magnetism?", "Steel."],
+    "Steel keeps its magnetism after the current stops. Iron does not, and aluminium never had any.", { after: { on: false } }));
+  H.push(Qn("h8", { n: 60, c: 2, k: "iron", on: true }, "Using the sample results, the graph of clips against turns curves upwards. What does that tell you?",
+    () => [O("Each extra 20 turns picks up more extra clips than the last 20", true), O("Each extra 20 turns picks up the same extra clips", false, "The extra clips are 8, 10, 13 and 15. They are not the same, so the line curves."), O("The clips go down after 60 turns", false, "The clips go up every time, so the line keeps rising."), O("The graph is a straight line through the origin", false, "A straight line would mean the same extra clips each time. The curve shows it is not.")],
+    ["Work out the extra clips each time: 8, then 18 − 8, then 31 − 18…", "The extra clips are 8, 10, 13 and 15. Are they the same?", "They grow, so each 20 turns adds more than the last."],
+    "The extra clips for each 20 turns are 8, 10, 13 and 15, so the graph curves upwards."));
+}
+TOOL.levels.easy = E; TOOL.levels.hard = H;
+TOOL.check = (q) => {
+  const ok = q.opts.find(o => o.ok).t;
+  if (q.expectBest) { const v = q.expectBest.map(o => cl(...o)), b = v.indexOf(Math.max(...v)); if (ok !== SET(...q.expectBest[b])) return "best option disagrees with the model"; }
+  if (q.expectText && ok !== q.expectText) return "answer disagrees";
+  if (q.id === "e10" && cl(80, 3, "aluminium") !== 0) return "aluminium should pick up none";
+  return null;
+};
+TOOL.verify = () => {
+  const bad = [];
+  const ts = [0, 20, 40, 60, 80].map(n => SAMPLE[n]); for (let i = 1; i < ts.length; i++) if (ts[i] <= ts[i - 1]) bad.push("sample data is not rising");
+  for (const n of [20, 40, 60, 80]) { if (!(cl(n, 1, "iron") < cl(n, 2, "iron") && cl(n, 2, "iron") < cl(n, 3, "iron"))) bad.push("current order wrong at " + n); }
+  if (cl(80, 3, "aluminium") || cl(80, 3, "wood")) bad.push("non-magnetic cores should pick up none");
+  return bad;
+};
+
+
+
+/* ================= shared engine (Demo, Knowledge check, progress, support, tour) ================= */
+const TOUR = TOOL.tour;
+const support = {};   // every support option starts OFF on every visit
+let mode = "demo", level = "easy", idx = 0, streak = 0, cur = null, sel = -1, order = [];
+const st = {};
+const PKEY = "ks3tools-progress:" + TOOL_ID;
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, q) => lv + ":" + q.id;
+function prog() {
+  const k = qkey(level, cur), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+function bumpScore() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function setFeedback(items) {
+  $("fb").innerHTML = items.map(i => `<div class="msg ${i.cls || ""}">${i.html}</div>`).join("");
+  keepInView();
+}
+const LEVELS = TOOL.levels;
+const hasSupport = k => !!support[k];
+
+/* ----- Things to try ----- */
+const tried = {};
+function renderTries() {
+  $("tryList").innerHTML = TOOL.tries.map(t => `<li id="try-${t.id}"${tried[t.id] ? ' class="done"' : ""}>${t.text}</li>`).join("");
+}
+function signal(name) {
+  if (!tried[name]) { tried[name] = true; const e = $("try-" + name); if (e) e.classList.add("done"); }
+  tourSignal(name);
+}
+
+/* ----- Support row ----- */
+function buildSupport() {
+  $("supportRow").innerHTML = '<span class="lbl">Support:</span>' + TOOL.supports.map(s =>
+    `<button class="sw" type="button" data-support="${s.k}" aria-pressed="false"><span class="dot"></span>${s.label} <span class="state">off</span></button>`).join("");
+  document.querySelectorAll(".sw").forEach(b => b.onclick = () => {
+    const k = b.dataset.support, on = !support[k]; support[k] = on;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.querySelector(".state").textContent = on ? "on" : "off";
+    TOOL.onSupport && TOOL.onSupport(k, on);
+  });
+}
+
+/* ----- Questions ----- */
+function openQuestion() {
+  const list = LEVELS[level], raw = list[idx];
+  cur = Object.assign({ id: raw.id }, raw.make ? raw.make() : raw);
+  sel = -1; order = shuffle(cur.opts.map((_, i) => i));
+  const p = prog();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").innerHTML = cur.text;
+  $("fb").innerHTML = "";
+  $("doneBadge").hidden = !p.solved;
+  hintLabel(); renderDots();
+  TOOL.onQuestion(cur, { finished: p.solved || p.revealed });
+  renderOpts();
+  if (p.solved || p.revealed) showFinished(p);
+  keepInView();
+}
+function renderOpts() {
+  const p = prog(), done = p.solved || p.revealed;
+  $("answer").innerHTML = (cur.prompt ? `<p class="small">${cur.prompt}</p>` : "") + '<div class="opts" role="radiogroup" aria-label="Answers">' +
+    order.map((oi, k) => `<button type="button" class="opt${done && cur.opts[oi].ok ? " done-ok" : ""}" role="radio" aria-checked="${sel === oi}" data-o="${oi}"${done ? " disabled" : ""}>${cur.opts[oi].t}</button>`).join("") + "</div>";
+  $("answer").querySelectorAll(".opt").forEach(b => b.onclick = () => { sel = +b.dataset.o; renderOpts(); });
+}
+function okText() { return cur.opts.find(o => o.ok).t; }
+function showFinished(p) {
+  renderOpts();
+  setFeedback([{ cls: p.solved ? "good" : "tip", html: p.solved
+    ? `<b>✓ You got this one right earlier.</b> ${cur.why}<br>Choose another question number above, or Reset this question to try it again.`
+    : `The answer was shown for this one: <b>${okText()}</b><br>${cur.why}<br>Choose another question number above, or Reset this question to try it again.` }]);
+}
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; openQuestion(); }));
+}
+function check() {
+  if (mode === "demo") return;
+  const p = prog();
+  if (p.solved || p.revealed) { setFeedback([{ cls: "tip", html: "This question is finished. Choose another question number above, or Reset this question to try it again." }]); return; }
+  if (sel < 0) { setFeedback([{ cls: "tip", html: "Choose an answer first, then press <b>Check</b>." }]); return; }
+  const o = cur.opts[sel];
+  if (o.ok) {
+    mark(qkey(level, cur), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bumpScore(); $("doneBadge").hidden = false; renderDots(); renderOpts();
+    TOOL.onResult && TOOL.onResult(cur, true);
+    setFeedback([{ cls: "good", html: `<b>✓ Correct.</b> ${cur.why}<br>Choose another question number above.` }]);
+  } else {
+    p.wrong++; streak = 0; bumpScore();
+    setFeedback([{ cls: "bad", html: `<b>✗ Not quite.</b> ${o.fb || "Look at the model again and try another answer."}` }]);
+  }
+}
+function hintLabel() { if (!cur) return; const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  if (mode === "demo" || !cur) return;
+  const p = prog();
+  if (p.solved || p.revealed) { setFeedback([{ cls: "tip", html: "This question is finished. Choose another question number above, or Reset this question to try it again." }]); return; }
+  if (p.hints < 3) p.hints++;
+  hintLabel();
+  setFeedback([{ cls: "tip", html: `<b>Hint ${p.hints} of 3:</b> ${cur.hints[p.hints - 1]}` }]);
+}
+function reveal() {
+  if (mode === "demo" || !cur) return;
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, cur), "shown"); renderDots(); }
+  renderOpts();
+  TOOL.onResult && TOOL.onResult(cur, false);
+  setFeedback([{ cls: "tip", html: `Answer: <b>${okText()}</b><br>${cur.why}` + (p.solved ? "" : " (No score for this one.)") }]);
+}
+function resetTask() {
+  if (mode === "demo") return;
+  delete DONE[qkey(level, cur)]; saveDone(); delete st[qkey(level, cur)]; bumpScore();
+  openQuestion();
+}
+
+/* ----- Instructions tour ----- */
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart(){
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:electromagnet", "1"); } catch (e) {}
+  $("newHere").hidden = true; tourGo(0);
+}
+function tourEnd(){
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i){
+  if (i >= TOUR.length){ tourEnd(); return; }
+  tourI = i; const st = TOUR[i]; if (st.pre) st.pre(); const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length){ tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+  if (st.do && st.already && st.already()) tourSignal(st.do);   // already done before this step
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minT = Math.max(8, $("topbar").getBoundingClientRect().bottom + 8), maxT = Math.max(minT, vh - 8 - h);
+  const fitsBelow = r.bottom + 14 + h <= vh - 8, fitsAbove = r.top - 14 - h >= minT;
+  const side = !fitsBelow && !fitsAbove && r.left - w - 22 >= 8;   // a tall target (e.g. the question panel): sit to its left
+  const visMid = (Math.max(r.top, minT) + Math.min(r.bottom, vh - 8)) / 2;
+  let left, top, dir;
+  if (side) { left = r.left - w - 16; top = visMid - h / 2; dir = "right"; }
+  else {
+    const below = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top - minT);
+    left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), vw - w - 8);
+    top = below ? r.bottom + 14 : r.top - h - 14; dir = below ? "up" : "down";
+  }
+  top = Math.min(Math.max(top, minT), maxT);   // the whole pop-up always stays on screen
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const ar = $("tourArrow"); ar.className = "tour-arrow " + dir;
+  if (dir === "right") { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, visMid - top - 8), h - 30) + "px"; }
+  else { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap;   // no arrow if the pop-up has had to sit on top of the target
+}
+function tourSignal(name){
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+
+
+
+/* ----- wiring ----- */
+$("check").onclick = check; $("hint").onclick = hint; $("reveal").onclick = reveal; $("reset").onclick = resetTask;
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bumpScore(); back(); if (mode !== "demo") { openQuestion(); setFeedback([{ cls: "tip", html: "Progress reset. Every question is fresh again." }]); } });
+  $("rpNo").addEventListener("click", back);
+});
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  if (mode === "demo") TOOL.onDemo(); else openQuestion();
+  fitPanel();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+let kivRaf = 0, kivTimer = 0;
+
+function keepInView() {
+  if (mode === "demo") return;
+  cancelAnimationFrame(kivRaf); clearTimeout(kivTimer);
+  kivRaf = requestAnimationFrame(() => {
+    const q = $("qpanel"), fb = $("fb");
+    if (window.innerWidth <= 900) { if (fb.textContent.trim()) fb.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" }); return; }
+    const stick = parseFloat(getComputedStyle(q).top) || 72, t = q.getBoundingClientRect().top;
+    if (t > stick + 1) window.scrollTo({ top: window.scrollY + t - stick, behavior: reduced() ? "instant" : "smooth" });
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    panelToFb();
+    kivTimer = setTimeout(() => { fitPanel(); panelToFb(); }, reduced() ? 30 : 450);
+  });
+}
+function panelToFb() {
+  const q = $("qpanel"), fb = $("fb"), qt = q.getBoundingClientRect().top;
+  const rel = e => e.getBoundingClientRect().top - qt + q.scrollTop;
+  const cap = Math.max(0, rel($("taskText")) - 8);
+  const want = fb.textContent.trim() ? rel(fb) + fb.offsetHeight + 12 - q.clientHeight : 0;
+  q.scrollTop = Math.max(0, Math.min(want, cap));
+}
+/* keep the question panel within the screen, so Check and the feedback are always visible (desktop) */
+function fitPanel(){
+  const q = $("qpanel");
+  if (window.innerWidth <= 900){ q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+/* the tool name joins the sticky bar once the big title has scrolled away */
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+
+level = null;
+(function verify() {
+  const bad = [];
+  for (const lv of ["easy", "hard"]) LEVELS[lv].forEach(raw => {
+    try {
+      const q = raw.make ? raw.make() : raw;
+      const oks = q.opts.filter(o => o.ok).length;
+      if (oks !== 1) bad.push(raw.id + " has " + oks + " correct answers");
+      if (!q.hints || q.hints.length < 3) bad.push(raw.id + " needs 3 hints");
+      if (TOOL.check) { const e = TOOL.check(q, raw); if (e) bad.push(raw.id + ": " + e); }
+    } catch (e) { bad.push(raw.id + " (" + e.message + ")"); }
+  });
+  if (TOOL.verify) bad.push(...TOOL.verify());
+  if (bad.length) { const el = $("bankErr"); el.hidden = false; el.textContent = "These questions have a mistake and may be wrong: " + bad.join("; "); }
+})();
+renderTries(); buildSupport(); bumpScore(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:electromagnet")) $("newHere").hidden = true; } catch (e) {}
+
+</script>
+</body>
+</html>
