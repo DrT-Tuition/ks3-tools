@@ -62,4 +62,4 @@ Some tools are new versions, made for KS3, of ideas from PhET Interactive Simula
 - Colour Mixer: idea from *Color Vision*
 - Lens and Eye: idea from *Geometric Optics: Basics*
 
-Made by Dr T’s Tuition. Shared under CC BY-NC-SA 4.0 — see [LICENSE](LICENSE).
+Made by Dr T’s Classroom. Shared under CC BY-NC-SA 4.0 — see [LICENSE](LICENSE).
