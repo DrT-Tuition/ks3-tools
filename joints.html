@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joints</title>
+<!--
+  SCIENCE SPEC — Joints (KS3)
+  Models: where bones meet and how joints let the skeleton move, in three tabs. Everything is drawn in code (SVG); no pictures.
+    1. Move it (slides 6, 14, 17): a friendly skeleton built as a simple 3D stick model and drawn from the front, turned, or side.
+       Five handles: knee and elbow (hinge: the lower bone turns in ONE plane only, the knee backwards 0–140°, the elbow forwards
+       0–145°, never the wrong way), hip and shoulder (ball-and-socket: drag anywhere, the limb swings forwards, backwards, out to the
+       side; "Arm circle" / "Leg circle" swing it round in a circle), skull (fixed: a small shake and "Fixed joint: the skull bones are
+       joined firmly to protect the brain."). Each joint shows its name, type and how it moves. "Statue" (the hook) locks every
+       joint: Sit down then fails ("Your joints are locked: you can't bend!"); with it off, the hips and knees bend and the skeleton
+       sits on a stool. Sort the joints: drag or tap the five joints into Hinge / Ball-and-socket / Fixed, then Check.
+    2. Inside a joint (slides 18–20): a cross-section of a moving joint (knee-like): two bone ends, cartilage caps, the fluid-filled
+       gap, a ligament on each side. Bend slider (0–80°). Cartilage and Fluid switches (on at the start). A friction meter shows
+       while the joint bends: Low (both on) → Medium (no fluid) → High (no cartilage: bare bone rubs on bone, small sparks and
+       scratch marks, "bones rub") → Very high (neither). Jump: a downward load; with cartilage the caps squash a little and spring
+       back ("absorbs shocks"); without it, a jolt and a red flash on the bone ends. Tear a ligament: the bones slip out of line
+       ("The bones might come apart or slip out of place", slide 10); Repair puts it back. Tap any part for its name and job.
+    3. Ligament or tendon? (slide 21–23): the same joint with one muscle joined to the lower bone by a tendon (and to the upper bone
+       by a short tendon, so no muscle joins bone directly). Tap a band: ligament "joins bone to bone", tendon "joins muscle to bone".
+       Muscle pulls: the muscle pulls the bone through the tendon (it is drawn shorter, but the words don't teach contraction) (one muscle only; no antagonistic pairs, no
+       "relaxes" — straightening again just says "muscles can only pull, never push"). Venn sort: Ligament / Both / Tendon.
+  Source: Y7 T2 B1.2 L5 Movement: joints (deck B1.2_Joints.md, slides 2, 4, 6, 8–11, 14–23, 25, 27; spec SPEC_joints.md).
+    KS3 strand: NC Biology, structure and function of living organisms — skeletal and muscular systems: "the structure and functions
+    of the human skeleton, to include support, protection, movement and making blood cells"; "biomechanics — the interaction
+    between skeleton and muscles". AQA KS3 3.8 Movement (joints, ligaments, tendons, cartilage).
+  Simplifications (on screen as "Model limits"): the skeleton is simplified; ball-and-socket movement is shown on a flat screen; the
+    friction meter is a model (four levels), not measured values; real joints have many more ligaments and tendons. Also: the
+    shoulder and hip ranges and the hinge limits are the model's own; the joint cross-section is a generic knee-like joint; removing
+    the cartilage closes the gap so the bone ends meet; the windmill arm circle is allowed in the model.
+  Misconceptions designed out (slide 4, BEST / Allen): ligaments join muscles to bones (the tendon and ligament are tapped, sorted and
+    named apart; feedback names the mix-up); joints are where muscles bend (joints are where bones meet; the muscle never bends);
+    cartilage is just more bone (cartilage is drawn as a separate pale-blue smooth cap and switched on/off); every joint can move
+    (the skull won't move); muscles push (only pulling is shown; feedback: "muscles can only pull"). Antagonistic pairs and which
+    muscle contracts are NOT taught (next lesson).
+  Facts and values used: joint = a place where two or more bones meet; muscles move bones, joints let the skeleton bend; joints are
+    strong but flexible; hinge: backwards and forwards (knee, elbow); ball-and-socket: all directions (hip, shoulder); fixed: no
+    movement at all (skull); skull bones are joined firmly to protect the brain; cartilage covers the ends of the bones, is smooth
+    and absorbs shocks (say KAR-tih-lij); fluid keeps the cartilage slippery; less friction: the bones don't rub; ligaments hold the
+    two bones together, join bone to bone, found at a joint; tendons join muscle to bone, let a muscle pull on a bone, found at a
+    joint; friction = a force that slows things down when two surfaces rub together; a torn ligament: the bones might come apart or
+    slip out of place; muscles can only pull. The model's own choices: the hinge limits, the four friction levels, the 0–80° bend.
+    Not in the sources (left out): bone names beyond "bone", joint fluid's proper name, real friction values, ranges of movement.
+  SoW lessons served: Y7 T2 B1.2 L5 Movement: joints (an Explore slide after slide 21 and a Check it slide after slide 25).
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Labels (joint names on the skeleton;
+    part labels inside the joint), Key words.
+  Idea credit: none (designed from scratch).
+  Checks: on load, the facts (joint types match slide 14, the Venn facts give only "Found at a joint" in both), the model (hinges stay
+    inside their limits, the hip swings out to the side, sitting keeps the feet on the floor, friction is lowest with cartilage and
+    fluid and highest with no cartilage, cartilage absorbs the jump), and every question (3 hints; one right option and feedback for
+    each wrong one; gap answers in the bank; goals not met at the start and reached by Show answer; "do it" parts done by Show
+    answer). Any failure shows a visible error box and switches that question off.
+  Performance: drawn on demand (no animation loop while idle); drags are coalesced to one redraw per frame; animations run with
+    paceFrame(cb, cap) (adaptive slow-down; caps: skeleton circles, sit, statue wobble, skull shake and muscle pull 12 fps, the Bend
+    slider 15 fps, jump 20 fps, tear 30 fps); static parts are cached (the core, skull, stool, circle trace, and any bone that hasn't
+    moved are not rebuilt), the joint's bones turn by transform; paused when the tab is hidden or the model is off-screen; no CSS
+    filters; no backdrop-filter. Reduced motion: animations play as a few still steps and the shakes are left out.
+    Review 18 Oct 2026: this HTML is now the master copy (the builder pieces in j/src are out of date). Arm circle from the Front
+    view turns the skeleton first, because a forwards-and-back circle seen from the front is a straight line.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Tuition palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+/* bone, cartilage, fluid, ligament, tendon and muscle colours: the same family as Muscle Pairs */
+:root{--bone:#F5ECD8;--bone-2:#E6D6B4;--bone-edge:#6E5A34;--cart:#CFE6EE;--cart-edge:#4F8095;--fluid:#B9DAF2;--fluid-edge:#6B9CC4;
+  --lig:#4F79B8;--lig-edge:#1F3F70;--lig-fib:#9DB8E0;--tendon:#FFFFFF;--tendon-edge:#55606E;--mus:#E9A49B;--mus-edge:#A9473C;--mus-fib:#C9675B;
+  --spark:#E8A43A;--spark-edge:#8F5A17;--stool:#C9B48E;--stool-edge:#7A6440;--floor:#C5CFDB;--lead:#1E252E;--lock:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bone:#EFE5CF;--bone-2:#D9C9A6;--bone-edge:#8C7546;--cart:#BFE0EC;--cart-edge:#7FB6CC;
+  --fluid:#3D6C96;--fluid-edge:#8CC4FF;--lig:#7FA8E8;--lig-edge:#D6E4FA;--lig-fib:#C3D6F5;--tendon:#FFFFFF;--tendon-edge:#E9EDF3;--mus:#B5635A;--mus-edge:#F2B8AF;--mus-fib:#E08A7F;
+  --stool:#6E5C3E;--stool-edge:#C9B48E;--floor:#2E4A70;--lead:#E9EDF3;--lock:#D9A536}}
+:root[data-theme="dark"]{--bone:#EFE5CF;--bone-2:#D9C9A6;--bone-edge:#8C7546;--cart:#BFE0EC;--cart-edge:#7FB6CC;
+  --fluid:#3D6C96;--fluid-edge:#8CC4FF;--lig:#7FA8E8;--lig-edge:#D6E4FA;--lig-fib:#C3D6F5;--tendon:#FFFFFF;--tendon-edge:#E9EDF3;--mus:#B5635A;--mus-edge:#F2B8AF;--mus-fib:#E08A7F;
+  --stool:#6E5C3E;--stool-edge:#C9B48E;--floor:#2E4A70;--lead:#E9EDF3;--lock:#D9A536}
+
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .lead{stroke:var(--lead);stroke-width:1.6;fill:none}
+.scene .halo{stroke:var(--surface);stroke-width:5;fill:none;opacity:.85}
+.scene .box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.scene .bn{fill:var(--bone);stroke:var(--bone-edge);stroke-width:2;stroke-linejoin:round}
+.scene .bnh{fill:none;stroke:#fff;stroke-opacity:.55;stroke-linecap:round}
+.scene .rib0{fill:none;stroke:var(--bone-edge);stroke-linecap:round;stroke-linejoin:round}
+.scene .rib1{fill:none;stroke:var(--bone);stroke-linecap:round;stroke-linejoin:round}
+.scene .vb{fill:var(--bone);stroke:var(--bone-edge);stroke-width:1.8}
+.scene .hit{fill:transparent;stroke:none}
+.scene .hdl .knob{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.scene .hdl .core{fill:var(--gold)}
+.scene .hdl.on .ring{fill:none;stroke:var(--gold);stroke-width:5}
+.scene .hdl .ring{fill:none;stroke:none}
+.scene .sel{fill:none;stroke:var(--gold);stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .warn{color:var(--bad);font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:3.2em;text-align:right}
+.slider span{font-size:16px;color:var(--muted)}
+.bank{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;align-items:center}
+.chip-l{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border-radius:10px;border:2px solid var(--accent);background:var(--surface);color:var(--ink);cursor:grab;touch-action:none}
+.chip-l[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chip-l.ok{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.chip-l.no{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.ghost{position:fixed;z-index:80;pointer-events:none;font:700 16px var(--f-body);padding:8px 14px;border-radius:10px;border:2px solid var(--accent);background:var(--surface);color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-50%)}
+.bins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.bin{background:var(--surface);border:2px dashed var(--line);border-radius:12px;padding:8px 10px;min-height:150px;display:grid;align-content:start;gap:6px;cursor:pointer}
+.bin.ready{border-color:var(--accent);border-style:solid}
+.bin h3{margin:0;font-size:17px;color:var(--accent)}
+.bin p{margin:0;font-size:15px;color:var(--muted)}
+.bin .chip-l{cursor:pointer;width:100%;text-align:left}
+@media (max-width:560px){.bins{grid-template-columns:minmax(0,1fr)}.bin{min-height:0}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;font-size:17px;line-height:1.35}
+.srow .seg button{padding:6px 10px;font-size:15px}
+@media (max-width:480px){.srow{grid-template-columns:minmax(0,1fr)}}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.seg button{padding:8px 11px}.tabs button{font-size:15px;padding:8px 4px}.model .btn{padding:10px 13px;font-size:16px}}
+@media (min-width:901px){.scene{max-height:min(560px,70vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .srow{font-size:16px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Joints<small>Move a skeleton's joints, look inside a joint, and find out what ligaments and tendons join.</small></h1>
+    <a class="brandmark" href="index.html" title="KS3 Science Tools by Dr T’s Tuition"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Tuition</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="KS3 Science Tools by Dr T’s Tuition" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Joints</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Joints model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="move" aria-pressed="true">Move it</button><button type="button" data-tab="inside" aria-pressed="false">Inside a joint</button><button type="button" data-tab="lt" aria-pressed="false">Ligament or tendon?</button></div>
+
+      <div class="pane" id="pane-move">
+        <div class="controls"><span class="seg" role="group" aria-label="Activity" id="mview"><button type="button" data-mv="move" aria-pressed="true">Move the joints</button><button type="button" data-mv="sort" aria-pressed="false">Sort the joints</button></span>
+          <span class="seg" role="group" aria-label="Turn the skeleton" id="fview"><button type="button" data-fv="front" aria-pressed="false">Front</button><button type="button" data-fv="turned" aria-pressed="true">Turned</button><button type="button" data-fv="side" aria-pressed="false">Side</button></span></div>
+        <div id="moveBox" class="pane">
+          <svg id="fsvg" class="scene" viewBox="0 0 800 610" role="group" aria-label="A skeleton with five joint handles"></svg>
+          <div class="controls" id="moveCtl">
+            <button class="sw" type="button" id="statueSw" aria-pressed="false"><span class="dot"></span>Statue <span class="state">off</span></button>
+            <button class="btn primary go" type="button" id="sitBtn">Sit down</button>
+            <button class="btn go" type="button" id="armCirc">⟳ Arm circle</button>
+            <button class="btn go" type="button" id="legCirc">⟳ Leg circle</button>
+            <button class="btn" type="button" id="fReset">Reset pose</button>
+          </div>
+          <div class="readout" id="fread" aria-live="polite"></div>
+        </div>
+        <div id="sortBox" class="pane" hidden>
+          <p class="small" style="margin:0">Drag each joint into its group. Or tap a joint, then tap a group.</p>
+          <div class="bank" id="jbank" role="group" aria-label="Joints to sort"></div>
+          <div class="bins" id="jbins"></div>
+          <div class="controls"><button class="btn primary" type="button" id="jCheck">Check my sort</button><button class="btn" type="button" id="jClear">Start again</button></div>
+          <div class="readout" id="jread" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-inside" hidden>
+        <svg id="isvg" class="scene" viewBox="0 0 960 470" role="group" aria-label="Inside a joint"></svg>
+        <div class="slider"><label class="ctl-lbl" for="bend">Bend the joint</label><input type="range" id="bend" min="0" max="80" step="1" value="0"><output id="bendOut" for="bend">0°</output></div>
+        <div class="controls" id="iswitches">
+          <button class="sw" type="button" id="cartSw" aria-pressed="true"><span class="dot"></span>Cartilage <span class="state">on</span></button>
+          <button class="sw" type="button" id="fluidSw" aria-pressed="true"><span class="dot"></span>Fluid <span class="state">on</span></button>
+          <button class="btn primary go" type="button" id="jump">Jump ▶</button>
+          <button class="btn go" type="button" id="tear">Tear a ligament</button>
+          <button class="btn" type="button" id="iReset">Fresh joint</button>
+        </div>
+        <div class="readout" id="iread" aria-live="polite"></div>
+      </div>
+
+      <div class="pane" id="pane-lt" hidden>
+        <span class="seg" role="group" aria-label="Activity" id="tview"><button type="button" data-tv="explore" aria-pressed="true">Tap the bands</button><button type="button" data-tv="venn" aria-pressed="false">Venn sort</button></span>
+        <div id="ltBox" class="pane">
+          <svg id="tsvg" class="scene" viewBox="0 0 960 470" role="group" aria-label="A joint with a muscle, a tendon and ligaments"></svg>
+          <div class="controls"><button class="btn primary go" type="button" id="pull">Muscle pulls ▶</button></div>
+          <div class="readout" id="tread" aria-live="polite"></div>
+        </div>
+        <div id="vennBox" class="pane" hidden>
+          <p class="small" style="margin:0">Sort each fact: ligament, tendon or both? Drag it into the diagram, or tap a fact, then tap a part of the diagram.</p>
+          <svg id="vsvg" class="scene" viewBox="0 0 960 380" role="group" aria-label="Venn diagram: Ligament, Tendon and Both"></svg>
+          <div class="bank" id="vbank" role="group" aria-label="Facts to sort"></div>
+          <div class="controls"><button class="btn primary" type="button" id="vCheck">Check my sort</button><button class="btn" type="button" id="vClear">Start again</button></div>
+          <div class="readout" id="vread" aria-live="polite"></div>
+        </div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> The skeleton is simplified. Ball-and-socket movement is shown on a flat screen. The friction meter is a model, not measured values. Real joints have many more ligaments and tendons.</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="labels" aria-pressed="false"><span class="dot"></span>Labels <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Tuition"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Tuition · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (B1.2 L5 Movement: joints — slides 8, 11, 14, 17, 18, 21, 23, 25, 27) ===== */
+const DEF = {   // key words (slide 8) and slide 21
+  joint: "A place where two or more bones meet.",
+  cartilage: "A smooth, strong tissue that covers the ends of bones in a joint.",
+  ligament: "A strong band of tissue that joins one bone to another bone.",
+  friction: "A force that slows things down when two surfaces rub together.",
+  tendon: "Joins muscle to bone. It lets a muscle pull on a bone." };
+const TYPES = {   // slide 14
+  hinge: { n: "Hinge joint", s: "Hinge", move: "backwards and forwards", long: "A hinge joint moves backwards and forwards." },
+  ball: { n: "Ball-and-socket joint", s: "Ball-and-socket", move: "all directions", long: "A ball-and-socket joint moves in all directions." },
+  fixed: { n: "Fixed joint", s: "Fixed", move: "no movement at all", long: "A fixed joint has no movement at all." } };
+const TKEYS = ["hinge", "ball", "fixed"];
+const FIXED_MSG = "Fixed joint: the skull bones are joined firmly to protect the brain.";
+const JOINTS = {   // slides 14, 16, 17
+  knee: { n: "Knee", type: "hinge", say: "The knee bends backwards. It can't bend the other way." },
+  elbow: { n: "Elbow", type: "hinge", say: "The elbow bends forwards. It can't bend the other way." },
+  hip: { n: "Hip", type: "ball", say: "The leg can swing forwards, backwards, out to the side and round in a circle." },
+  shoulder: { n: "Shoulder", type: "ball", say: "The arm can swing forwards, backwards, out to the side and round in a circle." },
+  skull: { n: "Skull", type: "fixed", say: FIXED_MSG } };
+const JKEYS = ["knee", "elbow", "hip", "shoulder", "skull"];
+const IPARTS = {   // slides 18, 20, 21
+  bone: { n: "Bone", job: "A joint is where two or more bones meet." },
+  cartilage: { n: "Cartilage", job: "Covers the ends of the bones. It is smooth and absorbs shocks. Say it: KAR-tih-lij." },
+  fluid: { n: "Fluid", job: "Keeps the cartilage slippery, so there is less friction." },
+  ligament: { n: "Ligament", job: "Joins bone to bone. It holds the two bones together." },
+  tendon: { n: "Tendon", job: "Joins muscle to bone. It lets a muscle pull on a bone." },
+  muscle: { n: "Muscle", job: "Muscles move bones. A tendon joins this muscle to the bone." } };
+const BANDS = {   // slide 21 (the Venn facts, slides 22–23)
+  ligament: { n: "Ligament", facts: ["Joins bone to bone", "Holds the joint together", "Found at a joint"] },
+  tendon: { n: "Tendon", facts: ["Joins muscle to bone", "Lets a muscle pull on a bone", "Found at a joint"] } };
+const VENN = (() => { const all = []; ["ligament", "tendon"].forEach(b => BANDS[b].facts.forEach(f => { if (!all.includes(f)) all.push(f); }));
+  return all.map((t, i) => { const inL = BANDS.ligament.facts.includes(t), inT = BANDS.tendon.facts.includes(t);
+    return { id: "v" + i, t, b: inL && inT ? "both" : inL ? "ligament" : "tendon" }; }); })();
+const VBIN = { ligament: "Ligament", both: "Both", tendon: "Tendon" };
+const vennWhy = x => x.b === "both" ? "Ligaments and tendons are both found at a joint, so this fact goes in the middle." :
+  x.b === "ligament" ? `A ligament ${x.t.toLowerCase()}. A tendon joins muscle to bone.` : `A tendon ${x.t.toLowerCase()}. A ligament joins bone to bone.`;
+const FR_W = ["Low", "Medium", "High", "Very high"];
+const friction = (cart, fluid) => (cart ? 0 : 2) + (fluid ? 0 : 1);   // the model's friction levels (not measured values)
+const FR_MSG = ["Low friction: smooth cartilage and slippery fluid. The bones don't rub.", "More friction: with no fluid, the cartilage isn't slippery.",
+  "High friction: the bones rub! With no cartilage, bare bone rubs on bone.", "Very high friction: the bones rub! There is no cartilage and no fluid."];
+const TEAR_MSG = "The bones might come apart or slip out of place.";   // slide 10 answer
+const LIMIT = { elbow: 145, knee: 140 };   // the model's hinge limits (degrees): no bending the wrong way
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (+v).toFixed(1);
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ===== 3D skeleton (y up, z towards the viewer when the skeleton faces you). Drawn with a simple turn-and-flatten projection. ===== */
+const FIG = { sh: 64, shY: 152, hx: 36, ua: 98, fa: 88, hand: 34, th: 128, sn: 122, foot: 40, head: 222 };
+const SIDE = -1;   // the handle arm and leg are on the skeleton's right side (on your left when it faces you)
+const VIEWS = { front: 0, turned: 35, side: 90 };
+const FL = { wide: { w: 800, h: 610, s: .88, cx: 400, gy: 596, fs: 20, hr: 26 }, tall: { w: 600, h: 770, s: 1.1, cx: 318, gy: 754, fs: 25, hr: 36 } };
+const DOWN = [0, -1, 0];
+const vadd = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], vsub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], vsc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const vdot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], vcross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const vnorm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+function rotAxis(k, t) { const c = Math.cos(t), s = Math.sin(t), v = 1 - c, [x, y, z] = k;
+  return [c + x * x * v, x * y * v - z * s, x * z * v + y * s, y * x * v + z * s, c + y * y * v, y * z * v - x * s, z * x * v - y * s, z * y * v + x * s, c + z * z * v]; }
+function rotTo(a, b) {   // the smallest turn that takes direction a to direction b
+  const c = vdot(a, b), ax = vcross(a, b), s = Math.hypot(ax[0], ax[1], ax[2]);
+  if (s < 1e-6) return c > 0 ? [1, 0, 0, 0, 1, 0, 0, 0, 1] : rotAxis([1, 0, 0], Math.PI);
+  return rotAxis(vsc(ax, 1 / s), Math.atan2(s, c));
+}
+const mv = (R, p) => [R[0] * p[0] + R[1] * p[1] + R[2] * p[2], R[3] * p[0] + R[4] * p[1] + R[5] * p[2], R[6] * p[0] + R[7] * p[1] + R[8] * p[2]];
+function limbArm(S, u, e) {   // shoulder (ball and socket) → elbow (hinge: the forearm bends forwards)
+  const R = rotTo(DOWN, u), E = vadd(S, vsc(u, FIG.ua)), er = e * D2R, f = mv(R, [0, -Math.cos(er), Math.sin(er)]), W = vadd(E, vsc(f, FIG.fa));
+  return { S, E, W, H: vadd(W, vsc(f, FIG.hand)) };
+}
+function limbLeg(Hp, v, k) {   // hip (ball and socket) → knee (hinge: the lower leg bends backwards)
+  const R = rotTo(DOWN, v), K = vadd(Hp, vsc(v, FIG.th)), kr = k * D2R, d = mv(R, [0, -Math.cos(kr), -Math.sin(kr)]), A = vadd(K, vsc(d, FIG.sn)), g = mv(R, [0, -Math.sin(kr), Math.cos(kr)]);
+  return { Hp, K, A, T: vadd(vadd(A, vsc(g, FIG.foot)), [0, -6, 0]), fw: mv(R, [0, 0, 1]) };
+}
+function pose(F) {
+  const sa = F.sit, sv = [0, -Math.cos(sa * 90 * D2R), Math.sin(sa * 90 * D2R)], sk = 90 * sa;
+  const rel = limbLeg([0, 0, 0], sv, sk), root = [-rel.A[0], -250 - rel.A[1], -rel.A[2]];   // the standing foot stays on the floor
+  const sitting = sa > .001;
+  return { root, sitting,
+    leg0: limbLeg(vadd(root, [-SIDE * FIG.hx, 0, 0]), sv, sk),
+    leg: limbLeg(vadd(root, [SIDE * FIG.hx, 0, 0]), sitting ? sv : F.leg.u, sitting ? sk : F.leg.k),
+    arm0: limbArm(vadd(root, [-SIDE * FIG.sh, FIG.shY, 0]), vnorm([0, -1, .36 * sa]), 8 + 56 * sa),   // sitting: hands rest on the knees
+    arm: limbArm(vadd(root, [SIDE * FIG.sh, FIG.shY, 0]), F.arm.u, F.arm.e),
+    head: vadd(root, [0, FIG.head, 4]) };
+}
+const ballU = (th, ph) => { const t = th * D2R, p = ph * D2R; return [SIDE * Math.sin(t) * Math.cos(p), -Math.cos(t), Math.sin(t) * Math.sin(p)]; };
+const BALL_OK = {   // the model's range for each ball-and-socket joint (it can't swing into the body)
+  shoulder: u => { const o = u[0] * SIDE; return (o > -.3 || u[2] > .45) && (u[2] > -.8 || u[1] > -.2); },
+  hip: v => { const o = v[0] * SIDE; return o > -.3 && o < .72 && v[2] > -.36 && v[1] < .3; } };
+function projector(F, K) {
+  const Y = FL[K], ps = VIEWS[F.yaw] * D2R, cs = Math.cos(ps), sn = Math.sin(ps);
+  return { Y, cs, sn, pr: p => [Y.cx + Y.s * (p[0] * cs + p[2] * sn), Y.gy - Y.s * (p[1] + 262)], dp: p => -p[0] * sn + p[2] * cs };
+}
+/* where the moving end of each joint is (the elbow for the shoulder, the wrist for the elbow, the knee for the hip, the ankle for the knee) */
+function endOf(F, j, P) { P = P || pose(F); return j === "shoulder" ? P.arm.E : j === "elbow" ? P.arm.W : j === "hip" ? P.leg.K : P.leg.A; }
+function solveJoint(F, j, T, K) {   // move joint j so its moving end goes as near as it can to screen point T
+  const pj = projector(F, K), P = pose(F), d2 = p => { const q = pj.pr(p); return Math.hypot(q[0] - T[0], q[1] - T[1]); };
+  if (j === "elbow" || j === "knee") {
+    const e0 = j === "elbow" ? F.arm.e : F.leg.k; let best = e0, bc = 1e9, raw = 1e9;
+    for (let e = 0; e <= LIMIT[j]; e++) {
+      const p = j === "elbow" ? limbArm(P.arm.S, F.arm.u, e).W : limbLeg(P.leg.Hp, F.leg.u, e).A, c = d2(p);
+      raw = Math.min(raw, c); const cc = c + .08 * Math.abs(e - e0); if (cc < bc) { bc = cc; best = e; } }
+    if (j === "elbow") F.arm.e = best; else F.leg.k = best;
+    return raw;
+  }
+  const u0 = j === "shoulder" ? F.arm.u : F.leg.u, ok = BALL_OK[j], L = j === "shoulder" ? FIG.ua : FIG.th, base = j === "shoulder" ? P.arm.S : P.leg.Hp;
+  const cost = u => { const ang = Math.acos(clamp(vdot(u, u0), -1, 1)) * R2D; return d2(vadd(base, vsc(u, L))) + .5 * ang + (j === "shoulder" && u[2] < -.05 ? 6 : 0); };
+  let bt = 0, bp = 0, bc = 1e9;
+  for (let th = 0; th <= 180; th += 6) for (let ph = -180; ph < 180; ph += (th ? 10 : 360)) { const u = ballU(th, ph); if (!ok(u)) continue; const c = cost(u); if (c < bc) { bc = c; bt = th; bp = ph; } }
+  let ft = bt, fp = bp;
+  for (let th = bt - 5; th <= bt + 5; th++) for (let ph = bp - 9; ph <= bp + 9; ph += 1.5) { if (th < 0 || th > 180) continue; const u = ballU(th, ph); if (!ok(u)) continue; const c = cost(u); if (c < bc) { bc = c; ft = th; fp = ph; } }
+  const u = ballU(ft, fp); if (j === "shoulder") F.arm.u = u; else F.leg.u = u;
+  return d2(vadd(base, vsc(u, L)));
+}
+
+/* ===== Inside a joint: geometry (joint units, the joint's centre at 0,0, y down) ===== */
+const JG = { R: 74, c: 12, shaft: 56, lowA: 40, lowB: 140, cupA: 12, cupB: 212 };
+const pol = (r, a) => [r * Math.cos(a * D2R), r * Math.sin(a * D2R)];
+const rot2 = (p, a) => { const c = Math.cos(a * D2R), s = Math.sin(a * D2R); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c]; };
+function jgeo(S, pull) {   // S: the joint's state; pull: the Ligament or tendon? muscle (0–1) or null
+  const gap0 = S.cart ? (S.fluid ? 14 : 4) : (S.fluid ? 8 : 1), q = S.q || 0;
+  const c = S.cart ? JG.c * (1 - .45 * q) : 0, gap = S.cart ? gap0 * (1 - .5 * q) : gap0 * (1 - .9 * q);
+  const Rl = JG.R + (S.cart ? 2 * JG.c : 0) + gap0, dy = (S.cart ? 2 * JG.c : 0) + gap0 - (2 * c + gap);
+  const a = pull == null ? S.bend : MUS.max * pull, sl = S.slip || 0;
+  const low = p => { const r = rot2(p, a - 8 * sl); return [r[0] + 24 * sl, r[1] + 12 * sl]; };
+  const x1 = Rl * Math.cos(JG.lowA * D2R), y1 = Rl * Math.sin(JG.lowA * D2R);
+  return { c, gap, Rl, dy, a, sl, low, x1, y1,
+    UL: [pol(JG.R, 216)[0], pol(JG.R, 216)[1] + dy], UR: [pol(JG.R, -25)[0], pol(JG.R, -25)[1] + dy],
+    LL: low([-(x1 - 6), y1 + 36]), LR: low([x1 - 6, y1 + 36]) };
+}
+const JL = { wide: { w: 960, h: 470, o: [470, 228], k: 1.2, olt: [470, 272], klt: 1, bx: 728, bw: 210, bh: 40, fs: 18, by: 30, bdy: 58, met: [16, 14, 236, 126] },
+  tall: { w: 600, h: 720, o: [262, 318], k: 1.1, olt: [262, 330], klt: .95, bx: 420, bw: 172, bh: 46, fs: 22, by: 34, bdy: 64, met: [338, 604, 254, 108] } };
+const MUS = { x: -150, top: -246, low0: [-50, 110], t0y: -50, max: 35 };
+MUS.Lt = Math.hypot(MUS.low0[0] - MUS.x, MUS.low0[1] - MUS.t0y);
+function muscleAt(G) {   // the muscle's lower end, so the tendon (fixed length) reaches its place on the lower bone
+  const A = G.low(MUS.low0), dx = A[0] - MUS.x, y = A[1] - Math.sqrt(Math.max(0, MUS.Lt * MUS.Lt - dx * dx));
+  return { A, T: [MUS.x, y], len: y - MUS.top };
+}
+const VL = { wide: { w: 960, h: 380, c: [[370, 200], [590, 200]], r: 172, fs: 22, tit: { ligament: [282, 72], both: [480, 104], tendon: [678, 72] }, at: { ligament: [282, 114], both: [480, 146], tendon: [678, 114] }, wr: { ligament: 14, both: 8, tendon: 14 } },
+  tall: { w: 600, h: 880, c: [[300, 250], [300, 540]], r: 225, fs: 28, tit: { ligament: [300, 80], both: [300, 362], tendon: [300, 622] }, at: { ligament: [300, 124], both: [300, 404], tendon: [300, 666] }, wr: { ligament: 21, both: 15, tendon: 21 } } };
+
+/* ===== The model state (pure data: used by the pictures, the questions and the load-time check) ===== */
+function freshF() { return { view: "move", yaw: "turned", arm: { u: [0, -1, 0], e: 0 }, leg: { u: [0, -1, 0], k: 0 }, sit: 0, sitting: false, statue: false, active: null, msg: null, used: {}, trace: null, wob: 0, shake: 0,
+  sort: { placed: {}, sel: null, res: false, msg: "" } }; }
+function freshI() { return { bend: 0, cart: true, fluid: true, torn: false, slip: 0, moving: false, lvl: 0, peak: 0, scratch: 0, q: 0, drop: null, flash: 0, shake: 0, info: null, jumps: 0, absorbed: false, jolted: false, msg: null }; }
+function freshT() { return { view: "explore", pull: 0, pulled: false, info: null, venn: { placed: {}, sel: null, res: false }, msg: null }; }
+function freshM() { return { tab: "move", F: freshF(), I: freshI(), T: freshT() }; }
+function bendTo(I, v) {   // the Bend slider: friction is felt only while the joint moves
+  v = clamp(Math.round(v), 0, 80); const d = Math.abs(v - I.bend); I.bend = v; if (!d) return false;
+  I.moving = true; I.lvl = friction(I.cart, I.fluid); I.peak = Math.max(I.peak, I.lvl); if (!I.cart) I.scratch = Math.min(8, I.scratch + d / 10);
+  return true;
+}
+function jumpResult(I) { I.jumps++; if (I.cart) { I.absorbed = true; I.jolted = false; } else { I.jolted = true; } }
+
+/* ===== Question bank (wording from the deck; answers come from the tables above) ===== */
+const ABC = "ABCDEF";
+const typeOpt = (j, k, why) => JOINTS[j].type === k ? { t: TYPES[k].n, ok: () => JOINTS[j].type === k } : { t: TYPES[k].n, why };
+const TASKS = {
+  easy: [
+    { id: "whatJoint", kind: "choice", text: "What is a joint?",
+      options: [{ t: "A place where two or more bones meet", ok: () => DEF.joint === "A place where two or more bones meet." },
+        { t: "A place where two muscles meet", why: "Joints are where bones meet, not muscles. Muscles pull on the bones to move them." },
+        { t: "The place where a muscle bends", why: "That's a common mix-up. Muscles don't bend at joints. Joints are where bones meet, and muscles move the bones." },
+        { t: "A joint of meat for a roast dinner", why: "That's the everyday meaning. In science, a joint is where two or more bones meet." }],
+      explain: "A joint is a place where two or more bones meet. Joints let the skeleton bend.",
+      hints: ["Think about the skeleton, not the muscles.", "What meets at your knee or your elbow?", "Two or more b… meet."] },
+    { id: "kneeType", kind: "choice", setup: M => { M.tab = "move"; }, need: M => !!M.F.used.knee, needMsg: "First bend the knee on the model: drag the knee handle on the Move it tab.",
+      revealM: M => { M.F.leg.k = 70; M.F.used.knee = true; M.F.active = "knee"; M.F.msg = null; },
+      text: "Do it: bend the knee on the Move it tab. Then choose: what type of joint is the knee?",
+      options: [typeOpt("knee", "hinge"), typeOpt("knee", "ball", "A ball-and-socket joint moves in all directions. Try to swing the lower leg out to the side: the knee won't go."),
+        typeOpt("knee", "fixed", "A fixed joint can't move at all. But you just bent the knee.")],
+      explain: "The knee is a hinge joint. It moves backwards and forwards only.",
+      hints: ["Drag the knee handle. Which ways will it go?", "It bends one way and back again, and no other way.", "Backwards and forwards: a h… joint."] },
+    { id: "ballEx", kind: "choice", setup: M => { M.tab = "move"; }, text: "Which of these is a ball-and-socket joint?",
+      options: [{ t: "Hip", ok: () => JOINTS.hip.type === "ball" },
+        { t: "Knee", why: "The knee is a hinge joint. It only moves backwards and forwards." },
+        { t: "Elbow", why: "The elbow is a hinge joint. It only moves backwards and forwards." },
+        { t: "Skull", why: "The skull has fixed joints. They can't move at all." }],
+      explain: "The hip is a ball-and-socket joint, like the shoulder. It moves in all directions.",
+      hints: ["Try each joint on the Move it tab.", "A ball-and-socket joint moves in all directions.", "It joins your leg to your body."] },
+    { id: "skullPredict", kind: "choice", setup: M => { M.tab = "move"; }, lock: "run", after: "skull",
+      text: "Predict: you try to move the bones of the skull. What will happen?", note: "This is a prediction. When you get it right, the model tries to move the skull.",
+      options: [{ t: "Nothing: the skull bones can't move", ok: () => JOINTS.skull.type === "fixed" },
+        { t: "They bend backwards and forwards, like the knee", why: "That's a hinge joint, like the knee and the elbow. The skull bones are joined firmly: they can't bend." },
+        { t: "They move in all directions, like the hip", why: "That's a ball-and-socket joint. The skull's joints are fixed." },
+        { t: "They move a little, because every joint can move", why: "That's a common idea, but not every joint can move. Fixed joints, like those in the skull, cannot move." }],
+      explain: "The skull has fixed joints. The bones are joined firmly to protect the brain, so they can't move.",
+      hints: ["What type of joint is in the skull?", "There are three types: hinge, ball-and-socket and fixed.", "Fixed means no movement at all."] },
+    { id: "armCircle", kind: "choice", setup: M => { M.tab = "move"; }, lock: "run", after: "armcircle",
+      text: "You swing your arm round in a big circle. Which type of joint lets it do that?", note: "When you get it right, the model swings the arm.",
+      options: [{ t: "A ball-and-socket joint (card B)", ok: () => JOINTS.shoulder.type === "ball" },
+        { t: "A hinge joint (card H)", why: "A hinge joint only moves backwards and forwards. It can't swing round in a circle." },
+        { t: "A fixed joint (card F)", why: "A fixed joint can't move at all." }],
+      explain: "The shoulder is a ball-and-socket joint. It moves in all directions, so the arm can swing round in a circle.",
+      hints: ["Which joint moves when you swing your arm round?", "That joint moves in all directions.", "The shoulder: card B."] },
+    { id: "covers", kind: "choice", setup: M => { M.tab = "inside"; }, stuck: "labels", text: "What covers the ends of the bones in a joint?",
+      options: [{ t: "Cartilage", ok: () => /covers the ends of bones/.test(DEF.cartilage) },
+        { t: "Ligaments", why: "Ligaments hold the two bones together. They join bone to bone, but they don't cover the ends." },
+        { t: "Tendons", why: "Tendons join muscle to bone. Something else covers the ends of the bones." },
+        { t: "A layer of extra bone", why: "That's a common mix-up. The ends are covered by cartilage, which is not just more bone. It is a smooth tissue." }],
+      explain: "Cartilage covers the ends of the bones. It is smooth and absorbs shocks.",
+      hints: ["Look at the Inside a joint tab. Turn on Labels.", "It is smooth and absorbs shocks.", "Say it: KAR-tih-lij."] },
+    { id: "fluidLig", kind: "gaps", setup: M => { M.tab = "inside"; }, stuck: "labels", text: "Inside a joint: choose the word that finishes each sentence.",
+      rows: [["fluid", "Fluid keeps the cartilage", "slippery"], ["lig", "Ligaments hold the two bones", "together"]], bank: ["slippery", "together", "rough", "apart"],
+      whyVal: { rough: "Rough would mean more friction, and the bones would rub. Inside a joint, things are smooth and slippery.",
+        apart: "Ligaments don't hold the bones apart. They join bone to bone, and hold the two bones together.",
+        together: "Together goes with the ligaments: they hold the two bones together.", slippery: "Slippery goes with the fluid: it keeps the cartilage slippery." },
+      explain: "Fluid keeps the cartilage slippery. Ligaments hold the two bones together.",
+      hints: ["On the Inside a joint tab, tap the fluid and a ligament.", "One keeps things slippery. The other holds things together.", "Fluid: slippery. Ligaments: together."] },
+    { id: "friction", kind: "choice", setup: M => { M.tab = "inside"; }, text: "What does the key word friction mean?",
+      options: [{ t: "A force that slows things down when two surfaces rub together", ok: () => DEF.friction.startsWith("A force that slows things down") },
+        { t: "A smooth tissue that covers the ends of bones", why: "That's cartilage. Smooth cartilage means less friction." },
+        { t: "A strong band of tissue that joins bone to bone", why: "That's a ligament." },
+        { t: "A place where two or more bones meet", why: "That's a joint." }],
+      explain: "Friction is a force that slows things down when two surfaces rub together. Smooth cartilage means less friction.",
+      hints: ["Rub your hands together fast. What do you feel?", "It is a force.", "It slows things down when two surfaces rub."] },
+    { id: "ligJoins", kind: "choice", setup: M => { M.tab = "lt"; }, stuck: "labels", text: "What does a ligament join?",
+      options: [{ t: "Bone to bone", ok: () => BANDS.ligament.facts.includes("Joins bone to bone") },
+        { t: "Muscle to bone", why: "That's a tendon. They're easy to mix up: a ligament joins bone to bone." },
+        { t: "Muscle to muscle", why: "Neither a ligament nor a tendon joins muscle to muscle." },
+        { t: "Cartilage to fluid", why: "Cartilage and fluid are inside the joint. A ligament joins the two bones." }],
+      explain: "A ligament joins bone to bone. It holds the joint together.",
+      hints: ["Tap a ligament on the Ligament or tendon? tab.", "Ligaments hold the two bones of a joint together.", "Bone to b…"] }
+  ],
+  hard: [
+    { id: "skullWhy", kind: "choice", setup: M => { M.tab = "move"; }, text: "The bones of the skull are joined by fixed joints. Why?",
+      options: [{ t: "The skull protects the brain, so its bones must stay firmly joined", ok: () => /protect the brain/.test(FIXED_MSG) },
+        { t: "Muscles hold the skull bones still", why: "The skull bones are joined firmly to each other. Muscles move bones: they don't fix them in place." },
+        { t: "Fixed joints move, but only very slowly", why: "Not every joint can move. Fixed joints have no movement at all." },
+        { t: "The skull has no bones, only cartilage", why: "The skull is made of bones. Cartilage covers the ends of bones in joints that move." }],
+      explain: "The skull protects the brain, so its bones are joined firmly: fixed joints. They have no movement at all.",
+      hints: ["What is inside the skull?", "Why would moving bones be a problem there?", "The skull protects the brain."] },
+    { id: "hingeQ", kind: "choice", setup: M => { M.tab = "inside"; }, text: "What stops the bones in your knee rubbing together?",
+      options: [{ t: "Ligaments hold the bones apart", why: "Ligaments hold the bones together, not apart. They join bone to bone." },
+        { t: "Smooth cartilage and slippery fluid", ok: () => friction(true, true) < friction(true, false) && friction(true, false) < friction(false, true) },
+        { t: "Tendons cushion the ends of the bones", why: "That mixes up tendons and cartilage. Tendons join muscle to bone. Cartilage covers the ends of the bones." },
+        { t: "Muscles push the bones away from each other", why: "Muscles can only pull. They never push." }],
+      explain: "Cartilage is smooth and fluid keeps it slippery, so there is little friction.",
+      hints: ["Look inside the joint. What covers the bone ends?", "Two things work together: one is smooth, one is slippery.", "Smooth cartilage and slippery fluid."] },
+    { id: "frHigh", kind: "goal", setup: M => { M.tab = "inside"; }, text: "Do it: make the friction meter go up to High. Then press Check.",
+      test: M => M.I.peak >= 2,
+      not: M => M.I.peak === 1 ? "The meter reached Medium. With no fluid there is more friction, but the bone ends are still covered. Take away something else." :
+        !M.I.cart ? "Now bend the joint with the slider and watch the meter." : "Take something away from inside the joint. Then bend it with the slider.",
+      done: () => "High friction: with no cartilage, bare bone rubs on bone. Smooth cartilage means less friction, so normally the bones don't rub.",
+      reveal: M => { M.I.cart = false; bendTo(M.I, 40); M.I.moving = false; },
+      hints: ["Use the switches on the Inside a joint tab, then bend the joint.", "Which part is smooth and covers the bone ends?", "Turn Cartilage off, then move the Bend slider."] },
+    { id: "shock", kind: "goal", setup: M => { M.tab = "inside"; M.I.cart = false; }, text: "Do it: the cartilage has gone. Make the joint absorb the shock of a jump. Then press Check.",
+      test: M => M.I.absorbed,
+      not: M => !M.I.cart ? (M.I.jolted ? "Jolt! The bare bones took the shock. Put back the part that absorbs shocks, then jump again." : "The part that absorbs shocks is missing. Put it back first.") : "Now press Jump.",
+      done: () => "The cartilage squashed a little, then sprang back: it absorbs shocks.",
+      reveal: M => { M.I.cart = true; jumpResult(M.I); },
+      hints: ["Which part of a joint absorbs shocks?", "Turn Cartilage on.", "Cartilage on, then press Jump."] },
+    { id: "frame", kind: "choice", setup: M => { M.tab = "inside"; }, text: "Finish the sentence: ‘Cartilage is smooth, so…’",
+      options: [{ t: "…there is less friction and the bones don't rub.", ok: () => friction(true, true) < friction(false, true) },
+        { t: "…the bones can slip out of place.", why: "That's what can happen if a ligament tears. Think about friction." },
+        { t: "…the joint is rough and doesn't slip.", why: "Cartilage doesn't make the joint rough. It is smooth, to reduce friction." },
+        { t: "…the muscles can push the bones apart.", why: "Muscles can only pull, never push. Smooth cartilage is about friction." }],
+      explain: "Cartilage is smooth, so there is less friction and the bones don't rub.",
+      hints: ["What is friction?", "Smooth surfaces rub less.", "…so there is less f…"] },
+    { id: "tear", kind: "choice", setup: M => { M.tab = "inside"; }, lock: "run", after: "tear",
+      text: "Predict: what might happen to a joint if a ligament tore?", note: "This is a prediction. When you get it right, the model tears a ligament.",
+      options: [{ t: "The bones might come apart or slip out of place", ok: () => /slip out of place/.test(TEAR_MSG) },
+        { t: "The muscle could not pull on the bone", why: "That would be a torn tendon: tendons join muscle to bone. A ligament joins bone to bone." },
+        { t: "The bone ends would rub, because the cartilage has gone", why: "A torn ligament doesn't take away the cartilage. Ligaments hold the two bones together." },
+        { t: "Nothing would change: ligaments only cushion the bones", why: "Ligaments don't cushion the bones: cartilage absorbs shocks. Ligaments hold the joint together." }],
+      explain: "Ligaments hold the two bones together. If one tore, the bones might come apart or slip out of place.",
+      hints: ["What is the job of a ligament?", "It holds the two bones together.", "Without it, the bones might c… a… or slip."] },
+    { id: "tendon", kind: "choice", setup: M => { M.tab = "lt"; }, stuck: "labels", text: "What does a tendon join?",
+      options: [{ t: "Muscle to bone", ok: () => BANDS.tendon.facts.includes("Joins muscle to bone") },
+        { t: "Bone to bone", why: "That's a ligament. They're easy to mix up: a tendon joins muscle to bone." },
+        { t: "Muscle to muscle", why: "Neither a tendon nor a ligament joins muscle to muscle." },
+        { t: "Cartilage to bone", why: "Cartilage covers the ends of the bones. A tendon is joined to a muscle." }],
+      explain: "A tendon joins muscle to bone. It lets a muscle pull on a bone.",
+      hints: ["Tap the band joined to the muscle on the Ligament or tendon? tab.", "One end of it is joined to the muscle.", "Muscle to b…"] },
+    { id: "venn", kind: "sort", setup: M => { M.tab = "lt"; }, text: "Ligament, tendon or both? Sort each fact.", bins: [["ligament", "Ligament"], ["both", "Both"], ["tendon", "Tendon"]],
+      items: VENN.map(x => ({ id: x.id, t: x.t, b: x.b, why: vennWhy(x) })),
+      explain: "Ligament only: joins bone to bone; holds the joint together. Tendon only: joins muscle to bone; lets a muscle pull on a bone. Both: found at a joint.",
+      hints: ["Try the Venn sort on the Ligament or tendon? tab.", "Which fact is true for both of them?", "Both are found at a joint."] },
+    { id: "errors", kind: "gaps", text: "Spot the errors. Each sentence has an error. Choose the fix for each one.",
+      rows: [["e1", "1. A joint is where two muscles meet. Fix:", "bones meet"], ["e2", "2. Ligaments join muscle to bone. Fix:", "bone to bone"],
+        ["e3", "3. Cartilage makes the joint rough to stop it slipping. Fix:", "smooth, to reduce friction"], ["e4", "4. Your skull has hinge joints. Fix:", "fixed joints"]],
+      bank: ["bones meet", "bone to bone", "smooth, to reduce friction", "fixed joints"],
+      rowWhy: { e1: "A joint is where two or more bones meet. Joints are not where muscles bend.", e2: "Ligaments join bone to bone. It's tendons that join muscle to bone.",
+        e3: "Cartilage is smooth, to reduce friction. It doesn't make the joint rough.", e4: "The skull has fixed joints. Not every joint can move." },
+      explain: "The fixes: 1. bones meet. 2. bone to bone. 3. smooth, to reduce friction. 4. fixed joints.",
+      hints: ["Read each sentence. Which word or phrase is wrong?", "Think: what meets at a joint? What does a ligament join? Is cartilage rough? Can skull bones move?", "Bones meet · bone to bone · smooth · fixed."] }
+  ]
+};
+const optT = o => o.t;
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (JKEYS.some(j => !TYPES[JOINTS[j].type])) errs.push("facts: every joint needs a type");
+  if (JOINTS.knee.type !== "hinge" || JOINTS.elbow.type !== "hinge" || JOINTS.hip.type !== "ball" || JOINTS.shoulder.type !== "ball" || JOINTS.skull.type !== "fixed") errs.push("facts: joint types differ from slide 14");
+  if (!(friction(true, true) < friction(true, false) && friction(true, false) < friction(false, true))) errs.push("model: friction must be lowest with cartilage and fluid, highest with no cartilage");
+  if (VENN.length !== 5 || VENN.filter(x => x.b === "both").map(x => x.t).join() !== "Found at a joint") errs.push("facts: the Venn needs 5 facts, with only 'Found at a joint' in both");
+  { const F = freshF(); solveJoint(F, "knee", [0, -9999], "wide"); solveJoint(F, "elbow", [0, -9999], "wide"); if (F.leg.k < 0 || F.leg.k > LIMIT.knee || F.arm.e < 0 || F.arm.e > LIMIT.elbow) errs.push("model: hinges must stay inside their limits"); }
+  { const P = pose({ ...freshF(), sit: 1 }); if (Math.abs(P.leg0.A[1] + 250) > .5 || Math.abs(P.leg0.A[2]) > .5) errs.push("model: sitting must keep the feet on the floor"); }
+  { const F = freshF(); F.yaw = "front"; const P = pose(F), pj = projector(F, "wide"), K = pj.pr(P.leg.K), S = pj.pr(P.leg.Hp);
+    solveJoint(F, "hip", [K[0] + SIDE * 200, S[1]], "wide"); if (F.leg.u[0] * SIDE < .4) errs.push("model: the hip must swing out to the side"); }
+  { const I = freshI(); bendTo(I, 30); if (I.peak !== 0) errs.push("model: low friction with cartilage and fluid"); I.cart = false; bendTo(I, 60); if (I.peak < 2) errs.push("model: high friction with no cartilage"); }
+  { const I = freshI(); jumpResult(I); if (!I.absorbed) errs.push("model: cartilage absorbs the jump"); const J = freshI(); J.cart = false; jumpResult(J); if (J.absorbed || !J.jolted) errs.push("model: no cartilage, a jolt"); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (t.options.length < 3) E("needs at least 3 options");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+      if (t.need) { const M = freshM(); if (t.setup) t.setup(M); if (t.need(M)) E("the 'do it' part is already done at the start"); t.revealM(M); if (!t.need(M)) E("Show answer must do the 'do it' part"); }
+    }
+    if (t.kind === "sort") t.items.forEach(x => { if (!t.bins.some(b => b[0] === x.b) || !x.why) E("sort item " + x.id); });
+    if (t.kind === "gaps") { if (new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); });
+      t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w]) && !t.rowWhy) E("no feedback for the word " + w); }); }
+    if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { labels: false, words: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let rafId = 0, anim = null, onScreen = true, paused = false, gen = 0, moveTimer = 0, bendPend = 0;
+const PKEY = "ks3tools-progress:joints";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+const LOCKW = { run: "Predict first. The model runs when you get it right, or press Show answer.", all: "The model is set for this question." };
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
+
+/* ===== Drawing helpers ===== */
+const narrow = () => { const w = boxW($("model")); return !!(w && w < 560); };
+const LK = () => narrow() ? "tall" : "wide";
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+const rd = m => `<p class="r1${m.w ? " warn" : ""}">${esc(m.h)}</p>` + (m.b ? `<p class="r2">${esc(m.b)}</p>` : "") + (m.c ? `<p class="r3">${esc(m.c)}</p>` : "");
+const tbox = (x, y, w, h, t, fs, cls) => `<rect class="${cls || "box"}" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="8"/><text x="${f1(x + 10)}" y="${f1(y + h / 2 + fs * .36)}" font-size="${fs}" font-weight="700">${esc(t)}</text>`;
+const leader = (x1, y1, x2, y2) => `<path class="halo" d="M${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}"/><path class="lead" d="M${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}"/><circle cx="${f1(x2)}" cy="${f1(y2)}" r="3.5" style="fill:var(--lead)"/>`;
+function wrap(t, n) { const w = t.split(" "), out = [""]; w.forEach(x => { if ((out[out.length - 1] + " " + x).trim().length > n) out.push(x); else out[out.length - 1] = (out[out.length - 1] + " " + x).trim(); }); return out.filter(Boolean); }
+function boneD(l, w) {   // a long bone along +x from 0 to l, with rounded double knobs at each end
+  const c = .22 * w, r = .34 * w, h = .26 * w, x1 = Math.sqrt(r * r - (c - h) * (c - h)), n = Math.sqrt(r * r - c * c), L = Math.max(l, .01);
+  return `M${f1(x1)} ${f1(-h)}L${f1(L - x1)} ${f1(-h)}A${f1(r)} ${f1(r)} 0 1 1 ${f1(L + n)} 0A${f1(r)} ${f1(r)} 0 1 1 ${f1(L - x1)} ${f1(h)}L${f1(x1)} ${f1(h)}A${f1(r)} ${f1(r)} 0 1 1 ${f1(-n)} 0A${f1(r)} ${f1(r)} 0 1 1 ${f1(x1)} ${f1(-h)}Z`;
+}
+function boneSVG(a, b, w, j, off) {   // off: shift sideways (for the two forearm and lower-leg bones). Returns attributes, patched in place each frame.
+  const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * R2D, x1 = .34 * w;
+  const ox = off ? -Math.sin(ang * D2R) * off : 0, oy = off ? Math.cos(ang * D2R) * off : 0;
+  return { t: `translate(${f1(a[0] + ox)} ${f1(a[1] + oy)}) rotate(${f1(ang)})`, j: j || "", d: boneD(l, w), hd: l > 2.4 * x1 ? `M${f1(x1)} ${f1(-w * .09)}L${f1(l - x1)} ${f1(-w * .09)}` : "M0 0", hw: f1(w * .1) };
+}
+function patchBone(g, B) {
+  if (g._bo === B) return; g._bo = B;
+  if (!g._b) { g.innerHTML = '<path class="bn"/><path class="bnh"/>'; g._b = 1; g._h = null; }
+  setAttr(g, "transform", B.t); if (B.j) { setAttr(g, "class", "drag"); setAttr(g, "data-j", B.j); }
+  setAttr(g.firstChild, "d", B.d); setAttr(g.lastChild, "d", B.hd); setAttr(g.lastChild, "stroke-width", B.hw);
+}
+const lockSVG = (x, y, s) => `<g transform="translate(${f1(x)} ${f1(y)}) scale(${f1(s)})" pointer-events="none"><path d="M-6 -2V-7a6 6 0 0 1 12 0V-2" fill="none" style="stroke:var(--lock)" stroke-width="3"/><rect x="-9" y="-3" width="18" height="14" rx="3" style="fill:var(--lock);stroke:var(--surface)" stroke-width="2"/></g>`;
+
+/* ----- 1. Move it ----- */
+function drawFig() {
+  const K = LK(), F = M.F, svg = $("fsvg"), pj = projector(F, K), Y = pj.Y, { pr, dp, cs, sn } = pj, P = pose(F), s = Y.s;
+  setAttr(svg, "viewBox", `0 0 ${Y.w} ${Y.h}`);
+  const items = []; let nk = 0; const add = (d, h, k) => items.push({ d, h, k: k || "i" + nk++ });
+  const bc = svg._bc || (svg._bc = new Map());   // a bone that hasn't moved keeps its old picture (nothing to patch)
+  const bone = (a, b, w, j, off) => { const k = "i" + nk++, pa = pr(a), pb = pr(b), key = [pa[0], pa[1], pb[0], pb[1]].map(f1).join() + "|" + w * s + "|" + (j || "") + "|" + (off || 0), o = bc.get(k);
+    items.push({ d: (dp(a) + dp(b)) / 2, b: o && o.key === key ? o.B : (bc.set(k, { key, B: boneSVG(pa, pb, w * s, j, off ? off * s : 0) }), bc.get(k).B), k }); };
+  const R = P.root, at = p => vadd(R, p);
+  /* the core: spine, ribs, pelvis, skull (worked out again only when the body itself moves) */
+  const ckey = [F.yaw, K].join("|"), o0 = pr([0, 0, 0]), oR = pr(R), ctr = `translate(${f1(oR[0] - o0[0])} ${f1(oR[1] - o0[1])})`, dR = dp(R);   // the core is drawn once and moved with the body
+  if (svg._ck !== ckey) { const keep = items.length;
+  { let h = ""; for (let y = 14; y <= 170; y += 13) { const q = pr(([0, y, -22])); h += `<ellipse class="vb" cx="${f1(q[0])}" cy="${f1(q[1])}" rx="${f1(10 * s * (.6 + .35 * Math.abs(cs)))}" ry="${f1(5.4 * s)}"/>`; }
+    for (let y = 176; y <= 200; y += 12) { const q = pr(([0, y, -6])); h += `<ellipse class="vb" cx="${f1(q[0])}" cy="${f1(q[1])}" rx="${f1(8 * s)}" ry="${f1(5 * s)}"/>`; }
+    add(-9, h, "spine"); }
+  { let h = ""; const lobes = [[-28, 26, -4, 24, 20], [28, 26, -4, 24, 20], [0, 18, -14, 14, 19], [0, -2, 14, 18, 8]];
+    lobes.forEach(([x, y, z, rx, ry]) => { const q = pr(([x, y, z])); h += `<ellipse class="vb" cx="${f1(q[0])}" cy="${f1(q[1])}" rx="${f1(rx * s * (.55 + .45 * Math.abs(cs)))}" ry="${f1(ry * s)}"/>`; });
+    add(-7, h, "pelvis"); }
+  { let h = ""; [[140, 46, 10], [123, 52, 12], [106, 55, 14], [89, 54, 16], [73, 49, 17]].forEach(([y, rx, dr]) => {
+      let d = ""; for (let t = -15; t <= 195; t += 15) { const a = t * D2R, q = pr(([rx * Math.cos(a), y - dr * Math.max(0, Math.sin(a)), 30 * Math.sin(a)])); d += (t === -15 ? "M" : "L") + f1(q[0]) + " " + f1(q[1]); }
+      h += `<path class="rib0" d="${d}" stroke-width="${f1(10 * s)}"/><path class="rib1" d="${d}" stroke-width="${f1(6.4 * s)}"/>`; });
+    add(-5, h, "ribs"); }
+    svg._ck = ckey; svg._core = items.splice(keep); }
+  svg._core.forEach(c => items.push({ k: c.k, h: c.h, d: c.d + dR, tr: ctr }));
+  bone(at([0, 150, 32]), at([0, 94, 34]), 11);   // breastbone
+  bone(at([-8, 162, 22]), at([-60, 160, 2]), 9); bone(at([8, 162, 22]), at([60, 160, 2]), 9);   // collarbones
+  /* the skull: fixed joints between its bones */
+  const skKey = ckey + "|" + f1(F.shake);
+  if (svg._skk !== skKey) { const c = pr([0, FIG.head, 4]), rx = (40 * Math.abs(cs) + 46 * Math.abs(sn)) * s, ry = 46 * s, fx = sn * s, sx = F.shake;
+    let h = `<g class="tap" data-j="skull" transform="translate(${f1(sx)} 0)">`;
+    h += `<ellipse class="vb" cx="${f1(c[0] + 8 * fx)}" cy="${f1(c[1] + 34 * s)}" rx="${f1((24 * Math.abs(cs) + 22 * Math.abs(sn)) * s)}" ry="${f1(16 * s)}"/>`;
+    h += `<ellipse class="vb" cx="${f1(c[0])}" cy="${f1(c[1])}" rx="${f1(rx)}" ry="${f1(ry)}"/>`;
+    [-1, 1].forEach(e => { const vis = -e * 15 * sn + 36 * cs; if (vis < -6) return; const ex = c[0] + (e * 15 * cs + 34 * sn) * s;
+      h += `<ellipse cx="${f1(ex)}" cy="${f1(c[1] + 2 * s)}" rx="${f1(8.5 * s * (.45 + .55 * Math.min(1, Math.abs(vis) / 36)))}" ry="${f1(10 * s)}" style="fill:var(--bone-edge)" opacity=".8"/>`; });
+    const nx = c[0] + 42 * fx; h += `<path d="M${f1(nx)} ${f1(c[1] + 12 * s)}l${f1(-4 * s)} ${f1(9 * s)}h${f1(8 * s)}z" style="fill:var(--bone-edge)" opacity=".75"/>`;
+    const tx = c[0] + 30 * fx, tw = (13 * Math.abs(cs) + 5) * s; h += `<path d="M${f1(tx - tw)} ${f1(c[1] + 30 * s)}H${f1(tx + tw)}" style="stroke:var(--bone-edge)" stroke-width="${f1(2 * s)}"/>`;
+    for (let i = -2; i <= 2; i++) h += `<path d="M${f1(tx + i * tw / 2.5)} ${f1(c[1] + 26 * s)}v${f1(8 * s)}" style="stroke:var(--bone-edge)" stroke-width="${f1(1.4 * s)}"/>`;
+    let z = ""; for (let i = 0; i <= 12; i++) { const t = i / 12, x = c[0] - rx * .8 + t * rx * 1.6, yy = c[1] - ry * .5 - Math.sin(t * Math.PI) * ry * .22 + (i % 2 ? 3.2 : -3.2) * s; z += (i ? "L" : "M") + f1(x) + " " + f1(yy); }
+    h += `<path d="${z}" fill="none" style="stroke:var(--bone-edge)" stroke-width="${f1(1.6 * s)}"/>`;
+    if (Math.abs(cs) > .5) { let v = ""; for (let i = 0; i <= 5; i++) v += (i ? "L" : "M") + f1(c[0] + (i % 2 ? 3 : -3) * s) + " " + f1(c[1] - ry * .98 + i * ry * .1); h += `<path d="${v}" fill="none" style="stroke:var(--bone-edge)" stroke-width="${f1(1.6 * s)}"/>`; }
+    h += `</g>`; svg._skk = skKey; svg._skh = h; }
+  items.push({ k: "skull", h: svg._skh, d: -4 + dR, tr: ctr });
+  /* limbs */
+  const arm = (A, j) => { bone(A.S, A.E, 15, j ? "shoulder" : ""); bone(A.E, A.W, 8, j ? "elbow" : "", -3.6); bone(A.E, A.W, 8, j ? "elbow" : "", 3.6); bone(A.W, A.H, 17, j ? "elbow" : ""); };
+  const leg = (L, j) => { bone(L.Hp, L.K, 21, j ? "hip" : ""); bone(L.K, L.A, 8, j ? "knee" : "", (L === P.leg ? 9 : -9) * Math.abs(cs)); bone(L.K, L.A, 16, j ? "knee" : "");
+    bone(L.A, L.T, 15, j ? "knee" : ""); const kc = vadd(L.K, vsc(L.fw, 11)), q = pr(kc); items.push({ d: dp(kc) + .5, h: `<ellipse class="vb" rx="${f1(8 * s)}" ry="${f1(10 * s)}"/>`, tr: `translate(${f1(q[0])} ${f1(q[1])})`, k: "i" + nk++ }); };
+  arm(P.arm0, false); arm(P.arm, true); leg(P.leg0, false); leg(P.leg, true);
+  items.sort((a, b) => a.d - b.d);
+  /* the scene: floor, stool, trace, figure, handles */
+  const fx0 = (pr(P.leg0.A)[0] + pr(P.leg.A)[0]) / 2;
+  const LY = figLayers(svg);
+  const bgl = [{ k: "floor", h: `<path d="M0 ${Y.gy}H${Y.w}" style="stroke:var(--floor)" stroke-width="4"/><ellipse cx="${f1(fx0)}" cy="${Y.gy}" rx="${f1(70 * s)}" ry="${f1(7 * s)}" style="fill:var(--floor)" opacity=".7"/>` }];
+  let h = "";
+  if (F.sit > .02) { if (svg._stk !== ckey) { const R1 = pose({ ...F, sit: 1 }).root, at1 = p => vadd(R1, p), top = -16, c4 = [[-60, top, -60], [60, top, -60], [60, top, 30], [-60, top, 30]].map(p => pr(at1(p))), lg = [[-54, -54], [54, -54], [54, 24], [-54, 24]].map(([x, z]) => [pr(at1([x, top - 6, z])), pr([R1[0] + x, -262, R1[2] + z])]);
+      svg._stk = ckey; svg._sth = lg.map(([a, b]) => `<path d="M${f1(a[0])} ${f1(a[1])}L${f1(b[0])} ${f1(b[1])}" style="stroke:var(--stool-edge)" stroke-width="${f1(9 * s)}" stroke-linecap="round"/>`).join("") +
+        `<path d="M${c4.map(q => f1(q[0]) + " " + f1(q[1])).join("L")}Z" style="fill:var(--stool);stroke:var(--stool-edge)" stroke-width="3" stroke-linejoin="round"/>`; }
+    bgl.push({ k: "stool", h: svg._sth, op: f1(Math.min(1, F.sit * 1.6)) }); }
+  if (F.trace) { const T0 = P[F.trace === "arm" ? "arm" : "leg"], tk = F.trace + ckey + (F.trace === "arm" ? T0.S : T0.Hp).map(f1).join();
+    if (svg._trk !== tk) { let d = "";
+    for (let i = 0; i <= 36; i++) { const a = i / 36 * 2 * Math.PI; const p = F.trace === "arm" ? limbArm(T0.S, [0, -Math.cos(a), Math.sin(a)], 0).H : limbLeg(T0.Hp, legCircleU(a), 0).T; const q = pr(p); d += (i ? "L" : "M") + f1(q[0]) + " " + f1(q[1]); }
+    svg._trk = tk; svg._trh = `<path d="${d}" fill="none" style="stroke:var(--accent)" stroke-width="3" stroke-dasharray="8 7" opacity=".55"/>`; }
+    bgl.push({ k: "trace", h: svg._trh }); }
+  patchKeyed(LY.bg, LY.bmap, bgl); const stl = LY.bmap.get("stool"); if (stl) setAttr(stl, "opacity", bgl[1].op);
+  setAttr(LY.fig, "transform", `rotate(${f1(F.wob)} ${f1(fx0)} ${Y.gy})`);
+  patchKeyed(LY.fig, LY.map, items);
+  const tops = [], tagY = [];
+  /* handles (or padlocks when Statue is on) */
+  const HP = { shoulder: P.arm.S, elbow: P.arm.E, hip: P.leg.Hp, knee: P.leg.K, skull: vadd(P.head, [0, 28, 0]) };
+  JKEYS.forEach(j => { const q = pr(HP[j]), qx = q[0] + (j === "skull" ? F.shake : 0), on = F.active === j, J = JOINTS[j]; h = "";
+    h += `<g class="hdl drag${on ? " on" : ""}" data-j="${j}" tabindex="0" role="button" aria-label="${J.n} handle: ${TYPES[J.type].n.toLowerCase()}. Drag it, or use the arrow keys.">` +
+      `<circle class="hit" r="${Y.hr}"/><circle class="ring" r="${f1(Y.hr * .66)}"/>` +
+      (F.statue ? lockSVG(0, 0, Y.hr / 22) : `<circle class="knob" r="${f1(Y.hr * .42)}"/><circle class="core" r="${f1(Y.hr * .14)}"/>`) +
+      `<circle class="fr" r="${f1(Y.hr * .8)}"/></g>`;
+    if (support.labels) { const tw = J.n.length * Y.fs * .6 + 18, x = Math.max(4, qx - Y.hr * .7 - tw - 6); let ty = q[1] - Y.fs * .9;
+      while (tagY.some(v => Math.abs(v - ty) < Y.fs * 1.9)) ty += Y.fs * 1.9; tagY.push(ty);   // labels never cover each other
+      h += `<g pointer-events="none">${tbox(x - qx, ty - q[1], tw, Y.fs * 1.8, J.n, Y.fs)}</g>`; }
+    tops.push({ k: "h-" + j, h, tr: `translate(${f1(qx)} ${f1(q[1])})` }); });
+  h = "";
+  /* caption: the joint you used, its type and how it moves */
+  if (F.active) { const J = JOINTS[F.active], T = TYPES[J.type], l1 = `${J.n}: ${T.n.toLowerCase()}`, l2 = cap(T.move), fs = Y.fs, w = Math.max(l1.length * fs * .58, l2.length * fs * .5) + 24;
+    h += `<g pointer-events="none"><rect class="box" x="8" y="8" width="${f1(w)}" height="${f1(fs * 2.9)}" rx="8"/><text x="20" y="${f1(8 + fs * 1.25)}" font-size="${fs}" font-weight="700" style="fill:var(--accent)">${esc(l1)}</text><text x="20" y="${f1(8 + fs * 2.45)}" font-size="${fs - 2}">${esc(l2)}</text></g>`; }
+  tops.push({ k: "cap", h, tr: "translate(0 0)" }); patchKeyed(LY.top, LY.tmap, tops);
+  fReadout();
+}
+function patchKeyed(parent, map, list) {   // one small group per item, kept in list order; only changed groups are patched
+  let prev = null; const live = new Set();
+  list.forEach(it => { let g = map.get(it.k); if (!g) { g = document.createElementNS("http://www.w3.org/2000/svg", "g"); map.set(it.k, g); }
+    live.add(it.k); if (it.b) patchBone(g, it.b); else { setLayer(g, it.h); if (it.tr) setAttr(g, "transform", it.tr); } const ref = prev ? prev.nextSibling : parent.firstChild; if (g !== ref) parent.insertBefore(g, ref); prev = g; });
+  map.forEach((g, k) => { if (!live.has(k)) { g.remove(); map.delete(k); } });
+}
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }   // patch a layer only when it changed
+function figLayers(svg) {   // background, the figure (one small group per bone, in depth order), handles and captions
+  if (!svg._ly) { svg.innerHTML = '<g></g><g></g><g></g>'; const [bg, fig, top] = svg.children; svg._ly = { bg, fig, top, map: new Map(), tmap: new Map(), bmap: new Map() }; }
+  return svg._ly;
+}
+function fReadout() {
+  const F = M.F; let h;
+  if (F.msg) h = rd(F.msg);
+  else if (F.active) { const J = JOINTS[F.active], T = TYPES[J.type]; h = rd({ h: `${J.n}: ${T.n.toLowerCase()}`, b: T.long, c: J.type === "fixed" ? "" : J.say }); }
+  else h = `<p class="r2">Drag a handle to move a joint. Try the knee, the shoulder and the skull.</p>`;
+  morphHTML($("fread"), h);
+}
+const legCircleU = a => vnorm([SIDE * .32 * (1 - Math.cos(a)), -1, .4 * Math.sin(a)]);
+const statueMsg = () => { M.F.msg = { h: "You're a statue!", b: "Your joints are locked: you can't bend!", w: 1 }; drawFig(); };
+
+/* joint sort (Move it → Sort the joints) */
+function drawSort() {
+  const Q = M.F.sort, order = M.jOrder || JKEYS, used = new Set(Object.keys(Q.placed));
+  const chip = (j, inBin) => { const res = Q.res && inBin ? (JOINTS[j].type === Q.placed[j] ? " ok" : " no") : "";
+    return `<button type="button" class="chip-l${res}" data-jc="${j}" aria-pressed="${Q.sel === j}"${inBin ? ` aria-label="${JOINTS[j].n}${res === " ok" ? ", right" : res === " no" ? ", not right" : ""}: tap to take it out"` : ""}>${res === " ok" ? "✓ " : res === " no" ? "✗ " : ""}${JOINTS[j].n}</button>`; };
+  const left = order.filter(j => !used.has(j));
+  morphHTML($("jbank"), left.length ? left.map(j => chip(j, false)).join("") : `<span class="small" style="margin:0">All five joints are sorted. Press Check my sort.</span>`);
+  morphHTML($("jbins"), TKEYS.map(k => `<div class="bin${Q.sel ? " ready" : ""}" data-bin="${k}" tabindex="0" role="button" aria-label="${TYPES[k].s} group${Q.sel ? ": put " + JOINTS[Q.sel].n + " here" : ""}"><h3>${TYPES[k].s}</h3><p>${cap(TYPES[k].move)}</p>` +
+    order.filter(j => Q.placed[j] === k).map(j => chip(j, true)).join("") + `</div>`).join(""));
+  morphHTML($("jread"), Q.msg ? Q.msg : `<p class="r2">Sort the five joints into their groups.</p>`);
+}
+function sortPlace(j, k) { if (locked()) return lockMsg(); const Q = M.F.sort; Q.placed[j] = k; Q.sel = null; Q.res = false; Q.msg = ""; drawSort(); }
+function sortCheck() {
+  const Q = M.F.sort, done = Object.keys(Q.placed); if (!done.length) { Q.msg = `<p class="r2">Put some joints into the groups first.</p>`; drawSort(); return; }
+  Q.res = true; const bad = done.filter(j => JOINTS[j].type !== Q.placed[j]);
+  const why = j => j === "skull" ? "The skull bones can't move: fixed joints. Not every joint can move." : `The ${j} moves ${TYPES[JOINTS[j].type].move}: it is a ${TYPES[JOINTS[j].type].n.toLowerCase()}.`;
+  Q.msg = bad.length ? `<p class="r1 warn">${bad.length} not right yet</p>` + bad.map(j => `<p class="r2">✗ ${esc(why(j))}</p>`).join("") :
+    done.length < 5 ? `<p class="r1">So far so good: ${done.length} of 5.</p><p class="r2">Sort the rest.</p>` :
+    `<p class="r1">✓ All 5 are right!</p><p class="r2">Hinge: knee and elbow. Ball-and-socket: hip and shoulder. Fixed: the skull.</p>`;
+  drawSort();
+}
+
+/* ----- 2. Inside a joint, and 3. Ligament or tendon? (the same joint, drawn in code) ----- */
+function ring(r0, r1, a0, a1) {   // a band between two radii, from angle a0 to a1 (clockwise on screen)
+  const lg = Math.abs(a1 - a0) > 180 ? 1 : 0, p = (r, a) => pol(r, a).map(f1).join(" ");
+  return `M${p(r1, a0)}A${f1(r1)} ${f1(r1)} 0 ${lg} 1 ${p(r1, a1)}L${p(r0, a1)}A${f1(r0)} ${f1(r0)} 0 ${lg} 0 ${p(r0, a0)}Z`;
+}
+function bandPath(a, b, G) {   // a ligament from a to b, bowed outwards round the joint
+  const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], l = Math.hypot(m[0], m[1]) || 1, need = Math.max(0, G.Rl + 20 - l), c = [m[0] + m[0] / l * need * 2, m[1] + m[1] / l * need * 2];
+  return { d: `M${f1(a[0])} ${f1(a[1])}Q${f1(c[0])} ${f1(c[1])} ${f1(b[0])} ${f1(b[1])}`, c, mid: [(a[0] + 2 * c[0] + b[0]) / 4, (a[1] + 2 * c[1] + b[1]) / 4] };
+}
+const qpt = (a, c, b, t) => [(1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
+function bandSVG(B, part, w, sel, torn, a, b) {
+  const under = sel ? `<path class="sel" d="${B.d}" stroke-width="${w + 12}"/>` : "";
+  if (torn) {   // two frayed ends
+    const pts = (t0, t1) => { let d = ""; for (let i = 0; i <= 6; i++) { const q = qpt(a, B.c, b, t0 + (t1 - t0) * i / 6); d += (i ? "L" : "M") + f1(q[0]) + " " + f1(q[1]); } return d; };
+    const e1 = qpt(a, B.c, b, .36), e2 = qpt(a, B.c, b, .64), fr = q => [-6, 0, 6].map(o => `<path d="M${f1(q[0])} ${f1(q[1])}l${o} 9" style="stroke:var(--lig-edge)" stroke-width="3" stroke-linecap="round"/>`).join("");
+    return `<g class="tap" data-p="${part}">${under}` + [pts(0, .36), pts(.64, 1)].map(d => `<path d="${d}" fill="none" style="stroke:var(--lig-edge)" stroke-width="${w + 4}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" style="stroke:var(--lig)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`).join("") + fr(e1) + fr(e2) + `</g>`;
+  }
+  const col = part === "tendon" ? ["--tendon-edge", "--tendon"] : ["--lig-edge", "--lig"];
+  return `<g class="tap" data-p="${part}">${under}<path d="${B.d}" fill="none" style="stroke:var(${col[0]})" stroke-width="${w + 4}" stroke-linecap="round"/><path d="${B.d}" fill="none" style="stroke:var(${col[1]})" stroke-width="${w}" stroke-linecap="round"/>` +
+    `<path d="${B.d}" fill="none" style="stroke:var(${part === "tendon" ? "--tendon-edge" : "--lig-fib"})" stroke-width="1.4" stroke-dasharray="10 8" opacity=".6"/></g>`;
+}
+function drawJoint(which) {   // which: "inside" or "lt"
+  const K = LK(), Y = JL[K], lt = which === "lt", S = lt ? Object.assign(freshI(), { bend: 0 }) : M.I, T = M.T, svg = $(lt ? "tsvg" : "isvg");
+  const G = jgeo(S, lt ? T.pull : null), R = JG.R, info = lt ? T.info : S.info, sel = p => info === p;
+  setAttr(svg, "viewBox", `0 0 ${Y.w} ${Y.h}`);
+  const [ox, oy] = lt ? Y.olt : Y.o, k = lt ? Y.klt : Y.k, W = p => [ox + p[0] * k, oy + p[1] * k];
+  let h = ""; const C = [], cut = (k, tr) => { C.push({ k, h, tr }); h = ""; }, rootTr = `translate(${f1(ox + (S.shake || 0))} ${oy}) scale(${k})`;
+  /* fluid (behind the bones): the space closed in by the two ligaments */
+  const BL = bandPath(G.UL, G.LL, G), BR = bandPath(G.UR, G.LR, G);
+  if (S.fluid) { const P2 = p => f1(p[0]) + " " + f1(p[1]), fd = `M${P2(G.UL)}Q${P2(BL.c)} ${P2(G.LL)}L${P2(G.LR)}Q${P2(BR.c)} ${P2(G.UR)}Z`;
+    h += `<path class="tap" data-p="fluid" d="${fd}" style="fill:var(--fluid);stroke:var(--fluid-edge)" stroke-width="1.5"/>` + (sel("fluid") ? `<path class="sel" d="${fd}"/>` : ""); }
+  cut("fluid");
+  /* lower bone (it turns as the joint bends) */
+  const tr = `translate(${f1(24 * G.sl)} ${f1(12 * G.sl)}) rotate(${f1(G.a - 8 * G.sl)})`, x1 = G.x1, y1 = G.y1, Rl = G.Rl;
+  const lowD = `M${f1(x1)} ${f1(y1)}C${f1(x1 + 12)} ${f1(y1 + 40)} 54 ${f1(y1 + 64)} 54 ${f1(y1 + 116)}L54 520L-54 520L-54 ${f1(y1 + 116)}C-54 ${f1(y1 + 64)} ${f1(-x1 - 12)} ${f1(y1 + 40)} ${f1(-x1)} ${f1(y1)}A${f1(Rl)} ${f1(Rl)} 0 0 0 ${f1(x1)} ${f1(y1)}Z`;
+  h += `<path class="bn tap" data-p="bone" d="${lowD}" style="fill:url(#${which}-bg)"/><path d="M-30 ${f1(y1 + 130)}L-30 520" class="bnh" stroke-width="7"/>` + (sel("bone") ? `<path class="sel" d="${lowD}"/>` : "");
+  if (S.cart) h += `<path class="tap" data-p="cartilage" d="${ring(Rl - G.c, Rl, 43, 137)}" style="fill:var(--cart);stroke:var(--cart-edge)" stroke-width="1.5"/>` + (sel("cartilage") ? `<path class="sel" d="${ring(Rl - G.c, Rl, 43, 137)}"/>` : "");
+  else if (S.scratch >= 1) for (let i = 0; i < Math.floor(S.scratch); i++) { const a = 60 + i * 9, p = pol(Rl + 3, a), q = pol(Rl + 9, a + 3); h += `<path d="M${f1(p[0])} ${f1(p[1])}L${f1(q[0])} ${f1(q[1])}" style="stroke:var(--bone-edge)" stroke-width="2" stroke-linecap="round"/>`; }
+  if (S.flash > 0) h += `<path d="M${f1(pol(Rl, 50)[0])} ${f1(pol(Rl, 50)[1])}A${f1(Rl)} ${f1(Rl)} 0 0 1 ${f1(pol(Rl, 130)[0])} ${f1(pol(Rl, 130)[1])}" fill="none" style="stroke:var(--bad)" stroke-width="8" stroke-linecap="round" opacity="${f1(S.flash)}"/>`;
+  cut("lower", tr);   // the lower bone turns as a whole: only its transform changes
+  /* upper bone */
+  const yj = Math.sqrt(R * R - JG.shaft * JG.shaft), upD = `M-56 -600L56 -600L56 ${f1(-yj)}A${R} ${R} 0 1 1 -56 ${f1(-yj)}Z`;
+  h += `<path class="bn tap" data-p="bone" d="${upD}" style="fill:url(#${which}-bg)"/><path d="M30 -600L30 -60" class="bnh" stroke-width="7"/>` + (sel("bone") ? `<path class="sel" d="${upD}"/>` : "");
+  if (S.cart) h += `<path class="tap" data-p="cartilage" d="${ring(R, R + G.c, JG.cupA, JG.cupB)}" style="fill:var(--cart);stroke:var(--cart-edge)" stroke-width="1.5"/><path d="${ring(R + G.c * .55, R + G.c * .75, 30, 150)}" fill="#fff" opacity=".45" pointer-events="none"/>` + (sel("cartilage") ? `<path class="sel" d="${ring(R, R + G.c, JG.cupA, JG.cupB)}"/>` : "");
+  else if (S.scratch >= 1) for (let i = 0; i < Math.floor(S.scratch); i++) { const a = 90 + G.a - 26 + i * 8, p = pol(R - 3, a), q = pol(R - 10, a + 4); h += `<path d="M${f1(p[0])} ${f1(p[1])}L${f1(q[0])} ${f1(q[1])}" style="stroke:var(--bone-edge)" stroke-width="2" stroke-linecap="round"/>`; }
+  if (S.flash > 0) h += `<path d="M${f1(pol(R, 40)[0])} ${f1(pol(R, 40)[1])}A${R} ${R} 0 0 1 ${f1(pol(R, 140)[0])} ${f1(pol(R, 140)[1])}" fill="none" style="stroke:var(--bad)" stroke-width="8" stroke-linecap="round" opacity="${f1(S.flash)}"/>`;
+  cut("upper", `translate(0 ${f1(G.dy)})`);
+  /* ligaments, one each side */
+  h += bandSVG(BL, "ligament", 15, sel("ligament"), false, G.UL, G.LL) + bandSVG(BR, "ligament", 15, sel("ligament"), !!S.torn, G.UR, G.LR);
+  cut("ligs");
+  /* the muscle and its tendons (Ligament or tendon? only) */
+  let MU = null;
+  if (lt) { MU = muscleAt(G); const top = MUS.top, len = MU.len, wm = clamp(24 * Math.sqrt(150 / Math.max(40, len)), 18, 40), x = MUS.x, by = MU.T[1];
+    const md = `M${x} ${top}C${f1(x + wm * 1.35)} ${f1(top + len * .22)} ${f1(x + wm * 1.35)} ${f1(top + len * .78)} ${x} ${f1(by)}C${f1(x - wm * 1.35)} ${f1(top + len * .78)} ${f1(x - wm * 1.35)} ${f1(top + len * .22)} ${x} ${top}Z`;
+    const up = { d: `M${x} ${top + 4}Q${x + 24} ${top - 16} -56 ${top - 22}`, c: [x + 24, top - 16] }, lo = { d: `M${x} ${f1(by - 4)}L${f1(MU.A[0])} ${f1(MU.A[1])}`, c: [(x + MU.A[0]) / 2, (by + MU.A[1]) / 2] };
+    h += bandSVG(up, "tendon", 9, sel("tendon")) + bandSVG(lo, "tendon", 9, sel("tendon"));
+    h += `<g class="tap" data-p="muscle"><path d="${md}" style="fill:var(--mus);stroke:var(--mus-edge)" stroke-width="2.5"/>` + [-.45, 0, .45].map(o => `<path d="M${x} ${f1(top + 8)}C${f1(x + wm * o * 1.6)} ${f1(top + len * .3)} ${f1(x + wm * o * 1.6)} ${f1(top + len * .7)} ${x} ${f1(by - 8)}" fill="none" style="stroke:var(--mus-fib)" stroke-width="1.6"/>`).join("") +
+      (sel("muscle") ? `<path class="sel" d="${md}"/>` : "") + `</g>`;
+    if (T.pull > .02 && T.pull < .98) { const ax = MU.A; h += `<path d="M${f1(ax[0] - 6)} ${f1(ax[1] - 40)}L${f1(ax[0] - 6)} ${f1(ax[1] - 70)}" style="stroke:var(--accent)" stroke-width="4" marker-end="url(#${which}-ar)"/>`; } }
+  cut("muscle");
+  /* sparks when bare bone rubs on bone */
+  const contact = pol(R + G.gap / 2 + 2, 90 + G.a * .5);
+  if (!lt && S.moving && S.lvl >= 2) { const rn = mulberry32(Math.round(S.bend * 7 + S.scratch * 13));
+    for (let i = 0; i < 3; i++) { const p = pol(R + 4, 90 + G.a * .5 + (rn() - .5) * 50), sz = 7 + rn() * 5; let d = ""; for (let j = 0; j < 8; j++) { const a = j * Math.PI / 4, q = j % 2 ? sz * .35 : sz; d += (j ? "L" : "M") + f1(p[0] + Math.cos(a) * q) + " " + f1(p[1] + Math.sin(a) * q); }
+      h += `<path d="${d}Z" style="fill:var(--spark);stroke:var(--spark-edge)" stroke-width="1.2"/>`; } }
+  cut("sparks");
+  /* the jump: a downward load */
+  if (S.drop != null) h += `<g><path d="M0 ${f1(-262 + 90 * S.drop)}V${f1(-170 + 90 * S.drop)}" style="stroke:var(--accent)" stroke-width="12" marker-end="url(#${which}-ar)"/></g>`;
+  cut("arrow");
+  /* labels (Support) */
+  if (support.labels) {
+    const L = lt ? [["muscle", [MUS.x + 8, MUS.top + MU.len * .4]], ["tendon", [(MUS.x + MU.A[0]) / 2, (MU.T[1] + MU.A[1]) / 2]], ["bone", [10, -150 + G.dy]], ["ligament", BR.mid], ["bone", G.low([12, 190])]]
+      : [["bone", [10, -170 + G.dy]], ["cartilage", S.cart ? pol(R + G.c / 2, 62).map((v, i) => v + (i ? G.dy : 0)) : null], ["fluid", S.fluid ? pol(JG.R + 18, 18) : null], ["ligament", BR.mid], ["bone", G.low([12, 190])]];
+    L.forEach(([p, at], i) => { if (!at) return; const by = Y.by + i * Y.bdy, [px, py] = W(at); h += leader(Y.bx, by + Y.bh / 2, px, py) + tbox(Y.bx, by, Y.bw, Y.bh, IPARTS[p].n, Y.fs); }); }
+  cut("labels");
+  /* friction meter (Inside a joint only) */
+  if (!lt) { const [mx, my, mw, mh] = Y.met, on = S.moving, lv = S.lvl, seg = (mw - 28) / 4;
+    h += `<g pointer-events="none"><rect class="box" x="${mx}" y="${my}" width="${mw}" height="${mh}" rx="10"/><text x="${mx + 12}" y="${my + 26}" font-size="${Y.fs}" font-weight="700">Friction meter</text>`;
+    for (let i = 0; i < 4; i++) h += `<rect x="${f1(mx + 12 + i * (seg + 1.3))}" y="${my + 38}" width="${f1(seg - 2)}" height="22" rx="4" style="fill:${on && i <= lv ? (i < 2 ? "var(--accent)" : "var(--bad)") : "var(--sunk)"};stroke:var(--line)" stroke-width="1.5"/>`;
+    h += `<text x="${mx + 12}" y="${my + mh - 16}" font-size="${Y.fs}" ${on ? `font-weight="700"${lv >= 2 ? ' style="fill:var(--bad)"' : ""}` : 'class="mut"'}>${on ? FR_W[lv] + (lv >= 2 ? ": bones rub!" : "") : "Bend the joint to test"}</text></g>`; }
+  cut("meter");
+  const defs = `<defs><linearGradient id="${which}-bg" x1="0" x2="1"><stop offset="0" style="stop-color:var(--bone-2)"/><stop offset=".55" style="stop-color:var(--bone)"/><stop offset="1" style="stop-color:var(--bone-2)"/></linearGradient>` +
+    `<marker id="${which}-ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10Z" style="fill:var(--accent)"/></marker></defs>` + h;
+  if (!svg._jl) { svg.innerHTML = "<g></g><g></g><g></g>"; const [d, r, t] = svg.children; svg._jl = { d, r, t, rm: new Map(), tm: new Map() }; }
+  const JLy = svg._jl; setLayer(JLy.d, defs); setAttr(JLy.r, "transform", rootTr);
+  patchKeyed(JLy.r, JLy.rm, C.filter(c => c.k !== "labels" && c.k !== "meter")); patchKeyed(JLy.t, JLy.tm, C.filter(c => c.k === "labels" || c.k === "meter"));
+  if (lt) tReadout(); else iReadout();
+}
+function iReadout() {
+  const I = M.I; let h;
+  if (I.moving) h = rd({ h: "Friction: " + FR_W[I.lvl], b: FR_MSG[I.lvl], w: I.lvl >= 2 });
+  else if (I.msg) h = rd(I.msg);
+  else if (I.info) h = rd({ h: IPARTS[I.info].n, b: IPARTS[I.info].job });
+  else h = `<p class="r2">Bend the joint with the slider. Tap a part to see its job.</p>`;
+  morphHTML($("iread"), h);
+}
+function tReadout() {
+  const T = M.T; let h;
+  if (T.msg) h = rd(T.msg);
+  else if (T.info) h = rd({ h: IPARTS[T.info].n, b: IPARTS[T.info].job });
+  else h = `<p class="r2">Tap a ligament, then the tendon. What does each one join?</p>`;
+  morphHTML($("tread"), h);
+}
+function partTap(which, p) {
+  if (which === "lt") { M.T.info = p; M.T.msg = null; drawJoint("lt"); if (p === "ligament" || p === "tendon") tourSignal("lt-tap"); }
+  else { M.I.info = p; M.I.msg = null; M.I.moving = false; drawJoint("inside"); }
+}
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* Venn sort (Ligament or tendon? → Venn sort) */
+function zoneAt(K, x, y) { const V = VL[K], i1 = Math.hypot(x - V.c[0][0], y - V.c[0][1]) <= V.r, i2 = Math.hypot(x - V.c[1][0], y - V.c[1][1]) <= V.r; return i1 && i2 ? "both" : i1 ? "ligament" : i2 ? "tendon" : null; }
+function drawVenn() {
+  const K = LK(), V = VL[K], Q = M.T.venn, svg = $("vsvg"), fs = V.fs;
+  setAttr(svg, "viewBox", `0 0 ${V.w} ${V.h}`);
+  let h = V.c.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${V.r}" style="fill:var(${i ? "--mus" : "--lig"});stroke:var(${i ? "--mus-edge" : "--lig-edge"})" fill-opacity=".16" stroke-width="3"/>`).join("");
+  ["ligament", "both", "tendon"].forEach(z => { const [tx, ty] = V.tit[z], t = VBIN[z], tw = t.length * fs * .62 + 22;
+    h += `<g class="tap zone" data-zone="${z}" tabindex="0" role="button" aria-label="${t}${Q.sel ? ": put the fact here" : ""}"><rect x="${f1(tx - tw / 2)}" y="${f1(ty - fs * 1.05)}" width="${f1(tw)}" height="${f1(fs * 1.6)}" rx="8" class="${Q.sel ? "box" : "hit"}"${Q.sel ? ' style="stroke:var(--accent)" stroke-width="2"' : ""}/>` +
+      `<text x="${tx}" y="${ty}" text-anchor="middle" font-size="${fs + 1}" font-weight="700" paint-order="stroke" stroke-width="6" stroke-linejoin="round" style="fill:var(--accent);stroke:var(--sunk)">${t}</text><rect class="fr" x="${f1(tx - tw / 2 - 3)}" y="${f1(ty - fs * 1.05 - 3)}" width="${f1(tw + 6)}" height="${f1(fs * 1.6 + 6)}" rx="10"/></g>`;
+    let y = V.at[z][1];
+    VENN.filter(x => Q.placed[x.id] === z).forEach(x => { const res = Q.res ? (x.b === z ? "✓ " : "✗ ") : "", lines = wrap(res + x.t, V.wr[z]);
+      h += `<g class="tap" data-vf="${x.id}" tabindex="0" role="button" aria-label="${esc(x.t)}${res === "✓ " ? ", right" : res ? ", not right" : ""}: tap to take it out">` + lines.map((l, i) => `<text x="${V.at[z][0]}" y="${f1(y + i * fs * 1.2)}" text-anchor="middle" font-size="${fs}"${res === "✗ " ? ' style="fill:var(--bad)"' : res ? ' style="fill:var(--good)"' : ""} font-weight="700">${esc(l)}</text>`).join("") + `</g>`;
+      y += lines.length * fs * 1.2 + fs * .5; }); });
+  morph(svg, h);
+  const left = (M.vOrder || VENN.map((x, i) => i)).map(i => VENN[i]).filter(x => !Q.placed[x.id]);
+  morphHTML($("vbank"), left.length ? left.map(x => `<button type="button" class="chip-l" data-vc="${x.id}" aria-pressed="${Q.sel === x.id}">${esc(x.t)}</button>`).join("") : `<span class="small" style="margin:0">All five facts are in the diagram. Press Check my sort.</span>`);
+  morphHTML($("vread"), Q.msg || `<p class="r2">Ligament only, tendon only, or both?</p>`);
+}
+function vennPlace(id, z) { if (locked()) return lockMsg(); const Q = M.T.venn; Q.placed[id] = z; Q.sel = null; Q.res = false; Q.msg = ""; drawVenn(); }
+function vennCheck() {
+  const Q = M.T.venn, done = VENN.filter(x => Q.placed[x.id]); if (!done.length) { Q.msg = `<p class="r2">Put some facts into the diagram first.</p>`; drawVenn(); return; }
+  Q.res = true; const bad = done.filter(x => Q.placed[x.id] !== x.b);
+  Q.msg = bad.length ? `<p class="r1 warn">${bad.length} not right yet</p>` + bad.map(x => `<p class="r2">✗ “${esc(x.t)}”: ${esc(vennWhy(x))}</p>`).join("") :
+    done.length < 5 ? `<p class="r1">So far so good: ${done.length} of 5.</p>` : `<p class="r1">✓ All 5 are right!</p><p class="r2">Both are found at a joint. A ligament joins bone to bone; a tendon joins muscle to bone.</p>`;
+  drawVenn();
+}
+
+/* ----- panes and controls ----- */
+const hideEl = (id, v) => $(id).toggleAttribute("hidden", !!v);
+function drawPane() {
+  const t = M.tab;
+  ["move", "inside", "lt"].forEach(k => { $("pane-" + k).hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  if (t === "move") { const v = M.F.view; document.querySelectorAll("#mview button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.mv === v)));
+    document.querySelectorAll("#fview button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.fv === M.F.yaw)));
+    $("moveBox").hidden = v !== "move"; $("sortBox").hidden = v !== "sort"; $("fview").hidden = v !== "move"; if (v === "move") drawFig(); else drawSort(); }
+  else if (t === "inside") drawJoint("inside");
+  else { const v = M.T.view; document.querySelectorAll("#tview button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tv === v)));
+    $("ltBox").hidden = v !== "explore"; $("vennBox").hidden = v !== "venn"; if (v === "explore") drawJoint("lt"); else drawVenn(); }
+}
+function renderCtl() {   // touches a control only when its state really changes (each change restyles the page)
+  const busy = !!anim, lk = locked(), F = M.F, I = M.I, T = M.T;
+  const txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  const sw = (id, v) => { const b = $(id); setAttr(b, "aria-pressed", String(!!v)); txt(b.querySelector(".state"), v ? "on" : "off"); };
+  sw("statueSw", F.statue); sw("cartSw", I.cart); sw("fluidSw", I.fluid);
+  txt($("sitBtn"), F.sitting ? "Stand up" : "Sit down");
+  ["sitBtn", "armCirc", "legCirc", "fReset", "statueSw", "jump", "tear", "iReset", "cartSw", "fluidSw", "pull", "jCheck", "jClear", "vCheck", "vClear"].forEach(id => dis($(id), busy || lk));
+  dis($("bend"), busy || lk); if (+$("bend").value !== I.bend) $("bend").value = I.bend; txt($("bendOut"), I.bend + "°");
+  txt($("tear"), I.torn ? "Repair the ligament" : "Tear a ligament");
+  txt($("pull"), T.pulled ? "Straighten again" : "Muscle pulls ▶");
+  const ln = $("lockNote"); if (ln.hidden !== !lk) ln.hidden = !lk; if (lk) txt(ln, LOCKW[lock] || LOCKW.all);
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { if (anim) finishAnim(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
+
+/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; reduced motion: a few still steps) ===== */
+function startAnim(a) { anim = a; a.t0 = null; a.el = 0; a.lastQ = -1; paused = false; renderCtl(); rafId = paceFrame(step, a.fps); }
+function step(ts) {
+  if (!anim) return;
+  if (!onScreen || document.hidden) { paused = true; return; }
+  if (anim.t0 == null) anim.t0 = ts - anim.el;
+  anim.el = ts - anim.t0;
+  let el = anim.el;
+  if (reduced()) { const q = Math.min(anim.dur, Math.floor(el / 400) * 400); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
+  if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) renderCtl(); return; }
+  rafId = paceFrame(step, anim.fps);
+}
+function resume() { if (anim && paused && onScreen && !document.hidden) { paused = false; anim.t0 = null; rafId = paceFrame(step, anim.fps); } }
+document.addEventListener("visibilitychange", resume);
+function finishAnim() { if (!anim) return; paceCancel(rafId); const a = anim; anim = null; paused = false; a.end(); if (!anim) renderCtl(); }
+const ease = u => .5 - .5 * Math.cos(Math.PI * Math.min(1, Math.max(0, u)));
+function stopAll() { gen++; while (anim) finishAnim(); clearTimeout(moveTimer); if (M.I.moving) { M.I.moving = false; } }
+const runAnim = (dur, frame, end, fps) => startAnim({ dur, fps, frame(el) { const u = Math.min(1, el / dur); frame(u); return u >= 1; }, end });
+
+function skullShake(force) {
+  const F = M.F; if (!force && locked()) return lockMsg(); stopAll(); F.active = "skull"; F.msg = null;
+  runAnim(560, u => { F.shake = reduced() ? 0 : 3.4 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); },
+    () => { F.shake = 0; F.used.skull = true; F.msg = { h: "Skull: fixed joint", b: FIXED_MSG, c: "It won't move: a fixed joint has no movement at all." }; drawFig(); tried(2); tourSignal("skull"); }, 12);
+}
+function armCircle(force) {
+  const F = M.F; if (!force && locked()) return lockMsg(); if (F.statue) return statueMsg(); stopAll();
+  F.view = "move"; F.active = "shoulder"; F.msg = null; F.arm.e = 0; F.trace = "arm";
+  const turned = F.yaw === "front"; if (turned) { F.yaw = "turned"; drawAll(); }   // from the front, a forwards-and-back circle looks like a straight line
+  runAnim(2600, u => { const a = ease(u) * 2 * Math.PI; F.arm.u = [0, -Math.cos(a), Math.sin(a)]; drawFig(); },
+    () => { F.arm.u = [0, -1, 0]; F.used.shoulder = true; F.msg = { h: "Shoulder: ball-and-socket joint", b: "The arm swung round in a big circle. A ball-and-socket joint moves in all directions.", c: turned ? "The skeleton turned so you can see the circle." : "" }; drawFig(); tried(1); tourSignal("armcircle"); }, 12);
+}
+function legCircle() {
+  const F = M.F; if (locked()) return lockMsg(); if (F.statue) return statueMsg(); if (F.sitting) { F.msg = { h: "Stand up first", b: "Stand up, then the leg can swing round." }; return drawFig(); }
+  stopAll(); F.active = "hip"; F.msg = null; F.leg.k = 0; F.trace = "leg";
+  runAnim(2600, u => { F.leg.u = legCircleU(ease(u) * 2 * Math.PI); drawFig(); },
+    () => { F.leg.u = [0, -1, 0]; F.used.hip = true; F.msg = { h: "Hip: ball-and-socket joint", b: "The leg swung round in a circle. A ball-and-socket joint moves in all directions." }; drawFig(); }, 12);
+}
+function sitToggle() {
+  const F = M.F; if (locked()) return lockMsg(); stopAll(); F.trace = null;
+  if (F.statue) { F.msg = { h: "You're a statue!", b: "Your joints are locked: you can't bend!", w: 1 };
+    runAnim(700, u => { F.wob = reduced() ? 0 : 2.6 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); }, () => { F.wob = 0; drawFig(); tried(0); tourSignal("sitfail"); }, 12); return; }
+  const from = F.sitting ? 1 : 0, to = 1 - from; F.leg = { u: [0, -1, 0], k: 0 }; F.active = null; F.msg = null;
+  const a0 = F.arm.e, u0 = F.arm.u;
+  runAnim(1300, u => { F.sit = from + (to - from) * ease(u); F.arm.u = to ? vnorm(vadd(vsc(u0, 1 - ease(u)), vsc(vnorm([0, -1, .36]), ease(u)))) : vnorm([0, -1, .36 * F.sit]); F.arm.e = to ? a0 + (64 - a0) * ease(u) : 64 * F.sit; drawFig(); },
+    () => { F.sit = to; F.sitting = !!to; F.msg = to ? { h: "Sitting down", b: "Your hips and knees bend, so you can sit. Joints let your skeleton bend." } : null; drawFig(); }, 12);
+}
+function jump() {
+  const I = M.I; if (locked()) return lockMsg(); stopAll(); I.msg = null; I.info = null;
+  runAnim(1000, u => { I.drop = u < .3 ? u / .3 : u < .6 ? 1 : null; const t = u - .3, env = t < 0 ? 0 : t < .08 ? t / .08 : Math.max(0, Math.exp(-(t - .08) * 7) * Math.cos((t - .08) * 16));
+      I.q = I.cart ? env : env; I.flash = !I.cart && t > 0 ? Math.exp(-t * 3) : 0; I.shake = !I.cart && t > 0 && !reduced() ? 5 * Math.sin(t * 70) * Math.exp(-t * 6) : 0; drawJoint("inside"); },
+    () => { I.drop = null; I.q = 0; I.flash = 0; I.shake = 0; jumpResult(I);
+      I.msg = I.cart ? { h: "Shock absorbed", b: "The cartilage squashed a little, then sprang back. It absorbs shocks." } : { h: "Jolt!", b: "With no cartilage, the bare bone ends took the shock.", w: 1 };
+      drawJoint("inside"); tourSignal("jump"); }, 20);
+}
+function tearToggle(force) {
+  const I = M.I; if (!force && locked()) return lockMsg(); stopAll(); I.info = null;
+  if (I.torn) { I.torn = false; I.slip = 0; I.msg = { h: "Repaired", b: "The ligament holds the two bones together again." }; drawJoint("inside"); renderCtl(); return; }
+  I.torn = true; I.msg = { h: "A torn ligament", b: TEAR_MSG, w: 1 };
+  runAnim(700, u => { I.slip = ease(u); drawJoint("inside"); }, () => { I.slip = 1; drawJoint("inside"); tried(4); });
+}
+function pullToggle() {
+  const T = M.T; if (locked()) return lockMsg(); stopAll(); T.info = null;
+  const from = T.pulled ? 1 : 0, to = 1 - from;
+  runAnim(1000, u => { T.pull = from + (to - from) * ease(u); drawJoint("lt"); },
+    () => { T.pull = to; T.pulled = !!to; T.msg = to ? { h: "The muscle pulls", b: "The muscle pulls on the tendon. The tendon pulls on the bone, so the joint bends." } :
+      { h: "Back to straight", b: "Remember: muscles can only pull, never push." }; drawJoint("lt"); }, 12);
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Lock the statue and try to sit.", "Swing the shoulder in a circle.", "Try to move the skull.", "Take away the cartilage and bend.", "Tear a ligament."];
+const TRIED = [false, false, false, false, false];
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const orders = m => { m.jOrder = shuffled(JKEYS.length).map(i => JKEYS[i]); m.vOrder = shuffled(VENN.length); return m; };
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; if (!M.jOrder) orders(M); renderTry(); drawAll(); }
+function newS() { const t = task; return { choice: null, sort: {}, gap: {}, order: shuffled(t.options ? t.options.length : t.items ? t.items.length : t.bank ? t.bank.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = orders(freshM());
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll();
+}
+const TABW = { move: "Move it", inside: "Inside a joint", lt: "Ligament or tendon?" };
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="small" style="margin:0 0 8px">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "sort") {
+    a.innerHTML = `<div class="opts">` + S.order.map(i => `<div class="srow"><span>${esc(t.items[i].t)}</span><span class="seg" role="group" aria-label="${esc(t.items[i].t)}">` +
+      t.bins.map(([b, w]) => `<button type="button" data-i="${i}" data-b="${b}" aria-pressed="false">${w}</button>`).join("") + `</span></div>`).join("") + `</div>`;
+    a.querySelectorAll(".srow button").forEach(b => b.addEventListener("click", () => { S.sort[+b.dataset.i] = b.dataset.b; paintSort(); }));
+  } else if (t.kind === "gaps") {
+    const bank = S.order.length === t.bank.length ? S.order.map(i => t.bank[i]) : t.bank;
+    a.innerHTML = (t.rowWhy ? "" : `<p class="small" style="margin:0 0 6px">Word bank: ${bank.map(esc).join(" · ")}</p>`) + `<div class="opts">` + t.rows.map(([k, txt]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select>${/Fix:$/.test(txt) ? "" : "."}</label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>${TABW[M.tab]}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function paintSort() { document.querySelectorAll("#answer .srow button").forEach(b => b.setAttribute("aria-pressed", String(S.sort[+b.dataset.i] === b.dataset.b))); }
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+    if (t.need && !t.need(M)) { stopAll(); t.revealM(M); drawAll(); } }
+  else if (t.kind === "sort") { t.items.forEach((x, i) => { S.sort[i] = x.b; }); paintSort(); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task; if (!t.after) return;
+  if (t.after === "skull" && M.F.used.skull && !lock) return;
+  lock = ""; stopAll(); renderCtl();
+  const now = instant || reduced();
+  if (t.after === "skull") { if (now) { M.F.active = "skull"; M.F.used.skull = true; M.F.msg = { h: "Skull: fixed joint", b: FIXED_MSG }; drawAll(); } else skullShake(true); }
+  if (t.after === "armcircle") { if (now) { M.F.active = "shoulder"; M.F.used.shoulder = true; M.F.trace = "arm"; drawAll(); } else armCircle(true); }
+  if (t.after === "tear") { if (M.I.torn) return; if (now) { M.I.torn = true; M.I.slip = 1; M.I.msg = { h: "A torn ligament", b: TEAR_MSG, w: 1 }; drawAll(); } else tearToggle(true); }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Joint", DEF.joint], ["Cartilage (KAR-tih-lij)", DEF.cartilage], ["Ligament", DEF.ligament], ["Tendon", DEF.tendon], ["Friction", DEF.friction],
+  ["Joint types", "hinge: backwards and forwards · ball-and-socket: all directions · fixed: no movement."]];
+function renderSupport() {
+  $("wordsBox").hidden = !support.words;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (k === "labels") drawPane(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    if (t.need && !t.need(M)) return { skip: t.needMsg };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "sort") { const miss = t.items.filter((x, i) => !S.sort[i]); if (miss.length === t.items.length) return { skip: "Choose " + t.bins.map(b => b[1]).join(", ").replace(/, ([^,]*)$/, " or $1") + " for each fact." };
+    const bad = t.items.find((x, i) => S.sort[i] && S.sort[i] !== x.b); if (bad) return { ok: false, html: esc(`“${bad.t}” is not right. ${bad.why}`) };
+    if (miss.length) return { skip: `So far so good. ${miss.length} still to sort.` }; return { ok: true, html: esc("Correct. " + t.explain) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose a word for each gap." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [k, txt] = wrong, v = S.gap[k];
+    return { ok: false, html: esc(t.rowWhy ? `Sentence ${txt.charAt(0)} needs a different fix. ${t.rowWhy[k]}` : `“${txt} ${v}” is not right. ${t.whyVal[v]}`) }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to finish, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+function msgStuck() { const k = task.stuck === "labels" ? "labels" : "words"; return support[k] ? "" : `Stuck? Turn on <b>${k === "labels" ? "Labels" : "Key words"}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + optT(t.options.find(o => o.ok && o.ok())) + " " + t.explain;
+  if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
+  return "Answer: " + t.explain;
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#fsvg", text: "Move it: drag a handle to move a joint. Start with the knee. It's a hinge joint.", do: "knee", doText: "Drag the knee handle to bend the knee." },
+  { el: "#fsvg", text: "Now try the skull. Its bones meet at fixed joints.", do: "skull", doText: "Tap or drag the skull handle." },
+  { el: "#armCirc", text: "The shoulder is a ball-and-socket joint. It moves in all directions.", do: "armcircle", doText: "Press Arm circle." },
+  { el: "#moveCtl", text: "Statue locks every joint, like the human statues. Turn it on, then try to sit down.", do: "sitfail", doText: "Turn on Statue, then press Sit down." },
+  { el: "#mview", text: "Sort the joints puts each joint into its group: hinge, ball-and-socket or fixed.", do: "view-sort", doText: "Press Sort the joints." },
+  { el: "#tabs", text: "Inside a joint shows what is inside: cartilage, fluid and ligaments.", do: "tab-inside", doText: "Press Inside a joint." },
+  { el: ".slider", tab: "inside", text: "Bend the joint. The friction meter shows how much the bones rub.", do: "bend", doText: "Move the Bend slider." },
+  { el: "#iswitches", tab: "inside", text: "Take away the cartilage or the fluid, then bend again. Jump puts a sudden load on the joint.", do: "cartoff", doText: "Turn Cartilage off." },
+  { el: "#jump", tab: "inside", text: "Jump: does the joint absorb the shock?", do: "jump", doText: "Press Jump." },
+  { el: "#tabs", text: "Ligament or tendon? adds a muscle. It has a Venn sort too.", do: "tab-lt", doText: "Press Ligament or tendon?" },
+  { el: "#tsvg", tab: "lt", text: "Tap a band to find out what it joins.", do: "lt-tap", doText: "Tap a ligament or the tendon." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:joints", "1"); } catch (e) {}
+  stopAll(); DEMO_M = orders(freshM()); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = $("topbar").getBoundingClientRect().height;
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { M.tab = st.tab; if (st.tab === "lt") M.T.view = "explore"; drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (drag or tap), touch and keyboard ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+const onKey = (el, fn) => el.addEventListener("keydown", e => { if (e.key !== "Enter" && e.key !== " ") return; const g = e.target.closest && e.target.closest("[tabindex]"); if (g && fn(g)) e.preventDefault(); });
+["fsvg"].forEach(id => $(id).addEventListener("touchstart", e => { if (e.target.closest && e.target.closest(".drag")) e.preventDefault(); }, { passive: false }));
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+/* 1. Move it: drag a joint */
+function jointUsed(j) {
+  const F = M.F; F.active = j; F.trace = null;
+  if (j === "knee" && F.leg.k >= 20) { F.used.knee = true; tourSignal("knee"); }
+  if (j === "elbow" && F.arm.e >= 20) F.used.elbow = true;
+  if (j === "shoulder" || j === "hip") F.used[j] = true;
+}
+function canMove(j) {
+  const F = M.F; if (locked()) { lockMsg(); return false; }
+  if (j === "skull") { skullShake(); return false; }
+  if (anim) return false;
+  if (F.statue) { statueMsg(); return false; }
+  if (F.sitting && (j === "hip" || j === "knee")) { F.active = j; F.msg = { h: "Stand up first", b: "Press Stand up, then you can move the leg." }; drawFig(); return false; }
+  return true;
+}
+(function figDrag() {
+  const svg = $("fsvg"); let dr = null, pend = 0;
+  const go = () => { pend = 0; if (!dr || !dr.T) return; const F = M.F;
+    const miss = solveJoint(F, dr.j, dr.T, LK()); F.msg = null; jointUsed(dr.j);
+    if ((dr.j === "knee" || dr.j === "elbow") && miss > 34 && dr.far) F.msg = { h: `${JOINTS[dr.j].n}: hinge joint`, b: `A hinge joint only moves backwards and forwards. The ${dr.j} won't go that way.`, w: 1 };
+    drawFig(); };
+  svg.addEventListener("pointerdown", e => {
+    const g = e.target.closest("[data-j]"); if (!g) return; const j = g.dataset.j; e.preventDefault();
+    if (!canMove(j)) return;
+    const F = M.F, p = svgPt(svg, e), E0 = projector(F, LK()).pr(endOf(F, j));
+    dr = { j, x: p.x, y: p.y, E0, T: null, moved: false, far: false }; try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+    F.active = j; F.msg = null; F.trace = null; drawFig();
+  });
+  svg.addEventListener("pointermove", e => { if (!dr) return; const p = svgPt(svg, e), dx = p.x - dr.x, dy = p.y - dr.y;
+    if (!dr.moved && Math.hypot(dx, dy) < 4) return; dr.moved = true; dr.far = Math.hypot(dx, dy) > 40;
+    dr.T = [dr.E0[0] + dx, dr.E0[1] + dy]; if (!pend) pend = paceFrame(go); });
+  const up = () => { if (!dr) return; if (pend) { paceCancel(pend); go(); } dr = null; renderCtl(); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("keydown", e => {
+    const g = e.target.closest && e.target.closest(".hdl"); if (!g) return; const j = g.dataset.j, k = e.key;
+    if (k === "Enter" || k === " ") { e.preventDefault(); if (canMove(j)) { M.F.active = j; M.F.msg = null; drawFig(); } return; }
+    if (!/^Arrow/.test(k)) return; e.preventDefault(); if (!canMove(j)) return;
+    const F = M.F, up_ = k === "ArrowUp" || k === "ArrowRight";
+    if (j === "knee") F.leg.k = clamp(F.leg.k + (up_ ? 5 : -5), 0, LIMIT.knee);
+    else if (j === "elbow") F.arm.e = clamp(F.arm.e + (up_ ? 5 : -5), 0, LIMIT.elbow);
+    else { const u = j === "shoulder" ? F.arm.u : F.leg.u; let th = Math.acos(clamp(-u[1], -1, 1)) * R2D, ph = Math.atan2(u[2], u[0] * SIDE) * R2D;
+      if (k === "ArrowUp") th += 8; else if (k === "ArrowDown") th -= 8; else ph += (k === "ArrowRight" ? 12 : -12);
+      const nu = ballU(clamp(th, 0, 180), ph); if (BALL_OK[j](nu)) { if (j === "shoulder") F.arm.u = nu; else F.leg.u = nu; } }
+    F.msg = null; jointUsed(j); drawFig();
+    const n = svg.querySelector(`.hdl[data-j="${j}"]`); if (n) n.focus({ preventScroll: true });
+  });
+})();
+$("mview").addEventListener("click", e => { const b = e.target.closest("button[data-mv]"); if (!b) return; stopAll(); M.F.view = b.dataset.mv; drawAll(); tourSignal("view-" + M.F.view); });
+$("fview").addEventListener("click", e => { const b = e.target.closest("button[data-fv]"); if (!b) return; M.F.yaw = b.dataset.fv; drawAll(); tourSignal("yaw"); });
+$("statueSw").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); const F = M.F; F.statue = !F.statue; if (F.statue && F.sitting) { F.sit = 0; F.sitting = false; }
+  if (F.statue) { F.arm = { u: [0, -1, 0], e: 0 }; F.leg = { u: [0, -1, 0], k: 0 }; F.trace = null; }
+  F.msg = F.statue ? { h: "Statue: on", b: "Every joint is locked straight. Now try to sit down." } : { h: "Statue: off", b: "Your joints can bend again." }; drawFig(); renderCtl(); });
+$("sitBtn").addEventListener("click", sitToggle);
+$("armCirc").addEventListener("click", () => armCircle());
+$("legCirc").addEventListener("click", legCircle);
+$("fReset").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); const F = M.F, keep = { yaw: F.yaw, used: F.used, sort: F.sort }; M.F = Object.assign(freshF(), keep); drawAll(); });
+/* joint sort and Venn: drag a chip, or tap it and then tap where it goes */
+function chipDrag(bank, key, label, drop, tap) {
+  let dr = null, ghost = null, eat = false;
+  bank.addEventListener("pointerdown", e => { const b = e.target.closest(`[data-${key}]`); if (!b || b.disabled) return; dr = { k: b.dataset[key === "jc" ? "jc" : "vc"], x: e.clientX, y: e.clientY, moved: false }; try { b.setPointerCapture(e.pointerId); } catch (x) {} });
+  bank.addEventListener("pointermove", e => { if (!dr) return;
+    if (!dr.moved) { if (Math.hypot(e.clientX - dr.x, e.clientY - dr.y) < 8) return; if (locked()) { dr = null; return lockMsg(); } dr.moved = true; ghost = document.createElement("div"); ghost.className = "ghost"; ghost.textContent = label(dr.k); document.body.appendChild(ghost); }
+    ghost.style.left = e.clientX + "px"; ghost.style.top = e.clientY + "px"; });
+  const up = e => { if (!dr) return; const d = dr; dr = null; if (!d.moved) return; eat = true; if (ghost) { ghost.remove(); ghost = null; } drop(d.k, e.clientX, e.clientY); };
+  bank.addEventListener("pointerup", up); bank.addEventListener("pointercancel", () => { dr = null; if (ghost) { ghost.remove(); ghost = null; } });
+  bank.addEventListener("click", e => { const b = e.target.closest(`[data-${key}]`); if (!b) return; if (eat) { eat = false; return; } if (locked()) return lockMsg(); tap(b.dataset[key === "jc" ? "jc" : "vc"]); });
+}
+chipDrag($("jbank"), "jc", j => JOINTS[j].n, (j, x, y) => { const el = document.elementFromPoint(x, y), b = el && el.closest && el.closest(".bin"); if (b) sortPlace(j, b.dataset.bin); else { M.F.sort.msg = `<p class="r2">Drop the joint on one of the three groups.</p>`; drawSort(); } },
+  j => { const Q = M.F.sort; Q.sel = Q.sel === j ? null : j; Q.msg = Q.sel ? `<p class="r2">Now tap a group for the ${j}.</p>` : ""; drawSort(); const n = document.querySelector(`#jbank [data-jc="${j}"]`); if (n) n.focus({ preventScroll: true }); });
+$("jbins").addEventListener("click", e => { const c = e.target.closest("[data-jc]"), b = e.target.closest(".bin"); if (locked()) return lockMsg();
+  const Q = M.F.sort; if (c && !Q.sel) { delete Q.placed[c.dataset.jc]; Q.res = false; Q.msg = ""; drawSort(); return; } if (b && Q.sel) sortPlace(Q.sel, b.dataset.bin); });
+onKey($("jbins"), g => { if (g.classList.contains("bin")) { if (M.F.sort.sel) sortPlace(M.F.sort.sel, g.dataset.bin); return true; } });
+$("jCheck").addEventListener("click", sortCheck);
+$("jClear").addEventListener("click", () => { if (locked()) return lockMsg(); M.F.sort = { placed: {}, sel: null, res: false, msg: "" }; drawSort(); });
+/* 2. Inside a joint */
+$("bend").addEventListener("input", e => { if (locked()) { e.target.value = M.I.bend; return lockMsg(); } if (anim) finishAnim(); const I = M.I;
+  I.msg = null; I.info = null; if (bendTo(I, +e.target.value)) { if (!I.cart) tried(3); tourSignal("bend"); clearTimeout(moveTimer); moveTimer = setTimeout(() => { I.moving = false; if (M.I === I && M.tab === "inside") drawJoint("inside"); }, 900); }
+  if ($("bendOut").textContent !== I.bend + "°") $("bendOut").textContent = I.bend + "°"; if (!bendPend) bendPend = paceFrame(() => { bendPend = 0; if (M.tab === "inside") drawJoint("inside"); }, 15); });   // one redraw per frame, at most 15 a second
+$("cartSw").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); const I = M.I; I.cart = !I.cart; I.moving = false; I.info = null;
+  I.msg = I.cart ? { h: "Cartilage: on", b: "Smooth cartilage covers the ends of the bones again." } : { h: "Cartilage: off", b: "The bare bone ends now meet. Bend the joint and watch the meter." };
+  drawJoint("inside"); renderCtl(); if (!I.cart) tourSignal("cartoff"); });
+$("fluidSw").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); const I = M.I; I.fluid = !I.fluid; I.moving = false; I.info = null;
+  I.msg = I.fluid ? { h: "Fluid: on", b: "Fluid keeps the cartilage slippery." } : { h: "Fluid: off", b: "No fluid: the joint is dry. Bend it and watch the meter." }; drawJoint("inside"); renderCtl(); });
+$("jump").addEventListener("click", jump);
+$("tear").addEventListener("click", () => tearToggle());
+$("iReset").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); M.I = freshI(); drawAll(); });
+["isvg", "tsvg"].forEach(id => { const svg = $(id), which = id === "isvg" ? "inside" : "lt";
+  svg.addEventListener("click", e => { const g = e.target.closest("[data-p]"); if (g) partTap(which, g.dataset.p); }); });
+/* 3. Ligament or tendon? */
+$("tview").addEventListener("click", e => { const b = e.target.closest("button[data-tv]"); if (!b) return; stopAll(); M.T.view = b.dataset.tv; drawAll(); tourSignal("view-" + M.T.view); });
+$("pull").addEventListener("click", pullToggle);
+chipDrag($("vbank"), "vc", id => VENN.find(x => x.id === id).t, (id, x, y) => { const svg = $("vsvg"), r = svg.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { const p = svgPt(svg, { clientX: x, clientY: y }), z = zoneAt(LK(), p.x, p.y); if (z) return vennPlace(id, z); }
+    M.T.venn.msg = `<p class="r2">Drop the fact inside one of the circles, or in the middle.</p>`; drawVenn(); },
+  id => { const Q = M.T.venn; Q.sel = Q.sel === id ? null : id; Q.msg = Q.sel ? `<p class="r2">Now tap Ligament, Both or Tendon in the diagram.</p>` : ""; drawVenn(); });
+$("vsvg").addEventListener("click", e => { if (locked()) return lockMsg(); const Q = M.T.venn, f = e.target.closest("[data-vf]");
+  if (f && !Q.sel) { delete Q.placed[f.dataset.vf]; Q.res = false; Q.msg = ""; drawVenn(); return; }
+  if (!Q.sel) return; const zt = e.target.closest("[data-zone]"); if (zt) return vennPlace(Q.sel, zt.dataset.zone);
+  const p = svgPt($("vsvg"), e), z = zoneAt(LK(), p.x, p.y); if (z) vennPlace(Q.sel, z); });
+onKey($("vsvg"), g => { const Q = M.T.venn; if (g.dataset.zone) { if (Q.sel) vennPlace(Q.sel, g.dataset.zone); return true; } if (g.dataset.vf) { delete Q.placed[g.dataset.vf]; Q.res = false; drawVenn(); return true; } });
+$("vCheck").addEventListener("click", vennCheck);
+$("vClear").addEventListener("click", () => { if (locked()) return lockMsg(); M.T.venn = { placed: {}, sel: null, res: false }; drawVenn(); });
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel so the model can be explored with them */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; resume(); }).observe($("model"));
+}
+let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; stopAll(); drawAll(); } }, 80); });
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+orders(M); bump(); setMode("demo"); fitPanel(); lastLay = LK();
+try { if (localStorage.getItem("ks3tools-toured:joints")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+</body>
+</html>

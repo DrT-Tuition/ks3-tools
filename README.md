@@ -10,6 +10,7 @@ Free interactive tools for KS3 science lessons. Each tool is a single HTML page 
 | Breathing | Biology | https://drt-tuition.github.io/ks3-tools/breathing.html |
 | Gas Exchange | Biology | https://drt-tuition.github.io/ks3-tools/gas-exchange.html |
 | Microscope | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
+| Joints | Biology | https://drt-tuition.github.io/ks3-tools/joints.html |
 | Muscle Pairs | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
 | Digestive System | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
 | Pondweed | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
