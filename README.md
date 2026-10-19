@@ -1,54 +1,58 @@
-# KS3 Science Tools
+# Science Tools
 
-Free interactive tools for KS3 science lessons. Each tool is a single HTML page with no log-in and nothing to install.
+Free interactive science tools for lessons from KS3 to A-level. Each tool is a single HTML page with no log-in and nothing to install.
 
 **Browse the tools:** https://drt-tuition.github.io/ks3-tools/
 
-| Tool | Subject | Link |
-|---|---|---|
-| Balance the Equation | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
-| Breathing | Biology | https://drt-tuition.github.io/ks3-tools/breathing.html |
-| Gas Exchange | Biology | https://drt-tuition.github.io/ks3-tools/gas-exchange.html |
-| Microscope | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
-| Joints | Biology | https://drt-tuition.github.io/ks3-tools/joints.html |
-| Muscle Pairs | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
-| Digestive System | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
-| Pondweed | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
-| Flower Parts | Biology | https://drt-tuition.github.io/ks3-tools/flower-parts.html |
-| Food Web | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
-| Natural Selection | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
-| Molecule Builder | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
-| Periodic Table Explorer | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
-| Particle Model | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
-| Diffusion | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
-| Gas Pressure | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
-| Acid Strength | Chemistry | https://drt-tuition.github.io/ks3-tools/acid-strength.html |
-| Indicator Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/indicator-lab.html |
-| Neutralise It | Chemistry | https://drt-tuition.github.io/ks3-tools/neutralise-it.html |
-| Naming Salts | Chemistry | https://drt-tuition.github.io/ks3-tools/naming-salts.html |
-| Dissolving | Chemistry | https://drt-tuition.github.io/ks3-tools/dissolving.html |
-| Separate It | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
-| Metal Reactions | Chemistry | https://drt-tuition.github.io/ks3-tools/metal-reactions.html |
-| Displacement Lab | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
-| Spring Stretch | Physics | https://drt-tuition.github.io/ks3-tools/spring-stretch.html |
-| Balanced Forces | Physics | https://drt-tuition.github.io/ks3-tools/balanced-forces.html |
-| Moon Phases | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
-| Make a Wave | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
-| Sound Waves | Physics | https://drt-tuition.github.io/ks3-tools/sound-waves.html |
-| Echo Timer | Physics | https://drt-tuition.github.io/ks3-tools/echo-timer.html |
-| Light Rays | Physics | https://drt-tuition.github.io/ks3-tools/light-rays.html |
-| Colour Mixer | Physics | https://drt-tuition.github.io/ks3-tools/colour-mixer.html |
-| Lens and Eye | Physics | https://drt-tuition.github.io/ks3-tools/lens-and-eye.html |
-| Static Charge | Physics | https://drt-tuition.github.io/ks3-tools/static-charge.html |
-| Circuit Builder | Physics | https://drt-tuition.github.io/ks3-tools/circuit-builder.html |
-| Electromagnet | Physics | https://drt-tuition.github.io/ks3-tools/electromagnet.html |
-| Skate Ramp | Physics | https://drt-tuition.github.io/ks3-tools/skate-ramp.html |
-| Heat Flow | Physics | https://drt-tuition.github.io/ks3-tools/heat-flow.html |
-| Graph It | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
-| DNA Builder | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
-| DNA Replication | A-level Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
-| Action Potential | A-level Biology | https://drt-tuition.github.io/ks3-tools/action-potential.html |
-| Protein Synthesis | A-level Biology | https://drt-tuition.github.io/ks3-tools/protein-synthesis.html |
+| Tool | Key stage | Subject | Link |
+|---|---|---|---|
+| Breathing | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/breathing.html |
+| Gas Exchange | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/gas-exchange.html |
+| Microscope | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
+| Joints | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/joints.html |
+| Muscle Pairs | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
+| Digestive System | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
+| Pondweed | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
+| Flower Parts | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/flower-parts.html |
+| Food Web | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
+| Natural Selection | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
+| Molecule Builder | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
+| Periodic Table Explorer | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
+| Balance the Equation | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
+| Particle Model | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
+| Diffusion | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
+| Gas Pressure | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
+| Indicator Lab | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/indicator-lab.html |
+| Neutralise It | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/neutralise-it.html |
+| Acid Strength | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/acid-strength.html |
+| Naming Salts | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/naming-salts.html |
+| Dissolving | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/dissolving.html |
+| Separate It | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
+| Metal Reactions | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/metal-reactions.html |
+| Displacement Lab | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
+| Spring Stretch | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/spring-stretch.html |
+| Balanced Forces | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/balanced-forces.html |
+| Moon Phases | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
+| Make a Wave | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
+| Sound Waves | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/sound-waves.html |
+| Echo Timer | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/echo-timer.html |
+| Light Rays | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/light-rays.html |
+| Colour Mixer | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/colour-mixer.html |
+| Lens and Eye | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/lens-and-eye.html |
+| Static Charge | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/static-charge.html |
+| Circuit Builder | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/circuit-builder.html |
+| Electromagnet | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/electromagnet.html |
+| Skate Ramp | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/skate-ramp.html |
+| Heat Flow | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/heat-flow.html |
+| Graph It | KS3 | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
+| DNA Builder | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
+| DNA Replication | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
+| Action Potential | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/action-potential.html |
+| Protein Synthesis | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/protein-synthesis.html |
+
+## Adding a tool
+
+The menu pages (index.html, ks3.html, ks3-biology.html and so on) are built from `_site_src/tools.json`. Add a line for the new tool, then run `python3 _site_src/build_site.py`. Each tool page loads `nav.js`, which adds the sticky menu bar (Home, KS3, KS4, KS5).
 
 ## Credits
 
