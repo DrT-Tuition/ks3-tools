@@ -5,7 +5,8 @@
 
 Pages made: index.html (choose a key stage), ks3/ks4/ks5.html (choose a subject)
 and ks3-biology.html etc. (the tools). Tool pages are not touched.
-To add a tool: add a line to tools.json (ks = ks3/ks4/ks5, subject = biology/
+To add a tool: add a line to tools.json (topic = e.g. "B1.2 Body systems"; tools are grouped
+by topic in code order, A–Z within a topic; ks = ks3/ks4/ks5, subject = biology/
 chemistry/physics, or "ws" for Working scientifically, which shows on every
 KS3 subject page), then run this script.
 """
@@ -47,7 +48,10 @@ a.big:hover{border-color:var(--card,var(--accent))}
 .big .chips a:hover{border-color:var(--accent)}
 .big .chips span{color:var(--muted);font-weight:400}
 .soon{opacity:.8}
-.subjects{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.subjects{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+a.tool{align-content:start}
+h2.topic{font-size:22px;margin:36px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.subjects + h2.topic{margin-top:28px}
 .subjects a{font-weight:700;font-size:16px;padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
   color:var(--accent);text-decoration:none}
 .subjects a:hover{border-color:var(--accent)}
@@ -99,7 +103,7 @@ def page(fname, title, lead, crumbs, body):
 def card(t, subject):
     cls = f" s-{subject}" if subject in SUBJ else ""
     return (f'    <a class="tool{cls}" href="{t["file"]}">\n      <span class="name">{t["name"]}</span>\n'
-            f'      <span class="desc">{t["desc"]}</span>\n      <span class="tag">{t["tag"]}</span>\n    </a>')
+            f'      <span class="desc">{t["desc"]}</span>\n    </a>')
 
 
 # Home: choose a key stage
@@ -140,13 +144,18 @@ for s in STAGES:
             f'<a href="{s["id"]}-{x}.html"{" aria-current=\"page\"" if x == sub else ""}>{SUBJ[x]}</a>'
             for x in s["subjects"]) + "</nav>"
         if main:
-            body = '  <div class="grid">\n' + "\n".join(card(t, sub) for t in main) + "\n  </div>"
+            # group by topic (in topic-code order), tools A–Z within each topic
+            topics = sorted({t["topic"] for t in main})
+            body = "\n\n".join(
+                f'  <h2 class="topic">{esc(tp)}</h2>\n  <div class="grid">\n'
+                + "\n".join(card(t, sub) for t in sorted((x for x in main if x["topic"] == tp), key=lambda x: x["name"].lower()))
+                + "\n  </div>" for tp in topics)
         else:
             body = (f'  <p class="empty">No {s["label"]} {SUBJ[sub].lower()} tools yet. They are on the way. '
                     f'Until then, try the <a href="ks3-{sub}.html">KS3 {SUBJ[sub].lower()} tools</a>.</p>')
         if ws and main:
-            body += ("\n\n  <h2>Working scientifically</h2>\n  <div class=\"grid\">\n"
-                     + "\n".join(card(t, sub) for t in ws) + "\n  </div>")
+            body += ("\n\n  <h2 class=\"topic\">Working scientifically</h2>\n  <div class=\"grid\">\n"
+                     + "\n".join(card(t, sub) for t in sorted(ws, key=lambda x: x["name"].lower())) + "\n  </div>")
         page(f'{s["id"]}-{sub}.html', f'{s["label"]} {SUBJ[sub]}',
              f'{s["years"]}. Interactive {SUBJ[sub].lower()} tools.',
              [("Home", "index.html"), (s["label"], f'{s["id"]}.html'), (SUBJ[sub], f'{s["id"]}-{sub}.html')],
