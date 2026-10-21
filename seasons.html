@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seasons</title>
+<!--
+  SCIENCE SPEC — Seasons (KS3 the Earth in space: day, night, year and seasons)
+  Models: the Earth spinning on a tilted axis while it orbits the Sun, in three tabs. Everything is drawn in code (SVG); no pictures.
+    1. Orbit (slides 15–17, 21): an oblique view of the Earth's orbit (not to scale), with the Sun at the centre and the four
+       key months marked as in the deck's diagram (December left, March near, June right, September far). Drag the Earth, use
+       the Month slider, or press Play a year. The axis keeps pointing the same way in space (tilted 23°), so in June the
+       Northern Hemisphere leans towards the Sun and in December away from it. The half of the Earth facing the Sun is lit.
+       The readout gives, for the UK and Australia: tilted towards / away (or "a little", under 15°) / side-on, the season and the day length.
+       "Not tilted" stands the axis upright: day length is 12 hours everywhere, all year, and there are no seasons.
+       "Distance from the Sun" shows the Earth–Sun distance, which hardly changes and is smallest in January (UK winter).
+    2. Day and night (slides 12, 18–20): the Earth seen side-on, sunlight from the left: day is the half facing the Sun,
+       night the half facing away. The chosen place (UK or Australia) is a dot on its line of latitude; Spin turns the Earth
+       once (24 hours), or drag the Earth / use the Time slider. The latitude line shows how much of each spin the place is
+       in daylight, and a 24-hour bar shows sunrise to sunset for that month.
+    3. Sunlight (slides 7, 22, 26): the Sun's height in the sky at a chosen time and month, two children and their shadows, and
+       a beam of sunlight 2 squares wide landing on the ground: a high Sun puts the beam on a small patch (more direct, more
+       concentrated sunlight); a low Sun spreads it over a big patch. Shadows are shortest at midday, when the Sun is highest.
+  Computed in code from the rules (nothing hard-coded): each month is shown on its 21st day. Angle from the June solstice
+    θ = 360° × (day − 21 June) ÷ 365.25. Sun's declination δ = asin(sin 23° × cos θ) (0 with no tilt). Day length: cos H =
+    −tan(latitude) × tan δ, day = 2H ÷ 15 hours. Sun height at hour t (sun time): sin(height) = sin(lat) sin δ + cos(lat) cos δ
+    cos(15° × (t − 12)). Day/night in the 3D drawing uses the same dot product, so the picture and the readout always agree.
+    Seasons by month (UK: Dec–Feb winter, Mar–May spring, Jun–Aug summer, Sep–Nov autumn; the Southern Hemisphere the opposite).
+    Beam patch = 2 squares ÷ sin(height). Shadow length = height of child ÷ tan(Sun height).
+  Sources: Y7 T1 P1.4 L3 The Earth (deck P1.4_The_Earth.md): slide 7 (hook: shadows long in the morning and evening, short at
+    midday), slide 5 (misconceptions), slide 9 (key words axis, rotate, hemisphere, season), slide 11 (rotating vs orbiting),
+    slide 12 (day and night: spins every 24 hours; day faces the Sun; the Sun seems to move because the Earth spins), slide 13–14
+    (Who's right: Joanne, Jason, Matthew), slide 15 (spin 24 hours, orbit 365¼ days, leap year, gravity keeps the Earth in orbit),
+    slide 17 (tilt about 23°, always pointing the same way), slides 18–20 (globe and torch demo: June lit for longest), slide 21
+    (tilt → seasons; towards: summer, longer days; away: winter, shorter days; Southern Hemisphere opposite), slides 22–24
+    (cause and effect: days longer and sunlight more direct; predict the season; Australia), slide 25 (hinge: what is a day?),
+    slide 26 (plenary: rays more direct; exit ticket; Sun highest at midday). Context only: P1.4_The_Solar_System.md (orbits
+    are ellipses, slightly squashed circles; gravity). The Moon is left to moon-phases.html.
+    KS3 strand: NC Physics, Space physics — "the seasons and the Earth's tilt, day length at different times of year, in
+    different hemispheres"; AQA KS3 3.7.2 Universe.
+  Simplifications (on screen as "Model limits"): not to scale (the Sun is far bigger and further away); the orbit is drawn as a
+    circle (the real one is very nearly circular); each month is shown on its 21st day; day lengths come from the simple rule
+    above and are rounded to the nearest hour (the atmosphere's bending of light and the Sun's width are left out); times are
+    sun times (the Sun is highest at midday; clock changes are left out); the Sunlight view shows the Sun's height, not its
+    direction across the sky; UK = latitude 51.5° N, Australia = latitude 34° S (Sydney).
+  Misconceptions designed out (slide 5, hinge slide 25; Driver et al. 1994): the Earth orbits the Sun every 24 hours (the spin
+    and the orbit have separate controls and readouts: Easy 4, 5, Hard 10); it is colder in winter because the Earth is further
+    away (the distance switch shows the Earth is a little closer in the UK's winter; both hemispheres are the same distance away
+    but have opposite seasons: Easy 7, Hard 5, 7, 8); the Sun moves around the Earth each day (only the Earth turns: Easy 2,
+    Hard 1); night is when the Moon covers the Sun (no Moon is drawn; night is the side facing away: Easy 2); the axis swings to
+    point at the Sun (it keeps pointing the same way, shown by the faint Earths at the four key months); a day is the time the
+    Sun is up (the hinge: a day is one spin, 24 hours).
+  Facts and values used: axis = an imaginary line through the Earth from the North Pole to the South Pole; rotate = to spin around
+    an axis; hemisphere = half of the Earth; the UK is in the Northern Hemisphere; season = one of the four parts of the year;
+    rotating means spinning, orbiting means going around another object; the Earth spins once every 24 hours; it orbits the Sun
+    once every 365¼ days; the spare quarter day gives a leap year; gravity keeps the Earth in orbit; tilt about 23°, always
+    pointing the same way; tilted towards the Sun → summer, longer days; away → winter, shorter days; the Southern Hemisphere has
+    the opposite season; days longer and sunlight more direct in summer; the Sun is highest in the sky at midday.
+    Not in the decks (standard KS3 values, listed in the report): Earth–Sun distance about 147 million km in January and 152
+    million km in July (closest in January); the latitudes of the UK (51.5° N) and Sydney (34° S); a low Sun spreads the same
+    sunlight over more ground, so it heats the ground less.
+  SoW lessons served: Y7 T1 P1.4 L3 The Earth (all three tabs).
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Key words, Seasons rule.
+  Idea credit: none (designed from scratch).
+  Checks: on load, the facts (23°, 24 hours, 365¼ days, four quarter days make one day), the model (June tilts the UK towards the
+    Sun and December away; March and September side-on; the UK's longest day is in June and shortest in December, Australia the
+    opposite; every month has opposite seasons in the two hemispheres; no tilt gives 12-hour days everywhere; the drawn 3D
+    day/night agrees with the day-length rule; the Earth is closest in January; the June midday Sun is higher and its beam patch
+    smaller than December's), and every question (3 hints; one right option and feedback for each wrong one; gap answers in the
+    bank; goals not met at the start and reached by Show answer). Any failure shows a visible error box and switches that
+    question off.
+  Performance: drawn on demand (no animation loop while idle). Play and Spin use paceFrame (30 fps cap, adaptive slow-down,
+    time-based motion) and stop by themselves after one year / one spin; only the Earth (orbit) or the dot, axis and lines
+    (day and night) are patched each frame; static layers are patched only when they change; no CSS filters; no backdrop-filter.
+    They pause when the tab is hidden or the model is scrolled off-screen. Reduced motion: Play and Spin step a whole month or
+    an hour at a time.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+/* space, Sun, Earth, sky and ground colours */
+:root{--space:#1F3150;--space-ink:#E9EDF3;--space-muted:#C3CCDA;--orbit:rgba(233,237,243,.45);--star:rgba(233,237,243,.55);
+  --sun-1:#FCE7A0;--sun-2:#F2A93B;--sun-edge:#B9741A;--ray:#F2C14E;--e-day:#3E7CC0;--e-hi:#6FA3DC;--e-night:#26334F;--e-edge:#0B1424;--axis:#F4F6F9;
+  --pin:#E0483E;--path-day:#F2C14E;--path-night:#9FB3CC;
+  --sky:#D3E6F6;--sky-low:#F3DDBE;--sky-night:#24365A;--ground:#93BE6E;--ground-2:#84B25F;--ground-edge:#4E6E3A;--shade:rgba(20,36,61,.55);
+  --beam:rgba(242,193,78,.42);--beam-ln:#B8820F;--patch:#B8820F;--lead:#1E252E;--dim:#4C5663}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--space:#0E1A2C;--orbit:rgba(233,237,243,.4);--e-night:#1F2A40;--e-edge:#A9B4C4;
+  --sky:#2C4C78;--sky-low:#5A4A52;--sky-night:#0B1626;--ground:#4F7A3E;--ground-2:#466E37;--ground-edge:#A7C98F;--shade:rgba(0,0,0,.6);
+  --beam:rgba(242,193,78,.33);--beam-ln:#F2C14E;--patch:#F2C14E;--lead:#E9EDF3;--dim:#B8C3D2}}
+:root[data-theme="dark"]{--space:#0E1A2C;--orbit:rgba(233,237,243,.4);--e-night:#1F2A40;--e-edge:#A9B4C4;
+  --sky:#2C4C78;--sky-low:#5A4A52;--sky-night:#0B1626;--ground:#4F7A3E;--ground-2:#466E37;--ground-edge:#A7C98F;--shade:rgba(0,0,0,.6);
+  --beam:rgba(242,193,78,.33);--beam-ln:#F2C14E;--patch:#F2C14E;--lead:#E9EDF3;--dim:#B8C3D2}
+.scene .sp{fill:var(--space)}
+.scene .spt{fill:var(--space-ink)!important}
+.scene .spm{fill:var(--space-muted)!important;paint-order:stroke;stroke:var(--space);stroke-width:4px;stroke-linejoin:round}
+.scene .star{fill:var(--star)}
+.scene .orb{fill:none;stroke:var(--orbit);stroke-width:2}
+.scene .orbA{fill:var(--orbit)}
+.scene .sunc{stroke:var(--sun-edge);stroke-width:2}
+.scene .glow{fill:var(--sun-1);opacity:.18}
+.scene .eday{fill:var(--e-day)}
+.scene .enight{fill:var(--e-night)}
+.scene .eedge{fill:none;stroke:var(--e-edge);stroke-width:2}
+.scene .eq{fill:none;stroke:rgba(233,237,243,.55);stroke-width:1.5}
+.scene .ax{stroke:var(--axis);stroke-width:3;stroke-linecap:round}
+.scene .axb{stroke:var(--axis);stroke-width:3;stroke-linecap:round;stroke-dasharray:5 6;opacity:.75}
+.scene .ghost{opacity:.5}
+.scene .ray{stroke:var(--ray);stroke-width:4;stroke-linecap:round;fill:none}
+.scene .rayh{fill:var(--ray)}
+.scene .pin{fill:var(--pin);stroke:#FFFFFF;stroke-width:2.5}
+.scene .pinb{fill:none;stroke:var(--pin);stroke-width:2.5;stroke-dasharray:4 3}
+.scene .pday{fill:none;stroke:var(--path-day);stroke-width:4;stroke-linecap:round}
+.scene .pnight{fill:none;stroke:var(--path-night);stroke-width:4;stroke-linecap:round;stroke-dasharray:2 7}
+.scene .pback{fill:none;stroke:var(--space-muted);stroke-width:1.5;stroke-dasharray:3 6;opacity:.7}
+.scene .spin{fill:none;stroke:#F08A5D;stroke-width:3.5;stroke-linecap:round}
+.scene .spinh{fill:#F08A5D}
+.scene .bard{fill:var(--path-day)}
+.scene .barn{fill:#3A4866}
+.scene .bare{fill:none;stroke:var(--space-muted);stroke-width:1.5}
+.scene .lbl{fill:var(--space-ink)!important;font-weight:700;paint-order:stroke;stroke:var(--space);stroke-width:5px;stroke-linejoin:round}
+.scene .dist{stroke:var(--space-ink);stroke-width:2;fill:none;stroke-dasharray:6 5}
+.scene .pill{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.scene .sky{fill:var(--sky)}
+.scene .skyl{fill:var(--sky-low)}
+.scene .skyn{fill:var(--sky-night)}
+.scene .gr{fill:var(--ground)}
+.scene .gr2{fill:var(--ground-2)}
+.scene .gre{stroke:var(--ground-edge);stroke-width:3}
+.scene .shade{fill:var(--shade)}
+.scene .beam{fill:var(--beam)}
+.scene .beamln{stroke:var(--beam-ln);stroke-width:2;stroke-dasharray:8 6;fill:none}
+.scene .patch{stroke:var(--patch);stroke-width:6;stroke-linecap:round}
+.scene .dimln{stroke:var(--dim);stroke-width:2;fill:none}
+.scene .dimt{fill:var(--dim)!important;paint-order:stroke;stroke:var(--sky);stroke-width:4px;stroke-linejoin:round}
+.scene .arc{fill:none;stroke:var(--lead);stroke-width:2}
+.scene .lead{fill:var(--lead)!important;font-weight:700;paint-order:stroke;stroke:var(--sky);stroke-width:4px;stroke-linejoin:round}
+.scene .kid{stroke:#3A2C22;stroke-width:2;stroke-linejoin:round}
+.scene .big{font-weight:700}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.readout th,.readout td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left}
+.readout th{font-size:15px;color:var(--muted)}
+.readout tr.me td{font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:5.6em;text-align:right}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:4px}
+.sscene{position:relative}
+#model{grid-template-columns:minmax(0,1fr)}
+/* the parts that move (the Earth in its orbit; the place on the spinning Earth) sit in their own SVG on top, so a frame
+   only repaints that small picture, not the stars, the Sun and the orbit underneath */
+.scene.ov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none}
+.scene.ov [data-earth],.scene.ov [data-spin]{pointer-events:auto}
+.scene .drag{cursor:grab;touch-action:none}
+@media (max-width:560px){.slider{grid-template-columns:minmax(0,1fr) auto}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .readout th,.readout td{padding:3px 5px}.readout table{font-size:15px}}
+@media (max-width:400px){.readout{padding:8px 8px}.readout table{font-size:14px}.readout th{font-size:13px}.readout th,.readout td{padding:3px 3px}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:901px){.scene{max-height:min(520px,62vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<body>
+<div class="wrap">
+  <header>
+    <h1>Seasons<small>Spin the Earth for day and night, orbit the Sun for a year, and see how the tilted axis gives us the seasons.</small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Seasons</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="The Earth in space model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="orbit" aria-pressed="true">Orbit</button><button type="button" data-tab="day" aria-pressed="false">Day and night</button><button type="button" data-tab="sun" aria-pressed="false">Sunlight</button></div>
+
+      <div class="pane" id="pane-orbit">
+        <div class="sscene" id="oscene"><svg id="osvg" class="scene" viewBox="0 0 960 430" role="img" aria-label="The Earth orbiting the Sun, not to scale."><g id="oBg"></g></svg><svg id="osvgT" class="scene ov" viewBox="0 0 960 430" role="group" aria-label="Drag the Earth to change the month."><g id="oTop"></g><g id="oEarth"></g></svg></div>
+        <div class="controls" id="orbCtl">
+          <button class="btn primary go" type="button" id="playBtn">Play a year ▶</button>
+          <button class="sw" type="button" id="distSw" aria-pressed="false"><span class="dot"></span>Distance from the Sun <span class="state">off</span></button>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-day" hidden>
+        <div class="sscene" id="dscene"><svg id="dsvg" class="scene" viewBox="0 0 960 440" role="img" aria-label="The Earth seen from the side, with sunlight from the left."><g id="dBack"></g><g id="dDisc"></g></svg><svg id="dsvgT" class="scene ov" viewBox="0 0 960 440" role="group" aria-label="Drag the Earth to spin it."><g id="dDyn"></g></svg></div>
+        <div class="slider" id="hDRow"><label class="ctl-lbl" for="hourD">Time</label><input type="range" id="hourD" min="0" max="23" step="1" value="15"><output id="hourDOut" for="hourD">3 pm</output></div>
+        <div class="controls"><button class="btn primary go" type="button" id="spinBtn">Spin once ▶</button></div>
+      </div>
+
+      <div class="pane" id="pane-sun" hidden>
+        <div class="sscene" id="lscene"><svg id="lsvg" class="scene" viewBox="0 0 960 400" role="group" aria-label="The Sun in the sky, two children and their shadows, and a beam of sunlight landing on the ground"><g id="lAll"></g></svg></div>
+        <div class="slider" id="hSRow"><label class="ctl-lbl" for="hourS">Time of day</label><input type="range" id="hourS" min="6" max="18" step="1" value="12"><output id="hourSOut" for="hourS">Midday</output></div>
+      </div>
+
+      <div class="slider" id="mRow"><label class="ctl-lbl" for="month">Month</label><input type="range" id="month" min="0" max="11" step="1" value="5"><output id="monthOut" for="month">June</output></div>
+      <div class="controls" id="globCtl">
+        <span class="controls" id="placeRow"><span class="gl" id="placeLbl">Place:</span><span class="seg" role="group" aria-labelledby="placeLbl" id="placeSeg"><button type="button" data-pl="uk" aria-pressed="true">UK</button><button type="button" data-pl="aus" aria-pressed="false">Australia</button></span></span>
+        <span class="controls" id="tiltRow"><span class="gl" id="tiltLbl">Axis:</span><span class="seg" role="group" aria-labelledby="tiltLbl" id="tiltSeg"><button type="button" data-tilt="1" aria-pressed="true">Tilted 23°</button><button type="button" data-tilt="0" aria-pressed="false">Not tilted</button></span></span>
+      </div>
+      <div class="readout" id="read" aria-live="polite"></div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> Not to scale: the Sun is far bigger and further away. The orbit is drawn as a circle (the real one is very nearly a circle). Each month is shown on its 21st day. Day lengths come from a simple rule and are rounded. Times are sun times: the Sun is highest at midday.</p>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="rule" aria-pressed="false"><span class="dot"></span>Seasons rule <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="ruleBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (P1.4 L3 The Earth — slides 5, 7, 9, 11, 12, 13, 15, 17, 18, 20, 21, 22, 24, 25, 26) ===== */
+const TILT = 23;          // slide 17: the tilt is about 23°, always pointing the same way
+const DAY_H = 24;         // slides 9, 12, 15: the Earth spins once every 24 hours
+const YEAR = 365.25;      // slide 15: it orbits the Sun once every 365¼ days
+const DEF = {             // slide 9 (key words), slide 11 (rotating vs orbiting)
+  axis: "An imaginary line through the Earth, from the North Pole to the South Pole.",
+  rotate: "To spin around an axis. The Earth rotates once every 24 hours.",
+  hemisphere: "Half of the Earth. The UK is in the Northern Hemisphere.",
+  season: "One of the four parts of the year: spring, summer, autumn and winter.",
+  orbit: "To go around another object. The Earth's orbit is its path round the Sun." };
+const RULES = ["The axis is tilted and always points the same way.", "Tilted towards the Sun: summer, with longer days.",
+  "Tilted away from the Sun: winter, with shorter days.", "The Southern Hemisphere has the opposite season."];   // slide 21
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MSH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAY21 = [20, 51, 79, 110, 140, 171, 201, 232, 263, 293, 324, 354];   // day of the year (from 0 = 1 January) of each month's 21st
+const SOLSTICE = 171;      // 21 June
+const PLACES = { uk: { n: "UK", the: "the UK", lat: 51.5, hemi: "Northern" }, aus: { n: "Australia", the: "Australia", lat: -34, hemi: "Southern" } };   // not in the decks: standard latitudes (UK, Sydney)
+const SEASON_N = ["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer", "autumn", "autumn", "autumn", "winter"];
+const OPP = { winter: "summer", summer: "winter", spring: "autumn", autumn: "spring" };
+const BEAM_SQ = 2;         // the beam of sunlight is 2 squares wide
+const KID = [{ h: 1, skin: "#7A4A2E", hair: "#1F1712", top: "#2E8A86", leg: "#34495E" }, { h: .86, skin: "#F0C9A2", hair: "#8A5A2B", top: "#D9822B", leg: "#3E3A36" }];
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (+v).toFixed(1);
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const eq = (a, b) => Math.abs(a - b) < 1e-9;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ===== The model: everything below is worked out from the rules ===== */
+const DAYX = DAY21.concat([DAY21[0] + 365]);
+const wrapM = m => ((m % 12) + 12) % 12;
+const mIdx = m => Math.round(wrapM(m)) % 12;
+function dayOf(m) { m = wrapM(m); const i = Math.floor(m); return DAYX[i] + (DAYX[i + 1] - DAYX[i]) * (m - i); }
+function mOfDay(d) { d = DAYX[0] + (((d - DAYX[0]) % 365) + 365) % 365; let i = 0; while (i < 11 && d >= DAYX[i + 1]) i++; return i + (d - DAYX[i]) / (DAYX[i + 1] - DAYX[i]); }
+const orbAng = m => 2 * Math.PI * (dayOf(m) - SOLSTICE) / YEAR;    // angle round the orbit from 21 June (radians)
+const decl = (m, tilt) => tilt ? Math.asin(Math.sin(TILT * D2R) * Math.cos(orbAng(m))) * R2D : 0;   // how far the Sun is overhead north (+) or south (−) of the equator
+function dayLen(pl, m, tilt) { const x = -Math.tan(PLACES[pl].lat * D2R) * Math.tan(decl(m, tilt) * D2R); return 2 * Math.acos(clamp(x, -1, 1)) * R2D / 15; }
+function sunHt(pl, m, tilt, hr) { const p = PLACES[pl].lat * D2R, d = decl(m, tilt) * D2R; return Math.asin(Math.sin(p) * Math.sin(d) + Math.cos(p) * Math.cos(d) * Math.cos(15 * (hr - 12) * D2R)) * R2D; }
+const isDay = (pl, m, tilt, hr) => sunHt(pl, m, tilt, hr) > 0;
+function season(pl, m, tilt) { if (!tilt) return null; const s = SEASON_N[mIdx(m)]; return PLACES[pl].lat > 0 ? s : OPP[s]; }
+function leaning(pl, m, tilt) { const d = decl(m, tilt) * Math.sign(PLACES[pl].lat); return d >= 15 ? "towards" : d > 3 ? "ltowards" : d <= -15 ? "away" : d < -3 ? "laway" : "side"; }
+const TILTW = { towards: "Towards the Sun", ltowards: "A little towards", away: "Away from the Sun", laway: "A little away", side: "Side-on" };
+const LEANW = { towards: "tilted towards the Sun", ltowards: "tilted a little towards the Sun", away: "tilted away from the Sun", laway: "tilted a little away from the Sun", side: "side-on: neither towards nor away" };
+function sunDistD(d) { const M = 2 * Math.PI * (d - 3) / YEAR, e = .0167; return 149.6 * (1 - e * e) / (1 + e * Math.cos(M)); }   // not in the decks: million km; closest about 3 January
+const sunDist = m => sunDistD(dayOf(m));
+const MSTART = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];   // first day of each month
+const calMonth = d => { let i = 11; while (i > 0 && d < MSTART[i]) i--; return i; };
+const extremeDay = sgn => { let bd = 0; for (let d = 1; d < 365; d++) if (sgn * (sunDistD(d) - sunDistD(bd)) < 0) bd = d; return bd; };
+const patchSq = ht => BEAM_SQ / Math.sin(ht * D2R);
+const hoursW = h => `about ${Math.round(h)} hour${Math.round(h) === 1 ? "" : "s"}`;
+function timeW(h) { h = ((Math.floor(h + 1e-6) % 24) + 24) % 24; return h === 0 ? "midnight" : h === 12 ? "midday" : h < 12 ? h + " am" : (h - 12) + " pm"; }
+const htW = a => a >= 50 ? "high in the sky" : a >= 35 ? "fairly high" : a >= 20 ? "fairly low" : "low in the sky";
+function shadowW(a) { const r = 1 / Math.tan(a * D2R); return r < .8 ? "short" : r < 1.5 ? "medium" : r < 3 ? "long" : "very long"; }
+const best = (f, better) => { let bi = 0; for (let i = 1; i < 12; i++) if (better(f(i), f(bi))) bi = i; return bi; };
+const longestM = pl => best(i => dayLen(pl, i, true), (a, b) => a > b + 1e-9);
+const highestM = pl => best(i => sunHt(pl, i, true, 12), (a, b) => a > b + 1e-9);
+const closestM = () => calMonth(extremeDay(1)), furthestM = () => calMonth(extremeDay(-1));   // the month of the closest / furthest day
+
+/* 3D helpers: world x right, y up (the North Pole side of the orbit), z towards the viewer of the orbit picture */
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const nrm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+const sc = (v, k) => [v[0] * k, v[1] * k, v[2] * k];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const axisW = tilt => tilt ? [-Math.sin(TILT * D2R), Math.cos(TILT * D2R), 0] : [0, 1, 0];   // fixed in space: the top leans towards the June Sun
+const earthPos = m => { const t = orbAng(m); return [Math.cos(t), 0, -Math.sin(t)]; };      // June right, September far, December left, March near
+const prj = (C, v) => [dot3(v, C.R), -dot3(v, C.U), dot3(v, C.T)];   // screen x, screen y (down), depth (towards the viewer)
+function perp(a, s) {   // two directions at right angles to the axis: e1 as close to the Sun as it can be, e2 the way the Earth turns
+  let e1 = add(s, sc(a, -dot3(s, a))); if (Math.hypot(e1[0], e1[1], e1[2]) < 1e-6) e1 = Math.abs(a[0]) < .9 ? [1, 0, 0] : [0, 0, 1];
+  e1 = nrm(e1); return [e1, cross(a, e1)];
+}
+/* a place on the Earth at hour hr: the Earth turns anticlockwise seen from above the North Pole; midday faces the Sun */
+function placeAt(a, s, lat, hr) { const [e1, e2] = perp(a, s), p = lat * D2R, h = 15 * (hr - 12) * D2R;
+  return add(sc(a, Math.sin(p)), add(sc(e1, Math.cos(p) * Math.cos(h)), sc(e2, Math.cos(p) * Math.sin(h)))); }
+
+/* ===== Model state ===== */
+function freshM() { return { tab: "orbit", m: new Date().getMonth(), place: "uk", tilt: true, dist: false, hD: 15, hS: 12, hide: false }; }
+
+/* ===== Question bank (wording from the deck; every answer is worked out from the rules above) ===== */
+const ABC = "ABCDEF";
+const SU = {
+  orbit: M => { M.tab = "orbit"; M.m = 5; },
+  dayOct: M => { M.tab = "day"; M.m = 9; M.hD = 15; },
+  orbDec: M => { M.tab = "orbit"; M.m = 11; },
+  orbDecHide: M => { M.tab = "orbit"; M.m = 11; M.hide = true; },
+  dayDec: M => { M.tab = "day"; M.m = 11; M.hD = 12; },
+  orbJun: M => { M.tab = "orbit"; M.m = 5; },
+  orbJul: M => { M.tab = "orbit"; M.m = 6; M.dist = false; },
+  sunDec: M => { M.tab = "sun"; M.m = 11; M.hS = 9; },
+  sunJun: M => { M.tab = "sun"; M.m = 5; M.hS = 12; },
+  day: M => { M.tab = "day"; M.m = 2; M.hD = 15; } };
+const at = f => { const m = freshM(); f(m); return m; };
+const DL = (pl, m) => Math.round(dayLen(pl, m, true));
+const TASKS = {
+  easy: [
+    { id: "words", kind: "gaps", setup: SU.orbit, stuck: "words", text: "Match each key word to what it means.",
+      rows: [["w1", "Axis:", "a line from the North Pole to the South Pole"], ["w2", "Rotate:", "to spin around an axis"],
+        ["w3", "Hemisphere:", "half of the Earth"], ["w4", "Season:", "one of the four parts of the year"]],
+      bank: ["a line from the North Pole to the South Pole", "to spin around an axis", "half of the Earth", "one of the four parts of the year", "to travel around the Sun"],
+      whyVal: { "a line from the North Pole to the South Pole": "That is the axis: an imaginary line from the North Pole to the South Pole.",
+        "to spin around an axis": "That is what rotate means.",
+        "half of the Earth": "That is a hemisphere. The UK is in the Northern Hemisphere.",
+        "one of the four parts of the year": "That is a season: spring, summer, autumn or winter.",
+        "to travel around the Sun": "That is orbiting, not rotating. Rotating means spinning around an axis." },
+      explain: "Axis: an imaginary line from the North Pole to the South Pole. Rotate: to spin around an axis. Hemisphere: half of the Earth. Season: one of the four parts of the year.",
+      hints: ["Start with the word you are surest of.", "Hemi- means half. Rotating is spinning, not orbiting.", "Axis → poles, rotate → spin, hemisphere → half, season → part of the year."] },
+    { id: "night", kind: "choice", setup: SU.day, text: "Three pupils explain night. Who is right?",
+      options: [{ t: "Jason: “The Earth spins. When your side faces away from the Sun, it is night.”", ok: () => isDay("uk", 2, true, 12) && !isDay("uk", 2, true, 0) },
+        { t: "Joanne: “The Sun goes around the Earth. When it is on the other side, it is night.”", why: "The Sun does not go around the Earth. It only seems to move because the Earth spins." },
+        { t: "Matthew: “The Moon covers the Sun, and that is what makes night.”", why: "The Moon does not cause night. Night is the side of the Earth facing away from the Sun." },
+        { t: "Sam: “The Earth goes round the Sun once a day. Night is when we are behind it.”", why: "One orbit takes a year, not a day. Night comes from the spin: the Earth spins once every 24 hours." }],
+      explain: "Jason is right. The Earth spins once every 24 hours. Night is the side of the Earth facing away from the Sun.",
+      hints: ["Look at the Day and night tab. Which half is dark?", "What does the Earth do once every 24 hours?", "The Earth spins. Night is the side facing a… from the Sun."] },
+    { id: "spinNight", kind: "goal", setup: SU.dayOct, text: "Do it: spin the Earth until the UK is in night. Then press Check.",
+      test: M => M.place === "uk" && !isDay("uk", M.m, M.tilt, M.hD),
+      not: M => M.place !== "uk" ? "Pick the UK under Place." : `At ${timeW(M.hD)} the UK still faces the Sun, so it is daytime. Spin the Earth further.`,
+      done: M => `At ${timeW(M.hD)} the UK faces away from the Sun, so it is night there.`,
+      reveal: M => { M.place = "uk"; M.hD = 0; },
+      hints: ["Use the Time slider or Spin, or drag the Earth.", "Night is the side facing away from the Sun: the right-hand side.", "Set the time to midnight."] },
+    { id: "hinge", kind: "choice", setup: SU.day, text: "What is a ‘day’?",
+      options: [{ t: "One spin of the Earth on its axis", ok: () => DAY_H === 24 && /spin/.test(DEF.rotate) },
+        { t: "One orbit of the Earth around the Sun", why: "One orbit of the Sun takes a year, not a day. A day is one spin." },
+        { t: "One orbit of the Moon around the Earth", why: "That is about a month. A day is one spin of the Earth." },
+        { t: "The time the Sun is above the horizon", why: "That is only the daylight part. A day is one whole spin: 24 hours, day and night." }],
+      explain: "A day is one spin of the Earth on its axis, which takes 24 hours.",
+      hints: ["Day and night come from one movement of the Earth.", "Does the Earth spin or orbit once every 24 hours?", "A day is one s… of the Earth."] },
+    { id: "year", kind: "choice", setup: SU.orbit, text: "How long does the Earth take to orbit the Sun once?",
+      options: [{ t: "365¼ days", ok: () => eq(YEAR, 365.25) },
+        { t: "24 hours", why: "24 hours is one spin. That is a day, not an orbit." },
+        { t: "About a month", why: "About a month is the Moon going round the Earth. The Earth's orbit of the Sun takes a year." },
+        { t: "12 hours", why: "12 hours is half a spin. One orbit of the Sun takes a year." }],
+      explain: "One orbit of the Sun takes 365¼ days: one year.",
+      hints: ["Press Play a year on the Orbit tab.", "One orbit of the Sun is one year.", "A year is about 365 days, plus a quarter."] },
+    { id: "summer", kind: "goal", setup: SU.orbDec, stuck: "rule", text: "Do it: move the Earth to a month when the UK has summer. Then press Check.",
+      test: M => M.tilt && season("uk", M.m, M.tilt) === "summer",
+      not: M => { if (!M.tilt) return "With no tilt there are no seasons. Set the axis back to Tilted.";
+        const mi = mIdx(M.m), s0 = `In ${MONTHS[mi]} the UK has ${season("uk", mi, true)}. `, l = leaning("uk", mi, true);
+        if (l === "towards") return s0 + "It already tilts towards the Sun, but summer starts in June. Move on a little.";   // May: late spring
+        if (l === "ltowards") return s0 + "It is only a little tilted towards the Sun. Summer comes when it tilts most towards the Sun.";
+        return s0 + "Move the Earth so the UK tilts towards the Sun."; },
+      done: M => `In ${MONTHS[mIdx(M.m)]} the UK is ${LEANW[leaning("uk", M.m, true)]}, so it has summer, with longer days.`,
+      reveal: M => { M.tilt = true; M.m = 5; },
+      hints: ["Drag the Earth round its orbit, or use the Month slider.", "In summer the UK is tilted towards the Sun.", "Try June."] },
+    { id: "away", kind: "choice", setup: SU.orbDec, stuck: "rule", text: "The UK is tilted away from the Sun. What season is it in the UK?",
+      options: [{ t: "Winter", ok: () => leaning("uk", 11, true) === "away" && season("uk", 11, true) === "winter" },
+        { t: "Summer", why: "Tilted towards the Sun gives summer. Tilted away gives winter." },
+        { t: "Spring", why: "In spring the UK is turning towards the Sun. Tilted away gives winter." },
+        { t: "It depends how far the Earth is from the Sun", why: "Distance does not cause the seasons. The tilt of the axis does: tilted away gives winter." }],
+      explain: "Tilted away from the Sun: the UK has winter, with shorter days.",
+      hints: ["Look at the Earth in December.", "Towards the Sun is summer. What is away?", "Tilted away from the Sun: w…"] },
+    { id: "decDay", kind: "choice", setup: SU.orbDecHide, lock: "run", after: "dayTab", stuck: "rule",
+      text: "Predict: it is December. Compared with the night, the UK's day is…", note: "This is a prediction. When you get it right, the model shows the UK's day.",
+      options: [{ t: "Shorter: the UK tilts away from the Sun", ok: () => dayLen("uk", 11, true) < 12 },
+        { t: "Longer: winter days are long", why: "Winter days are short. In December the UK tilts away from the Sun, so it spends less of each spin in the light." },
+        { t: "The same: 12 hours each, all year", why: "Day and night are about 12 hours each only in March and September. In December the UK's days are short." },
+        { t: "There is no daytime in winter", why: "The UK still has daytime in winter: it is just shorter than the night." }],
+      explain: `In December the UK tilts away from the Sun. Its day is ${hoursW(dayLen("uk", 11, true))} and its night ${hoursW(24 - dayLen("uk", 11, true))}.`,
+      hints: ["Is the UK tilted towards or away from the Sun in December?", "Tilted away from the Sun: winter, with … days.", "Winter days are shorter."] }
+  ],
+  hard: [
+    { id: "sunMoves", kind: "choice", setup: SU.day, text: "The Sun seems to move across the sky each day. Why?",
+      options: [{ t: "The Earth spins on its axis", ok: () => DAY_H === 24 },
+        { t: "The Sun moves around the Earth", why: "The Sun does not go around the Earth. It only seems to move because the Earth spins." },
+        { t: "The Earth orbits the Sun once a day", why: "One orbit takes a year. The Earth spins once every 24 hours, and that makes the Sun seem to move." },
+        { t: "The Moon pulls the Sun across the sky", why: "The Moon doesn't move the Sun. The Sun only seems to move because the Earth spins." }],
+      explain: "The Sun seems to move because the Earth spins on its axis, once every 24 hours.",
+      hints: ["What does the Earth do every 24 hours?", "Spin the Earth on the Day and night tab. Watch the UK move.", "The Earth s… on its axis."] },
+    { id: "leap", kind: "choice", setup: SU.orbit, text: "Why do we have a leap year every four years?",
+      options: [{ t: "An orbit takes 365¼ days. Four spare quarter days make one extra day.", ok: () => eq(4 * (YEAR - 365), 1) },
+        { t: "The Earth spins more slowly every fourth year", why: "The Earth spins once every 24 hours. The leap day comes from the spare quarter day in each orbit." },
+        { t: "An orbit takes 366 days", why: `An orbit takes 365¼ days. ¼ + ¼ + ¼ + ¼ = ${4 * (YEAR - 365)} extra day every four years.` },
+        { t: "The Moon slows the Earth's orbit every four years", why: "The Moon has nothing to do with it. An orbit takes 365¼ days, and the spare quarters add up." }],
+      explain: `One orbit takes 365¼ days. Four spare quarter days make ${4 * (YEAR - 365)} extra day: the leap day.`,
+      hints: ["How long is one orbit?", "365¼ days: what happens to the ¼ each year?", "¼ + ¼ + ¼ + ¼ = 1 day."] },
+    { id: "longest", kind: "goal", setup: SU.dayDec, text: "Do it: choose the month when the UK has its longest day. Then press Check.",
+      test: M => M.place === "uk" && M.tilt && mIdx(M.m) === longestM("uk"),
+      not: M => M.place !== "uk" ? "Pick the UK under Place." : !M.tilt ? "Set the axis back to Tilted." :
+        DL("uk", M.m) === DL("uk", longestM("uk")) ? `In ${MONTHS[mIdx(M.m)]} the UK's day is ${hoursW(dayLen("uk", M.m, true))}: nearly the longest. Try the month when the UK tilts most towards the Sun.`
+        : `In ${MONTHS[mIdx(M.m)]} the UK's day is ${hoursW(dayLen("uk", M.m, true))}. Find the month with the longest day.`,
+      done: M => `In ${MONTHS[mIdx(M.m)]} the UK tilts towards the Sun, so it is lit for longest: ${hoursW(dayLen("uk", M.m, true))}.`,
+      reveal: M => { M.place = "uk"; M.tilt = true; M.m = longestM("uk"); },
+      hints: ["Change the month and watch the day part of the UK's path.", "The longest day is when the UK tilts most towards the Sun.", `Try ${MONTHS[longestM("uk")]}.`] },
+    { id: "chain", kind: "gaps", setup: SU.orbJun, stuck: "rule", text: "Why is it summer in the UK in June? Finish each step of the chain.",
+      rows: [["c1", "1. The Earth's axis is tilted, so in June", "the UK tilts towards the Sun"], ["c2", "2. So the UK's", "days are longer"],
+        ["c3", "3. And its sunlight is", "more direct"], ["c4", "4. So the UK has", "summer"]],
+      bank: ["the UK tilts towards the Sun", "days are longer", "more direct", "summer", "the Earth is closer to the Sun", "days are shorter", "winter"],
+      whyVal: { "the UK tilts towards the Sun": "This goes in step 1: in June the UK tilts towards the Sun.",
+        "days are longer": "This goes in step 2: tilted towards the Sun, the UK's days are longer.",
+        "more direct": "This goes in step 3: the Sun is higher, so its light is more direct.",
+        "summer": "This goes in step 4: the UK has summer.",
+        "the Earth is closer to the Sun": "Distance does not cause the seasons. The tilt does.",
+        "days are shorter": "Tilted towards the Sun, the days are longer, not shorter.",
+        "winter": "Tilted towards the Sun gives summer, not winter." },
+      explain: "Tilted axis → the UK tilts towards the Sun → days are longer → sunlight is more direct → the UK has summer.",
+      hints: ["Start with which way the UK leans in June.", "Towards the Sun: longer days and more direct sunlight.", "towards → longer → more direct → summer."] },
+    { id: "south", kind: "choice", setup: SU.orbJun, stuck: "rule", text: "It is summer in the UK. What season is it in Australia, and why?",
+      options: [{ t: "Winter: the Southern Hemisphere tilts away from the Sun", ok: () => season("aus", 6, true) === "winter" && leaning("aus", 6, true) === "away" },
+        { t: "Summer: the whole Earth has the same season", why: "The two hemispheres have opposite seasons. When the UK tilts towards the Sun, Australia tilts away." },
+        { t: "Winter: Australia is further from the Sun", why: "The UK and Australia are the same distance from the Sun. Australia has winter because it tilts away." },
+        { t: "Spring: it is one season behind the UK", why: "The seasons are opposite, not one behind. When the UK tilts towards the Sun, Australia tilts away." }],
+      explain: "When the UK tilts towards the Sun, the Southern Hemisphere tilts away, so Australia has winter.",
+      hints: ["Pick Australia and look at the readout.", "Australia is in the Southern Hemisphere.", "The Southern Hemisphere has the opposite season."] },
+    { id: "noTilt", kind: "choice", setup: SU.orbJun, lock: "run", after: "notilt",
+      text: "Predict: what would happen if the Earth's axis were not tilted?", note: "This is a prediction. When you get it right, the model stands the axis upright.",
+      options: [{ t: "No seasons: day and night would be 12 hours each, all year", ok: () => [...Array(12).keys()].every(i => eq(dayLen("uk", i, false), 12) && eq(dayLen("aus", i, false), 12)) },
+        { t: "Stronger seasons: longer summers", why: "The tilt causes the seasons. With no tilt, neither hemisphere leans towards the Sun, so there are no seasons." },
+        { t: "No day and night", why: "Day and night come from the spin, not the tilt. The Earth would still spin once every 24 hours." },
+        { t: "The same seasons as now", why: "The tilt causes the seasons. With no tilt, every day would have 12 hours of daylight." }],
+      explain: "With no tilt, no part of the Earth leans towards the Sun. Every place would get 12 hours of day and 12 of night, all year: no seasons.",
+      hints: ["What causes the seasons?", "With no tilt, which hemisphere leans towards the Sun?", "Neither does, so day length would never change."] },
+    { id: "closest", kind: "choice", setup: SU.orbJul, lock: "run", after: "dist",
+      text: "Predict: the Earth's distance from the Sun changes a little in a year. When is it closest?", note: "This is a prediction. When you get it right, the model shows the distance.",
+      options: [{ t: "In January, the UK's winter", ok: () => closestM() === 0 },
+        { t: "In July, the UK's summer", why: "Many people think we are closer in summer. In fact the Earth is a little closer in January, in the UK's winter. So distance can't cause the seasons." },
+        { t: "In June, on the longest day", why: "The longest day comes from the tilt, not the distance. The Earth is closest in January, in the UK's winter." },
+        { t: "In March, in spring", why: "Look at the distance through the year: the Earth is closest in January, in the UK's winter." }],
+      explain: `The Earth is closest in January (about ${Math.round(sunDist(0))} million km), in the UK's winter, and furthest in July (about ${Math.round(sunDist(6))} million km). So distance does not cause the seasons: the tilt does.`,
+      hints: ["The answer surprises most people.", "If distance caused the seasons, both hemispheres would have summer at once.", "It is closest in the UK's winter."] },
+    { id: "warm", kind: "choice", setup: SU.sunJun, text: "Why does the same sunlight heat the ground more in summer?",
+      options: [{ t: "The Sun is higher, so the sunlight lands on a smaller area", ok: () => patchSq(sunHt("uk", 5, true, 12)) < patchSq(sunHt("uk", 11, true, 12)) },
+        { t: "The Sun gives out more heat in summer", why: "The Sun doesn't change with our seasons. What changes is how high it is in our sky." },
+        { t: "The Earth is much closer to the Sun in summer", why: "Distance does not cause the seasons. In summer the Sun is higher, so its light is more direct." },
+        { t: "The Sun is lower, so it is nearer to us", why: "In summer the Sun is higher, not lower. Its light lands on a smaller area, so it is more direct." }],
+      explain: `In summer the midday Sun is higher. The same beam lands on about ${Math.round(patchSq(sunHt("uk", 5, true, 12)))} squares instead of about ${Math.round(patchSq(sunHt("uk", 11, true, 12)))}: the sunlight is more direct.`,
+      hints: ["Compare the beam in June and December on the Sunlight tab.", "When the Sun is high, how big is the patch the beam lands on?", "Higher Sun → smaller patch → more direct sunlight."] },
+    { id: "shadow", kind: "goal", setup: SU.sunDec, text: "Do it: make your shadow as short as it can be in the UK this year. Then press Check.",
+      test: M => M.place === "uk" && M.tilt && M.hS === 12 && mIdx(M.m) === highestM("uk"),
+      not: M => { if (M.place !== "uk") return "Pick the UK under Place."; if (!M.tilt) return "Set the axis back to Tilted.";
+        const a = sunHt("uk", M.m, true, M.hS); if (a <= 0) return `At ${timeW(M.hS)} in ${MONTHS[mIdx(M.m)]} the Sun has not risen. Choose another time.`;
+        return M.hS !== 12 ? `Your shadow is ${shadowW(a)}. When in the day is the Sun highest?` : `At midday in ${MONTHS[mIdx(M.m)]} your shadow is ${shadowW(a)}. Find the month with the highest Sun.`; },
+      done: M => `Midday in ${MONTHS[mIdx(M.m)]}: the Sun is ${Math.round(sunHt("uk", M.m, true, 12))}° high, the highest it gets, so your shadow is shortest.`,
+      reveal: M => { M.place = "uk"; M.tilt = true; M.hS = 12; M.m = highestM("uk"); },
+      hints: ["Change the time of day first, then the month.", "The Sun is highest at midday, and highest of all in summer.", `Midday in ${MONTHS[highestM("uk")]}.`] },
+    { id: "exit", kind: "choice", setup: SU.orbit, text: "Exit ticket: which sentence is right?",
+      options: [{ t: "Day and night are caused by the Earth spinning, but seasons are caused by its tilted axis as it orbits.", ok: () => DAY_H === 24 && TILT === 23 },
+        { t: "Day and night are caused by the Earth orbiting, but seasons are caused by its distance from the Sun.", why: "Both parts are wrong. The spin causes day and night, and the tilted axis causes the seasons." },
+        { t: "Day and night, and the seasons, are both caused by the Earth spinning.", why: "The spin causes day and night. The seasons come from the tilted axis as the Earth orbits." },
+        { t: "Day and night are caused by the Moon, but seasons are caused by the tilt.", why: "The Moon does not cause night. Night is the side of the Earth facing away from the Sun." }],
+      explain: "Spin → day and night. Tilted axis + orbit → seasons.",
+      hints: ["Two different movements: spin and orbit.", "Which one takes 24 hours? Which one takes a year?", "Spin → day and night. Tilted axis + orbit → seasons."] }
+  ]
+};
+const optT = o => o.t;
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (TILT !== 23 || DAY_H !== 24 || !eq(YEAR, 365.25) || !eq(4 * (YEAR - 365), 1)) errs.push("facts: 23°, 24 hours, 365¼ days (slides 15, 17)");
+  if (leaning("uk", 5, true) !== "towards" || leaning("uk", 11, true) !== "away") errs.push("model: June must tilt the UK towards the Sun and December away (slide 21)");
+  if (leaning("uk", 2, true) !== "side" || leaning("uk", 8, true) !== "side") errs.push("model: March and September must be side-on");
+  if (longestM("uk") !== 5 || best(i => dayLen("uk", i, true), (a, b) => a < b - 1e-9) !== 11) errs.push("model: the UK's longest day in June and shortest in December");
+  if (longestM("aus") !== 11) errs.push("model: Australia's longest day in December");
+  for (let i = 0; i < 12; i++) {
+    if (season("aus", i, true) !== OPP[season("uk", i, true)]) errs.push("model: opposite seasons in " + MONTHS[i]);
+    if (!eq(dayLen("uk", i, false), 12) || !eq(dayLen("aus", i, false), 12)) errs.push("model: no tilt must give 12-hour days");
+    if (season("uk", i, true) === "summer" && !/towards/.test(leaning("uk", i, true))) errs.push("model: UK summer must tilt towards the Sun");
+    if (season("uk", i, true) === "winter" && !/away/.test(leaning("uk", i, true))) errs.push("model: UK winter must tilt away");
+    for (const pl of ["uk", "aus"]) {   // the 3D picture must agree with the rule: fraction of the latitude circle facing the Sun
+      const a = axisW(true), P = earthPos(i), s = sc(P, -1); let lit = 0; const N = 720;
+      for (let k = 0; k < N; k++) if (dot3(placeAt(a, s, PLACES[pl].lat, 24 * k / N), s) > 0) lit++;
+      if (Math.abs(lit / N * 24 - dayLen(pl, i, true)) > .1) errs.push("model: the drawn day length disagrees in " + MONTHS[i]);
+      [3, 9, 15, 21].forEach(h => { if ((dot3(placeAt(a, s, PLACES[pl].lat, h), s) > 0) !== isDay(pl, i, true, h)) errs.push("model: the drawn day/night disagrees"); });
+    }
+  }
+  if (closestM() !== 0 || furthestM() !== 6) errs.push("model: closest in January, furthest in July");
+  if (!(sunHt("uk", 5, true, 12) > sunHt("uk", 11, true, 12)) || !(sunHt("uk", 5, true, 12) > sunHt("uk", 5, true, 9))) errs.push("model: the Sun is higher at midday and in summer");
+  if (highestM("uk") !== 5) errs.push("model: the UK's highest Sun is in June");
+  for (let i = 0; i < 12; i++) if (Math.abs(mOfDay(dayOf(i)) - i) > 1e-6) errs.push("model: month and day must convert both ways");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (t.options.length < 3) E("needs at least 3 options");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+    }
+    if (t.kind === "gaps") { if (new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); });
+      t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w])) E("no feedback for the word " + w); }); }
+    if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, rule: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null, drag = null;
+const PKEY = "ks3tools-progress:seasons";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+const LOCKW = { run: "Predict first. The model changes when you get it right, or press Show answer.", all: "The model is set for this question." };
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
+
+/* ===== Drawing ===== */
+const narrow = () => { const w = boxW($("model")); return !!(w && w < 560); };
+const LK = () => narrow() ? "tall" : "wide";
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }   // patch a layer only when it changed
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+const P2 = p => `${f1(p[0])} ${f1(p[1])}`;
+function stars(W, H, n, seed) { let s = seed, h = ""; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < n; i++) h += `<circle class="star" cx="${f1(r() * W)}" cy="${f1(r() * H)}" r="${f1(.8 + r() * 1.4)}"/>`; return h; }
+function viewBox(svg, W, H) { setAttr(svg, "viewBox", `0 0 ${W} ${H}`); }
+/* the lit part of a sphere seen from the viewer: the half-disc on the Sun's side plus the shadow line (an ellipse) */
+function litPath(r, sp) {
+  const L = Math.hypot(sp[0], sp[1]);
+  if (L < 1e-3) return sp[2] > 0 ? `M${-r} 0A${r} ${r} 0 1 1 ${r} 0A${r} ${r} 0 1 1 ${-r} 0Z` : "";
+  const k = Math.abs(sp[2]) * r, ang = Math.atan2(sp[1], sp[0]) * R2D;
+  return { d: `M0 ${-r}A${r} ${r} 0 0 1 0 ${r}A${f1(k)} ${r} 0 0 ${sp[2] > 0 ? 1 : 0} 0 ${-r}Z`, ang };
+}
+function runs(pts, keep) {   // split a list of [x, y, depth] points into runs that pass keep()
+  const out = []; let cur = null;
+  pts.forEach(p => { if (keep(p)) { if (!cur) out.push(cur = []); cur.push(p); } else cur = null; });
+  return out.filter(r => r.length > 1).map(r => "M" + r.map(P2).join("L")).join("");
+}
+function earthSVG(cx, cy, r, s, a, C, o) {   // s: direction to the Sun, a: the axis (world); o: { ghost, label, fs }
+  /* the lit half is drawn as the half facing the Sun on the page, as in the deck's diagram (slide 21), so every Earth
+     shows its day half and its night half (seen truly from this angle, the March Earth would look all dark) */
+  const s0 = prj(C, s), sl = Math.hypot(s0[0], s0[1]) || 1, sp = [s0[0] / sl, s0[1] / sl, 0], ap = prj(C, a), L = 1.38, lp = litPath(r, sp);
+  const tip = [cx + ap[0] * r * L, cy + ap[1] * r * L], bot = [cx - ap[0] * r * L, cy - ap[1] * r * L];
+  let h = `<path class="axb" d="M${P2(bot)}L${P2(tip)}"/>`;
+  h += `<circle class="enight" cx="${f1(cx)}" cy="${f1(cy)}" r="${r}"/>`;
+  h += `<path class="eday"${o.id ? ` id="${o.id}"` : ""} transform="translate(${f1(cx)} ${f1(cy)}) rotate(${f1(lp.ang)})" d="${lp.d}"/>`;
+  if (!o.ghost) { const [e1, e2] = perp(a, [1, 0, 0]), pts = [];
+    for (let i = 0; i <= 48; i++) { const t = i / 48 * 2 * Math.PI, v = add(sc(e1, Math.cos(t)), sc(e2, Math.sin(t))), q = prj(C, v); pts.push([cx + q[0] * r, cy + q[1] * r, q[2]]); }
+    h += `<path class="eq" d="${runs(pts, p => p[2] > 0)}"/>`; }
+  h += `<circle class="eedge" cx="${f1(cx)}" cy="${f1(cy)}" r="${r}"/>`;
+  const fr = ap[2] >= 0 ? tip : bot; h += `<path class="ax" d="M${f1(cx)} ${f1(cy)}L${P2(fr)}"/>`;   // the half of the axis on our side of the Earth
+  if (ap[2] < 0) h += `<path class="ax" d="M${P2(tip)}L${f1(cx + ap[0] * r * 1.02)} ${f1(cy + ap[1] * r * 1.02)}"/>`;
+  if (o.label) h += T_(tip[0] + (ap[0] < 0 ? -6 : 6), tip[1] - 4, "N", o.fs, `class="lbl" text-anchor="${ap[0] < 0 ? "end" : "start"}"`);
+  return h;
+}
+
+/* --- 1. Orbit --- */
+const OLO = { wide: { W: 960, H: 430, cx: 480, cy: 213, R: 320, e: 22 * D2R, r: 30, rg: 15, sun: 46, fs: 19 },
+  tall: { W: 600, H: 600, cx: 300, cy: 290, R: 226, e: 46 * D2R, r: 40, rg: 19, sun: 46, fs: 28 } };
+const camO = G => ({ R: [1, 0, 0], U: [0, Math.cos(G.e), -Math.sin(G.e)], T: [0, Math.sin(G.e), Math.cos(G.e)] });
+function orbXY(G, m) { const P = earthPos(m), q = prj(camO(G), sc(P, G.R)); return [G.cx + q[0], G.cy + q[1]]; }
+/* where each key-month label goes: clear of every place the moving Earth (with its axis and N) can be.
+   September above the orbit, March below it; December and June outside it (wide) or inside it (phone, no room outside). */
+function monthLbl(G, lk, m0, x, y) {
+  const fs = G.fs * .85, gap = G.r + 18;
+  if (m0 === 8) return [x, y - G.r * 1.38 - fs * 1.55, "middle"];
+  if (m0 === 2) return [x, y + G.r * 1.38 + fs * 1.25, "middle"];
+  if (lk === "wide") return m0 === 11 ? [x - G.r - 14, y + fs * .35, "end"] : [x + G.r + 14, y + fs * .35, "start"];
+  /* phone: December just below the line to the Sun, June just above it (the distance label sits on the other side) */
+  return m0 === 11 ? [x + gap + 6, y + fs * 1.1, "start"] : [x - gap - 14, y - fs * .5, "end"];
+}
+function orbitBg(G, tilt, lk) {
+  const C = camO(G), ry = G.R * Math.sin(G.e);
+  let h = `<rect class="sp" x="0" y="0" width="${G.W}" height="${G.H}" rx="8"/>` + stars(G.W, G.H, lk === "wide" ? 46 : 34, 7);
+  h += `<defs><radialGradient id="sunG" cx="40%" cy="38%" r="70%"><stop offset="0" style="stop-color:var(--sun-1)"/><stop offset="1" style="stop-color:var(--sun-2)"/></radialGradient><radialGradient id="glowG"><stop offset=".55" style="stop-color:var(--sun-1);stop-opacity:.45"/><stop offset="1" style="stop-color:var(--sun-1);stop-opacity:0"/></radialGradient></defs>`;
+  h += `<ellipse class="orb" cx="${G.cx}" cy="${G.cy}" rx="${G.R}" ry="${f1(ry)}"/>`;
+  [3.5, 9.5].forEach(m0 => { const a = orbXY(G, m0), b = orbXY(G, m0 + .12), ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * R2D;   // which way the Earth goes
+    h += `<path class="orbA" transform="translate(${P2(a)}) rotate(${f1(ang)})" d="M8 0L-7 -7L-4 0L-7 7Z"/>`; });
+  [11, 2, 5, 8].forEach(m0 => { const [x, y] = orbXY(G, m0), P = earthPos(m0);   // faint Earths at the four key months: the axis keeps pointing the same way
+    h += `<g class="ghost">${earthSVG(x, y, G.rg, sc(P, -1), axisW(tilt), C, { ghost: true })}</g>`;
+    const [lx, ly, an] = monthLbl(G, lk, m0, x, y);
+    h += T_(lx, ly, lk === "wide" ? "21 " + MONTHS[m0] : MSH[m0], G.fs * .85, `class="spm" text-anchor="${an}"`); });
+  h += `<circle cx="${G.cx}" cy="${G.cy}" r="${f1(G.sun * 1.7)}" style="fill:url(#glowG)"/><circle class="sunc" cx="${G.cx}" cy="${G.cy}" r="${G.sun}" style="fill:url(#sunG)"/>`;
+  h += T_(G.cx, G.cy + G.fs * .35, "Sun", G.fs, `class="big" text-anchor="middle" style="fill:#1E252E"`);
+  return h;
+}
+/* the Earth is drawn once at the origin and moved with a transform: while it moves, only its position and the turn of its
+   lit half change (the axis keeps pointing the same way) */
+const litAng = (G, m) => { const s0 = prj(camO(G), sc(earthPos(m), -1)); return Math.atan2(s0[1], s0[0]) * R2D; };
+function orbitEarth(G, M) {
+  const C = camO(G), [x, y] = orbXY(G, M.m), P = earthPos(M.m);
+  return `<g data-earth tabindex="0" role="slider" aria-label="The Earth. Drag it, or use the arrow keys, to change the month." aria-valuemin="0" aria-valuemax="11" aria-valuenow="${mIdx(M.m)}" aria-valuetext="${MONTHS[mIdx(M.m)]}" class="drag">` +
+    `<g id="oE" transform="translate(${f1(x)} ${f1(y)})"><circle class="hit" cx="0" cy="0" r="${G.r + 22}"/>${earthSVG(0, 0, G.r, sc(P, -1), axisW(M.tilt), C, { label: true, fs: G.fs, id: "oLit" })}` +
+    `<circle class="fr" cx="0" cy="0" r="${G.r + 10}"/></g></g>`;
+}
+function patchOrbitEarth() {   // one frame of Play or a drag
+  const G = OLO[LK()], [x, y] = orbXY(G, M.m), e = $("oE"), l = $("oLit");
+  if (!e || !l) return drawOrbitEarth();
+  setAttr(e, "transform", `translate(${f1(x)} ${f1(y)})`); setAttr(l, "transform", `translate(0.0 0.0) rotate(${f1(litAng(G, M.m))})`);
+  if (M.dist) setLayer($("oTop"), orbitTop(G, M));
+}
+function orbitTop(G, M) {
+  if (!M.dist) return "";
+  const [x, y] = orbXY(G, M.m), dx = x - G.cx, dy = y - G.cy, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+  const a = [G.cx + ux * (G.sun + 6), G.cy + uy * (G.sun + 6)], b = [x - ux * (G.r + 6), y - uy * (G.r + 6)];
+  const tall = G.W < 700, s = tall ? `${Math.round(sunDist(M.m))} million km` : `about ${Math.round(sunDist(M.m))} million km`, w = s.length * G.fs * .5 + 18;
+  /* on a phone there is no room beside the line, so the label sits in the bottom-left corner, clear of the orbit */
+  const mx = tall ? 12 + w / 2 : a[0] + (b[0] - a[0]) * .5, my = tall ? G.H - G.fs * .75 : a[1] + (b[1] - a[1]) * .5;
+  return `<path class="dist" d="M${P2(a)}L${P2(b)}"/><rect class="pill" x="${f1(mx - w / 2)}" y="${f1(my - G.fs * .9)}" width="${f1(w)}" height="${f1(G.fs * 1.5)}" rx="${f1(G.fs * .75)}"/>` +
+    T_(mx, my + G.fs * .3, s, G.fs * .85, `text-anchor="middle" class="big"`);
+}
+function drawOrbit() {
+  const lk = LK(), G = OLO[lk]; viewBox($("osvg"), G.W, G.H); viewBox($("osvgT"), G.W, G.H);
+  setLayer($("oBg"), orbitBg(G, M.tilt, lk)); drawOrbitEarth();
+}
+function drawOrbitEarth() { const G = OLO[LK()]; setLayer($("oEarth"), orbitEarth(G, M)); setLayer($("oTop"), orbitTop(G, M)); }
+
+/* --- 2. Day and night: seen side-on, sunlight from the left --- */
+const DLO = { wide: { W: 960, H: 440, cx: 590, cy: 190, r: 140, fs: 20, ax: [40, 330], bar: { x: 150, y: 398, w: 660, h: 18 } },
+  tall: { W: 600, H: 620, cx: 345, cy: 262, r: 168, fs: 28, ax: [14, 150], bar: { x: 60, y: 560, w: 480, h: 22 } } };
+function camD(m) { const t = orbAng(m); return { R: [Math.cos(t), 0, -Math.sin(t)], U: [0, 1, 0], T: [Math.sin(t), 0, Math.cos(t)] }; }
+function dayDisc(G, lk) {
+  const { cx, cy, r, fs } = G;
+  let h = `<path class="eday" d="M${cx} ${cy - r}A${r} ${r} 0 0 0 ${cx} ${cy + r}Z"/>`;
+  h += `<circle class="eedge" cx="${cx}" cy="${cy}" r="${r}"/>`;
+  /* below the Earth but out to the sides: the axis ends reach about half a radius either side of the middle */
+  h += T_(cx - r * .98, cy + r + fs * 1.15, "Day", fs * 1.2, `class="lbl" text-anchor="middle"`) + T_(cx + r * .98, cy + r + fs * 1.15, "Night", fs * 1.2, `class="lbl" text-anchor="middle"`);
+  return h;
+}
+function dayBack(G, lk, M) {   // the space, the sunlight and the half of the axis behind the Earth
+  const { W, H, cy, r, fs } = G, C = camD(M.m), a = axisW(M.tilt), ap = prj(C, a), L = 1.24;
+  let h = `<rect class="sp" x="0" y="0" width="${W}" height="${H}" rx="8"/>` + stars(W, H, lk === "wide" ? 40 : 30, 11);
+  const n = lk === "wide" ? 6 : 5, top = cy - r * .85, gap = r * 1.7 / (n - 1);
+  for (let i = 0; i < n; i++) { const y = top + i * gap; h += `<path class="ray" d="M${G.ax[0]} ${f1(y)}H${G.ax[1] - 14}"/><path class="rayh" d="M${G.ax[1] - 16} ${f1(y - 9)}L${G.ax[1]} ${f1(y)}L${G.ax[1] - 16} ${f1(y + 9)}Z"/>`; }
+  h += T_(G.ax[0], top - fs * .9, "Sunlight", fs, `class="lbl"`);
+  const tip = [G.cx + ap[0] * r * L, cy + ap[1] * r * L], bot = [G.cx - ap[0] * r * L, cy - ap[1] * r * L];
+  h += `<path class="axb" d="M${P2(bot)}L${P2(tip)}"/>`;
+  return h;
+}
+function dayDyn(G, lk, M) {
+  const { cx, cy, r, fs } = G, C = camD(M.m), a = axisW(M.tilt), s = sc(earthPos(M.m), -1), ap = prj(C, a), L = 1.24, pl = PLACES[M.place];
+  const tip = [cx + ap[0] * r * L, cy + ap[1] * r * L], bot = [cx - ap[0] * r * L, cy - ap[1] * r * L];
+  let h = "";
+  /* the place's path in one spin: day part solid, night part dotted; the far side faint */
+  if (!M.hide) { const pts = [];
+    for (let i = 0; i <= 144; i++) { const v = placeAt(a, s, pl.lat, i / 6), q = prj(C, v); pts.push([cx + q[0] * r, cy + q[1] * r, q[2], dot3(v, s) > 0]); }
+    h += `<path class="pback" d="${runs(pts, p => p[2] < 0)}"/>`;
+    h += `<path class="pday" d="${runs(pts, p => p[2] >= 0 && p[3])}"/><path class="pnight" d="${runs(pts, p => p[2] >= 0 && !p[3])}"/>`; }
+  /* the half of the axis on our side */
+  const fr = ap[2] >= 0 ? tip : bot; h += `<path class="ax" d="M${f1(cx)} ${f1(cy)}L${P2(fr)}"/>`;
+  if (ap[2] < 0) h += `<path class="ax" d="M${P2(tip)}L${f1(cx + ap[0] * r * 1.02)} ${f1(cy + ap[1] * r * 1.02)}"/>`;
+  const [nx, ny, na] = poleLbl(G, lk, M); h += T_(nx, ny, "North Pole", fs * .9, `class="lbl" text-anchor="${na}"`);
+  /* spin arrow round the top of the axis */
+  { const [e1, e2] = perp(a, s), c0 = sc(a, .9), pts = [];
+    for (let i = 0; i <= 16; i++) { const t = (35 + i * 7) * D2R, v = add(c0, add(sc(e1, .32 * Math.cos(t)), sc(e2, .32 * Math.sin(t)))), q = prj(C, v); pts.push([cx + q[0] * r, cy + q[1] * r]); }
+    const e = pts[pts.length - 1], d = pts[pts.length - 2], ang = Math.atan2(e[1] - d[1], e[0] - d[0]) * R2D;
+    h += `<path class="spin" d="M${pts.slice(0, -1).map(P2).join("L")}"/><path class="spinh" transform="translate(${P2(e)}) rotate(${f1(ang)})" d="M6 0L-9 -8L-9 8Z"/>`; }
+  /* the place */
+  const v = placeAt(a, s, pl.lat, M.hD), q = prj(C, v), px = cx + q[0] * r, py = cy + q[1] * r, front = q[2] >= -1e-6;
+  h += `<circle id="dPin" class="${front ? "pin" : "pinb"}" cx="${f1(px)}" cy="${f1(py)}" r="${lk === "wide" ? 9 : 11}"/>`;
+  const [lx, ly] = pinLbl(G, M, px, py);
+  h += T_(lx, ly, pl.n + (front ? "" : " (far side)"), fs, `class="lbl" id="dPinT"`);
+  /* the spin handle (drag) */
+  h += `<g data-spin tabindex="0" role="slider" aria-label="The Earth. Drag it, or use the arrow keys, to spin it." aria-valuemin="0" aria-valuemax="23" aria-valuenow="${Math.floor(M.hD)}" aria-valuetext="${timeW(M.hD)}" class="drag"><circle class="hit" cx="${cx}" cy="${cy}" r="${r}"/><circle class="fr" cx="${cx}" cy="${cy}" r="${r + 8}"/></g>`;
+  /* 24-hour bar: sunrise to sunset */
+  const B = G.bar, len = dayLen(M.place, M.m, M.tilt), x = hr => B.x + B.w * hr / 24;
+  h += `<rect class="barn" x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="4"/>`;
+  if (!M.hide) h += `<rect class="bard" x="${f1(x(12 - len / 2))}" y="${B.y}" width="${f1(B.w * len / 24)}" height="${B.h}"/>`;
+  h += `<rect class="bare" x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="4"/>`;
+  [[0, "Midnight"], [12, "Midday"], [24, "Midnight"]].concat(lk === "wide" ? [[6, "6 am"], [18, "6 pm"]] : []).forEach(([hr, s2]) =>
+    { h += `<path class="bare" d="M${f1(x(hr))} ${B.y - 4}V${B.y}"/>` + T_(x(hr), B.y - 8, s2, fs * .75, `class="spm" text-anchor="${hr === 0 ? "start" : hr === 24 ? "end" : "middle"}"`); });
+  const mx = x(((M.hD % 24) + 24) % 24);
+  h += `<path class="pin" id="dMark" d="M${f1(mx)} ${B.y + B.h + 2}l-8 12h16Z"/>`;
+  return h;
+}
+/* the place's name: above-right of the dot, or below it when that would run into the North Pole label */
+/* "North Pole" beside the top of the axis: outwards on a wide screen; always to the right on a phone, where the
+   left-hand side is taken by the "Sunlight" label */
+function poleLbl(G, lk, M) {
+  const ap = prj(camD(M.m), axisW(M.tilt)), tx = G.cx + ap[0] * G.r * 1.24, ty = G.cy + ap[1] * G.r * 1.24, left = lk === "wide" && ap[0] < 0;
+  return [tx + (left ? -10 : 10), ty + 4, left ? "end" : "start"];
+}
+function pinLbl(G, M, px, py) {
+  const [nx, ny, na] = poleLbl(G, LK(), M), nw = G.fs * 5, nx0 = na === "end" ? nx - nw : nx, w = G.fs * 10;
+  const near = Math.abs((py - 10) - ny) < G.fs * 1.3 && px + 14 < nx0 + nw && px + 14 + w > nx0;
+  return near ? [px + 14, py + G.fs * 1.4] : [px + 14, py - 10];
+}
+function patchDayDot() {   // one frame of a spin: only the place, its label and the time marker move
+  const lk = LK(), G = DLO[lk], C = camD(M.m), a = axisW(M.tilt), s = sc(earthPos(M.m), -1), pl = PLACES[M.place];
+  const pin = $("dPin"), lab = $("dPinT"), mk = $("dMark"); if (!pin || !lab || !mk) return setLayer($("dDyn"), dayDyn(G, lk, M));
+  const q = prj(C, placeAt(a, s, pl.lat, M.hD)), px = G.cx + q[0] * G.r, py = G.cy + q[1] * G.r, front = q[2] >= -1e-6, B = G.bar;
+  setAttr(pin, "cx", f1(px)); setAttr(pin, "cy", f1(py)); setAttr(pin, "class", front ? "pin" : "pinb");
+  const [lx, ly] = pinLbl(G, M, px, py); setAttr(lab, "x", f1(lx)); setAttr(lab, "y", f1(ly)); const t = pl.n + (front ? "" : " (far side)"); if (lab.textContent !== t) lab.textContent = t;
+  setAttr(mk, "d", `M${f1(B.x + B.w * (((M.hD % 24) + 24) % 24) / 24)} ${B.y + B.h + 2}l-8 12h16Z`);
+}
+function drawDay() {
+  const lk = LK(), G = DLO[lk]; viewBox($("dsvg"), G.W, G.H); viewBox($("dsvgT"), G.W, G.H);
+  setLayer($("dBack"), dayBack(G, lk, M)); setLayer($("dDisc"), dayDisc(G, lk)); setLayer($("dDyn"), dayDyn(G, lk, M));
+}
+
+/* --- 3. Sunlight on the ground --- */
+const SLO = { wide: { W: 960, H: 400, gy: 316, land: 300, sq: 60, sunD: 250, kidX: 640, kidH: 112, fs: 20 },
+  tall: { W: 600, H: 560, gy: 430, land: 200, sq: 50, sunD: 220, kidX: 390, kidH: 150, fs: 28 } };
+function kidSVG(k, x, gy, H) {   // a child standing, feet at (x, gy)
+  const s = H / 112;
+  return `<g transform="translate(${f1(x)} ${f1(gy)}) scale(${f1(s * k.h)})"><path class="kid" style="fill:${k.leg}" d="M-11 0V-44H-1V0ZM1 0V-44H11V0Z"/>` +
+    `<path class="kid" style="fill:${k.top}" d="M-15 -42V-72Q-15 -80 -7 -80H7Q15 -80 15 -72V-42Z"/>` +
+    `<circle class="kid" style="fill:${k.skin}" cx="0" cy="-94" r="14"/><path style="fill:${k.hair}" d="M-14 -96Q-13 -110 0 -110Q13 -110 14 -96Q8 -104 0 -103Q-8 -104 -14 -96Z"/></g>`;
+}
+function sunScene(G, lk, M) {
+  const { W, H, gy, land, sq, fs } = G, a = sunHt(M.place, M.m, M.tilt, M.hS), up = a > 0;
+  let h = `<rect class="${!up ? "skyn" : a < 12 ? "skyl" : "sky"}" x="0" y="0" width="${W}" height="${gy}" rx="8"/>`;
+  if (!up) h += stars(W, gy, 26, 5);
+  h += `<rect class="gr" x="0" y="${gy}" width="${W}" height="${H - gy}"/>`;
+  for (let x = 0, i = 0; x < W; x += sq, i++) if (i % 2) h += `<rect class="gr2" x="${x}" y="${gy}" width="${sq}" height="${H - gy}"/>`;
+  h += `<path class="gre" d="M0 ${gy}H${W}"/>`;
+  h += T_(W - 14, fs * 1.4, PLACES[M.place].lat > 0 ? "Looking south" : "Looking north", fs * .8, `class="${up ? "lead" : "lbl"}" text-anchor="end"`);
+  const kids = [[G.kidX, KID[0]], [G.kidX + (lk === "wide" ? 80 : 100), KID[1]]];
+  if (!up) {
+    h += T_(W / 2, gy * .45, "The Sun is below the horizon.", fs * 1.1, `class="lbl" text-anchor="middle"`) + T_(W / 2, gy * .45 + fs * 1.5, "It is night.", fs * 1.1, `class="lbl" text-anchor="middle"`);
+    h += `<rect x="0" y="${gy}" width="${W}" height="${H - gy}" style="fill:#0B1626;opacity:.55"/>`;
+    kids.forEach(([x, k]) => { h += kidSVG(k, x, gy, G.kidH); });
+    return h;
+  }
+  const ar = a * D2R, ux = Math.cos(ar), uy = Math.sin(ar), sD = Math.min(G.sunD, (land - 40) / ux), sx = land - sD * ux, sy = gy - sD * uy;   // a low Sun stays on the picture
+  /* shadows first (behind the children), pointing away from the Sun */
+  kids.forEach(([x, k]) => { const hh = G.kidH * k.h, L = Math.min(W * 2, hh / Math.tan(ar));
+    h += `<path class="shade" d="M${f1(x - 11)} ${gy + 1}L${f1(x + 11)} ${gy + 1}L${f1(x + 11 + L)} ${gy + 14}Q${f1(x + 15 + L)} ${gy + 20} ${f1(x + 5 + L)} ${gy + 20}L${f1(x - 11)} ${gy + 8}Z"/>`; });
+  kids.forEach(([x, k]) => { h += kidSVG(k, x, gy, G.kidH); });
+  /* the beam: 2 squares wide, landing on a patch of ground */
+  const half = BEAM_SQ * sq / 2, x1 = land - half / uy, x2 = land + half / uy, back = sD - 30;
+  h += `<defs><linearGradient id="beamG" gradientUnits="userSpaceOnUse" x1="${f1(land - back * ux)}" y1="${f1(gy - back * uy)}" x2="${land}" y2="${gy}"><stop offset="0" style="stop-color:var(--ray);stop-opacity:.05"/><stop offset=".45" style="stop-color:var(--ray);stop-opacity:.4"/><stop offset="1" style="stop-color:var(--ray);stop-opacity:.55"/></linearGradient></defs>`;
+  h += `<path d="M${f1(x1)} ${gy}L${f1(x2)} ${gy}L${f1(x2 - back * ux)} ${f1(gy - back * uy)}L${f1(x1 - back * ux)} ${f1(gy - back * uy)}Z" style="fill:url(#beamG)"/>`;
+  h += `<path class="beamln" d="M${f1(x1)} ${gy}L${f1(x1 - back * ux)} ${f1(gy - back * uy)}M${f1(x2)} ${gy}L${f1(x2 - back * ux)} ${f1(gy - back * uy)}"/>`;
+  h += `<path class="patch" d="M${f1(x1)} ${gy}H${f1(x2)}"/>`;
+  const n = Math.round(patchSq(a)), by = gy + (H - gy) * .55;
+  h += `<path class="dimln" d="M${f1(x1)} ${by - 9}V${by + 9}M${f1(x2)} ${by - 9}V${by + 9}M${f1(x1)} ${by}H${f1(x2)}"/>`;
+  h += T_(clamp((x1 + x2) / 2, 120, W - 120), by + fs * 1.3, `about ${n} square${n === 1 ? "" : "s"}`, fs, `class="lead" text-anchor="middle" style="stroke:var(--ground)"`);
+  /* the Sun's height: an angle at the landing point */
+  const R0 = lk === "wide" ? 70 : 60, ex = land - R0 * ux, ey = gy - R0 * uy;
+  h += `<path class="arc" d="M${land - R0} ${gy}A${R0} ${R0} 0 0 1 ${f1(ex)} ${f1(ey)}"/>`;
+  h += T_(land - R0 - 8, gy - 10, Math.round(a) + "°", fs, `class="lead" text-anchor="end"`);
+  h += `<circle class="glow" cx="${f1(sx)}" cy="${f1(sy)}" r="46"/><circle class="sunc" cx="${f1(sx)}" cy="${f1(sy)}" r="30" style="fill:var(--sun-2)"/>`;
+  return h;
+}
+function drawSun() { const lk = LK(), G = SLO[lk]; viewBox($("lsvg"), G.W, G.H); setLayer($("lAll"), sunScene(G, lk, M)); }
+
+/* --- the readout under the model --- */
+function readout() {
+  const t = M.tab, mi = mIdx(M.m), mon = MONTHS[mi], pl = PLACES[M.place];
+  if (M.hide) return `<p class="r1">${esc(mon)}</p><p class="r3">The readout is hidden for this prediction.</p>`;
+  if (t === "orbit") {
+    const rows = ["uk", "aus"].map(k => { const s = season(k, mi, M.tilt);
+      return `<tr${k === M.place ? ' class="me"' : ""}><td>${PLACES[k].n}</td><td>${M.tilt ? TILTW[leaning(k, mi, true)] : "Not tilted"}</td><td>${s ? cap(s) : "No seasons"}</td><td>${Math.round(dayLen(k, mi, M.tilt))} hours</td></tr>`; }).join("");
+    return `<p class="r1">${esc(mon)}: ${esc(pl.the)} is ${esc(M.tilt ? LEANW[leaning(M.place, mi, true)] : "not tilted, so there are no seasons")}.</p>` +
+      `<table><thead><tr><th>Place</th><th>Tilt</th><th>Season</th><th>Day length (about)</th></tr></thead><tbody>${rows}</tbody></table>` +
+      (M.tilt ? lateW(M.place, mi) : "") +
+      (M.dist ? `<p class="r2">Distance from the Sun: about ${Math.round(sunDist(mi))} million km. It hardly changes all year.</p>` : "");
+  }
+  if (t === "day") {
+    const len = dayLen(M.place, mi, M.tilt), d = isDay(M.place, mi, M.tilt, M.hD);
+    return `<p class="r1">${esc(pl.n)} at ${timeW(M.hD)}: ${d ? "daytime. It faces the Sun." : "night. It faces away from the Sun."}</p>` +
+      `<p class="r2">In ${esc(mon)} ${esc(pl.the)} has ${hoursW(len)} of day and ${hoursW(24 - len)} of night.</p>` +
+      `<p class="r3">One spin takes 24 hours. The Sun seems to move because the Earth spins.</p>`;
+  }
+  const a = sunHt(M.place, mi, M.tilt, M.hS);
+  if (a <= 0) return `<p class="r1">${esc(pl.n)}, ${esc(mon)}, ${timeW(M.hS)}: the Sun has not risen yet, or has set.</p><p class="r3">No sunlight and no shadows: it is night.</p>`;
+  const n = Math.round(patchSq(a));
+  return `<p class="r1">${esc(pl.n)}, ${esc(mon)}, ${timeW(M.hS)}: the Sun is ${htW(a)} (${Math.round(a)}°).</p>` +
+    `<p class="r2">Shadows: ${shadowW(a)}. The beam covers about ${n} square${n === 1 ? "" : "s"} of ground.</p>` +
+    `<p class="r3">${a >= 35 ? "High Sun → the sunlight is more direct → each square gets more of it." : "Low Sun → the same sunlight spreads over more ground."}</p>`;
+}
+
+/* the tilt is the same either side of June and December, but the seasons are not: May and July both tilt the UK towards
+   the Sun, yet May is still spring. Name the months that come at the end of a season so the readout never looks wrong. */
+const NEXTS = { winter: "spring", spring: "summer", summer: "autumn", autumn: "winter" };
+function lateW(pl, mi) {
+  const s = season(pl, mi, true), l = leaning(pl, mi, true), n = season(pl, (mi + 1) % 12, true);
+  const odd = (l === "towards" && s !== "summer") || (l === "away" && s !== "winter") || (l === "ltowards" && s === "summer") || (l === "laway" && s === "winter");
+  return odd && n !== s ? `<p class="r3">${MONTHS[mi]} is the end of ${s} in ${esc(PLACES[pl].the)}. ${cap(n)} starts in ${MONTHS[(mi + 1) % 12]}.</p>` : "";
+}
+function drawPane() {
+  const t = M.tab;
+  ["orbit", "day", "sun"].forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  if (t === "orbit") drawOrbit(); else if (t === "day") drawDay(); else drawSun();
+  morphHTML($("read"), readout());
+}
+function renderCtl() {   // touches a control only when its state really changes
+  const lk = locked(), txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  const mi = mIdx(M.m), ms = $("month"); if (+ms.value !== mi) ms.value = mi; txt($("monthOut"), MONTHS[mi]); setAttr(ms, "aria-valuetext", MONTHS[mi]);
+  const hd = Math.floor(((M.hD % 24) + 24) % 24); if (+$("hourD").value !== hd) $("hourD").value = hd; txt($("hourDOut"), cap(timeW(hd))); setAttr($("hourD"), "aria-valuetext", timeW(hd));
+  if (+$("hourS").value !== M.hS) $("hourS").value = M.hS; txt($("hourSOut"), cap(timeW(M.hS))); setAttr($("hourS"), "aria-valuetext", timeW(M.hS));
+  document.querySelectorAll("#placeSeg button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.pl === M.place)));
+  document.querySelectorAll("#tiltSeg button").forEach(b => setAttr(b, "aria-pressed", String((b.dataset.tilt === "1") === M.tilt)));
+  const ds = $("distSw"); setAttr(ds, "aria-pressed", String(M.dist)); txt(ds.querySelector(".state"), M.dist ? "on" : "off");
+  txt($("playBtn"), anim && anim.kind === "play" ? "Pause ■" : "Play a year ▶");
+  txt($("spinBtn"), anim && anim.kind === "spin" ? "Stop ■" : "Spin once ▶");
+  ["month", "hourD", "hourS", "distSw", "playBtn", "spinBtn"].forEach(id => dis($(id), lk));
+  document.querySelectorAll("#placeSeg button, #tiltSeg button").forEach(b => dis(b, lk));
+  const ln = $("lockNote"); if (ln.hidden !== !lk) ln.hidden = !lk; if (lk) txt(ln, LOCKW[lock] || LOCKW.all);
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
+
+/* ===== Animation: Play a year (orbit) and Spin once (day and night). paceFrame caps the frame rate; motion is time-based.
+   Each frame only patches the Earth (orbit) or the moving parts (day and night); the readout changes once a month / hour. ===== */
+let visOK = true;
+function startAnim(kind) {
+  stopAll();
+  const dur = kind === "play" ? 12000 : 8000, span = kind === "play" ? 12 : 24, start = kind === "play" ? M.m : M.hD;
+  const a = { kind, start, id: 0, el: 0, lastT: performance.now(), paused: false }; anim = a; renderCtl();
+  a.frame = now => {
+    if (anim !== a) return;
+    const t = Math.max(now, performance.now());
+    if (!visOK || document.hidden) { a.paused = true; return; }   // off-screen or hidden: stop asking for frames (resumeAnim starts again)
+    a.el += Math.min(250, t - a.lastT); a.lastT = t;
+    const u = Math.min(1, a.el / dur), step = reduced() ? Math.floor(u * span + 1e-9) : u * span;
+    if (kind === "play") { const before = mIdx(M.m); M.m = wrapM(start + step); if (u >= 1) M.m = wrapM(Math.round(start)); if (mIdx(M.m) !== before || u >= 1) { drawOrbitEarth(); morphHTML($("read"), readout()); renderCtl(); } else patchOrbitEarth(); }
+    else { const before = Math.floor(M.hD), was = isDay(M.place, M.m, M.tilt, M.hD); M.hD = (start + step) % 24; if (u >= 1) M.hD = start;
+      if (was && !isDay(M.place, M.m, M.tilt, M.hD)) tried(1);
+      if (Math.floor(M.hD) !== before || u >= 1) { setLayer($("dDyn"), dayDyn(DLO[LK()], LK(), M)); morphHTML($("read"), readout()); renderCtl(); } else patchDayDot(); }
+    if (u >= 1) { anim = null; renderCtl(); return; }
+    a.id = paceFrame(a.frame, reduced() ? 4 : 15);
+  };
+  a.id = paceFrame(a.frame, reduced() ? 4 : 15);
+}
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 15); }
+function stopAll() {   // stop where it is: a month or an hour on the dot
+  if (!anim) return; const a = anim; anim = null; paceCancel(a.id);
+  if (a.kind === "play") M.m = Math.round(M.m) % 12; else M.hD = Math.round(M.hD) % 24;
+  drawAll();
+}
+
+/* model changes from the controls */
+function setMonth(m, fromDrag) {
+  if (locked()) return lockMsg(); stopAll();
+  const was = mIdx(M.m); M.m = fromDrag ? m : Math.round(m) % 12; if (!fromDrag) { drawAll(); afterMonth(was); }
+  else if (M.tab === "orbit") { if (mIdx(M.m) !== was) { drawOrbitEarth(); morphHTML($("read"), readout()); renderCtl(); } else patchOrbitEarth(); }
+}
+function afterMonth(was) { if (mIdx(M.m) !== was) tourSignal("month"); checkTried(); }
+function checkTried() {
+  if (M.tilt && M.place === "uk" && mIdx(M.m) === longestM("uk") && M.tab !== "sun") tried(0);
+  if (!M.tilt) tried(2);
+  if (M.tab === "sun" && M.tilt && M.place === "uk" && M.hS === 12 && mIdx(M.m) === highestM("uk")) tried(3);
+  if (M.dist && mIdx(M.m) === closestM()) tried(4);
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Find the month when the UK has its longest day.", "Spin the Earth. Watch the UK go into night.", "Set the axis to Not tilted. What happens to the seasons?",
+  "On Sunlight, make your midday shadow as short as it can be.", "Turn on Distance from the Sun. When is the Earth closest?"];
+const TRIED = [false, false, false, false, false];
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task; return { choice: null, gap: {}, order: shuffled(t.options ? t.options.length : t.bank ? t.bank.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM(); m.m = 5;
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll();
+}
+const TABW = { orbit: "Orbit", day: "Day and night", sun: "Sunlight" };
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="small" style="margin:0 0 8px">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const bank = S.order.length === t.bank.length ? S.order.map(i => t.bank[i]) : t.bank;
+    a.innerHTML = `<div class="opts">` + t.rows.map(([k, txt]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>${TABW[M.tab]}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel(instant);
+}
+function revealModel() {
+  const t = task; if (!t.after) return;
+  lock = "";
+  if (t.after === "dayTab") { M.hide = false; M.tab = "day"; M.hD = 15; }
+  if (t.after === "notilt") { M.tilt = false; M.hide = false; }
+  if (t.after === "dist") { M.dist = true; M.m = closestM(); }
+  drawAll();
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Axis", DEF.axis], ["Rotate", DEF.rotate], ["Orbit", DEF.orbit], ["Hemisphere", DEF.hemisphere], ["Season", DEF.season]];
+function renderSupport() {
+  $("ruleBox").hidden = !support.rule; $("wordsBox").hidden = !support.words;
+  $("ruleBox").innerHTML = "<h3>Seasons rule</h3>" + RULES.map(w => `<p>${esc(w)}</p>`).join("");
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [, txt] = wrong, v = S.gap[wrong[0]];
+    return { ok: false, html: esc(`“${txt} ${v}” is not right. ${t.whyVal[v]}`) }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to stop, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${k === "rule" ? "Seasons rule" : "Key words"}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + optT(t.options.find(o => o.ok && o.ok())).replace(/\.$/, "") + ". " + t.explain;
+  if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
+  return "Answer: " + t.explain;
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#tabs", tab: "orbit", text: "Three views of the Earth: its orbit, day and night, and sunlight on the ground." },
+  { el: "#oscene", tab: "orbit", text: "Drag the Earth round its orbit, or use the Month slider.", do: "month", doText: "Move the Earth to another month." },
+  { el: "#playBtn", tab: "orbit", text: "Play a whole year. Watch the axis: it always points the same way.", do: "play", doText: "Press Play a year." },
+  { el: "#read", tab: "orbit", text: "The readout shows the season and the day length in the UK and in Australia." },
+  { el: "#tiltRow", tab: "orbit", text: "What if the axis were not tilted? Try it, and watch the seasons.", do: "notilt", doText: "Press Not tilted." },
+  { el: "#distSw", tab: "orbit", set: M => { M.tilt = true; }, text: "The axis is tilted again. Now show the Earth's distance from the Sun. Does it cause the seasons?", do: "dist", doText: "Turn on Distance from the Sun." },
+  { el: "#tabs", text: "Day and night: the Earth seen from the side, with the Sun on the left.", do: "tab-day", doText: "Press Day and night." },
+  { el: "#spinBtn", tab: "day", text: "Spin the Earth once: 24 hours. Watch the UK go from day into night.", do: "spin", doText: "Press Spin once." },
+  { el: "#placeRow", tab: "day", text: "Pick a place. Australia is in the Southern Hemisphere.", do: "place", doText: "Pick Australia." },
+  { el: "#tabs", text: "Sunlight: how high the Sun is, and how long your shadow is.", do: "tab-sun", doText: "Press Sunlight." },
+  { el: "#hSRow", tab: "sun", text: "Change the time of day. When is your shadow shortest?", do: "time", doText: "Move the Time of day slider." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:seasons", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; drawAll(); }
+  if (st.set) { st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (drag), touch and keyboard ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+["oscene", "dscene"].forEach(id => $(id).addEventListener("touchstart", e => { if (e.target.closest && e.target.closest(".drag")) e.preventDefault(); }, { passive: false }));
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+/* 1. Orbit: drag the Earth round its orbit (it follows the pointer, then settles on the nearest month) */
+(function orbitWire() {
+  const svg = $("osvgT"); let dr = null, pend = 0, last = null;
+  const toM = p => { const G = OLO[LK()], X = (p.x - G.cx) / G.R, Z = (p.y - G.cy) / (G.R * Math.sin(G.e)), th = Math.atan2(-Z, X);   // invert the drawing
+    return mOfDay(SOLSTICE + th / (2 * Math.PI) * YEAR); };
+  const go = () => { pend = 0; if (dr && last) setMonth(toM(last), true); };
+  svg.addEventListener("pointerdown", e => { if (!e.target.closest("[data-earth]")) return; e.preventDefault(); if (locked()) return lockMsg();
+    stopAll(); dr = { m0: mIdx(M.m) }; last = svgPt(svg, e); try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
+  svg.addEventListener("pointermove", e => { if (!dr) return; last = svgPt(svg, e); if (!pend) pend = paceFrame(go, 20); });
+  const up = () => { if (!dr) return; if (pend) { paceCancel(pend); pend = 0; } if (last) M.m = toM(last); const was = dr.m0; dr = null;
+    M.m = mIdx(M.m); drawAll(); afterMonth(was); const n = document.querySelector("#osvgT [data-earth]"); if (n && document.activeElement === n) n.focus({ preventScroll: true }); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("keydown", e => { if (!e.target.closest || !e.target.closest("[data-earth]")) return; const k = e.key; if (!/^Arrow/.test(k)) return; e.preventDefault();
+    if (locked()) return lockMsg(); const was = mIdx(M.m); stopAll(); M.m = (mIdx(M.m) + (k === "ArrowRight" || k === "ArrowUp" ? 1 : 11)) % 12; drawAll(); afterMonth(was);
+    const n = document.querySelector("#osvgT [data-earth]"); if (n) n.focus({ preventScroll: true }); });
+})();
+/* 2. Day and night: drag across the Earth to spin it */
+(function dayWire() {
+  const svg = $("dsvgT"); let dr = null, pend = 0;
+  const go = () => { pend = 0; if (!dr) return; M.hD = ((dr.h0 + (dr.x - dr.x0) / (DLO[LK()].r * .5)) % 24 + 24) % 24; const hb = Math.floor(M.hD); if (hb !== dr.hb) { dr.hb = hb; setLayer($("dDyn"), dayDyn(DLO[LK()], LK(), M)); morphHTML($("read"), readout()); renderCtl(); } else patchDayDot(); };
+  svg.addEventListener("pointerdown", e => { if (!e.target.closest("[data-spin]")) return; e.preventDefault(); if (locked()) return lockMsg();
+    stopAll(); const p = svgPt(svg, e); dr = { x0: p.x, x: p.x, h0: M.hD, day: isDay(M.place, M.m, M.tilt, M.hD) }; try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
+  svg.addEventListener("pointermove", e => { if (!dr) return; dr.x = svgPt(svg, e).x; if (!pend) pend = paceFrame(go, 20); });
+  const up = () => { if (!dr) return; if (pend) { paceCancel(pend); pend = 0; } const d = dr; go(); dr = null; M.hD = Math.round(M.hD) % 24; drawAll();
+    if (d.day && !isDay(M.place, M.m, M.tilt, M.hD)) tried(1); if (Math.abs(d.x - d.x0) > 4) tourSignal("spin"); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("keydown", e => { if (!e.target.closest || !e.target.closest("[data-spin]")) return; const k = e.key; if (!/^Arrow/.test(k)) return; e.preventDefault();
+    if (locked()) return lockMsg(); stopAll(); setHourD(M.hD + (k === "ArrowRight" || k === "ArrowUp" ? 1 : -1)); const n = document.querySelector("#dsvgT [data-spin]"); if (n) n.focus({ preventScroll: true }); });
+})();
+function setHourD(h) { if (locked()) return lockMsg(); stopAll(); const was = isDay(M.place, M.m, M.tilt, M.hD); M.hD = ((Math.round(h) % 24) + 24) % 24; drawAll(); if (was && !isDay(M.place, M.m, M.tilt, M.hD)) tried(1); }
+$("month").addEventListener("input", e => { if (locked()) { e.target.value = mIdx(M.m); return lockMsg(); } setMonth(+e.target.value); });
+$("hourD").addEventListener("input", e => { if (locked()) { e.target.value = Math.floor(M.hD); return lockMsg(); } setHourD(+e.target.value); });
+$("hourS").addEventListener("input", e => { if (locked()) { e.target.value = M.hS; return lockMsg(); } stopAll(); M.hS = +e.target.value; drawAll(); checkTried(); tourSignal("time"); });
+$("playBtn").addEventListener("click", () => { if (locked()) return lockMsg(); if (anim && anim.kind === "play") { stopAll(); checkTried(); return; } startAnim("play"); tourSignal("play"); });
+$("spinBtn").addEventListener("click", () => { if (locked()) return lockMsg(); if (anim && anim.kind === "spin") { stopAll(); return; } startAnim("spin"); tourSignal("spin"); });
+$("distSw").addEventListener("click", () => { if (locked()) return lockMsg(); M.dist = !M.dist; drawAll(); checkTried(); if (M.dist) tourSignal("dist"); });
+$("placeSeg").addEventListener("click", e => { const b = e.target.closest("[data-pl]"); if (!b) return; if (locked()) return lockMsg(); const ch = M.place !== b.dataset.pl;
+  M.place = b.dataset.pl; if (anim && anim.kind === "spin") stopAll(); drawAll(); checkTried(); if (ch) tourSignal("place"); });
+$("tiltSeg").addEventListener("click", e => { const b = e.target.closest("[data-tilt]"); if (!b) return; if (locked()) return lockMsg();
+  M.tilt = b.dataset.tilt === "1"; drawAll(); checkTried(); if (!M.tilt) tourSignal("notilt"); });
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; resumeAnim(); }).observe($("model"));   // pause Play / Spin while the model is off-screen
+}
+document.addEventListener("visibilitychange", resumeAnim);
+let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; stopAll(); drawAll(); } }, 80); });
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
+try { if (localStorage.getItem("ks3tools-toured:seasons")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
