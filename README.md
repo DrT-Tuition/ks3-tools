@@ -34,6 +34,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Spring Stretch | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/spring-stretch.html |
 | Balanced Forces | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/balanced-forces.html |
 | Motion Graphs | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/motion-graphs.html |
+| Pressure Lab | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/pressure-lab.html |
 | Seesaw | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/seesaw.html |
 | Moon Phases | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/moon-phases.html |
 | Make a Wave | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/make-a-wave.html |
