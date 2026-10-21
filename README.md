@@ -19,6 +19,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Molecule Builder | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
 | Periodic Table Explorer | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
 | Balance the Equation | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
+| Reaction Lab | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/reaction-lab.html |
 | Particle Model | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/particle-model.html |
 | Diffusion | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/diffusion.html |
 | Gas Pressure | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/gas-pressure.html |
