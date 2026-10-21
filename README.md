@@ -11,6 +11,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Microscope | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/microscope.html |
 | Joints | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/joints.html |
 | Muscle Pairs | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/muscle-pairs.html |
+| Food Tests Lab | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/food-tests.html |
 | Digestive System | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/digestive-system.html |
 | Pondweed | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/pondweed.html |
 | Flower Parts | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/flower-parts.html |
