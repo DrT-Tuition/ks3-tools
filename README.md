@@ -17,6 +17,8 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Flower Parts | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/flower-parts.html |
 | Food Web | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/food-web.html |
 | Natural Selection | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
+| Cell Builder | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/cell-builder.html |
+| Variation Sorter | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/variation.html |
 | Molecule Builder | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
 | Periodic Table Explorer | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
 | Balance the Equation | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |
@@ -49,6 +51,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Electromagnet | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/electromagnet.html |
 | Skate Ramp | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/skate-ramp.html |
 | Heat Flow | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/heat-flow.html |
+| Mass and Weight | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/mass-weight.html |
 | Graph It | KS3 | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 | DNA Builder | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 | DNA Replication | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
