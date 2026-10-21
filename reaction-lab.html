@@ -48,8 +48,8 @@
     feedback); reactants and products on either side (named); heated copper carbonate reacts with oxygen (oxygen is a spare tile,
     feedback); the black powder is soot (distractor); the final temperature shows the best fuel (rise is shown; reused water fails the
     fair test); endothermic reactions "make cold" (arrows in from the surroundings; feedback); the test tube is part of the reaction
-    (surroundings named on screen); dissolving is a reaction (tests 1 and 3 are named as a solid dissolving: a physical change,
-    still endothermic, so L7 talks of "changes"; Hard Q10 says "change"); air is all oxygen (the oxygen meter shows plenty / running
+    (surroundings named on screen); endothermic means no reaction (Dan, 21 Oct 2026: L7 tests 1 and 3 are true endothermic reactions,
+    citric acid / vinegar + bicarbonate of soda, which fizz as they cool, replacing the deck's dissolving tests); air is all oxygen (the oxygen meter shows plenty / running
     low / too low, not a percentage).
   Facts and values used: signs: a gas (fizzing), a new solid, a colour change, light, heat or cold, a bang, a smell; a chemical reaction
     makes new substances, atoms rearrange, most are not easily reversible; physical changes: changes of state and dissolving, usually
@@ -702,9 +702,9 @@ const milkAt = (c, t) => CARBS[c].tMilky ? clamp((t - (CARBS[c].tMilky - 12)) / 
 
 /* 5. Exothermic or endothermic (L7 practical s19–21). Start and end temperatures are the model's own. */
 const TESTS = [
-  { id: 1, n: "Test 1: ammonium nitrate + water", T0: 20, T1: 8, add: "crystals", dis: "ammonium nitrate", feel: "The tube feels cold." },
+  { id: 1, n: "Test 1: citric acid + bicarbonate of soda", T0: 20, T1: 9, add: "crystals", fizz: 1, feel: "Fizzing, and the tube feels cold." },
   { id: 2, n: "Test 2: hydrochloric acid + sodium hydroxide", T0: 20, T1: 27, add: "pour", rx: "neut", feel: "The tube feels warm." },
-  { id: 3, n: "Test 3: ammonium chloride + water", T0: 20, T1: 14, add: "crystals", dis: "ammonium chloride", feel: "The tube feels cold." },
+  { id: 3, n: "Test 3: vinegar + bicarbonate of soda", T0: 20, T1: 16, add: "crystals", fizz: 1, feel: "Fizzing, and the tube feels a little cold." },
   { id: 4, n: "Test 4: hydrochloric acid + magnesium", T0: 20, T1: 29, add: "ribbon", rx: "mgacid", feel: "Fizzing, and the tube feels warm." } ];
 const testById = id => TESTS.find(x => x.id === +id);
 const tChange = x => x.T1 - x.T0;   // L7 s16: change = end − start
@@ -1033,6 +1033,7 @@ function exoScene(E) {
   const X = 290, Y = 120, W = 62, H = 220, lt = Y + H * .55 - (x.add === "pour" ? 30 * sm(p / .2) : 0);
   let inner = liquid(X, lt, W, H, "acid") + surf(X, lt, W);
   if (x.add === "crystals" && p > .08) inner += `<path d="M${X + 12} ${Y + H - 6}q18 -14 38 0z" ${fl("whites", "fill-opacity:" + n1(1 - .8 * sm((p - .1) / .7)))}/>`;
+  if (x.fizz && run && p > .1) inner += bubbles(9, 10, X + 14, X + 48, Y + H - 12, lt, p * 4, 1.1, 3.5);
   if (x.add === "ribbon" && p > .08) inner += `<rect x="${X + 16}" y="${Y + H - 16}" width="${n1(30 * (1 - .5 * sm(p)))}" height="6" rx="2" ${fl("mg", "stroke:var(--steel-edge);stroke-width:1")}/>` + (run ? bubbles(9, 10, X + 14, X + 44, Y + H - 18, lt, p * 4, 1.1, 3.5) : "");
   s += tubeB(X, Y, W, H);
   let q = tubeI("tE", X, Y, W, H, inner) + thermo(X + 40, Y - 70, 260, Math.round(T), -10, 40), fr = tubeF(X, Y, W, H) + rackFront(230, 180);
@@ -1465,13 +1466,13 @@ const TASKS = {
       explain: "Zinc carbonate breaks down on heating: one compound → simpler substances.",
       hints: ["Thermal decomposition: heat breaks down one compound.", "Look for only one reactant.", "A carbonate breaking down…"] },
     /* L7 */
-    { id: "coldTube", kind: "choice", setup: M => { M.tab = "exo"; M.E.test = 1; }, text: "A test tube gets colder during a change, like Test 1. What is happening?",
-      options: [{ t: "Energy is transferred from the surroundings to the substances in the change", ok: () => kindOf(testById(1)) === "endo" && /from the surroundings/.test(DEF.endo) },
-        { t: "Energy is transferred to the surroundings", why: "That would warm the tube up: an exothermic change." },
-        { t: "The change is making cold", why: "Changes don't 'give out cold'. Energy is taken in from the surroundings, so they cool down." },
-        { t: "The change has stopped", why: "A cold tube shows the change is taking energy in. It is endothermic." }],
-      explain: "It is endothermic: energy leaves the tube (the surroundings) and goes into the substances in the change.",
-      hints: ["Is the tube part of the change, or the surroundings?", "The surroundings cool down. Where did their energy go?", "Endothermic: energy goes in, from the surroundings."] }
+    { id: "coldTube", kind: "choice", setup: M => { M.tab = "exo"; M.E.test = 1; }, text: "A test tube gets colder during a reaction, like Test 1. What is happening?",
+      options: [{ t: "Energy is transferred from the surroundings to the reacting substances", ok: () => kindOf(testById(1)) === "endo" && /from the surroundings/.test(DEF.endo) },
+        { t: "Energy is transferred to the surroundings", why: "That would warm the tube up: an exothermic reaction." },
+        { t: "The reaction is making cold", why: "Reactions don't 'give out cold'. Energy is taken in from the surroundings, so they cool down." },
+        { t: "The reaction has stopped", why: "The fizzing shows it is still reacting. A cold tube shows the reaction is taking energy in: it is endothermic." }],
+      explain: "It is endothermic: energy leaves the tube (the surroundings) and goes into the reacting substances.",
+      hints: ["Is the tube part of the reaction, or the surroundings?", "The surroundings cool down. Where did their energy go?", "Endothermic: energy goes in, from the surroundings."] }
   ]
 };
 
