@@ -55,6 +55,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Heat Flow | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/heat-flow.html |
 | Mass and Weight | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/mass-weight.html |
 | Seasons | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/seasons.html |
+| Solar System Scale | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/solar-system.html |
 | Graph It | KS3 | Working scientifically | https://drt-tuition.github.io/ks3-tools/graph-it.html |
 | DNA Builder | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-builder.html |
 | DNA Replication | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
