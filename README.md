@@ -35,6 +35,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Separate It | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/separate-it.html |
 | Metal Reactions | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/metal-reactions.html |
 | Displacement Lab | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/displacement-lab.html |
+| Extracting Metals | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/extracting-metals.html |
 | Spring Stretch | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/spring-stretch.html |
 | Balanced Forces | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/balanced-forces.html |
 | Motion Graphs | KS3 | Physics | https://drt-tuition.github.io/ks3-tools/motion-graphs.html |
