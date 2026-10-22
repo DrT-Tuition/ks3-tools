@@ -19,6 +19,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Natural Selection | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/natural-selection.html |
 | Cell Builder | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/cell-builder.html |
 | Variation Sorter | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/variation.html |
+| Menstrual Cycle | KS3 | Biology | https://drt-tuition.github.io/ks3-tools/menstrual-cycle.html |
 | Molecule Builder | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/molecule-builder.html |
 | Periodic Table Explorer | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/periodic-table.html |
 | Balance the Equation | KS3 | Chemistry | https://drt-tuition.github.io/ks3-tools/balance-the-equation.html |

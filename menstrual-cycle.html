@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menstrual Cycle</title>
+<!--
+  SCIENCE SPEC — Menstrual Cycle (KS3 Biology: reproduction, the menstrual cycle and contraception)
+  Models: the 28-day menstrual cycle and two methods of contraception, in two tabs. Everything is drawn in code (SVG); no pictures.
+    1. The 28-day cycle: a round day dial (Day 1 at the top, clockwise) with a draggable marker, a Day slider and Play ▶
+       (paced, one day at a time, stops at Day 28). Bands on the dial: period (Days 1–5), lining thickens and an egg matures
+       (Days 6–13), ovulation (Day 14), lining thick and spongy (Days 15–21), lining breaks down (Days 22–28). Linked to the dial,
+       a simple front-view diagram of the uterus, oviducts and ovaries, plus a close-up of the lining: the lining's thickness
+       comes from the day (thin after the period → thick and spongy → breaks down → leaves the body through the vagina); an egg
+       matures in an ovary (Days 5–13), is released at Day 14 and travels along the oviduct (Days 14–21). The readout gives each
+       day in the deck's wording.
+    2. What if the egg is fertilised? "Egg fertilised" can be switched on on Days 14–16, just after the egg is released (an egg can only be fertilised then).
+       The egg becomes an embryo, travels to the uterus and implants in the thick lining (shown on Day 21). The lining is not
+       shed and there is no period: the dial's Days 22–28 become "Pregnancy" and Play stops at Day 28 instead of starting again.
+    3. Contraception: a Venn diagram (as in the booklet) to sort 8 statements into Condom only, Both or Pill only, by dragging
+       or tap-then-tap. Check my sort marks each one ✓ or ✗ (with words, not colour alone).
+  Computed in code from the rules (nothing hard-coded): the stage of each day comes from the stage table; lining thickness is
+    interpolated from 5 key days (Day 1 0.45, Day 5 0.12, Day 14 0.9, Day 21 1.0, Day 28 0.5; 1.0 from Day 21 in pregnancy);
+    breakdown grows from Day 21 to Day 28; the egg's place is worked out from the day and the fertilisation day. The Venn
+    answers come from a property table for each method (barrier, hormones, every day, stops ovulation, STI protection, prevents
+    pregnancy, stops semen, method of contraception), so the sort, the feedback and the questions always agree.
+  Sources: Y8 T1 B1.3 L9 The menstrual cycle (approved lesson file build_B13_L9_Menstrual_Cycle.py, from the source deck
+    Y8T1_1B3_L9_The_Menstrual_Cycle.pptx): hook (repeating cycle, about 28 days, same events in the same order; what is different
+    in the month a woman becomes pregnant?), misconceptions slide (period ≠ ovulation; not exactly 28 days; the pill does not
+    protect against STIs; ovulation is not on Day 1), key words (menstrual cycle, period 3–7 days, ovulation around Day 14,
+    contraception = ways of preventing pregnancy), New Learning 1 (stages by day + booklet cycle table), New Learning 2 (if the
+    egg is fertilised: implantation, the lining isn't shed, no periods; concept cartoon Dev / Ella / Finn), New Learning 3
+    (condoms vs the pill + Venn booklet task), formative gap fill (28, 14, 3 to 7), hinge (Day 14), plenary (correct the
+    mistakes; exit ticket compare condoms and the pill). Starter context: earlier B1.3 lessons (an ovary releases an egg about
+    once a month; an embryo implants in the uterus lining; about 9 months / 40 weeks).
+    KS3 strand: NC Biology, Reproduction — "reproduction in humans (as an example of a mammal), including the structure and
+    function of the male and female reproductive systems, menstrual cycle (without details of hormones), gametes,
+    fertilisation"; AQA KS3 3.10.2 Human reproduction.
+  Simplifications (on screen as "Model limits"): days are typical (about 28 days; real cycles vary between people and from month
+    to month; a period lasts 3–7 days and is shown on Days 1–5); one egg from one ovary is shown each cycle; the diagram is
+    simplified and not to scale; implantation is shown on Day 21; no hormones are named (only "the pill's hormones stop
+    ovulation", as in the deck). The deck's day ranges overlap at Day 5 and Day 14 ("Days 1–5", "Days 5–13", "Day 14",
+    "Days 14–21"): the dial gives Day 5 to the period and Day 14 to ovulation, and the readout keeps the deck's labels.
+  Misconceptions designed out (deck misconceptions slide and hinge): a period is the same as ovulation (separate bands, readout
+    and diagram events; Easy 2, 3, Hard 1, 3, 5); every cycle is exactly 28 days (the note under the dial; Hard 2); the pill
+    protects against STIs (Venn, Easy 8, Hard 7, 8, 10); ovulation happens on Day 1 (Day 1 is labelled the start of a period;
+    Easy 3, Hard 1, 10); periods carry on in pregnancy (Finn; the dial stops cycling; Easy 7, Hard 5, 6, 10).
+  Facts and values used: menstrual cycle = the repeating changes in the female reproductive system, about 28 days; period = the
+    uterus lining leaving the body through the vagina, 3–7 days; ovulation = an ovary releasing an egg, around Day 14;
+    contraception = ways of preventing pregnancy; Days 1–5 period; Days 5–13 lining thickens, an egg matures; Day 14 ovulation;
+    Days 14–21 lining stays thick and spongy, the egg travels along the oviduct; Days 22–28 no fertilisation → the lining breaks
+    down; fertilised egg → implantation → pregnancy; the embryo implants in the thick lining; in pregnancy the lining isn't shed:
+    no periods; condoms: a barrier, thin latex over the penis, stop semen entering the vagina, also protect against STIs, e.g.
+    HIV; the pill: a tablet a woman takes every day, its hormones stop ovulation, no protection against STIs; both prevent
+    pregnancy and are methods of contraception.
+    Not in the deck (listed in the report): implantation shown on Day 21; Egg fertilised allowed on Days 14–16 (spec); the egg
+    is shown fading away by Day 23 when it is not fertilised.
+  SoW lessons served: Y8 T1 B1.3 L9 The menstrual cycle (both tabs).
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Key words, Cycle table, Condom vs pill.
+  Idea credit: none (designed from scratch).
+  Checks: on load, the facts (28, 14, 3–7), the stage table (covers Days 1–28 once each, matches the deck's labels), the model
+    (lining thinnest at the end of the period, thickening to Day 14, thick on Days 14–21, breaking down on Days 22–28; shedding
+    only on Days 1–5; the egg in the ovary on Days 5–13, released on Day 14, in the oviduct on Days 14–21 and gone by Day 23;
+    with fertilisation the embryo implants by Day 21 and the lining is never shed), the Venn table (3 condom only, 3 pill only,
+    2 both, as in the booklet; only condoms protect against STIs) and every question (3 hints; one right option and feedback
+    for each wrong one; gap answers in the bank; goals not met at the start and reached by Show answer). Any failure shows a
+    visible error box and switches that question off.
+  Performance: drawn on demand (no animation loop while idle). Play uses paceFrame (12 fps cap, adaptive slow-down, time-based
+    motion) and stops by itself at Day 28; each frame only patches the dial marker, and every other frame the moving parts of the diagram (lining drawn in 1/20 steps, so most
+    frames leave it untouched); on phones the diagram labels are drawn larger (UL.big, read on build/resize only); static
+    layers are patched only when they change; no CSS filters; no backdrop-filter. Play pauses when the tab is hidden or the
+    model is scrolled off-screen. Reduced motion: Play steps one whole day at a time.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.readout th,.readout td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left}
+.readout th{font-size:15px;color:var(--muted)}
+.readout tr.me td{font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:5.6em;text-align:right}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:4px}
+.sscene{position:relative}
+#model{grid-template-columns:minmax(0,1fr)}
+/* the parts that move (the Earth in its orbit; the place on the spinning Earth) sit in their own SVG on top, so a frame
+   only repaints that small picture, not the stars, the Sun and the orbit underneath */
+.scene.ov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none}
+.scene.ov [data-earth],.scene.ov [data-spin]{pointer-events:auto}
+.scene .drag{cursor:grab;touch-action:none}
+@media (max-width:560px){.slider{grid-template-columns:minmax(0,1fr) auto}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .readout th,.readout td{padding:3px 5px}.readout table{font-size:15px}}
+@media (max-width:400px){.readout{padding:8px 8px}.readout table{font-size:14px}.readout th{font-size:13px}.readout th,.readout td{padding:3px 3px}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:901px){.scene{max-height:min(520px,62vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+/* ---- Menstrual Cycle: dial, uterus diagram, Venn ---- */
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cyc{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:12px;align-items:center}
+@container (max-width:560px){.cyc{grid-template-columns:minmax(0,1fr)}}
+.cnote{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-radius:8px}
+:root{--b-period:#F2B6B9;--b-thicken:#F8DCE2;--b-ovu:#F3D98E;--b-thick:#EBAFC3;--b-break:#E2DCE3;--b-preg:#BFE3CD;--b-sep:#FBFAF8;
+  --wall:#F3CFC6;--wall-edge:#A8625C;--cav:#FFF7F5;--lin:#D9506A;--lin-br:#E59AA8;--ves:#9E1F3A;--frag:#B8283F;
+  --ovary:#F2DDB8;--ovary-edge:#9A7A44;--egg:#FFF6CC;--egg-edge:#8A6A1A;
+  --vc:#2D5B8C;--vc-fill:rgba(45,91,140,.09);--vp:#B04E17;--vp-fill:rgba(194,87,26,.09)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--b-period:#7B2F3B;--b-thicken:#5A3550;--b-ovu:#7A6224;--b-thick:#7A3558;--b-break:#3C4660;--b-preg:#1E5A3F;--b-sep:#1E3555;
+  --wall:#6E4752;--wall-edge:#E3B0A8;--cav:#24314C;--lin:#E2667E;--lin-br:#A85E6E;--ves:#FFB3C0;--frag:#FF8094;
+  --ovary:#7A6648;--ovary-edge:#E6CC96;--egg:#FFF0B8;--egg-edge:#D9A536;
+  --vc:#8CC4FF;--vc-fill:rgba(140,196,255,.10);--vp:#F5A97A;--vp-fill:rgba(245,169,122,.10)}}
+:root[data-theme="dark"]{--b-period:#7B2F3B;--b-thicken:#5A3550;--b-ovu:#7A6224;--b-thick:#7A3558;--b-break:#3C4660;--b-preg:#1E5A3F;--b-sep:#1E3555;
+  --wall:#6E4752;--wall-edge:#E3B0A8;--cav:#24314C;--lin:#E2667E;--lin-br:#A85E6E;--ves:#FFB3C0;--frag:#FF8094;
+  --ovary:#7A6648;--ovary-edge:#E6CC96;--egg:#FFF0B8;--egg-edge:#D9A536;
+  --vc:#8CC4FF;--vc-fill:rgba(140,196,255,.10);--vp:#F5A97A;--vp-fill:rgba(245,169,122,.10)}
+/* dial */
+.scene .dface{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.scene .b-period{fill:var(--b-period)}.scene .b-thicken{fill:var(--b-thicken)}.scene .b-ovu{fill:var(--b-ovu)}
+.scene .b-thick{fill:var(--b-thick)}.scene .b-break{fill:var(--b-break)}.scene .b-preg{fill:var(--b-preg)}
+.scene .bsep{stroke:var(--b-sep);stroke-width:2}
+.scene .bedge{fill:none;stroke:var(--line);stroke-width:1.5}
+.scene .blbl{font-weight:700}
+.scene .dnum{fill:var(--muted)!important;font-weight:700}
+.scene .cl{fill:var(--muted)!important}
+.scene .cday{fill:var(--accent)!important;font-weight:700}
+.scene .cst{font-weight:700}
+.scene .knob{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.scene .knobt{fill:var(--accent-ink)!important;font-weight:700}
+.scene .kfr{fill:none;stroke:var(--focus);stroke-width:3;display:none}
+.scene .knobg:focus-visible .kfr{display:inline}
+.scene .knobg{outline:none}
+/* uterus diagram */
+.scene .wall{fill:var(--wall);stroke:var(--wall-edge);stroke-width:2.5;stroke-linejoin:round}
+.scene .cav{fill:var(--cav)}
+.scene .tubeo{fill:none;stroke:var(--wall-edge);stroke-width:17;stroke-linecap:round}
+.scene .tubei{fill:none;stroke:var(--wall);stroke-width:12.5;stroke-linecap:round}
+.scene .tubel{fill:none;stroke:var(--cav);stroke-width:4;stroke-linecap:round}
+.scene .fim{fill:none;stroke:var(--wall-edge);stroke-width:3;stroke-linecap:round}
+.scene .lin{fill:none;stroke:var(--lin);stroke-linejoin:round}
+.scene .lin.br{stroke:var(--lin-br)}
+.scene .linb{fill:var(--lin)}
+.scene .linb.br{fill:var(--lin-br)}
+.scene .ves{fill:var(--ves)}
+.scene .vesl{fill:none;stroke:var(--ves);stroke-width:2.5;stroke-linecap:round}
+.scene .bite{fill:var(--cav)}
+.scene .bitec{fill:var(--surface)}
+.scene .frag{fill:var(--frag)}
+.scene .ova{fill:var(--ovary);stroke:var(--ovary-edge);stroke-width:2}
+.scene .egg{fill:var(--egg);stroke:var(--egg-edge);stroke-width:2}
+.scene .eggn{fill:var(--egg-edge)}
+.scene .emb{fill:var(--egg);stroke:var(--egg-edge);stroke-width:1.5}
+.scene .ld{stroke:var(--ink);stroke-width:1.5;fill:none}
+.scene .lb{font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+.scene .lbm{fill:var(--muted)!important;font-weight:700}
+.scene .cbox{fill:var(--sunk);stroke:var(--line);stroke-width:1.5}
+.scene .cboxi{fill:var(--surface);stroke:var(--line);stroke-width:1}
+/* Venn */
+.venn{container-type:inline-size;display:grid;gap:10px}
+.tray{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;background:var(--sunk);min-height:64px}
+.vz-h{margin:0 0 6px;font-weight:700;font-size:16px;line-height:1.3}
+.tray .vz-h{color:var(--muted)}
+.vz[data-zone="c"] .vz-h{color:var(--vc)}
+.vz[data-zone="p"] .vz-h{color:var(--vp)}
+.vz[data-zone="b"] .vz-h{color:var(--ink)}
+.vcs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-content:center}
+.tray .vcs{justify-content:flex-start}
+.vwrap{position:relative;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.vbg{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.vbg ellipse{vector-effect:non-scaling-stroke;stroke-width:3}
+.vbg .ec{fill:var(--vc-fill);stroke:var(--vc)}
+.vbg .ep{fill:var(--vp-fill);stroke:var(--vp)}
+.vbg .v{display:none}
+.vzones{position:relative;display:grid;grid-template-columns:30% 40% 30%;min-height:310px}
+.vz{padding:66px 6px 22px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;border-radius:12px}
+.vz .vcs{flex:1;flex-direction:column;flex-wrap:nowrap;width:100%}
+.vz[data-zone="c"]{padding-left:6%}
+.vz[data-zone="p"]{padding-right:6%}
+.vz[data-zone="b"]{padding-left:6%;padding-right:6%;padding-top:34px}
+.chp{font:700 15px var(--f-body);line-height:1.25;padding:7px 10px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:grab;touch-action:none;max-width:100%;text-align:center;user-select:none;-webkit-user-select:none}
+.vz .chp{width:100%}
+.chp[aria-pressed="true"]{border:2px solid var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.chp.ok{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.chp.no{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.chp.dragging{position:relative;z-index:40;cursor:grabbing;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.vz.can,.tray.can{outline:2px dashed var(--accent);outline-offset:-5px;cursor:pointer}
+.vz:focus-visible,.tray:focus-visible{outline:3px solid var(--focus);outline-offset:-4px}
+@container (max-width:540px){
+  .vbg .h{display:none}.vbg .v{display:inline}
+  .vzones{grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;min-height:0}
+  .vz,.vz[data-zone="b"]{padding-top:16px;padding-bottom:12px}
+  .vz[data-zone="c"],.vz[data-zone="p"],.vz[data-zone="b"]{padding-left:14%;padding-right:14%}
+  .vz[data-zone="b"]{padding-left:8%;padding-right:8%}
+  .vz .vcs{min-height:52px}
+}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;vertical-align:top}
+.tbl th{color:var(--muted)}
+.cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.cmp ul{margin:0;padding-left:18px}
+@media (max-width:420px){.cmp{grid-template-columns:minmax(0,1fr)}}
+.grow .post{white-space:nowrap}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Menstrual Cycle<small>Move through the 28 days of the menstrual cycle, see what happens if the egg is fertilised, and sort condoms and the pill.</small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Menstrual Cycle</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="The menstrual cycle model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="cycle" aria-pressed="true">The 28-day cycle</button><button type="button" data-tab="contra" aria-pressed="false">Contraception</button></div>
+
+      <div class="pane" id="pane-cycle">
+        <div class="cyc">
+          <div class="sscene" id="dscene"><svg id="dsvg" class="scene" viewBox="0 0 420 420" role="group" aria-label="Day dial: the 28 days of the menstrual cycle. Drag the marker round the dial to change the day."><g id="dBg"></g><g id="dDyn"></g></svg></div>
+          <div class="sscene" id="uscene"><svg id="usvg" class="scene" viewBox="0 0 520 440" role="img" aria-label="Simple diagram of the uterus, oviducts and ovaries, with a close-up of the uterus lining. Not to scale."><g id="uBg"></g><g id="uDyn"></g></svg></div>
+        </div>
+        <div class="slider" id="dayRow"><label class="ctl-lbl" for="day">Day</label><input type="range" id="day" min="1" max="28" step="1" value="1"><output id="dayOut" for="day">Day 1</output></div>
+        <div class="controls" id="cycCtl">
+          <button class="btn primary go" type="button" id="playBtn">Play ▶</button>
+          <button class="sw" type="button" id="fertSw" aria-pressed="false"><span class="dot"></span>Egg fertilised <span class="state">off</span></button>
+        </div>
+        <p class="cnote">A cycle lasts about 28 days. It varies between people and from month to month. A period lasts 3–7 days.</p>
+      </div>
+
+      <div class="pane" id="pane-contra" hidden>
+        <div class="venn" id="venn">
+          <div class="tray" data-zone="" role="button" tabindex="0" aria-label="Statements to sort. Put a statement back here."><p class="vz-h">Statements to sort</p><div class="vcs" id="vz-t"></div></div>
+          <div class="vwrap">
+            <svg class="vbg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse class="ec h" cx="35.5" cy="50" rx="34.5" ry="48.5"/><ellipse class="ep h" cx="64.5" cy="50" rx="34.5" ry="48.5"/><ellipse class="ec v" cx="50" cy="34.5" rx="49" ry="33.5"/><ellipse class="ep v" cx="50" cy="65.5" rx="49" ry="33.5"/></svg>
+            <div class="vzones">
+              <div class="vz" data-zone="c" role="button" tabindex="0" aria-label="Condom only"><p class="vz-h">Condom only</p><div class="vcs" id="vz-c"></div></div>
+              <div class="vz" data-zone="b" role="button" tabindex="0" aria-label="Both"><p class="vz-h">Both</p><div class="vcs" id="vz-b"></div></div>
+              <div class="vz" data-zone="p" role="button" tabindex="0" aria-label="Pill only"><p class="vz-h">Pill only</p><div class="vcs" id="vz-p"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="controls" id="vennCtl">
+          <button class="btn primary go" type="button" id="vennCheck">Check my sort</button>
+          <button class="btn" type="button" id="vennReset">Start again</button>
+        </div>
+      </div>
+
+      <div class="readout" id="read" aria-live="polite"></div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> Days are typical: real cycles vary. The diagram is simplified and not to scale. It shows one egg from one ovary, and the embryo implanting on Day 21.</p>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="table" aria-pressed="false"><span class="dot"></span>Cycle table <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="contra" aria-pressed="false"><span class="dot"></span>Condom vs pill <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="tableBox" hidden></div>
+            <div class="support-box" id="contraBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (B1.3 L9 The menstrual cycle: hook, misconceptions, key words, New Learning 1–3, gap fill, hinge, plenary) ===== */
+const CYCLE = 28;            // key words, hook: about 28 days
+const OVU = 14;              // key words: ovulation around Day 14
+const PER = [3, 7];          // key words: a period lasts 3–7 days
+const VARIES = true;         // misconceptions slide: about 28 days, but it varies between people and month to month
+const IMPLANT = 21;          // not in the deck: the day the embryo is shown implanting in the thick lining
+const FERT = [14, 16];       // spec: Egg fertilised can be switched on on Days 14–16, while the egg is in the oviduct
+const DEF = {                // key words slide
+  cycle: "The repeating changes in the female reproductive system: about 28 days.",
+  period: "When the uterus lining leaves the body through the vagina: 3–7 days.",
+  ovulation: "When an ovary releases an egg: around Day 14.",
+  contraception: "Ways of preventing pregnancy." };
+/* New Learning 1: the stages (d0–d1 are the days the dial gives each stage; days is the deck's own label) */
+const STAGES = [
+  { key: "period", d0: 1, d1: 5, days: "Days 1–5", name: "Period", row: "period: the lining leaves the body", lining: "Leaves the body (a period)", egg: "—" },
+  { key: "thicken", d0: 6, d1: 13, days: "Days 5–13", name: "Lining thickens", row: "the lining thickens; an egg matures", lining: "Thickens", egg: "An egg matures in the ovary" },
+  { key: "ovu", d0: 14, d1: 14, days: "Day 14", name: "Ovulation", row: "ovulation: an egg is released", lining: "Thick", egg: "Egg released (ovulation)" },
+  { key: "thick", d0: 15, d1: 21, days: "Days 14–21", name: "Thick and spongy", row: "the lining stays thick and spongy", lining: "Stays thick and spongy", egg: "Travels along the oviduct" },
+  { key: "break", d0: 22, d1: 28, days: "Days 22–28", name: "Lining breaks down", row: "the lining breaks down", lining: "Breaks down if no fertilisation", egg: "Not fertilised" }];
+/* New Learning 3: condoms vs the pill (compare slide) and the booklet Venn statements */
+const COMPARE = { condom: ["A barrier: thin latex over the penis.", "Stops semen entering the vagina.", "Also protects against STIs, e.g. HIV."],
+  pill: ["A tablet a woman takes every day.", "Its hormones stop ovulation.", "No protection against STIs."] };
+const METHODS = {
+  condom: { barrier: 1, hormones: 0, everyday: 0, ovulation: 0, sti: 1, pregnancy: 1, semen: 1, contra: 1 },
+  pill: { barrier: 0, hormones: 1, everyday: 1, ovulation: 1, sti: 0, pregnancy: 1, semen: 0, contra: 1 } };
+const ITEMS = [
+  { id: "barrier", t: "A barrier method", why: "A condom is a barrier: thin latex over the penis. The pill is a tablet, not a barrier." },
+  { id: "hormones", t: "Contains hormones", why: "Only the pill contains hormones. Its hormones stop ovulation." },
+  { id: "everyday", t: "Taken every day", why: "The pill is a tablet a woman takes every day." },
+  { id: "ovulation", t: "Stops ovulation", why: "The pill's hormones stop ovulation. A condom doesn't: it is a barrier." },
+  { id: "sti", t: "Protects against STIs", why: "Only barrier methods like condoms protect against STIs. The pill doesn't." },
+  { id: "pregnancy", t: "Prevents pregnancy", why: "Both condoms and the pill prevent pregnancy." },
+  { id: "semen", t: "Stops semen entering the vagina", why: "A condom stops semen entering the vagina. The pill doesn't: it stops ovulation." },
+  { id: "contra", t: "A method of contraception", why: "Both are methods of contraception: ways of preventing pregnancy." }];
+const ITEM = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const ZW = { c: "Condom only", b: "Both", p: "Pill only" };
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const eq = (a, b) => Math.abs(a - b) < 1e-9;
+const P2 = p => `${f1(p[0])} ${f1(p[1])}`;
+const hash = k => (((k + 1) * 9301 + 49297) % 233280) / 233280;
+const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+
+/* ===== The model: everything below is worked out from the rules ===== */
+const dayI = d => clamp(Math.floor(d + 1e-9), 1, CYCLE);
+const stageOf = d => { const i = dayI(d); return STAGES.find(s => i >= s.d0 && i <= s.d1); };
+const LIN = [[1, .45], [5, .12], [14, .9], [21, 1], [28, .5]];   // lining thickness (0–1) on 5 key days
+function interp(T, d) { if (d <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (d <= T[i][0]) { const [a, va] = T[i - 1], [b, vb] = T[i]; return va + (vb - va) * (d - a) / (b - a); } return T[T.length - 1][1]; }
+const liningAt = (d, preg) => preg && d >= IMPLANT ? 1 : interp(LIN, d);
+const breakAt = (d, preg) => preg ? 0 : clamp((d - IMPLANT) / (CYCLE - IMPLANT), 0, 1);   // breaking down: 0 on Day 21 → 1 on Day 28
+const shedAt = d => d < 5 ? 1 : d < 6 ? 6 - d : 0;                                         // the lining leaving the body: Days 1–5
+const zoneOf = id => { const c = METHODS.condom[id], p = METHODS.pill[id]; return c && p ? "b" : c ? "c" : p ? "p" : ""; };
+const vennRight = M => ITEMS.every(i => M.venn[i.id] === zoneOf(i.id));
+/* where the egg (or embryo) is: ovary (Days 5–13), oviduct (Days 14–21, s = 0 at the ovary end → 1 at the uterus), then gone */
+function eggAt(d, M) {
+  const preg = M && M.preg, fd = M && M.fd;
+  if (preg && d >= fd) {
+    const sF = (fd - OVU) / 7;
+    if (d < IMPLANT - 1) return { where: "tube", s: sF + (1 - sF) * (d - fd) / (IMPLANT - 1 - fd), kind: "embryo", a: 1 };
+    if (d < IMPLANT) return { where: "toLining", u: d - (IMPLANT - 1), kind: "embryo", a: 1 };
+    return { where: "implanted", kind: "embryo", a: 1 };
+  }
+  if (d < 5) return { where: "none" };
+  if (d < OVU) return { where: "ovary", r: 3 + 5 * (d - 5) / (OVU - 5), kind: "egg", a: 1 };
+  if (d <= IMPLANT) return { where: "tube", s: (d - OVU) / 7, kind: "egg", a: 1 };
+  if (d < 23) return { where: "fade", kind: "egg", a: 1 - (d - IMPLANT) / 2 };
+  return { where: "none" };
+}
+
+/* ===== Model state ===== */
+function freshM() { return { tab: "cycle", day: 1, preg: false, fd: 0, hide: false, note: "", venn: {}, vorder: shuffled(ITEMS.length).map(i => ITEMS[i].id), sel: null, vchk: false }; }
+
+/* ===== Question bank (wording from the deck; every answer is worked out from the rules above) ===== */
+const ABC = "ABCDEF";
+const SU = {
+  d1: M => { M.tab = "cycle"; M.day = 1; },
+  d8: M => { M.tab = "cycle"; M.day = 8; },
+  d14: M => { M.tab = "cycle"; M.day = OVU; },
+  d25: M => { M.tab = "cycle"; M.day = 25; },
+  fert16: M => { M.tab = "cycle"; M.day = 16; M.preg = true; M.fd = OVU; M.hide = true; },
+  contra: M => { M.tab = "contra"; } };
+const stageRows = () => STAGES.map((s, i) => ["s" + (i + 1), s.days + ":", s.row]);
+const TASKS = {
+  easy: [
+    { id: "words", kind: "gaps", setup: SU.d1, stuck: "words", text: "Match each key word to what it means.",
+      rows: [["w1", "Menstrual cycle:", "repeating changes, about every 28 days"], ["w2", "Period:", "the uterus lining leaving the body"],
+        ["w3", "Ovulation:", "an ovary releasing an egg"], ["w4", "Contraception:", "ways of preventing pregnancy"]],
+      bank: ["repeating changes, about every 28 days", "the uterus lining leaving the body", "an ovary releasing an egg", "ways of preventing pregnancy", "an embryo implanting in the lining"],
+      whyVal: { "repeating changes, about every 28 days": "That is the menstrual cycle: a cycle is something that repeats.",
+        "the uterus lining leaving the body": "That is a period. It lasts 3–7 days.",
+        "an ovary releasing an egg": "That is ovulation. 'Ov-' is to do with eggs.",
+        "ways of preventing pregnancy": "That is contraception. 'Contra' means against.",
+        "an embryo implanting in the lining": "That is implantation. It only happens if the egg is fertilised." },
+      explain: "Menstrual cycle: the repeating changes, about 28 days. Period: the uterus lining leaves the body. Ovulation: an ovary releases an egg. Contraception: ways of preventing pregnancy.",
+      hints: ["Start with the word you are surest of.", "'Ov-' is to do with eggs. 'Contra' means against.", "Cycle → repeats, period → lining leaves, ovulation → egg released, contraception → preventing pregnancy."] },
+    { id: "period", kind: "choice", setup: SU.d1, stuck: "words", text: "What is a period?",
+      options: [{ t: "The uterus lining leaving the body through the vagina", ok: () => stageOf(3).key === "period" && shedAt(3) > 0 && /leaves the body/.test(DEF.period) },
+        { t: "An egg being released from an ovary", why: "That is ovulation, around Day 14. A period is the lining leaving the body. They are not the same." },
+        { t: "The uterus lining getting thicker", why: "That happens after the period, on Days 5–13. A period is the lining leaving the body." },
+        { t: "An embryo implanting in the lining", why: "That only happens if the egg is fertilised, and then there is no period." }],
+      explain: "A period is when the uterus lining leaves the body through the vagina. It lasts 3–7 days.",
+      hints: ["Set the dial to Day 3. What is the lining doing?", "Watch the lining in the diagram on Days 1–5.", "In a period, the lining leaves the b…"] },
+    { id: "ovuDay", kind: "goal", setup: SU.d1, stuck: "table", text: "Do it: set the dial to the day an egg is usually released. Then press Check.",
+      test: M => dayI(M.day) === OVU,
+      not: M => { const d = dayI(M.day), s = stageOf(d).key;
+        if (d === 1) return "Day 1 is the start of a period, not ovulation. Move on to about halfway through the cycle.";
+        if (s === "period") return `Day ${d} is in the period: the lining is leaving the body. That isn't ovulation.`;
+        if (s === "thicken") return `On Day ${d} the lining is thickening and an egg is maturing. It hasn't been released yet. Move on.`;
+        if (s === "thick") return `On Day ${d} the egg is already travelling along the oviduct. It was released a little earlier.`;
+        return `On Day ${d} the lining is breaking down. The egg was released much earlier.`; },
+      done: M => `Day ${dayI(M.day)}: ovulation. An ovary releases an egg.`,
+      reveal: M => { M.day = OVU; },
+      hints: ["Drag the marker round the dial, or use the Day slider.", "Releasing an egg is called ovulation. It is about halfway through the cycle.", "Set Day 14."] },
+    { id: "thickenDay", kind: "goal", setup: SU.d25, stuck: "table", text: "Do it: set a day when the lining is thickening and an egg is maturing. Then press Check.",
+      test: M => stageOf(M.day).key === "thicken",
+      not: M => { const d = dayI(M.day), s = stageOf(d).key;
+        if (d === 5) return "Day 5 is the end of the period. The lining starts to thicken just after it. Move on a day.";
+        if (s === "period") return `Day ${d} is in the period: the lining is leaving the body.`;
+        if (s === "ovu") return `Day ${d} is ovulation: the egg has matured and is released. Go back a little.`;
+        if (s === "thick") return `On Day ${d} the lining is already thick and spongy, and the egg has been released. Go back.`;
+        return `On Day ${d} the lining is breaking down. Look earlier in the cycle, just after the period.`; },
+      done: M => `Day ${dayI(M.day)}: the lining thickens and an egg matures in the ovary.`,
+      reveal: M => { M.day = 9; },
+      hints: ["Watch the lining and the ovary as you move the dial.", "This happens after the period and before ovulation.", "Try a day between 6 and 13."] },
+    { id: "stages", kind: "gaps", setup: SU.d1, stuck: "table", text: "What happens when? Choose the stage for each set of days.",
+      rows: stageRows(),
+      bank: STAGES.map(s => s.row).concat(["an embryo implants"]),
+      whyVal: Object.assign(Object.fromEntries(STAGES.map(s => [s.row, `That goes with ${s.days}.`])), { "an embryo implants": "An embryo only implants if the egg is fertilised. It isn't part of every cycle." }),
+      explain: STAGES.map(s => `${s.days}: ${s.row}`).join(". ") + ".",
+      hints: ["The cycle starts with a period on Day 1.", "Ovulation is around Day 14. The lining thickens before it.", "Period → thickens → ovulation → thick and spongy → breaks down."] },
+    { id: "numbers", kind: "gaps", setup: SU.d1, text: "Fill the gaps.",
+      rows: [["n1", "The menstrual cycle lasts about", String(CYCLE), "days."], ["n2", "Ovulation happens around Day", String(OVU), ""], ["n3", "A period lasts", `${PER[0]} to ${PER[1]}`, "days."]],
+      bank: [String(CYCLE), String(OVU), `${PER[0]} to ${PER[1]}`, "1", "40"],
+      whyVal: { [String(CYCLE)]: `${CYCLE} is the length of the whole cycle, in days.`, [String(OVU)]: `Day ${OVU} is ovulation, about halfway through.`,
+        [`${PER[0]} to ${PER[1]}`]: `A period lasts ${PER[0]} to ${PER[1]} days.`, "1": "Day 1 is the first day of a period. It isn't ovulation, and it isn't how long anything lasts.",
+        "40": "40 weeks is about how long a pregnancy lasts. It isn't part of the cycle." },
+      explain: `The cycle lasts about ${CYCLE} days. Ovulation happens around Day ${OVU}. A period lasts ${PER[0]} to ${PER[1]} days.`,
+      hints: ["Count the days round the dial.", "Ovulation is about halfway round. Read the note under the model.", `${CYCLE}, ${OVU}, ${PER[0]} to ${PER[1]}.`] },
+    { id: "fertLining", kind: "choice", setup: SU.fert16, lock: "run", after: "preg28",
+      text: "Predict: this month the egg has been fertilised. What happens to the uterus lining?", note: "This is a prediction. When you get it right, the model moves on to Day 28.",
+      options: [{ t: "It stays thick: the embryo implants in it", ok: () => { const M = { preg: true, fd: OVU }; return liningAt(28, true) > .95 && breakAt(28, true) === 0 && eggAt(IMPLANT, M).where === "implanted"; } },
+        { t: "It breaks down, and a period starts as usual", why: "In pregnancy the lining isn't shed, so there are no periods. The embryo implants in the thick lining." },
+        { t: "It gets thinner and leaves with the egg", why: "The lining stays thick. The embryo implants in it." },
+        { t: "It breaks down, but more slowly", why: "It doesn't break down at all. In pregnancy the lining isn't shed: no periods." }],
+      explain: "The embryo implants in the thick lining. In pregnancy the lining isn't shed, so there are no periods.",
+      hints: ["Where does the embryo implant?", "The embryo implants in the thick lining. Can the lining be shed now?", "In pregnancy the lining isn't shed."] },
+    { id: "sti", kind: "choice", setup: SU.contra, stuck: "contra", text: "Which method of contraception also protects against STIs?",
+      options: [{ t: "Condoms", ok: () => METHODS.condom.sti && !METHODS.pill.sti },
+        { t: "The contraceptive pill", why: "The pill doesn't protect against STIs. Only barrier methods like condoms do." },
+        { t: "Both of them", why: "Only condoms protect against STIs. The pill gives no protection against STIs." },
+        { t: "Neither of them", why: "Condoms do: they are a barrier. They protect against STIs, e.g. HIV." }],
+      explain: "Condoms are a barrier. They prevent pregnancy and also protect against STIs, e.g. HIV. The pill doesn't.",
+      hints: ["Which one is a barrier?", "A barrier stops semen entering the vagina.", "Only barrier methods like c… protect against STIs."] },
+    { id: "pill", kind: "choice", setup: SU.contra, stuck: "contra", text: "How does the contraceptive pill prevent pregnancy?",
+      options: [{ t: "Its hormones stop ovulation", ok: () => METHODS.pill.hormones && METHODS.pill.ovulation && !METHODS.pill.barrier },
+        { t: "It is a barrier over the penis", why: "That is a condom. The pill is a tablet: its hormones stop ovulation." },
+        { t: "It protects against STIs", why: "The pill gives no protection against STIs. It prevents pregnancy because its hormones stop ovulation." },
+        { t: "It moves the period to Day 14", why: "Day 14 is ovulation, not a period. The pill's hormones stop ovulation, so no egg is released." }],
+      explain: "The pill is a tablet a woman takes every day. Its hormones stop ovulation, so no egg is released.",
+      hints: ["The pill is a tablet a woman takes every day.", "What does the pill contain?", "Its hormones stop o…"] }
+  ],
+  hard: [
+    { id: "pvo", kind: "choice", setup: SU.d1, text: "Which sentence is right?",
+      options: [{ t: "A period is the lining leaving the body. Ovulation is an egg being released.", ok: () => stageOf(3).key === "period" && stageOf(OVU).key === "ovu" },
+        { t: "A period and ovulation are the same thing.", why: "They are different. A period is the lining leaving the body (Days 1–5). Ovulation is an egg being released (Day 14)." },
+        { t: "Ovulation happens on Day 1, at the start of a period.", why: "Day 1 is the start of a period. Ovulation is around Day 14." },
+        { t: "A period is an egg being released. Ovulation is the lining leaving the body.", why: "These are swapped. A period is the lining leaving the body. Ovulation is an egg being released." }],
+      explain: "A period is the uterus lining leaving the body (Days 1–5). Ovulation is an ovary releasing an egg (around Day 14).",
+      hints: ["Set the dial to Day 3, then to Day 14. Compare them.", "Which one is about the lining, and which is about an egg?", "Period → lining leaves. Ovulation → egg released."] },
+    { id: "varies", kind: "choice", setup: SU.d1, text: "Kim's cycle was 26 days last month and 30 days this month. What should Kim know?",
+      options: [{ t: "That's normal: cycles are about 28 days, but they vary from month to month", ok: () => CYCLE === 28 && VARIES },
+        { t: "Every cycle should be exactly 28 days", why: "Not true. About 28 days is typical, but cycles vary between people and from month to month." },
+        { t: "Only the period can change length, not the cycle", why: "The whole cycle can vary: it is about 28 days, not exactly 28." },
+        { t: "Ovulation must have happened on Day 1", why: "Ovulation is around Day 14, not Day 1. And cycles do vary in length." }],
+      explain: "The cycle is about 28 days. It varies between people and from month to month.",
+      hints: ["Read the note under the dial.", "Is every cycle exactly 28 days?", "About 28 days, but it v…"] },
+    { id: "hinge", kind: "choice", setup: SU.d1, text: "What usually happens around Day 14 of the menstrual cycle?",
+      options: [{ t: "An egg is released", ok: () => stageOf(OVU).key === "ovu" && eggAt(OVU - .01).where === "ovary" && eggAt(OVU).where === "tube" },
+        { t: "A period starts", why: "A period starts on Day 1. Don't mix up a period and ovulation." },
+        { t: "The uterus lining breaks down", why: "The lining breaks down on Days 22–28, if the egg isn't fertilised." },
+        { t: "An embryo implants", why: "That only happens after fertilisation. Day 14 is ovulation." }],
+      explain: "Day 14 is ovulation: an ovary releases an egg.",
+      hints: ["What is the special word for Day 14?", "Ovulation: 'ov-' is to do with eggs.", "An ovary releases an e…"] },
+    { id: "next", kind: "choice", setup: SU.d14, lock: "run", after: "d25",
+      text: "Predict: an egg is released on Day 14 and is not fertilised. What happens next?", note: "This is a prediction. When you get it right, the model moves on to Day 25.",
+      options: [{ t: "The lining stays thick for a week, then breaks down. Then a period starts.", ok: () => liningAt(18, false) > .85 && breakAt(19, false) === 0 && breakAt(25, false) > 0 && stageOf(1).key === "period" },
+        { t: "The lining breaks down at once, on Day 15", why: "The lining stays thick and spongy on Days 14–21. It breaks down on Days 22–28." },
+        { t: "The lining stays thick, and there are no more periods", why: "That only happens in pregnancy. With no fertilisation, the lining breaks down: a period." },
+        { t: "Another egg is released the next day", why: "An egg is released about once a cycle, around Day 14. Next the lining stays thick, then breaks down." }],
+      explain: "Days 14–21: thick and spongy. Days 22–28: no fertilisation, so it breaks down. Then a period starts.",
+      hints: ["What does the lining do on Days 14–21?", "No fertilisation? Then what happens to the lining?", "Thick and spongy, then it breaks down."] },
+    { id: "cartoon", kind: "choice", setup: SU.d1, text: "Who is right about periods?",
+      options: [{ t: "Ella: “A period is the uterus lining leaving the body.”", ok: () => /leaves the body/.test(DEF.period) },
+        { t: "Dev: “A period is when the egg is released.”", why: "Dev is describing ovulation, around Day 14. A period is the lining leaving the body." },
+        { t: "Finn: “Periods carry on all through pregnancy.”", why: "In pregnancy the lining isn't shed, so there are no periods." }],
+      explain: "Ella is right. The lining breaks down and leaves the body when the egg isn't fertilised.",
+      hints: ["Two of them have mixed something up.", "Which one is describing ovulation? Which one forgets about pregnancy?", "The lining leaving the body is a p…"] },
+    { id: "pregGoal", kind: "goal", setup: SU.d8, stuck: "table", text: "Do it: make this a month when the woman becomes pregnant. Set a day just after the egg is released, switch on Egg fertilised, then go on to Day 28. Then press Check.",
+      test: M => M.preg && dayI(M.day) === CYCLE,
+      not: M => { const d = dayI(M.day);
+        if (!M.preg) { if (d < OVU) return `On Day ${d} there is no egg to fertilise yet. Ovulation is around Day ${OVU}.`;
+          if (d <= FERT[1]) return `On Day ${d} there is an egg in the oviduct. Switch on Egg fertilised.`;
+          return `Day ${d} is too late. An egg can only be fertilised just after it is released. Go back to Day ${FERT[0]}–${FERT[1]}, then switch on Egg fertilised.`; }
+        if (d < IMPLANT) return "The egg is fertilised. Now go on: the embryo travels to the uterus.";
+        return `Day ${d}: the embryo has implanted. Go on to Day ${CYCLE}.`; },
+      done: () => `The embryo implanted in the thick lining on Day ${IMPLANT}. On Day ${CYCLE} the lining is still there: it isn't shed, so there is no period.`,
+      reveal: M => { M.preg = true; M.fd = OVU; M.day = CYCLE; },
+      hints: ["An egg can only be fertilised just after it is released (ovulation).", `Set Day ${OVU}, then switch on Egg fertilised.`, "Then press Play, or move the dial to Day 28."] },
+    { id: "sti2", kind: "choice", setup: SU.contra, stuck: "contra", text: "Priya takes the contraceptive pill every day. Is she protected against STIs?",
+      options: [{ t: "No: the pill gives no protection against STIs. Only barrier methods like condoms do.", ok: () => !METHODS.pill.sti && METHODS.condom.sti && METHODS.condom.barrier },
+        { t: "Yes: the pill stops ovulation, so it stops STIs too", why: "Stopping ovulation prevents pregnancy, not STIs. Only barrier methods like condoms protect against STIs." },
+        { t: "Yes: the pill works in the same way as a condom", why: "They work in different ways. The pill's hormones stop ovulation. A condom is a barrier." },
+        { t: "Yes, as long as she takes it every day", why: "Even taken every day, the pill gives no protection against STIs." }],
+      explain: "The pill prevents pregnancy, but it gives no protection against STIs. Only barrier methods like condoms do.",
+      hints: ["How does the pill work?", "Which kind of method protects against STIs?", "Only barrier methods like condoms protect against STIs."] },
+    { id: "vennGoal", kind: "goal", setup: SU.contra, stuck: "contra", text: "Do it: on the Contraception tab, sort all 8 statements into Condom only, Both or Pill only. Then press Check.",
+      test: M => vennRight(M),
+      not: M => { const left = ITEMS.filter(i => !M.venn[i.id]).length; if (left) return `Sort all 8 statements first: ${left} still to go.`;
+        const w = ITEMS.filter(i => M.venn[i.id] !== zoneOf(i.id)); const i = w[0];
+        return `${w.length} in the wrong place. “${i.t}” doesn't go in ${ZW[M.venn[i.id]]}. ${i.why}`; },
+      done: () => "Condom only: a barrier method, protects against STIs, stops semen entering the vagina. Pill only: contains hormones, taken every day, stops ovulation. Both: prevents pregnancy, a method of contraception.",
+      reveal: M => { M.tab = "contra"; ITEMS.forEach(i => { M.venn[i.id] = zoneOf(i.id); }); M.sel = null; },
+      hints: ["Start with the ones you are sure of. Drag them, or tap a statement and then a part of the diagram.", "A condom is a barrier. The pill contains hormones. What do both of them do?", "Both: prevents pregnancy, and a method of contraception. Only condoms protect against STIs."] },
+    { id: "exit", kind: "choice", setup: SU.contra, stuck: "contra", text: "Exit ticket: which sentence compares condoms and the pill correctly?",
+      options: [{ t: "Condoms are a barrier that stops semen entering the vagina, whereas the pill's hormones stop ovulation.", ok: () => METHODS.condom.barrier && METHODS.condom.semen && METHODS.pill.hormones && METHODS.pill.ovulation },
+        { t: "Condoms stop ovulation, whereas the pill is a barrier.", why: "These are swapped. A condom is a barrier. The pill's hormones stop ovulation." },
+        { t: "Condoms and the pill both protect against STIs.", why: "Only condoms protect against STIs. The pill gives no protection against STIs." },
+        { t: "Condoms contain hormones, whereas the pill stops semen entering the vagina.", why: "These are swapped. The pill contains hormones. A condom stops semen entering the vagina." }],
+      explain: "A condom is a barrier. The pill's hormones stop ovulation.",
+      hints: ["How does each one prevent pregnancy?", "One is a barrier. The other contains hormones.", "Condoms: barrier. Pill: hormones stop ovulation."] },
+    { id: "fix", kind: "gaps", setup: SU.d1, text: "Fix the mistakes: “Ovulation happens on Day 1.” “The pill protects against STIs.” “In pregnancy, periods carry on.” Choose the right words.",
+      rows: [["f1", "1. Ovulation happens on", `Day ${OVU}`, ""], ["f2", "2. Protection against STIs comes from", "condoms", ""], ["f3", "3. In pregnancy, periods", "stop: the lining isn't shed", ""]],
+      bank: [`Day ${OVU}`, "Day 1", "condoms", "the pill", "stop: the lining isn't shed", "carry on as usual"],
+      whyVal: { [`Day ${OVU}`]: `Ovulation happens around Day ${OVU}.`, "Day 1": "Day 1 is the start of a period. Ovulation is around Day 14.",
+        "condoms": "Only condoms protect against STIs.", "the pill": "The pill gives no protection against STIs. Only condoms do.",
+        "stop: the lining isn't shed": "In pregnancy the lining isn't shed, so there are no periods.", "carry on as usual": "In pregnancy the lining isn't shed, so there are no periods." },
+      explain: "1. Ovulation happens around Day 14 (Day 1 is the period). 2. Only condoms protect against STIs. 3. In pregnancy the lining isn't shed: no periods.",
+      hints: ["Each sentence has one wrong idea. Find it first.", "Which day is ovulation? Which method is a barrier?", "Day 14; condoms; the lining isn't shed."] }
+  ]
+};
+const optT = o => o.t;
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (CYCLE !== 28 || OVU !== 14 || PER[0] !== 3 || PER[1] !== 7) errs.push("facts: 28 days, Day 14, 3–7 days (key words)");
+  for (let d = 1; d <= CYCLE; d++) if (STAGES.filter(s => d >= s.d0 && d <= s.d1).length !== 1) errs.push("stages: Day " + d + " must be in exactly one stage");
+  STAGES.forEach(s => { const m = s.days.match(/(\d+)(?:–(\d+))?/), a = +m[1], b = +(m[2] || m[1]); if (b !== s.d1 || (a !== s.d0 && a !== s.d0 - 1)) errs.push("stages: the label " + s.days + " disagrees with the dial"); });
+  if (stageOf(1).key !== "period" || stageOf(OVU).key !== "ovu" || stageOf(CYCLE).key !== "break") errs.push("stages: Day 1 period, Day 14 ovulation, Day 28 breaking down");
+  let thin = 1; for (let d = 1; d <= CYCLE; d++) if (liningAt(d, false) < liningAt(thin, false)) thin = d;
+  if (thin !== 5) errs.push("model: the lining must be thinnest at the end of the period");
+  for (let d = 6; d <= OVU; d++) if (!(liningAt(d, false) > liningAt(d - 1, false))) errs.push("model: the lining must thicken on Days 5–14");
+  for (let d = OVU; d <= IMPLANT; d++) if (liningAt(d, false) < .85) errs.push("model: the lining must be thick on Days 14–21");
+  for (let d = 22; d <= CYCLE; d++) { if (!(breakAt(d, false) > breakAt(d - 1, false))) errs.push("model: the lining must break down on Days 22–28"); if (!(liningAt(d, false) < liningAt(d - 1, false))) errs.push("model: the lining must get thinner as it breaks down"); }
+  for (let d = 1; d <= CYCLE; d++) { if ((shedAt(d) > 0) !== (stageOf(d).key === "period")) errs.push("model: the lining only leaves the body on Days 1–5"); if ((breakAt(d, false) > 0) !== (stageOf(d).key === "break")) errs.push("model: breaking down only on Days 22–28"); }
+  for (let d = 5; d < OVU; d++) if (eggAt(d).where !== "ovary") errs.push("model: the egg matures in the ovary on Days 5–13");
+  if (eggAt(OVU).where !== "tube" || !eq(eggAt(OVU).s, 0)) errs.push("model: the egg is released on Day 14");
+  for (let d = OVU + 1; d <= IMPLANT; d++) if (eggAt(d).where !== "tube" || !(eggAt(d).s > eggAt(d - 1).s)) errs.push("model: the egg travels along the oviduct on Days 14–21");
+  if (eggAt(23).where !== "none" || eggAt(1).where !== "none") errs.push("model: an egg that isn't fertilised is gone by Day 23");
+  for (let fd = FERT[0]; fd <= FERT[1]; fd++) { const M = { preg: true, fd };
+    if (eggAt(fd).where !== "tube") errs.push("model: there must be an egg in the oviduct on Day " + fd);
+    if (eggAt(IMPLANT, M).where !== "implanted" || eggAt(IMPLANT - .5, M).where === "implanted") errs.push("model: the embryo implants on Day " + IMPLANT);
+    for (let d = fd; d <= CYCLE; d++) { if (breakAt(d, true) !== 0) errs.push("model: in pregnancy the lining never breaks down"); if (d >= IMPLANT && liningAt(d, true) < .99) errs.push("model: in pregnancy the lining stays thick"); } }
+  const z = { c: 0, b: 0, p: 0 }; ITEMS.forEach(i => { const k = zoneOf(i.id); if (!k) errs.push("venn: " + i.t + " fits neither method"); else z[k]++; if (!i.why) errs.push("venn: no feedback for " + i.t); });
+  if (z.c !== 3 || z.p !== 3 || z.b !== 2) errs.push("venn: the booklet has 3 condom only, 3 pill only and 2 both");
+  if (zoneOf("sti") !== "c" || zoneOf("ovulation") !== "p" || zoneOf("pregnancy") !== "b") errs.push("venn: only condoms protect against STIs; the pill stops ovulation; both prevent pregnancy");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (t.options.length < 3) E("needs at least 3 options");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+    }
+    if (t.kind === "gaps") { if (new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); });
+      t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w])) E("no feedback for the word " + w); }); }
+    if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); if (!t.not(M)) E("no feedback at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
+  });
+  /* the stage-table question must agree with the dial */
+  const st = TASKS.easy.find(t => t.id === "stages"); if (st) st.rows.forEach(([, lbl, a], i) => { if (stageOf(STAGES[i].d0).row !== a || !lbl.startsWith(STAGES[i].days)) errs.push("easy stages: row " + (i + 1) + " disagrees with the dial"); });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, table: false, contra: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null;
+const PKEY = "ks3tools-progress:menstrual-cycle";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+const LOCKW = { run: "Predict first. The model changes when you get it right, or press Show answer.", all: "The model is set for this question." };
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
+
+/* ===== Drawing ===== */
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }   // patch a layer only when it changed
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+
+/* --- 1. the day dial: Day 1 at the top, going clockwise --- */
+const DG = { cx: 210, cy: 210, r1: 120, r2: 172 }, RM = (DG.r1 + DG.r2) / 2;
+const angD = d => (d - 1) / CYCLE * 2 * Math.PI;                 // where day d starts
+const PT = (r, a) => [DG.cx + r * Math.sin(a), DG.cy - r * Math.cos(a)];
+function sector(d0, d1, r1, r2) { const a0 = angD(d0), a1 = angD(d1 + 1), lg = a1 - a0 > Math.PI ? 1 : 0;
+  return `M${P2(PT(r2, a0))}A${r2} ${r2} 0 ${lg} 1 ${P2(PT(r2, a1))}L${P2(PT(r1, a1))}A${r1} ${r1} 0 ${lg} 0 ${P2(PT(r1, a0))}Z`; }
+function arcD(d0, d1, r) {   // a path along the ring for a label; bottom-half labels run the other way so they read upright
+  const a0 = angD(d0) + .03, a1 = angD(d1 + 1) - .03, mid = (a0 + a1) / 2, flip = mid > Math.PI / 2 && mid < 3 * Math.PI / 2, lg = a1 - a0 > Math.PI ? 1 : 0;
+  return flip ? `M${P2(PT(r, a1))}A${r} ${r} 0 ${lg} 0 ${P2(PT(r, a0))}` : `M${P2(PT(r, a0))}A${r} ${r} 0 ${lg} 1 ${P2(PT(r, a1))}`; }
+const bands = M => [{ k: "period", d0: 1, d1: 5, t: "Period" }, { k: "thicken", d0: 6, d1: 13, t: "Lining thickens" }, { k: "ovu", d0: 14, d1: 14, t: "" },
+  { k: "thick", d0: 15, d1: 21, t: "Thick, spongy" }, M.preg ? { k: "preg", d0: 22, d1: 28, t: "Pregnancy" } : { k: "break", d0: 22, d1: 28, t: "Breaks down" }];
+function eggSVG(x, y, r, a, kind) {
+  if (kind === "embryo") return `<g opacity="${f1(a)}"><circle class="egg" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r + 1.5)}"/>` +
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([i, j]) => `<circle class="emb" cx="${f1(x + i * r * .42)}" cy="${f1(y + j * r * .42)}" r="${f1(r * .42)}"/>`).join("") + `</g>`;
+  return `<g opacity="${f1(a)}"><circle class="egg" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"/><circle class="eggn" cx="${f1(x + r * .15)}" cy="${f1(y - r * .1)}" r="${f1(Math.max(1.2, r * .3))}"/></g>`;
+}
+function dialBg(M) {
+  const B = bands(M); let h = "<defs>";
+  B.forEach(b => { if (b.t) h += `<path id="arc-${b.k}" d="${arcD(b.d0, b.d1, RM)}"/>`; });
+  h += `</defs>`;
+  h += `<circle class="dface" cx="${DG.cx}" cy="${DG.cy}" r="${DG.r1 - 4}"/>`;
+  h += `<g class="drag" data-dial="1">` + B.map(b => `<path class="b-${b.k}" d="${sector(b.d0, b.d1, DG.r1, DG.r2)}"/>`).join("");
+  for (let d = 1; d <= CYCLE; d++) { const a = angD(d); h += `<line class="bsep" x1="${f1(PT(DG.r1, a)[0])}" y1="${f1(PT(DG.r1, a)[1])}" x2="${f1(PT(DG.r2, a)[0])}" y2="${f1(PT(DG.r2, a)[1])}"/>`; }
+  h += `<circle class="bedge" cx="${DG.cx}" cy="${DG.cy}" r="${DG.r2}"/><circle class="bedge" cx="${DG.cx}" cy="${DG.cy}" r="${DG.r1}"/>`;
+  B.forEach(b => { if (b.t) h += `<text font-size="19" class="blbl" dominant-baseline="central"><textPath href="#arc-${b.k}" startOffset="50%" text-anchor="middle">${esc(b.t)}</textPath></text>`; });
+  const e = PT(RM, angD(14) + Math.PI / CYCLE); h += eggSVG(e[0], e[1], 8, 1, "egg") + `</g>`;
+  /* Ovulation is one day wide: its label sits just outside the ring, wider than the day, centred on Day 14 */
+  const a14 = angD(14) + Math.PI / CYCLE, w = .42, r = DG.r2 + 21;
+  h += `<path id="arc-ovl" d="M${P2(PT(r, a14 + w))}A${r} ${r} 0 0 0 ${P2(PT(r, a14 - w))}" fill="none"/>`;
+  h += `<text font-size="19" class="blbl" dominant-baseline="central"><textPath href="#arc-ovl" startOffset="50%" text-anchor="middle">Ovulation</textPath></text>`;
+  [1, 5, 14, 21, 28].forEach(d => { const p = PT(DG.r1 - 16, angD(d) + Math.PI / CYCLE); h += T_(p[0], p[1], String(d), 16, `class="dnum" text-anchor="middle" dominant-baseline="central"`); });
+  return h;
+}
+function stageName(M) { const d = M.day; return M.preg && d >= M.fd ? (d >= IMPLANT ? "Pregnancy" : "Egg fertilised") : stageOf(d).name; }
+function dialDyn(M) {
+  const d = M.day, di = dayI(d), k = PT(RM, angD(d) + Math.PI / CYCLE);
+  let h = T_(DG.cx, DG.cy - 46, "Day", 20, `class="cl" text-anchor="middle"`) + T_(DG.cx, DG.cy + 14, String(di), 58, `class="cday" text-anchor="middle"`) +
+    T_(DG.cx, DG.cy + 50, stageName(M), 21, `class="cst" text-anchor="middle"`);
+  h += `<g class="knobg drag" data-dial="1" tabindex="0" role="slider" aria-label="Day of the cycle" aria-valuemin="1" aria-valuemax="${CYCLE}" aria-valuenow="${di}" aria-valuetext="Day ${di}: ${esc(stageName(M))}" transform="translate(${f1(k[0])} ${f1(k[1])})">` +
+    `<circle class="kfr" r="27"/><circle class="knob" r="22"/>${T_(0, 1, String(di), 18, `class="knobt" text-anchor="middle" dominant-baseline="central"`)}</g>`;
+  return h;
+}
+
+/* --- 2. the uterus, oviducts and ovaries (front view), with a close-up of the lining --- */
+const CAV_D = "M198 124C204 108 316 108 322 124C316 172 280 236 260 270C240 236 204 172 198 124Z";
+const CAV_SEG = [[[198, 124], [204, 108], [316, 108], [322, 124]], [[322, 124], [316, 172], [280, 236], [260, 270]], [[260, 270], [240, 236], [204, 172], [198, 124]]];
+const OUT_D = "M178 116C178 80 342 80 342 116C342 176 300 246 288 280L288 318L232 318L232 280C220 246 178 176 178 116Z";
+const OVD = [[188, 118], [160, 70], [100, 66], [104, 136]];   // left oviduct: from the uterus to the open end by the ovary
+const OVD_R = OVD.map(p => [520 - p[0], p[1]]);
+const OVA = { x: 92, y: 166, rx: 30, ry: 19 };
+const SHED = [[262, 205], [260, 268], [260, 318], [260, 438]];   // the way out: uterus → cervix → vagina
+const CB = { x: 332, y: 262, w: 176, h: 172, wy: 398, wh: 26 };  // the close-up box and its wall
+function bez(P, t) { const u = 1 - t; return [0, 1].map(k => u * u * u * P[0][k] + 3 * u * u * t * P[1][k] + 3 * u * t * t * P[2][k] + t * t * t * P[3][k]); }
+const CAVPTS = (() => { const pts = []; CAV_SEG.forEach(S => { for (let i = 0; i < 16; i++) pts.push(bez(S, i / 16)); });
+  const c = pts.reduce((a, p) => [a[0] + p[0] / pts.length, a[1] + p[1] / pts.length], [0, 0]);
+  return pts.map((p, i) => { const a = pts[(i + pts.length - 1) % pts.length], b = pts[(i + 1) % pts.length]; let n = [-(b[1] - a[1]), b[0] - a[0]]; const L = Math.hypot(n[0], n[1]) || 1; n = [n[0] / L, n[1] / L];
+    if ((c[0] - p[0]) * n[0] + (c[1] - p[1]) * n[1] < 0) n = [-n[0], -n[1]]; return { p, n }; }); })();
+function polyAt(pts, s) {   // a point a fraction s of the way along a polyline
+  const L = []; let tot = 0; for (let i = 1; i < pts.length; i++) { L.push(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); tot += L[i - 1]; }
+  let d = s * tot; for (let i = 0; i < L.length; i++) { if (d <= L[i]) return lerp(pts[i], pts[i + 1], d / L[i]); d -= L[i]; } return pts[pts.length - 1]; }
+const UL = { big: false };   // big labels when the diagram is drawn narrow (phones); read on build and on resize, never per frame
+function ulCheck() { const w = $("usvg").getBoundingClientRect().width, big = w > 0 && w < 400; if (big !== UL.big) { UL.big = big; $("uBg")._h = ""; $("uDyn")._h = ""; if (M.tab === "cycle") drawCycle(); } }
+function uterusBg() {
+  let h = `<defs><clipPath id="cavClip"><path d="${CAV_D}"/></clipPath></defs>`;
+  [OVD, OVD_R].forEach(P => { const d = `M${P2(P[0])}C${P2(P[1])} ${P2(P[2])} ${P2(P[3])}`; h += `<path class="tubeo" d="${d}"/><path class="tubei" d="${d}"/><path class="tubel" d="${d}"/>`;
+    const e = P[3], sx = P === OVD ? 1 : -1; h += [-12, -4, 4, 12].map(o => `<path class="fim" d="M${f1(e[0] + o * .4 * sx)} ${e[1] + 3}l${f1(o * .9 * sx)} 11"/>`).join(""); });
+  h += `<ellipse class="ova" cx="${OVA.x}" cy="${OVA.y}" rx="${OVA.rx}" ry="${OVA.ry}"/><ellipse class="ova" cx="${520 - OVA.x}" cy="${OVA.y}" rx="${OVA.rx}" ry="${OVA.ry}"/>`;
+  h += `<path class="wall" d="M230 316L290 316L298 446L222 446Z"/><path class="cav" d="M254 316L266 316L272 446L248 446Z"/>`;
+  h += `<path class="wall" d="${OUT_D}"/><path class="cav" d="${CAV_D}"/><rect class="cav" x="255" y="262" width="10" height="60"/>`;
+  /* labels */
+  const B = UL.big, fs = B ? 24 : 19;   // phones: bigger labels, moved so they still fit
+  h += B ? `<path class="ld" d="M86 60L121 84"/>` + T_(52, 58, "Oviduct", fs, `class="lb" text-anchor="middle"`)
+    : `<path class="ld" d="M90 97L112 100"/>` + T_(48, 101, "Oviduct", fs, `class="lb" text-anchor="middle"`);
+  h += T_(OVA.x, OVA.y + OVA.ry + (B ? 27 : 24), "Ovary", fs, `class="lb" text-anchor="middle"`);
+  h += `<path class="ld" d="M150 258L214 236"/>` + T_(B ? 100 : 110, 264, "Uterus", fs, `class="lb" text-anchor="middle"`);
+  h += `<path class="ld" d="M196 404L240 404"/>` + T_(B ? 150 : 158, 410, "Vagina", fs, `class="lb" text-anchor="middle"`);
+  h += B ? `<path class="ld" d="M358 218L309 166"/>` + T_(362, 226, "Uterus", fs, `class="lb"`) + T_(362, 252, "lining", fs, `class="lb"`)
+    : `<path class="ld" d="M356 226L309 166"/>` + T_(360, 238, "Uterus lining", fs, `class="lb"`);
+  h += `<rect class="cboxi" x="${CB.x}" y="${CB.y}" width="${CB.w}" height="${CB.h}" rx="10"/>` + T_(CB.x + CB.w / 2, CB.y + 24, "Lining close-up", B ? 19 : 17, `class="lbm" text-anchor="middle"`);
+  h += `<rect class="wall" x="${CB.x + 14}" y="${CB.wy}" width="${CB.w - 28}" height="${CB.wh}"/>` + T_(CB.x + CB.w / 2, CB.wy + 19, "Uterus wall", B ? 19 : 15, `text-anchor="middle"`);
+  return h;
+}
+function uterusDyn(M) {
+  const d = M.day, q = v => Math.round(v * 20) / 20;   // drawn in steps of 1/20, so most Play frames leave the lining untouched (cheap on slow PCs)
+  const th = q(liningAt(d, M.preg)), br = q(breakAt(d, M.preg)), sh = M.preg ? 0 : Math.ceil(shedAt(d) * 10) / 10, tpx = 3 + th * 22;
+  const sp = clamp((th - .6) / .35, 0, 1) * (1 - br * .8), amt = Math.max(br, sh * .5);
+  let h = `<g clip-path="url(#cavClip)"><path class="lin${br > .35 || sh > 0 ? " br" : ""}" d="${CAV_D}" stroke-width="${f1(2 * tpx)}"/>`;
+  if (sp > .02) CAVPTS.forEach(({ p, n }, i) => { if (i % 2) return; h += `<circle class="ves" cx="${f1(p[0] + n[0] * tpx * .55)}" cy="${f1(p[1] + n[1] * tpx * .55)}" r="${f1(1 + 2 * sp)}"/>`; });
+  if (amt > .02) {
+    CAVPTS.forEach(({ p, n }, i) => { h += `<circle class="bite" cx="${f1(p[0] + n[0] * tpx)}" cy="${f1(p[1] + n[1] * tpx)}" r="${f1(amt * (2 + 5 * hash(i)))}"/>`; });
+    const k = Math.round(amt * 7); for (let j = 0; j < k; j++) { const q = CAVPTS[(j * 7 + 3) % CAVPTS.length], o = tpx + 5 + 16 * amt * hash(j + 11);
+      h += `<ellipse class="frag" cx="${f1(q.p[0] + q.n[0] * o)}" cy="${f1(q.p[1] + q.n[1] * o)}" rx="4.5" ry="3"/>`; }
+  }
+  h += `</g>`;
+  if (sh > 0) for (let j = 0; j < 6; j++) { const s = ((d - 1) * .8 + j / 6) % 1, q = polyAt(SHED, s);   // pieces of lining leaving through the vagina
+    h += `<ellipse class="frag" cx="${f1(q[0])}" cy="${f1(q[1])}" rx="4" ry="5" opacity="${f1(sh)}"/>`; }
+  /* the egg or embryo */
+  const e = eggAt(d, M); let ep = null, lbl = "";
+  if (e.where === "ovary") { ep = [OVA.x + 8, OVA.y - 2]; h += eggSVG(ep[0], ep[1], e.r, 1, "egg"); lbl = "Egg"; }
+  else if (e.where === "tube") { ep = bez(OVD, 1 - e.s); h += eggSVG(ep[0], ep[1], e.kind === "embryo" ? 7 : 8, 1, e.kind); lbl = e.kind === "embryo" ? "Embryo" : "Egg"; }
+  else if (e.where === "fade") { ep = [200, 128]; h += eggSVG(ep[0], ep[1], 8, e.a, "egg"); }
+  else if (e.where === "toLining" || e.where === "implanted") { const I = [216, 117 + tpx * .55]; ep = e.where === "implanted" ? I : lerp(OVD[0], I, e.u); h += eggSVG(ep[0], ep[1], 7, 1, "embryo"); lbl = "Embryo"; }
+  if (lbl && ep) { const lx = e.where === "ovary" ? ep[0] + 24 : e.where === "tube" ? ep[0] + (ep[0] < 150 ? 20 : 4) : 226, ly = e.where === "ovary" ? ep[1] + 4 : e.where === "tube" ? ep[1] - 20 : 152;
+    h += T_(lx, ly, lbl, UL.big ? 22 : 18, `class="lb"`); }
+  /* the close-up */
+  const hp = 6 + th * 76, top = CB.wy - hp, x0 = CB.x + 14, w = CB.w - 28;
+  h += `<rect class="linb${br > .35 || sh > 0 ? " br" : ""}" x="${x0}" y="${f1(top)}" width="${w}" height="${f1(hp)}"/>`;
+  if (sp > .02) for (let i = 0; i < 5; i++) { const x = x0 + 14 + i * 30; let p = `M${x} ${CB.wy}`; for (let y = CB.wy - 9, s = 1; y > top + 6; y -= 9, s = -s) p += `L${f1(x + 4 * s)} ${f1(y)}`;
+    h += `<path class="vesl" d="${p}" opacity="${f1(sp)}"/>`; }
+  if (amt > .02) { for (let j = 0; j < 10; j++) h += `<circle class="bitec" cx="${f1(x0 + 6 + j * 15.5)}" cy="${f1(top)}" r="${f1(amt * (3 + 6 * hash(j + 5)))}"/>`;
+    const k = Math.round(amt * 5); for (let j = 0; j < k; j++) h += `<ellipse class="frag" cx="${f1(x0 + 80 + 56 * hash(j + 3))}" cy="${f1(Math.max(CB.y + 40, top - 8 - 24 * amt * hash(j + 9)))}" rx="5" ry="3.5"/>`; }
+  h += T_(x0 + 2, top - 8, "Lining", UL.big ? 20 : 16, `class="lb"`);
+  return h;
+}
+function drawCycle() { setLayer($("dBg"), dialBg(M)); setLayer($("dDyn"), dialDyn(M)); if (!$("uBg")._h) setLayer($("uBg"), uterusBg()); setLayer($("uDyn"), uterusDyn(M)); }
+function patchCycle(u) { setLayer($("dDyn"), dialDyn(M)); if (u !== false) setLayer($("uDyn"), uterusDyn(M)); }   // one frame of Play (u false: leave the diagram, which changes slowly, for the next frame)
+
+/* --- 3. the Venn diagram (HTML chips on a drawn background) --- */
+function chipH(id) { const it = ITEM[id], z = M.venn[id] || "", mk = M.vchk && z ? (z === zoneOf(id) ? "ok" : "no") : "";
+  return `<button type="button" class="chp${mk ? " " + mk : ""}" data-chip="${id}" aria-pressed="${M.sel === id}">${mk === "ok" ? "✓ " : mk === "no" ? "✗ " : ""}${esc(it.t)}${mk ? `<span class="vh">${mk === "ok" ? " (right)" : " (wrong place)"}</span>` : ""}</button>`; }
+function renderVenn() {
+  ["", "c", "b", "p"].forEach(z => { const ids = M.vorder.filter(id => (M.venn[id] || "") === z);
+    morphHTML($("vz-" + (z || "t")), ids.map(chipH).join("") || (z ? "" : `<p class="small" style="margin:0">All sorted.</p>`)); });
+  document.querySelectorAll("#venn [data-zone]").forEach(el => el.classList.toggle("can", !!M.sel && !locked()));
+}
+
+/* --- the readout under the model --- */
+const NOTEW = { window: `An egg can only be fertilised just after it is released. Set Day ${FERT[0]}, ${FERT[0] + 1} or ${FERT[1]} first.`,
+  back: "You went back before the egg was fertilised, so Egg fertilised is off again.",
+  stopped: "The cycle has stopped: there is no period during pregnancy. Switch off Egg fertilised to start a new cycle." };
+function readout() {
+  if (M.tab === "contra") {
+    const n = ITEMS.filter(i => M.venn[i.id]).length, ok = ITEMS.filter(i => M.venn[i.id] === zoneOf(i.id)).length;
+    if (M.vchk) { const w = ITEMS.filter(i => M.venn[i.id] && M.venn[i.id] !== zoneOf(i.id));
+      return `<p class="r1">${ok === ITEMS.length ? "All 8 right!" : `${ok} of 8 right.`}</p>` +
+        (w.length ? `<p class="r2">Look again at the ones marked ✗. For example, “${esc(w[0].t)}”: ${esc(w[0].why)}</p>` : ok === ITEMS.length ? `<p class="r2">Only condoms protect against STIs. Both methods prevent pregnancy.</p>` : "") +
+        (n < ITEMS.length ? `<p class="r3">${ITEMS.length - n} still to sort.</p>` : ""); }
+    return M.sel ? `<p class="r1">Chosen: “${esc(ITEM[M.sel].t)}”.</p><p class="r3">Now tap Condom only, Both or Pill only. Or tap Statements to sort to put it back.</p>`
+      : `<p class="r1">Sorted ${n} of 8.</p><p class="r3">Drag each statement into the diagram, or tap it and then tap a part of the diagram.</p>`;
+  }
+  const d = dayI(M.day), s = stageOf(d);
+  if (M.hide) return `<p class="r1">Day ${d}</p><p class="r3">The readout is hidden for this prediction.</p>`;
+  let r1, r2, r3;
+  if (M.preg && d >= IMPLANT) { r1 = `Day ${d}: pregnancy.`; r2 = "The embryo has implanted in the thick lining."; r3 = "The lining isn't shed, so there is no period."; }
+  else if (M.preg) { r1 = `Day ${d}: the egg has been fertilised.`; r2 = "It is now an embryo. It travels along the oviduct to the uterus."; r3 = "The lining stays thick and spongy."; }
+  else if (s.key === "period") { r1 = `Day ${d}: period.`; r2 = "The uterus lining breaks away and leaves the body through the vagina."; r3 = d === 5 ? "The period is ending. Next, the lining starts to thicken." : "A period usually lasts 3–7 days."; }
+  else if (s.key === "thicken") { r1 = `Day ${d}: the lining thickens.`; r2 = "The uterus lining gets thicker. An egg matures in the ovary."; r3 = "Ovulation comes around Day 14."; }
+  else if (s.key === "ovu") { r1 = `Day ${d}: ovulation.`; r2 = "An ovary releases an egg. The lining is thick."; r3 = "The egg moves into the oviduct."; }
+  else if (s.key === "thick") { r1 = `Day ${d}: the lining stays thick and spongy.`; r2 = "The egg travels along the oviduct."; r3 = `Stage: ${s.days}.`; }
+  else { r1 = `Day ${d}: the lining breaks down.`; r2 = "The egg wasn't fertilised, so the lining breaks down."; r3 = d === CYCLE ? "Next: Day 1 of the next cycle, the start of a period." : "Then it leaves the body: a period."; }
+  return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(r2)}</p><p class="r3">${esc(r3)}</p>` + (M.note ? `<p class="r2"><b>${esc(NOTEW[M.note])}</b></p>` : "");
+}
+function drawPane() {
+  const t = M.tab;
+  ["cycle", "contra"].forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  if (t === "cycle") drawCycle(); else renderVenn();
+  morphHTML($("read"), readout());
+}
+function renderCtl() {   // touches a control only when its state really changes
+  const lk = locked(), txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  const di = dayI(M.day), ds = $("day"); if (+ds.value !== di) ds.value = di; txt($("dayOut"), "Day " + di); setAttr(ds, "aria-valuetext", `Day ${di}: ${stageName(M)}`);
+  const fs = $("fertSw"); setAttr(fs, "aria-pressed", String(M.preg)); txt(fs.querySelector(".state"), M.preg ? "on" : "off");
+  txt($("playBtn"), anim ? "Pause ■" : "Play ▶");
+  ["day", "fertSw", "playBtn", "vennCheck", "vennReset"].forEach(id => dis($(id), lk));
+  const vc = $("vennCheck"); if (vc.hidden !== (mode !== "demo")) vc.hidden = mode !== "demo";
+  const ln = $("lockNote"); if (ln.hidden !== !lk) ln.hidden = !lk; if (lk) txt(ln, LOCKW[lock] || LOCKW.all);
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { stopAll(); M.tab = t; M.sel = null; drawAll(); if (t === "cycle") ulCheck(); tourSignal("tab-" + t); }
+
+/* ===== Animation: Play runs the cycle a day at a time and stops at Day 28. paceFrame caps the frame rate; motion is
+   time-based. Each frame only patches the dial marker and the moving parts of the diagram; the readout changes once a day. ===== */
+let visOK = true;
+const MS_DAY = 450;
+function startAnim() {
+  stopAll();
+  if (dayI(M.day) >= CYCLE) { if (M.preg) { M.note = "stopped"; drawAll(); return; } M.day = 1; M.note = ""; }
+  const start = M.day, span = CYCLE - start, dur = span * MS_DAY;
+  const a = { start, id: 0, el: 0, lastT: performance.now(), paused: false }; anim = a; M.note = ""; drawAll();
+  a.frame = now => {
+    if (anim !== a) return;
+    const t = Math.max(now, performance.now());
+    if (!visOK || document.hidden) { a.paused = true; return; }   // off-screen or hidden: stop asking for frames (resumeAnim starts again)
+    a.el += Math.min(250, t - a.lastT); a.lastT = t;
+    const u = Math.min(1, a.el / dur), before = dayI(M.day);
+    M.day = reduced() ? start + Math.floor(u * span + 1e-9) : start + u * span; if (u >= 1) M.day = CYCLE;
+    if (dayI(M.day) !== before || u >= 1) { drawPane(); renderCtl(); afterDay(); } else patchCycle((a.n = (a.n || 0) + 1) % 2 === 0);   // the marker moves every frame; the diagram every other frame
+    if (u >= 1) { anim = null; M.day = CYCLE; if (M.preg) M.note = "stopped"; drawAll(); return; }
+    a.id = paceFrame(a.frame, reduced() ? 4 : 12);
+  };
+  a.id = paceFrame(a.frame, reduced() ? 4 : 12);
+}
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 12); }
+function stopAll() {   // stop where it is, on a whole day
+  if (!anim) return; const a = anim; anim = null; paceCancel(a.id);
+  M.day = Math.max(1, Math.floor(M.day + 1e-9)); drawAll();
+}
+
+/* model changes from the controls */
+function setDay(v) {
+  if (locked()) return lockMsg(); stopAll();
+  const was = dayI(M.day); M.day = clamp(Math.round(v), 1, CYCLE); M.note = "";
+  if (M.preg && M.day < M.fd) { M.preg = false; M.fd = 0; M.note = "back"; }
+  drawAll(); if (dayI(M.day) !== was) { tourSignal("day"); afterDay(); }
+}
+function toggleFert() {
+  if (locked()) return lockMsg(); stopAll();
+  if (M.preg) { M.preg = false; M.fd = 0; M.note = ""; drawAll(); return; }
+  const d = dayI(M.day);
+  if (d < FERT[0] || d > FERT[1]) { M.note = "window"; drawAll(); return; }
+  M.preg = true; M.fd = d; M.note = ""; drawAll(); tourSignal("fert"); afterDay();
+}
+function afterDay() {   // things to try in Demo
+  const d = dayI(M.day), s = stageOf(d).key;
+  if (s === "period" && !M.preg) tried(0);
+  if (d === OVU) tried(1);
+  if (anim && s === "break" && !M.preg) tried(2);
+  if (M.preg && d >= IMPLANT) tried(3);
+}
+function place(id, z) {
+  if (locked()) return lockMsg();
+  if (z) M.venn[id] = z; else delete M.venn[id];
+  M.sel = null; M.vchk = false; drawAll(); if (z) tourSignal("sort");
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Find the days of the period. What leaves the body?", "Find the day an egg is released.", "Press Play. Watch the lining thicken, then break down.",
+  "On Day 14, switch on Egg fertilised and play on. Is there a period?", "On Contraception, sort all 8 statements. Then press Check my sort."];
+const TRIED = [false, false, false, false, false];
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task; return { choice: null, gap: {}, order: shuffled(t.options ? t.options.length : t.bank ? t.bank.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll();
+}
+const TABW = { cycle: "28-day cycle", contra: "Contraception" };
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="small" style="margin:0 0 8px">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const bank = S.order.length === t.bank.length ? S.order.map(i => t.bank[i]) : t.bank;
+    a.innerHTML = `<div class="opts">` + t.rows.map(([k, txt, , post]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select>${post ? ` <span class="post">${esc(post)}</span>` : ""}</label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>${TABW[M.tab]}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel(instant);
+}
+function revealModel() {
+  const t = task; if (!t.after) return;
+  lock = ""; stopAll();
+  if (t.after === "preg28") { M.hide = false; M.day = CYCLE; }
+  if (t.after === "d25") { M.day = 25; }
+  drawAll();
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Menstrual cycle", DEF.cycle], ["Period", DEF.period], ["Ovulation", DEF.ovulation], ["Contraception", DEF.contraception]];
+const SUPW = { words: "Key words", table: "Cycle table", contra: "Condom vs pill" };
+function renderSupport() {
+  $("wordsBox").hidden = !support.words; $("tableBox").hidden = !support.table; $("contraBox").hidden = !support.contra;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("tableBox").innerHTML = `<h3>Cycle table</h3><table class="tbl"><thead><tr><th>Days</th><th>Uterus lining</th><th>Egg</th></tr></thead><tbody>` +
+    STAGES.map(s => `<tr><td>${esc(s.days.replace(/^Days? /, ""))}</td><td>${esc(s.lining)}</td><td>${esc(s.egg)}</td></tr>`).join("") + `</tbody></table>`;
+  $("contraBox").innerHTML = `<h3>Condom vs pill</h3><div class="cmp"><div><b>Condoms</b><ul>${COMPARE.condom.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div><div><b>The contraceptive pill</b><ul>${COMPARE.pill.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></div>`;
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [, txt, , post] = wrong, v = S.gap[wrong[0]];
+    return { ok: false, html: esc(`“${txt} ${v}${post ? " " + post : ""}” is not right. ${t.whyVal[v]}`) }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to stop, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${SUPW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + optT(t.options.find(o => o.ok && o.ok())).replace(/\.$/, "") + ". " + t.explain;
+  if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
+  return "Answer: " + t.explain;
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#tabs", tab: "cycle", text: "Two parts: the 28-day cycle, and contraception." },
+  { el: "#dscene", tab: "cycle", text: "The dial shows the 28 days of the cycle. Day 1 is the first day of a period.", do: "day", doText: "Drag the marker to another day." },
+  { el: "#uscene", tab: "cycle", text: "The diagram shows the uterus lining, the ovaries and the egg on that day." },
+  { el: "#playBtn", tab: "cycle", set: M => { M.day = 1; M.preg = false; M.fd = 0; M.note = ""; }, text: "Play runs the cycle day by day. It stops at Day 28. Watch the lining.", do: "play", doText: "Press Play." },
+  { el: "#read", tab: "cycle", text: "The readout says what happens on each day." },
+  { el: "#fertSw", tab: "cycle", set: M => { M.day = OVU; M.preg = false; M.fd = 0; M.note = ""; }, text: "Day 14: an ovary has released an egg. What if the egg is fertilised?", do: "fert", doText: "Switch on Egg fertilised." },
+  { el: "#playBtn", tab: "cycle", text: "Play on. The embryo implants in the thick lining. Is there a period?", do: "play", doText: "Press Play." },
+  { el: "#tabs", text: "Now contraception: ways of preventing pregnancy.", do: "tab-contra", doText: "Press Contraception." },
+  { el: ".tray", tab: "contra", pref: "above", text: "Drag a statement into Condom only, Both or Pill only in the diagram. Or tap it, then tap a part of the diagram.", do: "sort", doText: "Sort one statement." },
+  { el: "#vennCheck", tab: "contra", text: "Check my sort marks each statement ✓ or ✗.", do: "vcheck", doText: "Press Check my sort." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:menstrual-cycle", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; M.sel = null; drawAll(); }
+  if (st.set) { stopAll(); st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = TOUR[tourI].pref === "above" && fitsAbove ? "down" : fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";   // pref: keep the space below free (e.g. to drop on)
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (drag), touch and keyboard ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+/* 1. the dial: press anywhere on the ring (or the marker) and drag round */
+(function dialWire() {
+  const svg = $("dsvg"); let dr = null;
+  const dayFrom = p => { let a = Math.atan2(p.x - DG.cx, -(p.y - DG.cy)); if (a < 0) a += 2 * Math.PI; return clamp(Math.floor(a / (2 * Math.PI) * CYCLE) + 1, 1, CYCLE); };
+  const onRing = p => { const r = Math.hypot(p.x - DG.cx, p.y - DG.cy); return r >= DG.r1 - 34 && r <= DG.r2 + 26; };
+  svg.addEventListener("pointerdown", e => { const p = svgPt(svg, e); if (!onRing(p) && !e.target.closest("[data-dial]")) return; e.preventDefault(); if (locked()) return lockMsg();
+    stopAll(); dr = { id: e.pointerId }; try { svg.setPointerCapture(e.pointerId); } catch (x) {} const d = dayFrom(p); if (d !== dayI(M.day)) setDay(d);
+    const k = svg.querySelector(".knobg"); if (k) k.focus({ preventScroll: true }); });
+  svg.addEventListener("pointermove", e => { if (!dr || e.pointerId !== dr.id) return; const d = dayFrom(svgPt(svg, e)); if (d !== dayI(M.day)) setDay(d); });
+  const up = e => { if (dr && e.pointerId === dr.id) dr = null; };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest(".drag")) e.preventDefault(); }, { passive: false });
+  svg.addEventListener("keydown", e => { if (!e.target.closest || !e.target.closest(".knobg")) return; const k = e.key, d = dayI(M.day);
+    const n = k === "ArrowRight" || k === "ArrowUp" ? d + 1 : k === "ArrowLeft" || k === "ArrowDown" ? d - 1 : k === "Home" ? 1 : k === "End" ? CYCLE : k === "PageUp" ? d + 7 : k === "PageDown" ? d - 7 : null;
+    if (n == null) return; e.preventDefault(); setDay(clamp(n, 1, CYCLE)); const g = svg.querySelector(".knobg"); if (g) g.focus({ preventScroll: true }); });
+})();
+$("day").addEventListener("input", e => { if (locked()) { e.target.value = dayI(M.day); return lockMsg(); } setDay(+e.target.value); });
+$("playBtn").addEventListener("click", () => { if (locked()) return lockMsg(); if (anim) { stopAll(); return; } startAnim(); tourSignal("play"); });
+$("fertSw").addEventListener("click", toggleFert);
+/* 2. the Venn diagram: drag a statement, or tap it and then tap a part of the diagram; Enter / Space on a part places it */
+(function vennWire() {
+  const V = $("venn"); let dr = null, lastUp = 0;
+  V.addEventListener("pointerdown", e => { const c = e.target.closest(".chp"); if (!c || locked()) return;
+    dr = { id: c.dataset.chip, el: c, x0: e.clientX, y0: e.clientY, moved: false, pid: e.pointerId }; try { c.setPointerCapture(e.pointerId); } catch (x) {} });
+  V.addEventListener("pointermove", e => { if (!dr || e.pointerId !== dr.pid) return; const dx = e.clientX - dr.x0, dy = e.clientY - dr.y0;
+    if (!dr.moved) { if (Math.hypot(dx, dy) < 7) return; dr.moved = true; dr.el.classList.add("dragging"); }
+    dr.el.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`; e.preventDefault(); });
+  V.addEventListener("pointerup", e => { if (!dr || e.pointerId !== dr.pid) return; const d = dr; dr = null; if (!d.moved) return;
+    lastUp = performance.now(); d.el.style.visibility = "hidden"; const t = document.elementFromPoint(e.clientX, e.clientY); d.el.style.visibility = "";
+    d.el.style.transform = ""; d.el.classList.remove("dragging"); const z = t && t.closest && t.closest("[data-zone]");
+    if (z && V.contains(z)) place(d.id, z.dataset.zone); });
+  V.addEventListener("pointercancel", () => { if (!dr) return; dr.el.style.transform = ""; dr.el.classList.remove("dragging"); dr = null; });
+  V.addEventListener("click", e => { if (performance.now() - lastUp < 80) return;   /* the click that ends a drag */ const c = e.target.closest(".chp"), z = e.target.closest("[data-zone]");
+    if (!c && !z) return; if (locked()) return lockMsg();
+    if (c) { M.sel = M.sel === c.dataset.chip ? null : c.dataset.chip; M.vchk = false; renderVenn(); morphHTML($("read"), readout()); return; }
+    if (M.sel) place(M.sel, z.dataset.zone); });
+  V.addEventListener("keydown", e => { const z = e.target.closest && e.target.closest("[data-zone]"); if (!z || e.target !== z) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (M.sel) { place(M.sel, z.dataset.zone); z.focus({ preventScroll: true }); } } });
+})();
+$("vennCheck").addEventListener("click", () => { if (locked()) return lockMsg(); M.vchk = true; M.sel = null; drawAll(); tourSignal("vcheck"); if (vennRight(M)) tried(4); });
+$("vennReset").addEventListener("click", () => { if (locked()) return lockMsg(); M.venn = {}; M.sel = null; M.vchk = false; drawAll(); });
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; resumeAnim(); }).observe($("model"));   // pause Play while the model is off-screen
+}
+document.addEventListener("visibilitychange", resumeAnim);
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+ulCheck(); window.addEventListener("resize", ulCheck);
+bump(); setMode("demo"); renderSupport(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:menstrual-cycle")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
