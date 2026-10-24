@@ -441,7 +441,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="readout2" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> All the numbers are invented example data. Real populations are much bigger than 20 animals. Colour is set by one gene with two alleles, and here the allele for brown is dominant: that is the model's own rule. A predator, drawn as a bird, is the only cause of death, and the chances of being eaten (50 % if easy to see, 10 % if camouflaged) are made up. One press is one generation. At least 4 animals always survive. The starting mix (2 BB, 8 Bb, 10 bb) is made up too. In Two populations only colour is drawn: real populations become different in many ways, over thousands of generations, before they are two species. The "very many generations later" jump is not to scale.</p>
+      <p class="limits"><b>Model limits:</b> All the numbers are invented example data. Real populations are much bigger than 20 animals. Colour is set by one gene with two alleles, and here the allele for brown is dominant: that is the model's own rule. A predator, drawn as a bird, is the only cause of death, and the chances of being eaten (50 % if easy to see, 10 % if camouflaged) are made up. One press is one generation. At least 4 animals always survive. The starting mix (2 BB, 8 Bb, 10 bb) is made up too. In a population this small, an allele can be lost just by chance; the Two populations part starts from populations where that does not happen in the first 60 generations. In Two populations only colour is drawn: real populations become different in many ways, over thousands of generations, before they are two species. The "very many generations later" jump is not to scale.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -597,7 +597,13 @@ function carrierLine(org, R) {   // recessive offspring from parents that all sh
   const O = ORG[org]; return `Some ${O.A} parents carry an allele for ${O.a}, so ${R.kidsRec === 1 ? "one offspring is" : "a few offspring are"} ${O.a}. No ${O.one} changed colour.${M.alleles ? "" : " Turn on Show alleles to see it."}`;
 }
 function lastRun(P, ground, pred) { let k = 0; for (let i = P.hist.length - 1; i > 0; i--) { const e = P.hist[i].env; if (e.ground === ground && e.pred === pred) k++; else break; } return k; }
-function newTwo(org, seed) { const G = ORG[org].grounds; return { org, A: newPop(org, G[0], true, seed * 3 + 1, N2), B: newPop(org, G[1], true, seed * 3 + 2, N2), gen: 0, long: false, test: null }; }
+function lost(P) { const h = P.hist[P.gen]; return GROUND[P.ground].suits === "A" ? h.alA === 0 : h.alA === h.alT; }   // the suited allele has gone (by chance)
+function keeps(org, ground, seed) { const P = newPop(org, ground, true, seed, N2); for (let g = 0; g < 60; g++) { commit(P, genStep(P)); if (lost(P)) return false; } return true; }
+function newTwo(org, seed) {   // start from a pair of populations that keep the suited allele for 60 generations (small populations can lose an allele by chance)
+  const G = ORG[org].grounds; let k = seed; while (!(keeps(org, G[0], k * 3 + 1) && keeps(org, G[1], k * 3 + 2))) k += 1000;
+  return { org, A: newPop(org, G[0], true, k * 3 + 1, N2), B: newPop(org, G[1], true, k * 3 + 2, N2), gen: 0, long: false, test: null }; }
+function lostNote(P, who) { if (!lost(P)) return ""; const O = ORG[P.org], s = GROUND[P.ground].suits, u = s === "A" ? "a" : "A";
+  return `${who} has no alleles for ${O[s]} left: they were lost by chance, because the population is so small. With no variation in colour, natural selection cannot make it ${O[s]}. Press Start again.`; }
 function twoNext(T) { [T.A, T.B].forEach(P => commit(P, genStep(P))); T.gen++; T.test = null; }
 function twoLater(T) { [T.A, T.B].forEach(P => runGens(P, LATER)); T.gen += LATER; T.long = true; T.test = null; }
 function twoTest(T) { const r = T.A.r; T.test = { ok: !T.long, ga: T.A.ind[Math.floor(r() * N2)].g.slice(), gb: T.B.ind[Math.floor(r() * N2)].g.slice() }; }
@@ -958,6 +964,7 @@ function readoutOne(stage) {
   }
   if (M.alleles) r3 = `Alleles in generation ${P.gen}: ${h.alA} of ${h.alT} are B (brown), ${h.alT - h.alA} are b (${O.a}).`;
   else if (M.labels) r3 = "";
+  if (!(anim && stage >= 0) && lostNote(P, "The population")) r3 = (r3 ? r3 + " " : "") + lostNote(P, "The population");
   setHTML($("readout"), `<p class="r1">${esc(r1)}</p><p class="r2">${esc(r2)}</p>${r3 ? `<p class="r3">${esc(r3)}</p>` : ""}`);
 }
 function closeSVG() {   // one real pair from the last breeding: parents → gametes → offspring (wide: one row; tall: a V shape)
@@ -1046,6 +1053,8 @@ function drawTwo(fade) {
   else if (T.test.ok) r3 = "✓ Yes: they can interbreed to produce fertile offspring, so they are still one species." + (T.gen ? " Their colours may differ, but that does not make them two species." : "");
   else r3 = "✗ No: over very many generations natural selection changed the two populations in many ways, not just colour (not drawn here). Their phenotypes are now so different that they cannot interbreed to produce fertile offspring. They are two species. Colour alone does not decide it: the test is fertile offspring.";
   if (!T.long) r4 = "A few generations are not enough to form a new species. Press Very many generations later to jump thousands of generations.";
+  const lostMsg = [lostNote(T.A, "Population 1"), lostNote(T.B, "Population 2")].filter(Boolean).join(" ");
+  if (lostMsg) r4 = lostMsg;
   setHTML($("readout2"), `<p class="r1">${esc(T.long ? "Thousands of generations later (not to scale)" : "Generation " + T.gen)}</p><p class="r2">${esc(`Population 1 (${GROUND[T.A.ground].n.toLowerCase()}): ${hA.A} ${O.A}, ${hA.a} ${O.a}. Population 2 (${GROUND[T.B.ground].n.toLowerCase()}): ${hB.A} ${O.A}, ${hB.a} ${O.a}.`)}</p><p class="r3">${esc(r3)}</p>${r4 ? `<p class="r3">${esc(r4)}</p>` : ""}`);
   $("scene2").setAttribute("aria-label", `Two populations of ${O.many}. ${T.test ? (T.test.ok ? "They produce fertile offspring." : "They cannot produce fertile offspring.") : ""}`);
 }
