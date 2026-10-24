@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tropism Simulator</title>
+<!--
+  SCIENCE SPEC — Tropism Simulator (KS4 · AQA GCSE Biology 8461 · 4.5.4.1 Control and coordination; Required practical 8)
+  Separate Biology only, Higher tier (as the request says; said once under the title). NOT Combined Science.
+  Models: a seedling with a shoot and a root, drawn in code (SVG), in two tabs.
+    1. Seedling: pupils choose the light (from the left, from above, from the right, none) and the seedling (upright, on its
+       side), then grow it for 0–3 days (Day slider, Grow ▶ paced). Auxin (orange dots, house particle look) is made in the
+       shoot tip and moves back down the shoot as it grows. In the shoot, light moves auxin to the shaded side; on its side,
+       gravity moves auxin to the lower side. More auxin → shoot cells elongate more, so the shoot bends away from the side
+       with more auxin (towards the light / upwards). In the root, gravity moves auxin to the lower side, where it slows
+       growth, so the upper side grows more and the root bends down. Sides are labelled as in the deck: P and Q (shoot, P on
+       the left when upright), R and S (root, R on the left when upright; on its side P and R are upper, Q and S lower).
+       "Move auxin yourself": pupils move auxin dots between the two sides (tap a side or its letter, drag a dot across, or
+       use the buttons) and see the growth follow the rule. A close-up shows the cells on each side elongating.
+    2. RP8 dishes: Dish 1 in a box with a slit, light from one side; Dish 2 on its edge in the dark; Dish 3 (control) with a
+       lamp above, flat. Grow them for 3 days and compare each with the control.
+  Computed in code (nothing hard-coded): each organ's path is grown step by step; at each step the auxin split comes from
+    the stimulus (u = sin(target − direction); light target from the lamp, gravity target straight down for roots and up for
+    shoots) or from the pupil's dots, and the turn per step is K × u in the direction the rule gives (shoot: away from the
+    side with more auxin; root: towards it). Dot counts, cell lengths, readout wording, question answers and the dishes all
+    come from the same functions. Auxin dots shown = the split at the tip at that moment, kept at least 6 : 2 while the organ
+    is still turning (more than 5° from the stimulus), so the picture reads as in s15/s28.
+  Sources: Y10 T4 L1 RP8 Plant tropisms (Triple deck): s5 misconceptions (geotropism ≠ gravity; auxin doesn't stay in the
+    tip; name phototropism/gravitropism, not just "tropism"; light is the variable changed, not kept the same), s7 hook,
+    s9 key words (tropism, phototropism, gravitropism also called geotropism, auxin), s12 New Learning (shoots grow towards
+    light, roots towards gravity), s13 sort, s15 auxin in shoots (made in the tip, moves back down, light moves it to the
+    shaded side P, shaded side grows more → bends towards light), s16 read the shoot, s18 auxin in roots (four steps, lower
+    side S, upper side R), s19 judge the explanation, s21 variables, s22 method and equipment, s23 order the method, s25
+    compare with the control, s26–27 predict, observe, explain (Dish 2), s28 draw the auxin, s29 hinge, s30–31 exam
+    questions and mark scheme, s34 plenary. AQA 8461 4.5.4.1 (RP8 4.5.4.1, AT 1, 3, 4, 7).
+  Simplifications (on screen as "Model limits"): growth rates, lengths and bend sizes are made-up example values (no mm
+    values are given); one seedling is shown, 5 per dish (the method uses 10); the root is drawn as if on damp paper so you
+    can see it; the model doesn't show where root auxin comes from; roots respond to gravity only in the model; on its side
+    the model offers no light or light from above; in "Move auxin yourself" light and gravity are switched off; the auxin
+    split evens out as the shoot turns to face the stimulus; not to scale.
+  Misconceptions designed out (request, s5, s19, s29): geotropism is the response, gravity the stimulus (key words, Hard 1);
+    auxin moves back down the shoot and the whole shoot bends (dots move down; Easy 5, Hard 3, 4, 5, 8); name the response,
+    not just "tropism" (Easy 2, Hard 1); light makes the lit side grow more / auxin to the lit side (Easy 7, Hard 3, 8);
+    keeping light the same (Hard 6); auxin speeds up growth in roots (Hard 4, 5); a "fair test" with no variable (Hard 9).
+  Facts and values used: tropism, phototropism, gravitropism (geotropism), auxin definitions (s9); shoots grow towards
+    light, roots towards gravity (s12); auxin made in the tip, moves back down, light → shaded side → cells elongate more →
+    bends towards light (s15); gravity → auxin to lower side S of root → slows growth → upper side R grows more → bends
+    down (s18); shoot on its side: auxin to the lower side, lower side grows more, bends up (s27); variables (s21); method:
+    damp filter paper, 10 seedlings per dish, Dish 1 box with slit, Dish 2 on its edge in the dark, Dish 3 control lamp
+    above, 3 days, same temperature, measure in mm, draw one (s22); mark schemes (s31).
+  Not in the deck (listed in the report): growth rates and bend sizes; the level descriptors for the 6-mark question
+    (the deck gives points; the levels are worded in AQA style from the points and labelled "Suggested mark scheme"; a plan
+    out of order is capped at Level 2); the 6-mark distractors are built from s21/s22/s31; where root auxin comes from (left out).
+  Question order: deck slide order (Easy: s9, s12, s13, s15 ×3, s16, s18, s23, s22/s25; Hard: s12, s15 ×2, s18, s19, s21, s26, s29, s30).
+  SoW lessons served: Y10 T4 L1 RP8 Plant tropisms (Triple).
+  Support starts OFF on every visit: Key words, Auxin rules, RP8 variables.
+  Idea credit: none (designed from scratch).
+  Checks on load: model (upright + side light bends the shoot towards the light with more auxin on the shaded side; light
+    from above / dark grows straight; on its side the shoot turns up and the root turns down with auxin on the lower side;
+    root on its side: upper side R grows more; manual dots follow the same rules; cells: more auxin → longer shoot cells,
+    shorter root cells; Dish 3 straight, Dish 1 bends towards the slit, Dish 2 shoots up and roots down) and every question
+    (3 hints; one right option and feedback for each wrong one; gap answers in the bank with feedback; goals not met at the
+    start and reached by Show answer; build answers reach full marks and every wrong statement has feedback). Any failure
+    shows a visible error box and switches that question off.
+  Performance: drawn on demand (no loop while idle). Grow uses paceFrame (≤8 fps, adaptive slow-down from a 25 % busy share,
+    time-based) and stops at Day 3. The seedling is drawn in four layers: organs and dots are patched attribute by attribute
+    each frame (fastLayer, no re-parsing); labels, cells, readout and slider only on each quarter-day tick. Paths are cached
+    per set-up. No CSS filters, no backdrop-filter. Grow pauses when the tab is hidden or the model is off-screen.
+    Reduced motion: Grow steps half a day at a time.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.readout th,.readout td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left}
+.readout th{font-size:15px;color:var(--muted)}
+.readout tr.me td{font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:5.6em;text-align:right}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:4px}
+/* the parts that move (the Earth in its orbit; the place on the spinning Earth) sit in their own SVG on top, so a frame
+   only repaints that small picture, not the stars, the Sun and the orbit underneath */
+.scene .drag{cursor:grab;touch-action:none}
+@media (max-width:560px){.slider{grid-template-columns:minmax(0,1fr) auto}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .readout th,.readout td{padding:3px 5px}.readout table{font-size:15px}}
+@media (max-width:400px){.readout{padding:8px 8px}.readout table{font-size:14px}.readout th{font-size:13px}.readout th,.readout td{padding:3px 3px}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:901px){.scene{max-height:min(520px,62vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+/* ---- Tropism Simulator ---- */
+#model{grid-template-columns:minmax(0,1fr)}
+.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.course{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:8px;font-size:16px;color:var(--muted)}
+.badge{display:inline-block;font:700 14px var(--f-body);line-height:1.2;padding:3px 9px;border-radius:6px;border:1.5px solid var(--accent);color:var(--accent);background:var(--surface)}
+:root{--auxin:#C2571A;--shoot:#5AA346;--shoot-edge:#1F3D1A;--coty:#7CBF5E;--root:#F1E8D4;--root-edge:#6B5A3A;--seed:#8B5E3C;--seed-edge:#3E2A1A;
+  --lamp:#F3C623;--lamp-edge:#7A5A00;--ray:#D9A536;--dark:#2A3446;--dark-a:.78;--grav:#5A6472;--cell:#E8F2DF;--cell-r:#F7F1E3;--dishg:#BFD8E6;--paper:#FFFFFF;--box:#C79A64;--box-edge:#6E4E26}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--auxin:#F08A3C;--shoot:#6FBF5A;--shoot-edge:#0E1A2C;--coty:#8FD06F;--root:#E6D9BC;--root-edge:#0E1A2C;--seed:#A8764E;--seed-edge:#0E1A2C;
+  --lamp:#F3C623;--lamp-edge:#0E1A2C;--ray:#D9A536;--dark:#0A1322;--dark-a:.7;--grav:#A9B4C4;--cell:#2C4A3A;--cell-r:#4A4436;--dishg:#5E7F95;--paper:#DCE3EC;--box:#8A6A44;--box-edge:#E0C39A}}
+:root[data-theme="dark"]{--auxin:#F08A3C;--shoot:#6FBF5A;--shoot-edge:#0E1A2C;--coty:#8FD06F;--root:#E6D9BC;--root-edge:#0E1A2C;--seed:#A8764E;--seed-edge:#0E1A2C;
+  --lamp:#F3C623;--lamp-edge:#0E1A2C;--ray:#D9A536;--dark:#0A1322;--dark-a:.7;--grav:#A9B4C4;--cell:#2C4A3A;--cell-r:#4A4436;--dishg:#5E7F95;--paper:#DCE3EC;--box:#8A6A44;--box-edge:#E0C39A}
+:root{--particle:#2D5B8C;--particle-edge:#14243D;--particle-2:#C2571A;--particle-2-ink:#FFFFFF;--particle-ink:#FFFFFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}}
+:root[data-theme="dark"]{--particle:#D9A536;--particle-edge:#0E1A2C;--particle-2:#8CC4FF;--particle-2-ink:#14243D;--particle-ink:#14243D}
+.scene .sh{fill:none;stroke:var(--shoot);stroke-linecap:round;stroke-linejoin:round}
+.scene .she{fill:none;stroke:var(--shoot-edge);stroke-linecap:round;stroke-linejoin:round}
+.scene .rt{fill:none;stroke:var(--root);stroke-linecap:round;stroke-linejoin:round}
+.scene .rte{fill:none;stroke:var(--root-edge);stroke-linecap:round;stroke-linejoin:round}
+.scene .coty{fill:var(--coty);stroke:var(--shoot-edge);stroke-width:2}
+.scene .seed{fill:var(--seed);stroke:var(--seed-edge);stroke-width:2}
+.scene .lampb{fill:var(--lamp);stroke:var(--lamp-edge);stroke-width:2}
+.scene .rayl{stroke:var(--ray);stroke-width:4;stroke-linecap:round}
+.scene .ray{fill:none;stroke:var(--ray);stroke-width:4;stroke-linecap:round}
+.scene .rayh{fill:var(--ray)}
+.scene .darkov{fill:var(--dark);opacity:var(--dark-a)}
+.scene .darkt{fill:#E9EDF3!important;font-weight:700}
+.scene .grav{stroke:var(--grav);stroke-width:4;fill:none}
+.scene .gravh{fill:var(--grav)}
+.scene .gl2{fill:var(--grav)!important;font-weight:700}
+.scene .lc{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.scene .lct{font-weight:700}
+.scene .ld{stroke:var(--ink);stroke-width:1.5;fill:none}
+.scene .ibox{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.scene .cellS{fill:var(--cell);stroke:var(--shoot-edge);stroke-width:1.5}
+.scene .cellR{fill:var(--cell-r);stroke:var(--root-edge);stroke-width:1.5}
+.scene .it{font-weight:700}
+.scene .itm{fill:var(--muted)!important}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+.scene .dish{fill:var(--dishg);fill-opacity:.35;stroke:var(--ink);stroke-width:2}
+.scene .paper{fill:var(--paper);stroke:var(--line);stroke-width:1}
+.scene .boxw{fill:var(--box);stroke:var(--box-edge);stroke-width:2}
+.scene .boxin{fill:var(--box);fill-opacity:.22;stroke:none}
+.scene .psel{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:8 5}
+.scene .pfr{fill:transparent;stroke:var(--line);stroke-width:1}
+.scene .panelbtn{cursor:pointer}
+.scene .panelbtn:focus-visible .pfr{stroke:var(--focus);stroke-width:3}
+.scene .dlbl{font-weight:700}
+.scene .cone{fill:var(--lamp);opacity:.18}
+.scene.manual{cursor:pointer}
+.scene .ax{fill:var(--auxin);stroke:var(--particle-edge);stroke-width:1}
+.scene .axh{fill:rgba(255,255,255,.38)}
+.scene.isdark{background:var(--dark)}
+.scene .ondark .grav{stroke:#C9D2DE}.scene .ondark .gravh,.scene .ondark .gl2{fill:#C9D2DE!important}
+.auxrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.auxrow .btn{min-height:44px;padding:8px 12px;font-size:16px}
+.keyline{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:15px;color:var(--muted);margin:0}
+.keyline svg{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
+/* build-an-answer chips */
+.bopts{display:grid;gap:6px}
+.bopt{font:400 16px var(--f-body);text-align:left;padding:7px 12px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.3}
+.bopt .n{flex:none;width:28px;height:28px;border-radius:50%;border:2px dashed var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--muted)}
+.bopt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.bopt[aria-pressed="true"] .n{border-style:solid;border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.bopt.out{display:none}
+.bopt.done-ok{border-color:var(--good);background:var(--good-bg)}
+.starter{margin:0 0 6px;font-size:16px;padding:5px 10px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.markline{font-weight:700}
+.ms{margin:4px 0 0;padding-left:20px}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel .bopt{padding:4px 10px;min-height:38px;font-size:15px;line-height:1.25}.qpanel .bopts{gap:5px}.qpanel .starter{font-size:15px;padding:4px 8px;margin-bottom:4px}
+}
+@media (min-width:901px) and (max-height:740px){
+  .qpanel .bopt{min-height:32px;padding:2px 10px}.qpanel .bopt .n{width:22px;height:22px}.qpanel .bopts{gap:4px}.qpanel .starter{line-height:1.3}
+}
+.limits .lim{margin:2px 0 0;padding-left:20px}
+.limits .lim li{margin:0}
+#demoPanel{gap:8px}
+#demoPanel .try{gap:2px}
+@media (min-width:901px){
+  .bopts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .qpanel .bopts.two .bopt{font-size:14px;line-height:1.25;padding:4px 8px;gap:6px;min-height:44px}
+  .qpanel .bopts.two .bopt .n{width:22px;height:22px;font-size:13px}
+}
+@media (min-width:901px) and (max-height:820px){.qpanel .bopts.two .bopt{min-height:40px;padding:3px 8px}}
+.feedback .msg.long{font-size:15px;line-height:1.4}
+@media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg.long{font-size:14px;line-height:1.35}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tropism Simulator<small>Change the light and gravity, watch where auxin goes, and see shoots and roots bend. Then run the three RP8 dishes.</small><span class="course"><span class="badge">Biology only</span><span class="badge">HT</span>For separate Biology (8461), Higher tier. Not for Combined Science.</span></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Tropism Simulator</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="The tropism model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="seed" aria-pressed="true">Seedling</button><button type="button" data-tab="dish" aria-pressed="false">RP8 dishes</button></div>
+
+      <div class="pane" id="pane-seed">
+        <svg id="ssvg" class="scene" viewBox="0 0 560 420" role="group" aria-label="A seedling with a shoot and a root. Orange dots are auxin. P and Q are the two sides of the shoot; R and S are the two sides of the root."><g id="sBg"></g><g id="sOrg"></g><g id="sDots"></g><g id="sLab"></g><g id="sCell"></g></svg>
+        <p class="keyline" id="keyline"><span><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" style="fill:var(--auxin);stroke:var(--particle-edge);stroke-width:1"/><circle cx="6.1" cy="6.1" r="1.5" style="fill:rgba(255,255,255,.38)"/></svg>Orange dot = auxin</span><span>P, Q = sides of the shoot</span><span>R, S = sides of the root</span></p>
+        <div class="controls" id="lightRow"><span class="ctl-lbl" id="lightLbl">Light:</span>
+          <div class="seg" id="lightSeg" role="group" aria-labelledby="lightLbl"><button type="button" data-light="left" aria-pressed="false">From the left</button><button type="button" data-light="above" aria-pressed="true">From above</button><button type="button" data-light="right" aria-pressed="false">From the right</button><button type="button" data-light="none" aria-pressed="false">None (dark)</button></div>
+        </div>
+        <div class="controls" id="poseRow"><span class="ctl-lbl" id="poseLbl">Seedling:</span>
+          <div class="seg" id="poseSeg" role="group" aria-labelledby="poseLbl"><button type="button" data-pose="up" aria-pressed="true">Upright</button><button type="button" data-pose="side" aria-pressed="false">On its side</button></div>
+          <button class="sw" type="button" id="manSw" aria-pressed="false"><span class="dot"></span>Move auxin yourself <span class="state">off</span></button>
+        </div>
+        <div class="auxrow" id="auxRow" hidden role="group" aria-label="Move auxin">
+          <span class="ctl-lbl">Move one auxin dot to:</span>
+          <button class="btn" type="button" data-move="P">P</button><button class="btn" type="button" data-move="Q">Q</button>
+          <button class="btn" type="button" data-move="R">R</button><button class="btn" type="button" data-move="S">S</button>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-dish" hidden>
+        <svg id="dsvg" class="scene" viewBox="0 0 600 312" role="group" aria-label="Required practical 8: three dishes of seedlings. Dish 1 in a box with a slit and light from one side; Dish 2 on its edge in a dark cupboard; Dish 3, the control, flat with a lamp above."><g id="dBg"></g><g id="dDyn"></g></svg>
+        <div class="controls"><span class="ctl-lbl" id="dishLbl">Look at:</span>
+          <div class="seg" id="dishSeg" role="group" aria-labelledby="dishLbl"><button type="button" data-dish="1" aria-pressed="false">Dish 1</button><button type="button" data-dish="2" aria-pressed="false">Dish 2</button><button type="button" data-dish="3" aria-pressed="true">Dish 3 (control)</button></div>
+        </div>
+      </div>
+
+      <div class="slider" id="dayRow"><label class="ctl-lbl" for="day">Time</label><input type="range" id="day" min="0" max="3" step="0.25" value="0"><output id="dayOut" for="day">Day 0</output></div>
+      <div class="controls" id="growCtl">
+        <button class="btn primary go" type="button" id="growBtn">Grow ▶</button>
+        <button class="btn go" type="button" id="againBtn">Start again</button>
+      </div>
+      <div class="readout" id="read" aria-live="polite"></div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <div class="limits"><b>Model limits:</b><ul class="lim">
+        <li>Growth rates, lengths and bend sizes are made-up example values, not real data. Not to scale.</li>
+        <li>The dots only show which side has more auxin, not real amounts.</li>
+        <li>As a shoot turns to face the light (or to point up), the two sides get more equal light, so in real plants the auxin evens out and the bend slows.</li>
+        <li>Auxin is made in the shoot tip. Root auxin is shown already in the root: the model doesn't show where it comes from.</li>
+        <li>Roots respond to gravity only here. On its side, the model offers light from above or no light.</li>
+        <li>The root is drawn as if on damp paper so you can see it. Each dish shows 5 seedlings (the method uses 10).</li>
+        <li>With "Move auxin yourself", the model ignores light and gravity.</li></ul></div>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="rules" aria-pressed="false"><span class="dot"></span>Auxin rules <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="vars" aria-pressed="false"><span class="dot"></span>RP8 variables <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="rulesBox" hidden></div>
+            <div class="support-box" id="varsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+</div>
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Y10 T4 L1 RP8 Plant tropisms: s9 key words, s12, s15, s18, s21, s22, s25, s27, s31) ===== */
+const DEF = {
+  tropism: "A growth response of a plant to a stimulus such as light or gravity.",
+  photo: "Growth of a plant in response to light.",
+  gravi: "Growth of a plant in response to gravity. Also called geotropism.",
+  auxin: "A plant hormone that makes cells elongate in shoots." };
+const AUX_MADE = "tip";            // s15: auxin is made in the tip of the shoot …
+const AUX_MOVES_DOWN = true;       // s15: … and moves back down
+const RULE = { shoot: "more", root: "less" };   // s15: more auxin → cells elongate more (shoot); s18: auxin slows growth (root)
+const DAYS = 3;                    // s22: leave for 3 days
+const PER_DISH = 10;               // s22: 10 seedlings in each dish (5 are drawn)
+const VARS = { iv: "Direction of light or gravity", dv: "Shoot length and direction of growth",
+  cv: ["Type and age of seedlings", "Number of seedlings in a dish", "Water, temperature and time"] };   // s21
+const METHOD = ["Put damp filter paper and 10 seedlings in each dish.", "Dish 1: box with a slit, light from one side.", "Dish 2: stand on its edge in the dark.",
+  "Dish 3 (control): lamp above, dish flat.", "Leave for 3 days at the same temperature.", "Measure shoots in mm. Draw and label one seedling."];   // s22
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const DEG = Math.PI / 180;
+
+/* ===== The model: growth is worked out step by step from the auxin rules ===== */
+const N = 8;                                    // auxin dots on each organ
+const K = 0.014, DS = 2;                        // turn per px of growth for a full split (example value); step length
+const LEN = { shoot: [40, 120], root: [30, 116] };   // length at Day 0 and growth over 3 days (made-up example values, px)
+const lenAt = (o, t) => LEN[o][0] + LEN[o][1] * t / DAYS;
+const ROT = { up: 0, side: 90 };                // on its side = turned a quarter turn clockwise (P and R end up on top)
+const LIGHT_DIR = { left: -150, right: -30 };  // the way a shoot turns towards a lamp at the side (deg, screen angles)
+const sideLight = l => l === "left" || l === "right";
+function target(o, c) { if (o === "root") return 90 * DEG; return (sideLight(c.light) ? LIGHT_DIR[c.light] : -90) * DEG; }   // roots: down; shoots: the lamp, or up
+const cfgOf = M => ({ pose: M.pose, light: M.light, manual: !!M.manual, nP: M.nP, nR: M.nR });
+const PC = new Map();
+/* u = auxin split: +1 all on the first side (P on the shoot = its left-hand side; R on the root = its right-hand side), −1 all on the
+   second side (Q, S). Either way, more on the first side turns the organ clockwise: a shoot bends away from extra auxin (that side
+   elongates more), a root bends towards it (auxin slows growth there). */
+function grow(o, c) {
+  const key = o + JSON.stringify(c); let P = PC.get(key); if (P) return P;
+  const a0 = ((o === "shoot" ? -90 : 90) + ROT[c.pose]) * DEG, tg = target(o, c), L0 = LEN[o][0], Lm = L0 + LEN[o][1];
+  const um = c.manual ? (2 * (o === "shoot" ? c.nP : c.nR) - N) / N : 0;
+  let a = a0, x = 0, y = 0; P = [{ x, y, a, u: c.manual ? um : Math.sin(tg - a) }];
+  for (let s = DS; s <= Lm + 1e-9; s += DS) {
+    const u = c.manual ? um : Math.sin(tg - a);
+    if (s > L0) { a += K * u * DS; if (c.manual) a = clamp(a, a0 - 100 * DEG, a0 + 100 * DEG); }
+    x += Math.cos(a) * DS; y += Math.sin(a) * DS; P.push({ x, y, a, u: c.manual ? um : Math.sin(tg - a) });
+  }
+  PC.set(key, P); return P;
+}
+const pathAt = (o, c, t) => { const P = grow(o, c); return P.slice(0, Math.min(P.length, Math.round(lenAt(o, t) / DS) + 1)); };
+/* the dots drawn on each side: from the split at the tip, but kept clearly one-sided (at least 6 : 2) while the organ is still turning
+   (more than 5° from the way the stimulus pulls it), so the picture always reads "auxin on the shaded / lower side" (s15, s28) */
+const TURNING = 5 * DEG;
+function count1(o, c, t) { if (c.manual) return o === "shoot" ? c.nP : c.nR; const p = pathAt(o, c, t), q = p[p.length - 1];
+  let n = clamp(Math.round(N * (1 + q.u) / 2), 0, N);
+  if (Math.abs(q.u) > Math.sin(TURNING)) { if (q.u > 1e-6) n = Math.max(n, N - 2); else if (q.u < -1e-6) n = Math.min(n, 2); }
+  return n; }
+const more = (o, c, t) => { const n = count1(o, c, t), A = o === "shoot" ? ["P", "Q"] : ["R", "S"]; return n > N / 2 ? A[0] : n < N / 2 ? A[1] : "even"; };
+const grows = (o, c, t) => { const m = more(o, c, t); if (m === "even") return "even"; if (o === "shoot") return m; return m === "R" ? "S" : "R"; };   // the side that grows more
+const tipA = (o, c, t) => { const p = pathAt(o, c, t); return p[p.length - 1].a / DEG; };
+const tilt = (c, t) => tipA("shoot", c, t) + 90;   // shoot tip: degrees clockwise from straight up
+const rootOff = (c, t) => tipA("root", c, t) - 90; // root tip: degrees away from straight down
+/* close-up cells: 0–2 = this side's share of the auxin; shoot cells elongate more with more auxin, root cells less (s15, s18) */
+function cellH(o, n1, t) { const g = t / DAYS, s1 = n1 / (N / 2), s2 = 2 - s1, f = s => 12 * (1 + .9 * g * (o === "shoot" ? s : 2 - s)); return [f(s1), f(s2)]; }
+/* the shaded side and the lower side, for the readout and the questions */
+const shadedSide = c => c.pose === "up" && c.light === "right" ? "P" : c.pose === "up" && c.light === "left" ? "Q" : c.pose === "side" ? "Q" : "";
+const lowerSide = (o, c) => c.pose === "side" ? (o === "shoot" ? "Q" : "S") : "";
+/* RP8 dishes (s22, s25) */
+const DISHES = [
+  { id: 1, cfg: { pose: "up", light: "right", manual: false, nP: 4, nR: 4 }, control: false, name: "Dish 1", sub: "Light from one side", tests: "light from one side" },
+  { id: 2, cfg: { pose: "side", light: "none", manual: false, nP: 4, nR: 4 }, control: false, name: "Dish 2", sub: "On its edge, dark", tests: "gravity, with no light" },
+  { id: 3, cfg: { pose: "up", light: "above", manual: false, nP: 4, nR: 4 }, control: true, name: "Dish 3", sub: "Control: lamp above", tests: "normal growth with light from above" }];
+const DISH = id => DISHES.find(d => d.id === id);
+const CF = { right: { pose: "up", light: "right", manual: false, nP: 4, nR: 4 }, left: { pose: "up", light: "left", manual: false, nP: 4, nR: 4 },
+  above: { pose: "up", light: "above", manual: false, nP: 4, nR: 4 }, dark: { pose: "up", light: "none", manual: false, nP: 4, nR: 4 },
+  side: { pose: "side", light: "none", manual: false, nP: 4, nR: 4 }, sideA: { pose: "side", light: "above", manual: false, nP: 4, nR: 4 } };
+
+/* ===== Model state ===== */
+function freshM() { return { tab: "seed", light: "above", pose: "up", manual: false, nP: 4, nR: 4, day: 0, hide: false, dish: 3, note: "" }; }
+
+/* ===== Question bank (wording from the deck; answers worked out from the model above) ===== */
+const ABC = "ABCDEF";
+const SU = {
+  base: M => {},
+  rightH: M => { M.light = "right"; M.hide = true; },
+  sideH: M => { M.pose = "side"; M.light = "none"; M.hide = true; },
+  side0: M => { M.pose = "side"; M.light = "none"; },
+  man: M => { M.manual = true; },
+  dish0: M => { M.tab = "dish"; M.dish = 2; },
+  dish3: M => { M.tab = "dish"; M.day = DAYS; M.dish = 3; } };
+const opt = (t, ok, why) => ({ t, ok, why });
+const TASKS = {
+  easy: [
+    { id: "tropDef", kind: "choice", setup: SU.base, stuck: "words", text: "What is a tropism?",
+      options: [opt("A growth response of a plant to a stimulus", () => /growth response/.test(DEF.tropism)),
+        opt("A plant hormone that makes cells elongate", () => false, "That is auxin, a hormone. A tropism is the growth response itself."),
+        opt("A plant moving to a new place", () => false, "A plant doesn't move to a new place. A tropism is a growth response, such as bending towards light."),
+        opt("Making glucose using light", () => false, "That is photosynthesis. A tropism is a growth response to a stimulus.")],
+      explain: "A tropism is a growth response of a plant to a stimulus such as light or gravity.",
+      hints: ["Trop means turn. What does a plant do, slowly, towards light?", "It is a kind of growth, not a chemical or a movement to a new place.", "A tropism is a growth r… to a s…"] },
+    { id: "sort", kind: "gaps", setup: SU.base, stuck: "words", text: "Light or gravity? Choose the response for each example.",
+      rows: [["a", "A pot plant leans towards the glass:", "Phototropism"], ["e", "A seedling turns its root downwards in the dark:", "Gravitropism"],
+        ["c", "Shoots in a box lean to a slit of light:", "Phototropism"], ["f", "A seedling on its side turns its shoot upwards:", "Gravitropism"]],
+      bank: ["Phototropism", "Gravitropism"],
+      whyVal: { Phototropism: "Phototropism is the response to light.", Gravitropism: "Gravitropism is the response to gravity." },
+      rowWhy: { a: "The glass lets light in. Light is the stimulus, so this is phototropism.", e: "It is dark, so light can't be the stimulus. Gravity is: gravitropism.",
+        c: "The slit lets light in. Light is the stimulus, so this is phototropism.", f: "No light is needed here: the shoot turns away from gravity. That is gravitropism." },
+      explain: "Phototropism: the pot plant at the glass and the shoots at the slit. Gravitropism: the root turning down in the dark and the shoot on its side turning up.",
+      hints: ["For each one, ask: what is the stimulus?", "Photo means light. Gravi means weight, as in gravity. Is there any light in the dark one?", "Glass and slit → phototropism. Dark and on its side → gravitropism."] },
+    { id: "photoGoal", kind: "goal", setup: SU.base, stuck: "rules", text: "Do it: set up the seedling so the shoot shows phototropism. Grow it for at least 1 day, then press Check.",
+      test: M => M.tab === "seed" && !M.manual && M.pose === "up" && sideLight(M.light) && M.day >= 1 && Math.abs(tilt(cfgOf(M), M.day)) > 5,
+      not: M => {
+        if (M.tab !== "seed") return "Use the Seedling tab of the model.";
+        if (M.manual) return "Switch off Move auxin yourself, so the light moves the auxin.";
+        if (M.pose !== "up") return "Stand the seedling upright first.";
+        if (M.light === "above") return "With light from above, auxin is even on P and Q. Both sides grow the same, so the shoot grows straight up. No bend.";
+        if (M.light === "none") return "In the dark there is no light, so this can't be phototropism. Choose a light.";
+        return "The light is right. Now grow it for at least 1 day: press Grow ▶ or move the Time slider."; },
+      done: M => { const s = shadedSide(cfgOf(M)); return `Light from the ${M.light}: auxin moves to ${s}, the shaded side. ${s} grows more, so the shoot bends towards the light. This is phototropism.`; },
+      reveal: M => { M.light = "right"; M.pose = "up"; M.manual = false; M.day = DAYS; },
+      hints: ["Photo means light. Which lights make one side shaded?", "Light from the left or from the right. Keep the seedling upright.", "Choose From the right, then press Grow ▶."] },
+    { id: "tipMade", kind: "choice", setup: SU.base, stuck: "rules", text: "Where is auxin made?",
+      options: [opt("In the tip of the shoot", () => AUX_MADE === "tip"),
+        opt("In the root", () => AUX_MADE === "root", "Not in the root. Auxin is made in the tip of the shoot, then moves back down."),
+        opt("In the leaves", () => AUX_MADE === "leaves", "Not in the leaves. Auxin is made in the tip of the shoot, then moves back down.")],
+      explain: "Auxin is made in the tip of the shoot. It then moves back down the shoot.",
+      hints: ["Press Grow ▶ and watch where the dots start in the shoot.", "In the shoot, the dots start at one end, then move down.", "Auxin is made in the t… of the shoot."] },
+    { id: "hormone", kind: "choice", setup: SU.base, stuck: "words", text: "Name the hormone that moves to the shaded side of a shoot.",
+      options: [opt("Auxin", () => true), opt("Gibberellin", () => false, "Gibberellin is a different plant hormone. The one that moves to the shaded side is auxin."),
+        opt("Ethene", () => false, "Ethene is a different plant hormone. The one that moves to the shaded side is auxin.")],
+      explain: "Auxin moves to the shaded side of a shoot.",
+      hints: ["It is shown as orange dots in the model.", "Look at the Key words: aux means increase.", "A…n."] },
+    { id: "predAux", kind: "choice", setup: SU.rightH, lock: "all", after: "grow", stuck: "rules", text: "Predict: light comes from the right. Which side of the shoot will get more auxin?",
+      options: [opt("P", () => more("shoot", CF.right, 0) === "P"), opt("Q", () => more("shoot", CF.right, 0) === "Q", "Q faces the light. Light moves auxin away from it, to the shaded side."),
+        opt("Both sides the same", () => more("shoot", CF.right, 0) === "even", "Light from one side moves auxin to the shaded side, so the two sides are not the same.")],
+      explain: "Light moves auxin to the shaded side, P. Cells on P elongate more, so the shoot bends towards the light.",
+      hints: ["Which side of the shoot faces the lamp?", "Light moves auxin to the shaded side: the side facing away from the lamp.", "The lamp is on the right, so the shaded side is on the left: P."] },
+    { id: "respName", kind: "choice", setup: SU.base, stuck: "words", text: "Name the type of growth response a shoot shows towards light.",
+      options: [opt("Phototropism", () => true), opt("Gravitropism", () => false, "Gravitropism is the response to gravity. Photo means light."),
+        opt("Tropism", () => false, "Just 'tropism' is not enough. Name the stimulus too: photo means light."),
+        opt("Photosynthesis", () => false, "Photosynthesis makes glucose. It is not a growth response.")],
+      explain: "A shoot growing towards light shows phototropism.",
+      hints: ["Name the stimulus in the word.", "Photo means light. Trop means turn.", "Photo… + …tropism."] },
+    { id: "rootSide", kind: "choice", setup: SU.sideH, lock: "all", after: "grow", stuck: "rules", text: "Predict: the seedling lies on its side. Which side of the root will grow more?",
+      options: [opt("R", () => grows("root", CF.side, 1) === "R"), opt("S", () => grows("root", CF.side, 1) === "S", "Gravity moves auxin to S, the lower side. In roots, auxin slows growth, so S grows less."),
+        opt("Both sides the same", () => grows("root", CF.side, 1) === "even", "Gravity moves auxin to the lower side, so the two sides grow differently.")],
+      explain: "Gravity moves auxin to S, the lower side. Auxin slows growth there, so R, the upper side, grows more and the root bends down.",
+      hints: ["Which side of the root is lower?", "Gravity moves auxin to the lower side, S. In roots, auxin slows growth.", "S grows less, so the other side grows more: R."] },
+    { id: "order", kind: "gaps", setup: SU.dish0, stuck: "vars", text: "Put the investigation in the right order.",
+      rows: [["1", "Step 1:", "Put seedlings on damp paper in the dishes"], ["2", "Step 2:", "Set each dish in its condition"], ["3", "Step 3:", "Leave for three days"], ["4", "Step 4:", "Measure the shoots and draw one seedling"]],
+      bank: ["Put seedlings on damp paper in the dishes", "Set each dish in its condition", "Leave for three days", "Measure the shoots and draw one seedling"],
+      whyVal: { "Put seedlings on damp paper in the dishes": "The seedlings go on damp paper in the dishes first.",
+        "Set each dish in its condition": "Set up each dish's condition once the seedlings are in.",
+        "Leave for three days": "Leave them to grow after each dish is set up.",
+        "Measure the shoots and draw one seedling": "Measure at the end, after three days of growth." },
+      explain: "Put seedlings on damp paper in the dishes → set each dish in its condition → leave for three days → measure the shoots and draw one seedling.",
+      hints: ["What has to happen before anything can grow?", "You can only measure at the end.", "Seedlings in the dishes → set the conditions → leave for three days → measure and draw."] },
+    { id: "control", kind: "choice", setup: SU.dish3, stuck: "vars", text: "Which dish is the control?",
+      options: [opt("Dish 3: lamp above, dish flat", () => DISH(3).control), opt("Dish 1: box with a slit", () => DISH(1).control, "Dish 1 tests light from one side. It is compared with the control."),
+        opt("Dish 2: on its edge in the dark", () => DISH(2).control, "Dish 2 tests gravity, with no light. It is compared with the control.")],
+      explain: "Dish 3, with the lamp above and the dish flat, is the control. It shows normal growth, so you compare each result with it.",
+      hints: ["The control shows normal growth.", "Which dish shows normal growth, with nothing changed?", "Dish 3."] }
+  ],
+  hard: [
+    { id: "stimResp", kind: "choice", setup: SU.side0, stuck: "words", text: "A root grows downwards. What is the stimulus, and what is the response?",
+      options: [opt("Stimulus: gravity. Response: gravitropism.", () => /gravity/.test(DEF.gravi)),
+        opt("Stimulus: geotropism. Response: growing down.", () => false, "Geotropism is the response, not the stimulus. Gravity is the stimulus."),
+        opt("Stimulus: light. Response: phototropism.", () => false, "Roots grow towards gravity, not light. The stimulus is gravity."),
+        opt("Stimulus: auxin. Response: tropism.", () => false, "Auxin is the hormone, not the stimulus. And name the response fully: gravitropism, not just 'tropism'.")],
+      explain: "Gravity is the stimulus. The growth response to gravity is gravitropism (also called geotropism).",
+      hints: ["The stimulus is the thing in the surroundings. The response is what the plant does.", "Gravity is in the surroundings; a -tropism word names what the plant does.", "Stimulus: gravity. Response: gravitropism."] },
+    { id: "manGoal", kind: "goal", setup: SU.man, stuck: "rules", text: "Do it: Move auxin yourself is on. Make the shoot bend to the right. Grow it for at least 2 days, then press Check.",
+      test: M => M.tab === "seed" && M.manual && M.pose === "up" && M.day >= 2 && tilt(cfgOf(M), M.day) >= 10,
+      not: M => {
+        if (M.tab !== "seed") return "Use the Seedling tab of the model.";
+        if (!M.manual) return "Switch Move auxin yourself back on. Here you decide where the auxin goes.";
+        if (M.pose !== "up") return "Stand the seedling upright first.";
+        if (M.nP < N / 2) return "More auxin is on Q, so Q cells elongate more and the shoot bends left, away from Q. Move auxin to the other side.";
+        if (M.nP === N / 2) return "Auxin is even on P and Q, so both sides grow the same and the shoot grows straight. Move some auxin.";
+        if (M.day < 2) return "Good auxin. Now grow it for at least 2 days: press Grow ▶ or move the Time slider.";
+        return "Move a little more auxin onto P, then grow it again."; },
+      done: M => `You put ${M.nP} of ${N} auxin dots on P. Cells on P elongate more, so the shoot bends to the right, away from P.`,
+      reveal: M => { M.tab = "seed"; M.manual = true; M.pose = "up"; M.nP = 7; M.day = DAYS; },
+      hints: ["In a shoot, the side with more auxin grows more.", "A shoot bends away from the side that grows more. To bend right, the left side must grow more.", "Tap P (or press the P button) until most dots are on P, then Grow ▶."] },
+    { id: "hinge", kind: "choice", setup: SU.base, stuck: "rules", text: "Why does a shoot bend towards light?",
+      options: [opt("Auxin gathers on the shaded side, which grows more", () => more("shoot", CF.right, 0) === shadedSide(CF.right) && RULE.shoot === "more"),
+        opt("Auxin gathers on the lit side, which grows more", () => more("shoot", CF.right, 0) === "Q", "Auxin moves away from the light, to the shaded side. The shaded side grows more."),
+        opt("Auxin stays in the tip, so the tip bends", () => !AUX_MOVES_DOWN, "Auxin doesn't stay in the tip. It moves back down, so cells all down one side elongate and the whole shoot bends."),
+        opt("Light makes the lit side grow more", () => false, "Light doesn't make the lit side grow. It moves auxin to the shaded side, and the shaded side grows more.")],
+      explain: "Auxin moves to the shaded side. Cells there elongate more, so the shoot bends towards the light.",
+      hints: ["Set light from the side and watch the dots and the close-up cells.", "Which side gets the auxin: the lit side or the shaded side?", "Auxin gathers on the shaded side, which grows more."] },
+    { id: "explShoot", kind: "build", ordered: true, max: 3, setup: SU.base, stuck: "rules",
+      text: "Explain why the shoot bends towards the light. [3 marks] Choose statements in order.",
+      starter: "Start with ▸ Auxin moves to… so cells…",
+      points: [{ id: "a", t: "Auxin moves to the shaded side.", miss: "Say where the auxin goes." },
+        { id: "b", t: "Cells on the shaded side elongate more.", miss: "Say what the auxin does to the cells." },
+        { id: "c", t: "The shaded side grows faster, so the shoot bends towards the light.", miss: "Finish by saying how this makes the shoot bend." }],
+      wrongs: [{ t: "Auxin moves to the lit side.", cancels: "a", why: "Auxin moves away from the light, to the shaded side." },
+        { t: "Cells on the lit side elongate more.", cancels: "b", why: "The lit side has less auxin, so its cells elongate less." },
+        { t: "Auxin stays in the tip, so only the tip bends.", cancels: "c", why: "Auxin moves back down the shoot, so the whole shoot bends." },
+        { t: "Light makes the lit side grow more.", cancels: "c", why: "Light moves auxin. It doesn't make the lit side grow more." }],
+      orderWhy: "Put the chain in order: where the auxin goes → what the cells do → how the shoot bends.",
+      scheme: "One mark for each step. Reject: auxin stays in the tip; light makes it grow.",
+      explain: "Auxin moves to the shaded side → cells on the shaded side elongate more → the shaded side grows faster, so the shoot bends towards the light.",
+      hints: ["Three marks: three linked steps. Where does auxin go? What happens to the cells? How does it bend?", "Light moves auxin to the shaded side. Shoot cells with more auxin elongate more.", "Choose: auxin to the shaded side → shaded cells elongate more → shaded side grows faster, so it bends towards light."] },
+    { id: "judge", kind: "choice", setup: SU.side0, stuck: "rules", text: "A root grows sideways, then bends downwards. Who is right?",
+      note: "Start with ▸ …is right because auxin…",
+      options: [opt("Ben: “Auxin gathers on the lower side and slows its growth, so the root bends down.”", () => lowerSide("root", CF.side) === more("root", CF.side, 0) && RULE.root === "less" && rootOff(CF.side, DAYS) < 30),
+        opt("Ana: “Auxin speeds up growth on the lower side, so the root bends upwards.”", () => RULE.root === "more", "Ana has roots the wrong way round. In roots, auxin slows growth. The lower side grows less, so the root bends down."),
+        opt("Cy: “Auxin stays in the tip, so only the tip turns.”", () => false, "Auxin doesn't stay in the tip. It gathers on the lower side, so the root grows unevenly and bends down.")],
+      explain: "Ben is right. In roots, extra auxin on the lower side slows growth. The upper side grows more, so the root bends down.",
+      hints: ["Grow the seedling on its side. Which side of the root gets the auxin?", "In roots, auxin slows growth. Which student says that?", "Ben."] },
+    { id: "explRoot", kind: "build", ordered: true, max: 3, setup: SU.side0, stuck: "rules",
+      text: "Explain why a root grows downwards. [3 marks] Choose statements in order.",
+      starter: "Start with ▸ Gravity moves auxin to…",
+      points: [{ id: "a", t: "Gravity moves auxin to the lower side of the root.", miss: "Say where gravity moves the auxin." },
+        { id: "b", t: "Auxin slows the growth of cells on the lower side.", miss: "Say what auxin does to root cells." },
+        { id: "c", t: "The upper side grows more, so the root bends down.", miss: "Finish by saying how this makes the root bend." }],
+      wrongs: [{ t: "Auxin speeds up growth on the lower side.", cancels: "b", why: "In roots, auxin slows growth. It speeds up elongation in shoots." },
+        { t: "Gravity moves auxin to the upper side.", cancels: "a", why: "Gravity moves auxin down, to the lower side." },
+        { t: "The lower side grows more, so the root bends down.", cancels: "c", why: "If the lower side grew more, the root would bend up. The upper side grows more." },
+        { t: "Auxin stays in the tip, so only the tip turns.", cancels: "c", why: "Auxin doesn't stay in the tip: it gathers on the lower side." }],
+      orderWhy: "Put the chain in order: where the auxin goes → what it does to the cells → how the root bends.",
+      scheme: "One mark for each step. Reject: auxin speeds up growth in roots; auxin stays in the tip.",
+      explain: "Gravity moves auxin to the lower side → auxin slows growth there → the upper side grows more, so the root bends down.",
+      hints: ["Three linked steps: where the auxin goes, what it does, how the root bends.", "In roots, auxin slows growth (the opposite of shoots).", "Choose: gravity → auxin to lower side → slows growth there → upper side grows more, root bends down."] },
+    { id: "poe", kind: "gaps", setup: SU.dish0, lock: "all", after: "grow", stuck: "rules",
+      text: "Dish 2 lies on its edge in the dark, with shoots pointing sideways. Predict how they will grow.",
+      note: "Start with ▸ I think the shoots will grow … and the roots will grow … because …",
+      rows: [["s", "The shoots will grow:", "upwards"], ["r", "The roots will grow:", "downwards"]],
+      bank: ["upwards", "downwards", "sideways, as they started", "towards a light"],
+      whyVal: { upwards: "Shoots grow upwards, away from gravity. Roots grow towards gravity.", downwards: "Roots grow downwards, towards gravity. Shoots grow away from gravity.",
+        "sideways, as they started": "Gravity still acts in the dark, so they don't keep growing sideways.", "towards a light": "Dish 2 is in the dark. There is no light, so this is gravitropism, not phototropism." },
+      explain: "Shoots grow upwards and roots grow downwards. Gravity moves auxin to the lower side: the shoot's lower side grows more (bends up), the root's lower side grows less (bends down). Gravitropism, not phototropism: there is no light.",
+      hints: ["There is no light in Dish 2. What stimulus is left?", "Shoots grow away from gravity. Roots grow towards it.", "Shoots: upwards. Roots: downwards."] },
+    { id: "vars", kind: "gaps", setup: SU.dish0, stuck: "vars", text: "Choose the variables for RP8.",
+      rows: [["iv", "Independent variable (what we change):", "direction of light or gravity"], ["dv", "Dependent variable (what we measure):", "shoot length and direction of growth"], ["cv", "A control variable (keep the same):", "type and age of seedlings"]],
+      bank: ["direction of light or gravity", "shoot length and direction of growth", "type and age of seedlings", "keeping the light the same", "the amount of auxin"],
+      whyVal: { "direction of light or gravity": "That is what we change: the independent variable.", "shoot length and direction of growth": "That is what we measure: the dependent variable.",
+        "type and age of seedlings": "That is kept the same: a control variable.",
+        "keeping the light the same": "Light is the variable we change, so it can't be kept the same. Keep seedling type, water and temperature the same.",
+        "the amount of auxin": "We can't see or measure auxin in RP8. We change light or gravity and measure the growth." },
+      explain: "Independent: direction of light or gravity. Dependent: shoot length and direction of growth. Control: type and age of seedlings (also number per dish, water, temperature and time).",
+      hints: ["Change one thing, measure one thing, keep the rest the same.", "We change where the light (or gravity) comes from. We measure the shoots.", "IV: direction of light or gravity. DV: shoot length and direction. CV: type and age of seedlings."] },
+    { id: "plan", kind: "build", ordered: true, max: 6, levels: true, setup: SU.dish0, stuck: "vars",
+      text: "Plan an investigation into the effect of gravity on the growth of seedlings. [6 marks]",
+      starter: "Build it in order. Frame ▸ I will set up… change… measure… keep… the same.",
+      points: [{ id: "a", rank: 1, t: "Same type, age and number of seedlings per dish", miss: "Say which seedlings you use, and how many." },
+        { id: "b", rank: 1, t: "Damp filter paper; same temperature", miss: "Say how you keep water and temperature the same." },
+        { id: "c", rank: 2, t: "One dish upright, one on its side, in the dark", miss: "Say what you change, and how you stop light being a variable." },
+        { id: "d", rank: 3, t: "Leave both for the same time, e.g. 3 days", miss: "Say how long you leave them." },
+        { id: "e", rank: 4, t: "Measure length (mm) or angle of bend; draw one", miss: "Say what you measure, and how." },
+        { id: "f", rank: 5, t: "Repeat and calculate a mean", miss: "Say how you make the results more reliable." }],
+      wrongs: [{ t: "Make sure it is a fair test", neutral: true, cancels: null, why: "'Fair test' scores nothing on its own: name the variables instead." },
+        { t: "Use a different type of seedling in each dish", cancels: "a", why: "The type of seedling is a control variable: keep it the same." },
+        { t: "Leave one dish for 1 day, the other for 3 days", cancels: "d", why: "Time is a control variable: leave both dishes for the same time." },
+        { t: "Put both dishes under a lamp from above", cancels: "c", why: "Then light acts as well as gravity. Keep both dishes in the dark to test gravity." },
+        { t: "Measure the amount of auxin in each seedling", cancels: null, why: "You can't measure auxin in RP8. Measure the growth: length or angle of bend." }],
+      orderWhy: "The right steps, but not in a sensible order: set up the dishes → set the conditions → leave them → measure → repeat and find a mean.",
+      scheme: "Deck points (s31): same type and age of seedlings, same number in each dish (1); damp paper, same temperature (1); one dish upright and one on its side, in the dark so light is not a variable (1); leave for the same time (1); measure shoot or root length / angle of bend, and draw (1); repeat and calculate a mean (1). Any six valid points. Reject 'fair test' with no variable named.",
+      explain: "Set up the same seedlings on damp paper at the same temperature → one dish upright, one on its side, in the dark → leave for the same time → measure length or angle and draw → repeat and find a mean.",
+      hints: ["Six marks: set-up, what you change, how long, what you measure, and how to make it reliable.", "To test gravity, light must not be a variable: keep the dishes in the dark. Keep the seedlings and time the same.", "Seedlings and paper → upright vs on its side, in the dark → leave → measure → repeat."] }
+  ]
+};
+/* questions in deck slide order, so a Check it slide can name only questions taught so far */
+const SLIDE_ORDER = { easy: ["tropDef", "respName", "sort", "photoGoal", "tipMade", "hormone", "predAux", "rootSide", "order", "control"],
+  hard: ["stimResp", "manGoal", "explShoot", "explRoot", "judge", "vars", "poe", "hinge", "plan"] };
+for (const lv in SLIDE_ORDER) TASKS[lv] = SLIDE_ORDER[lv].map(id => TASKS[lv].find(t => t.id === id));
+const optT = o => o.t;
+const levelOf = m => m >= 5 ? "Level 3 (5–6 marks)" : m >= 3 ? "Level 2 (3–4 marks)" : m >= 1 ? "Level 1 (1–2 marks)" : "Level 0 (no marks)";
+/* suggested levels (not in the deck: worded in AQA style from the deck's six points; a plan out of order can't reach Level 3) */
+const LEVELS_TXT = "Suggested mark scheme (levels). Level 3 (5–6): a logical, ordered plan that gives valid results, naming what is changed, measured and kept the same. Level 2 (3–4): most steps, but some missing or out of order. Level 1 (1–2): some relevant steps. 0: nothing creditworthy.";
+const bItems = t => [...t.points.map((p, i) => ({ k: "p" + i, t: p.t, p })), ...t.wrongs.map((w, i) => ({ k: "w" + i, t: w.t, w }))];
+function buildMark(t, keys) {
+  const its = bItems(t), ch = keys.map(k => its.find(x => x.k === k)), cw = ch.filter(x => x.w), cp = ch.filter(x => x.p);
+  const cancelled = new Set(cw.map(x => x.w.cancels).filter(Boolean)), cred = cp.filter(x => !cancelled.has(x.p.id));
+  const rk = p => p.rank != null ? p.rank : t.points.indexOf(p);   // points with the same rank can go in either order
+  const pos = cp.map(x => rk(x.p)), inOrder = !t.ordered || pos.every((v, i) => i === 0 || (t.points[0].rank != null ? v >= pos[i - 1] : v > pos[i - 1]));
+  let marks = Math.min(t.max, cred.length); if (t.levels && !inOrder && marks > 4) marks = 4;   // levels: a plan out of order stays in Level 2
+  const missing = t.points.filter(p => !cp.some(x => x.p === p)), block = cw.filter(x => !x.w.neutral), neutral = cw.filter(x => x.w.neutral);
+  return { marks, cw: block, neutral, missing, inOrder, ok: marks === t.max && !block.length && inOrder };
+}
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [], E0 = m => errs.push("model: " + m);
+  if (!(more("shoot", CF.right, 0) === "P" && tilt(CF.right, DAYS) > 20)) E0("light from the right: auxin on P, shoot bends right towards the light");
+  if (!(more("shoot", CF.left, 0) === "Q" && tilt(CF.left, DAYS) < -20)) E0("light from the left: auxin on Q, shoot bends left");
+  [CF.above, CF.dark].forEach(c => { if (more("shoot", c, DAYS) !== "even" || Math.abs(tilt(c, DAYS)) > .5 || more("root", c, DAYS) !== "even" || Math.abs(rootOff(c, DAYS)) > .5) E0("upright, light from above or dark: straight shoot and root, even auxin"); });
+  [CF.side, CF.sideA].forEach(c => { if (more("shoot", c, 0) !== "Q" || Math.abs(tilt(c, DAYS)) > 25 || more("root", c, 0) !== "S" || grows("root", c, 1) !== "R" || Math.abs(rootOff(c, DAYS)) > 25) E0("on its side: auxin on the lower sides Q and S; shoot turns up, root turns down"); });
+  if (more("shoot", CF.right, DAYS) !== "P") E0("the shaded side keeps more auxin while the shoot bends");
+  const m1 = { pose: "up", light: "none", manual: true, nP: 6, nR: 2 };
+  if (!(tilt(m1, DAYS) > 10 && rootOff(m1, DAYS) < -10 && grows("root", m1, 1) === "R")) E0("manual dots: more on P → bends right; more on S → root bends towards S");
+  const cs = cellH("shoot", 6, DAYS), cr = cellH("root", 6, DAYS); if (!(cs[0] > cs[1] && cr[0] < cr[1])) E0("cells: more auxin → longer shoot cells, shorter root cells");
+  if (!(Math.abs(tilt(DISH(3).cfg, DAYS)) < .5 && tilt(DISH(1).cfg, DAYS) > 20 && Math.abs(tilt(DISH(2).cfg, DAYS)) < 25 && Math.abs(rootOff(DISH(2).cfg, DAYS)) < 25) || DISHES.filter(d => d.control).length !== 1) E0("dishes: Dish 3 control straight, Dish 1 bends to the slit, Dish 2 shoots up and roots down");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (t.options.length < 3) E("needs at least 3 options");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+    }
+    if (t.kind === "gaps") { if (new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); });
+      t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w])) E("no feedback for the word " + w); }); }
+    if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); if (!t.not(M)) E("no feedback at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
+    if (t.kind === "build") {
+      if (t.points.length < t.max) E("not enough creditworthy points");
+      if (!buildMark(t, t.points.map((p, j) => "p" + j)).ok) E("the full answer must score full marks");
+      t.wrongs.forEach(w => { if (!w.why) E("a wrong statement has no feedback"); if (w.cancels && !t.points.some(p => p.id === w.cancels)) E("a wrong statement cancels a missing point");
+        const r = buildMark(t, [...t.points.map((p, j) => "p" + j), "w" + t.wrongs.indexOf(w)]); if (w.neutral ? !r.ok : r.ok) E(w.neutral ? "a no-credit statement must not block full marks" : "a wrong statement must stop full marks"); });
+      t.points.forEach(p => { if (!p.miss) E("a point has no 'missing' feedback"); });
+      if (t.ordered && buildMark(t, t.points.map((p, j) => "p" + j).reverse()).ok) E("order must matter");
+    }
+  });
+  /* the predict questions must agree with the model */
+  const pa = TASKS.easy.find(t => t.id === "predAux"); if (pa && pa.options.find(o => o.ok()).t !== more("shoot", CF.right, 0)) errs.push("easy predAux: disagrees with the model");
+  const rs = TASKS.easy.find(t => t.id === "rootSide"); if (rs && rs.options.find(o => o.ok()).t !== grows("root", CF.side, 1)) errs.push("easy rootSide: disagrees with the model");
+  const po = TASKS.hard.find(t => t.id === "poe"); if (po && !(Math.abs(tilt(DISH(2).cfg, DAYS)) < 25 && Math.abs(rootOff(DISH(2).cfg, DAYS)) < 25)) errs.push("hard poe: Dish 2 must turn shoots up and roots down");
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, rules: false, vars: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null;
+const PKEY = "ks3tools-progress:gcse-tropism-simulator";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+const LOCKW = { all: "Predict first. The model grows when you get it right, or press Show answer." };
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
+
+/* ===== Drawing ===== */
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+/* during Grow: a layer of plain self-closing shapes keeps the same elements frame to frame, so only their attributes are
+   updated (no re-parsing of the picture); anything else falls back to setLayer */
+const TAG_RE = /<(\w+)((?:\s+[\w:-]+="[^"]*")*)\s*\/>/g, ATT_RE = /([\w:-]+)="([^"]*)"/g;
+function fastLayer(g, h) {
+  if (g._h === h) return;
+  const tags = [...h.matchAll(TAG_RE)], kids = g.children;
+  if (tags.length && tags.length === kids.length && tags.every((m, i) => kids[i].localName === m[1])) {
+    tags.forEach((m, i) => { const el = kids[i]; for (const a of m[2].matchAll(ATT_RE)) if (el.getAttribute(a[1]) !== a[2]) el.setAttribute(a[1], a[2]); });
+    g._h = h;
+  } else setLayer(g, h);
+}
+const UL = { big: false };   // bigger text when the picture is drawn narrow (phones); read on build and resize only
+function ulCheck() { const sv = M.tab === "dish" ? $("dsvg") : $("ssvg"), w = sv.getBoundingClientRect().width, big = w > 0 && w < 430;
+  if (big !== UL.big) { UL.big = big; ["sBg", "sOrg", "sDots", "sLab", "sCell", "dBg", "dDyn"].forEach(i => { $(i)._h = ""; }); drawPane(); } }
+const FS = n => Math.round(n * (UL.big ? 1.4 : 1));
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+function svgParticle(x, y, r, fill) { return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>`; }
+const SEED = { up: [280, 232], side: [292, 196] };
+const W = { shoot: 22, root: 16 };
+const LAMP = { left: [44, 70], right: [516, 70], above: [280, 30] };
+function poly(P, ox, oy, sc) {   // every few points is enough for a smooth curve (fewer points = less work per frame)
+  const k = sc < .6 ? 5 : 3, out = []; for (let i = 0; i < P.length; i += k) out.push(f1(ox + P[i].x * sc) + "," + f1(oy + P[i].y * sc));
+  if ((P.length - 1) % k) { const q = P[P.length - 1]; out.push(f1(ox + q.x * sc) + "," + f1(oy + q.y * sc)); } return out.join(" "); }
+const nL = a => [Math.sin(a), -Math.cos(a)];   // the organ's left-hand side, facing its tip
+function lampSVG(x, y) { let h = ""; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; h += `<line class="rayl" x1="${f1(x + 20 * Math.cos(a))}" y1="${f1(y + 20 * Math.sin(a))}" x2="${f1(x + 27 * Math.cos(a))}" y2="${f1(y + 27 * Math.sin(a))}"/>`; }
+  return h + `<circle class="lampb" cx="${x}" cy="${y}" r="15"/>`; }
+function arrowSVG(x1, y1, x2, y2, cl) { const a = Math.atan2(y2 - y1, x2 - x1), hx = x2 - 12 * Math.cos(a), hy = y2 - 12 * Math.sin(a), px = -Math.sin(a) * 7, py = Math.cos(a) * 7;
+  return `<line class="${cl}" x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(hx)}" y2="${f1(hy)}"/><polygon class="${cl}h" points="${f1(x2)},${f1(y2)} ${f1(hx + px)},${f1(hy + py)} ${f1(hx - px)},${f1(hy - py)}"/>`; }
+function raysSVG(l) {
+  const [lx, ly] = LAMP[l];
+  if (l === "above") return arrowSVG(240, 58, 240, 100, "ray") + arrowSVG(320, 58, 320, 100, "ray");
+  const aim = [300, 132], d = Math.hypot(aim[0] - lx, aim[1] - ly), ux = (aim[0] - lx) / d, uy = (aim[1] - ly) / d; let h = "";
+  [-14, 14].forEach(o => { const ox = -uy * o, oy = ux * o; h += arrowSVG(lx + ux * 36 + ox, ly + uy * 36 + oy, lx + ux * 88 + ox, ly + uy * 88 + oy, "ray"); });
+  return h; }
+const IB = { x: 404, y: 286, w: 146, h: 124 };
+function seedBg(M) {
+  let h = `<rect x="0" y="0" width="560" height="420" fill="transparent"/>`;
+  if (M.light === "none" && !M.manual) h += T_(18, 34, "No light (dark)", FS(17), 'class="darkt"');
+  else if (!M.manual) h += lampSVG(...LAMP[M.light]) + raysSVG(M.light) + T_(LAMP[M.light][0], LAMP[M.light][1] + (M.light === "above" ? 6 : 48), M.light === "above" ? "" : "Lamp", FS(15), 'text-anchor="middle" class="it"');
+  else h += T_(18, 34, "Light and gravity off: you move the auxin", FS(16), 'class="itm"');
+  if (!M.manual) h += `<g class="${M.light === "none" ? "ondark" : ""}">` + arrowSVG(40, 290, 40, 362, "grav") + T_(12, 384, "Gravity", FS(15), 'class="gl2"') + `</g>`;
+  h += `<rect class="ibox" x="${IB.x}" y="${IB.y}" width="${IB.w}" height="${IB.h}" rx="8"/>` + T_(IB.x + 39, IB.y + 17, "Shoot", FS(13), 'text-anchor="middle" class="it"') + T_(IB.x + 107, IB.y + 17, "Root", FS(13), 'text-anchor="middle" class="it"');
+  return h;
+}
+function organSVG(o, P, ox, oy, sc, w) { const pts = poly(P, ox, oy, sc), c = o === "shoot" ? "sh" : "rt";
+  return `<polyline class="${c}e" points="${pts}" stroke-width="${f1(w + 4)}"/><polyline class="${c}" points="${pts}" stroke-width="${f1(w)}"/>`; }
+function cotySVG(P, ox, oy, sc) { const p = P[P.length - 1], x = ox + p.x * sc, y = oy + p.y * sc, ad = p.a / DEG; let h = "";
+  [-48, 48].forEach(d => { const a = (ad + d) * DEG, r = 11 * sc; h += `<ellipse class="coty" cx="${f1(x + Math.cos(a) * r)}" cy="${f1(y + Math.sin(a) * r)}" rx="${f1(12 * sc)}" ry="${f1(6 * sc)}" transform="rotate(${f1(ad + d)} ${f1(x + Math.cos(a) * r)} ${f1(y + Math.sin(a) * r)})"/>`; });
+  return h; }
+function seedSVG(x, y, pose, sc) { return `<ellipse class="seed" cx="${x}" cy="${y}" rx="${f1(13 * sc)}" ry="${f1(9 * sc)}" transform="rotate(${ROT[pose]} ${x} ${y})"/>`; }
+function ptAt(P, s) { const i = clamp(Math.round(s / DS), 0, P.length - 1); return P[i]; }
+function labelSVG(P, s, side, letter, ox, oy, w, tap) {   // side +1: left-hand, −1: right-hand
+  const ext = Math.max(0, 22 - s), p0 = ptAt(P, s), n = nL(p0.a), d = [Math.cos(p0.a), Math.sin(p0.a)];
+  const bx = ox + p0.x + d[0] * ext, by = oy + p0.y + d[1] * ext, r = UL.big ? 16 : 13, off = w / 2 + 10 + r;
+  const cx = bx + n[0] * off * side, cy = by + n[1] * off * side;
+  return `<g${tap ? ` class="tap" data-side="${letter}"` : ""}><line class="ld" x1="${f1(bx + n[0] * w / 2 * side)}" y1="${f1(by + n[1] * w / 2 * side)}" x2="${f1(cx - n[0] * r * side)}" y2="${f1(cy - n[1] * r * side)}"/>` +
+    `<circle class="lc" cx="${f1(cx)}" cy="${f1(cy)}" r="${r}"/>` + T_(cx, cy + r * .4, letter, FS(16), 'text-anchor="middle" class="lct"') +
+    (tap ? `<circle class="hit" cx="${f1(cx)}" cy="${f1(cy)}" r="24"/>` : "") + `</g>`; }
+function dotsSVG(o, P, n1, M, ox, oy) {
+  const L = (P.length - 1) * DS, r = o === "shoot" ? 3.8 : 3.3, off = W[o] / 2 - r - .9, out = [];   // dots hug their own side
+  const D = o === "shoot" ? (M.manual ? L - 8 : clamp(24 + 42 * M.day, 4, L - 8)) : L - 12;
+  [[n1, 1], [N - n1, -1]].forEach(([c, sd]) => { const s1 = o === "shoot" ? sd : -sd;   // shoot: P is left-hand (+); root: R is right-hand (−)
+    for (let j = 0; j < c; j++) { const s = o === "shoot" ? L - (4 + (j + .5) / c * D) : 8 + (j + .5) / c * D, p = ptAt(P, s), n = nL(p.a);
+      const x = ox + p.x + n[0] * off * s1, y = oy + p.y + n[1] * off * s1;   // house particle look (outline .145r, highlight up-left), styled by class to keep each frame light
+      out.push(`<circle class="ax" cx="${f1(x)}" cy="${f1(y)}" r="${r}"/><circle class="axh" cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${f1(r * .28)}"/>`); } });
+  return out.join(""); }
+function cellsSVG(M, c) {
+  if (M.hide) return T_(IB.x + IB.w / 2, IB.y + 70, "Predict first", FS(14), 'text-anchor="middle" class="itm"');
+  const nS = count1("shoot", c, M.day), nR = count1("root", c, M.day), hs = cellH("shoot", nS, M.day), hr = cellH("root", nR, M.day), base = IB.y + IB.h - 22; let h = "";
+  const col = (x, hh, cls) => { let y = base; for (let i = 0; i < 2; i++) { h += `<rect class="${cls}" x="${x}" y="${f1(y - hh)}" width="24" height="${f1(hh)}" rx="3"/>`; y -= hh; } };
+  col(IB.x + 12, hs[0], "cellS"); col(IB.x + 42, hs[1], "cellS"); col(IB.x + 80, hr[0], "cellR"); col(IB.x + 110, hr[1], "cellR");
+  [["P", 24], ["Q", 54], ["R", 92], ["S", 122]].forEach(([l, x]) => { h += T_(IB.x + x, base + 17, l, FS(14), 'text-anchor="middle" class="it"'); });
+  return h; }
+/* the seedling is drawn in four layers: during Grow only the organs and dots are patched every frame; the labels and the
+   cell close-up are patched on each quarter-day tick (they move slowly), which keeps each frame light on slow PCs */
+function seedParts(M) {
+  const c = cfgOf(M), [ox, oy] = SEED[M.pose], PS = pathAt("shoot", c, M.day), PR = pathAt("root", c, M.day);
+  const LS = (PS.length - 1) * DS, LR = (PR.length - 1) * DS, tap = M.manual && M.tab === "seed";
+  return { c, org: () => organSVG("root", PR, ox, oy, 1, W.root) + organSVG("shoot", PS, ox, oy, 1, W.shoot) + cotySVG(PS, ox, oy, 1) + seedSVG(ox, oy, M.pose, 1),
+    dots: () => M.hide ? "" : dotsSVG("root", PR, count1("root", c, M.day), M, ox, oy) + dotsSVG("shoot", PS, count1("shoot", c, M.day), M, ox, oy),
+    lab: () => labelSVG(PS, LS * .5, 1, "P", ox, oy, W.shoot, tap) + labelSVG(PS, LS * .5, -1, "Q", ox, oy, W.shoot, tap) +
+      labelSVG(PR, LR * .55, -1, "R", ox, oy, W.root, tap) + labelSVG(PR, LR * .55, 1, "S", ox, oy, W.root, tap),
+    cell: () => cellsSVG(M, c) };
+}
+function drawSeed(M, all) { const P = seedParts(M); fastLayer($("sOrg"), P.org()); fastLayer($("sDots"), P.dots()); if (all) { setLayer($("sLab"), P.lab()); setLayer($("sCell"), P.cell()); } }
+const seedDyn = M => { const P = seedParts(M); return P.org() + P.dots() + P.lab() + P.cell(); };   // the whole picture as one string (used by checks)
+/* RP8 dishes */
+function dishBg(M) {
+  let h = `<rect x="0" y="0" width="600" height="312" fill="transparent"/>`;
+  /* Dish 1: box with a slit on the right, lamp outside */
+  h += `<rect class="boxin" x="14" y="112" width="144" height="144"/><rect class="boxw" x="14" y="112" width="144" height="8"/><rect class="boxw" x="14" y="112" width="8" height="144"/>` +
+    `<rect class="boxw" x="150" y="112" width="8" height="40"/><rect class="boxw" x="150" y="178" width="8" height="78"/>` + lampSVG(180, 165).replace(/r="15"/, 'r="10"') +
+    arrowSVG(166, 165, 128, 165, "ray");
+  h += `<rect class="dish" x="30" y="244" width="112" height="12" rx="3"/><rect class="paper" x="33" y="244" width="106" height="4"/>`;
+  /* Dish 2: on its edge in a dark cupboard */
+  h += `<rect class="darkov" x="206" y="14" width="188" height="252" rx="10"/>` + T_(300, 36, "Dark cupboard", FS(14), 'text-anchor="middle" class="darkt"');
+  h += `<circle class="dish" cx="300" cy="160" r="92"/><circle class="paper" cx="300" cy="160" r="85" style="opacity:.55"/>`;
+  /* Dish 3: control, lamp above */
+  h += `<polygon class="cone" points="490,52 510,52 566,244 434,244"/>` + lampSVG(500, 40).replace(/r="15"/, 'r="11"');
+  h += `<rect class="dish" x="438" y="244" width="124" height="12" rx="3"/><rect class="paper" x="441" y="244" width="118" height="4"/>`;
+  DISHES.forEach((d, i) => { const x = 100 + i * 200;
+    h += `<g class="panelbtn" data-dish="${d.id}" tabindex="0" role="button" aria-label="${esc(d.name + ": " + d.sub)}"><rect class="pfr" x="${4 + i * 200}" y="4" width="192" height="302" rx="10"/>` +
+      T_(x, 282, d.name, FS(15), 'text-anchor="middle" class="dlbl"') + T_(x, 300, d.sub, FS(13), 'text-anchor="middle" class="itm"') + `</g>`; });
+  return h; }
+function dishDyn(M) {
+  let h = "";
+  /* flat dishes (1 and 3): the roots grow into the damp paper, so only shoots are drawn; Dish 2 stands on its edge, so its roots show */
+  const mini = (c, ox, oy, sc, rs) => (rs ? organSVG("root", pathAt("root", c, M.day), ox, oy, rs, 5) : "") + organSVG("shoot", pathAt("shoot", c, M.day), ox, oy, sc, 6) + cotySVG(pathAt("shoot", c, M.day), ox, oy, sc) + seedSVG(ox, oy, c.pose, .45);
+  [40, 63, 86, 109, 132].forEach(x => { h += mini(DISH(1).cfg, x, 244, .44, 0); });
+  [118, 160, 202].forEach(y => { h += mini(DISH(2).cfg, 292, y, .34, .34); });
+  [452, 476, 500, 524, 548].forEach(x => { h += mini(DISH(3).cfg, x, 244, .5, 0); });
+  const i = M.dish - 1; h += `<rect class="psel" x="${6 + i * 200}" y="6" width="188" height="298" rx="9" pointer-events="none"/>`;
+  return h; }
+
+/* --- the readout under the model --- */
+const dayTxt = d => { const q = Math.floor(d * 4 + 1e-6) / 4; return `Day ${q.toFixed(q % 1 ? (q * 4 % 2 ? 2 : 1) : 0)}`; };
+const LW = { left: "light from the left", right: "light from the right", above: "light from above", none: "no light (dark)" };
+function readout() {
+  if (M.tab === "dish") {
+    const d = DISH(M.dish), g = M.day > 0;
+    const line = d.id === 3 ? (g ? "Dish 3 (control): lamp above, dish flat. The shoots grow straight up. This is normal growth to compare with." : "Dish 3 (control): lamp above, dish flat.")
+      : d.id === 1 ? (g ? "Dish 1: box with a slit, light from one side. Compared with the control, the shoots bend towards the slit: phototropism." : "Dish 1: box with a slit, light from one side.")
+      : (g ? "Dish 2: on its edge in the dark. Compared with the control, the shoots turn up and the roots turn down: gravitropism. There is no light, so it is not phototropism." : "Dish 2: on its edge in the dark. The shoots point sideways at the start.");
+    return `<p class="r1">${dayTxt(M.day)} · ${esc(d.name)}${d.control ? " (control)" : ""}</p><p class="r2">${esc(line)}</p><p class="r3">${g ? "Compare each result with the control (Dish 3) to decide what caused it." : "Press Grow ▶ to leave the dishes for 3 days."}</p>`;
+  }
+  const c = cfgOf(M), t = M.day, g = t > 0, w = g ? "" : " will";
+  let r1 = `${dayTxt(t)} · ${M.manual ? "auxin moved by you" : LW[M.light]} · ${M.pose === "up" ? "upright" : "on its side"}`, sh, rt;
+  if (M.hide) { sh = "Predict first: where will the auxin go?"; rt = ""; }
+  else if (M.manual) {
+    const ms = more("shoot", c, t), mr = more("root", c, t);
+    sh = ms === "even" ? `Shoot: auxin is even (4 on P, 4 on Q). Both sides grow the same, so the shoot grows straight.` :
+      `Shoot: ${count1("shoot", c, t)} of ${N} auxin dots on P. Cells on ${ms} elongate more, so the shoot${w} bend${g ? "s" : ""} away from ${ms}, towards ${ms === "P" ? "Q" : "P"}.`;
+    rt = mr === "even" ? `Root: auxin is even on R and S, so the root grows straight.` :
+      `Root: more auxin on ${mr}. Auxin slows growth there, so ${mr === "R" ? "S" : "R"} grows more and the root${w} bend${g ? "s" : ""} towards ${mr}.`;
+  } else {
+    const ms = more("shoot", c, t);
+    if (ms === "even") sh = M.light === "none" ? "Shoot: no light. Auxin is even on P and Q, so both sides grow the same and the shoot grows straight up." : "Shoot: light from above. Auxin is even on P and Q, so both sides grow the same and the shoot grows straight up.";
+    else if (M.pose === "up") sh = `Shoot: light moves auxin to ${ms}, the shaded side. Cells on ${ms} elongate more, so the shoot${w} bend${g ? "s" : ""} towards the light: phototropism.`;
+    else sh = `Shoot: gravity${M.light === "above" ? " (and the light from above)" : ""} moves auxin to ${ms}, the lower side. Cells on ${ms} elongate more, so the shoot${w} bend${g ? "s" : ""} upwards: gravitropism.`;
+    rt = M.pose === "up" ? "Root: auxin is even on R and S, so it grows straight down, towards gravity." :
+      `Root: gravity moves auxin to S, the lower side. Auxin slows growth there, so R grows more and the root${w} bend${g ? "s" : ""} down: gravitropism.`;
+  }
+  const r3 = M.note ? M.note : M.manual ? "Tap P, Q, R or S (or drag a dot across) to move auxin." : g ? "Auxin is made in the shoot tip and moves back down the shoot." : "Press Grow ▶ to watch 3 days of growth.";
+  return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(sh)}</p>${rt ? `<p class="r2">${esc(rt)}</p>` : ""}<p class="r3">${esc(r3)}</p>`;
+}
+function drawPane() {
+  $("pane-seed").hidden = M.tab !== "seed"; $("pane-dish").hidden = M.tab !== "dish";
+  if (M.tab === "seed") { setLayer($("sBg"), seedBg(M)); drawSeed(M, true); $("ssvg").classList.toggle("manual", M.manual); $("ssvg").classList.toggle("isdark", M.light === "none" && !M.manual); }
+  else { setLayer($("dBg"), dishBg(M)); setLayer($("dDyn"), dishDyn(M)); }
+  morphHTML($("read"), readout());
+}
+function renderCtl() {   // touches a control only when its state changes
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", b.dataset.tab === M.tab));
+  document.querySelectorAll("#lightSeg button").forEach(b => { const l = b.dataset.light; setAttr(b, "aria-pressed", l === M.light && !M.manual); const dis = M.manual || (M.pose === "side" && sideLight(l)); if (b.disabled !== dis) b.disabled = dis; });
+  document.querySelectorAll("#poseSeg button").forEach(b => setAttr(b, "aria-pressed", b.dataset.pose === M.pose));
+  document.querySelectorAll("#dishSeg button").forEach(b => setAttr(b, "aria-pressed", +b.dataset.dish === M.dish));
+  setAttr($("manSw"), "aria-pressed", M.manual); const s = $("manSw").querySelector(".state"); if (s.textContent !== (M.manual ? "on" : "off")) s.textContent = M.manual ? "on" : "off";
+  const ah = !(M.manual && M.tab === "seed"); if ($("auxRow").hidden !== ah) $("auxRow").hidden = ah;
+  const v = String(Math.floor(M.day * 4 + 1e-6) / 4); if ($("day").value !== v) $("day").value = v;
+  const o = dayTxt(M.day); if ($("dayOut").textContent !== o) $("dayOut").textContent = o;
+  const gt = anim ? "Pause ❚❚" : M.day >= DAYS ? "Grow again ▶" : "Grow ▶"; if ($("growBtn").textContent !== gt) $("growBtn").textContent = gt;
+  if (!locked()) $("lockNote").hidden = true;
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { if (locked()) return lockMsg(); stopAll(); M.tab = t; M.note = ""; drawAll(); ulCheck(); tourSignal("tab-" + t); afterChange(); }
+
+/* ===== Animation: Grow runs to Day 3 and stops. paceFrame caps the frame rate; motion is time-based ===== */
+let visOK = true;
+const MS_DAY = 1500, FPS = 8;   // growth is slow: 8 frames a second looks the same and is light on slow PCs
+function startGrow() {
+  stopAll(); if (M.day >= DAYS) M.day = 0;
+  const a = anim = { paused: false, lastT: performance.now(), acc: 0, id: 0 };
+  a.frame = now => {
+    if (anim !== a) return;
+    if (!visOK || document.hidden) { a.paused = true; return; }
+    const tn = performance.now(), dt = Math.min(200, tn - a.lastT); a.lastT = tn;
+    if (reduced()) { a.acc += dt; if (a.acc >= 500) { a.acc = 0; M.day = Math.min(DAYS, Math.floor(M.day * 2 + 1e-9) / 2 + .5); } }
+    else M.day = Math.min(DAYS, M.day + dt / MS_DAY);
+    if (M.day >= DAYS) { anim = null; drawAll(); afterChange(); tourSignal("grown"); return; }
+    const q = Math.floor(M.day * 4), tick = q !== a.q;   // labels, cells, text and slider change only every quarter day
+    if (M.tab === "seed") drawSeed(M, tick); else fastLayer($("dDyn"), dishDyn(M));
+    if (tick) { a.q = q; morphHTML($("read"), readout()); renderCtl(); }
+    a.id = paceFrame(a.frame, reduced() ? 4 : FPS);
+  };
+  renderCtl(); a.id = paceFrame(a.frame, reduced() ? 4 : FPS);
+}
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : FPS); }
+function stopAll() { if (anim) { paceCancel(anim.id); anim = null; } }
+
+/* model changes from the controls */
+function change(fn, sig) { if (locked()) return lockMsg(); stopAll(); fn(); drawAll(); afterChange(); if (sig) tourSignal(sig); }
+function setLight(l) { change(() => { M.light = l; M.note = ""; }, "light"); }
+function setPose(p) { change(() => { M.pose = p; M.note = ""; if (p === "side" && sideLight(M.light)) { M.light = "none"; M.note = "On its side, the model offers light from above or no light."; } }, "pose-" + p); }
+function toggleMan() { change(() => { M.manual = !M.manual; M.nP = 4; M.nR = 4; M.note = ""; }, M.manual ? "" : "manual"); }
+function moveAux(side) {
+  if (locked()) return lockMsg();
+  if (!M.manual) { M.note = "Switch on Move auxin yourself first."; morphHTML($("read"), readout()); return; }
+  stopAll();
+  if (side === "P") M.nP = Math.min(N, M.nP + 1); if (side === "Q") M.nP = Math.max(0, M.nP - 1);
+  if (side === "R") M.nR = Math.min(N, M.nR + 1); if (side === "S") M.nR = Math.max(0, M.nR - 1);
+  M.note = ""; drawAll(); afterChange(); tourSignal("move");
+}
+function setDay(v) { if (locked()) { $("day").value = M.day; return lockMsg(); } stopAll(); M.day = clamp(v, 0, DAYS); drawAll(); afterChange(); tourSignal("day"); }
+function afterChange() {   // things to try in Demo
+  if (mode !== "demo") return;
+  const c = cfgOf(M);
+  if (M.tab === "seed" && !M.manual && M.light === "right" && M.day >= 1) tried(0);
+  if (M.tab === "seed" && !M.manual && M.pose === "side" && M.light === "none" && M.day >= DAYS) tried(1);
+  if (M.tab === "seed" && M.manual && M.pose === "up" && M.day >= 1 && tilt(c, M.day) <= -10) tried(2);
+  if (M.tab === "dish" && M.day >= DAYS) tried(3);
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Light from the right: where does auxin go?", "On its side, in the dark: grow it for 3 days.",
+  "Move auxin yourself: bend the shoot left.", "RP8 dishes: grow, then compare with Dish 3."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task; return { choice: null, gap: {}, build: [], order: shuffled(t.options ? t.options.length : t.kind === "build" ? bItems(t).length : t.bank ? t.bank.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll(); ulCheck();
+}
+function renderAnswer() {
+  const a = $("answer"), t = task, note = t.note ? `<p class="starter">${esc(t.note)}</p>` : "";
+  if (t.kind === "choice") {
+    a.innerHTML = note + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const bank = S.order.length === t.bank.length ? S.order.map(i => t.bank[i]) : t.bank;
+    a.innerHTML = note + `<div class="opts">` + t.rows.map(([k, txt]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "build") {
+    const its = bItems(t);
+    a.innerHTML = `<p class="starter">${esc(t.starter)}</p>` +
+      `<div class="bopts${its.length > 8 ? " two" : ""}" role="group" aria-label="Statements">` + S.order.map(i => `<button type="button" class="bopt" data-k="${its[i].k}" aria-pressed="false"><span class="n" aria-hidden="true"></span><span>${esc(its[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".bopt").forEach(b => b.addEventListener("click", () => { const k = b.dataset.k, j = S.build.indexOf(k); if (j >= 0) S.build.splice(j, 1); else S.build.push(k); paintBuild(); }));
+    paintBuild();
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>${M.tab === "dish" ? "RP8 dishes" : "Seedling"}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function paintBuild() {
+  document.querySelectorAll("#answer .bopt").forEach(b => { const j = S.build.indexOf(b.dataset.k), on = j >= 0;
+    b.setAttribute("aria-pressed", String(on)); b.querySelector(".n").textContent = on ? (task.ordered ? j + 1 : "✓") : "";
+    b.setAttribute("aria-label", b.textContent.replace(/^[\d✓]+/, "") + (on ? (task.ordered ? `, chosen ${j + 1}` : ", chosen") : "")); });
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "build") { S.build = t.points.map((p, j) => "p" + j); paintBuild();
+    const box = document.querySelector("#answer .bopts"); if (box) S.build.forEach(k => { const b = box.querySelector(`[data-k="${k}"]`); if (b) box.appendChild(b); });   // the answer reads in order
+    document.querySelectorAll("#answer .bopt").forEach(b => b.classList.toggle("out", b.dataset.k[0] === "w"));
+    const sp = document.querySelector("#answer .starter"); if (sp) sp.hidden = true; }   // room for the mark scheme
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task; if (t.after !== "grow") return;
+  lock = ""; stopAll(); M.hide = false;
+  if (t.id === "poe") M.dish = 2;
+  if (instant) { M.day = DAYS; drawAll(); } else { M.day = 0; drawAll(); startGrow(); }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const SUPW = { words: "Key words", rules: "Auxin rules", vars: "RP8 variables" };
+function renderSupport() {
+  $("wordsBox").hidden = !support.words; $("rulesBox").hidden = !support.rules; $("varsBox").hidden = !support.vars;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + [["Tropism", DEF.tropism], ["Phototropism", DEF.photo], ["Gravitropism", DEF.gravi], ["Auxin", DEF.auxin]].map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("rulesBox").innerHTML = "<h3>Auxin rules</h3><p>Auxin is made in the tip of the shoot and moves back down.</p><p><b>Shoot:</b> light moves auxin to the shaded side. More auxin → cells elongate more.</p><p><b>Root:</b> gravity moves auxin to the lower side. More auxin → growth slows.</p><p>Shoots grow towards light. Roots grow towards gravity.</p>";
+  $("varsBox").innerHTML = `<h3>RP8 variables</h3><p><b>Independent (change):</b> ${esc(VARS.iv)}</p><p><b>Dependent (measure):</b> ${esc(VARS.dv)}</p><p><b>Control (keep the same):</b> ${esc(VARS.cv.join("; "))}</p>`;
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [k, txt] = wrong, v = S.gap[k];
+    return { ok: false, html: esc(`“${txt} ${v}” is not right. ${t.rowWhy && t.rowWhy[k] ? t.rowWhy[k] : t.whyVal[v]}`) }; }
+  if (t.kind === "build") { if (!S.build.length) return { skip: t.ordered ? "Tap the statements you would write, in order." : "Tap the statements your plan needs." };
+    const r = buildMark(t, S.build), lv = t.levels ? ` ${levelOf(r.marks)}.` : "", mk = `${r.marks} of ${t.max} marks.${lv}`;
+    const nt = r.neutral.length ? " " + r.neutral[0].w.why : "";   // a no-credit statement: say so, but it doesn't stop full marks
+    if (r.ok) return { ok: true, html: `<span class="markline">${esc("Correct: " + mk)}</span> ${esc(t.explain + nt)}` };
+    const why = r.cw.length ? r.cw[0].w.why : r.missing.length ? r.missing[0].miss : !r.inOrder ? t.orderWhy : r.neutral.length ? r.neutral[0].w.why : t.orderWhy;
+    return { ok: false, html: `<span class="markline">${esc(mk)}</span> ${esc(why)}` }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to stop growing, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${SUPW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true'], #answer .bopt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") return esc("Answer: " + optT(t.options.find(o => o.ok && o.ok())).replace(/\.$/, "") + ". " + t.explain);
+  if (t.kind === "goal") return esc("Answer: the model has done it for you. " + t.done(M));
+  if (t.kind === "build") return `<b>Answer (${t.max} marks):</b> the statements above, in order. ${esc(t.scheme)}${t.levels ? "<br>" + esc(LEVELS_TXT) : ""}`;
+  return esc("Answer: " + t.explain);
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg(task.kind === "build" ? "tip long" : "tip", answerHTML(task) + (p.solved ? "" : esc(" (No score for this one.)")));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#tabs", tab: "seed", text: "Two parts: one seedling, and the three dishes of Required practical 8." },
+  { el: "#ssvg", tab: "seed", text: "A seedling with a shoot and a root. P and Q are the two sides of the shoot. R and S are the two sides of the root. Orange dots are auxin." },
+  { el: "#lightSeg", tab: "seed", set: M => { M.manual = false; M.pose = "up"; M.light = "above"; M.day = 0; }, text: "Choose where the light comes from.", do: "light", doText: "Choose a light." },
+  { el: "#growBtn", tab: "seed", text: "Grow ▶ shows 3 days of growth. Watch the auxin move back down from the tip.", do: "grown", doText: "Press Grow ▶ and let it finish." },
+  { el: "#read", tab: "seed", text: "The readout says where the auxin is, which side grows more, and the name of the response." },
+  { el: "#poseSeg", tab: "seed", set: M => { M.day = 0; }, text: "Lay the seedling on its side to see the response to gravity.", do: "pose-side", doText: "Press On its side." },
+  { el: "#day", tab: "seed", text: "The Time slider moves through the 3 days.", do: "day", doText: "Move the Time slider." },
+  { el: "#manSw", tab: "seed", set: M => { M.manual = false; M.pose = "up"; M.day = 2; }, text: "Now you decide where the auxin goes.", do: "manual", doText: "Switch on Move auxin yourself." },
+  { el: "#ssvg", tab: "seed", set: M => { M.manual = true; }, text: "Tap P, Q, R or S (or drag a dot across) to move one auxin dot to that side. Watch the bend change.", do: "move", doText: "Move one auxin dot." },
+  { el: "#tabs", text: "Now the RP8 set-up: three dishes of seedlings.", do: "tab-dish", doText: "Press RP8 dishes." },
+  { el: "#dishSeg", tab: "dish", text: "Dish 3 is the control. Press Grow ▶, then compare each dish with it." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-tropism-simulator", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; drawAll(); }
+  if (st.set) { stopAll(); st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = TOUR[tourI].pref === "above" && fitsAbove ? "down" : fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";   // pref: keep the space below free (e.g. to drop on)
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (tap and drag), touch and keyboard ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("lightSeg").addEventListener("click", e => { const b = e.target.closest("button[data-light]"); if (b && !b.disabled) setLight(b.dataset.light); });
+$("poseSeg").addEventListener("click", e => { const b = e.target.closest("button[data-pose]"); if (b) setPose(b.dataset.pose); });
+$("manSw").addEventListener("click", toggleMan);
+$("auxRow").addEventListener("click", e => { const b = e.target.closest("button[data-move]"); if (b) moveAux(b.dataset.move); });
+$("day").addEventListener("input", e => setDay(+e.target.value));
+$("growBtn").addEventListener("click", () => { if (locked()) return lockMsg(); if (anim) { stopAll(); renderCtl(); return; } startGrow(); tourSignal("grow"); });
+$("againBtn").addEventListener("click", () => setDay(0));
+function pickDish(id) { if (locked()) return lockMsg(); M.dish = id; drawAll(); tourSignal("dish"); }
+$("dishSeg").addEventListener("click", e => { const b = e.target.closest("button[data-dish]"); if (b) pickDish(+b.dataset.dish); });
+$("dsvg").addEventListener("click", e => { const g = e.target.closest("[data-dish]"); if (g) pickDish(+g.dataset.dish); });
+$("dsvg").addEventListener("keydown", e => { const g = e.target.closest && e.target.closest("[data-dish]"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pickDish(+g.dataset.dish); } });
+/* the seedling: in Move auxin yourself, tap a side (or its letter) to move one dot there, or drag a dot across the organ */
+(function seedWire() {
+  const svg = $("ssvg"); let dr = null;
+  function nearest(p) {   // nearest organ point: which organ, and is p on its left-hand side?
+    const c = cfgOf(M), [ox, oy] = SEED[M.pose]; let best = null;
+    ["shoot", "root"].forEach(o => pathAt(o, c, M.day).forEach(q => { const d = Math.hypot(p.x - ox - q.x, p.y - oy - q.y); if (!best || d < best.d) best = { o, d, q }; }));
+    const n = nL(best.q.a), left = (p.x - ox - best.q.x) * n[0] + (p.y - oy - best.q.y) * n[1] > 0;
+    best.side = best.o === "shoot" ? (left ? "P" : "Q") : (left ? "S" : "R"); return best; }
+  svg.addEventListener("pointerdown", e => {
+    if (!M.manual || M.tab !== "seed") return; if (locked()) return lockMsg();
+    const lab = e.target.closest("[data-side]"); if (lab) { e.preventDefault(); moveAux(lab.dataset.side); return; }
+    const p = svgPt(svg, e), b = nearest(p); if (b.d > W[b.o] / 2 + 14) return;
+    e.preventDefault(); dr = { id: e.pointerId, b, x0: e.clientX, y0: e.clientY }; try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
+  svg.addEventListener("pointerup", e => {
+    if (!dr || e.pointerId !== dr.id) return; const d = dr; dr = null;
+    if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6) { moveAux(d.b.side); return; }   // a tap on one side
+    const b = nearest(svgPt(svg, e)); if (b.o === d.b.o && b.side !== d.b.side) moveAux(b.side); });   // a dot dragged across
+  svg.addEventListener("pointercancel", () => { dr = null; });
+})();
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; resumeAnim(); }).observe($("model"));   // pause Grow while the model is off-screen
+}
+document.addEventListener("visibilitychange", resumeAnim);
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+window.addEventListener("resize", ulCheck);
+bump(); setMode("demo"); renderSupport(); fitPanel(); ulCheck();
+try { if (localStorage.getItem("ks3tools-toured:gcse-tropism-simulator")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .25 || P.busy / Math.max(1, P.n) > 40) {   // over 25 % of the time, or frames over 40 ms: aim for about a quarter of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .25 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .1 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+
+
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

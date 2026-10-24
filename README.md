@@ -61,6 +61,18 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | DNA Replication | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/dna-replication.html |
 | Action Potential | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/action-potential.html |
 | Protein Synthesis | KS5 | Biology | https://drt-tuition.github.io/ks3-tools/protein-synthesis.html |
+| Microscope Lab | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-microscope-lab.html |
+| Photosynthesis Lab | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-photosynthesis-lab.html |
+| Exercise and the Body | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-exercise-and-the-body.html |
+| Monoclonal Antibody Maker | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-monoclonal-antibody-maker.html |
+| Punnett Square Builder | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-punnett-square-builder.html |
+| Tropism Simulator | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-tropism-simulator.html |
+| DNA to Protein | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-dna-to-protein.html |
+| Quadrat Sampling | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-quadrat-sampling.html |
+| Predator–Prey Cycles | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-predator-prey-cycles.html |
+| Natural Selection | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-natural-selection.html |
+| Selective Breeding | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-selective-breeding.html |
+| How Diseases Spread | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-how-diseases-spread.html |
 
 ## Adding a tool
 

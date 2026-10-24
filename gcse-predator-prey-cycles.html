@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Predator–Prey Cycles</title>
+<!--
+  SCIENCE SPEC — Predator–Prey Cycles (AQA GCSE Biology 8461 and Combined Science Trilogy 8464, 4.7.2.1 Levels of organisation; WS 1.2 models)
+  Site placement: KS4 · Biology · "4.7.2 Ecosystems and biodiversity". Combined and separate Biology, Foundation and Higher.
+    Nothing here is Higher-only or Biology-only (4.7.2.1 is on every tier and both courses), so no HT or Biology only badges are used.
+  Models:
+    1. Build a food chain: the four organisms of the lesson's chain (grass, rabbit, fox, eagle; deck slide 14) start in a shuffled tray.
+       Drag each one (or tap it, then tap a box) into the four boxes. Tap the gap between two filled boxes to draw an arrow; tap it again
+       to flip it. Tap the label under a box to choose its role: producer, primary consumer, secondary consumer, tertiary consumer.
+       "Check my chain" (Demo) marks the order (from who eats whom: rabbits eat grass, foxes eat rabbits, eagles eat foxes), each
+       arrow (it must point from the food to the eater) and each role (counted from the producer), with specific feedback.
+    2. Cycles: a rabbit (prey) and fox (predator) population model, worked out in code year by year (RK4 steps of 0.01 year):
+         rabbits: births limited by the grass, minus rabbits eaten;  foxes: births from rabbits eaten, minus deaths.
+         dR/dt = a·R·(1 − R/K) − q,  dF/dt = c·q − d·F,  q = b·R·F ÷ (1 + h·R)   (a 1.08, K 150, b 0.0464, h 0.0285, c 2.21, d 2.21)
+       The numbers were tuned so the default start (40 rabbits, 10 foxes, as the deck graph starts) reproduces the deck graph's first peaks
+       (rabbits about 110 at years 3–4, foxes about 70 at year 6) and its pattern:
+       rabbits rise, foxes rise after them, rabbits fall, then foxes fall, again and again (a stable cycle about every 8–9 years).
+       Choose the starting numbers (rabbits 15–140, foxes 4–60: no run then drops below one animal), press Run to draw the graph year by year (or drag the Year slider), and read the numbers.
+       "Remove the foxes" sets the foxes to 0 at the year shown: the rabbits then rise until there isn't enough grass for more (K = 150), and
+       the readout says so. Levelling off is a model choice, flagged in Model limits (real rabbits might strip the grass and then fall).
+       Grass cover is full up to 75 rabbits and falls to 10% at 150: removed at the rabbit peak, the grass is nearly all eaten a year later (slide 6 hook).
+       A field picture shows the animals (1 picture = 10 animals) and the grass cover, worked out from the rabbit numbers.
+       Letters P–S mark the first rabbit peak (P), fox peak (Q), rabbit trough (R) and fox trough (S), found in code from the run.
+  Source deck (every slide read, hidden slide 4 and notes included): Y10 T6 L1 Food chains (Higher, 8464 4.7.2.1): s2 starter
+    (community = all the species living in one place), s4 misconceptions, s6 hook (no more foxes), s8 key words, s11 producers, s12–13
+    producer or consumer sort, s14 food chain with roles, s15–16 construct the chain, s17 predators and prey, s18–19 true or false,
+    s20 predator–prey cycles (example data, invented to show the pattern), s21–22 read the graph, s23 formative check, s24 hinge,
+    s25–26 exam questions and mark scheme, s28 plenary and exit ticket.
+  Simplifications (on screen as "Model limits"): the numbers are example data, invented to show the pattern (as the deck says);
+    only two species are modelled; the grass limits the rabbits to about 150 and with no foxes they level off there (real rabbits might
+    crash); numbers are averages, not whole animals; real populations also change with disease,
+    weather and other species.
+  Misconceptions designed out (deck s4 and hinge s24; AQA 8464 examiner reports 8464/B/2F June 2023 Q4.3, 8464/B/2H June 2024
+    Q5.1–5.2): arrows show the predators, or point from the eater to the food (arrows are drawn by the pupil and marked: from the food
+    to the eater; the caption says energy passes along each arrow; hinge feedback names "the predators"); "they are prey" or "part of
+    a food chain" is a full answer (Hard 2, 8 and 10 feedback: say what happens: prey provide energy, more rabbits are eaten);
+    habitat, population and community are interchangeable (Hard 3, Key words support).
+  Facts and values used: producer, consumer, predator, prey definitions (s8); photosynthetic organisms make the biomass for life;
+    a producer is usually a green plant or alga and makes glucose by photosynthesis; consumers cannot make their own food (s11);
+    oak tree, grass and algae are producers; hawk, rabbit and fox are consumers (s12–13); grass → rabbit → fox → eagle with producer,
+    primary, secondary and tertiary consumer (s14–16); a fox is a predator and a rabbit its prey; one animal can be both; prey give
+    their energy to the predator; a stable community keeps predators and prey in balance (s17); the cycle pattern and its reasons
+    (s20–22); mark scheme points and REJECT lists (s26); exit ticket answer (s28). Population numbers: invented example data.
+  SoW lessons served: Y10 T6 L1 Food chains (Combined Higher and Foundation; separate Biology).
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Key words, Reading the graph.
+  Checks on load: the facts (who eats whom gives exactly grass → rabbit → fox → eagle; roles; producers of slide 12), the model
+    (default run: rabbits peak before foxes; letters P < Q < R < S in time; cycles still going in years 12–20; no foxes → rabbits rise
+    and grass falls; numbers never negative), and every question (3 hints; exactly one right option with feedback for every wrong one;
+    grid and multi answers valid; number answers read from the model; build parts; goals not met at the start and met by Show answer).
+    Any failure shows a visible error box and switches that question off.
+  Performance: drawn on demand. Run animates at most 30 frames a second (paceFrame, time-based, adaptive slow-down), pauses when the
+    tab is hidden or the model is scrolled off-screen, and stops at year 20. The graph's static layer is rebuilt only when the run
+    changes; each frame patches only the two lines, the cursor and the field picture (morph); no CSS filters; no backdrop-filter.
+  Idea credit: none (designed from scratch; ideas shared with this site's KS3 Food Web tool).
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--rab:#1F6E8C;--fox:#B8501A;--grass:#4E8A3A;--grass-e:#2F5A22;--soil:#C9AE86;--sky:#EEF3F8;
+  --fur-r:#B4A28C;--fur-re:#5E4E3E;--fur-f:#D9732B;--fur-fe:#7A3A10;--eag:#6B4424;--eag-e:#3A2412;--beak:#E2B13C;--white-fur:#FBFAF8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--rab:#8CC4FF;--fox:#F2A65A;--grass:#6FB25A;--grass-e:#9FD48C;--soil:#6B5A43;--sky:#1B3150;
+  --fur-r:#B4A28C;--fur-re:#2A2118;--fur-f:#D9732B;--fur-fe:#3A1A06;--eag:#7A5030;--eag-e:#21140A;--white-fur:#F2EFE8}}
+:root[data-theme="dark"]{--rab:#8CC4FF;--fox:#F2A65A;--grass:#6FB25A;--grass-e:#9FD48C;--soil:#6B5A43;--sky:#1B3150;
+  --fur-r:#B4A28C;--fur-re:#2A2118;--fur-f:#D9732B;--fur-fe:#3A1A06;--eag:#7A5030;--eag-e:#21140A;--white-fur:#F2EFE8}
+
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.cg{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.gl{font-weight:700;font-size:16px;color:var(--muted)}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.rng{display:inline-flex;align-items:center;gap:8px;font-size:16px}
+.rng input[type=range]{width:150px;height:44px;accent-color:var(--accent);margin:0}
+.rng output{font-weight:700;min-width:3ch;font-variant-numeric:tabular-nums;color:var(--accent)}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+@media (min-width:901px){#chainSvg{max-height:min(420px,52vh)}#graphSvg{max-height:min(330px,40vh)}}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene .b{font-weight:700}
+.scene [tabindex]{outline:none;cursor:pointer}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .card2{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.scene .crd{touch-action:none;cursor:grab}
+.scene .crd rect.bg{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.scene .crd.sel rect.bg{stroke:var(--gold);stroke-width:5}
+.scene .gone{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 5}
+.scene .slotb{fill:var(--surface);stroke:var(--muted);stroke-width:2;stroke-dasharray:7 5}
+.scene .slot.filled .slotb{stroke:var(--accent);stroke-dasharray:none}
+.scene .slot.target .slotb{stroke:var(--gold);stroke-width:4}
+.scene .slot.filled{touch-action:none}
+.scene .gapb{fill:transparent;stroke:none}
+.scene .gapc{fill:var(--surface);stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.scene .arr{fill:var(--ink);stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.scene .arr.bad{fill:var(--bad);stroke:var(--bad)}
+.scene .roleb{fill:var(--sunk);stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.scene .role.set .roleb{fill:var(--surface);stroke:var(--accent);stroke-dasharray:none}
+.scene .role.sel .roleb{stroke:var(--gold);stroke-width:4}
+.scene .okt{fill:var(--good)!important;font-weight:700}
+.scene .badt{fill:var(--bad)!important;font-weight:700}
+.scene .ax{fill:var(--muted)}
+.scene .gridl{stroke:var(--line);stroke-width:1}
+.scene .axl{stroke:var(--ink);stroke-width:1.8}
+.scene .ln{fill:none;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
+.scene .ln.r{stroke:var(--rab)}
+.scene .ln.f{stroke:var(--fox);stroke-dasharray:10 6}
+.scene .lt.r{fill:var(--rab)!important;font-weight:700}
+.scene .lt.f{fill:var(--fox)!important;font-weight:700}
+.scene .cur{stroke:var(--accent);stroke-width:2;stroke-dasharray:3 4}
+.scene .dotr{fill:var(--rab);stroke:var(--surface);stroke-width:2}
+.scene .dotf{fill:var(--fox);stroke:var(--surface);stroke-width:2}
+.scene .remv{stroke:var(--bad);stroke-width:2.5;stroke-dasharray:6 4}
+.scene .remt{fill:var(--bad)!important;font-weight:700}
+.scene .letc{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.scene .lett{font-weight:700}
+.field{background:var(--sky)}
+.zones{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.zones .btn{min-height:44px;padding:8px 14px;font-size:17px}
+.gnote{margin:0;min-height:1.5em;font-size:16px;color:var(--muted)}
+.ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;font:700 18px var(--f-body);padding:8px 14px;border-radius:10px;border:2px solid var(--accent);background:var(--surface);color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.25);will-change:transform;white-space:nowrap}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .ok{color:var(--good);font-weight:700}
+.readout .warn{color:var(--bad);font-weight:700}
+.readout .kr{color:var(--rab);font-weight:700}.readout .kf{color:var(--fox);font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.badge{display:inline-block;font-size:13px;line-height:1.4;font-weight:700;padding:0 8px;border-radius:999px;border:1.5px solid var(--accent);color:var(--accent);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.bopts .opt[aria-pressed="true"]::after{content:none}
+.bopts .opt{padding:5px 12px;line-height:1.3;font-size:16px;min-height:44px;align-items:center}
+.mopts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.frame{margin:0;padding:6px 10px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:16px}
+.pinrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:17px}
+.pin{font:700 20px var(--f-body);padding:6px 12px;min-height:44px;width:8ch;max-width:100%;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+table.gt{border-collapse:collapse;width:100%;font-size:16px}
+.gt th,.gt td{border-bottom:1px solid var(--line);padding:4px 4px;text-align:left;vertical-align:middle}
+.gt thead th{font-size:14px;color:var(--muted);line-height:1.3}
+.gt tbody th{font-weight:400}
+.gt select{font:700 16px var(--f-body);padding:6px 6px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.ws{margin:4px 0 0;padding-left:22px}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.seg button{padding:8px 11px}.tabs button{font-size:15px;padding:8px 4px}.model .btn{padding:10px 13px;font-size:16px}.rng input[type=range]{width:120px}.mopts{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .gt select{min-height:40px;padding:4px 6px}.qpanel .frame{padding:4px 8px;font-size:15px}
+  .qpanel .bopts .opt{min-height:40px;padding:4px 10px}
+}
+
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- organism pictures, drawn in code (viewBox 0 0 100 70) -->
+    <symbol id="pic-grass" viewBox="0 0 100 70">
+      <rect x="6" y="58" width="88" height="8" rx="4" style="fill:var(--soil)"/>
+      <path d="M14 60 Q16 38 10 20 Q22 38 22 60Z M24 60 Q28 30 26 8 Q36 32 32 60Z M34 60 Q40 36 46 16 Q44 40 42 60Z M44 60 Q48 26 56 6 Q56 34 52 60Z M54 60 Q58 36 66 18 Q64 40 62 60Z M64 60 Q70 30 74 10 Q76 36 72 60Z M74 60 Q80 40 90 24 Q84 44 82 60Z" style="fill:var(--grass);stroke:var(--grass-e);stroke-width:1.4;stroke-linejoin:round"/>
+    </symbol>
+    <symbol id="pic-rabbit" viewBox="0 0 100 70">
+      <ellipse cx="66" cy="15" rx="4.5" ry="14" transform="rotate(-14 66 15)" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <ellipse cx="75" cy="15" rx="4.5" ry="14" transform="rotate(10 75 15)" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <ellipse cx="46" cy="44" rx="27" ry="17" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <circle cx="33" cy="47" r="14" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <circle cx="71" cy="33" r="12" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <circle cx="19" cy="40" r="6.5" style="fill:var(--white-fur);stroke:var(--fur-re);stroke-width:1.5"/>
+      <ellipse cx="56" cy="60" rx="10" ry="4" style="fill:var(--fur-r);stroke:var(--fur-re);stroke-width:1.5"/>
+      <circle cx="75" cy="30" r="2.2" style="fill:#1E252E"/><circle cx="82.5" cy="35" r="1.8" style="fill:#7A4A3A"/>
+    </symbol>
+    <symbol id="pic-fox" viewBox="0 0 100 70">
+      <path d="M30 42 Q8 46 4 30 Q2 20 10 18 Q14 32 32 34Z" style="fill:var(--fur-f);stroke:var(--fur-fe);stroke-width:1.5;stroke-linejoin:round"/>
+      <path d="M10 18 Q2 20 4 30 Q8 24 13 26Z" style="fill:var(--white-fur);stroke:var(--fur-fe);stroke-width:1.2"/>
+      <rect x="36" y="46" width="6" height="16" rx="3" style="fill:var(--fur-fe)"/><rect x="60" y="46" width="6" height="16" rx="3" style="fill:var(--fur-fe)"/>
+      <ellipse cx="50" cy="40" rx="24" ry="12" style="fill:var(--fur-f);stroke:var(--fur-fe);stroke-width:1.5"/>
+      <path d="M68 30 L72 12 L78 26 L84 13 L86 30 Q96 36 97 40 Q88 46 76 44 Q68 40 68 30Z" style="fill:var(--fur-f);stroke:var(--fur-fe);stroke-width:1.5;stroke-linejoin:round"/>
+      <path d="M78 42 Q88 46 97 40 Q90 38 84 39Z" style="fill:var(--white-fur)"/>
+      <circle cx="96" cy="40" r="2" style="fill:#1E252E"/><circle cx="82" cy="33" r="2" style="fill:#1E252E"/>
+    </symbol>
+    <symbol id="pic-eagle" viewBox="0 0 100 70">
+      <path d="M50 32 Q30 14 4 16 Q16 22 18 28 Q8 30 6 36 Q22 36 32 42 Q42 44 50 40 Q58 44 68 42 Q78 36 94 36 Q92 30 82 28 Q84 22 96 16 Q70 14 50 32Z" style="fill:var(--eag);stroke:var(--eag-e);stroke-width:1.5;stroke-linejoin:round"/>
+      <ellipse cx="50" cy="42" rx="10" ry="16" style="fill:var(--eag);stroke:var(--eag-e);stroke-width:1.5"/>
+      <path d="M43 56 L50 68 L57 56Z" style="fill:var(--white-fur);stroke:var(--eag-e);stroke-width:1.2"/>
+      <circle cx="50" cy="24" r="8.5" style="fill:var(--white-fur);stroke:var(--eag-e);stroke-width:1.5"/>
+      <path d="M50 26 Q56 26 55 32 Q52 30 50 30Z" style="fill:var(--beak);stroke:var(--eag-e);stroke-width:1"/>
+      <circle cx="47" cy="22" r="1.6" style="fill:#1E252E"/><circle cx="53" cy="22" r="1.6" style="fill:#1E252E"/>
+      <path d="M44 56 l-3 4 M47 57 l-1 5 M56 56 l3 4 M53 57 l1 5" style="stroke:var(--beak);stroke-width:2;stroke-linecap:round"/>
+    </symbol>
+  </defs>
+</svg>
+<div class="wrap">
+  <header>
+    <h1>Predator–Prey Cycles<small>Build a food chain, then watch rabbit and fox numbers rise and fall. GCSE Biology.</small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Predator–Prey Cycles</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Food chain and predator–prey model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="chain" aria-pressed="true">Build a food chain</button><button type="button" data-tab="cyc" aria-pressed="false">Cycles</button></div>
+
+      <!-- Tab 1: build a food chain -->
+      <div id="chainPart">
+        <svg id="chainSvg" class="scene" viewBox="0 0 640 344" role="group" aria-label="Food chain builder. Drag an organism into a box, or tap it and then tap a box. Tap the gap between two boxes to draw an arrow. Tap the label under a box to choose its role."><g id="cL"></g></svg>
+        <div class="zones" id="pick" hidden><span class="gl" id="pickLbl">Role:</span><span class="controls" id="pickBtns"></span><button class="linkbtn" type="button" id="pickNo">Cancel</button></div>
+        <p class="gnote" id="cnote" aria-live="polite"></p>
+        <div class="controls" id="chainAct"><button class="btn primary go" type="button" id="chainCheck">Check my chain</button><button class="btn go" type="button" id="chainFill">Fill it for me ▸</button><button class="btn" type="button" id="chainClear">Start again</button></div>
+        <div class="readout" id="cread" aria-live="polite"></div>
+      </div>
+
+      <!-- Tab 2: predator–prey cycles -->
+      <div id="cycPart" hidden>
+        <div class="controls" id="startCtl">
+          <label class="rng" for="r0"><span class="gl">Starting rabbits:</span><input type="range" id="r0" min="15" max="140" step="5" value="40"><output id="r0v" for="r0">40</output></label>
+          <label class="rng" for="f0"><span class="gl">Starting foxes:</span><input type="range" id="f0" min="4" max="60" step="1" value="10"><output id="f0v" for="f0">10</output></label>
+        </div>
+        <svg id="fieldSvg" class="scene field" viewBox="0 0 640 96" role="img" aria-label="The field"><g id="fL"></g></svg>
+        <svg id="graphSvg" class="scene" viewBox="0 0 640 300" role="img" aria-label="Graph of rabbit and fox numbers against time"><g id="gS"></g></svg>
+        <div class="controls" id="cycAct">
+          <button class="btn primary go" type="button" id="runBtn">Run ▶</button>
+          <label class="rng" for="yr" id="yrLbl"><span class="gl">Year:</span><input type="range" id="yr" min="0" max="20" step="0.5" value="20"><output id="yrv" for="yr">20</output></label>
+          <button class="btn go" type="button" id="remBtn">Remove the foxes</button>
+          <button class="sw" type="button" id="letSw" aria-pressed="false"><span class="dot"></span>Letters P–S <span class="state">off</span></button>
+        </div>
+        <p class="gnote" id="ynote" aria-live="polite"></p>
+        <div class="readout" id="yread" aria-live="polite"></div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> <span id="limitsTxt"></span></p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Reading the graph <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="graphBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="ghost" id="ghost" aria-hidden="true" hidden></div>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+<svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+<svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+<span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+</footer>
+</div>
+
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Y10 T6 L1 Food chains: slides 2, 4, 8, 11–17, 20–26, 28) ===== */
+const ORG = ["grass", "rabbit", "fox", "eagle"];                                   // slide 14
+const NM = { grass: ["grass", "grass"], rabbit: ["rabbit", "rabbits"], fox: ["fox", "foxes"], eagle: ["eagle", "eagles"] };
+const EATS = { rabbit: "grass", fox: "rabbit", eagle: "fox" };                    // who eats whom (slide 14: a rabbit eats the grass, a fox eats the rabbit, an eagle eats the fox)
+const MAKES_FOOD = { grass: true };                                                // grass makes glucose (slide 14); producers make their own food by photosynthesis (slide 11)
+const ROLES = ["Producer", "Primary consumer", "Secondary consumer", "Tertiary consumer"];   // slide 14
+const DECK_CHAIN = ["grass", "rabbit", "fox", "eagle"];                            // slides 14–16 answer
+const SORT = [["Oak tree", true], ["Grass", true], ["Hawk", false], ["Rabbit", false], ["Fox", false], ["Algae", true]];   // slides 12–13: producers A, B, F
+const DEF = {
+  producer: "An organism that makes its own food, usually by photosynthesis.",     // slide 8
+  consumer: "An organism that gets energy by eating other organisms.",
+  predator: "A consumer that kills and eats other animals.",
+  prey: "An animal that is killed and eaten by a predator.",
+  primary: "Eats the producer.", secondary: "Eats the primary consumer.", tertiary: "Eats the secondary consumer.",   // slide 14
+  habitat: "Where an organism lives.", population: "All the organisms of one species living in a place.",            // slide 4
+  community: "All the species living in one place." };                             // slide 2
+const WORDS = [["Producer", DEF.producer], ["Consumer", DEF.consumer], ["Predator", DEF.predator], ["Prey", DEF.prey],
+  ["Primary consumer", DEF.primary], ["Secondary consumer", DEF.secondary], ["Tertiary consumer", DEF.tertiary],
+  ["Habitat", DEF.habitat], ["Population", DEF.population], ["Community", DEF.community]];
+const GRAPHHELP = ["Each line is one population: rabbits are the solid line, foxes the dashed line.", "A peak is a highest point. A trough is a lowest point.",
+  "To read a number, go straight across from the point to the side axis.",
+  "At the very start, the lines depend on the starting numbers. Look at a whole cycle: each fox peak comes after a rabbit peak."];
+const LESSON = "Food chains";
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const n1 = o => NM[o][0], np = o => NM[o][1];
+const f1 = v => String(Math.round(v * 10) / 10);
+const isProducer = o => !!MAKES_FOOD[o] && !EATS[o];
+function chainFromRules() {   // start with the producer, then add whoever eats the last one
+  const c = [ORG.find(isProducer)];
+  for (;;) { const nx = ORG.find(o => EATS[o] === c[c.length - 1]); if (!nx || c.includes(nx)) break; c.push(nx); }
+  return c;
+}
+const CHAIN = chainFromRules();
+const roleIx = o => CHAIN.indexOf(o);   // the role of an organism is its place in the chain, counted from the producer
+
+/* ===== Predator–prey model: invented example numbers, chosen to give the deck's pattern from the deck's start (40 rabbits, 10 foxes) =====
+   rabbits: births held back as the grass runs short, minus rabbits eaten; foxes: births from rabbits eaten, minus deaths. */
+const PP = { a: 1.08, K: 150, b: 0.0464, h: 0.0285, c: 2.21, d: 2.21 };   // tuned so 40 rabbits + 10 foxes gives the deck graph: rabbits about 110 at years 3–4, foxes about 70 at year 6
+const YEARS = 20, DTO = 0.05, NSUB = 5, NPT = Math.round(YEARS / DTO) + 1;
+const SIMC = new Map();
+function deriv(R, F) { const q = PP.b * R * F / (1 + PP.h * R); return [PP.a * R * (1 - R / PP.K) - q, PP.c * q - PP.d * F]; }
+function simulate(r0, f0, rem) {
+  const key = r0 + "," + f0 + "," + rem; if (SIMC.has(key)) return SIMC.get(key);
+  const R = new Float64Array(NPT), F = new Float64Array(NPT), dt = DTO / NSUB; let r = r0, f = f0;
+  for (let i = 0; i < NPT; i++) {
+    if (rem != null && i * DTO >= rem - 1e-9) f = 0;   // every fox removed from this year on
+    R[i] = r; F[i] = f;
+    for (let k = 0; k < NSUB; k++) {
+      const k1 = deriv(r, f), k2 = deriv(r + dt / 2 * k1[0], f + dt / 2 * k1[1]), k3 = deriv(r + dt / 2 * k2[0], f + dt / 2 * k2[1]), k4 = deriv(r + dt * k3[0], f + dt * k3[1]);
+      r = Math.max(0, r + dt / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0])); f = Math.max(0, f + dt / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]));
+    }
+  }
+  const s = { R, F, r0, f0, rem }; if (SIMC.size > 60) SIMC.clear(); SIMC.set(key, s); return s;
+}
+const ix = t => Math.max(0, Math.min(NPT - 1, Math.round(t / DTO)));
+const rAt = (s, t) => s.R[ix(t)], fAt = (s, t) => s.F[ix(t)];
+const grassPct = R => Math.max(10, Math.min(100, Math.round(100 * (1 - R / PP.K) / .5 / 5) * 5));   // grass cover: full up to half the grass limit, down to 10% at the limit (some grass is left: it still feeds 150 rabbits) (more rabbits eat more grass)
+const GRASS_LIMIT = R => R >= .95 * PP.K;   // the rabbits have stopped rising: not enough grass for any more
+function features(s) {   // P first rabbit peak, Q first fox peak after P, R first rabbit trough after P, S first fox trough after Q
+  const A = s.R, B = s.F, mx = (a, i) => a[i] >= a[i - 1] && a[i] > a[i + 1], mn = (a, i) => a[i] <= a[i - 1] && a[i] < a[i + 1];
+  const find = (a, test, from) => { for (let i = Math.max(1, from); i < NPT - 1; i++) if (test(a, i) && a[i] > 0) return i; return -1; };
+  const P = find(A, mx, 1), Q = P < 0 ? -1 : find(B, mx, P + 1), Rr = P < 0 ? -1 : find(A, mn, P + 1), S = Q < 0 ? -1 : find(B, mn, Q + 1);
+  const pt = (k, i, line) => i < 0 ? null : { k, i, t: i * DTO, line, v: line === "r" ? A[i] : B[i], peak: k === "P" || k === "Q" };
+  return [pt("P", P, "r"), pt("Q", Q, "f"), pt("R", Rr, "r"), pt("S", S, "f")].filter(Boolean);
+}
+const featsOf = s => s.feat || (s.feat = features(s));   // found once per run
+const DEF_S = () => simulate(40, 10, null);
+const FEAT = () => features(DEF_S());
+const featOf = k => FEAT().find(p => p.k === k);
+const round = v => Math.round(v);
+const nAn = (v, one, many) => { const k = Math.round(v); return `${k} ${k === 1 ? one : many}`; };
+
+/* ===== Model state ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function trayOrder() { let t; do { t = shuffled(4).map(i => ORG[i]); } while (t.join() === CHAIN.join()); return t; }   // never already in order
+function freshC() { return { slot: [null, null, null, null], gap: [0, 0, 0], role: [null, null, null, null], tray: trayOrder(), noRoles: false, noCap: false, marks: null }; }
+function freshY() { return { r0: 40, f0: 10, rem: null, t: YEARS, letters: false, hideNum: false }; }
+function freshM() { return { tab: "chain", C: freshC(), Y: freshY(), sel: null, drag: null }; }
+const SIM = () => simulate(M.Y.r0, M.Y.f0, M.Y.rem);
+function buildChain(C, n, roles) { C.slot = [null, null, null, null]; C.gap = [0, 0, 0]; C.role = [null, null, null, null];
+  for (let i = 0; i < n; i++) { C.slot[i] = CHAIN[i]; if (i) C.gap[i - 1] = 1; if (roles) C.role[i] = roleIx(CHAIN[i]); } }
+const slotOf = (C, o) => C.slot.indexOf(o);
+/* What is wrong with the chain? want = { n: organisms needed, end: organism it must end with, roles: "all" | "producer" | "none" }.
+   Returns "" when right. Order comes from EATS, arrows must point from the food to the eater, roles are counted from the producer. */
+function chainIssue(C, want) {
+  const n = want.n, S = C.slot;
+  if (S[0] && !isProducer(S[0])) return `A food chain begins with a producer. The ${n1(S[0])} is a consumer: it can't make its own food.`;
+  for (let i = 1; i < 4; i++) { const a = S[i - 1], b = S[i];   // first, the order of the organisms already placed side by side
+    if (!a || !b || EATS[b] === a) continue;
+    if (EATS[a] === b) return `Boxes ${i} and ${i + 1} are back to front: the ${n1(a)} eats the ${n1(b)}, so the ${n1(b)} comes first.`;
+    return `${cap(np(b))} don't eat ${np(a)} here. Put the organism that eats the ${n1(a)} next.`; }
+  for (let i = 0; i < n; i++) if (!S[i]) return `Box ${i + 1} is empty. ${i === 0 ? "Start with the organism the chain begins with." : "Put an organism into it."}`;
+  for (let i = n; i < 4; i++) if (S[i]) return `This chain needs only ${n} organisms. Take the ${n1(S[i])} out of box ${i + 1}: tap it.`;
+  if (want.end && S[n - 1] !== want.end) return `The chain must end with the ${n1(want.end)}.`;
+  for (let i = 0; i < n - 1; i++) { const a = S[i], b = S[i + 1], g = C.gap[i];
+    if (!g) return `Draw the arrow between the ${n1(a)} and the ${n1(b)}: tap the gap between them.`;
+    if (g < 0) return `The arrow between the ${n1(a)} and the ${n1(b)} points from the eater to the food. Arrows point from the food to the eater: tap it to flip it.`; }
+  if (want.roles === "none") return "";
+  for (let i = 0; i < n; i++) { const r = C.role[i], o = S[i];   // wrong labels first, then missing ones
+    if (r == null || r === roleIx(o)) continue;
+    if (r === 0) return `The ${n1(o)} can't make its own food, so it isn't the producer. It is a consumer.`;
+    if (roleIx(o) === 0) return `The ${n1(o)} makes its own food by photosynthesis, so it isn't a consumer.`;
+    return `The ${n1(o)} isn't the ${ROLES[r].toLowerCase()}. Count the feeding steps from the producer: the ${n1(o)} eats the ${n1(EATS[o])}.`; }
+  for (let i = 0; i < n; i++) if (C.role[i] == null && (want.roles === "all" || i === 0)) return `Label the ${n1(S[i])}: tap the label under it.`;
+  return "";
+}
+const WANT4 = { n: 4, roles: "all" };
+
+/* ===== Question bank (wording from the deck; every answer is checked against the model above) ===== */
+const ABC = "ABCDEF";
+function SET(o) { return m => {
+  m.tab = o.tab || "chain";
+  if (o.chain) buildChain(m.C, o.chain, o.roles);
+  m.C.noRoles = !!o.noRoles; m.C.noCap = !!o.noCap;
+  if (o.tab === "cyc") { m.Y.r0 = o.r0 || 40; m.Y.f0 = o.f0 || 10; m.Y.rem = o.rem == null ? null : o.rem; m.Y.t = o.t == null ? YEARS : o.t; m.Y.letters = !!o.letters; m.Y.hideNum = !!o.hideNum; }
+}; }
+const P_ = () => featOf("P"), Q_ = () => featOf("Q"), R_ = () => featOf("R"), S_ = () => featOf("S");
+const TASKS = {
+  easy: [
+    { id: "prod", kind: "choice", setup: SET({ chain: 0 }), stuck: "words", text: "Why is a green plant a producer?",
+      options: [{ t: "It makes its own food by photosynthesis", ok: () => isProducer("grass") && /photosynthesis/.test(DEF.producer) },
+        { t: "It is eaten by animals", why: "Being eaten doesn't make it a producer: a rabbit is eaten too. A producer makes its own food." },
+        { t: "It gets energy by eating other organisms", why: "That is what a consumer does. Consumers cannot make their own food, but a plant can." },
+        { t: "It is at the end of the food chain", why: "Every food chain begins with a producer. It doesn't end with one." }],
+      explain: "A green plant makes its own food (glucose) by photosynthesis, so it is a producer.",
+      hints: ["Think about where a plant's food comes from.", "Consumers cannot make their own food. Can a plant?", "A plant makes glucose by p…"] },
+    { id: "sort", kind: "multi", setup: SET({ chain: 0 }), stuck: "words", text: "Producer or consumer? Choose every producer.",
+      options: SORT.map(([t, ok]) => ({ t, ok, why: ok ? (t === "Algae" ? "Algae make their own food by photosynthesis, so algae are producers too." : "A green plant makes its own food by photosynthesis, so it is a producer too.")
+        : `A ${t.toLowerCase()} is a consumer: it gets energy by eating other organisms.` })),
+      explain: "Producers: oak tree, grass and algae. Consumers: hawk, rabbit and fox.",
+      hints: ["A producer makes its own food.", "Producers are green plants or algae.", "Choose the two plants and the algae."] },
+    { id: "build4", kind: "goal", setup: SET({ noRoles: true }), want: { n: 4, roles: "none" }, stuck: "words",
+      text: "Do it: rabbits eat grass, foxes eat rabbits and eagles eat foxes. Build the food chain in the model, with an arrow between each pair. Then press Check.",
+      hints: ["Start with the organism that makes its own food.", "Next comes the animal that eats it, and so on. Tap each gap to draw an arrow.", "Grass, rabbit, fox, eagle. Each arrow points to the eater."],
+      done: "Grass → rabbit → fox → eagle. Each arrow points from the food to the eater." },
+    { id: "roles", kind: "goal", setup: SET({ chain: 4 }), want: WANT4, stuck: "words",
+      text: "Do it: label each organism in the chain. Choose producer, primary consumer, secondary consumer or tertiary consumer. Then press Check.",
+      hints: ["The chain starts with the producer.", "Primary eats the producer. Secondary eats the primary consumer.", "Grass producer, rabbit primary, fox secondary, eagle tertiary."],
+      done: "Grass is the producer, the rabbit the primary consumer, the fox the secondary consumer and the eagle the tertiary consumer." },
+    { id: "nameP", kind: "choice", setup: SET({ chain: 4, noRoles: true }), stuck: "words", text: "Food chain: grass → rabbit → fox → eagle. Name the producer.",
+      options: [{ t: "Grass", ok: () => isProducer("grass") && CHAIN[0] === "grass" },
+        { t: "Rabbit", why: "The rabbit eats the grass, so it is a consumer: the primary consumer. The producer makes its own food." },
+        { t: "Fox", why: "The fox eats rabbits: it is a consumer. Look for the organism that makes its own food." },
+        { t: "Eagle", why: "The eagle is at the end of the chain. A chain begins with the producer." }],
+      explain: "Grass is the producer: it makes its own food by photosynthesis.",
+      hints: ["Which organism makes its own food?", "The producer is at the start of the chain.", "It is the green plant."] },
+    { id: "nameT", kind: "choice", setup: SET({ chain: 4, noRoles: true }), stuck: "words", text: "Name the tertiary consumer in grass → rabbit → fox → eagle.",
+      options: [{ t: "Eagle", ok: () => roleIx("eagle") === 3 },
+        { t: "Fox", why: "The fox is the secondary consumer: it eats the primary consumer. Count one more step." },
+        { t: "Rabbit", why: "The rabbit eats the producer, so it is the primary consumer." },
+        { t: "Grass", why: "Grass is the producer. It is not a consumer at all." }],
+      explain: "The eagle is the tertiary consumer: it eats the secondary consumer, the fox.",
+      hints: ["Count the consumers from the producer: primary, secondary, tertiary.", "Primary is first, secondary second, tertiary third.", "The third consumer is the e…"] },
+    { id: "hinge", kind: "choice", setup: SET({ chain: 4, noRoles: true, noCap: true }), stuck: "words", text: "In a food chain, what do the arrows show?",
+      options: [{ t: "From the food to the eater", ok: () => EATS.rabbit === "grass" },
+        { t: "The predators", why: "Many pupils pick this. An arrow isn't an animal: it shows feeding, from the food to the animal that eats it." },
+        { t: "From the eater to the food", why: "That's back to front. Each arrow points to the eater, from the organism that is eaten." },
+        { t: "Where the organisms live", why: "That would be the habitat. The arrows show who is eaten by whom." }],
+      explain: "Each arrow points from the organism that is eaten to the organism that eats it.",
+      hints: ["Look at the arrow between the grass and the rabbit.", "Which one is eaten? Which way does the arrow point?", "From the f… to the e…"] },
+    { id: "both", kind: "choice", setup: SET({ chain: 4, noRoles: true }), stuck: "words", text: "In grass → rabbit → fox → eagle, which animal is both a predator and prey?",
+      options: [{ t: "Fox", ok: () => !!EATS.fox && ORG.some(o => EATS[o] === "fox") && !isProducer(EATS.fox) },
+        { t: "Rabbit", why: "A rabbit is prey for the fox, but it eats grass, a plant. A predator kills and eats other animals." },
+        { t: "Eagle", why: "The eagle is a predator, but nothing eats it in this chain, so it isn't prey here." },
+        { t: "Grass", why: "Grass is a producer, not an animal. Predators and prey are animals." }],
+      explain: "The fox kills and eats rabbits (predator) and is eaten by the eagle (prey).",
+      hints: ["A predator kills and eats other animals.", "Which animal eats an animal and is eaten by one?", "It is in the middle: the f…"] },
+    { id: "foxUp", kind: "choice", setup: SET({ tab: "cyc" }), stuck: "graph", text: "Use the graph. Why do the fox numbers rise after the rabbits rise?",
+      options: [{ t: "More food for the foxes", ok: () => Q_().t > P_().t },
+        { t: "Fewer rabbits to compete with", why: "Foxes don't compete with rabbits: foxes eat them. More rabbits means more food for foxes." },
+        { t: "Foxes eat grass", why: "Foxes are predators: they eat rabbits, not grass." }],
+      explain: "More rabbits means more food for the foxes, so more foxes survive and breed.",
+      hints: ["What do foxes eat?", "What happens to a fox's food when the rabbits rise?", "More rabbits means more f…"] },
+    { id: "pattern", kind: "choice", setup: SET({ tab: "cyc" }), stuck: "graph", text: "What does the pattern on the graph show?",
+      options: [{ t: "Numbers rise and fall in cycles", ok: () => cyclesGoOn(DEF_S()) },
+        { t: "Numbers stay the same", why: "Look at the lines: both go up and down, again and again." },
+        { t: "Foxes always outnumber rabbits", why: "Look at both lines: for most of the time there are more rabbits than foxes." }],
+      explain: "The numbers of predators and prey rise and fall in cycles.",
+      hints: ["Follow each line from left to right.", "Does each line go up once, or again and again?", "They rise and fall in c…"] }
+  ],
+  hard: [
+    { id: "build3", kind: "goal", setup: SET({}), want: { n: 3, end: "fox", roles: "producer" }, stuck: "words",
+      text: "Do it: rabbits eat grass, foxes eat rabbits and eagles eat foxes. Build a food chain of three organisms that ends with the fox. Draw the arrows and label the producer. Then press Check.",
+      hints: ["Leave one organism out: the chain ends with the fox.", "Start with the producer. Tap each gap for an arrow, then tap the label under the producer.", "Grass → rabbit → fox, with grass labelled Producer."],
+      done: "Grass → rabbit → fox, with the grass labelled as the producer." },
+    { id: "energy", kind: "choice", setup: SET({ chain: 4, noRoles: true }), stuck: "words", text: "Why do the foxes need the rabbits? Choose the best exam answer.",
+      options: [{ t: "Rabbits provide energy for the foxes when they are eaten", ok: () => EATS.fox === "rabbit" },
+        { t: "Rabbits are prey", why: "True, but examiners say this doesn't go far enough. Say what happens: the rabbits provide energy for the foxes." },
+        { t: "Rabbits are part of a food chain", why: "True, but it doesn't go far enough. Say what the rabbits provide: energy, when the foxes eat them." },
+        { t: "Rabbits live in the same habitat as foxes", why: "Sharing a habitat isn't the reason. Say what the rabbits provide when they are eaten: energy." }],
+      explain: "Prey give their energy to the predator: the rabbits provide energy for the foxes when they are eaten.",
+      hints: ["The examiners want you to say what happens.", "What passes from the rabbit to the fox?", "Rabbits provide e… for the foxes."] },
+    { id: "terms", kind: "grid", setup: SET({ chain: 0 }), stuck: "words", text: "Habitat, population or community? Choose the right word for each.",
+      opts: ["habitat", "population", "community"],
+      rows: [{ q: "Where the rabbits live", ans: "habitat", why: "Where an organism lives is its habitat." },
+        { q: "All the rabbits in the field", ans: "population", why: "All the organisms of one species is a population." },
+        { q: "All the species living in the field", ans: "community", why: "All the species living in one place is a community." }],
+      explain: "Habitat: where they live. Population: one species. Community: all the species in one place.",
+      hints: ["The three words mean different things: use each one once.", "A population is one species. A community is many species.", "Habitat: where. Population: all the rabbits. Community: all the species."] },
+    { id: "letQ", kind: "choice", setup: SET({ tab: "cyc", letters: true }), stuck: "graph", text: "The letters P to S mark the graph. At which letter are the fox numbers at their highest?",
+      options: [{ t: "Q", ok: () => Q_().line === "f" && Q_().peak },
+        { t: "P", why: "P is the top of the rabbits' line. Look for the highest point on the foxes' line." },
+        { t: "R", why: "R is the lowest point of the rabbits' line." },
+        { t: "S", why: "S is on the foxes' line, but it is their lowest point." }],
+      explain: "Q is the peak of the foxes' line. It comes after the rabbits' peak at P.",
+      hints: ["Find the foxes' line first: it is dashed.", "Which letter is at the top of the dashed line?", "It's the letter just after P."] },
+    { id: "readP", kind: "num", setup: SET({ tab: "cyc", letters: true, hideNum: true }), stuck: "graph", text: "Read the graph. About how many rabbits are there at P?",
+      frame: "Start with ▸ Going across from P to the side axis, there are about … rabbits.",
+      ans: () => round(P_().v), tol: 6, close: 14,
+      slips: [{ v: () => fAt(DEF_S(), P_().t), msg: () => "That's the foxes' number at that time. P is on the rabbits' line: the solid one." },
+        { v: () => P_().t, tol: 1, msg: () => "That's the year, on the bottom axis. Read the number of animals on the side axis." }],
+      gen: "Find P at the top of the solid line, then go straight across to the side axis.",
+      unit: "rabbits",
+      hints: ["P is the rabbits' first peak.", "Go straight across from P to the numbers on the side axis.", `It's between ${Math.floor(P_().v / 20) * 20} and ${Math.floor(P_().v / 20) * 20 + 20}.`] },
+    { id: "foxDown", kind: "choice", setup: SET({ tab: "cyc", letters: true }), stuck: "graph", text: "Between Q and S the fox numbers fall. Why?",
+      options: [{ t: "Fewer rabbits means less food for the foxes", ok: () => R_().t > Q_().t && R_().v < rAt(DEF_S(), Q_().t) },
+        { t: "The rabbits eat the foxes", why: "Rabbits eat grass, not foxes. Look at what happens to the foxes' food." },
+        { t: "The foxes run out of grass", why: "Foxes don't eat grass: they eat rabbits." },
+        { t: "More foxes are born", why: "More births would make the fox numbers rise, not fall." }],
+      explain: "Fewer rabbits means the fox numbers fall too: there is less food for them.",
+      hints: ["Look at the rabbits' line between Q and S.", "The rabbits are falling. What do foxes eat?", "Fewer rabbits means less f… for the foxes."] },
+    { id: "describe", kind: "build", setup: SET({ tab: "cyc" }), stuck: "graph", marks: 2,
+      text: "Use the graph. Describe how the fox numbers change after the rabbits rise. [2 marks]",
+      frame: "Start with ▸ After the rabbits rise, the fox numbers…",
+      parts: [{ t: "rise,", pt: 1 }, { t: "to a peak after the rabbits' peak, then fall again.", pt: 2 },
+        { t: "stay high for ever.", why: "Examiners reject this: the graph shows the foxes fall again after their peak." },
+        { t: "fall straight away.", why: "Look at the graph: after the rabbits rise, the foxes rise first." },
+        { t: "peak before the rabbits.", why: "The foxes peak after the rabbits: they need the extra food first." }],
+      missing: { 1: "You haven't said that the fox numbers rise.", 2: "You haven't said when they peak, or that they fall again." },
+      order: "Both points are there. Put them in order: first the rise, then the peak and the fall.",
+      ok: () => Q_().t > P_().t && S_().v < Q_().v,
+      scheme: "Mark scheme: fox numbers rise (1); after the rabbits / then fall again (1). Reject: foxes always stay high.",
+      hints: ["Follow the dashed line after the rabbits rise.", "First it goes up. Then what happens after its peak?", "Rise, to a peak after the rabbits, then fall again."] },
+    { id: "explain", kind: "build", setup: SET({ tab: "cyc" }), stuck: "graph", marks: 2,
+      text: "Explain why the number of rabbits falls after the foxes rise. [2 marks]",
+      frame: "Start with ▸ More foxes means more rabbits are…",
+      parts: [{ t: "More foxes means more rabbits are eaten,", pt: 1 }, { t: "so the number of rabbits falls.", pt: 2 },
+        { t: "The rabbits eat the foxes.", why: "Examiners reject this: rabbits eat grass. The foxes eat the rabbits." },
+        { t: "The rabbits are prey.", why: "True, but it doesn't go far enough. Say what happens: more rabbits are eaten." },
+        { t: "The grass grows faster.", why: "The grass isn't the reason here. Say what the extra foxes do to the rabbits." }],
+      missing: { 1: "You haven't said what the extra foxes do to the rabbits.", 2: "You haven't said what happens to the number of rabbits." },
+      order: "Both points are there. Put the cause first, then what happens to the rabbits.",
+      ok: () => R_().v < rAt(DEF_S(), Q_().t),
+      scheme: "Mark scheme: more foxes eat more rabbits (1); so the number of rabbits falls (1). Reject: rabbits eat the foxes.",
+      hints: ["What do the foxes do to the rabbits?", "More foxes means more rabbits are e…", "Eaten, so the number of rabbits falls."] },
+    { id: "remove", kind: "choice", setup: SET({ tab: "cyc", t: 0 }), stuck: "graph", predict: true,
+      text: "Predict: the farmer removes every fox at the start. What happens to the rabbit numbers? Your answer runs the model.",
+      options: [{ t: "They rise", ok: () => { const s = simulate(40, 10, 0); return rAt(s, 5) > 40 && rAt(s, YEARS) > 40; } },
+        { t: "They fall, because nothing protects them", why: "With no foxes, fewer rabbits are eaten. Watch the model: the rabbits rise." },
+        { t: "They stay the same", why: "The foxes were eating rabbits. Without them, more rabbits survive, so the numbers rise." },
+        { t: "The rabbits die out", why: "Nothing eats the rabbits now. Watch the model: they rise." }],
+      explain: "With no foxes, fewer rabbits are eaten, so the rabbit numbers rise.",
+      onCheck: m => { m.Y.rem = 0; m.Y.t = 0; },
+      hints: ["What were the foxes doing to the rabbits?", "With no foxes, are more or fewer rabbits eaten?", "Fewer rabbits are eaten, so they r…"] },
+    { id: "grass", kind: "build", setup: SET({ tab: "cyc", rem: 0 }), stuck: "words", marks: 3,
+      text: "Back to the hook: explain why removing the foxes harmed the grass. Build the answer from three points.",
+      frame: "Start with ▸ Removing the foxes harmed the grass because…",
+      parts: [{ t: "with no foxes, fewer rabbits are eaten,", pt: 1 }, { t: "so the number of rabbits rises,", pt: 2 }, { t: "and more rabbits eat more of the grass.", pt: 3 },
+        { t: "the foxes were eating the grass.", why: "Foxes don't eat grass: they eat rabbits." },
+        { t: "the rabbits are prey.", why: "True, but it doesn't explain the grass. Say what happens to the rabbits, then to the grass." }],
+      missing: { 1: "You haven't said what happens when there are no foxes to eat the rabbits.", 2: "You haven't said what happens to the rabbit numbers.", 3: "You haven't said what the extra rabbits do to the grass." },
+      order: "All three points are there. Put them in order: the foxes, then the rabbits, then the grass.",
+      ok: () => { const s = simulate(40, 10, 0); return rAt(s, YEARS) > 40 && grassPct(rAt(s, YEARS)) < grassPct(40); },
+      scheme: "With no foxes to eat them, the rabbits rose and ate most of the grass.",
+      hints: ["Start with the foxes: what did they do to the rabbits?", "Then the rabbits: what happens to their numbers?", "Fewer rabbits eaten → more rabbits → more grass eaten."] }
+  ]
+};
+function cyclesGoOn(s) {   // the rabbits still rise and fall by at least 30 in years 12–20 (a stable cycle, not settling down)
+  let lo = 1e9, hi = 0; for (let i = ix(12); i < NPT; i++) { lo = Math.min(lo, s.R[i]); hi = Math.max(hi, s.R[i]); } return hi - lo > 30;
+}
+function parseNum(raw) { const s = String(raw == null ? "" : raw).trim().replace(/,/g, "").replace(/\s*rabbits?$/i, ""); if (!s) return null; return /^\d+(\.\d+)?$/.test(s) ? +s : NaN; }
+function markNum(t, raw) {
+  const v = parseNum(raw), a = t.ans();
+  if (v == null) return { skip: "Type a number first." };
+  if (isNaN(v)) return { skip: "Type a number only, for example 85." };
+  if (Math.abs(v - a) <= t.tol) return { ok: true, html: `Correct: about ${a} ${t.unit}. Anything from ${a - t.tol} to ${a + t.tol} is fine for a reading from a graph.` };
+  const sl = t.slips.find(x => Math.abs(v - x.v()) <= (x.tol || 4));
+  if (sl) return { ok: false, html: sl.msg() };
+  if (t.close && Math.abs(v - a) <= t.close) return { ok: false, html: `Close. Go straight across from the very top of the curve at P, more carefully: is it ${v < a ? "a bit higher" : "a bit lower"}?` };
+  return { ok: false, html: t.gen };
+}
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (CHAIN.join() !== DECK_CHAIN.join()) errs.push("facts: who eats whom must give grass → rabbit → fox → eagle (slide 14)");
+  if (CHAIN.map(roleIx).join() !== "0,1,2,3" || ROLES.length !== 4) errs.push("facts: roles (slide 14)");
+  if (SORT.filter(x => x[1]).map(x => x[0]).join() !== "Oak tree,Grass,Algae") errs.push("facts: producers A, B, F (slide 13)");
+  { const C = freshC(); buildChain(C, 4, true); if (chainIssue(C, WANT4)) errs.push("model: the right chain must pass");
+    C.gap[1] = -1; if (!/eater to the food/.test(chainIssue(C, WANT4))) errs.push("model: a back-to-front arrow must be named");
+    C.gap[1] = 1; C.role[1] = 2; if (!chainIssue(C, WANT4)) errs.push("model: a wrong role must be found"); }
+  { const s = DEF_S(), F = features(s), k = F.map(p => p.k).join("");
+    if (k !== "PQRS") errs.push("model: letters P–S not all found");
+    else { const [P, Q, R, S] = F; if (!(P.t < Q.t && Q.t < R.t && R.t < S.t)) errs.push("model: P, Q, R, S out of time order");
+      if (!(P.v > 80 && Q.v < P.v)) errs.push("model: rabbit peak (deck pattern)"); }
+    if (!cyclesGoOn(s)) errs.push("model: the cycles must keep going (stable community)");
+    for (let i = 0; i < NPT; i++) if (!(s.R[i] >= 0 && s.F[i] >= 0)) { errs.push("model: numbers must not be negative"); break; }
+    let fx = 0; for (let i = 0; i < NPT; i++) if (s.F[i] > s.R[i]) fx++; if (fx > NPT / 2) errs.push("model: rabbits should outnumber foxes most of the time"); }
+  { const s = simulate(40, 10, 0); if (!(rAt(s, YEARS) > 140 && fAt(s, 5) === 0 && grassPct(rAt(s, YEARS)) < grassPct(40) && GRASS_LIMIT(rAt(s, YEARS)))) errs.push("model: no foxes → rabbits rise to the grass limit, grass falls"); }
+  { const s = simulate(40, 10, 4); if (!(grassPct(rAt(s, 5)) <= 30)) errs.push("model: foxes removed at the rabbit peak → grass nearly bare a year later (slide 6 hook)"); }
+  { const F = features(DEF_S()), P = F[0], Q = F[1]; if (!P || !Q || Math.abs(P.v - 110) > 8 || Math.abs(Q.v - 70) > 8 || Math.abs(Q.t - 6) > .6 || P.t < 3 || P.t > 4.5) errs.push("model: default run must match the deck graph peaks (s20)"); }
+  for (const r0 of [15, 20, 40, 80, 120, 140]) for (const f0 of [4, 5, 10, 30, 60]) { const s = simulate(r0, f0, null); let ok = true; for (let i = 0; i < NPT; i++) if (s.R[i] < 1 || s.F[i] < 1) ok = false; if (features(s).map(p => p.k).join("") !== "PQRS") ok = false; if (!ok) errs.push(`model: start ${r0}, ${f0} must not die out and must show P–S`); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    try {
+      if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+      if (t.kind === "choice") {
+        if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+        if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+        if (t.options.length < 3 || new Set(t.options.map(o => o.t)).size !== t.options.length) E("options");
+      }
+      if (t.kind === "multi" && (!t.options.some(o => o.ok) || t.options.some(o => !o.why))) E("multi options");
+      if (t.kind === "grid" && t.rows.some(r => !t.opts.includes(r.ans) || !r.why)) E("grid rows");
+      if (t.kind === "num") { const a = t.ans(); if (!(a > 0) || !markNum(t, String(a)).ok || t.slips.some(x => Math.abs(x.v() - a) <= t.tol + (x.tol || 4))) E("number answer or slips"); }
+      if (t.kind === "build") { const pts = t.parts.filter(p => p.pt).map(p => p.pt).sort().join(), want = [...Array(t.marks).keys()].map(k => k + 1);
+        if (pts !== want.join() || t.parts.some(p => !p.pt && !p.why) || want.some(k => !t.missing[k]) || !t.ok()) E("build parts"); }
+      if (t.kind === "goal") { const m = freshM(); t.setup(m); if (!chainIssue(m.C, t.want)) E("goal already met at the start");
+        revealGoal(t, m); if (chainIssue(m.C, t.want)) E("goal not reachable"); }
+    } catch (x) { E("error " + x.message); }
+  });
+  return errs;
+}
+function revealGoal(t, m) { buildChain(m.C, t.want.n, t.want.roles !== "none"); if (t.want.roles === "producer") { m.C.role = [0, null, null, null]; } }
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, graph: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M;
+const PKEY = "ks3tools-progress:gcse-predator-prey-cycles";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const qz = () => mode !== "demo";
+const qLock = k => qz() && !(task.free || []).includes(k);
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question."; }
+
+/* ===== Drawing: the food chain (one coordinate table per layout) ===== */
+const LC = {
+  wide: { w: 640, h: 344, card: [124, 92], tray: { y: 28, xs: [14, 174, 334, 494] }, trayLab: [14, 18],
+    slot: [124, 96], slots: [[14, 150], [174, 150], [334, 150], [494, 150]], gaps: [[156, 198, "h"], [316, 198, "h"], [476, 198, "h"]],
+    role: [124, 50], roles: [[14, 256], [174, 256], [334, 256], [494, 256]], cap: [[320, 334]] },
+  tall: { w: 380, h: 640, card: [86, 80], tray: { y: 26, xs: [6, 100, 194, 288] }, trayLab: [6, 17],
+    slot: [150, 86], slots: [[12, 132], [12, 254], [12, 376], [12, 498]], gaps: [[87, 236, "v"], [87, 358, "v"], [87, 480, "v"]],
+    role: [190, 56], roles: [[180, 147], [180, 269], [180, 391], [180, 513]], cap: [[190, 610], [190, 630]] } };
+const narrow = () => { const w = boxW($("model")); return !!(w && w < 560); };
+const LK = () => narrow() ? "tall" : "wide";
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }   // patch only when it changed
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+function pic(o, x, y, w, h, nameFs) {   // an organism picture with its name underneath, inside the box x, y, w, h
+  const ph = h - nameFs - 12;
+  return `<use href="#pic-${o}" x="${f1(x + 4)}" y="${f1(y + 4)}" width="${f1(w - 8)}" height="${f1(ph)}"/>` + T_(x + w / 2, y + h - 8, cap(n1(o)), nameFs, 'text-anchor="middle" class="b"');
+}
+function arrowPath(x, y, dir, ori) {   // dir 1 = from box i to box i + 1
+  const L = 15, hw = 8, hl = 12;
+  if (ori === "h") { const a = x - L * dir, b = x + L * dir, bx = b - hl * dir;
+    return `<line class="arr" x1="${a}" y1="${y}" x2="${bx}" y2="${y}"/><path class="arr" style="stroke-width:1" d="M${b} ${y}L${bx} ${y - hw}L${bx} ${y + hw}Z"/>`; }
+  const a = y - L * dir, b = y + L * dir, by = b - hl * dir;
+  return `<line class="arr" x1="${x}" y1="${a}" x2="${x}" y2="${by}"/><path class="arr" style="stroke-width:1" d="M${x} ${b}L${x - hw} ${by}L${x + hw} ${by}Z"/>`;
+}
+function chainSVG(lo) {
+  const C = M.C, sel = M.sel, h = [], fs = lo === LC.tall ? 14 : 16, drag = M.drag;
+  h.push(T_(lo.trayLab[0], lo.trayLab[1], "Organisms", 14, 'class="b mut"'));
+  lo.tray.xs.forEach((x, k) => { const o = C.tray[k], [w, hh] = lo.card, y = lo.tray.y, placed = slotOf(C, o) >= 0, s = sel && sel.t === "card" && sel.o === o;
+    if (placed) { h.push(`<rect class="gone" x="${x}" y="${y}" width="${w}" height="${hh}" rx="10"/>`); return; }
+    h.push(`<g class="crd${s ? " sel" : ""}" data-card="${o}" tabindex="0" role="button" aria-pressed="${s}" aria-label="${esc(cap(n1(o)) + (s ? ", picked up" : ""))}">` +
+      `<rect class="bg" x="${x}" y="${y}" width="${w}" height="${hh}" rx="10"/><rect class="fr" x="${x - 4}" y="${y - 4}" width="${w + 8}" height="${hh + 8}" rx="12"/>` + pic(o, x, y, w, hh, fs) + `</g>`); });
+  lo.slots.forEach(([x, y], i) => { const o = C.slot[i], [w, hh] = lo.slot, tg = !!(drag || (sel && sel.t === "card"));
+    h.push(`<g class="slot${o ? " filled" : ""}${tg ? " target" : ""}" data-slot="${i}" tabindex="0" role="button" aria-label="${esc(`Box ${i + 1}: ${o ? n1(o) : "empty"}`)}">` +
+      `<rect class="slotb" x="${x}" y="${y}" width="${w}" height="${hh}" rx="10"/><rect class="fr" x="${x - 4}" y="${y - 4}" width="${w + 8}" height="${hh + 8}" rx="12"/>` +
+      (o ? pic(o, x, y, w, hh, fs) : T_(x + w / 2, y + hh / 2 + 6, `box ${i + 1}`, 15, 'text-anchor="middle" class="mut"')) + `</g>`); });
+  lo.gaps.forEach(([x, y, ori], i) => { const a = C.slot[i], b = C.slot[i + 1]; if (!a || !b) return;
+    const g = C.gap[i], bad = C.marks && g < 0, hw = ori === "h" ? 22 : 34, hhh = ori === "h" ? 34 : 22;
+    const say = g ? `points to the ${n1(g > 0 ? b : a)}` : "no arrow yet";
+    h.push(`<g data-gap="${i}" tabindex="0" role="button" aria-label="${esc(`Arrow between ${n1(a)} and ${n1(b)}: ${say}. Press to ${g ? "flip it" : "draw it"}.`)}">` +
+      `<rect class="gapb" x="${x - hw}" y="${y - hhh}" width="${hw * 2}" height="${hhh * 2}"/><rect class="fr" x="${x - hw + 2}" y="${y - hhh + 2}" width="${hw * 2 - 4}" height="${hhh * 2 - 4}" rx="6"/>` +
+      (g ? `<g${bad ? ' class="bad"' : ""}>${arrowPath(x, y, g, ori).replace(/class="arr"/g, bad ? 'class="arr bad"' : 'class="arr"')}</g>` : `<circle class="gapc" cx="${x}" cy="${y}" r="13"/>` + T_(x, y + 5, "?", 15, 'text-anchor="middle" class="mut b"')) + `</g>`); });
+  if (!C.noRoles) lo.roles.forEach(([x, y], i) => { const o = C.slot[i]; if (!o) return; const r = C.role[i], [w, hh] = lo.role, s = sel && sel.t === "role" && sel.i === i;
+    const words = r == null ? null : ROLES[r].split(" "), cx = x + w / 2;
+    let inner = `<rect class="roleb" x="${x}" y="${y}" width="${w}" height="${hh}" rx="8"/><rect class="fr" x="${x - 3}" y="${y - 3}" width="${w + 6}" height="${hh + 6}" rx="10"/>`;
+    if (!words) inner += T_(cx, y + hh / 2 + 5, "role: tap", 15, 'text-anchor="middle" class="mut"');
+    else if (words.length === 1 || lo === LC.tall) inner += T_(cx, y + hh / 2 + 6, ROLES[r], 16, 'text-anchor="middle" class="b"');
+    else inner += T_(cx, y + 20, words[0], 15, 'text-anchor="middle" class="b"') + T_(cx, y + 40, words[1], 15, 'text-anchor="middle" class="b"');
+    h.push(`<g class="role${r != null ? " set" : ""}${s ? " sel" : ""}" data-role="${i}" tabindex="0" role="button" aria-label="${esc(`Role of the ${n1(o)}: ${r == null ? "not chosen" : ROLES[r]}`)}">${inner}</g>`); });
+  if (!C.noCap) { const t = lo.cap.length > 1 ? ["Each arrow points from the food to the eater.", "Energy passes along it."] : ["Each arrow points from the food to the eater: energy passes along it."];
+    t.forEach((s, j) => h.push(T_(lo.cap[j][0], lo.cap[j][1], s, 14, 'text-anchor="middle" class="mut"'))); }
+  return h.join("");
+}
+function chainText(C) {   // the pupil's chain as text, using the pupil's own arrows
+  let s = ""; for (let i = 0; i < 4; i++) { if (!C.slot[i]) { if (i) break; return ""; }
+    if (i) s += C.gap[i - 1] > 0 ? " → " : C.gap[i - 1] < 0 ? " ← " : " · "; s += n1(C.slot[i]); }
+  return s;
+}
+function chainRead() {
+  const C = M.C, txt = chainText(C);
+  if (C.marks) return C.marks;
+  if (!txt) return `<p class="r1">No organisms in the boxes yet</p><p class="r3">Drag an organism into box 1, or tap it and then tap a box.</p>`;
+  return `<p class="r1">Your chain: ${esc(txt)}</p><p class="r3">${qz() ? "Press Check in the question panel when you are ready." : "Press Check my chain to mark it."}</p>`;
+}
+
+/* ===== Drawing: the field and the graph ===== */
+const LG = { wide: { w: 640, h: 300, x0: 58, x1: 560, y0: 16, y1: 252, fs: 15 }, tall: { w: 380, h: 300, x0: 50, x1: 296, y0: 16, y1: 248, fs: 14 } };
+const LF = { wide: { w: 640, h: 96, rab: { x: 10, dx: 36, per: 9, ys: [10, 40], w: 32, h: 22 }, fox: { x: 352, dx: 40, per: 7, ys: [8, 38], w: 38, h: 27 }, tufts: 24, gy: 74 },
+  tall: { w: 380, h: 104, rab: { x: 4, dx: 23, per: 9, ys: [10, 38], w: 24, h: 17 }, fox: { x: 214, dx: 33, per: 5, ys: [8, 38], w: 32, h: 23 }, tufts: 14, gy: 80 } };
+const yMaxOf = s => { let m = 0; for (let i = 0; i < NPT; i++) m = Math.max(m, s.R[i], s.F[i]); return Math.max(160, Math.ceil((m + 24) / 40) * 40); };   // room above the top peak for its letter
+function graphStatic(G, s) {
+  const ym = yMaxOf(s), X = t => G.x0 + (G.x1 - G.x0) * t / YEARS, Y = v => G.y1 - (G.y1 - G.y0) * v / ym, h = [];
+  for (let v = 0; v <= ym; v += 20) { h.push(`<line class="gridl" x1="${G.x0}" x2="${G.x1}" y1="${f1(Y(v))}" y2="${f1(Y(v))}"/>`);
+    if (ym <= 160 || v % 40 === 0) h.push(T_(G.x0 - 6, Y(v) + 5, String(v), G.fs - 1, 'text-anchor="end" class="ax"')); }
+  for (let t = 0; t <= YEARS; t += 2) { h.push(`<line class="gridl" x1="${f1(X(t))}" x2="${f1(X(t))}" y1="${G.y0}" y2="${G.y1}"/>`);
+    if (G.w > 500 || t % 4 === 0) h.push(T_(X(t), G.y1 + 18, String(t), G.fs - 1, 'text-anchor="middle" class="ax"')); }
+  h.push(`<line class="axl" x1="${G.x0}" x2="${G.x0}" y1="${G.y0}" y2="${G.y1}"/><line class="axl" x1="${G.x0}" x2="${G.x1}" y1="${G.y1}" y2="${G.y1}"/>`);
+  h.push(T_((G.x0 + G.x1) / 2, G.h - 6, "Time (years)", G.fs, 'text-anchor="middle"'));
+  h.push(`<text x="14" y="${(G.y0 + G.y1) / 2}" font-size="${G.fs}" text-anchor="middle" transform="rotate(-90 14 ${(G.y0 + G.y1) / 2})">Number of animals</text>`);
+  const line = (A, cls) => { const p = []; for (let i = 0; i < NPT; i += 2) p.push(f1(X(i * DTO)) + "," + f1(Y(A[i]))); return `<polyline class="ln ${cls}" points="${p.join(" ")}"/>`; };
+  /* both whole lines are drawn once; Run only widens the clip rectangle that shows them (cheap frames on slow PCs) */
+  h.push(`<clipPath id="ppReveal"><rect id="ppRevealR" x="${G.x0 - 6}" y="0" width="0" height="${G.h}"/></clipPath><g clip-path="url(#ppReveal)">${line(s.R, "r")}${line(s.F, "f")}</g>`);
+  /* the moving parts are made once here; each frame of Run only moves them (setAttr) */
+  h.push(`<line id="ppCur" class="cur" y1="${G.y0}" y2="${G.y1}"/><circle id="ppDr" class="dotr" r="6"/><circle id="ppDf" class="dotf" r="6"/>` +
+    `<text id="ppLr" class="lt r" font-size="${G.fs}">Rabbits</text><text id="ppLf" class="lt f" font-size="${G.fs}">Foxes</text><g id="ppLet"></g>`);
+  if (s.rem != null) h.push(`<line class="remv" x1="${f1(X(s.rem))}" x2="${f1(X(s.rem))}" y1="${G.y0}" y2="${G.y1}"/>` + T_(X(s.rem) + 5, G.y0 + 14, "foxes removed", G.fs - 1, 'class="remt"'));
+  return { html: h.join(""), X, Y };
+}
+function graphDyn(G, s, gs) {   // moves the cursor, the dots and the line names; redraws the letters only when they change
+  const Y_ = M.Y, n = ix(Y_.t), X = gs.X, Y = gs.Y, $$ = gs.el || (gs.el = { c: $("ppCur"), dr: $("ppDr"), df: $("ppDf"), lr: $("ppLr"), lf: $("ppLf"), lt: $("ppLet") }), e = $$;
+  const cx = f1(X(n * DTO)), ry = Y(s.R[n]), fy = Y(s.F[n]);
+  setAttr(e.c, "x1", cx); setAttr(e.c, "x2", cx); setAttr(e.dr, "cx", cx); setAttr(e.dr, "cy", f1(ry)); setAttr(e.df, "cx", cx); setAttr(e.df, "cy", f1(fy));
+  const lx = f1(Math.min(+cx + 9, G.x1 + 6)), lo = G.y0 + 12, hi = G.y1 - 8, gap = G.fs + 3;   // line names next to the line ends, kept apart and inside the plot
+  let a = Math.max(lo, Math.min(hi, ry - 8)), b = Math.max(lo, Math.min(hi, fy - 8));
+  if (Math.abs(a - b) < gap) { const up = a <= b ? "a" : "b", top = Math.max(lo, Math.min(a, b) - (gap - Math.abs(a - b)) / 2), bot = Math.min(hi + 8, top + gap);
+    if (up === "a") { a = bot - gap; b = bot; } else { b = bot - gap; a = bot; } }
+  setAttr(e.lr, "x", lx); setAttr(e.lr, "y", f1(a)); setAttr(e.lf, "x", lx); setAttr(e.lf, "y", f1(b));
+  /* letters mark the cycle itself, so only before any removal */
+  let lh = "";
+  if (Y_.letters) featsOf(simulate(s.r0, s.f0, null)).forEach(p => { if (p.i > n || s.rem != null && p.t >= s.rem) return;
+    const py = Y(p.v), up = p.peak ? py - 18 >= G.y0 + 12 : py + 18 > G.y1 - 14, x = X(p.t), y = py + (up ? -18 : 18);   // above a peak, below a trough, unless that leaves the plot
+    lh += `<circle class="letc" cx="${f1(x)}" cy="${f1(y)}" r="12"/>` + T_(x, y + 5.5, p.k, 16, 'text-anchor="middle" class="lett"'); });
+  if (e.lt._h !== lh) { e.lt.innerHTML = lh; e.lt._h = lh; }
+}
+function fieldSVG(F) {   // every tuft and animal is drawn once; fieldSet() only shows or hides them
+  const h = [], step = F.w / F.tufts;
+  h.push(`<rect x="0" y="${F.gy}" width="${F.w}" height="${F.h - F.gy}" style="fill:var(--soil)"/>`);
+  for (let k = 0; k < F.tufts; k++) { const x = k * step + step / 2, y = F.gy + 2;
+    h.push(`<path data-t="${(k * 7) % F.tufts}" visibility="hidden" d="M${f1(x - 9)} ${y} Q${f1(x - 8)} ${y - 14} ${f1(x - 12)} ${y - 22} Q${f1(x - 3)} ${y - 12} ${f1(x - 2)} ${y} Q${f1(x)} ${y - 18} ${f1(x + 2)} ${y - 26} Q${f1(x + 5)} ${y - 12} ${f1(x + 4)} ${y} Q${f1(x + 7)} ${y - 14} ${f1(x + 12)} ${y - 20} Q${f1(x + 9)} ${y - 8} ${f1(x + 10)} ${y}Z" style="fill:var(--grass);stroke:var(--grass-e);stroke-width:1"/>`); }
+  const place = (n, L, o) => { for (let k = 0; k < n; k++) { const row = Math.floor(k / L.per) % 2, col = k % L.per, x = L.x + col * L.dx + (row ? L.dx / 2 : 0), y = L.ys[row];
+    h.push(`<use data-${o[0]}="${k}" visibility="hidden" href="#pic-${o}" x="${f1(x)}" y="${f1(y)}" width="${L.w}" height="${L.h}"/>`); } };
+  place(FMAX.r, F.rab, "rabbit"); place(F.fox.per * 2, F.fox, "fox");
+  return h.join("");
+}
+const FMAX = { r: 18 };
+function fieldSet(F, R, Fx) {
+  const g = $("fL"), nt = Math.round(grassPct(R) / 100 * F.tufts), nr = M.Y.hideNum ? 0 : Math.min(FMAX.r, Math.round(R / 10)), nf = M.Y.hideNum ? 0 : Math.min(F.fox.per * 2, Math.round(Fx / 10)),   // no animal pictures when the numbers are hidden
+     key = nt + "," + nr + "," + nf;
+  if (g._k === key) return; g._k = key;
+  if (!g._els) g._els = { t: [...g.querySelectorAll("[data-t]")], r: [...g.querySelectorAll("[data-r]")], f: [...g.querySelectorAll("[data-f]")] };
+  g._els.t.forEach(e => setAttr(e, "visibility", +e.dataset.t < nt ? "visible" : "hidden"));
+  g._els.r.forEach(e => setAttr(e, "visibility", +e.dataset.r < nr ? "visible" : "hidden"));
+  g._els.f.forEach(e => setAttr(e, "visibility", +e.dataset.f < nf ? "visible" : "hidden"));
+}
+let gsCache = null;
+function drawCyc() {
+  const lk = LK(), G = LG[lk], F = LF[lk], s = SIM(), key = lk + "|" + s.r0 + "," + s.f0 + "," + s.rem;
+  setAttr($("graphSvg"), "viewBox", `0 0 ${G.w} ${G.h}`); setAttr($("fieldSvg"), "viewBox", `0 0 ${F.w} ${F.h}`);
+  if (!gsCache || gsCache.key !== key) { gsCache = Object.assign(graphStatic(G, s), { key }); setLayer($("gS"), gsCache.html); const lt = $("ppLet"); if (lt) lt._h = null; }
+  { const r = $("ppRevealR"); if (r) setAttr(r, "width", f1(gsCache.X(ix(M.Y.t) * DTO) - G.x0 + 8)); }
+  graphDyn(G, s, gsCache);
+  const n = ix(M.Y.t), R = s.R[n], Fx = s.F[n];
+  { const g = $("fL"); if (g._lk !== lk) { g.innerHTML = fieldSVG(F); g._lk = lk; g._els = null; g._k = null; } fieldSet(F, R, Fx); }
+  const yr = f1(n * DTO);
+  if (anim && drawCyc.last === Math.floor(n * DTO * 2)) return;   // while running, the words below change at most every half year
+  drawCyc.last = Math.floor(n * DTO * 2);
+  setAttr($("graphSvg"), "aria-label", M.Y.hideNum ? "Graph of rabbit and fox numbers against time, years 0 to 20" : `Graph of rabbit and fox numbers. Year ${yr}: ${nAn(R, "rabbit", "rabbits")}, ${nAn(Fx, "fox", "foxes")}.`);
+  setAttr($("fieldSvg"), "aria-label", M.Y.hideNum ? "The field" : `The field in year ${yr}: grass cover ${grassPct(R)}%`);
+  $("yrv").textContent = yr; if (+$("yr").value !== Math.floor(M.Y.t * 2) / 2) $("yr").value = Math.floor(M.Y.t * 2) / 2;
+  const noFox = s.rem != null && M.Y.t >= s.rem;
+  morphHTML($("yread"), M.Y.hideNum ? `<p class="r1">Year ${yr}</p><p class="r3">The numbers are hidden for this question: read them from the graph.</p>`
+    : `<p class="r1">Year ${yr}: <span class="kr">${nAn(R, "rabbit", "rabbits")}</span> · <span class="kf">${nAn(Fx, "fox", "foxes")}</span> · grass cover ${grassPct(R)}%</p>` +
+      (noFox ? `<p class="r2">No foxes, so fewer rabbits are eaten. ${GRASS_LIMIT(R) ? "The rabbits stop rising: the grass is nearly all eaten, and there isn't enough for any more rabbits." : `The rabbits rise.${grassPct(R) <= 25 ? " More rabbits eat more grass: the grass is nearly all eaten." : ""}`}</p>` : "") +
+      `<p class="r3">Field picture: 1 picture = 10 animals.</p>`);
+}
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+const LIMITS = { chain: "A food chain shows one feeding path only. Real animals eat, and are eaten by, more than one kind of organism. Pictures are not to scale.",
+  cyc: "The numbers are example data, invented to show the pattern, as in the lesson. The rabbits' growth is limited by the grass: this field can feed about 150 rabbits, so with no foxes they level off there. That is a model choice: real rabbits might eat the grass bare and then fall. Only rabbits and foxes are modelled, and the numbers are averages, not whole animals. Real populations also change with disease, weather and other species." };
+function draw() {
+  const lk = LK(), cyc = M.tab === "cyc";
+  $("chainPart").hidden = cyc; $("cycPart").hidden = !cyc;
+  if (!cyc) { const lo = LC[lk]; setAttr($("chainSvg"), "viewBox", `0 0 ${lo.w} ${lo.h}`); setLayer($("cL"), chainSVG(lo)); morphHTML($("cread"), chainRead()); }
+  else drawCyc();
+  renderCtl(); renderPick(); checkTried();
+}
+function renderCtl() {
+  const C = M.C, Y = M.Y, q = qz();
+  document.querySelectorAll("#tabs [data-tab]").forEach(b => { setAttr(b, "aria-pressed", b.dataset.tab === M.tab); b.disabled = q && qLock("tab"); });
+  $("r0").value = Y.r0; $("f0").value = Y.f0; $("r0v").textContent = Y.r0; $("f0v").textContent = Y.f0;
+  $("r0").disabled = $("f0").disabled = qLock("start");
+  $("remBtn").textContent = Y.rem == null ? "Remove the foxes" : "Put the foxes back"; $("remBtn").disabled = qLock("remove");
+  const ls = $("letSw"); setAttr(ls, "aria-pressed", Y.letters); ls.querySelector(".state").textContent = Y.letters ? "on" : "off"; ls.disabled = qLock("letters");
+  $("runBtn").textContent = anim ? "Pause ❚❚" : Y.t >= YEARS ? "Run again ▶" : "Run ▶";
+  $("chainCheck").hidden = q; $("chainFill").textContent = q && task.kind === "goal" ? "Fill it for me (shows the answer) ▸" : "Fill it for me ▸";
+  $("chainFill").disabled = q && task.kind !== "goal"; $("chainClear").disabled = q && task.kind !== "goal";
+  $("limitsTxt").textContent = LIMITS[M.tab];
+  $("lockNote").hidden = !q;
+  if (q) $("lockNote").textContent = task.kind === "goal" ? "Build your answer in the model, then press Check." : M.tab === "cyc" ? "The starting numbers are set for this question. You can still Run and move the Year." : "The chain is set for this question.";
+}
+let pickOrd = null, pickFor = -1;
+function renderPick() {
+  const s = M.sel, on = s && s.t === "role" && M.tab === "chain";
+  $("pick").hidden = !on; if (!on) { pickFor = -1; return; }
+  if (pickFor !== s.i || !pickOrd) { pickFor = s.i; pickOrd = shuffled(ROLES.length); }
+  $("pickLbl").textContent = `Role of the ${n1(M.C.slot[s.i])}:`;
+  const had = $("pick").contains(document.activeElement);
+  $("pickBtns").innerHTML = pickOrd.map(k => `<button class="btn" type="button" data-pick="${k}">${ROLES[k]}</button>`).join("");
+  if (had) { const b = $("pickBtns").querySelector("button"); if (b) b.focus({ preventScroll: true }); }
+  if (typeof tourI !== "undefined" && tourI >= 0) requestAnimationFrame(() => { tourPlace(); setTimeout(tourPlace, 400); });
+}
+const setNote = s => { $("cnote").textContent = s || ""; };
+const setYNote = s => { $("ynote").textContent = s || ""; };
+
+/* ===== Actions: food chain ===== */
+const chainLocked = () => qz() && task.kind !== "goal";
+function edited() { M.C.marks = null; }
+function tapCard(o) {
+  if (chainLocked()) return lockMsg(); if (slotOf(M.C, o) >= 0) return;
+  const s = M.sel; if (s && s.t === "card" && s.o === o) { M.sel = null; setNote(""); } else { M.sel = { t: "card", o }; setNote(`${cap(n1(o))} picked up. Now tap a box.`); }
+  draw();
+}
+function clearGapsNear(C) { for (let i = 0; i < 3; i++) if (!C.slot[i] || !C.slot[i + 1]) C.gap[i] = 0; for (let i = 0; i < 4; i++) if (!C.slot[i]) C.role[i] = null; }
+function place(o, i) {
+  const C = M.C, from = slotOf(C, o), old = C.slot[i];
+  if (from === i) { M.sel = null; draw(); return; }
+  if (from >= 0) { C.slot[from] = old; C.role[from] = null; }   // moving from another box: swap
+  C.slot[i] = o; C.role[i] = null; clearGapsNear(C); edited(); M.sel = null;
+  setNote(`${cap(n1(o))} is in box ${i + 1}.${old && from < 0 ? ` The ${n1(old)} went back.` : ""}`);
+  draw(); tourSignal("place");
+}
+function tapSlot(i) {
+  if (chainLocked()) return lockMsg();
+  const C = M.C, s = M.sel;
+  if (s && s.t === "card") { place(s.o, i); return; }
+  if (C.slot[i]) { const o = C.slot[i]; C.slot[i] = null; clearGapsNear(C); edited(); M.sel = null; setNote(`The ${n1(o)} went back.`); draw(); return; }
+  setNote("Tap an organism first, then tap this box.");
+}
+function tapGap(i) {
+  if (chainLocked()) return lockMsg();
+  const C = M.C; if (!C.slot[i] || !C.slot[i + 1]) return;
+  C.gap[i] = C.gap[i] === 1 ? -1 : 1; edited(); M.sel = null;
+  const to = C.gap[i] > 0 ? C.slot[i + 1] : C.slot[i]; setNote(`The arrow points to the ${n1(to)}. Tap it again to flip it.`);
+  draw(); tourSignal("arrow");
+}
+function tapRole(i) { if (chainLocked()) return lockMsg(); if (!M.C.slot[i]) return; M.sel = { t: "role", i }; setNote("Choose the role below."); draw();
+  requestAnimationFrame(() => { const p = $("pick"), r = p.getBoundingClientRect(); if (r.bottom > window.innerHeight) p.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" }); }); }
+function pickRole(k) { const s = M.sel; if (!s || s.t !== "role") return; M.C.role[s.i] = k; edited(); M.sel = null; setNote(`The ${n1(M.C.slot[s.i])} is labelled ${ROLES[k].toLowerCase()}.`); draw(); tourSignal("role"); }
+function checkChain() {
+  const C = M.C, e = chainIssue(C, WANT4), txt = chainText(C);
+  C.marks = e ? `<p class="r1 warn">✗ Not yet: ${esc(txt || "no organisms yet")}</p><p class="r2">${esc(e)}</p>` : `<p class="r1 ok">✓ Correct: ${esc(txt)}</p><p class="r2">Grass is the producer, the rabbit the primary consumer, the fox the secondary consumer and the eagle the tertiary consumer.</p>`;
+  if (!e) tried(0); if (/eater to the food/.test(e)) tried(1);
+  draw(); tourSignal("ccheck");
+}
+function fillChain() { if (qz() && task.kind === "goal") { reveal(); return; } buildChain(M.C, 4, true); edited(); M.sel = null; setNote("The chain is filled in."); draw(); }
+function clearChain() { const C = M.C; C.slot = [null, null, null, null]; C.gap = [0, 0, 0]; C.role = [null, null, null, null]; edited(); M.sel = null; setNote(""); draw(); }
+
+/* ===== Actions: cycles. Run draws the graph year by year: 0.25 s a year, at most 30 frames a second, then stops. ===== */
+let anim = null, rafId = 0, onScreen = true, paused = false;
+function stopRun() { if (rafId) paceCancel(rafId); rafId = 0; anim = null; paused = false; }
+function runFrom(t0) {
+  stopRun(); M.Y.t = t0;
+  if (reduced()) { M.Y.t = YEARS; draw(); afterRun(); return; }
+  anim = { t0, start: null }; draw(); rafId = paceFrame(stepRun, 10);
+}
+function stepRun(ts) {
+  if (!anim) return;
+  if (!onScreen || document.hidden) { paused = true; rafId = 0; return; }
+  if (anim.start == null) anim.start = ts - 0;
+  M.Y.t = Math.min(YEARS, anim.t0 + (ts - anim.start) / 250);
+  drawCyc();
+  if (M.Y.t >= YEARS) { anim = null; rafId = 0; draw(); afterRun(); return; }
+  rafId = paceFrame(stepRun, 10);   // a graph drawing itself needs no more than 10 frames a second
+}
+function resume() { if (anim && paused && onScreen && !document.hidden) { paused = false; anim.t0 = M.Y.t; anim.start = null; rafId = paceFrame(stepRun, 10); } }
+document.addEventListener("visibilitychange", resume);
+function afterRun() { if (mode === "demo") { tried(2); if (M.Y.r0 >= 100) tried(3); if (M.Y.rem != null) tried(4); } }
+function runBtn() { if (anim) { stopRun(); draw(); return; } runFrom(M.Y.t >= YEARS ? 0 : M.Y.t); tourSignal("run"); }
+function setStart(which, v) { if (qLock("start")) return lockMsg(); M.Y[which] = v; stopRun(); draw(); tourSignal("start"); }
+function setYear(v) { stopRun(); M.Y.t = v; draw(); tourSignal("year"); }
+function removeFoxes() {
+  if (qLock("remove")) return lockMsg();
+  const Y = M.Y; if (Y.rem != null) { Y.rem = null; stopRun(); setYNote("The foxes are back."); draw(); return; }
+  Y.rem = Y.t >= YEARS || anim && Y.t > YEARS - 1 ? 0 : Math.floor(Y.t * 2) / 2;
+  setYNote(`Every fox removed in year ${Y.rem}. Watch the rabbits and the grass.`);
+  runFrom(Y.rem); tourSignal("remove");
+}
+function toggleLetters() { if (qLock("letters")) return lockMsg(); M.Y.letters = !M.Y.letters; draw(); }
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Build grass → rabbit → fox → eagle with every role. Press Check my chain.", "Turn one arrow round. What does Check my chain say?",
+  "Open Cycles and press Run. Which line peaks first?", "Start with 100 or more rabbits and run it. Do the foxes still rise after the rabbits?",
+  "Press Remove the foxes. What happens to the rabbits and the grass?"];
+const TRIED = [false, false, false, false, false];
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function checkTried() {}
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function loadDemo() { task = { kind: "demo" }; S = {}; stopRun(); M = DEMO_M; M.sel = null; setNote(""); setYNote(""); renderTry(); draw(); }
+function newS() { const t = task; return { choice: null, multi: [], gap: {}, text: "", pick: [], order: shuffled(t.options ? t.options.length : t.parts ? t.parts.length : 0), ord: shuffled(t.opts ? t.opts.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length} · ${LESSON}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { if (mode === "demo") return; stopRun(); const m = freshM(); task.setup(m); M = m; setNote(""); setYNote(""); draw(); }
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "multi") {
+    a.innerHTML = `<p class="small" style="margin:0 0 6px">Choose all that are right.</p><div class="opts mopts" role="group" aria-label="Organisms">` + S.order.map(i =>
+      `<button type="button" class="opt" data-m="${i}" aria-pressed="false"><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll("[data-m]").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.m, j = S.multi.indexOf(i); if (j >= 0) S.multi.splice(j, 1); else S.multi.push(i); b.setAttribute("aria-pressed", String(j < 0)); }));
+  } else if (t.kind === "grid") {
+    a.innerHTML = `<table class="gt"><tbody>` + t.rows.map((r, k) =>
+      `<tr><th scope="row">${esc(r.q)}</th><td><select data-r="${k}" aria-label="${esc(r.q)}"><option value="">choose…</option>${S.ord.map(j => `<option value="${esc(t.opts[j])}">${esc(t.opts[j])}</option>`).join("")}</select></td></tr>`).join("") + `</tbody></table>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = `<p class="frame">${esc(t.frame)}</p><div class="pinrow"><label for="pin"><b>Your answer:</b></label><input class="pin" id="pin" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"> <span>${esc(t.unit)}</span></div>`;
+    const inp = $("pin"); inp.addEventListener("input", () => { S.text = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  } else if (t.kind === "build") {
+    a.innerHTML = `<p class="frame">${esc(t.frame)}<br>Tap the right statements in order (tap again to take one out).</p>` +
+      `<div class="opts bopts" role="group" aria-label="Statements">` + S.order.map(i => `<button type="button" class="opt" data-p="${i}" aria-pressed="false"><span class="k" aria-hidden="true">·</span><span>${esc(t.parts[i].t)}</span></button>`).join("") + `</div><p class="vh" id="built" aria-live="polite"></p>`;
+    a.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.p, j = S.pick.indexOf(i); if (j >= 0) S.pick.splice(j, 1); else S.pick.push(i); renderBuilt(); }));
+    renderBuilt();
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>Build a food chain</b> model, then press Check.</p>`;
+  }
+}
+function renderBuilt() {
+  const t = task; $("built").textContent = S.pick.length ? "Your answer: " + S.pick.map(i => t.parts[i].t).join(" ") : "";
+  document.querySelectorAll("#answer [data-p]").forEach(b => { const j = S.pick.indexOf(+b.dataset.p); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? String(j + 1) : "·"; });
+}
+function showFinished(p) {
+  setAnswerState();
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "multi") { S.multi = t.options.map((o, i) => o.ok ? i : -1).filter(i => i >= 0); document.querySelectorAll("#answer [data-m]").forEach(b => b.setAttribute("aria-pressed", String(t.options[+b.dataset.m].ok))); }
+  else if (t.kind === "grid") { t.rows.forEach((r, k) => { S.gap[k] = r.ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.gap[s.dataset.r]; }); }
+  else if (t.kind === "num") { S.text = String(t.ans()); const i = $("pin"); if (i) i.value = S.text; }
+  else if (t.kind === "build") { S.pick = t.parts.map((p, i) => [p.pt, i]).filter(x => x[0]).sort((a, b) => a[0] - b[0]).map(x => x[1]); renderBuilt(); }
+  else if (t.kind === "goal" && chainIssue(M.C, t.want)) { revealGoal(t, M); M.sel = null; }
+  revealModel();
+}
+function revealModel() {   // after a right answer or Show answer, the model shows everything
+  M.C.noRoles = false; M.C.noCap = false;
+  if (task.kind === "goal" && task.want.roles !== "all") { for (let i = 0; i < task.want.n; i++) M.C.role[i] = roleIx(M.C.slot[i]); }
+  M.Y.hideNum = false; if (M.tab === "cyc") M.Y.letters = true;
+  if (task.onCheck) { task.onCheck(M); runFrom(M.Y.t); return; }
+  draw();
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+function renderSupport() {
+  $("wordsBox").hidden = !support.words; $("graphBox").hidden = !support.graph;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("graphBox").innerHTML = "<h3>Reading the graph</h3>" + GRAPHHELP.map(w => `<p>${esc(w)}</p>`).join("");
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.support; support[k] = !support[k]; renderSupport(); }));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "multi") { if (!S.multi.length) return { skip: "Choose at least one answer first." };
+    const wrong = S.multi.find(i => !t.options[i].ok), miss = t.options.findIndex((o, i) => o.ok && !S.multi.includes(i));
+    if (wrong != null) return { ok: false, html: esc(t.options[wrong].why) };
+    if (miss >= 0) return { ok: false, html: esc(`So far, so good, but one is missing. ${t.options[miss].t}? ${t.options[miss].why}`) };
+    return { ok: true, html: esc("Correct. " + t.explain) }; }
+  if (t.kind === "grid") { if (t.rows.some((r, k) => !S.gap[k])) return { skip: "Choose a word in every row." };
+    const w = t.rows.filter((r, k) => S.gap[k] !== r.ans);
+    if (!w.length) return { ok: true, html: esc("Correct. " + t.explain) };
+    const dup = new Set(t.rows.map((r, k) => S.gap[k])).size < t.rows.length;
+    return { ok: false, html: esc(`${t.rows.length - w.length} of ${t.rows.length} right. ${dup ? "Habitat, population and community mean different things: use each word once. " : ""}${w[0].why}`) }; }
+  if (t.kind === "num") { const r = markNum(t, S.text); return r.skip ? r : { ok: r.ok, html: esc(r.html) }; }
+  if (t.kind === "build") {
+    if (!S.pick.length) return { skip: "Tap the statements to build your answer." };
+    const bad = S.pick.find(i => !t.parts[i].pt), pts = S.pick.filter(i => t.parts[i].pt).map(i => t.parts[i].pt), got = new Set(pts).size, all = [...Array(t.marks).keys()].map(k => k + 1);
+    if (bad != null) return { ok: false, html: esc(`“${t.parts[bad].t}” ${t.parts[bad].why}`) };
+    const miss = all.find(k => !pts.includes(k));
+    if (miss) return { ok: false, html: esc(`${got} of ${t.marks} ${t.id === "grass" ? "points" : "marks"} so far. ${t.missing[miss]}`) };
+    if (pts.join() !== all.join()) return { ok: false, html: esc(t.order) };
+    const pre = t.frame.replace("Start with ▸ ", "").replace(/…$/, ""), body = S.pick.map(i => t.parts[i].t).join(" ");
+    return { ok: true, html: esc(`Correct: ${t.marks} of ${t.marks} ${t.id === "grass" ? "points" : "marks"}. ${body.startsWith(pre) ? "" : pre + " "}${body}`.replace(/\s+/g, " ")) };
+  }
+  if (t.kind === "goal") { const e = chainIssue(M.C, t.want); return e ? { ok: false, html: esc(e) } : { ok: true, html: esc("Correct. " + t.done) }; }
+  return { skip: "" };
+}
+const STUCKW = { words: "Key words", graph: "Reading the graph" };
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel();
+  } else {
+    p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck();
+    if (task.predict) { task.onCheck(M); runFrom(M.Y.t); }   // predict, then see: the model runs whatever was chosen
+  }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") return esc("Answer: " + t.options.find(o => o.ok && o.ok()).t + ". " + t.explain);
+  if (t.kind === "multi" || t.kind === "grid") return esc("Answer: " + t.explain);
+  if (t.kind === "goal") return esc("Answer: the model has done it for you. " + t.done);
+  if (t.kind === "num") { const a = t.ans(); return `<b>Answer: about ${a} ${esc(t.unit)}</b> (${a - t.tol} to ${a + t.tol} is fine). P is the rabbits' first peak, in year ${f1(P_().t)}: go straight across to the side axis.`; }
+  if (t.kind === "build") return `<b>Answer:</b> statements ${t.marks === 2 ? "1 and 2" : "1 to " + t.marks} above. ${esc(t.scheme)}`;
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState();
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const ensure2 = () => { const C = M.C; if (!(C.slot[0] && C.slot[1])) { C.slot[0] = C.slot[0] || ORG.find(o => slotOf(C, o) < 0); C.slot[1] = C.slot[1] || ORG.find(o => slotOf(C, o) < 0); } };
+const TOUR = [
+  { el: "#tabs", tab: "chain", text: "Two parts: Build a food chain, and Cycles." },
+  { el: "#chainSvg", tab: "chain", text: "Drag an organism into a box, or tap it and then tap a box.", do: "place", doText: "Put one organism into a box." },
+  { el: "#chainSvg", tab: "chain", prep: ensure2, text: "Tap the gap between two boxes to draw an arrow. Tap it again to flip it.", do: "arrow", doText: "Draw one arrow." },
+  { el: "#chainSvg", alt: "#pick", tab: "chain", prep: ensure2, text: "Tap the label under a box to choose its role, such as producer.", do: "role", doText: "Choose one role." },
+  { el: "#chainCheck", tab: "chain", text: "Check my chain marks the order, the arrows and the roles.", do: "ccheck", doText: "Press Check my chain." },
+  { el: "#tabs", text: "Cycles: rabbits are the prey and foxes are the predators.", do: "tab-cyc", doText: "Press Cycles." },
+  { el: "#startCtl", tab: "cyc", text: "Choose how many rabbits and foxes there are at the start.", do: "start", doText: "Move a slider." },
+  { el: "#runBtn", tab: "cyc", text: "Run draws the graph, year by year.", do: "run", doText: "Press Run." },
+  { el: "#yrLbl", tab: "cyc", text: "Move the Year slider to read the numbers in any year.", do: "year", doText: "Move the Year slider." },
+  { el: "#remBtn", tab: "cyc", text: "Remove the foxes takes every fox away in the year shown. Watch the rabbits and the grass.", do: "remove", doText: "Press Remove the foxes." },
+  { el: ".support", text: "Support: switch on key words or graph tips when you need them." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-predator-prey-cycles", "1"); } catch (e) {}
+  DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st_ = TOUR[i];
+  if (st_.tab && M.tab !== st_.tab) { stopRun(); M.tab = st_.tab; M.sel = null; }
+  if (st_.prep) st_.prep();
+  draw();
+  const el = document.querySelector(st_.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st_.text;
+  tourWait = st_.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st_.do ? "▶ " + st_.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st_.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const T = TOUR[tourI], alt = T.alt && document.querySelector(T.alt), el = alt && alt.getClientRects().length ? alt : document.querySelector(T.el); if (!el) return;   // e.g. the role choices, once open, so the pop-up never covers them
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (drag or tap), touch and keyboard ===== */
+function setTab(t) { if (qLock("tab")) return lockMsg(); stopRun(); M.tab = t; M.sel = null; setNote(""); draw(); tourSignal("tab-" + t); }
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("pickBtns").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) pickRole(+b.dataset.pick); });
+$("pickNo").addEventListener("click", () => { M.sel = null; setNote(""); draw(); });
+$("chainCheck").addEventListener("click", checkChain);
+$("chainFill").addEventListener("click", fillChain);
+$("chainClear").addEventListener("click", clearChain);
+$("runBtn").addEventListener("click", runBtn);
+$("remBtn").addEventListener("click", removeFoxes);
+$("letSw").addEventListener("click", toggleLetters);
+$("r0").addEventListener("input", e => setStart("r0", +e.target.value));
+$("f0").addEventListener("input", e => setStart("f0", +e.target.value));
+$("yr").addEventListener("input", e => setYear(+e.target.value));
+(function svgWire() {
+  const svg = $("chainSvg"), gh = $("ghost"); let dr = null, pend = 0;
+  const moveGhost = () => { pend = 0; if (dr) gh.style.transform = `translate(${Math.round(dr.cx - (dr.gw || 40))}px,${Math.round(dr.cy - 22)}px)`; };   // width read once per drag
+  const act = g => { const d = g.dataset; if (d.card) tapCard(d.card); else if (d.slot != null) tapSlot(+d.slot); else if (d.gap != null) tapGap(+d.gap); else if (d.role != null) tapRole(+d.role); };
+  svg.addEventListener("pointerdown", e => {
+    if (e.button > 0) return;
+    const t = e.target.closest("[data-card], [data-slot], [data-gap], [data-role]"); if (!t) return;
+    e.preventDefault();
+    dr = { el: t, x: e.clientX, y: e.clientY, cx: e.clientX, cy: e.clientY, moved: false };
+    try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  svg.addEventListener("pointermove", e => {
+    if (!dr) return; dr.cx = e.clientX; dr.cy = e.clientY;
+    const d = dr.el.dataset, o = d.card || (d.slot != null ? M.C.slot[+d.slot] : null);
+    if (!dr.moved) { if (!o || chainLocked() || Math.hypot(dr.cx - dr.x, dr.cy - dr.y) < 8) return;
+      dr.moved = true; dr.o = o; dr.from = d.slot != null ? +d.slot : -1;
+      gh.textContent = cap(n1(o)); gh.hidden = false; dr.gw = gh.offsetWidth / 2; M.drag = o; M.sel = null; draw(); }
+    if (!pend) pend = paceFrame(moveGhost);
+  });
+  const end = cancel => {
+    if (!dr) return; const d = dr; dr = null; if (pend) { paceCancel(pend); pend = 0; }
+    gh.hidden = true; M.drag = null;
+    if (!d.moved) { if (!cancel) act(d.el); return; }
+    const under = cancel ? null : document.elementFromPoint(d.cx, d.cy), sl = under && under.closest && under.closest("#chainSvg [data-slot]");
+    if (sl) { place(d.o, +sl.dataset.slot); return; }
+    if (d.from >= 0 && !cancel) { const C = M.C; C.slot[d.from] = null; clearGapsNear(C); edited(); setNote(`The ${n1(d.o)} went back.`); }
+    draw();
+  };
+  svg.addEventListener("pointerup", () => end(false)); svg.addEventListener("pointercancel", () => end(true));
+  svg.addEventListener("keydown", e => {
+    const g = e.target.closest && e.target.closest("[data-card], [data-slot], [data-gap], [data-role]"); if (!g) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault();
+      const d = g.dataset, ref = d.card ? ["card", d.card] : d.slot != null ? ["slot", d.slot] : d.gap != null ? ["gap", d.gap] : ["role", d.role];
+      act(g);
+      if (ref[0] === "role" && M.sel) { const b = $("pickBtns").querySelector("button"); if (b) b.focus({ preventScroll: true }); return; }
+      const next = ref[0] === "card" && M.sel ? svg.querySelector("[data-slot]") : svg.querySelector(`[data-${ref[0]}="${ref[1]}"]`) || svg.querySelector("[data-card], [data-slot]");
+      if (next) next.focus({ preventScroll: true }); }
+  });
+  svg.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("[data-card], .slot.filled")) e.preventDefault(); }, { passive: false });
+})();
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopRun(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[0].isIntersecting; resume(); }).observe($("graphSvg"));
+}
+let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; gsCache = null; draw(); } }, 80); });
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
+try { if (localStorage.getItem("ks3tools-toured:gcse-predator-prey-cycles")) $("newHere").hidden = true; } catch (e) {}
+
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

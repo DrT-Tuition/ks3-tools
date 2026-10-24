@@ -1,0 +1,1688 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monoclonal Antibody Maker</title>
+<!--
+  SCIENCE SPEC — Monoclonal Antibody Maker (GCSE Biology 8461, 4.3.2 Monoclonal antibodies: separate Biology only, Higher tier only)
+  Placement: KS4 · Biology · "4.3.2 Monoclonal antibodies". Not Combined Science (8464).
+  Models, in three tabs, everything drawn in code (SVG); no pictures:
+    1. Make it: the six production steps, in order, each done by the pupil: choose and inject a specific antigen into a mouse
+       (drag the syringe or press Inject; "The disease" is offered and refused, with the misconception named); collect the
+       mouse's lymphocytes (four, each making one antibody; the two whose antibody fits were stimulated and release it); fuse
+       them with tumour cells (drag or Fuse), giving a mix of hybridomas, labelled as cells, each making its own antibody; the
+       hybridomas divide (4 → 8) and make antibody; the pupil picks the single hybridoma whose antibody fits the antigen and
+       clones it in a new flask (1 → 8 identical cells, all making the same antibody; a wrong pick is refused with feedback),
+       so cloning is the selection step; the antibody is collected and purified into a bottle, leaving the cells behind. A step list shows done / now; the readout says why each step matters.
+    2. Target it: antibodies with one of three binding sites (triangle, square, round cups) meet antigens of three shapes.
+       Release: each antibody binds only an antigen whose shape fits its binding site (worked out in code); the rest stay free.
+       Uses (deck s17): pregnancy test (binds the hormone in urine), lab test (binds a pathogen's antigen; labs also measure hormone
+       levels), fluorescent dye (the dye shows where a molecule is in tissue), cancer drug (the drug is carried only to cells with
+       the antigen; healthy cells are not harmed; with the wrong binding site the drug goes to healthy cells instead, only to
+       show specificity, flagged in Model limits).
+    3. Weigh it up: sort 7 statements into Advantages / Disadvantages (drag or tap-then-tap), Check my sort marks ✓ / ✗ in words.
+  Computed in code: the step reached comes from the state (mkStep); which lymphocytes fit comes from their binding-site shape;
+    the order question's answer (B → D → A → C) is sorted from the step table; every binding is planned by shape match (bindPlan),
+    so the scene, the readout, the goals and the questions always agree; the sort's answers come from the statement table.
+  Sources: Y10 T1 L1 Monoclonal antibodies (Triple deck, Higher): s2–3 starter (lymphocytes make antibodies; mitosis; tumour);
+    s4 misconceptions (hybridoma is a cell that makes the antibody; the mouse is given a specific antigen, not the disease;
+    antibodies bind a specific antigen on target cells, not white blood cells; be specific about uses); s6 hook (pregnancy test
+    finds one hormone; cancer drug spares healthy cells); s8–10 key words (antigen, monoclonal, hybridoma, specific; mono = one);
+    s11 production; s12–13 put it in order (B D A C); s14 specificity (one binding site on one antigen; identical, from one clone;
+    other cells not harmed); s15–16 true or false; s17 uses; s18–19 match use to method; s20 advantages and disadvantages;
+    s21–22 sort (C, D, E advantages; A, B, F disadvantages); s23 explain it aloud (lymphocyte → specific antibody; tumour cell →
+    divides again and again; hybridoma → divides and makes antibody); s24 hinge; s25–26 exam questions and mark scheme;
+    s29 plenary. AQA 8461 spec 4.3.2.1 and 4.3.2.2 (HT only, Biology only).
+  Simplifications (on screen as "Model limits"): shapes stand for binding sites and antigens (real ones are 3D molecules, far too
+    small to see); not to scale; a few cells and antibodies stand for very many; the shapes, cells, numbers and scenes are made
+    up; each lymphocyte's and hybridoma's antibody is shown on its surface so pupils can see which one fits; the uses are
+    simplified (no test-strip details, no named hormones or drugs); the wrong-binding-site cancer drug outcome only shows specificity.
+  Misconceptions designed out: the hybridoma is the monoclonal antibody (labelled "Hybridoma: a cell" and drawn as a cell making
+    separate Y-shaped antibodies; Easy 3, Hard 1, 4, 5, 8); the mouse is injected with the disease (refused in Make it; Easy 2,
+    Hard 8); antibodies bind to white blood cells (never shown; binding only to the matching antigen; Easy 8, 9, Hard 6);
+    vague uses ("treat diseases") — uses are named exactly (Easy 8, 9, Hard 2).
+  Facts and values used: only those above. No values, named hormones or named drugs (the request: "Do not add values or named drugs").
+  Not in the deck (in the report): three antigen / binding-site shapes as a model; four lymphocytes, two of them fitting;
+    hybridomas divide 4 → 8; the wrong-binding-site cancer drug outcome; the scenes for each use.
+  SoW lessons served: Y10 T1 L1 Monoclonal antibodies (Triple), all three tabs.
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Key words, Production steps, Uses.
+  Checks on load: the step table and the order answer B D A C; the lymphocyte table (each antigen has fitting and non-fitting
+    lymphocytes); every use (the right binding site binds only targets; every other binding site binds no target); the drug
+    reaches only cancer cells with the right binding site; the sort table (4 advantages, 3 disadvantages); every question
+    (3 hints; exactly one right option / a complete point set; feedback for every wrong option or word; goals not met at the
+    start and reached by Show answer). Any failure shows a visible error box and switches that question off.
+  Performance: drawn on demand (no loop while idle). Short tweens (inject, fuse, divide, clone, purify, release) use paceFrame
+    (10 fps cap, adaptive slow-down, time-based) and stop by themselves; each frame patches the scene with morph(); no CSS
+    filters; no backdrop-filter; tweens pause when the tab is hidden or the model is off-screen. Reduced motion: jumps to the end.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.readout th,.readout td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left}
+.readout th{font-size:15px;color:var(--muted)}
+.readout tr.me td{font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:5.6em;text-align:right}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:4px}
+.sscene{position:relative}
+@media (max-width:560px){.slider{grid-template-columns:minmax(0,1fr) auto}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .readout th,.readout td{padding:3px 5px}.readout table{font-size:15px}}
+@media (max-width:400px){.readout{padding:8px 8px}.readout table{font-size:14px}.readout th{font-size:13px}.readout th,.readout td{padding:3px 3px}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:901px){.scene{max-height:min(520px,62vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+/* ---- Monoclonal Antibody Maker ---- */
+.hgroup{display:grid;gap:8px}
+.tier{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:0;font-size:16px;color:var(--muted)}
+.bdg{font-weight:700;font-size:14px;line-height:1.3;padding:2px 10px;border-radius:999px;border:2px solid var(--accent);color:var(--accent);background:var(--surface);white-space:nowrap}
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.steps li{display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;font-size:13.5px;font-weight:700;line-height:1.15;padding:5px 4px;border-radius:8px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);min-width:0}
+.steps li>span:last-child{min-width:0;overflow-wrap:anywhere}
+.steps li .n{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;font-size:13px}
+.steps li.now{border:2px solid var(--accent);color:var(--ink);background:var(--surface)}
+.steps li.now .n{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.steps li.done{color:var(--good)}
+.steps li.done .n{background:var(--good-bg);border-color:var(--good)}
+@container (max-width:640px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.seg.ic button{display:inline-flex;align-items:center;gap:6px}
+.seg.ic svg{width:26px;height:26px;flex:none}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+:root{--ab:#2D5B8C;--ag:#C2571A;--agf:#F6D2BC;--lym:#D9CCEE;--lym-e:#6B4FA0;--lym-n:#8C6CC4;--tum:#F6CC9C;--tum-e:#B5651D;--tum-n:#E0893A;
+  --mouse:#C9B8A4;--mouse-e:#6E5A44;--mouse-ear:#EBB9B1;--glass:#DCEAF5;--glass-e:#6D8AA6;--liq:#CFE4F4;--path:#B9D9A8;--path-e:#3E7A2E;
+  --hc:#F3D3CF;--hc-e:#A8625C;--cc:#E9B7C8;--cc-e:#8E3A5C;--tis:#F4E1D2;--tis-e:#A0785A;--dye:#F2C230;--dye-e:#8A6A00;--drug:#7A3E9D;--urine:#FBF1C4;--urine-e:#B39A3A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ab:#8CC4FF;--ag:#F5A97A;--agf:#5A3A28;--lym:#4A3D6B;--lym-e:#C7B5F0;--lym-n:#9C84D6;--tum:#6E4A28;--tum-e:#F2B77A;--tum-n:#C07A3A;
+  --mouse:#7A6A58;--mouse-e:#E3D2BD;--mouse-ear:#A86E68;--glass:#24405F;--glass-e:#9CB8D4;--liq:#21466B;--path:#2F5A2A;--path-e:#A8DC94;
+  --hc:#6B4148;--hc-e:#E3B0A8;--cc:#6E3550;--cc-e:#F0A8C4;--tis:#5A4636;--tis-e:#E2C2A4;--dye:#FFD84D;--dye-e:#FFF0A8;--drug:#D4A8F0;--urine:#4E4826;--urine-e:#E3D27A}}
+:root[data-theme="dark"]{--ab:#8CC4FF;--ag:#F5A97A;--agf:#5A3A28;--lym:#4A3D6B;--lym-e:#C7B5F0;--lym-n:#9C84D6;--tum:#6E4A28;--tum-e:#F2B77A;--tum-n:#C07A3A;
+  --mouse:#7A6A58;--mouse-e:#E3D2BD;--mouse-ear:#A86E68;--glass:#24405F;--glass-e:#9CB8D4;--liq:#21466B;--path:#2F5A2A;--path-e:#A8DC94;
+  --hc:#6B4148;--hc-e:#E3B0A8;--cc:#6E3550;--cc-e:#F0A8C4;--tis:#5A4636;--tis-e:#E2C2A4;--dye:#FFD84D;--dye-e:#FFF0A8;--drug:#D4A8F0;--urine:#4E4826;--urine-e:#E3D27A}
+.scene .abp{fill:none;stroke:var(--ab);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.scene .abc{fill:none;stroke:var(--ab);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.scene .agh{fill:var(--ag);stroke:var(--ag);stroke-width:1;stroke-linejoin:round}
+.scene .ags{stroke:var(--ag);stroke-width:2.5;stroke-linecap:round}
+.scene .drug{fill:var(--drug);stroke:var(--surface);stroke-width:1}
+.scene .dye{fill:var(--dye);stroke:var(--dye-e);stroke-width:1.5}
+.scene .glow{fill:none;stroke:var(--dye);stroke-width:7;opacity:.85}
+.scene .lymc{fill:var(--lym);stroke:var(--lym-e);stroke-width:2.5}
+.scene .lymn{fill:var(--lym-n)}
+.scene .tumc{fill:var(--tum);stroke:var(--tum-e);stroke-width:2.5}
+.scene .tumn{fill:var(--tum-n)}
+.scene .hybc{fill:var(--tum);stroke:var(--tum-e);stroke-width:2.5}
+.scene .hybn{fill:var(--lym-n);stroke:var(--tum-n);stroke-width:3}
+.scene .mouse{fill:var(--mouse);stroke:var(--mouse-e);stroke-width:2.5;stroke-linejoin:round}
+.scene .mear{fill:var(--mouse-ear)}
+.scene .mtail{fill:none;stroke:var(--mouse-e);stroke-width:4;stroke-linecap:round}
+.scene .meye{fill:var(--mouse-e)}
+.scene .glass{fill:var(--glass);stroke:var(--glass-e);stroke-width:2.5;stroke-linejoin:round}
+.scene .liq{fill:var(--liq)}
+.scene .gline{fill:none;stroke:var(--glass-e);stroke-width:2.5;stroke-linecap:round}
+.scene .plg{fill:var(--glass-e)}
+.scene .pathc{fill:var(--path);stroke:var(--path-e);stroke-width:2.5}
+.scene .hcell{fill:var(--hc);stroke:var(--hc-e);stroke-width:2.5}
+.scene .ccell{fill:var(--cc);stroke:var(--cc-e);stroke-width:2.5}
+.scene .ccell.hit,.scene .hcell.hit{stroke-dasharray:7 4}
+.scene .tcell{fill:var(--tis);stroke:var(--tis-e);stroke-width:2}
+.scene .mol{fill:var(--sunk);stroke:var(--muted);stroke-width:2}
+.scene .smp{fill:var(--urine);stroke:var(--urine-e);stroke-width:2}
+.scene .smpb{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.scene .zoom{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.scene .zl{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.scene .drop{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:8 6}
+.scene .ld{stroke:var(--ink);stroke-width:1.5;fill:none}
+.scene .lb{font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+.scene .lbs{paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+.scene .lbm{fill:var(--muted)!important;font-weight:700}
+.scene .good{fill:var(--good)!important;font-weight:700}
+.scene .bad{fill:var(--bad)!important;font-weight:700}
+.scene .selr{fill:none;stroke:var(--accent);stroke-width:3.5}
+.scene .tap{cursor:pointer}
+.scene [data-drag]{cursor:grab;touch-action:none}
+.scene .kf{fill:none;stroke:var(--focus);stroke-width:3;display:none}
+.scene .tap:focus-visible .kf,.scene [data-drag]:focus-visible .kf{display:inline}
+.scene .tap,.scene [data-drag]{outline:none}
+.mscene,.tscene{max-width:100%}
+/* Weigh it up: two-zone sort */
+.sorter{container-type:inline-size;display:grid;gap:10px}
+.tray{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;background:var(--sunk);min-height:64px}
+.vz-h{margin:0 0 6px;font-weight:700;font-size:16px;line-height:1.3}
+.tray .vz-h{color:var(--muted)}
+.vcs{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@container (max-width:520px){.zones{grid-template-columns:minmax(0,1fr)}}
+.vz{border:2px solid var(--line);border-radius:12px;padding:8px 10px;min-height:170px;background:var(--surface);display:flex;flex-direction:column}
+.vz .vcs{flex:1;flex-direction:column;flex-wrap:nowrap}
+.vz[data-zone="a"]{border-color:var(--good)}
+.vz[data-zone="a"] .vz-h{color:var(--good)}
+.vz[data-zone="d"]{border-color:var(--bad)}
+.vz[data-zone="d"] .vz-h{color:var(--bad)}
+.chp{font:700 15px var(--f-body);line-height:1.25;padding:7px 10px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:grab;touch-action:none;max-width:100%;text-align:left;user-select:none;-webkit-user-select:none}
+.chp[aria-pressed="true"]{border:2px solid var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.chp.ok{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.chp.no{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.chp.dragging{position:relative;z-index:40;cursor:grabbing;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.vz.can,.tray.can{outline:2px dashed var(--accent);outline-offset:-5px;cursor:pointer}
+.vz:focus-visible,.tray:focus-visible{outline:3px solid var(--focus);outline-offset:-4px}
+/* question kinds */
+.frame{margin:0;padding:6px 10px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.ordrow{display:flex;gap:10px;align-items:center;font-size:17px;line-height:1.35}
+.ordrow select{font:700 17px var(--f-body);padding:6px 8px;min-height:44px;min-width:64px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);flex:none}
+.opt.multi[aria-pressed="true"]::after{content:"✓ chosen"}
+.grow .post{white-space:nowrap}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel .ordrow{font-size:16px;line-height:1.25;gap:8px}.qpanel .ordrow select{min-height:38px;padding:2px 6px}.qpanel .opts{gap:5px}
+  .qpanel .frame{font-size:16px;padding:4px 10px}
+}
+.seg.ic svg .abp{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.seg.ic svg .abc{fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+@media (min-width:901px){.mscene .scene,.tscene .scene{max-height:min(430px,56vh)}}
+@container (max-width:400px){.steps li{font-size:12px;padding:5px 2px}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hgroup"><h1>Monoclonal Antibody Maker<small>Make monoclonal antibodies step by step, target them to one antigen, and weigh up their uses.</small></h1>
+    <p class="tier"><span class="bdg">Biology only</span><span class="bdg">HT</span> Separate Biology (8461), Higher tier only. Not in Combined Science.</p></div>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Monoclonal Antibodies</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="The monoclonal antibody model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="make" aria-pressed="true">1. Make it</button><button type="button" data-tab="target" aria-pressed="false">2. Target it</button><button type="button" data-tab="weigh" aria-pressed="false">3. Weigh it up</button></div>
+
+      <div class="pane" id="pane-make">
+        <ol class="steps" id="mkSteps" aria-label="Production steps"></ol>
+        <div class="sscene mscene" id="mscene"><svg id="msvg" class="scene" viewBox="0 0 640 360" role="group" aria-label="Making monoclonal antibodies. Not to scale."><g id="mFix"></g><g id="mDyn"></g></svg></div>
+        <div class="controls" id="mkCtl">
+          <div class="seg" id="agSeg" role="group" aria-label="What to inject"><button type="button" data-ag="tri" aria-pressed="false">▲ Antigen</button><button type="button" data-ag="sq" aria-pressed="false">■ Antigen</button><button type="button" data-ag="rd" aria-pressed="false">● Antigen</button><button type="button" data-ag="dis" aria-pressed="false">The disease</button></div>
+          <button class="btn primary go" type="button" id="mkAct">Inject ▶</button>
+          <button class="btn" type="button" id="mkReset">Start again</button>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-target" hidden>
+        <div class="ctlrow"><span class="gl">Use:</span><div class="seg" id="useSeg" role="group" aria-label="Use"><button type="button" data-use="antigens" aria-pressed="true">Antigens</button><button type="button" data-use="preg" aria-pressed="false">Pregnancy test</button><button type="button" data-use="lab" aria-pressed="false">Lab test</button><button type="button" data-use="dye" aria-pressed="false">Fluorescent dye</button><button type="button" data-use="drug" aria-pressed="false">Cancer drug</button></div></div>
+        <div class="ctlrow"><span class="gl">Binding site:</span><div class="seg ic" id="abSeg" role="group" aria-label="Antibody binding site"><button type="button" data-ab="tri" aria-pressed="false" aria-label="Triangle binding site"></button><button type="button" data-ab="sq" aria-pressed="false" aria-label="Square binding site"></button><button type="button" data-ab="rd" aria-pressed="false" aria-label="Round binding site"></button></div>
+          <button class="btn primary go" type="button" id="relBtn">Release antibodies ▶</button></div>
+        <div class="sscene tscene" id="tscene"><svg id="tsvg" class="scene" viewBox="0 0 640 360" role="img" aria-label="Antibodies and antigens. Not to scale."><g id="tDyn"></g><g id="tAb"></g><g id="tLbl"></g></svg></div>
+      </div>
+
+      <div class="pane" id="pane-weigh" hidden>
+        <div class="sorter" id="sorter">
+          <div class="tray" data-zone="" role="button" tabindex="0" aria-label="Statements to sort. Put a statement back here."><p class="vz-h">Statements to sort</p><div class="vcs" id="wz-t"></div></div>
+          <div class="zones">
+            <div class="vz" data-zone="a" role="button" tabindex="0" aria-label="Advantages"><p class="vz-h">✓ Advantages</p><div class="vcs" id="wz-a"></div></div>
+            <div class="vz" data-zone="d" role="button" tabindex="0" aria-label="Disadvantages"><p class="vz-h">✗ Disadvantages</p><div class="vcs" id="wz-d"></div></div>
+          </div>
+        </div>
+        <div class="controls" id="wCtl">
+          <button class="btn primary go" type="button" id="wCheck">Check my sort</button>
+          <button class="btn" type="button" id="wReset">Start again</button>
+        </div>
+      </div>
+
+      <div class="readout" id="read" aria-live="polite"></div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> Shapes stand for binding sites and antigens: real ones are molecules, far too small to see. Not to scale. A few cells and antibodies stand for very many. The shapes, cells, numbers and scenes are made up to show the idea. Each use is simplified: no test-strip details, no named hormones or drugs. Choosing the wrong binding site for the cancer drug only shows what “specific” means.</p>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="steps" aria-pressed="false"><span class="dot"></span>Production steps <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="uses" aria-pressed="false"><span class="dot"></span>Uses <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="stepsBox" hidden></div>
+            <div class="support-box" id="usesBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Y10 T1 L1 Monoclonal antibodies, Triple deck) ===== */
+const DEF = {                // s8 key words
+  antigen: "A molecule on a cell or pathogen that an antibody binds to.",
+  monoclonal: "Made from a single clone of cells, so all identical.",
+  hybridoma: "A cell made by joining a lymphocyte to a tumour cell.",
+  specific: "Fitting only one thing." };
+const INJECT = "antigen";    // s4: the mouse is given a specific antigen, not the disease
+const HYB = { isCell: true, divides: true, makesAntibody: true, from: ["lymphocyte", "tumour cell"] };   // s8, s11, s23
+const SH = ["tri", "sq", "rd"], SHN = { tri: "triangle", sq: "square", rd: "round" }, SHI = { tri: "▲", sq: "■", rd: "●" };
+/* s11 production steps, in order */
+const STEPS = [
+  { k: "inject", short: "Inject antigen", t: "Inject a mouse with a specific antigen", why: "The mouse is given a specific antigen, not the disease. Its lymphocytes are stimulated to make the antibody for it." },
+  { k: "lymph", short: "Collect lymphocytes", t: "Collect the mouse's lymphocytes", why: "Each mouse lymphocyte makes one antibody. Some were stimulated by your antigen to make the antibody for it." },
+  { k: "fuse", short: "Fuse", t: "Fuse them with tumour cells: hybridomas", why: "Each lymphocyte joined a tumour cell. A hybridoma is a cell that can divide and makes one antibody. Now there is a mix of hybridomas." },
+  { k: "divide", short: "Divide", t: "The hybridomas divide and make antibody", why: "Hybridomas are cells, not the antibody. They divide and make antibody, but it is still a mix of different antibodies." },
+  { k: "clone", short: "Clone one cell", t: "Clone the single cell that makes your antibody", why: "That single hybridoma cell was cloned: many identical cells that all make the same antibody. Monoclonal: from one clone." },
+  { k: "purify", short: "Purify", t: "Collect and purify the antibody", why: "The antibody is collected and purified. The antibodies are all identical: they all bind the same antigen." }];
+const stepNo = k => STEPS.findIndex(s => s.k === k);
+/* s12 put it in order: the answer is sorted from the step table (B → D → A → C) */
+const ORD4 = [{ L: "A", t: "Single hybridoma cells are cloned", step: "clone" }, { L: "B", t: "Mouse lymphocytes make a particular antibody", step: "lymph" },
+  { L: "C", t: "The antibody is collected and purified", step: "purify" }, { L: "D", t: "Lymphocytes join tumour cells to make hybridomas", step: "fuse" }];
+const ORD_ANS = ORD4.slice().sort((a, b) => stepNo(a.step) - stepNo(b.step));
+/* s17 uses (target = the antigen shape the right binding site must fit, in this model) */
+const USES = {
+  antigens: { name: "Antigens", target: "", tag: "", intro: "Three cells, each with a different antigen." },
+  preg: { name: "Pregnancy test", target: "rd", tag: "", intro: "Pregnancy tests detect a hormone. This urine sample has the hormone and other molecules." },
+  lab: { name: "Lab test", target: "sq", tag: "", intro: "Labs measure hormone levels or detect pathogens. This blood sample has a pathogen in it." },
+  dye: { name: "Fluorescent dye", target: "tri", tag: "dye", intro: "A fluorescent dye is attached to each antibody. Where in the tissue is the molecule?" },
+  drug: { name: "Cancer drug", target: "sq", tag: "drug", intro: "A drug is attached to each antibody. The cancer cells have their own antigen." } };
+const USELIST = [["Pregnancy tests", "detect a hormone (the antibody binds the hormone in urine)."], ["Labs", "measure hormone levels or detect pathogens (the antibody binds its antigen)."],
+  ["A fluorescent dye", "on the antibody locates molecules in tissue."], ["A drug", "bound to the antibody is delivered to cancer cells."]];
+/* s20–22 advantages and disadvantages */
+const WITEMS = [
+  { id: "spec", t: "Very specific to one target", z: "a", why: "An advantage: each antibody binds only one antigen." },
+  { id: "reach", t: "Drugs reach only the cancer cells", z: "a", why: "An advantage: the antibody carries the drug only to cells with its antigen." },
+  { id: "healthy", t: "Healthy cells are not harmed", z: "a", why: "An advantage: the drug isn't carried to healthy cells." },
+  { id: "tiny", t: "Detects tiny amounts of a hormone", z: "a", why: "An advantage: a pregnancy test finds a hormone in a drop of urine." },
+  { id: "side", t: "More side effects than expected", z: "d", why: "A disadvantage: treatments caused more side effects than expected." },
+  { id: "less", t: "Not as widely used as hoped", z: "d", why: "A disadvantage: they are not as widely used as hoped." },
+  { id: "mice", t: "Mice are used to make them", z: "d", why: "A disadvantage: live mice are used to make them." }];
+const WITEM = Object.fromEntries(WITEMS.map(i => [i.id, i]));
+const ZW = { a: "Advantages", d: "Disadvantages" };
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const hash = k => (((k + 1) * 9301 + 49297) % 233280) / 233280;
+const R2D = 180 / Math.PI;
+const rot = (p, d) => { const a = d / R2D, c = Math.cos(a), s = Math.sin(a); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c]; };
+const ang = v => Math.atan2(v[1], v[0]) * R2D;
+const unit = v => { const L = Math.hypot(v[0], v[1]) || 1; return [v[0] / L, v[1] / L]; };
+const ease = u => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+const mix = (a, b, u) => a + (b - a) * u;
+const others = s => SH.filter(x => x !== s);
+
+/* ===== The model: everything below is worked out from the rules ===== */
+const fits = (site, antigen) => !!site && site === antigen;   // a binding site fits only the antigen of the same shape (s14)
+/* Make it: the step reached comes from the state */
+const mkStep = k => !k.inj ? 0 : !k.col ? 1 : !k.fused ? 2 : k.n < 8 ? 3 : k.cn < 8 ? 4 : !k.pur ? 5 : 6;
+/* four mouse lymphocytes, each making one antibody; two were stimulated by the antigen (their antibody fits it).
+   Each one is fused with a tumour cell, so the hybridomas are a mix; hybridoma i (and its daughters) makes antibody lymShapes(ag)[i]. */
+const ID4 = [0, 1, 2, 3];
+/* perm: the order the four lymphocytes are drawn in, shuffled for each new Make it run so the fitting ones move about */
+const lymShapes = (ag, perm) => { const [o1, o2] = others(ag), B = [o1, ag, o2, ag]; return (perm || ID4).map(j => B[j]); };
+const cellShape = (ag, i, perm) => lymShapes(ag, perm)[i >> 1];   // cell i of the 8 after dividing
+/* Target it: the scene for each use; every antigen is a site {x, y, n (outward normal), sh} on an item */
+function circSites(cx, cy, r, sh, angs) { return angs.map(a => { const n = [Math.cos(a / R2D), Math.sin(a / R2D)]; return { x: cx + n[0] * r, y: cy + n[1] * r, n, sh }; }); }
+const SCENES = {};
+function sceneItems(use) {
+  if (SCENES[use]) return SCENES[use];
+  const I = [];
+  if (use === "antigens") SH.forEach((s, i) => I.push({ kind: "cell", cls: "hcell", x: 120 + i * 200, y: 248, r: 52, role: "", sites: circSites(120 + i * 200, 248, 52, s, [-150, -112, -68, -30]), label: SHN[s][0].toUpperCase() + SHN[s].slice(1) + " antigens" }));
+  if (use === "preg") {
+    [[150, 236, "rd"], [242, 304, "tri"], [336, 262, "rd"], [430, 316, "sq"], [500, 230, "rd"], [574, 298, "tri"]].forEach(([x, y, s]) =>
+      I.push({ kind: "mol", x, y, role: s === USES.preg.target ? "target" : "", sites: [{ x, y: y + 11 * GS, n: [0, -1], sh: s, bare: true }] }));
+  }
+  if (use === "lab") {
+    [[170, 252], [430, 292]].forEach(([x, y]) => I.push({ kind: "path", x, y, role: "target", sites: [-24, 0, 24].map(o => ({ x: x + o, y: y - 17, n: [0, -1], sh: USES.lab.target })) }));
+    [[300, 262, "tri"], [548, 250, "rd"]].forEach(([x, y, s]) => I.push({ kind: "cell", cls: "hcell", x, y, r: 30, role: "", sites: circSites(x, y, 30, s, [-125, -55]) }));
+  }
+  if (use === "dye") {
+    const T = USES.dye.target, map = ["rd", T, "sq", "rd", T, "sq", "rd", "sq", T, "rd"];
+    map.forEach((s, i) => { const x = 46 + (i % 5) * 112, y = 160 + Math.floor(i / 5) * 96;
+      I.push({ kind: "tis", x, y, w: 104, h: 88, role: s === T ? "target" : "", sites: [{ x: x + 52, y: y + 30, n: [0, -1], sh: s }] }); });
+  }
+  if (use === "drug") {
+    const T = USES.drug.target;
+    [[195, 248], [445, 248]].forEach(([x, y]) => I.push({ kind: "cancer", x, y, r: 44, role: "target", sites: circSites(x, y, 44, T, [-145, -92, -38]) }));
+    [[70, 262, "rd"], [320, 262, "tri"], [570, 262, "rd"]].forEach(([x, y, s]) => I.push({ kind: "cell", cls: "hcell", x, y, r: 30, role: "healthy", sites: circSites(x, y, 30, s, [-130, -50]) }));
+  }
+  I.forEach((it, i) => it.sites.forEach(s => { s.item = i; }));
+  return (SCENES[use] = I);
+}
+const NAB = 6, GS = 1.3;   // antibodies and antigens in Target it are drawn 1.3× bigger
+const abStart = i => [80 + i * 96, 72];
+/* which antibody binds which antigen: only sites whose shape fits the binding site; at most one antibody per site */
+const BPC = {};
+function bindPlan(use, ab) { const k = use + ab; return BPC[k] || (BPC[k] = bindPlan0(use, ab)); }
+function bindPlan0(use, ab) {
+  const I = sceneItems(use), rr = []; let more = true;
+  for (let j = 0; more; j++) { more = false; I.forEach(it => { if (it.sites[j]) { rr.push(it.sites[j]); more = true; } }); }   // round robin across the items
+  const m = rr.filter(s => fits(ab, s.sh)).slice(0, NAB).sort((a, b) => a.x - b.x), k = m.length;
+  const plan = Array(NAB).fill(null);
+  m.forEach((s, j) => { plan[k === 1 ? 2 : Math.round(j * (NAB - 1) / (k - 1))] = s; });
+  const hit = new Set(m.map(s => s.item));
+  return { plan, hit, targets: I.map((it, i) => it.role === "target" ? i : -1).filter(i => i >= 0), items: I };
+}
+function bindResult(use, ab) {
+  const B = bindPlan(use, ab), tgt = B.targets.filter(i => B.hit.has(i)).length, off = [...B.hit].filter(i => B.items[i].role !== "target").length,
+    healthy = [...B.hit].filter(i => B.items[i].role === "healthy").length;
+  return { bound: B.plan.filter(Boolean).length, tgt, off, healthy, nT: B.targets.length, ok: tgt > 0 && off === 0 };
+}
+
+/* ===== Model state ===== */
+function freshMk(ag) { return { perm: shuffled(4), ag: ag || "", inj: false, col: false, fused: false, n: 4, cn: 0, pick: -1, pur: false, drag: null }; }
+function freshM() { return { tab: "make", note: "", hs: false, mk: freshMk(), tg: { use: "antigens", ab: "", rel: false }, w: {}, word: shuffled(WITEMS.length).map(i => WITEMS[i].id), sel: null, wchk: false }; }
+
+/* ===== Question bank (ordered by the deck's slides; every answer is worked out from the rules above) ===== */
+const ABC = "ABCDEFGH";
+const SU = {
+  make0: M => { M.tab = "make"; },
+  make1: M => { M.tab = "make"; M.mk.ag = "tri"; M.mk.inj = true; },
+  make4: M => { M.tab = "make"; Object.assign(M.mk, { ag: "tri", inj: true, col: true, fused: true, n: 8 }); },
+  hide: M => { M.tab = "target"; M.hs = true; },
+  tgTri: M => { M.tab = "target"; M.tg.use = "antigens"; M.tg.ab = "tri"; M.tg.hide = true; },
+  dye: M => { M.tab = "target"; M.tg.use = "dye"; },
+  drug: M => { M.tab = "target"; M.tg.use = "drug"; M.tg.ab = ""; },
+  weigh: M => { M.tab = "weigh"; } };
+const fitCell = (ag, perm) => [...Array(8).keys()].find(i => fits(cellShape(ag, i, perm), ag));
+const TASKS = {
+  easy: [
+    { id: "mono", kind: "choice", setup: SU.make0, stuck: "words", src: "s9", text: "What does ‘mono’ mean in monoclonal?",
+      options: [{ t: "One", ok: () => /single clone/.test(DEF.monoclonal) },
+        { t: "Many", why: "Mono means one. Monoclonal antibodies are made from a single clone of cells." },
+        { t: "Mouse", why: "Mono isn't short for mouse. Mono means one: made from one clone of cells." },
+        { t: "Tumour", why: "Mono means one. ‘Monoclonal’: made from one clone, so the antibodies are all identical." }],
+      explain: "Mono means one. Monoclonal: made from a single clone of cells, so all identical.",
+      hints: ["Think of other words that start with mono-, like monorail.", "Monorail, monotone: what do they have just one of?", "Mono means o…"] },
+    { id: "inject", kind: "choice", setup: SU.hide, stuck: "steps", src: "s4, s11", text: "To make monoclonal antibodies, what is the mouse injected with?",
+      options: [{ t: "A specific antigen", ok: () => INJECT === "antigen" },
+        { t: "The disease", why: "A common mistake. The mouse isn't given the disease. It is given a specific antigen, so its lymphocytes make that antibody." },
+        { t: "Monoclonal antibodies", why: "The antibodies are what we want to make. The mouse is given a specific antigen, so its lymphocytes make the antibody." },
+        { t: "Tumour cells", why: "Tumour cells are joined to lymphocytes later, to make hybridomas. The mouse is given a specific antigen." }],
+      explain: "The mouse is given a specific antigen. Its lymphocytes are stimulated to make the antibody for that antigen.",
+      hints: ["Open Make it and try each choice in the syringe.", "What does an antibody bind to?", "The mouse is given a specific a…"] },
+    { id: "name", kind: "choice", setup: SU.make0, stuck: "words", src: "s8, s11", text: "Name the cell made by joining a lymphocyte and a tumour cell.",
+      options: [{ t: "A hybridoma", ok: () => HYB.isCell && HYB.from.includes("lymphocyte") && HYB.from.includes("tumour cell") },
+        { t: "A monoclonal antibody", why: "A common mistake. The joined cell is not the antibody. It is a hybridoma: a cell that makes the antibody." },
+        { t: "An antigen", why: "An antigen is the molecule an antibody binds to. The joined cell is a hybridoma." },
+        { t: "A lymphocyte", why: "A lymphocyte is one of the two cells that are joined. Together they make a hybridoma." }],
+      explain: "A hybridoma: a cell made by joining a lymphocyte to a tumour cell.",
+      hints: ["Two different cells are joined. The new cell has a name of its own.", "Its name sounds like ‘hybrid’, because it is a mix of two cells.", "Hybrid… + -oma."] },
+    { id: "makeHyb", kind: "goal", setup: SU.make1, stuck: "steps", src: "s11", text: "Do it: on Make it, collect the mouse's lymphocytes and fuse them with tumour cells to make hybridomas. Then press Check.",
+      test: M => M.mk.fused,
+      not: M => !M.mk.col ? "First collect the mouse's lymphocytes: press Collect lymphocytes." : "Now join the lymphocytes to the tumour cells: drag them onto the tumour cells, or press Fuse.",
+      done: () => "Each lymphocyte joined a tumour cell to make a hybridoma: a cell that divides and makes one antibody.",
+      reveal: M => { M.mk.col = true; M.mk.fused = true; },
+      hints: ["Follow the step list on Make it.", "Collect the lymphocytes first, then join them to the tumour cells.", "Press Collect lymphocytes, then press Fuse."] },
+    { id: "cloneOne", kind: "goal", setup: SU.make4, stuck: "steps", src: "s11, s14", text: "Do it: on Make it, clone the single hybridoma cell that makes the antibody for the ▲ antigen. Then press Check.",
+      test: M => M.mk.pick >= 0 && M.mk.cn === 8 && fits(cellShape(M.mk.ag, M.mk.pick, M.mk.perm), M.mk.ag),
+      not: M => M.note === "wronghyb" ? "That hybridoma makes a different antibody: it won't bind the ▲ antigen. Look at the tips of each cell's antibody."
+        : `Find a hybridoma whose antibody fits the ▲ antigen. ${UL.big ? "Tap it to clone it." : "Drag it into the new flask, or tap it."}`,
+      done: () => "That one cell was cloned: identical cells that all make the antibody for the ▲ antigen. These are monoclonal antibodies.",
+      reveal: M => { M.mk.pick = fitCell(M.mk.ag, M.mk.perm); M.mk.cn = 8; M.note = ""; },
+      hints: ["Each hybridoma makes one antibody. Look at the shape at the tips of its Y.", "You want the binding site that fits the ▲ antigen.", () => UL.big ? "Tap a cell with ▲-shaped tips." : "Drag a cell with ▲-shaped tips into the new flask."] },
+    { id: "order", kind: "gaps", setup: SU.hide, stuck: "steps", src: "s12", text: "Put the steps of making monoclonal antibodies in order.",
+      rows: ORD_ANS.map((o, i) => ["o" + (i + 1), ["1st", "2nd", "3rd", "4th"][i] + ":", o.L + "  " + o.t, ""]),
+      bank: ORD4.map(o => o.L + "  " + o.t),
+      whyVal: Object.fromEntries(ORD4.map(o => [o.L + "  " + o.t, {
+        lymph: "The mouse lymphocytes make the antibody first, before anything is joined.",
+        fuse: "Lymphocytes join tumour cells after they make the antibody, and before any cloning.",
+        clone: "Single hybridoma cells can only be cloned after the hybridomas are made.",
+        purify: "The antibody is collected and purified last, once the cells have made lots of it." }[o.step]])),
+      explain: "B → D → A → C: lymphocytes make the antibody, join tumour cells to make hybridomas, single cells are cloned, then the antibody is purified.",
+      hints: ["What has to happen before a hybridoma can exist?", "Purifying the antibody comes last.", "B, then D, then A, then C."] },
+    { id: "bind", kind: "choice", setup: SU.tgTri, lock: "run", after: "release", stuck: "words", src: "s14", text: "Predict: look at this antibody's binding site. Which antigen will it bind?", note: "This is a prediction. When you get it right, the antibodies are released.",
+      options: SH.map(s => fits("tri", s) ? { t: `The ${SHN[s]} antigen`, ok: () => bindResult("antigens", "tri").bound > 0 && bindPlan("antigens", "tri").plan.every(p => !p || p.sh === s) }
+        : { t: `The ${SHN[s]} antigen`, why: `The ${SHN[s]} antigen doesn't fit this binding site. Each antibody binds one specific antigen: the one its binding site fits.` })
+        .concat([{ t: "All three antigens", why: "Antibodies are specific: the binding site fits only one antigen, so it binds only that one." }]),
+      explain: "The binding site fits only the triangle antigen, so the antibody binds only that one.",
+      hints: ["Look at the shape at the tips of the Y.", "The binding site is like a lock. Which antigen is the key?", "The tips are triangle-shaped."] },
+    { id: "use", kind: "choice", setup: SU.make0, stuck: "uses", src: "s17", text: "Give a use of monoclonal antibodies.",
+      options: [{ t: "Pregnancy tests: they detect a hormone", ok: () => USES.preg.target !== "" },
+        { t: "Binding to white blood cells to stop them attacking", why: "A common mistake. They don't bind to white blood cells. They bind a specific antigen, e.g. a hormone in a pregnancy test." },
+        { t: "Making tumour cells divide in a patient", why: "No. Tumour cells are only used to make hybridomas. Uses include pregnancy tests and delivering drugs to cancer cells." },
+        { t: "Giving a patient the disease", why: "No. They are used to diagnose, measure, research and treat, e.g. pregnancy tests detect a hormone." }],
+      explain: "Pregnancy tests detect a hormone. Other uses: measuring hormone levels or detecting pathogens in labs, locating molecules with a fluorescent dye, and carrying a drug to cancer cells.",
+      hints: ["On Target it, look at the Use buttons.", "Think of tests that diagnose something.", "Pregnancy t…"] },
+    { id: "match", kind: "gaps", setup: SU.make0, stuck: "uses", src: "s18", text: "Match each use to how the antibody works.",
+      rows: [["m1", "Pregnancy test:", "binds the hormone in urine", ""], ["m2", "Locating molecules in tissue:", "carries a fluorescent dye", ""],
+        ["m3", "Cancer treatment:", "carries a drug to cancer cells", ""], ["m4", "Detecting a pathogen:", "binds its antigen", ""]],
+      bank: ["binds the hormone in urine", "carries a fluorescent dye", "carries a drug to cancer cells", "binds its antigen", "binds to white blood cells"],
+      whyVal: { "binds the hormone in urine": "That is how a pregnancy test works: it detects a hormone.", "carries a fluorescent dye": "That is for locating molecules in tissue: the dye shows where they are.",
+        "carries a drug to cancer cells": "That is cancer treatment: the drug reaches only the cancer cells.", "binds its antigen": "That is how a lab detects a pathogen: the antibody binds the pathogen's antigen.",
+        "binds to white blood cells": "A common mistake. Monoclonal antibodies bind a specific antigen, not white blood cells." },
+      explain: "Pregnancy test: binds the hormone in urine. Locating molecules: carries a fluorescent dye. Cancer: carries a drug to cancer cells. Pathogen: binds its antigen.",
+      hints: ["Try each use on Target it.", "A dye shows where something is. A drug treats.", "Hormone → pregnancy; dye → locating; drug → cancer; antigen → pathogen."] },
+    { id: "sort", kind: "goal", setup: SU.weigh, stuck: "uses", src: "s21", text: "Do it: on Weigh it up, sort all 7 statements into Advantages and Disadvantages. Then press Check.",
+      test: M => wRight(M),
+      not: M => { const left = WITEMS.filter(i => !M.w[i.id]).length; if (left) return `Sort all 7 statements first: ${left} still to go.`;
+        const w = WITEMS.filter(i => M.w[i.id] !== i.z), i = w[0]; return `${w.length} in the wrong place. “${i.t}” isn't one of the ${ZW[M.w[i.id]].toLowerCase()}. ${i.why}`; },
+      done: () => "Advantages: very specific, drugs reach only cancer cells, healthy cells not harmed, tiny amounts detected. Disadvantages: more side effects than expected, not as widely used as hoped, mice are used.",
+      reveal: M => { M.tab = "weigh"; WITEMS.forEach(i => { M.w[i.id] = i.z; }); M.sel = null; },
+      hints: ["Drag them, or tap a statement and then a box. Start with the ones you are sure of.", "Anything about harm, side effects or using mice is a disadvantage.", "Disadvantages: side effects, not widely used, mice. The rest are advantages."] }
+  ],
+  hard: [
+    { id: "tf", kind: "gaps", setup: SU.make0, stuck: "words", src: "s15", text: "True or false? Choose for each statement.",
+      rows: [["t1", "1. A hybridoma cell can divide and make an antibody.", HYB.divides && HYB.makesAntibody ? "True" : "False", ""],
+        ["t2", "2. The hybridoma is the monoclonal antibody.", HYB.isCell ? "False" : "True", ""],
+        ["t3", "3. Monoclonal antibodies bind one specific antigen.", SH.every(a => SH.filter(s => fits(a, s)).length === 1) ? "True" : "False", ""],
+        ["t4", "4. Hybridoma cells are made by joining two lymphocytes.", HYB.from.includes("tumour cell") ? "False" : "True", ""]],
+      bank: ["True", "False"],
+      rowWhy: { t1: "Statement 1 is true: a hybridoma divides and makes the antibody.", t2: "Statement 2 is false. A common mistake: the hybridoma is a cell. It makes the antibody.",
+        t3: "Statement 3 is true: each binding site fits one specific antigen.", t4: "Statement 4 is false: a lymphocyte joins a tumour cell." },
+      whyVal: { True: "", False: "" },
+      rowPoint: { t1: "Look again at statement 1: what can a hybridoma do?", t2: "Look again at statement 2: is a hybridoma a cell or a molecule?",
+        t3: "Look again at statement 3: how many antigens does one binding site fit?", t4: "Look again at statement 4: which two cells are joined?" },
+      explain: "1 True. 2 False: the hybridoma is a cell that makes the antibody. 3 True. 4 False: a lymphocyte joins a tumour cell.",
+      hints: ["Two are true and two are false.", "Is a hybridoma a cell or a molecule? What two cells are joined?", "True, False, True, False."] },
+    { id: "dye", kind: "choice", setup: SU.hide, stuck: "uses", src: "s17", text: "A fluorescent dye is attached to a monoclonal antibody. What does this let scientists do?",
+      options: [{ t: "Locate a specific molecule in tissue", ok: () => USES.dye.tag === "dye" && bindResult("dye", USES.dye.target).ok },
+        { t: "Kill the cancer cells", why: "That needs a drug attached, not a dye. A dye shows where the molecule is." },
+        { t: "Make the hybridoma divide faster", why: "The dye is on the antibody, not the hybridoma. It shows where a molecule is in tissue." },
+        { t: "Light up every molecule in the tissue", why: "The antibody is specific: it binds only one antigen, so the dye shows only where that molecule is." }],
+      explain: "The antibody binds only its antigen, so the dye shows where that molecule is in the tissue.",
+      hints: ["What does a glowing dye let you see?", "Try Fluorescent dye on Target it, then press Release.", "It shows where a molecule is: it l…s it."] },
+    { id: "drugGoal", kind: "goal", setup: SU.drug, stuck: "uses", src: "s14, s17", text: "Do it: on Target it, choose the binding site that will carry the drug to the cancer cells only. Release the antibodies, then press Check.",
+      test: M => M.tg.use === "drug" && M.tg.rel && bindResult("drug", M.tg.ab).ok,
+      not: M => { const g = M.tg;
+        if (g.use !== "drug") return "Choose Cancer drug under Use first.";
+        if (!g.ab) return "Choose a binding site first. Look at the antigens on the cancer cells.";
+        if (!g.rel) return "Now press Release antibodies.";
+        const r = bindResult("drug", g.ab);
+        return r.healthy ? `The ${SHN[g.ab]} binding site fits the antigen on healthy cells, so the drug reached ${r.healthy} healthy cell${r.healthy > 1 ? "s" : ""}. Choose the one that fits the cancer cells' antigen.`
+          : `No antibodies bound: the ${SHN[g.ab]} binding site fits no antigen here. Look at the cancer cells' antigen.`; },
+      done: M => `The ${SHN[M.tg.ab]} binding site fits only the antigen on the cancer cells. The drug reached only the cancer cells: healthy cells are not harmed.`,
+      reveal: M => { M.tg.use = "drug"; M.tg.ab = USES.drug.target; M.tg.rel = true; },
+      hints: ["Look closely at the antigens on the cancer cells.", "The binding site must be the same shape as the cancer cells' antigen.", "Choose the square binding site, then Release."] },
+    { id: "props", kind: "multi", setup: SU.make0, stuck: "steps", src: "s23, s25 Q2", marks: 2, text: "Give two properties of a hybridoma cell that make it useful. Choose two.",
+      options: [{ t: "It can divide", ok: () => HYB.divides, miss: "One property comes from the tumour cell." },
+        { t: "It makes the specific antibody", ok: () => HYB.makesAntibody, miss: "One property comes from the lymphocyte." },
+        { t: "It is a monoclonal antibody", why: "“It is a monoclonal antibody” is a common mistake. A hybridoma is a cell that makes the antibody." },
+        { t: "It binds to white blood cells", why: "“It binds to white blood cells” is wrong. Antibodies bind a specific antigen, and the hybridoma is a cell that makes them." },
+        { t: "It spreads to other parts of the body", why: "“It spreads to other parts of the body” describes a malignant tumour, not why a hybridoma is useful." }],
+      explain: "It can divide (from the tumour cell) and it makes the specific antibody (from the lymphocyte).",
+      scheme: "Mark scheme: can divide (1); makes the antibody (1). Accept: can be cloned.",
+      hints: ["One property comes from each cell that was joined.", "The tumour cell divides again and again. The lymphocyte makes…", "It can divide; it makes the antibody."] },
+    { id: "hinge", kind: "choice", setup: SU.make0, stuck: "words", src: "s24", text: "What is a hybridoma?",
+      options: [{ t: "A cell that divides and makes an antibody", ok: () => HYB.isCell && HYB.divides && HYB.makesAntibody },
+        { t: "A monoclonal antibody", why: "A common mistake. A hybridoma is a cell. It divides and makes the antibody." },
+        { t: "A white blood cell from a patient", why: "No. A hybridoma is made in the lab by joining a mouse lymphocyte to a tumour cell." },
+        { t: "A tumour that makes a drug", why: "No. It is a cell made from a lymphocyte and a tumour cell. It makes an antibody, not a drug." }],
+      explain: "A hybridoma is a cell made by joining a lymphocyte to a tumour cell. It divides and makes the antibody.",
+      hints: ["Is a hybridoma a cell or a molecule?", "It is made from a lymphocyte and a tumour cell.", "A cell that divides and makes…"] },
+    { id: "explain", kind: "multi", setup: SU.drug, stuck: "uses", src: "s14, s25 Q3", marks: 3, text: "Explain why a monoclonal antibody can deliver a drug to cancer cells only. Choose the points that earn marks.",
+      starter: "The binding site fits only…",
+      options: [{ t: "…one antigen: the antibody is specific to it.", ok: () => SH.every(a => SH.filter(s => fits(a, s)).length === 1), miss: "Say why it binds only one thing." },
+        { t: "That antigen is on the cancer cells.", ok: () => sceneItems("drug").filter(i => i.role === "target").every(i => i.sites.every(s => s.sh === USES.drug.target)), miss: "Say where the antigen is." },
+        { t: "The drug is attached to the antibody, so it is carried there.", ok: () => USES.drug.tag === "drug", miss: "Say how the drug gets there." },
+        { t: "The drug kills all the cells it meets.", why: "“The drug kills all the cells it meets” would get no mark: the drug only reaches cells with the antigen." },
+        { t: "The antibody binds to white blood cells.", why: "“The antibody binds to white blood cells” is a common mistake: it binds a specific antigen on the cancer cells." }],
+      explain: "The binding site fits only one antigen; that antigen is on the cancer cells; the drug is attached to the antibody, so it is carried only to them.",
+      scheme: "Mark scheme: specific to one antigen (1); antigen on cancer cells (1); drug attached to antibody (1). Reject: kills all cells.",
+      hints: ["Three marks: three points. Try the Cancer drug on Target it.", "Specific to what? Where is that antigen? How does the drug get there?", "One antigen; on the cancer cells; drug attached to the antibody."] },
+    { id: "disadv", kind: "choice", setup: SU.weigh, stuck: "uses", src: "s20, s25 Q4", text: "Give one disadvantage of monoclonal antibody treatment.",
+      options: [{ t: "It has caused more side effects than expected", ok: () => WITEM.side.z === "d" },
+        { t: "Healthy cells are not harmed", why: "That is an advantage, not a disadvantage." },
+        { t: "It is very specific to one target", why: "Being specific is an advantage: the drug reaches only the target cells." },
+        { t: "Drugs reach only the cancer cells", why: "That is an advantage: healthy cells are spared." }],
+      explain: "More side effects than expected. Also accept: not as widely used as hoped; mice are used.",
+      hints: ["Try sorting on Weigh it up.", "A disadvantage is a problem with the treatment.", "Side effects…"] },
+    { id: "describe", kind: "order", setup: SU.hide, stuck: "steps", src: "s11, s25 Q5", marks: 4, text: "Describe how monoclonal antibodies are produced. Number the points you would use, in order.",
+      starter: "First, a mouse is…",
+      options: [{ t: "A mouse is injected with a specific antigen: its lymphocytes make a particular antibody.", step: "lymph", miss: "Start with the mouse and what its lymphocytes do." },
+        { t: "They are combined with tumour cells to make hybridomas.", step: "fuse", miss: "Say what the lymphocytes are joined to." },
+        { t: "Single hybridoma cells are cloned.", step: "clone", miss: "Say what happens to single hybridoma cells." },
+        { t: "The antibody is collected and purified.", step: "purify", miss: "Say what happens at the end." },
+        { t: "The mouse is injected with the disease.", why: "“Injected with the disease” would be rejected: the mouse is given a specific antigen." },
+        { t: "The hybridoma is purified: it is the antibody.", why: "A common mistake: the hybridoma is a cell. The antibody it makes is purified." },
+],
+      explain: "1 A mouse is injected with a specific antigen: its lymphocytes are stimulated to make a particular antibody. 2 They are combined with tumour cells to make hybridomas. 3 Single hybridoma cells are cloned. 4 The antibody is collected and purified.",
+      scheme: "Mark scheme: lymphocytes stimulated (1); fused with tumour cells: hybridomas (1); cloned (1); purified (1). Reject: injected with the disease.",
+      hints: ["Four marks: four points, in order. Work through Make it.", "Leave out anything about ‘the disease’ or the hybridoma being the antibody.", "Lymphocytes → hybridomas → cloned → purified."] }
+  ]
+};
+TASKS.hard.forEach(t => { if (t.kind === "order") t.options.forEach(o => { if (o.step) o.ok = () => stepNo(o.step) >= 0; }); });
+const optT = o => o.t;
+const wRight = M => WITEMS.every(i => M.w[i.id] === i.z);
+const orderAns = t => t.options.map((o, i) => [o, i]).filter(([o]) => o.ok && o.ok()).sort((a, b) => stepNo(a[0].step) - stepNo(b[0].step)).map(([, i]) => i);
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (STEPS.length !== 6 || ORD_ANS.map(o => o.L).join("") !== "BDAC") errs.push("steps: the order must be B → D → A → C (s12–13)");
+  SH.forEach(a => { [ID4, [3, 2, 1, 0], [1, 3, 0, 2]].forEach(pm => { if (fitCell(a, pm) == null || lymShapes(a, pm).filter(s => fits(s, a)).length !== 2) errs.push("lymphocytes: a shuffled order must keep two that fit " + a); }); const L = lymShapes(a); if (L.filter(s => fits(s, a)).length !== 2 || L.length !== 4 || L.filter(s => !fits(s, a)).length !== 2) errs.push("lymphocytes: two of four must fit antigen " + a); if (fitCell(a) == null) errs.push("hybridomas: one must make the antibody for " + a); if (SH.filter(s => fits(a, s)).length !== 1) errs.push("binding: each site fits one antigen"); });
+  for (const u of Object.keys(USES)) {
+    const T = USES[u].target;
+    SH.forEach(ab => { const r = bindResult(u, ab), P = bindPlan(u, ab);
+      if (P.plan.some(s => s && !fits(ab, s.sh))) errs.push(`use ${u}: an antibody bound an antigen that doesn't fit`);
+      if (u === "antigens") { if (r.bound < 1) errs.push("use antigens: every binding site must bind one cell"); return; }
+      if (ab === T && !r.ok) errs.push(`use ${u}: the right binding site must bind only the targets`);
+      if (ab !== T && r.tgt) errs.push(`use ${u}: a wrong binding site bound a target`); });
+  }
+  if (bindResult("drug", USES.drug.target).healthy !== 0 || SH.filter(s => s !== USES.drug.target).some(s => bindResult("drug", s).healthy < 1 && bindResult("drug", s).bound)) errs.push("use drug: only the right binding site spares healthy cells");
+  if (WITEMS.filter(i => i.z === "a").length !== 4 || WITEMS.filter(i => i.z === "d").length !== 3) errs.push("sort: 4 advantages, 3 disadvantages (s20–22)");
+  { const M = freshM(); M.mk.ag = "tri"; M.mk.inj = true; M.mk.col = true; M.mk.fused = true; M.mk.n = 8; M.mk.cn = 8; M.mk.pur = true; if (mkStep(M.mk) !== 6) errs.push("make: the six steps must end in step 6"); if (mkStep(freshMk()) !== 0) errs.push("make: a new model starts at step 1"); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+    }
+    if (t.kind === "multi" || t.kind === "order") {
+      const R = t.options.filter(o => o.ok && o.ok());
+      if (R.length !== t.marks) E("needs " + t.marks + " creditworthy points");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong point has no feedback");
+      if (R.some(o => !o.miss)) E("a point has no 'missing' feedback");
+      if (t.options.length - R.length < 2) E("needs at least 2 wrong points");
+      if (!t.scheme) E("needs the mark scheme");
+    }
+    if (t.kind === "order" && orderAns(t).map(j => t.options[j].step).join() !== "lymph,fuse,clone,purify") E("the points must follow the production steps");
+    if (t.kind === "gaps") { if (new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); if (t.rowWhy && !t.rowWhy[k]) E("no feedback for row " + k); });
+      if (!t.rowWhy) t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w])) E("no feedback for the word " + w); }); }
+    if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); if (!t.not(M)) E("no feedback at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, steps: false, uses: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null;
+const PKEY = "ks3tools-progress:gcse-monoclonal-antibody-maker";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+const LOCKW = { run: "Predict first. The antibodies are released when you get it right, or press Show answer.", all: "The model is set for this question." };
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
+
+/* ===== Drawing ===== */
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+const UL = { big: false };
+const FS = n => UL.big ? Math.round(n * 1.75) : n;
+const B_ = (a, b) => UL.big ? a : b;   // phone wording : laptop wording
+const cx_ = (x, s, fs) => { const w = s.length * FS(fs) * .56 / 2; return clamp(x, w + 4, 636 - w); };   // keep a centred label inside the picture
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${FS(fs)}"${o ? " " + o : ""}>${esc(s)}</text>`;
+const LB = (x, y, s, fs, anchor) => T_(x, y, s, fs, `class="lb"${anchor ? ` text-anchor="${anchor}"` : ""}`);
+
+/* antibody (Y shape) in its own frame: junction (0,0), stem to (0,18), arms to (±11,−13); a binding-site cup at each arm tip */
+const CUP = { tri: "M-8 4.5L0 -8.5L8 4.5", sq: "M-7.5 5V-7.5H7.5V5", rd: "M-7.2 1.5A7.6 7.6 0 1 1 7.2 1.5" };
+const ABL = [-11, -13], ABR = [11, -13], ABU = unit([11, 13]), ABC_L = [ABL[0] - ABU[0] * 8, ABL[1] - ABU[1] * 8];
+function cup(T, sh) { const u = unit([-T[0], -T[1]]), c = [T[0] - u[0] * 8, T[1] - u[1] * 8]; return `<path class="abc" d="${CUP[sh]}" transform="translate(${f1(c[0])} ${f1(c[1])}) rotate(${f1(ang(u) + 90)})"/>`; }
+const AB_BODY = {};
+function abBody(sh, tag) { const k = sh + tag; if (AB_BODY[k]) return AB_BODY[k];
+  let h = `<path class="abp" d="M0 18V0M0 0L-11 -13M0 0L11 -13"/>` + cup(ABL, sh) + cup(ABR, sh);
+  if (tag === "drug") h += `<path class="drug" d="M0 19l6.5 3.8v7.5l-6.5 3.8l-6.5 -3.8v-7.5z"/>`;
+  if (tag === "dye") h += `<circle class="dye" cx="0" cy="25" r="6"/>`;
+  return (AB_BODY[k] = h); }
+const abG = (x, y, a, sh, tag, sc) => `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(a)})${sc && sc !== 1 ? ` scale(${sc})` : ""}">${abBody(sh, tag || "")}</g>`;
+/* where an antibody sits when its left binding site holds an antigen head at H, pointing out along n */
+function boundPose(H, n, sc) { sc = sc || 1; const th = ang(n) - ang(ABU), r = rot(ABC_L, th); return [H[0] - r[0] * sc, H[1] - r[1] * sc, th]; }
+/* where an antibody sits on a cell's surface, stem in, binding sites out */
+function surfPose(P, n, sc) { const th = ang([-n[0], -n[1]]) - 90, r = rot([0, 18 * (sc || 1)], th); return [P[0] - r[0], P[1] - r[1], th]; }
+/* an antigen: a short stalk from the surface point, with its shaped head 11 units out */
+const HEAD = { tri: `<path class="agh" d="M0 -5.5L5.2 3.6L-5.2 3.6Z"/>`, sq: `<path class="agh" d="M-4.4 -4.4H4.4V4.4H-4.4Z"/>`, rd: `<circle class="agh" r="5"/>` };
+function antigen(s, sc) { sc = sc || 1; const H = [s.x + s.n[0] * 11 * sc, s.y + s.n[1] * 11 * sc]; return `<g transform="translate(${f1(H[0])} ${f1(H[1])}) rotate(${f1(ang(s.n) + 90)})${sc !== 1 ? ` scale(${sc})` : ""}">${s.bare ? "" : `<path class="ags" d="M0 11V4.5"/>`}${HEAD[s.sh]}</g>`; }
+const headAt = (s, sc) => [s.x + s.n[0] * 11 * (sc || 1), s.y + s.n[1] * 11 * (sc || 1)];
+function abIcon(sh) { return `<svg viewBox="-28 -31 56 52" aria-hidden="true"><g class="scene-ic">${abBody(sh, "")}</g></svg>`; }
+
+/* --- cells and glassware --- */
+function lymph(x, y, r, sh, opt) {
+  opt = opt || {}; let h = `<circle class="lymc" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"/><circle class="lymn" cx="${f1(x - r * .08)}" cy="${f1(y + r * .06)}" r="${f1(r * .66)}"/>`;
+  const sc = r / 30;
+  [-128, -52, 10].forEach(a => { const n = [Math.cos(a / R2D), Math.sin(a / R2D)], P = [x + n[0] * r, y + n[1] * r], p = surfPose(P, n, sc); h += abG(p[0], p[1], p[2], sh, "", sc); });
+  if (opt.stim) [[-1.55, .2], [1.5, .55], [.15, 1.6]].forEach(([dx, dy], i) => { h += abG(x + dx * r, y + dy * r, 30 + i * 70, sh, "", .62 * sc); });
+  return h;
+}
+const tumour = (x, y, r, op) => `<g${op != null ? ` opacity="${f1(op)}"` : ""}><circle class="tumc" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"/><circle class="tumn" cx="${f1(x + r * .06)}" cy="${f1(y - r * .04)}" r="${f1(r * .42)}"/></g>`;
+const hybrid = (x, y, r, op) => `<g${op != null ? ` opacity="${f1(op)}"` : ""}><circle class="hybc" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}"/><circle class="hybn" cx="${f1(x)}" cy="${f1(y)}" r="${f1(r * .5)}"/></g>`;
+function mouse(x, y, s) {
+  return `<g transform="translate(${f1(x)} ${f1(y)}) scale(${s})"><path class="mtail" d="M-86 22C-128 34 -146 74 -196 62"/>` +
+    `<ellipse class="mouse" cx="-42" cy="52" rx="17" ry="8"/><ellipse class="mouse" cx="44" cy="52" rx="17" ry="8"/>` +
+    `<ellipse class="mouse" cx="0" cy="0" rx="92" ry="56"/><ellipse class="mouse" cx="90" cy="-16" rx="46" ry="35"/>` +
+    `<circle class="mouse" cx="72" cy="-56" r="21"/><circle class="mear" cx="72" cy="-56" r="12"/>` +
+    `<circle class="meye" cx="106" cy="-26" r="5"/><circle class="mear" cx="135" cy="-10" r="5.5"/></g>`;
+}
+const SYR = { home: [500, 104], a: 150, tip: [85, 0] };
+function syringe(x, y, fill) {
+  let h = `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${SYR.a})"><path class="gline" d="M45 0H85"/><rect class="plg" x="-76" y="-11" width="8" height="22" rx="2"/><path class="gline" d="M-70 0H-40"/>` +
+    `<rect class="glass" x="-45" y="-14" width="90" height="28" rx="5"/><rect class="liq" x="-28" y="-10" width="70" height="20" rx="3"/><rect class="plg" x="-34" y="-12" width="6" height="24"/>`;
+  if (fill === "dis") h += [[-10, 0], [14, -3], [32, 2]].map(([a, b]) => `<circle class="pathc" cx="${a}" cy="${b}" r="6"/>`).join("");
+  else if (fill) h += [-12, 8, 28].map(a => `<g transform="translate(${a} 0) rotate(${-SYR.a})">${HEAD[fill]}</g>`).join("");
+  return h + `</g>`;
+}
+const syrTip = p => { const r = rot(SYR.tip, SYR.a); return [p[0] + r[0], p[1] + r[1]]; };
+const MOUSE_BOX = { x0: 150, x1: 395, y0: 150, y1: 290 };
+/* a conical flask: neck 26 wide each side, base half-width hw, top y 34, shoulder y 110, base y 344 */
+const hwAt = (y, hw) => 26 + clamp((y - 110) / 220, 0, 1) * (hw - 26);
+function flask(cx, hw) { return `<path class="glass" d="M${cx - 26} 34V110L${cx - hw} 330Q${cx - hw - 2} 344 ${cx - hw + 14} 344H${cx + hw - 14}Q${cx + hw + 2} 344 ${cx + hw} 330L${cx + 26} 110V34"/><path class="gline" d="M${cx - 32} 34H${cx + 32}"/>`; }
+function liquid(cx, hw) { const y = 176, w = hwAt(y, hw); return `<path class="liq" d="M${f1(cx - w)} ${y}L${cx - hw + 4} 328Q${cx - hw + 2} 340 ${cx - hw + 16} 340H${cx + hw - 16}Q${cx + hw - 2} 340 ${cx + hw - 4} 328L${f1(cx + w)} ${y}Z"/>`; }
+const CELLS = { 1: [[0, 0]], 2: [[-1, 0], [1, 0]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 8: [[-3, -1], [-1, -1], [1, -1], [3, -1], [-3, 1], [-1, 1], [1, 1], [3, 1]] };
+function cellPos(n, cx, sp) { const L = CELLS[n] || CELLS[8], one = n <= 2; return L.map(([i, j]) => [cx + i * sp / 2, one ? 288 : 289 + j * 31]); }
+function flaskAbs(cx, k) { const P = []; for (let i = 0; i < k; i++) P.push([cx - 48 + (i % 4) * 32 + (Math.floor(i / 4) % 2) * 14, 200 + Math.floor(i / 4) * 30, (hash(i * 3) - .5) * 70]); return P; }
+function bottle(cx) { return `<path class="glass" d="M${cx - 28} 74V58H${cx + 28}V74L${cx + 66} 104Q${cx + 74} 110 ${cx + 74} 122V330Q${cx + 74} 344 ${cx + 60} 344H${cx - 60}Q${cx - 74} 344 ${cx - 74} 330V122Q${cx - 74} 110 ${cx - 66} 104Z"/><rect class="plg" x="${cx - 32}" y="40" width="64" height="20" rx="4"/>` +
+  `<path class="liq" d="M${cx - 66} 170H${cx + 66}V328Q${cx + 66} 336 ${cx + 58} 336H${cx - 58}Q${cx - 66} 336 ${cx - 66} 328Z"/>`; }
+function bottleAbs(cx, k) { const P = []; for (let i = 0; i < k; i++) P.push([cx - 42 + (i % 3) * 42, 205 + Math.floor(i / 3) * 44, (hash(i * 7) - .5) * 50]); return P; }
+
+/* --- 1. Make it --- */
+const lerp2 = (a, b, u) => [mix(a[0], b[0], u), mix(a[1], b[1], u)];
+const HYBC = new Map();
+function hybCell(x, y, r, sh, op) { const key = `${f1(x)},${f1(y)},${r},${sh},${op == null ? "" : f1(op)},${UL.big}`, c = HYBC.get(key); if (c) return c; if (HYBC.size > 600) HYBC.clear(); const v = hybCell0(x, y, r, sh, op); HYBC.set(key, v); return v; }
+function hybCell0(x, y, r, sh, op) { const sc = UL.big ? .8 : .62, p = surfPose([x, y - r], [0, -1], sc); return `<g${op != null ? ` opacity="${f1(op)}"` : ""}>${hybrid(x, y, r)}${sh ? abG(p[0], p[1], p[2], sh, "", sc) : ""}</g>`; }
+const MIXP = [[88, 154], [236, 154], [384, 154], [532, 154], [88, 316], [236, 316], [384, 316], [532, 316]];   // phone layout of the mix, 148 apart
+const LYM4 = [[330, 122], [470, 122], [330, 262], [470, 262]], LF = [[95, 128], [215, 128], [95, 262], [215, 262]], TF = [[430, 128], [550, 128], [430, 262], [550, 262]];
+function makeSVG(M) {
+  const k = M.mk, a = anim && anim.tab === "make" ? anim : null, u = a ? ease(a.u) : 1, sc = a ? a.from : mkStep(k), ag = k.ag, HS = lymShapes(ag, k.perm);
+  let h = "", mv = "";   // mv: the parts that move in a clone or purify tween (their own layer)
+  if (sc === 0) {
+    h += mouse(250, 222, 1) + `<rect class="drop" x="${MOUSE_BOX.x0}" y="${MOUSE_BOX.y0}" width="${MOUSE_BOX.x1 - MOUSE_BOX.x0}" height="${MOUSE_BOX.y1 - MOUSE_BOX.y0}" rx="40" opacity="${k.drag && k.drag.kind === "syr" ? 1 : 0}"/>`;
+    let p = SYR.home;
+    if (a && a.kind === "inj") { const tgt = [300, 182], r = rot(SYR.tip, SYR.a), end = [tgt[0] - r[0], tgt[1] - r[1]]; p = lerp2(SYR.home, end, u); }
+    else if (k.drag && k.drag.kind === "syr") p = [SYR.home[0] + k.drag.dx, SYR.home[1] + k.drag.dy];
+    if (a && a.kind === "inj" && u > .7) for (let i = 0; i < 5; i++) mv += `<g transform="translate(${f1(220 + i * 22)} ${f1(205 + (i % 2) * 18)}) scale(1.2)" opacity="${f1((u - .7) / .3)}">${HEAD[ag]}</g>`;
+    mv += `<g data-drag="syr">${syringe(p[0], p[1], ag)}<rect x="${f1(p[0] - 80)}" y="${f1(p[1] - 50)}" width="160" height="100" fill="transparent"/></g>`;
+    h += LB(250, 316, "Mouse", 18, "middle");
+    h += LB(560, 30, ag === "dis" ? "Syringe: the disease" : ag ? `Syringe: ${SHI[ag]} antigen` : "Syringe: choose what goes in", 17, "end");
+  } else if (sc === 1) {
+    h += mouse(108, 292, .42);
+    for (let i = 0; i < 4; i++) h += `<g transform="translate(${f1(86 + i * 13)} ${f1(286 + (i % 2) * 8)}) scale(.8)">${HEAD[ag]}</g>`;
+    h += `<path class="zl" d="M132 270L268 74M132 290L282 312"/><g class="tap" data-col="1" tabindex="0" role="button" aria-label="The mouse's lymphocytes: collect them"><circle class="kf" cx="400" cy="190" r="168"/><circle class="zoom" cx="400" cy="190" r="162"/>`;
+    LYM4.forEach(([x, y], i) => { h += lymph(x, y, 27, HS[i], { stim: fits(HS[i], ag) }); });
+    h += `</g>` + LB(14, 40, B_("Antigen:", "Your antigen:"), 17) + `<g transform="translate(${UL.big ? 170 : 148} 34) scale(1.8)">${HEAD[ag]}</g>`;
+    if (!UL.big) h += LB(14, 132, "The mouse's", 16) + LB(14, 154, "lymphocytes:", 16) + LB(14, 176, "each makes", 16) + LB(14, 198, "one antibody", 16);
+  } else if (sc === 2) {
+    const fu = a && a.kind === "fuse", m = fu ? clamp(u / .55, 0, 1) : 0, F = fu ? clamp((u - .55) / .45, 0, 1) : 0, d = k.drag && k.drag.kind === "lym" ? [k.drag.dx, k.drag.dy] : [0, 0];
+    if (!fu) h += `<rect class="drop" x="352" y="56" width="276" height="290" rx="24" opacity="${k.drag && k.drag.kind === "lym" ? 1 : 0}"/>`;
+    TF.forEach(([x, y]) => { h += tumour(x, y, 34, 1 - F); });
+    let g = "";
+    LF.forEach(([x, y], i) => { const q = fu ? lerp2([x, y], [TF[i][0] - 44, TF[i][1]], m) : [x + d[0], y + d[1]]; g += lymph(q[0], q[1], 28, HS[i]); });
+    h += fu ? `<g opacity="${f1(1 - F)}">${g}</g>` : `<g data-drag="lym">${g}<rect x="20" y="56" width="290" height="290" fill="transparent"/></g>`;
+    if (F > 0) TF.forEach(([x, y], i) => { h += hybCell(x - 8, y, 36, HS[i], F); });
+    if (!fu) { h += LB(155, 30, "Lymphocytes", 17, "middle") + LB(490, 30, "Tumour cells", 17, "middle");
+      if (!UL.big) h += T_(155, 342, "each makes one antibody", 15, `class="lbs" text-anchor="middle"`) + T_(490, 342, "divide again and again", 15, `class="lbs" text-anchor="middle"`); }
+  } else if (sc === 3) {
+    const cx = 300, n = k.n, dv = a && a.kind === "div", n0 = dv ? n / 2 : n, P = cellPos(n, cx, 56), P0 = cellPos(n0, cx, 56);
+    h += flask(cx, 150) + liquid(cx, 150);
+    P.forEach((p, i) => { const q = dv ? lerp2(P0[i >> 1], p, u) : p; h += hybCell(q[0], q[1], 19, HS[n === 8 ? i >> 1 : i]); });
+    const t = P[0]; h += `<path class="ld" d="M${f1(t[0] - 4)} ${f1(t[1] - 46)}L150 170"/>` + LB(146, 166, "Antibody", 17, "end");
+    h += `<path class="ld" d="M${f1(P[P.length - 1][0] + 22)} ${f1(P[P.length - 1][1] - 6)}L${UL.big ? 448 : 466} 250"/>` + LB(UL.big ? 452 : 470, 248, B_("Hybridomas", "Hybridomas:"), 17) + LB(UL.big ? 452 : 470, UL.big ? 282 : 272, `a mix of ${n}`, 17);
+  } else if (sc === 4 && UL.big && k.pick < 0) {
+    /* phones: the mix fills the picture (2 rows × 4, big antibodies) so the binding sites can be compared; tap one to clone it */
+    h += `<rect class="zoom" x="8" y="44" width="624" height="308" rx="22"/>` + LB(14, 32, "Antigen:", 17) + `<g transform="translate(178 22) scale(2.6)">${HEAD[ag]}</g>` + LB(630, 30, "Tap the one that fits", 15, "end");
+    MIXP.forEach(([x, y], i) => { const s = HS[i >> 1], p = surfPose([x, y - 26], [0, -1], 1.75);
+      h += `<g data-drag="cell" data-i="${i}" tabindex="0" role="button" aria-label="Hybridoma cell ${i + 1}: makes an antibody with a ${SHN[s]} binding site"><circle class="kf" cx="${x}" cy="${y - 34}" r="66"/>${hybrid(x, y, 26)}${abG(p[0], p[1], p[2], s, "", 1.75)}<rect x="${x - 70}" y="${y - 100}" width="140" height="130" fill="transparent"/></g>`; });
+  } else if (sc === 4) {
+    const A = 168, B = 472, PA = cellPos(8, A, 44);
+    h += flask(A, 124) + liquid(A, 124) + flask(B, 124) + liquid(B, 124);
+    PA.forEach((p, i) => { if (i === k.pick) return; const dragging = k.drag && k.drag.kind === "cell" && k.drag.i === i, q = dragging ? [p[0] + k.drag.dx, p[1] + k.drag.dy] : p, s = HS[i >> 1];
+      h += `<g data-drag="cell" data-i="${i}" tabindex="0" role="button" aria-label="Hybridoma cell ${i + 1}: makes an antibody with a ${SHN[s]} binding site"><circle class="kf" cx="${f1(q[0])}" cy="${f1(q[1] - 12)}" r="34"/>${hybCell(q[0], q[1], 18, s)}<circle cx="${f1(q[0])}" cy="${f1(q[1] - 10)}" r="28" fill="transparent"/></g>`; });
+    if (k.pick < 0) h += `<rect class="drop" x="${B - 110}" y="150" width="220" height="196" rx="20" opacity="${k.drag && k.drag.kind === "cell" ? 1 : 0}"/>`;
+    if (k.pick >= 0) {
+      const cl = a && a.kind === "clone", s3 = cl ? Math.min(2, Math.floor(a.u * 3)) : 3, v = cl ? ease(clamp(a.u * 3 - s3, 0, 1)) : 1;
+      const n1 = cl ? Math.pow(2, s3 + 1) : 8, n0 = n1 / 2, P = cellPos(n1, B, 44), P0 = cellPos(n0, B, 44);
+      if (!cl) flaskAbs(B, 8).forEach(p => { mv += abG(p[0], p[1], p[2], ag, "", .6); });
+      if (cl && a.u < .12) { const s0 = PA[k.pick], q = lerp2(s0, P0[0], ease(a.u / .12)); mv += hybCell(q[0], q[1], 18, ag); }
+      else P.forEach((p, i) => { const q = cl ? lerp2(P0[i >> 1], p, v) : p; mv += hybCell(q[0], q[1], 18, ag); });
+    }
+    if (k.pick < 0 && !UL.big) h += LB(300, 54, "Antigen:", 15, "middle") + `<g transform="translate(300 72) scale(1.4)">${HEAD[ag]}</g>`;
+    h += LB(A, 24, B_("A mix", "Hybridomas: a mix"), 17, "middle") + LB(B, 24, k.pick >= 0 && !(a && a.kind === "clone") ? B_("A clone", "A clone: identical cells") : "New flask: one cell", 17, "middle");
+  } else {
+    const A = 168, B = 472, pu = a && a.kind === "pur";
+    h += flask(A, 124) + liquid(A, 124) + bottle(B);
+    cellPos(8, A, 44).forEach(p => { h += hybCell(p[0], p[1], 18, ag); });
+    const F = flaskAbs(A, 8), Bt = bottleAbs(B, 9);
+    F.forEach((p, i) => { const q = !k.pur ? p : pu ? [mix(p[0], Bt[i][0], u), mix(p[1], Bt[i][1], u) - Math.sin(u * Math.PI) * 70, mix(p[2], Bt[i][2], u)] : Bt[i];
+      mv += abG(q[0], q[1], q[2], ag, "", k.pur ? mix(.6, .9, pu ? u : 1) : .6); });
+    h += LB(A, 24, "The clone", 17, "middle") + LB(B, 24, k.pur && !pu ? "Purified antibody" : "Bottle", 17, "middle");
+    if (sc === 6 && !pu && !UL.big) h += LB(B + 92, 150, "all", 16) + LB(B + 92, 170, "identical", 16);
+  }
+  return [h, mv];
+}
+function renderSteps() {
+  const s = mkStep(M.mk), html = STEPS.map((x, i) => `<li class="${i < s ? "done" : i === s ? "now" : ""}"${i === s ? ' aria-current="step"' : ""}><span class="n" aria-hidden="true">${i < s ? "✓" : i + 1}</span><span>${esc(x.short)}${i < s ? '<span class="vh"> (done)</span>' : ""}</span></li>`).join("");
+  morphHTML($("mkSteps"), html); const ul = $("mkSteps"); if (ul.hidden !== !!M.hs) ul.hidden = !!M.hs;
+}
+
+/* --- 2. Target it --- */
+function targetSVG(M) {
+  const g = M.tg, U = USES[g.use], I = sceneItems(g.use), a = anim && anim.tab === "target" ? anim : null, u = a ? ease(a.u) : 1;
+  const P = g.ab ? bindPlan(g.use, g.ab) : null, done = g.rel && !a, hit = P && g.rel ? P.hit : new Set();
+  let h = "";
+  if (g.use === "preg") h += `<rect class="smp" x="36" y="120" width="568" height="226" rx="14"/>` + LB(52, 146, "Urine sample", 17);
+  if (g.use === "lab") h += `<rect class="smpb" x="36" y="120" width="568" height="226" rx="14"/>` + LB(52, 146, "Blood sample", 17);
+  if (g.use === "dye") h += (M.hs ? "" : LB(600, 24, B_("Find:", "Molecule to find:"), 16, "end") + `<g transform="translate(620 18) scale(1.6)">${HEAD[USES.dye.target]}</g>`) + LB(46, 152, "Tissue", 16);
+  I.forEach((it, i) => {
+    const on = done && hit.has(i);
+    if (it.kind === "cell") h += `<circle class="${it.cls}${on && it.role === "healthy" && U.tag === "drug" ? " hit" : ""}" cx="${it.x}" cy="${it.y}" r="${it.r}"/><circle class="tumn" opacity=".35" cx="${it.x}" cy="${it.y + 4}" r="${f1(it.r * .38)}"/>`;
+    if (it.kind === "path") h += `<rect class="pathc" x="${it.x - 40}" y="${it.y - 17}" width="80" height="34" rx="17"/>`;
+    if (it.kind === "tis") h += `<rect class="tcell" x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}" rx="12"/><circle class="tumn" opacity=".35" cx="${it.x + 52}" cy="${it.y + 60}" r="12"/>`;
+    if (it.kind === "cancer") { let d = ""; for (let j = 0; j <= 16; j++) { const t = j / 16 * 2 * Math.PI, rr = it.r * (1 + .08 * Math.sin(5 * t + i) + .05 * Math.cos(3 * t)); d += (j ? "L" : "M") + f1(it.x + rr * Math.cos(t)) + " " + f1(it.y + rr * Math.sin(t)); }
+      h += `<path class="ccell${on ? " hit" : ""}" d="${d}Z"/><circle class="tumn" opacity=".4" cx="${it.x}" cy="${it.y + 6}" r="${f1(it.r * .36)}"/>`; }
+    if (on && U.tag === "dye") h += it.kind === "tis" ? `<rect class="glow" x="${it.x + 4}" y="${it.y + 4}" width="${it.w - 8}" height="${it.h - 8}" rx="10"/>` : `<circle class="glow" cx="${it.x}" cy="${it.y}" r="${it.r || 20}"/>`;
+    it.sites.forEach(s => { h += antigen(s, GS); });
+  });
+  /* labels: their own layer, drawn on top of the antibodies */
+  let L = "";
+  if (g.use === "antigens") I.forEach(it => { const l = B_(it.label.split(" ")[0], it.label); L += T_(cx_(it.x, l, 16), 336, l, 16, `class="lb" text-anchor="middle"`); });
+  if (g.use === "preg") { const hm = I.find(it => it.role === "target"), ot = I.find(it => !it.role); L += `<path class="ld" d="M${hm.x - 8} ${hm.y + 8}L104 300"/>` + LB(100, 318, "Hormone", 16, "middle") + `<path class="ld" d="M${ot.x} ${ot.y + 9}L${ot.x} 332"/>` + LB(ot.x + 6, 338, B_("Other", "Other molecule"), 15); }
+  if (g.use === "lab") { const pa = I.find(it => it.kind === "path"), oc = I.find(it => it.kind === "cell"); L += LB(pa.x, pa.y + 40, "Pathogen", 16, "middle") + LB(oc.x, oc.y + 50, "Other cell", 16, "middle"); }
+  if (g.use === "drug") I.forEach((it, i) => { const on = done && hit.has(i), w = it.role === "target" ? (on ? ["Drug", "delivered"] : ["Cancer", "cell"]) : (done ? (on ? ["✗ Wrong", "cell"] : ["Not", "harmed"]) : ["Healthy", "cell"]),
+      cls = `class="lb${it.role === "healthy" && done ? (on ? " bad" : " good") : ""}" text-anchor="middle"`, y = it.y + it.r + 22;
+    L += UL.big ? T_(it.x, y + 4, w[0], 15, cls) + T_(it.x, y + 32, w[1], 15, cls) : T_(cx_(it.x, w.join(" "), 15), y, w.join(" "), 15, cls); });
+  L += LB(24, 24, g.hide ? "Antibodies: look at the binding site" : g.ab ? (UL.big ? `Antibodies: ${SHN[g.ab]}` : `Antibodies: ${SHN[g.ab]} binding site`) : "Choose a binding site", 16);
+  return [h, targetAb(M), L];
+}
+
+/* the antibodies: their own layer, so a frame of Release only rebuilds and patches them */
+function targetAb(M) {
+  const g = M.tg, U = USES[g.use], a = anim && anim.tab === "target" ? anim : null, u = a ? ease(a.u) : 1, P = g.ab ? bindPlan(g.use, g.ab) : null;
+  let ab = "";
+  if (g.ab) for (let i = 0; i < NAB; i++) {
+    const s0 = abStart(i), s = P.plan[i];
+    let e = [s0[0], s0[1], 0];
+    if (g.rel) e = s ? boundPose(headAt(s, GS), s.n, GS) : [s0[0] + 10, s0[1] + 14, i % 2 ? 18 : -18];
+    const p = g.rel && a ? [mix(s0[0], e[0], u), mix(s0[1], e[1], u), mix(0, e[2], u)] : e;
+    ab += abG(p[0], p[1], p[2], g.ab, U.tag, GS);
+  }
+  return ab;
+}
+
+/* --- 3. Weigh it up (HTML chips) --- */
+function chipH(id) { const it = WITEM[id], z = M.w[id] || "", mk = M.wchk && z ? (z === it.z ? "ok" : "no") : "";
+  return `<button type="button" class="chp${mk ? " " + mk : ""}" data-chip="${id}" aria-pressed="${M.sel === id}">${mk === "ok" ? "✓ " : mk === "no" ? "✗ " : ""}${esc(it.t)}${mk ? `<span class="vh">${mk === "ok" ? " (right)" : " (wrong place)"}</span>` : ""}</button>`; }
+function renderSort() {
+  ["", "a", "d"].forEach(z => { const ids = M.word.filter(id => (M.w[id] || "") === z);
+    morphHTML($("wz-" + (z || "t")), ids.map(chipH).join("") || (z ? "" : `<p class="small" style="margin:0">All sorted.</p>`)); });
+  document.querySelectorAll("#sorter [data-zone]").forEach(el => el.classList.toggle("can", !!M.sel && !locked()));
+}
+
+/* --- the readout under the model --- */
+const NOTEW = { noag: "Choose what goes in the syringe first.", disease: "No: the mouse isn't given the disease. It is given a specific antigen. Choose an antigen.",
+  wronghyb: "That hybridoma makes a different antibody: it won't bind your antigen. Look at the tips of each cell's antibody." };
+function readout() {
+  if (M.tab === "weigh") {
+    const n = WITEMS.filter(i => M.w[i.id]).length, ok = WITEMS.filter(i => M.w[i.id] === i.z).length;
+    if (M.wchk) { const w = WITEMS.filter(i => M.w[i.id] && M.w[i.id] !== i.z);
+      return `<p class="r1">${ok === WITEMS.length ? "All 7 right!" : `${ok} of 7 right.`}</p>` + (w.length ? `<p class="r2">Look again at the ones marked ✗. For example, “${esc(w[0].t)}”: ${esc(w[0].why)}</p>` : ok === WITEMS.length ? `<p class="r2">They are very specific, but treatment has had more side effects than expected.</p>` : "") +
+        (n < WITEMS.length ? `<p class="r3">${WITEMS.length - n} still to sort.</p>` : ""); }
+    return M.sel ? `<p class="r1">Chosen: “${esc(WITEM[M.sel].t)}”.</p><p class="r3">Now tap Advantages or Disadvantages. Or tap Statements to sort to put it back.</p>`
+      : `<p class="r1">Sorted ${n} of 7.</p><p class="r3">Drag each statement into a box, or tap it and then tap a box.</p>`;
+  }
+  if (M.tab === "target") {
+    const g = M.tg, U = USES[g.use];
+    if (!g.rel || (anim && anim.tab === "target")) return `<p class="r1">${esc(U.name)}</p><p class="r2">${esc(M.hs && g.use === "dye" ? "A fluorescent dye is attached to each antibody." : U.intro)}</p><p class="r3">${g.hide ? "Predict which antigen the antibodies will bind." : g.ab ? "Now press Release antibodies." : "Choose a binding site, then press Release antibodies."}</p>`;
+    const r = bindResult(g.use, g.ab), sn = SHN[g.ab];
+    let r1, r2;
+    if (g.use === "antigens") { r1 = r.bound ? `The antibodies bound only the ${sn} antigens.` : "No antibodies bound."; r2 = `Each antibody is specific: its binding site fits one antigen. The other antigens don't fit.`; }
+    else if (r.ok) { r1 = { preg: "The antibodies bound the hormone: the test detects it.", lab: "The antibodies bound the pathogen's antigen: the pathogen is detected.",
+        dye: "The dye glows where the molecule is: the antibodies located it in the tissue.", drug: "The drug reached only the cancer cells. Healthy cells are not harmed." }[g.use];
+      r2 = `The ${sn} binding site fits only the ${sn} antigen.`; }
+    else if (!r.bound) { r1 = "No antibodies bound."; r2 = `The ${sn} binding site fits no antigen here.`; }
+    else { r1 = { preg: "The antibodies bound other molecules, not the hormone.", lab: "The antibodies bound other cells, not the pathogen.",
+        dye: "The dye glows on the wrong cells: not where the molecule is.", drug: `The drug went to ${r.healthy} healthy cell${r.healthy > 1 ? "s" : ""} instead.` }[g.use];
+      r2 = g.use === "drug" ? "These antibodies don't fit the cancer cells' antigen. Choose the binding site that does." : `The ${sn} binding site fits a different antigen. Choose the one that fits the target.`; }
+    return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(r2)}</p><p class="r3">${r.bound === NAB ? `All ${NAB} antibodies bound.` : `${r.bound} of ${NAB} antibodies bound. The rest stay free.`}</p>`;
+  }
+  const k = M.mk, s = mkStep(k), ag = k.ag;
+  const INS = [ag && ag !== "dis" ? "Drag the syringe onto the mouse, or press Inject." : "Choose an antigen for the syringe. Then drag the syringe onto the mouse, or press Inject.",
+    "Press Collect lymphocytes, or tap the lymphocytes.", "Drag the lymphocytes onto the tumour cells, or press Fuse.",
+    "Press Divide.", `Find a hybridoma whose antibody fits the ${SHI[ag] || ""} antigen. ${UL.big ? "Tap it to clone it." : "Drag it into the new flask, or tap it."}`, "Press Collect and purify.",
+    `Done: monoclonal antibodies for the ${SHI[ag] || ""} antigen. Try them on Target it.`];
+  if (M.hs) return `<p class="r1">Make it</p><p class="r2">Use the controls to try it out.</p>` + (M.note ? `<p class="r2"><b>${esc(NOTEW[M.note])}</b></p>` : "");
+  const r1 = s < 6 ? `Step ${s + 1} of 6: ${STEPS[s].t}.` : "All 6 steps done.";
+  return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(INS[s])}</p>` + (M.note ? `<p class="r2"><b>${esc(NOTEW[M.note])}</b></p>` : s > 0 ? `<p class="r3">Why: ${esc(STEPS[s - 1].why)}</p>` : `<p class="r3">The mouse is given a specific antigen.</p>`);
+}
+function drawMake(all) { const [f, mv] = makeSVG(M); if (all) setLayer($("mFix"), f); setLayer($("mDyn"), mv); }
+function drawFrame() { if (M.tab === "make") drawMake(!anim || (anim.kind !== "clone" && anim.kind !== "pur" && anim.kind !== "inj")); else if (M.tab === "target") setLayer($("tAb"), targetAb(M)); }   // one tween frame: only the moving layer
+function drawScene() { if (M.tab === "make") { drawMake(true); renderSteps(); } else if (M.tab === "target") { const [bg, ab, lb] = targetSVG(M); setLayer($("tDyn"), bg); setLayer($("tAb"), ab); setLayer($("tLbl"), lb); } else renderSort(); }
+function drawPane() {
+  const t = M.tab;
+  ["make", "target", "weigh"].forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  drawScene(); morphHTML($("read"), readout());
+}
+const ACTW = ["Inject ▶", "Collect lymphocytes ▶", "Fuse ▶", "Divide ▶", "", "Collect and purify ▶", "Test them on Target it →"];
+function renderCtl() {
+  const lk = locked(), txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; }, hid = (el, v) => { if (el.hidden !== v) el.hidden = v; };
+  const s = mkStep(M.mk), busy = !!anim;
+  hid($("agSeg"), s !== 0); document.querySelectorAll("#agSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.ag === M.mk.ag)); dis(b, lk); });
+  const act = $("mkAct"); hid(act, s === 4 && !busy); txt(act, busy ? "Wait…" : ACTW[s]); dis(act, lk);
+  dis($("mkReset"), lk);
+  document.querySelectorAll("#useSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.use === M.tg.use)); dis(b, lk); });
+  document.querySelectorAll("#abSeg button").forEach(b => { setAttr(b, "aria-pressed", String(!M.tg.hide && b.dataset.ab === M.tg.ab)); dis(b, lk); });
+  const rb = $("relBtn"); txt(rb, M.tg.rel ? "Reset ↺" : "Release antibodies ▶"); dis(rb, lk || !M.tg.ab);
+  ["wCheck", "wReset"].forEach(id => dis($(id), lk));
+  const wc = $("wCheck"); hid(wc, mode !== "demo");
+  const ln = $("lockNote"); hid(ln, !lk); if (lk) txt(ln, LOCKW[lock] || LOCKW.all);
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { stopAll(); M.tab = t; M.sel = null; M.mk.drag = null; drawAll(); bigCheck(); tourSignal("tab-" + t); }
+
+/* ===== Animation: short tweens that stop by themselves. paceFrame caps the frame rate; motion is time-based. ===== */
+let visOK = true;
+function tween(tab, kind, from, dur, onEnd) {
+  stopAll();
+  const a = { tab, kind, from, cap: 10, u: 0, el: 0, last: performance.now(), dur: reduced() ? 1 : dur, onEnd, paused: false }; anim = a; renderCtl();
+  a.frame = now => {
+    if (anim !== a) return;
+    if (!visOK || document.hidden) { a.paused = true; return; }
+    const t = Math.max(now, performance.now()); a.el += Math.min(250, t - a.last); a.last = t;
+    a.u = Math.min(1, a.el / a.dur);
+    if (a.u >= 1) { finish(a); return; }
+    drawFrame(); a.id = paceFrame(a.frame, a.cap);
+  };
+  if (reduced()) { finish(a); return; }
+  drawScene(); a.id = paceFrame(a.frame, a.cap);
+}
+function finish(a) { if (anim !== a) return; anim = null; paceCancel(a.id); if (a.onEnd) a.onEnd(); drawAll(); }
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.last = performance.now(); a.id = paceFrame(a.frame, a.cap); }
+function stopAll() { if (anim) finish(anim); }
+
+/* ===== Model changes from the controls ===== */
+function chooseAg(ag) { if (locked()) return lockMsg(); if (anim || mkStep(M.mk) !== 0) return; M.mk.ag = ag; M.note = ""; drawAll(); tourSignal("ag"); }
+function inject() {
+  const k = M.mk; if (locked()) return lockMsg(); if (anim) return;
+  k.drag = null;
+  if (!k.ag) { M.note = "noag"; drawAll(); return; }
+  if (k.ag === "dis") { M.note = "disease"; drawAll(); tried(0); return; }
+  M.note = ""; k.inj = true; const kb = document.activeElement === $("mkAct"); tween("make", "inj", 0, 900, () => { if (kb) setTimeout(() => $("mkAct").focus({ preventScroll: true }), 0); }); tourSignal("inject");
+}
+/* keep keyboard focus on something real when the control under it disappears */
+function refocus(sel) { const a = document.activeElement; if (!a || a === document.body || !a.isConnected || a.closest("#msvg") || (a.id === "mkAct" && a.hidden)) { const el = document.querySelector(sel); if (el) el.focus({ preventScroll: true }); } }
+function collect() { const k = M.mk; if (locked()) return lockMsg(); if (anim || mkStep(k) !== 1) return; k.col = true; M.note = ""; drawAll(); refocus("#mkAct"); tourSignal("collect"); }
+function fuse() { const k = M.mk; if (locked()) return lockMsg(); if (anim || mkStep(k) !== 2) return; k.drag = null; k.fused = true; M.note = ""; tween("make", "fuse", 2, 1100); tourSignal("fuse"); }
+function divide() { const k = M.mk; if (locked()) return lockMsg(); if (anim || mkStep(k) !== 3) return; k.n *= 2; tween("make", "div", 3, 650, () => setTimeout(() => refocus('[data-drag="cell"]'), 0)); }
+function cloneCell(i) { const k = M.mk; if (locked()) return lockMsg(); if (anim || mkStep(k) !== 4) return; k.drag = null;
+  if (!fits(cellShape(k.ag, i, k.perm), k.ag)) { M.note = "wronghyb"; drawAll(); return; }
+  M.note = ""; k.pick = i; k.cn = 8; tween("make", "clone", 4, 2000); refocus("#mkAct"); }
+function purify() { const k = M.mk; if (locked()) return lockMsg(); if (anim || mkStep(k) !== 5) return; k.pur = true; tween("make", "pur", 5, 1300, () => tried(1)); }
+function mkAction() {
+  const s = mkStep(M.mk);
+  if (s === 0) inject(); else if (s === 1) collect(); else if (s === 2) fuse(); else if (s === 3) divide(); else if (s === 5) purify();
+  else if (s === 6) { if (locked()) return lockMsg(); M.tg.ab = M.mk.ag; M.tg.rel = false; setTab("target"); }
+}
+function mkResetAll() { if (locked()) return lockMsg(); stopAll(); M.mk = freshMk(); M.note = ""; drawAll(); }
+function setUse(u) { if (locked()) return lockMsg(); stopAll(); M.tg.use = u; M.tg.rel = false; drawAll(); if (u !== "antigens") tourSignal("use"); }
+function setAb(s) { if (locked()) return lockMsg(); stopAll(); M.tg.ab = s; M.tg.rel = false; drawAll(); tourSignal("ab"); }
+function release() {
+  if (locked()) return lockMsg(); const g = M.tg; if (!g.ab) return;
+  if (g.rel) { stopAll(); g.rel = false; drawAll(); return; }
+  g.rel = true; const use = g.use, r = bindResult(use, g.ab);
+  tween("target", "rel", 0, 1300, () => { if (use === "antigens") tried(2); if (use === "drug" && r.ok) tried(3); });
+  tourSignal("rel");
+}
+function place(id, z) {
+  if (locked()) return lockMsg();
+  if (z) M.w[id] = z; else delete M.w[id];
+  M.sel = null; M.wchk = false; drawAll();
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Make it: put the disease in the syringe and inject it. What happens?", "Make it: work through all 6 steps to make monoclonal antibodies.",
+  "Target it: choose a binding site and press Release. Which antigens bind?", "Cancer drug: get the drug to the cancer cells only.", "Weigh it up: sort all 7 statements. Then press Check my sort."];
+const TRIED = [false, false, false, false, false];
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task; return { choice: null, multi: new Set(), gap: {}, ord: {}, order: shuffled(t.options ? t.options.length : t.bank ? t.bank.length : 0) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}` + (task.marks ? ` · ${task.marks} marks` : "");
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll(); bigCheck();
+}
+const TABW = { make: "Make it", target: "Target it", weigh: "Weigh it up" };
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  const frame = t.starter ? `<p class="frame"><b>Start with:</b> ${esc(t.starter)}</p>` : "";
+  if (t.kind === "choice" || t.kind === "multi") {
+    a.innerHTML = frame + (t.note ? `<p class="small" style="margin:0 0 8px">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt${t.kind === "multi" ? " multi" : ""}" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.i;
+      if (t.kind === "choice") { S.choice = i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }
+      else { if (S.multi.has(i)) S.multi.delete(i); else S.multi.add(i); b.setAttribute("aria-pressed", String(S.multi.has(i))); } }));
+    if (t.kind === "multi") a.insertAdjacentHTML("afterbegin", "");
+  } else if (t.kind === "gaps") {
+    const bank = S.order.length === t.bank.length ? S.order.map(i => t.bank[i]) : t.bank;
+    a.innerHTML = frame + `<div class="opts">` + t.rows.map(([k, txt, , post]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select>${post ? ` <span class="post">${esc(post)}</span>` : ""}</label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "order") {
+    const n = t.marks;
+    a.innerHTML = frame + `<div class="opts">` + S.order.map(i => `<label class="ordrow"><select data-o="${i}" aria-label="Number for: ${esc(t.options[i].t)}"><option value="">–</option>${Array.from({ length: n }, (_, j) => `<option value="${j + 1}">${j + 1}</option>`).join("")}</select><span>${esc(t.options[i].t)}</span></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { if (s.value) S.ord[s.dataset.o] = +s.value; else delete S.ord[s.dataset.o]; }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>${TABW[M.tab]}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function showFinished(p) {
+  if (M.hs) { M.hs = false; drawAll(); }
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "multi") { S.multi = new Set(t.options.map((o, i) => o.ok && o.ok() ? i : -1).filter(i => i >= 0)); document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(S.multi.has(+b.dataset.i)))); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "order") { S.ord = {}; orderAns(t).forEach((i, j) => { S.ord[i] = j + 1; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.ord[s.dataset.o] ? String(S.ord[s.dataset.o]) : ""; }); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel(instant);
+}
+function revealModel(instant) {
+  const t = task; if (!t.after) return;
+  lock = ""; stopAll();
+  if (t.after === "release") { M.tg.rel = true; M.tg.hide = false; if (instant) drawAll(); else tween("target", "rel", 0, 1300); }
+  renderCtl();
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Antigen", DEF.antigen], ["Monoclonal", DEF.monoclonal], ["Hybridoma", DEF.hybridoma], ["Specific", DEF.specific]];
+const SUPW = { words: "Key words", steps: "Production steps", uses: "Uses" };
+function renderSupport() {
+  $("wordsBox").hidden = !support.words; $("stepsBox").hidden = !support.steps; $("usesBox").hidden = !support.uses;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("stepsBox").innerHTML = "<h3>Production steps</h3>" + STEPS.map((s, i) => `<p>${i + 1}. ${esc(s.t)}.</p>`).join("");
+  $("usesBox").innerHTML = "<h3>Uses</h3>" + USELIST.map(u => `<p><b>${esc(u[0])}</b> ${esc(u[1])}</p>`).join("");
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Marking ===== */
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "multi") {
+    if (!S.multi.size) return { skip: "Choose the points first. You can choose more than one." };
+    const ch = [...S.multi].map(i => t.options[i]), wr = ch.filter(o => !(o.ok && o.ok())), right = ch.filter(o => o.ok && o.ok()), all = t.options.filter(o => o.ok && o.ok());
+    if (!wr.length && right.length === all.length) return { ok: true, html: esc(`Correct: ${t.marks} of ${t.marks} marks. ${t.explain}`) };
+    const missing = all.filter(o => !S.multi.has(t.options.indexOf(o)));
+    if (wr.length) return { ok: false, html: esc(`${right.length ? `${right.length} of ${t.marks} good points chosen, but ${wr.length === 1 ? "one is" : wr.length + " are"} wrong.` : wr.length === 1 ? "That point earns no mark." : `${wr.length} points chosen earn no mark.`} ${wr[0].why} Take ${wr.length === 1 ? "it" : "them"} out.`) };
+    return { ok: false, html: esc(`${right.length} of ${t.marks} marks. ${missing.length} point${missing.length > 1 ? "s" : ""} still missing. ${missing[0].miss}`) };
+  }
+  if (t.kind === "order") {
+    const nums = Object.values(S.ord);
+    if (!nums.length) return { skip: "Number the points you would write: 1 first. Leave the rest blank." };
+    const dup = nums.find((v, i) => nums.indexOf(v) !== i); if (dup) return { ok: false, html: esc(`You used the number ${dup} more than once. Give each point its own number.`) };
+    const ch = Object.keys(S.ord).map(Number), wr = ch.filter(i => !(t.options[i].ok && t.options[i].ok())), ans = orderAns(t), right = ch.filter(i => ans.includes(i));
+    if (wr.length) return { ok: false, html: esc(`${wr.length === 1 ? "One point is" : wr.length + " points are"} wrong. ${t.options[wr[0]].why} Take ${wr.length === 1 ? "it" : "them"} out.`) };
+    const missing = ans.filter(i => !ch.includes(i));
+    if (missing.length) return { ok: false, html: esc(`${right.length} of ${t.marks} marks. ${missing.length} point${missing.length > 1 ? "s" : ""} missing. ${t.options[missing[0]].miss}`) };
+    const seq = ch.sort((a, b) => S.ord[a] - S.ord[b]);
+    if (seq.join() !== ans.join()) { const j = seq.findIndex((v, i) => v !== ans[i]); return { ok: false, html: esc(`All four points are there, but not in order. Point ${j + 1} should be about ${ABOUT[t.options[ans[j]].step]}. Describe the steps in the order they happen.`) }; }
+    return { ok: true, html: esc(`Correct: ${t.marks} of ${t.marks} marks, in order. ${t.explain}`) };
+  }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [k, txt, , post] = wrong, v = S.gap[k], n = t.rows.filter(([kk, , a]) => S.gap[kk] !== a).length;
+    if (t.rowWhy) return { ok: false, html: esc(`${n} not right yet. ${prog().wrong >= 1 ? t.rowWhy[k] : t.rowPoint[k]}`) };
+    return { ok: false, html: esc(`“${txt} ${v}${post ? " " + post : ""}” is not right. ${t.whyVal[v]}`) }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to stop, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+const ABOUT = { lymph: "the mouse and its lymphocytes", fuse: "joining them to tumour cells", clone: "cloning single cells", purify: "purifying the antibody" };
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${SUPW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false); if (M.hs) { M.hs = false; drawAll(); }
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; const h = hs[p.hints - 1]; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(typeof h === "function" ? h() : h)}`); hintLabel(); }
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + optT(t.options.find(o => o.ok && o.ok())).replace(/\.$/, "") + ". " + t.explain;
+  if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
+  if (t.scheme) return `Answer shown above. ` + t.scheme;
+  return "Answer: " + t.explain;
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false); if (M.hs) { M.hs = false; drawAll(); }
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const ensure = n => M => { const k = M.mk; if (!k.ag || k.ag === "dis") k.ag = "tri"; M.note = "";
+  if (n === 0 && k.inj) { M.mk = freshMk(k.ag); return; }
+  if (n >= 1) k.inj = true; if (n >= 2) k.col = true; };
+const TOUR = [
+  { el: "#tabs", tab: "make", text: "Three parts: make the antibodies, target them, then weigh them up." },
+  { el: "#mkSteps", tab: "make", set: M => { M.mk = freshMk(); M.note = ""; }, text: "Making them takes six steps, in order. Each step needs you to act." },
+  { el: "#agSeg", tab: "make", text: "First, choose what goes in the syringe.", do: "ag", doText: "Choose an antigen." },
+  { el: "#mscene", tab: "make", set: ensure(0), text: "Drag the syringe onto the mouse, or press Inject.", do: "inject", doText: "Inject the mouse." },
+  { el: "#mscene", tab: "make", set: ensure(1), text: "These are the mouse's lymphocytes. Each makes one antibody. Your antigen stimulated some of them.", do: "collect", doText: "Press Collect lymphocytes, or tap them." },
+  { el: "#mkAct", tab: "make", set: ensure(2), text: "Fuse joins each lymphocyte to a tumour cell. The result is a mix of hybridomas: cells.", do: "fuse", doText: "Press Fuse." },
+  { el: "#read", tab: "make", text: "The readout says why each step matters. Later: divide, clone the one cell that makes your antibody, then purify." },
+  { el: "#tabs", text: "Now see what the antibodies do.", do: "tab-target", doText: "Press Target it." },
+  { el: "#abSeg", tab: "target", text: "Each antibody has a binding site at the tips of the Y.", do: "ab", doText: "Choose a binding site." },
+  { el: "#relBtn", tab: "target", set: M => { if (!M.tg.ab) M.tg.ab = "tri"; M.tg.rel = false; }, text: "Release the antibodies. Only the antigen that fits will bind.", do: "rel", doText: "Press Release antibodies." },
+  { el: "#useSeg", tab: "target", text: "Choose a use: a pregnancy test, a lab test, a dye or a cancer drug.", do: "use", doText: "Choose Cancer drug." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-monoclonal-antibody-maker", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; M.sel = null; drawAll(); }
+  if (st.set) { stopAll(); st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = TOUR[tourI].pref === "above" && fitsAbove ? "down" : fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";   // pref: keep the space below free (e.g. to drop on)
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer (drag), touch and keyboard ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("agSeg").addEventListener("click", e => { const b = e.target.closest("button[data-ag]"); if (b) chooseAg(b.dataset.ag); });
+$("mkAct").addEventListener("click", mkAction);
+$("mkReset").addEventListener("click", mkResetAll);
+$("useSeg").addEventListener("click", e => { const b = e.target.closest("button[data-use]"); if (b) setUse(b.dataset.use); });
+$("abSeg").addEventListener("click", e => { const b = e.target.closest("button[data-ab]"); if (b) setAb(b.dataset.ab); });
+$("relBtn").addEventListener("click", release);
+document.querySelectorAll("#abSeg button").forEach(b => { const s = b.dataset.ab; b.innerHTML = abIcon(s) + `<span>${SHN[s][0].toUpperCase() + SHN[s].slice(1)}</span>`; });
+/* 1. Make it: drag the syringe, the lymphocyte or one hybridoma cell; tap (or Enter) a lymphocyte or a cell */
+(function makeWire() {
+  const svg = $("msvg"); let dr = null, raf = 0;
+  const redraw = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; drawMake(true); }); };
+  svg.addEventListener("pointerdown", e => { const g = e.target.closest("[data-drag]"); if (!g) return; e.preventDefault(); if (locked()) return lockMsg(); if (anim) return;
+    const p = svgPt(svg, e); dr = { kind: g.dataset.drag, i: +(g.dataset.i || 0), x0: p.x, y0: p.y, moved: false, pid: e.pointerId }; try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
+  svg.addEventListener("pointermove", e => { if (!dr || e.pointerId !== dr.pid) return; const p = svgPt(svg, e), dx = p.x - dr.x0, dy = p.y - dr.y0;
+    if (dr.kind === "cell" && UL.big) return; if (!dr.moved) { if (Math.hypot(dx, dy) < 6) return; dr.moved = true; } M.mk.drag = { kind: dr.kind, i: dr.i, dx, dy }; redraw(); });
+  svg.addEventListener("pointerup", e => { if (!dr || e.pointerId !== dr.pid) return; const d = dr, k = M.mk; dr = null; const p = svgPt(svg, e), dx = p.x - d.x0, dy = p.y - d.y0; k.drag = null;
+    if (d.kind === "cell" && UL.big) { cloneCell(d.i); return; }   // phones: the clone step is tap-only; any release counts as a tap on the cell it started on
+    if (!d.moved) { if (d.kind === "cell") cloneCell(d.i); else drawAll(); return; }
+    if (d.kind === "syr") { const t = syrTip([SYR.home[0] + dx, SYR.home[1] + dy]), B = MOUSE_BOX, inB = q => q[0] > B.x0 && q[0] < B.x1 && q[1] > B.y0 - 30 && q[1] < B.y1;
+      if (inB(t) || inB([p.x, p.y])) { inject(); return; } }
+    else if (d.kind === "lym") { if (p.x > 340) { fuse(); return; } }
+    else if (d.kind === "cell") { if (p.x > 472 - 120 && p.x < 472 + 120 && p.y > 120) { cloneCell(d.i); return; } }
+    drawAll(); });
+  svg.addEventListener("pointercancel", () => { if (!dr) return; dr = null; M.mk.drag = null; drawAll(); });
+  svg.addEventListener("click", e => { const g = e.target.closest("[data-col]"); if (g) collect(); });
+  svg.addEventListener("keydown", e => { if (e.key !== "Enter" && e.key !== " ") return; const g = e.target.closest && e.target.closest("[data-col],[data-drag='cell']"); if (!g) return;
+    e.preventDefault(); if (g.dataset.col != null) collect(); else cloneCell(+g.dataset.i); });
+  svg.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("[data-drag]")) e.preventDefault(); }, { passive: false });
+})();
+/* 3. Weigh it up: drag a statement, or tap it and then tap a box; Enter / Space on a box places it */
+(function sortWire() {
+  const V = $("sorter"); let dr = null, lastUp = 0;
+  V.addEventListener("pointerdown", e => { const c = e.target.closest(".chp"); if (!c || locked()) return;
+    dr = { id: c.dataset.chip, el: c, x0: e.clientX, y0: e.clientY, sy0: window.scrollY, moved: false, pid: e.pointerId }; try { c.setPointerCapture(e.pointerId); } catch (x) {} });
+  V.addEventListener("pointermove", e => { if (!dr || e.pointerId !== dr.pid) return; const dx = e.clientX - dr.x0, dy = e.clientY - dr.y0;
+    if (!dr.moved) { if (Math.hypot(dx, dy) < 7) return; dr.moved = true; dr.el.classList.add("dragging"); }
+    const edge = e.clientY > window.innerHeight - 56 ? 14 : e.clientY < 110 ? -14 : 0; if (edge) window.scrollBy(0, edge);   // scroll the page when a statement is dragged to the edge (phones)
+    dr.el.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy + window.scrollY - dr.sy0)}px)`; e.preventDefault(); });
+  V.addEventListener("pointerup", e => { if (!dr || e.pointerId !== dr.pid) return; const d = dr; dr = null; if (!d.moved) return;
+    lastUp = performance.now(); d.el.style.visibility = "hidden"; const t = document.elementFromPoint(e.clientX, e.clientY); d.el.style.visibility = "";
+    d.el.style.transform = ""; d.el.classList.remove("dragging"); const z = t && t.closest && t.closest("[data-zone]");
+    if (z && V.contains(z)) place(d.id, z.dataset.zone); });
+  V.addEventListener("pointercancel", () => { if (!dr) return; dr.el.style.transform = ""; dr.el.classList.remove("dragging"); dr = null; });
+  V.addEventListener("click", e => { if (performance.now() - lastUp < 80) return; const c = e.target.closest(".chp"), z = e.target.closest("[data-zone]");
+    if (!c && !z) return; if (locked()) return lockMsg();
+    if (c && M.sel && M.sel !== c.dataset.chip && z && z.dataset.zone) { place(M.sel, z.dataset.zone); return; }   // a chip already in a box: put the chosen one in that box
+    if (c) { M.sel = M.sel === c.dataset.chip ? null : c.dataset.chip; M.wchk = false; renderSort(); morphHTML($("read"), readout()); return; }
+    if (M.sel) place(M.sel, z.dataset.zone); });
+  V.addEventListener("keydown", e => { const z = e.target.closest && e.target.closest("[data-zone]"); if (!z || e.target !== z) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (M.sel) { place(M.sel, z.dataset.zone); z.focus({ preventScroll: true }); } } });
+})();
+$("wCheck").addEventListener("click", () => { if (locked()) return lockMsg(); M.wchk = true; M.sel = null; drawAll(); if (wRight(M)) tried(4); });
+$("wReset").addEventListener("click", () => { if (locked()) return lockMsg(); M.w = {}; M.sel = null; M.wchk = false; drawAll(); });
+/* bigger labels when a scene is drawn narrow (phones); read on build and on resize, never per frame */
+function bigCheck() { const el = M.tab === "target" ? $("tsvg") : $("msvg"), w = el.getBoundingClientRect().width, big = w > 0 && w < 470;
+  if (big !== UL.big) { UL.big = big; $("mDyn")._h = ""; $("mFix")._h = ""; $("tDyn")._h = ""; $("tAb")._h = ""; $("tLbl")._h = ""; drawScene(); } }
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; resumeAnim(); }).observe($("model"));   // pause a tween while the model is off-screen
+}
+document.addEventListener("visibilitychange", resumeAnim);
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); renderSupport(); fitPanel(); bigCheck(); window.addEventListener("resize", bigCheck);
+try { if (localStorage.getItem("ks3tools-toured:gcse-monoclonal-antibody-maker")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

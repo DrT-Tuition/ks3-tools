@@ -1,0 +1,1636 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photosynthesis Lab</title>
+<!--
+  SCIENCE SPEC — Photosynthesis Lab (GCSE: AQA 8461 Biology / 8464 Combined Science Trilogy, 4.4.1.1 to 4.4.1.2; RP5 / RP6)
+  Models, in three tabs. Everything is drawn in code (SVG); no pictures.
+    1. Limiting factors (L1 s11, s14–s26). Sliders for light intensity (0–10, arbitrary units), carbon dioxide
+       concentration (0–10, arbitrary units) and temperature (0–60 °C). Each factor sets the fastest rate it allows:
+         light   1.2 × light intensity
+         CO₂     1.2 × CO₂ concentration
+         temp    12 × rise(T)            rise(T) = 0.97 × (T ÷ 40)^1.25 + 0.03 up to 40 °C, then 1 (warmer → more collisions);
+                                         den(T) = 1 up to 40 °C, then falls smoothly to 0 at 55 °C (enzymes denatured)
+       rate = a smooth minimum of the three, (Σ x⁻⁶)^(−1/6), × den(T) (denaturing above 40 °C lowers the whole rate,
+       at any light or CO₂ setting). So the factor in shortest supply sets the rate, and the curve
+       levels off when another factor limits (s15, s18). The temperature curve peaks at about 40 °C and falls to zero (s21).
+       The live graph plots rate against the chosen factor (light, CO₂ or temperature), the other two fixed at their
+       sliders; a ring marks the current settings. HT: "Pin this curve" keeps the curve dashed, so pupils change another
+       factor and see two curves on one graph (raising light lifts the plateau, s24). Support "Show what limits": a bar
+       for each factor (the rate it allows) and the rate line, so the shortest bar sets the rate (the deck's sandwich
+       model idea, s14); the readout names the factor in shortest supply, or "too hot: enzymes denatured" above 40 °C.
+    2. Virtual RP5 (Combined) / RP6 (Biology) (L2 s12, s15, s16, s19–s20, s23–s29). Lamp, metre rule, pondweed (cut end
+       up) in a boiling tube of sodium hydrogencarbonate solution in a rack, thermometer, stopwatch; a beaker of water
+       is the heat screen. The lamp moves to 10, 20, 30, 40, 50 cm (buttons, drag or arrow keys). "Count for 1 minute"
+       waits 2 minutes if the lamp has moved (s16), then counts oxygen bubbles leaving the cut stem for 1 minute (sped
+       up: 1 minute = 6 s). Three counts per distance fill the table; pupils press a count to mark an anomaly, type the
+       mean (checked in code; feedback names the slip), and each correct mean is plotted against lamp distance, with an
+       optional curve of best fit (least squares, same falling shape). Improvements (s26): gas syringe (measures volume
+       in cm³ instead of counting bubbles of different sizes), heat screen (stops the lamp warming the water), darken
+       the room (no room light).
+       INVENTED DATA (said on screen): mean count = 68 × I ÷ (I + 0.32) × rise(T) ÷ rise(20), with I = (10 ÷ d)² + 0.02
+       when room lights are on; this matches the deck's example 52, 30, 18, 11, 8 bubbles per minute at 10–50 cm (dark
+       room, 20 °C). Without the heat screen the lamp warms the water: T = 20 + 4 × (10 ÷ d)² °C (4 °C at 10 cm, as in
+       the s30 hinge). Scatter ±5 % (at least ±0.6, cut off at 1.6 sd); about 1 in 14 counts is an anomaly (× 0.45 or
+       × 1.75). Bubble sizes vary (0.5–1.5 × 0.012 cm³); the syringe reads the true volume ± 3 %, with no anomalies.
+       Anomaly rule (code): with three counts, one count further than max(3, 25 % of the median) from the median.
+    3. Inverse square law (HT; L2 s21–s22). Start and new lamp distance (5–50 cm). Side view of the light spreading,
+       and the patch it lights at each distance: the same light spreads over (d₂ ÷ d₁)² times the area. Working in code:
+       distance change → square it → intensity × (d₁ ÷ d₂)², as a simplified fraction.
+  Sources: Y10 T1 L1 Photosynthesis (Higher deck; Triple L3 identical apart from s15 "disease or no magnesium reduces
+    it"); Y10 T1 L2 RP5 Rate of photosynthesis (Higher deck; Triple L4 RP6 identical apart from RP number). Slides used:
+    L1 s4, s8, s11–s13, s14, s15–s17, s18–s20, s21–s23, s24–s26, s27, s28, s29–s30, s33; L2 s5, s9, s11, s12, s15, s16,
+    s18, s19–s20, s21–s22, s23–s25, s26–s28, s29, s30, s31–s32. AQA 8461/8464 4.4.1.1, 4.4.1.2 (HT: two- and three-factor
+    graphs; inverse square law), RP5 (8464) / RP6 (8461).
+  Tier and course badges: HT on Pin this curve, the Inverse square law tab and Hard 4 and 8; "Biology only" on magnesium.
+  Simplifications (on screen as Model limits): rates in arbitrary units; one smooth model for every plant; chlorophyll
+    fixed (described, not a slider); the lab counts are invented; time sped up; the lamp is a small point of light.
+  Misconceptions designed out (L1 s4, L2 s5, hinges L1 s28 and L2 s30; AQA 8461/1H examiner reports Nov 2020,
+    Jun 2024 Q7.7–7.8, Jun 2025 Q4.1–4.2):
+    - A flat line means light is still limiting / photosynthesis has stopped (the plateau is labelled by the limiting
+      factor, the rate stays high; E3, E4, H2 feedback).
+    - A limiting factor stops the reaction (the curve never drops when a factor runs low; it stops rising; key words).
+    - Photosynthesis creates energy / energy is released (H1 feedback; equation note "light energy is taken in").
+    - Chlorophyll is an enzyme (E1, E2, H1 feedback).
+    - Bubble count is the independent variable; the pondweed is moved (E6 feedback: you move the lamp).
+    - "Amount of light" as a variable (E6 feedback; the tool always says light intensity).
+    - Rate units b/s or O₂/s (the tool writes bubbles per minute and cm³ per minute; H6 feedback).
+    - A warming lamp is a fair test (the thermometer rises without the heat screen; H10 feedback).
+  Facts and values used: word equation; endothermic; chlorophyll absorbs light; symbols CO₂, H₂O, C₆H₁₂O₆, O₂;
+    limiting factors light intensity, CO₂ (only 0.04% of air), temperature, chlorophyll (disease; Biology only: no
+    magnesium); best temperature about 40 °C, too hot denatures enzymes, rate falls to zero; growers add heat, light or
+    CO₂ only while the extra crop pays for it (HT); RP apparatus, variables, method, safety; means 32, 30, 34 → 32 and
+    5, 5, 11 → 5; 45 bubbles in 90 s → 30 per minute; 27 cm³ in 45 min → 0.6 cm³ per minute; 21, 23, 22 → 22;
+    anomalies 30, 31, 12 → 30.5; 16, 40, 15 → 15.5; 8, 9, 8 → 8.3; inverse square 10→20 ¼, 10→30 1/9, 10→40 1/16,
+    20→10 × 4, 5→15 1/9, 10→50 1/25; improvements gas syringe, heat screen, darkened room; example data 52, 30, 18, 11, 8.
+  SoW lessons served: Y10 T1 L1 Photosynthesis and L2 RP5 (Combined); Triple Y10 T1 L3 Photosynthesis and L4 RP6.
+  Questions: Easy 1–5 and Hard 1–4 test L1 (L3 Triple); Easy 6–10 and Hard 5–10 test L2 (L4 Triple).
+  Checks on load: model facts (60 °C → 0; peak near 40 °C; the plateau is not light-limited; deck lab data; inverse
+    square fractions; anomaly rule and means on the deck's sets) and every question (3 hints; one right option with
+    feedback for every wrong one; gap feedback; numeric answers computed and slips outside tolerance; statements with
+    feedback; goals not met at the start and reached by Show answer). A failure shows an error box and switches the
+    question off.
+  Performance: drawn on demand; the only animation is a count (bubbles or syringe), paced by paceFrame (20 fps cap for the count,
+    adaptive slow-down), patching one small layer; stops when the count ends. Reduced motion: counts finish at once.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--metal:#D3DAE2;--metal-2:#A9B4C2;--metal-edge:#4A5664;--glass:#E4EFF8;--glass-edge:#5E7A96;--water:#CFE6F3;--sol:#D8EEF0;
+  --bench:#C9A274;--bench-edge:#6E5230;--wood:#D9B98C;--wall:#EEF1F5;--leaf:#4E9A3A;--leaf-2:#3B7D2B;--leaf-edge:#24521A;
+  --beam:#F6D36B;--bulb:#FFF1B8;--therm:#C62F2F;--rule:#E8D29A;--rule-edge:#7A6430;--curve:#14243D;--curve2:#C2571A;--grid:#D5DCE5;
+  --bar1:#2D5B8C;--bar2:#C2571A;--bar3:#1D6B3F;--dim:#0B1220;--tagbg:#FBFAF8;--tagline:#B9C3D0;--particle-edge:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--metal:#B8C3CF;--metal-2:#8593A3;--metal-edge:#E9EDF3;--glass:#2B4A6E;--glass-edge:#9DB7D3;
+  --water:#2D5578;--sol:#2E5A6E;--bench:#8E6C45;--bench-edge:#E0C49A;--wood:#9C7B52;--wall:#1B3150;--leaf:#6CC254;--leaf-2:#4FA23A;--leaf-edge:#C9F0BC;
+  --beam:#E8C45A;--bulb:#FFF1B8;--therm:#FF7A6E;--rule:#B89A55;--rule-edge:#F0D7AE;--curve:#D9A536;--curve2:#8CC4FF;--grid:#2E4A70;
+  --bar1:#8CC4FF;--bar2:#FFA36B;--bar3:#7FD4A0;--dim:#050A14;--tagbg:#1E3555;--tagline:#4A6890;--particle-edge:#0E1A2C}}
+:root[data-theme="dark"]{--metal:#B8C3CF;--metal-2:#8593A3;--metal-edge:#E9EDF3;--glass:#2B4A6E;--glass-edge:#9DB7D3;
+  --water:#2D5578;--sol:#2E5A6E;--bench:#8E6C45;--bench-edge:#E0C49A;--wood:#9C7B52;--wall:#1B3150;--leaf:#6CC254;--leaf-2:#4FA23A;--leaf-edge:#C9F0BC;
+  --beam:#E8C45A;--bulb:#FFF1B8;--therm:#FF7A6E;--rule:#B89A55;--rule-edge:#F0D7AE;--curve:#D9A536;--curve2:#8CC4FF;--grid:#2E4A70;
+  --bar1:#8CC4FF;--bar2:#FFA36B;--bar3:#7FD4A0;--dim:#050A14;--tagbg:#1E3555;--tagline:#4A6890;--particle-edge:#0E1A2C}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 6px;line-height:1.25}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:10px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene .ax{stroke:var(--ink);stroke-width:2.4;fill:none}
+.scene .gr{stroke:var(--grid);stroke-width:1}
+.scene .cv{stroke:var(--curve);stroke-width:4;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.scene .cv2{stroke:var(--curve2);stroke-width:4;fill:none;stroke-dasharray:12 8;stroke-linecap:round}
+.scene .tag{fill:var(--tagbg);stroke:var(--tagline);stroke-width:1.5}
+.scene .mk{fill:var(--surface);stroke:var(--ink);stroke-width:2.5}
+.scene .metal{fill:var(--metal);stroke:var(--metal-edge);stroke-width:2;stroke-linejoin:round}
+.scene .metal2{fill:var(--metal-2);stroke:var(--metal-edge);stroke-width:2;stroke-linejoin:round}
+.scene .glass{fill:var(--glass);stroke:var(--glass-edge);stroke-width:2}
+.scene .glassl{fill:none;stroke:var(--glass-edge);stroke-width:2.2}
+.scene .sol{fill:var(--sol)}
+.scene .water{fill:var(--water)}
+.scene .bench{fill:var(--bench);stroke:var(--bench-edge);stroke-width:2}
+.scene .wood{fill:var(--wood);stroke:var(--bench-edge);stroke-width:2}
+.scene .rule{fill:var(--rule);stroke:var(--rule-edge);stroke-width:1.5}
+.scene .tick{stroke:var(--rule-edge);stroke-width:1.2}
+.scene .leaf{fill:var(--leaf);stroke:var(--leaf-edge);stroke-width:1.2}
+.scene .stem{stroke:var(--leaf-2);stroke-width:5;fill:none;stroke-linecap:round}
+.scene .bub{fill:rgba(255,255,255,.55);stroke:var(--glass-edge);stroke-width:1.4}
+.scene .beam{fill:var(--beam)}
+.scene .bulb{fill:var(--bulb);stroke:var(--metal-edge);stroke-width:1.5}
+.scene .therm{fill:var(--therm)}
+.scene .drag{cursor:grab;touch-action:none}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3;stroke-dasharray:6 4}
+.scene .wall{fill:var(--wall)}
+.scene .dim{fill:var(--dim)}
+.scene .lcd{fill:#1E252E;stroke:var(--metal-edge);stroke-width:2}
+.scene .lcdt{fill:#9EF0B4!important;font-variant-numeric:tabular-nums;font-weight:700}
+.scene .b1{fill:var(--bar1)}.scene .b2{fill:var(--bar2)}.scene .b3{fill:var(--bar3)}
+.scene .acc{fill:var(--accent)!important;font-weight:700}
+.scene .bold{font-weight:700}
+.scene .xs{stroke:var(--curve);stroke-width:3.4;stroke-linecap:round}
+.scene .fit{stroke:var(--curve2);stroke-width:3;fill:none;stroke-dasharray:10 6}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.btn:disabled,.sw:disabled{opacity:.45;cursor:default}
+.slider{display:grid;grid-template-columns:minmax(9.5em,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:4.2em;text-align:right}
+.sliders{display:grid;gap:0}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .warn{color:var(--bad);font-weight:700}
+.readout .okc{color:var(--good);font-weight:700}
+.readout ol{margin:2px 0 0;padding-left:24px}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.badge{display:inline-block;font-size:13px;font-weight:700;line-height:1.2;padding:2px 7px;border-radius:6px;border:1.5px solid var(--accent);color:var(--accent);background:var(--surface);vertical-align:middle;letter-spacing:.02em;white-space:nowrap}
+.badge.bio{border-style:dashed}
+.tabs button[aria-pressed="true"] .badge{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink)}
+.small{font-size:16px;color:var(--muted);margin:0}
+.frame{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-left:4px solid var(--accent);border-radius:6px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.status{font-size:16px;font-weight:700;color:var(--accent)}
+/* lab table + graph */
+.labgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:1100px){.labgrid{grid-template-columns:minmax(0,1fr)}}
+.rt{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.rt caption{text-align:left;font-weight:700;font-size:15px;color:var(--muted);padding-bottom:4px}
+.rt th{font-size:14px;color:var(--muted);text-align:center;padding:2px 3px;line-height:1.25}
+.rt td{padding:2px 3px;text-align:center;border-top:1px solid var(--line)}
+.rt tr.cur td{background:var(--sunk)}
+.rt td.dst{font-weight:700;text-align:left;white-space:nowrap}
+.rt th:nth-child(n+2):nth-child(-n+4){min-width:44px}
+.cnt{font:700 16px var(--f-body);min-width:46px;min-height:40px;padding:2px 4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.cnt[aria-pressed="true"]{text-decoration:line-through;border:2px dashed var(--bad);color:var(--bad)}
+.cnt[aria-pressed="true"]::after{content:" anom.";font-size:12px;text-decoration:none;display:block;line-height:1}
+.cnt:disabled{cursor:default;opacity:1}
+.meanin{font:700 16px var(--f-body);width:4.6em;min-height:40px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.meanin.ok{border:2px solid var(--good);background:var(--good-bg);color:var(--good)}
+.meanin.no{border:2px solid var(--bad)}
+.emp{color:var(--muted)}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none;min-width:1.2em}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.opts.build .opt[aria-pressed="true"]::after{content:"✓ in answer"}
+.grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.grid2 .grow{justify-content:space-between}
+@media (max-width:420px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.unit{font-weight:700}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.ms{margin:6px 0 0;padding-left:20px;font-size:16px}
+@media (max-width:560px){.seg button{padding:8px 10px;font-size:15px}.tabs button{font-size:15px;padding:8px 3px}
+  .slider{grid-template-columns:minmax(0,1fr) auto;gap:0 8px}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .rt{font-size:15px}.cnt{min-width:40px}.meanin{width:4em}}
+@media (min-width:901px){.scene{max-height:min(440px,52vh)}#gsvg{max-height:none}}
+@media (min-width:901px) and (max-height:820px){
+  .model{gap:8px}.model .seg button{min-height:40px;padding:6px 12px}.model .readout{padding:6px 10px}.model .readout .r2{font-size:16px}
+  .slider input[type=range]{height:38px}
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:5px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:4px 8px;font-size:16px}
+  .qpanel .frame{padding:4px 8px;font-size:15px}
+}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+.qpanel .opt{line-height:1.3}
+@media (max-width:400px){h1{font-size:23px}header{gap:10px}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Photosynthesis Lab<small>Find what limits the rate of photosynthesis, then do the pondweed practical (RP5 Combined Science · RP6 Biology). Parts marked <span class="badge">HT</span> are Higher tier only.</small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Photosynthesis Lab</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Photosynthesis model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="lim" aria-pressed="true">Limiting factors</button><button type="button" data-tab="rp" aria-pressed="false">Virtual RP5 / RP6</button><button type="button" data-tab="isq" aria-pressed="false">Inverse square law <span class="badge">HT</span></button></div>
+
+      <div class="pane" id="pane-lim">
+        <div class="sliders">
+          <div class="slider" id="lightRow"><label class="ctl-lbl" for="sL">Light intensity</label><input type="range" id="sL" min="0" max="10" step="0.5" value="3"><output id="oL" for="sL"></output></div>
+          <div class="slider" id="co2Row"><label class="ctl-lbl" for="sC">Carbon dioxide</label><input type="range" id="sC" min="0" max="10" step="0.5" value="5"><output id="oC" for="sC"></output></div>
+          <div class="slider" id="tRow"><label class="ctl-lbl" for="sT">Temperature</label><input type="range" id="sT" min="0" max="60" step="1" value="30"><output id="oT" for="sT"></output></div>
+        </div>
+        <div class="controls" id="xvRow"><span class="gl" id="xvLbl">Graph against:</span><span class="seg" role="group" aria-labelledby="xvLbl" id="xvSeg"><button type="button" data-xv="light" aria-pressed="true">Light</button><button type="button" data-xv="co2" aria-pressed="false">CO₂</button><button type="button" data-xv="temp" aria-pressed="false">Temperature</button></span></div>
+        <svg id="lsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="Graph of the rate of photosynthesis against the chosen factor"><g id="lG"></g></svg>
+        <div class="controls" id="pinRow"><button class="btn" type="button" id="pinBtn">Pin this curve</button><span class="badge" title="Higher tier only">HT</span><button class="linkbtn" type="button" id="unpinBtn">Clear pinned curve</button><span class="small" id="pinNote">Pin a curve, then change another factor to compare two curves.</span></div>
+        <svg id="barsvg" class="scene" viewBox="0 0 960 170" role="img" aria-label="Bars: the rate each factor allows. The shortest bar sets the rate." hidden><g id="barG"></g></svg>
+        <div class="readout" id="lread" aria-live="polite"></div>
+        <p class="small" id="chlNote">Chlorophyll is a limiting factor too: disease can reduce the amount. <span class="badge bio">Biology only</span> A lack of magnesium also reduces it.</p>
+      </div>
+
+      <div class="pane" id="pane-rp" hidden>
+        <div class="controls" id="distRow"><span class="gl" id="dLbl">Lamp distance:</span><span class="seg" role="group" aria-labelledby="dLbl" id="dSeg"><button type="button" data-d="10" aria-pressed="true">10 cm</button><button type="button" data-d="20" aria-pressed="false">20</button><button type="button" data-d="30" aria-pressed="false">30</button><button type="button" data-d="40" aria-pressed="false">40</button><button type="button" data-d="50" aria-pressed="false">50</button></span></div>
+        <div class="controls" id="impRow"><span class="gl">Improvements:</span>
+          <button class="sw" type="button" id="screenSw" aria-pressed="false"><span class="dot"></span>Heat screen <span class="state">off</span></button>
+          <button class="sw" type="button" id="darkSw" aria-pressed="false"><span class="dot"></span>Darken the room <span class="state">off</span></button>
+          <button class="sw" type="button" id="syrSw" aria-pressed="false"><span class="dot"></span>Gas syringe <span class="state">off</span></button></div>
+        <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 340" role="img" aria-label="The practical: a lamp on a metre rule shines on pondweed in a boiling tube of sodium hydrogencarbonate solution, with a thermometer and a stopwatch."><g id="rBg"></g><g id="rMov"></g></svg></div>
+        <div class="controls" id="runRow"><button class="btn primary" type="button" id="countBtn">Count for 1 minute</button><span class="status" id="runStat" aria-live="polite"></span></div>
+        <div class="labgrid">
+          <div id="rtable"></div>
+          <div><svg id="gsvg" class="scene" viewBox="0 0 480 330" role="img" aria-label="Graph of mean rate against lamp distance"><g id="gG"></g></svg>
+            <div class="controls" style="margin-top:6px"><button class="sw" type="button" id="fitSw" aria-pressed="false"><span class="dot"></span>Curve of best fit <span class="state">off</span></button></div></div>
+        </div>
+        <div class="controls" id="meanRow"><button class="btn" type="button" id="checkMeans">Check my means</button><button class="linkbtn" type="button" id="clearRow">Clear this row</button><button class="linkbtn" type="button" id="clearAll">Clear table</button></div>
+        <div class="readout" id="rread" aria-live="polite"></div>
+      </div>
+
+      <div class="pane" id="pane-isq" hidden>
+        <p class="small"><span class="badge">HT</span> Higher tier only. Light intensity ∝ 1 ÷ distance².</p>
+        <div class="sliders">
+          <div class="slider" id="d1Row"><label class="ctl-lbl" for="s1">Start distance</label><input type="range" id="s1" min="5" max="50" step="5" value="10"><output id="o1" for="s1"></output></div>
+          <div class="slider" id="d2Row"><label class="ctl-lbl" for="s2">New distance</label><input type="range" id="s2" min="5" max="50" step="5" value="20"><output id="o2" for="s2"></output></div>
+        </div>
+        <svg id="isvg" class="scene" viewBox="0 0 960 380" role="img" aria-label="Light from a small lamp spreads out. Further away, the same light covers a bigger area, so it is less intense."><g id="iG"></g></svg>
+        <div class="readout" id="iread" aria-live="polite"></div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <p class="limits"><b>Model limits:</b> Rates are in arbitrary units from a simple model with the same shapes as the lesson’s graphs; real plants differ. In the Virtual RP, the bubble counts, volumes, the lamp’s warming of the water and the room light are invented example data with random scatter and the odd anomaly, not real results. One minute is sped up to 6 seconds. The lamp is treated as a tiny point of light, so its light intensity follows the inverse square law exactly. The rate of photosynthesis does not fall by the same factor: at high light intensity another factor limits the rate, so the rate levels off (Limiting factors tab).</p>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="eq" aria-pressed="false"><span class="dot"></span>Equation <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="limits" aria-pressed="false"><span class="dot"></span>Show what limits <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Maths help <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="eqBox" hidden></div>
+            <div class="support-box" id="mathsBox" hidden></div>
+            <div class="support-box" id="wordsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts from the decks ===== */
+const DEF = {   // L1 s8, L2 s9
+  photosynthesis: "A reaction that uses light to make glucose from carbon dioxide and water.",
+  endothermic: "A reaction that takes in energy from the surroundings.",
+  chlorophyll: "The green pigment in chloroplasts that absorbs light.",
+  limiting: "The factor that stops the rate of a reaction rising any higher.",
+  iv: "The factor you choose to change.", dv: "The factor you measure.", cv: "A factor you keep the same so the test is fair.",
+  anomaly: "A result that does not fit the pattern." };
+const EQW = "carbon dioxide + water → glucose + oxygen";   // L1 s11
+const SYMS = [["carbon dioxide", "CO₂"], ["water", "H₂O"], ["glucose", "C₆H₁₂O₆"], ["oxygen", "O₂"]];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
+const num = v => { const x = Math.round(v * 100) / 100; return String(x); };
+const near = (v, a) => Math.abs(v - a) <= Math.max(.02 * Math.abs(a), .01);
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const ABC = "ABCDEFGHIJ";
+const FNAME = { light: "light intensity", co2: "carbon dioxide", temp: "temperature", hot: "too hot" };
+
+/* ===== 1. Limiting factors model ===== */
+const rise = T => T <= 0 ? .03 : T >= 40 ? 1 : .97 * Math.pow(T / 40, 1.25) + .03;   // warmer → more collisions (L1 s21 P)
+const den = T => { if (T <= 40) return 1; if (T >= 55) return 0; const u = (T - 40) / 15; return 1 - (3 * u * u - 2 * u * u * u); };   // denatured (s21 R)
+const terms = (L, C, T) => ({ light: 1.2 * L, co2: 1.2 * C, temp: 12 * rise(T) });   // the fastest rate each factor allows
+const softmin = a => a.some(x => x <= 1e-9) ? 0 : Math.pow(a.reduce((s, x) => s + Math.pow(x, -6), 0), -1 / 6);
+const rate = (L, C, T) => { const t = terms(L, C, T); return softmin([t.light, t.co2, t.temp]) * den(T); };   // too hot: denaturing lowers the whole rate
+function limiting(L, C, T) {   // the factor in shortest supply (or "hot" when the enzymes are denaturing)
+  if (T > 40 && den(T) < 1) return "hot";
+  const t = terms(L, C, T); let k = "light"; if (t.co2 < t[k]) k = "co2"; if (t.temp < t[k]) k = "temp";
+  return k;
+}
+const XV = { light: { n: "Light intensity", ax: "Light intensity (arbitrary units)", max: 10, step: 2 }, co2: { n: "Carbon dioxide", ax: "Carbon dioxide concentration (arbitrary units)", max: 10, step: 2 },
+  temp: { n: "Temperature", ax: "Temperature (°C)", max: 60, step: 10 } };
+const YMAX = 12;
+const rateAtX = (s, xv, x) => rate(xv === "light" ? x : s.L, xv === "co2" ? x : s.C, xv === "temp" ? x : s.T);
+const limAtX = (s, xv, x) => limiting(xv === "light" ? x : s.L, xv === "co2" ? x : s.C, xv === "temp" ? x : s.T);
+
+/* ===== 2. Virtual RP model (INVENTED example data; matches the deck's 52, 30, 18, 11, 8 at 20 °C in a dark room) ===== */
+const LAB = { V: 68, K: .32, Iroom: .02, T0: 20, dT: 4, bub: .012, D: [10, 20, 30, 40, 50] };
+const labI = (d, dark) => Math.pow(10 / d, 2) + (dark ? 0 : LAB.Iroom);
+const labT = (d, screen) => LAB.T0 + (screen ? 0 : LAB.dT * Math.pow(10 / d, 2));
+const labMu = (d, env) => { const I = labI(d, env.dark); return LAB.V * I / (I + LAB.K) * rise(labT(d, env.screen)) / rise(LAB.T0); };
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function sample(d, env, row) {   // one count (or one syringe volume) at distance d
+  const mu = labMu(d, env);
+  if (env.syr) return r2(mu * LAB.bub * (1 + clamp(gauss() * .03, -.075, .075)));
+  const far = x => Math.abs(x - mu) > Math.max(3, .25 * mu), hasAn = row.some(far), sd = Math.max(.6, .05 * mu);
+  const normal = () => Math.max(0, Math.round(mu + clamp(gauss() * sd, -1.6 * sd, 1.6 * sd)));
+  const want = !hasAn && Math.random() < .07;
+  for (let k = 0; k < 30; k++) {   // keep the table honest: at most one anomaly per row, and the rule finds exactly that one
+    const v = want && k < 15 ? Math.max(0, Math.round(mu * (Math.random() < .5 ? .45 : 1.75))) : normal(), r = row.concat(v);
+    const fi = r.map((x, i) => far(x) ? i : -1).filter(i => i >= 0);
+    if (fi.length > 1) continue;
+    if (r.length === 3 && anomIdx(r, false) !== (fi.length ? fi[0] : -1)) continue;
+    return v;
+  }
+  return Math.round(mu);
+}
+function anomIdx(a, vol) {   // the one count that doesn't fit: further than max(3, 25 % of the median) from the median
+  if (a.length < 3) return -1;
+  const s = [...a].sort((x, y) => x - y), m = s[1], thr = Math.max(vol ? 0 : 3, .25 * m);
+  const far = a.map((x, i) => Math.abs(x - m) > thr ? i : -1).filter(i => i >= 0);
+  return far.length === 1 ? far[0] : -1;
+}
+const meanOf = a => a.reduce((s, x) => s + x, 0) / a.length;
+function goodMean(a, vol) { const i = anomIdx(a, vol); return meanOf(i < 0 ? a : a.filter((x, j) => j !== i)); }
+const TOL = vol => vol ? .006 : .051;
+function judgeMean(a, vol, v) {   // a typed mean: right, or which slip it looks like
+  const i = anomIdx(a, vol), ok = goodMean(a, vol), dp = vol ? 2 : 1, tol = TOL(vol), fx = x => vol ? x.toFixed(2) : num(r1(x));
+  if (Math.abs(v - ok) <= tol) return { ok: true };
+  const tot = a.reduce((s, x) => s + x, 0);
+  if (i >= 0 && Math.abs(v - meanOf(a)) <= tol) return { why: `You included the anomaly (${fx(a[i])}). Leave it out, then divide by 2.` };
+  if (i >= 0 && Math.abs(v - (tot - a[i]) / 3) <= tol) return { why: "You left out the anomaly but still divided by 3. You used two counts, so divide by 2." };
+  if (Math.abs(v - tot) <= tol || (i >= 0 && Math.abs(v - (tot - a[i])) <= tol)) return { why: "That is the total. Now divide by the number of counts you used." };
+  if (Math.abs(v - ok) <= (vol ? .05 : .5)) return { why: `Nearly. Give the mean to ${dp} decimal place${dp > 1 ? "s" : ""}.` };
+  return { why: i >= 0 ? "Not quite. One count doesn't fit the pattern: leave it out, add the others, then divide." : "Not quite. Add the three counts, then divide by 3." };
+}
+function bestFit(pts) {   // least squares y = a·x ÷ (x + b), x = (10 ÷ d)²
+  if (pts.length < 3) return null; let best = null;
+  for (let k = 0; k <= 120; k++) { const b = .02 * Math.pow(1.05, k), f = pts.map(p => { const x = Math.pow(10 / p.d, 2); return x / (x + b); });
+    const a = pts.reduce((s, p, i) => s + p.y * f[i], 0) / f.reduce((s, g) => s + g * g, 0), e = pts.reduce((s, p, i) => s + Math.pow(a * f[i] - p.y, 2), 0);
+    if (!best || e < best.e) best = { a, b, e }; }
+  return best;
+}
+
+/* ===== 3. Inverse square law (HT) ===== */
+function isq(d1, d2) {   // intensity factor (d1 ÷ d2)² as a simplified fraction, plus the working
+  const p0 = d1 * d1, q0 = d2 * d2, g = gcd(p0, q0), p = p0 / g, q = q0 / g, r = d2 / d1;
+  return { p, q, f: p0 / q0, r, r2: r * r, int: Number.isInteger(r) || Number.isInteger(1 / r) };
+}
+const frac = (p, q) => q === 1 ? String(p) : `${p}/${q}`;
+function isqWork(d1, d2) {
+  const o = isq(d1, d2), L = [];
+  if (d1 === d2) return ["The distance is the same, so the intensity does not change."];
+  if (d2 > d1) {
+    L.push(`The distance changes from ${d1} cm to ${d2} cm: ${d2} ÷ ${d1} = ${num(o.r)}, so it is × ${num(o.r)}.`);
+    L.push(`Square it: ${num(o.r)} × ${num(o.r)} = ${num(o.r2)}.`);
+    L.push(`Intensity ∝ 1 ÷ distance², so the intensity falls to ${o.p === 1 ? "1/" + o.q : "1 ÷ " + num(o.r2) + " = " + frac(o.p, o.q)} of what it was.`);
+  } else {
+    const k = d1 / d2;
+    L.push(`The distance changes from ${d1} cm to ${d2} cm: ${d1} ÷ ${d2} = ${num(k)}, so it is ÷ ${num(k)}.`);
+    L.push(`Square it: ${num(k)} × ${num(k)} = ${num(k * k)}.`);
+    L.push(`Intensity ∝ 1 ÷ distance², so the intensity is ${Number.isInteger(k * k) ? num(k * k) + " times" : frac(o.p, o.q) + " of what it was, " + num(o.f) + " times"} greater.`);
+  }
+  return L;
+}
+
+/* ===== Model state ===== */
+const blankTab = () => ({ 10: [], 20: [], 30: [], 40: [], 50: [] });
+function freshM() { return { tab: "lim", L: 3, C: 5, T: 30, xv: "light", pin: null, marks: null, hideNow: false, nowName: "",
+  d: 10, screen: false, dark: false, syr: false, lastD: null, data: { n: blankTab(), v: blankTab() }, mark: { n: {}, v: {} }, inp: { n: {}, v: {} }, ok: { n: {}, v: {} },
+  rmsg: "", fit: false, example: false, d1: 10, d2: 20, hideWork: false }; }
+const meth = m => m.syr ? "v" : "n";
+const env = m => ({ screen: m.screen, dark: m.dark, syr: m.syr });
+const support = { eq: false, limits: false, maths: false, words: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {}, TASKS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null;
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const PKEY = "ks3tools-progress:gcse-photosynthesis-lab";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const locked = () => mode !== "demo" && !!lock;
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
+
+/* ===== Drawing helpers ===== */
+const narrow = () => { const w = boxW($("model")); return !!(w && w < 600); };
+const LK = () => narrow() ? "tall" : "wide";
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+const tw = (s, fs) => s.length * fs * .54 + 4;
+function tag(x, y, s, fs, cls, anchor) {
+  const w = tw(s, fs) + 12, h = fs + 10, x0 = anchor === "end" ? x - w : anchor === "start" ? x : x - w / 2;
+  return `<rect class="tag" x="${f1(x0)}" y="${f1(y - fs - 2)}" width="${f1(w)}" height="${f1(h)}" rx="7"/>` + T_(x0 + w / 2, y, s, fs, `text-anchor="middle"${cls ? ` class="${cls}"` : ""}`);
+}
+function setVB(svg, w, h) { const v = `0 0 ${w} ${h}`; if (svg.getAttribute("viewBox") !== v) svg.setAttribute("viewBox", v); }
+
+/* --- 1. the limiting-factor graph --- */
+function limGeo() { const t = LK() === "tall"; return t ? { W: 600, H: 470, x0: 84, y0: 24, w: 492, h: 340, fs: 22 } : { W: 960, H: 400, x0: 84, y0: 22, w: 846, h: 300, fs: 18 }; }
+function curvePath(G, s, xv) {
+  const X = XV[xv], n = 120; let d = "";
+  for (let i = 0; i <= n; i++) { const x = X.max * i / n, y = rateAtX(s, xv, x);
+    d += (i ? "L" : "M") + f1(G.x0 + G.w * x / X.max) + " " + f1(G.y0 + G.h * (1 - y / YMAX)); }
+  return d;
+}
+function drawLimGraph() {
+  const G = limGeo(), X = XV[M.xv], s = { L: M.L, C: M.C, T: M.T }, fs = G.fs; setVB($("lsvg"), G.W, G.H);
+  const px = x => G.x0 + G.w * x / X.max, py = y => G.y0 + G.h * (1 - y / YMAX);
+  let o = "";
+  for (let x = 0; x <= X.max + 1e-9; x += X.step / 2) o += `<path class="gr" d="M${f1(px(x))} ${G.y0}V${G.y0 + G.h}"/>`;
+  for (let y = 0; y <= YMAX; y += 2) o += `<path class="gr" d="M${G.x0} ${f1(py(y))}H${G.x0 + G.w}"/>`;
+  o += `<path class="ax" d="M${G.x0} ${G.y0 - 6}V${G.y0 + G.h}H${G.x0 + G.w + 6}"/>`;
+  for (let x = 0; x <= X.max + 1e-9; x += X.step) o += T_(px(x), G.y0 + G.h + fs + 6, String(x), fs, 'text-anchor="middle"');
+  for (let y = 0; y <= YMAX; y += 4) o += T_(G.x0 - 10, py(y) + fs * .35, String(y), fs, 'text-anchor="end"');
+  o += T_(G.x0 + G.w / 2, G.H - 10, X.ax, fs, 'text-anchor="middle" class="bold"');
+  o += `<text x="${fs + 4}" y="${f1(G.y0 + G.h / 2)}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 4} ${f1(G.y0 + G.h / 2)})">Rate of photosynthesis</text>`;
+  const pin = M.pin && M.pin.xv === M.xv ? M.pin : null;
+  if (pin) o += `<path class="cv2" d="${curvePath(G, pin, M.xv)}"/>`;
+  o += `<path class="cv" d="${curvePath(G, s, M.xv)}"/>`;
+  if (pin) {   // legend, top left: line style + words (never colour alone)
+    const lx = G.x0 + 14, ly = G.y0 + 10, nw = M.nowName || "Now", pw = pin.name || pinName(pin), bw = Math.max(tw(nw, fs - 2), tw(pw, fs - 2)) + 70;
+    o += `<rect class="tag" x="${lx}" y="${ly}" width="${f1(bw)}" height="${fs * 2 + 24}" rx="8"/>` +
+      `<path class="cv" d="M${lx + 10} ${ly + fs * .5 + 8}h40"/>` + T_(lx + 60, ly + fs + 6, nw, fs - 2) +
+      `<path class="cv2" d="M${lx + 10} ${ly + fs * 1.5 + 16}h40"/>` + T_(lx + 60, ly + fs * 2 + 14, pw, fs - 2);
+  }
+  (M.marks || []).forEach(mk => { const src = mk.on === "pin" && pin ? pin : s, x = mk.x, y = rateAtX(src, M.xv, x), cx = px(x), cy = py(y), r = fs * .95, dy = mk.below ? r * 2.1 : -r * 2.1;
+    o += `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="5" style="fill:var(--ink)"/><circle class="mk" cx="${f1(cx)}" cy="${f1(cy + dy)}" r="${f1(r)}"/>` + T_(cx, cy + dy + fs * .36, mk.lab, fs, 'text-anchor="middle" class="bold"'); });
+  if (!M.hideNow) { const xv = M.xv === "light" ? M.L : M.xv === "co2" ? M.C : M.T, y = rate(M.L, M.C, M.T);
+    o += `<circle cx="${f1(px(xv))}" cy="${f1(py(y))}" r="${fs * .6}" style="fill:none;stroke:var(--curve2);stroke-width:3.5"/><circle cx="${f1(px(xv))}" cy="${f1(py(y))}" r="4.5" style="fill:var(--curve2)"/>` +
+      tag(clamp(px(xv), G.x0 + 40, G.x0 + G.w - 40), clamp(py(y) - fs * 1.4, G.y0 + fs + 6, G.y0 + G.h - 6), "now", fs - 3); }
+  setLayer($("lG"), o);
+}
+const pinName = p => `Pinned: light ${num(p.L)} · CO₂ ${num(p.C)} · ${num(p.T)} °C`;
+function drawBars() {
+  const show = support.limits && M.tab === "lim"; $("barsvg").toggleAttribute("hidden", !show); if (!show) return;   // SVG has no .hidden property
+  const t = LK() === "tall", W = t ? 600 : 960, H = t ? 230 : 170, fs = t ? 21 : 17; setVB($("barsvg"), W, H);
+  const tm = terms(M.L, M.C, M.T), r = rate(M.L, M.C, M.T), lk = limiting(M.L, M.C, M.T);
+  if (lk === "hot") tm.temp = r;   // too hot: denaturing (× den(T)) sets the rate, so the temperature bar shrinks to the rate line
+  const x0 = t ? 150 : 190, w = W - x0 - (t ? 20 : 170), sx = v => x0 + w * Math.min(v, 15) / 15;
+  const rows = [["light", "Light", "b1"], ["co2", "Carbon dioxide", "b2"], ["temp", "Temperature", "b3"]];
+  let o = T_(12, fs + 4, "The rate each factor allows (arbitrary units)", fs, 'class="mut"');
+  const rh = t ? 52 : 36;
+  rows.forEach(([k, n, c], i) => { const y = fs + 18 + i * rh, short = k === lk || (k === "temp" && lk === "hot");
+    o += T_(x0 - 10, y + rh * .55, n, fs, `text-anchor="end"${short ? ' class="bold"' : ""}`) + `<rect class="${c}" x="${x0}" y="${y + 4}" width="${f1(Math.max(2, sx(tm[k]) - x0))}" height="${rh - 12}" rx="4"/>`;
+    if (short) o += t ? T_(x0 + 6, y + rh + 2, lk === "hot" ? "too hot: denatured enzymes lower the whole rate" : "◀ shortest supply", fs - 3, 'class="acc"') : T_(sx(tm[k]) + 10, y + rh * .55, lk === "hot" ? "◀ too hot: the whole rate falls" : "◀ shortest supply", fs - 1, 'class="acc"');
+  });
+  const ry = fs + 10, rb = fs + 18 + 3 * rh;
+  o += `<path d="M${f1(sx(r))} ${ry}V${rb}" style="stroke:var(--ink);stroke-width:3;stroke-dasharray:6 5"/>` + T_(sx(r), rb + fs + 2, `rate ${num(r1(r))}`, fs - 2, 'text-anchor="middle" class="bold"');
+  setLayer($("barG"), o);
+}
+function limRead() {
+  const r = rate(M.L, M.C, M.T), lk = limiting(M.L, M.C, M.T);
+  let h = `<p class="r1">Rate of photosynthesis: ${num(r1(r))}</p><p class="r2">Light ${num(M.L)} · CO₂ ${num(M.C)} · ${num(M.T)} °C</p>`;
+  if (support.limits) h += `<p class="r3">${lk === "hot" ? (r < .05 ? "Too hot: the enzymes are denatured, so the rate has fallen to zero." : "Too hot: the enzymes are being denatured, so the rate falls.") : `Shortest supply: <b>${FNAME[lk]}</b>. Raising it would raise the rate.`}</p>`;
+  if (M.pin && M.pin.xv !== M.xv) h += `<p class="r3">The pinned curve is for a different graph.</p>`;
+  return h;
+}
+
+/* --- 2. the practical --- */
+function labGeo() { const t = LK() === "tall"; return t ? { W: 600, H: 390, bench: 326, tube: 528, fs: 19, s: .8, ls: .95, tw: 24, top: 44, liq: 64, cut: 178, lv: 1 } : { W: 960, H: 340, bench: 282, tube: 856, fs: 16, s: 1, ls: 1.2, tw: 30, top: 34, liq: 56, cut: 150, lv: 1.3 }; }
+const pxcm = G => (G.tube - 120 * G.s) / 56;
+const lampX = (G, d) => G.tube - d * pxcm(G);
+function lampSVG(G, d) {   // an LED desk lamp; the front of its head (the light) at (lx, hy)
+  const s = G.ls, lx = lampX(G, d), hy = G.bench - 128 * s, bx = lx - 46 * s;
+  return `<g data-lamp="1" class="drag" tabindex="0" role="slider" aria-label="Lamp distance" aria-valuemin="10" aria-valuemax="50" aria-valuenow="${d}" aria-valuetext="${d} cm">` +
+    `<rect x="${f1(bx - 50 * s)}" y="${f1(hy - 50 * s)}" width="${f1(130 * s)}" height="${f1(G.bench - hy + 58 * s)}" style="fill:transparent"/>` +
+    `<ellipse class="metal2" cx="${f1(bx)}" cy="${f1(G.bench - 6 * s)}" rx="${f1(34 * s)}" ry="${f1(9 * s)}"/>` +
+    `<path d="M${f1(bx)} ${f1(G.bench - 10 * s)}L${f1(bx - 6 * s)} ${f1(hy + 30 * s)}L${f1(lx - 26 * s)} ${f1(hy)}" style="fill:none;stroke:var(--metal-edge);stroke-width:${f1(6 * s)};stroke-linecap:round;stroke-linejoin:round"/>` +
+    `<path class="metal" d="M${f1(lx - 34 * s)} ${f1(hy - 14 * s)}L${f1(lx)} ${f1(hy - 26 * s)}V${f1(hy + 26 * s)}L${f1(lx - 34 * s)} ${f1(hy + 14 * s)}Z"/>` +
+    `<rect class="bulb" x="${f1(lx - 4 * s)}" y="${f1(hy - 22 * s)}" width="${f1(6 * s)}" height="${f1(44 * s)}" rx="2"/>` +
+    `<rect class="fr" x="${f1(bx - 46 * s)}" y="${f1(hy - 46 * s)}" width="${f1(122 * s)}" height="${f1(G.bench - hy + 50 * s)}" rx="8"/></g>`;
+}
+function drawLabBg() {
+  const G = labGeo(), s = G.s, fs = G.fs, tx = G.tube, tw2 = G.tw, top = G.top, liq = G.liq, bot = G.bench - 10, d = M.d, lv = G.lv; setVB($("rsvg"), G.W, G.H);
+  const T = labT(d, M.screen), hy = G.bench - 128 * G.ls, lx = lampX(G, d);
+  let o = `<rect class="wall" x="0" y="0" width="${G.W}" height="${G.bench}"/>`;
+  if (M.dark) o += `<rect class="dim" x="0" y="0" width="${G.W}" height="${G.H}" opacity=".55"/>`;
+  o += `<rect class="bench" x="0" y="${G.bench}" width="${G.W}" height="${G.H - G.bench}"/>`;
+  /* beam: brighter when closer (opacity follows the relative light intensity) */
+  o += `<path class="beam" d="M${f1(lx + 2)} ${f1(hy - 20 * G.ls)}L${f1(tx - tw2)} ${f1(liq - 4)}L${f1(tx - tw2)} ${f1(bot - 20)}L${f1(lx + 2)} ${f1(hy + 20 * G.ls)}Z" opacity="${f1(clamp(.12 + .55 * Math.pow(10 / d, 2), .12, .67))}"/>`;
+  /* metre rule: 0 at the pondweed, distance read at the lamp */
+  const rx0 = tx - 58 * pxcm(G), ry = G.bench + 8;
+  o += `<rect class="rule" x="${f1(rx0)}" y="${ry}" width="${f1(tx + 8 - rx0)}" height="${f1(G.H - G.bench - 14)}" rx="3"/>`;
+  for (let c = 0; c <= 56; c++) { const x = tx - c * pxcm(G), big = c % 10 === 0, mid = c % 5 === 0;
+    if (pxcm(G) < 8 && !mid) continue;
+    o += `<path class="tick" d="M${f1(x)} ${ry}v${big ? 14 : mid ? 9 : 5}"/>`; if (big) o += T_(x, ry + 14 + fs, String(c), fs - 1, 'text-anchor="middle"'); }
+  o += T_(rx0 + 6, G.H - 6, "cm", fs - 2, 'class="mut"');
+  /* heat screen: a beaker of water between the lamp and the tube */
+  if (M.screen) { const bx = tx - 72 * s * (G.s < 1 ? .7 : 1), bw = 50 * s, bt = G.bench - 92 * s;
+    o += `<path class="water" d="M${f1(bx - bw / 2 + 2)} ${f1(bt + 16 * s)}H${f1(bx + bw / 2 - 2)}V${f1(G.bench - 4)}H${f1(bx - bw / 2 + 2)}Z" opacity=".85"/>` +
+      `<path class="glassl" d="M${f1(bx - bw / 2 - 4)} ${f1(bt)}L${f1(bx - bw / 2)} ${f1(bt + 4)}V${f1(G.bench - 2)}H${f1(bx + bw / 2)}V${f1(bt)}"/>` + T_(bx, bt - 8, "heat screen", fs - 3, 'text-anchor="middle" class="mut"'); }
+  /* rack (back) */
+  o += `<rect class="wood" x="${f1(tx - tw2 - 22)}" y="${f1(G.bench - 96 * s)}" width="${f1(2 * tw2 + 44)}" height="${f1(10 * s)}" rx="2"/>`;
+  /* boiling tube with solution */
+  o += `<path class="sol" d="M${f1(tx - tw2 + 2)} ${f1(liq)}H${f1(tx + tw2 - 2)}V${f1(bot - tw2)}A${f1(tw2 - 2)} ${f1(tw2 - 2)} 0 0 1 ${f1(tx - tw2 + 2)} ${f1(bot - tw2)}Z"/>`;
+  /* pondweed, cut end at the top (L2 s12) */
+  const cut = pondCut(G), sb = bot - 10;
+  o += `<path class="stem" d="M${f1(tx + 2)} ${f1(sb)}C${f1(tx - 8)} ${f1(sb - 40)} ${f1(tx + 8)} ${f1(cut + 40)} ${f1(tx)} ${f1(cut)}"/>`;
+  for (let y = sb - 14; y > cut + 12; y -= 15 * lv) { const xx = tx + (y > (sb + cut) / 2 ? 1 : -1) * 2;
+    [-1, 1].forEach(k => { o += `<ellipse class="leaf" cx="${f1(xx + k * 10 * lv)}" cy="${f1(y)}" rx="${f1(11 * lv)}" ry="${f1(3.6 * lv)}" transform="rotate(${k * -28} ${f1(xx + k * 10 * lv)} ${f1(y)})"/>`; }); }
+  o += `<path d="M${f1(tx - 4)} ${f1(cut)}h8" style="stroke:var(--leaf-edge);stroke-width:2.5"/>`;
+  /* thermometer in the tube */
+  const thx = tx + tw2 - 9, tTop = top - 22, tBot = bot - 18, tLen = tBot - tTop - 10, colTop = tBot - 6 - tLen * clamp(T / 50, 0, 1);
+  o += `<rect x="${f1(thx - 4 * s)}" y="${f1(tTop)}" width="${f1(8 * s)}" height="${f1(tBot - tTop)}" rx="4" style="fill:var(--surface);stroke:var(--glass-edge);stroke-width:1.5"/>` +
+    `<rect class="therm" x="${f1(thx - 1.6 * s)}" y="${f1(colTop)}" width="${f1(3.2 * s)}" height="${f1(tBot - colTop)}"/><circle class="therm" cx="${f1(thx)}" cy="${f1(tBot)}" r="${f1(6 * s)}"/>`;
+  o += tag(G.s < 1 ? tx - tw2 - 6 : tx + tw2 + 6, G.s < 1 ? top + fs + 6 : tTop + fs + 4, `${num(Math.round(T * 10) / 10)} °C`, fs, M.screen ? "" : T > 20.5 ? "acc" : "", G.s < 1 ? "end" : "start");
+  /* tube glass (front) and rack front */
+  o += `<path class="glassl" d="M${f1(tx - tw2)} ${f1(top)}V${f1(bot - tw2)}A${f1(tw2)} ${f1(tw2)} 0 0 0 ${f1(tx + tw2)} ${f1(bot - tw2)}V${f1(top)}"/><path d="M${f1(tx - tw2 - 3)} ${f1(top)}h${f1(2 * tw2 + 6)}" style="stroke:var(--glass-edge);stroke-width:3;stroke-linecap:round"/>`;
+  o += `<rect class="wood" x="${f1(tx - tw2 - 22)}" y="${f1(G.bench - 40 * s)}" width="${f1(2 * tw2 + 44)}" height="${f1(40 * s)}" rx="3"/>`;
+  /* gas syringe (improvement): delivery tube from a bung to a syringe */
+  if (M.syr) { const sy = syrGeo(G);
+    o += `<rect x="${f1(tx - tw2 + 2)}" y="${f1(top - 10)}" width="${f1(2 * tw2 - 4)}" height="14" rx="3" style="fill:#3A3F46"/>` +
+      `<path d="M${f1(tx - 6)} ${f1(top - 10)}V${f1(sy.y)}H${f1(sy.x1 + 4)}" style="fill:none;stroke:var(--glass-edge);stroke-width:5;stroke-linejoin:round"/>` +
+      `<rect class="glass" x="${f1(sy.x0)}" y="${f1(sy.y - 13)}" width="${f1(sy.x1 - sy.x0)}" height="26" rx="4"/>`;
+    for (let v = 0; v <= 1.0001; v += .1) { const x = sy.x1 - v * sy.per; o += `<path class="tick" d="M${f1(x)} ${f1(sy.y + 13)}v${Math.round(v * 10) % 5 ? 6 : 11}"/>`; if (Math.round(v * 10) % 5 === 0) o += T_(x, sy.y + 13 + fs + 6, num(r1(v)), fs - 3, 'text-anchor="middle"'); }
+    o += T_(sy.x0, sy.y + 13 + fs + 6, "cm³", fs - 3, 'text-anchor="end" class="mut"');
+  } else { o += `<path d="M${f1(tx - tw2 - 3)} ${f1(top)}h${f1(2 * tw2 + 6)}" style="stroke:var(--glass-edge);stroke-width:3"/>`; }
+  /* stopwatch + counter boxes (text patched by the animation) */
+  o += `<rect class="lcd" x="14" y="14" width="${f1(150 * s + 20)}" height="${f1(46 * s + 14)}" rx="8"/>` + T_(14 + (150 * s + 20) / 2, 14 + 34 * s + 10, "0:00", 30 * s + 4, 'id="swT" class="lcdt" text-anchor="middle"') + T_(18, 14 + 46 * s + 14 + fs + 2, "Stopwatch", fs - 2, 'class="mut"');
+  const tall = G.s < 1, cx0 = tall ? 14 : 14 + 150 * s + 34, cy0 = tall ? 14 + 46 * s + 14 + fs * 2 + 14 : 14 + 34 * s + 8;
+  o += tag(cx0, cy0, M.syr ? "Volume: 0.00 cm³" : "Bubbles: 0", fs + 1, "acc", "start").replace("<text ", '<text id="cntT" ');
+  o += lampSVG(G, d);
+  setLayer($("rBg"), o);
+  setCounter(lastShown());
+}
+const pondCut = G => G.cut;
+function syrGeo(G) { const x1 = G.tube - 44, per = (G.s < 1 ? 200 : 300); return { x1, x0: x1 - per * 1.1 - 10, y: 22, per }; }
+function lastShown() { const a = M.data[meth(M)][M.d]; return a.length ? a[a.length - 1] : null; }
+function setCounter(v) {
+  const c = document.getElementById("cntT"), sw = document.getElementById("swT"); if (!c) return;
+  const txt = M.syr ? `Volume: ${v == null ? "0.00" : v.toFixed(2)} cm³` : `Bubbles: ${v == null ? 0 : v}`; if (c.textContent !== txt) c.textContent = txt;
+  if (!anim && sw && sw.textContent !== (v == null ? "0:00" : "1:00")) sw.textContent = v == null ? "0:00" : "1:00";
+}
+function drawLabMov(now) {   // the moving layer: bubbles rising, or the syringe plunger
+  const G = labGeo(); let o = "";
+  if (M.syr) { const sy = syrGeo(G), v = anim && anim.kind === "count" ? anim.vNow : (lastShown() || 0), x = sy.x1 - v * sy.per;
+    o += `<rect x="${f1(x)}" y="${f1(sy.y - 10)}" width="${f1(sy.x1 - x)}" height="20" style="fill:var(--surface);opacity:.85"/><rect class="metal" x="${f1(x - 8)}" y="${f1(sy.y - 12)}" width="8" height="24"/><path class="metal2" d="M${f1(x - 8)} ${f1(sy.y - 3)}H${f1(sy.x0 - 30)}v6H${f1(x - 8)}Z"/><rect class="metal" x="${f1(sy.x0 - 36)}" y="${f1(sy.y - 14)}" width="8" height="28"/>`;
+  } else if (anim && anim.bubs) {   // bubbles: a pool of circles, patched in place (no rebuild each frame)
+    const g = $("rMov"); if (g._h !== "pool") { g.innerHTML = ""; g._h = "pool"; g._pool = []; }
+    const cut = pondCut(G), liq = G.liq, sp = (cut - liq) / 900; let n = 0;
+    anim.bubs.forEach(b => { const age = now - b.t; if (age < 0) return; const y = cut - age * sp; if (y < liq + 3) return;
+      let c = g._pool[n]; if (!c) { c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("class", "bub"); g.appendChild(c); g._pool.push(c); }
+      setAttr(c, "cx", f1(G.tube - 1 + Math.sin(age / 140 + b.p) * 3 + b.dx * G.tw * .4 * Math.min(1, age / 700))); setAttr(c, "cy", f1(y)); setAttr(c, "r", f1(b.r * G.lv)); if (c.style.display) c.style.display = ""; n++; });
+    for (let i = n; i < g._pool.length; i++) if (g._pool[i].style.display !== "none") g._pool[i].style.display = "none";
+    return;
+  }
+  setLayer($("rMov"), o);
+}
+function drawTable() {
+  const k = meth(M), vol = k === "v", D = LAB.D, tab = M.data[k];
+  let h = `<table class="rt"><caption>${M.example ? "Example results from the lesson (made-up data)" : vol ? "Volume of oxygen in 1 minute (cm³)" : "Bubbles counted in 1 minute"}</caption><thead><tr><th scope="col">Lamp distance (cm)</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">Mean rate (${vol ? "cm³" : "bubbles"} per minute)</th></tr></thead><tbody>`;
+  D.forEach(d => { const a = tab[d], mk = M.mark[k][d] || [];
+    h += `<tr${d === M.d ? ' class="cur"' : ""}><td class="dst">${d}</td>`;
+    for (let i = 0; i < 3; i++) h += `<td>${a[i] == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-d="${d}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="${d} cm, count ${i + 1}: ${vol ? a[i].toFixed(2) : a[i]}${mk.includes(i) ? ", marked as an anomaly" : ""}">${vol ? a[i].toFixed(2) : a[i]}</button>`}</td>`;
+    const ok = M.ok[k][d], v = M.inp[k][d] || "";
+    h += `<td>${a.length < 3 ? '<span class="emp">–</span>' : `<input class="meanin${ok ? " ok" : ok === false ? " no" : ""}" data-d="${d}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(v)}" aria-label="Mean at ${d} cm"${ok ? " readonly" : ""}>`}</td></tr>`; });
+  h += `</tbody></table><p class="small" style="margin-top:4px">Press a count to mark it as an anomaly. Counted for 1 minute, so the mean is the rate.</p>`;
+  const el = $("rtable"), foc = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("meanin") ? document.activeElement.dataset.d : null;
+  if (el._h !== h) { el.innerHTML = h; el._h = h; if (foc) { const n = el.querySelector(`.meanin[data-d="${foc}"]`); if (n) { n.focus({ preventScroll: true }); const L = n.value.length; try { n.setSelectionRange(L, L); } catch (e) {} } } }
+}
+function drawLabGraph() {
+  const k = meth(M), vol = k === "v", pts = LAB.D.filter(d => M.ok[k][d]).map(d => ({ d, y: goodMean(M.data[k][d], vol) }));
+  const W = 480, H = 330, x0 = 66, y0 = 16, w = 392, h = 250, fs = 15;
+  const top = vol ? Math.max(1, Math.ceil((Math.max(0, ...pts.map(p => p.y)) * 1.1) * 5) / 5) : Math.max(60, Math.ceil(Math.max(0, ...pts.map(p => p.y)) * 1.1 / 10) * 10);
+  const px = d => x0 + w * d / 60, py = y => y0 + h * (1 - y / top);
+  let o = "";
+  for (let d = 0; d <= 60; d += 5) o += `<path class="gr" d="M${f1(px(d))} ${y0}V${y0 + h}"/>`;
+  const ys = vol ? top / 5 : 10; for (let y = 0; y <= top + 1e-9; y += ys / 2) o += `<path class="gr" d="M${x0} ${f1(py(y))}H${x0 + w}"/>`;
+  o += `<path class="ax" d="M${x0} ${y0 - 4}V${y0 + h}H${x0 + w + 4}"/>`;
+  for (let d = 0; d <= 60; d += 10) o += T_(px(d), y0 + h + fs + 5, String(d), fs, 'text-anchor="middle"');
+  for (let y = 0; y <= top + 1e-9; y += ys) o += T_(x0 - 6, py(y) + 5, vol ? num(r2(y)) : String(Math.round(y)), fs, 'text-anchor="end"');
+  o += T_(x0 + w / 2, H - 8, "Distance of lamp (cm)", fs, 'text-anchor="middle" class="bold"');
+  o += `<text x="${fs + 2}" y="${y0 + h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 2} ${y0 + h / 2})">${vol ? "Mean cm³ of oxygen per minute" : "Mean bubbles per minute"}</text>`;
+  if (M.fit) { const bf = bestFit(pts);
+    if (bf) { let p = ""; for (let i = 0; i <= 60; i++) { const d = 8 + i * (52 - 8) / 60, x = Math.pow(10 / d, 2), y = bf.a * x / (x + bf.b); p += (i ? "L" : "M") + f1(px(d)) + " " + f1(py(Math.min(top, y))); } o += `<path class="fit" d="${p}"/>`; }
+    else o += T_(x0 + w / 2, y0 + 30, "Plot at least 3 points first", fs, 'text-anchor="middle" class="mut"'); }
+  pts.forEach(p => { const x = px(p.d), y = py(p.y); o += `<path class="xs" d="M${f1(x - 6)} ${f1(y - 6)}L${f1(x + 6)} ${f1(y + 6)}M${f1(x - 6)} ${f1(y + 6)}L${f1(x + 6)} ${f1(y - 6)}"/>`; });
+  if (!pts.length) o += T_(x0 + w / 2, y0 + h / 2, "Check a mean to plot it here", fs + 1, 'text-anchor="middle" class="mut"');
+  setLayer($("gG"), o);
+}
+function labRead() {
+  const k = meth(M), T = labT(M.d, M.screen), I = Math.pow(10 / M.d, 2), n = M.data[k][M.d].length;
+  let h = `<p class="r1">Lamp at ${M.d} cm · water ${num(Math.round(T * 10) / 10)} °C${M.screen ? "" : T > 20.5 ? ' <span class="warn">(the lamp is warming it)</span>' : ""}</p>`;
+  h += `<p class="r2">Counts at ${M.d} cm: ${n} of 3${M.dark ? " · room dark" : " · room lights on"}${M.syr ? " · gas syringe" : ""}</p>`;
+  if (M.rmsg) h += `<p class="r3">${M.rmsg}</p>`;
+  return h;
+}
+
+/* --- 3. inverse square law --- */
+function isqGeo() { const t = LK() === "tall"; return t ? { W: 600, H: 520, fs: 20, sideH: 200 } : { W: 960, H: 380, fs: 17, sideH: 190 }; }
+function drawIsq() {
+  const G = isqGeo(), fs = G.fs, d1 = M.d1, d2 = M.d2, o0 = isq(d1, d2); setVB($("isvg"), G.W, G.H);
+  const lx = 44, cy = G.sideH / 2 + 6, px = (G.W - 110) / 50, k = (G.sideH / 2 - 26) / (50 * px), far = lx + 52 * px;
+  let o = `<path class="beam" d="M${lx} ${cy}L${f1(far)} ${f1(cy - k * 52 * px)}V${f1(cy + k * 52 * px)}Z" opacity=".35"/><circle class="bulb" cx="${lx}" cy="${cy}" r="9"/>` + T_(lx, cy + 30, "lamp", fs - 2, 'text-anchor="middle" class="mut"');
+  [[d1, "start"], [d2, "new"]].forEach(([d, w], i) => { const x = lx + d * px, hh = k * d * px;
+    o += `<path d="M${f1(x)} ${f1(cy - hh)}V${f1(cy + hh)}" style="stroke:var(${i ? "--curve2" : "--curve"});stroke-width:6;stroke-linecap:round${i ? ";stroke-dasharray:10 6" : ""}"/>` +
+      T_(x, i ? cy + hh + fs + 8 : cy - hh - 10, `${w}: ${d} cm`, fs - 1, 'text-anchor="middle" class="bold"'); });
+  /* front view of each lit patch */
+  const yb = G.sideH + 16, avail = G.H - yb - fs * 2 - 16, dm = Math.max(d1, d2), sc = Math.min(avail, (G.W / 2 - 60)) / dm;
+  const cols = [[d1, "At the start distance", G.W * .25], [d2, "At the new distance", G.W * .72]];
+  cols.forEach(([d, lab, cx], i) => { const side = d * sc, x = cx - side / 2, y = yb + fs + 8 + (avail - side) / 2, op = .18 + .8 * Math.pow(Math.min(d1, d2) / d, 2);
+    o += T_(cx, yb + fs, lab, fs - 1, 'text-anchor="middle" class="bold"');
+    o += `<rect class="beam" x="${f1(x)}" y="${f1(y)}" width="${f1(side)}" height="${f1(side)}" opacity="${f1(op)}"/><rect x="${f1(x)}" y="${f1(y)}" width="${f1(side)}" height="${f1(side)}" style="fill:none;stroke:var(--ink);stroke-width:2"/>`;
+    const u = Math.min(d1, d2) * sc;   // grid of squares the size of the smaller patch
+    if (d > Math.min(d1, d2) && u >= 4) { let g = ""; for (let a = u; a < side - .5; a += u) g += `M${f1(x + a)} ${f1(y)}v${f1(side)}M${f1(x)} ${f1(y + a)}h${f1(side)}`; o += `<path d="${g}" style="stroke:var(--ink);stroke-width:1;opacity:.6"/>`; }
+  });
+  const big = Math.max(d1, d2) / Math.min(d1, d2), cap = d1 === d2 ? "Same distance, same area" : Number.isInteger(big) ? `Same light spread over ${num(big * big)} squares` : `Same light spread over ${num(big * big)} times the area`;
+  o += T_(G.W / 2, G.H - 10, cap, fs, 'text-anchor="middle" class="acc"');
+  setLayer($("iG"), o);
+}
+function isqRead() {
+  const o = isq(M.d1, M.d2);
+  if (M.hideWork) return `<p class="r1">light intensity ∝ 1 ÷ distance²</p><p class="r3">The working is hidden for this question. The picture shows 10 cm → 20 cm as an example.</p>`;
+  const L = isqWork(M.d1, M.d2);
+  return `<p class="r1">light intensity ∝ 1 ÷ distance²</p><ol class="r2">${L.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="r3">This is the change in light intensity, not in the rate. The rate levels off when another factor limits it.</p>`;
+}
+
+/* ===== Draw everything that is showing ===== */
+function drawPane() {
+  ["lim", "rp", "isq"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
+  if (M.tab === "lim") { drawLimGraph(); drawBars(); morphHTML($("lread"), limRead()); }
+  else if (M.tab === "rp") { drawLabBg(); drawLabMov(performance.now()); drawTable(); drawLabGraph(); morphHTML($("rread"), labRead()); }
+  else { drawIsq(); morphHTML($("iread"), isqRead()); }
+}
+function renderCtl() {
+  const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => { const on = String(b.dataset[attr]) === String(v); if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
+  pr("#tabs button", "tab", M.tab); pr("#xvSeg button", "xv", M.xv); pr("#dSeg button", "d", M.d);
+  [["sL", "L", "oL", v => num(v)], ["sC", "C", "oC", v => num(v)], ["sT", "T", "oT", v => num(v) + " °C"], ["s1", "d1", "o1", v => v + " cm"], ["s2", "d2", "o2", v => v + " cm"]].forEach(([id, k, out, fm]) => {
+    const e = $(id); if (+e.value !== M[k]) e.value = M[k]; const t = fm(M[k]); if ($(out).textContent !== t) $(out).textContent = t; });
+  const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
+  sw("screenSw", M.screen); sw("darkSw", M.dark); sw("syrSw", M.syr); sw("fitSw", M.fit);
+  $("unpinBtn").hidden = !M.pin; $("pinNote").hidden = !!M.pin;
+  $("countBtn").disabled = !!anim; $("countBtn").textContent = anim ? (anim.phase === "wait" ? "Waiting 2 minutes…" : "Counting…") : M.syr ? "Measure for 1 minute" : "Count for 1 minute";
+  if (!locked()) $("lockNote").hidden = true;
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { if (anim && t !== "rp") stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); if (t === "isq") tried(4); }
+function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); if (a.finish) a.finish(); }
+
+/* ===== Counting run (sped up: 2-minute wait = 1.5 s, 1 minute = 6 s) ===== */
+const WAIT = 1500, CD = 6000;
+function startCount() {
+  if (locked()) return lockMsg();
+  if (anim) return;
+  const k = meth(M), row = M.data[k][M.d];
+  if (row.length >= 3) { M.rmsg = `You have three ${M.syr ? "readings" : "counts"} at ${M.d} cm. Clear this row to count again, or move the lamp.`; morphHTML($("rread"), labRead()); return; }
+  const val = sample(M.d, env(M), row), waits = M.lastD !== M.d || M.lastSyr !== M.syr, m = M;
+  m.rmsg = "";
+  const done = () => { if (M !== m) return; row.push(val); m.lastD = m.d; m.lastSyr = m.syr; m.example = false;
+    m.rmsg = `${M.syr ? "Reading" : "Count"} ${row.length} at ${m.d} cm: ${M.syr ? val.toFixed(2) + " cm³" : val + " bubbles"}.` + (row.length === 3 ? " Now type the mean in the table." : "");
+    $("runStat").textContent = ""; tourSignal("count"); drawAll(); };
+  if (reduced()) { done(); return; }
+  const t0 = performance.now(), wait = waits ? WAIT : 0, bubs = [];
+  const mu = m.syr ? 0 : labMu(m.d, env(m)), shown = m.syr ? 0 : val;
+  if (!m.syr) { const nw = Math.round(mu * wait / CD);   // bubbles during the wait are not counted
+    for (let i = 0; i < nw; i++) bubs.push({ t: t0 + (i + Math.random() * .6) * wait / Math.max(1, nw), r: 2.4 + Math.random() * 2.6, p: Math.random() * 6, dx: Math.random() - .5, c: false });
+    for (let i = 0; i < shown; i++) bubs.push({ t: t0 + wait + (i + .2 + Math.random() * .6) * CD / shown, r: 2.4 + Math.random() * 2.6, p: Math.random() * 6, dx: Math.random() - .5, c: true }); }
+  anim = { kind: "count", phase: wait ? "wait" : "count", bubs, vNow: 0, t0, finish: null };
+  const a = anim; renderCtl();
+  const sw = () => document.getElementById("swT");
+  a.finish = () => { drawLabMov(performance.now()); };
+  const step = now => {
+    if (anim !== a) return;
+    const tt = now - t0;
+    const stat = txt => { const e = $("runStat"); if (e.textContent !== txt) e.textContent = txt; };
+    if (tt < wait) { a.phase = "wait"; const s = sw(), w = "wait " + (2 - Math.floor(tt / wait * 2)) + ":00"; if (s && s.textContent !== w) s.textContent = w; stat("Wait 2 minutes at the new distance…"); }
+    else { if (a.phase !== "count") { a.phase = "count"; renderCtl(); }
+      const f = clamp((tt - wait) / CD, 0, 1), s = sw(); if (s) { const t = Math.floor(f * 60), txt = `0:${String(t).padStart(2, "0")}`.replace("0:60", "1:00"); if (s.textContent !== txt) s.textContent = txt; }
+      if (m.syr) { a.vNow = val * f; setCounter(r2(a.vNow)); }
+      else { const c = bubs.filter(b => b.c && b.t <= now).length, el = document.getElementById("cntT"), w = `Bubbles: ${c}`; if (el && el.textContent !== w) el.textContent = w; }
+      stat(m.syr ? "Measuring the oxygen…" : "Counting the bubbles…"); }
+    drawLabMov(now);
+    const end = t0 + wait + CD + (m.syr ? 0 : 900);
+    if (now < end) a.id = paceFrame(step, 20);
+    else { anim = null; done(); }
+  };
+  a.id = paceFrame(step, 20);
+}
+function clearRow(d) { const k = meth(M); M.data[k][d] = []; delete M.mark[k][d]; delete M.inp[k][d]; delete M.ok[k][d]; M.example = false; }
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Raise the light intensity. Where does the curve level off?", "Turn on Show what limits (Support). Which bar is shortest?",
+  "Do three counts at one distance, then type the mean.", "Set light and CO₂ high, graph against temperature, then push it past 40 °C.", "HT: open Inverse square law. Double the distance."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Knowledge check: questions in lesson order (L1 then L2; slide order within a lesson) ===== */
+const SU = {
+  graphPQ: (L, mk) => m => { m.tab = "lim"; m.xv = "light"; m.L = L; m.C = 5; m.T = 30; m.marks = mk; m.hideNow = true; },
+  lab: m => { m.tab = "rp"; m.d = 10; },
+  example: m => { m.tab = "rp"; m.example = true; m.fit = true; const D = { 10: [51, 52, 53], 20: [30, 29, 31], 30: [18, 17, 19], 40: [11, 10, 12], 50: [8, 8, 8] };
+    LAB.D.forEach(d => { m.data.n[d] = D[d].slice(); m.ok.n[d] = true; m.inp.n[d] = num(goodMean(D[d], false)); }); }
+};
+const EXAMPLE_MEANS = [52, 30, 18, 11, 8];   // L2 s24
+const STMT = s => s.t;
+TASKS.easy = [
+  { id: "eq", kind: "gaps", lesson: "L1 s11", text: "Complete the word equation for photosynthesis.", setup: m => { m.tab = "lim"; },
+    rows: [["a", "carbon dioxide +", "water"], ["b", "→ glucose +", "oxygen"]], bank: ["water", "oxygen", "glucose", "starch", "carbon dioxide", "chlorophyll"],
+    why: (k, w) => ({ oxygen: k === "a" ? "Oxygen is a product: the plant gives it out. It goes after the arrow." : "",
+      water: k === "b" ? "Water is a reactant: the plant takes it in. It goes before the arrow." : "",
+      glucose: k === "a" ? "Glucose is made by photosynthesis, so it goes after the arrow." : "Glucose is already there. The other product is a gas.",
+      starch: "Starch is not in the equation. Use the reactants and products of photosynthesis.",
+      "carbon dioxide": k === "a" ? "Carbon dioxide is already there. What else does the plant take in?" : "Plants take in carbon dioxide. It is a reactant, not a product.",
+      chlorophyll: "Chlorophyll is not a reactant or a product. It is a green pigment that absorbs light." })[w],
+    explain: `${EQW}. Light energy is taken in, and chlorophyll absorbs it.`, stuck: "eq",
+    hints: ["The plant takes in two things: one through its leaves, one through its roots.", "The roots take in water. The plant gives out a gas.", `${EQW}.`] },
+  { id: "sort", kind: "gaps", fixed: true, grid: true, lesson: "L1 s12–13, s27", text: "Sort each one: a reactant, a product, or needed for the reaction.", setup: m => { m.tab = "lim"; },
+    rows: [["co2", "CO₂", "Reactant"], ["light", "Light", "Needed"], ["glu", "C₆H₁₂O₆", "Product"], ["h2o", "H₂O", "Reactant"], ["o2", "O₂", "Product"], ["chl", "Chlorophyll", "Needed"]],
+    bank: ["Reactant", "Product", "Needed"],
+    why: (k, w) => ({ co2: "CO₂ is carbon dioxide. The plant takes it in and uses it, so it is a reactant.",
+      light: w === "Reactant" ? "Light is energy, not a substance. It is needed for the reaction." : "Light is taken in, not made. It is needed for the reaction.",
+      glu: "C₆H₁₂O₆ is glucose. The plant makes it, so it is a product.", h2o: "H₂O is water. The plant takes it in, so it is a reactant.",
+      o2: "O₂ is oxygen. The plant gives it out, so it is a product.",
+      chl: w === "Reactant" ? "Chlorophyll is a green pigment that absorbs light. It is needed, but it is not a reactant (and it is not an enzyme)." : "Chlorophyll is not made by photosynthesis. It absorbs the light, so it is needed." })[k],
+    explain: "Reactants: CO₂ and H₂O. Products: C₆H₁₂O₆ (glucose) and O₂. Needed: light and chlorophyll.", stuck: "eq",
+    hints: ["Reactants go in, products come out.", "Which two are not substances used up or made? They are needed for the reaction.", "Reactant: CO₂, H₂O. Product: C₆H₁₂O₆, O₂. Needed: light, chlorophyll."] },
+  { id: "flat", kind: "choice", lesson: "L1 s16–17, s28", text: "The rate rises, then stays flat as light increases. What does the flat part at Q show?", lock: "all", setup: SU.graphPQ(9, [{ lab: "Q", x: 8.5 }]),
+    options: [{ t: "Another factor is now limiting the rate.", ok: () => limAtX({ L: 9, C: 5, T: 30 }, "light", 8.5) !== "light" && rateAtX({ L: 9, C: 5, T: 30 }, "light", 8.5) > 1 },
+      { t: "Light is still limiting the rate.", why: "If light were limiting, more light would raise the rate. The line is flat, so light is no longer in short supply." },
+      { t: "Photosynthesis has stopped.", why: "The rate is still high, not zero. It just cannot rise any higher." },
+      { t: "The chlorophyll has run out.", why: "Chlorophyll does not run out as the light increases. The flat part means another factor is in short supply." }],
+    explain: "The rate is still high but cannot rise. Light is no longer in short supply, so another factor, such as carbon dioxide or temperature, is limiting.", stuck: "limits",
+    hints: ["At Q, is the rate zero, or still high?", "If light were limiting, would more light raise the rate?", "Another factor is now in shortest supply."] },
+  { id: "p", kind: "choice", lesson: "L1 s18–20", text: "Which factor is limiting the rate at point P?", lock: "all", setup: SU.graphPQ(2, [{ lab: "P", x: 2 }]),
+    options: [{ t: "Light intensity", ok: () => limiting(2, 5, 30) === "light" },
+      { t: "Carbon dioxide", why: "At P the rate still rises as the light increases, so light is in shortest supply. Carbon dioxide limits on the flat part." },
+      { t: "Temperature", why: "At P, more light still raises the rate. So light is the factor in shortest supply here." },
+      { t: "Nothing: the plant has all it needs", why: "If nothing limited it, the rate would not be so low. More light still raises it at P." }],
+    explain: "At P the rate rises when the light increases, so light intensity is the limiting factor.", stuck: "limits",
+    hints: ["Look at the slope of the line at P. Is the rate still rising?", "When more of a factor raises the rate, that factor is limiting.", "More light raises the rate at P, so light limits."] },
+  { id: "t60", kind: "choice", lesson: "L1 s21–23", text: "Move the temperature slider to 60 °C. What happens to the rate?", setup: m => { m.tab = "lim"; m.xv = "temp"; m.L = 8; m.C = 8; m.T = 30; }, after: "t60",
+    options: [{ t: "It falls to zero, because the enzymes are denatured.", ok: () => rate(8, 8, 60) === 0 && den(60) === 0 },
+      { t: "It is at its highest: warmer is always faster.", why: "The rate is fastest at about 40 °C. Above that, enzymes are denatured, so the rate falls." },
+      { t: "It levels off, because another factor is limiting.", why: "This is not a plateau. The rate has fallen to zero because the enzymes are denatured." },
+      { t: "It halves, because the plant runs short of carbon dioxide.", why: "Carbon dioxide hasn't changed. The heat has denatured the enzymes." }],
+    explain: "The best temperature is about 40 °C. Above it the enzymes are denatured, so the rate falls to zero.",
+    hints: ["Drag the temperature slider to 60 °C and watch the ring on the graph.", "Where is the rate fastest? What happens above that temperature?", "Too hot: the enzymes are denatured, so the rate falls to zero."] },
+  { id: "iv", kind: "choice", lesson: "L2 s15", text: "In the pondweed practical, what is the independent variable?", setup: SU.lab,
+    options: [{ t: "The distance of the lamp from the pondweed", ok: () => true },
+      { t: "The number of bubbles in one minute", why: "That is what you measure: the dependent variable. You change the lamp distance." },
+      { t: "The distance of the pondweed", why: "The pondweed stays still. You move the lamp, so it is the distance of the lamp from the pondweed." },
+      { t: "The amount of light", why: "Don't say “amount of light”. Say light intensity, which you change by moving the lamp." },
+      { t: "The temperature of the water", why: "Temperature is kept the same: it is a control variable." }],
+    explain: "You change the distance of the lamp from the pondweed (this changes the light intensity). You measure the bubbles.", stuck: "words",
+    hints: ["The independent variable is the one you choose to change.", "What do you move in this practical?", "The distance of the lamp from the pondweed."] },
+  { id: "cv", kind: "choice", lesson: "L2 s15", text: "Which of these is a control variable in the pondweed practical?", setup: SU.lab,
+    options: [{ t: "The temperature of the water", ok: () => true },
+      { t: "The distance of the lamp", why: "That is what you change: the independent variable." },
+      { t: "The number of bubbles in one minute", why: "That is what you measure: the dependent variable." },
+      { t: "The light intensity", why: "Light intensity changes as you move the lamp. It goes with the independent variable." }],
+    explain: "Keep the water temperature the same, so only light changes the rate. Others: the same solution, the same pondweed, a 1-minute count.", stuck: "words",
+    hints: ["A control variable is kept the same.", "Which one would change the rate if it changed, but is not the lamp?", "The temperature of the water."] },
+  { id: "do30", kind: "goal", lesson: "L2 s16", text: "Do the method: move the lamp to 30 cm, then count for 1 minute three times.", setup: SU.lab,
+    test: M => M.data.n[30].length >= 3,
+    not: M => M.syr ? "Turn off the gas syringe: this method counts bubbles." : M.d !== 30 ? "Move the lamp to 30 cm first (press 30, or drag the lamp)." : `You have ${M.data.n[30].length} of 3 counts at 30 cm. Press Count for 1 minute again.`,
+    done: M => `Three counts at 30 cm: ${M.data.n[30].slice(0, 3).join(", ")}. Repeats help you spot an anomaly and find a mean.`,
+    reveal: M => { M.syr = false; M.d = 30; M.lastD = 30; const r = M.data.n[30]; while (r.length < 3) r.push(sample(30, env(M), r)); },
+    hints: ["Press 30 in Lamp distance, or drag the lamp along the metre rule.", "Wait for each count to finish, then press Count for 1 minute again.", "Lamp at 30 cm, then Count for 1 minute three times."] },
+  { id: "mean", kind: "num", lesson: "L2 s19, s31", text: "A student counts 21, 23 and 22 bubbles in one minute. Calculate the mean.", setup: SU.lab,
+    frame: "mean = total ÷ number of counts", lbl: "Mean =", unit: "bubbles per minute", ans: () => meanOf([21, 23, 22]),
+    wrongs: [[66, "66 is the total. Now divide by the number of counts (3)."], [33, "You divided by 2. There are 3 counts, so divide by 3."], [21, "That is just one count. Add all three, then divide by 3."], [23, "That is the biggest count. Add all three, then divide by 3."]],
+    generic: "Add the three counts, then divide by 3.", stuck: "maths",
+    working: () => ["Total = 21 + 23 + 22 = 66", "Mean = 66 ÷ 3 = 22 bubbles per minute"],
+    hints: ["Add the three counts first.", "21 + 23 + 22 = 66. How many counts are there?", "66 ÷ 3 = 22."] },
+  { id: "pattern", kind: "choice", lesson: "L2 s23–25", text: "The graph shows the lesson’s example results. Describe the pattern.", setup: SU.example, lock: "all",
+    options: [{ t: "The rate falls steeply, then levels out as the lamp moves away.", ok: () => { const d = EXAMPLE_MEANS; return d[0] - d[1] > d[3] - d[4] && d.every((v, i) => !i || v < d[i - 1]); } },
+      { t: "The rate falls by the same amount every 10 cm.", why: "Look at the gaps: 52 to 30 is a fall of 22, but 11 to 8 is only 3. It is a curve, not a straight line." },
+      { t: "The rate rises as the lamp moves away.", why: "The further the lamp, the lower the light intensity, and the fewer bubbles per minute." },
+      { t: "The rate falls to zero at 30 cm.", why: "At 30 cm the mean is still 18 bubbles per minute. The rate never reaches zero here." }],
+    explain: "Closer lamp, faster rate. The rate falls steeply (52 → 30 bubbles per minute), then levels out (11 → 8) as the lamp moves away, because the light intensity falls.",
+    hints: ["Read the means: 52, 30, 18, 11, 8.", "Compare the fall from 10 to 20 cm with the fall from 40 to 50 cm.", "It falls steeply, then levels out."] }
+];
+const L3MS = ["Level 2 (3–4 marks): the rise, the peak near 40 °C and the fall, with both explanations.", "Level 1 (1–2 marks): the pattern only, or one explanation."];
+TASKS.hard = [
+  { id: "endo", kind: "build", lesson: "L1 s11, s29 Q2", text: "Explain why photosynthesis is an endothermic reaction. [2 marks] Choose the statements for your answer.", frame: "Photosynthesis is endothermic because…", setup: m => { m.tab = "lim"; },
+    stm: [{ t: "energy is taken in,", c: 1 }, { t: "from the surroundings, as light.", c: 2 },
+      { t: "energy is created by the plant.", why: "Energy is never created. Light energy is transferred to the plant." },
+      { t: "energy is given out to the surroundings.", why: "Giving out energy is exothermic. Photosynthesis takes energy in." },
+      { t: "chlorophyll is an enzyme that makes energy.", why: "Chlorophyll is a green pigment that absorbs light. It is not an enzyme." }],
+    miss: { 1: "Say whether energy is taken in or given out.", 2: "Say where the energy comes from." },
+    explain: "Photosynthesis is endothermic because energy is taken in (1), from the surroundings, as light (1).", stuck: "words",
+    hints: ["Endothermic: does energy go in or out?", "Two marks: one for which way the energy goes, one for where it comes from.", "Energy is taken in, from the surroundings, as light."] },
+  { id: "level", kind: "build", ordered: true, lesson: "L1 s18–20, s29 Q5", text: "Explain why the rate levels off at Q. [2 marks] Build your answer in order.", frame: "Start with: Light is no longer limiting, so…", lock: "all", setup: SU.graphPQ(9, [{ lab: "Q", x: 8.5 }]),
+    stm: [{ t: "Light is no longer limiting,", c: 1 }, { t: "so another factor, such as carbon dioxide or temperature, now limits the rate.", c: 2 },
+      { t: "Light is still the limiting factor.", why: "Not at Q. More light would raise the rate if light were limiting, but the line is flat." },
+      { t: "Photosynthesis has stopped.", why: "The rate is still high at Q. It cannot rise any higher, but it hasn't stopped." },
+      { t: "The plant has run out of chlorophyll.", why: "The chlorophyll doesn't run out. Another factor is in short supply." }],
+    miss: { 1: "Start by saying what has happened to light as a limiting factor.", 2: "Say what is limiting the rate now. Name an example." },
+    explain: "Light is no longer limiting (1), so another factor, such as carbon dioxide or temperature, now limits the rate (1).", stuck: "limits",
+    hints: ["At Q, does more light raise the rate?", "If light is not limiting, something else must be. Give an example.", "Light is no longer limiting, so another factor, such as carbon dioxide or temperature, now limits the rate."] },
+  { id: "temp", kind: "build", ordered: true, lesson: "L1 s21–23", text: "Describe and explain the temperature graph. [4 marks] Build your answer in order.",
+    frame: "Start with: Up to about 40 °C, the rate…", setup: m => { m.tab = "lim"; m.xv = "temp"; m.L = 10; m.C = 10; m.T = 20; },
+    stm: [{ t: "Up to about 40 °C, the rate rises,", c: 1, d: 1 }, { t: "because warmer particles collide more.", c: 2, e: 1 },
+      { t: "It is fastest at about 40 °C.", c: 3, d: 1 }, { t: "Above 40 °C it falls quickly, to zero,", c: 4, d: 1 },
+      { t: "because the enzymes are denatured.", c: 5, e: 1 },
+      { t: "Above 40 °C another factor limits it.", why: "The rate doesn't level off above 40 °C: it falls. That is the enzymes being denatured, not another limiting factor." },
+      { t: "The heat creates extra energy.", why: "Energy is never created. Light energy is transferred to the plant." }],
+    miss: { 1: "Describe what happens to the rate up to about 40 °C.", 2: "Explain why warming speeds it up (think particles).", 3: "Describe the peak: where is the rate fastest?", 4: "Describe what happens above 40 °C.", 5: "Explain the fall above 40 °C (think enzymes)." },
+    explain: "Rate rises to about 40 °C (warmer particles collide more), is fastest at about 40 °C, then falls quickly to zero because the enzymes are denatured.", ms: L3MS,
+    hints: ["Describe three parts: the rise, the peak, the fall.", "Explain two parts: the rise (particles) and the fall (enzymes).", "Rise, because of collisions; fastest at 40 °C; falls to zero, because enzymes are denatured."] },
+  { id: "two", kind: "choice", ht: true, lesson: "L1 s24–26", text: "Two curves: bright light and dim light. At Q, on the dim light curve, which factor limits the rate?", lock: "all",
+    setup: m => { m.tab = "lim"; m.xv = "co2"; m.L = 8; m.C = 5; m.T = 30; m.pin = { xv: "co2", L: 3, C: 5, T: 30, name: "Dim light" }; m.nowName = "Bright light"; m.hideNow = true; m.marks = [{ lab: "P", x: 2.5 }, { lab: "Q", x: 9, on: "pin", below: true }]; },
+    options: [{ t: "Light intensity", ok: () => limiting(3, 9, 30) === "light" && limiting(8, 2.5, 30) === "co2" && rate(8, 9, 30) > rate(3, 9, 30) + 2 },
+      { t: "Carbon dioxide concentration", why: "At Q the dim light curve is flat: more carbon dioxide does not raise it. The bright light curve is higher, so light is limiting." },
+      { t: "Temperature", why: "Both curves are at the same temperature. The bright light curve is higher, so light makes the difference." },
+      { t: "Nothing: photosynthesis has stopped", why: "The rate at Q is not zero. It is flat because light is in short supply." }],
+    explain: "At Q more carbon dioxide does not raise the rate, but more light does (the bright curve is higher). So light intensity limits. At P, carbon dioxide limits. Growers add heat, light or CO₂ only while the extra crop pays for it.",
+    hints: ["Is the dim light curve still rising at Q?", "Which change lifts the plateau: more carbon dioxide, or more light?", "The bright curve is higher, so light intensity limits at Q."] },
+  { id: "anom", kind: "num", lesson: "L2 s20 Q1", text: "Counts at 40 cm: 5, 5, 11. Find the mean without the anomaly.", setup: SU.lab,
+    frame: "mean = total ÷ number of counts (leave out the anomaly)", lbl: "Mean =", unit: "bubbles per minute", ans: () => goodMean([5, 5, 11], false),
+    wrongs: [[7, "You included the anomaly (11). Leave it out: (5 + 5) ÷ 2."], [10, "10 is the total of the two good counts. Now divide by 2."], [10 / 3, "You left out 11 but still divided by 3. You used two counts, so divide by 2."], [21, "21 is the total of all three. Leave out the anomaly, then divide by 2."], [11, "11 is the anomaly: it is much bigger than the others. Leave it out."]],
+    generic: "Find the count that doesn’t fit, leave it out, then find the mean of the other two.", stuck: "maths",
+    working: () => ["Anomaly: 11 (much bigger than 5 and 5)", "Total = 5 + 5 = 10", "Mean = 10 ÷ 2 = 5 bubbles per minute"],
+    hints: ["Which count does not fit the pattern?", "Leave out 11. How many counts are left?", "(5 + 5) ÷ 2 = 5."] },
+  { id: "r90", kind: "num", lesson: "L2 s20 Q2", text: "A plant makes 45 bubbles in 90 s. Calculate the rate in bubbles per minute.", setup: SU.lab,
+    frame: "rate = number of bubbles ÷ time in minutes (change seconds into minutes first)", lbl: "Rate =", unit: "bubbles per minute", ans: () => 45 / (90 / 60),
+    wrongs: [[.5, "That is bubbles per second (45 ÷ 90). Change 90 s into minutes first: 1.5 minutes."], [2, "You divided the wrong way (90 ÷ 45). Divide the bubbles by the time."], [4050, "You multiplied. Rate = bubbles ÷ time."], [67.5, "You multiplied 45 by 1.5. Divide instead: 45 ÷ 1.5."], [45, "That is the number of bubbles, not the rate. Divide by the time in minutes."]],
+    generic: "Change 90 s into minutes, then divide the bubbles by the time.", stuck: "maths",
+    working: () => ["Time = 90 s ÷ 60 = 1.5 minutes", "Rate = 45 ÷ 1.5", "Rate = 30 bubbles per minute"],
+    hints: ["How many minutes is 90 s?", "90 s = 1.5 minutes. Rate = bubbles ÷ minutes.", "45 ÷ 1.5 = 30."] },
+  { id: "vol", kind: "num", lesson: "L2 s20 Q3", text: "27 cm³ of oxygen is made in 45 minutes. Calculate the rate.", setup: SU.lab,
+    frame: "rate = volume ÷ time", lbl: "Rate =", unit: "cm³ per minute", ans: () => 27 / 45,
+    wrongs: [[45 / 27, "You divided the wrong way (45 ÷ 27). Divide the volume by the time."], [1215, "You multiplied. Rate = volume ÷ time."], [27 / 2700, "That is cm³ per second. The question asks per minute, so don't change the time."], [72, "You added. Rate = volume ÷ time."]],
+    generic: "Divide the volume by the time in minutes.", stuck: "maths",
+    working: () => ["Rate = volume ÷ time", "Rate = 27 cm³ ÷ 45 minutes", "Rate = 0.6 cm³ per minute"],
+    hints: ["Which is the amount, and which is the time?", "Rate = 27 ÷ 45.", "27 ÷ 45 = 0.6."] },
+  { id: "isq", kind: "num", ht: true, lesson: "L2 s21–22, s31 Q5", text: "A lamp moves from 10 cm to 40 cm away. By what factor does the light intensity fall?", lock: "all",
+    setup: m => { m.tab = "isq"; m.d1 = 10; m.d2 = 20; m.hideWork = true; }, after: "isq",
+    frame: "Find how many times the distance changes. Square that number. Then divide 1 by it.", lbl: "It falls to 1 ÷", unit: "", ans: () => isq(10, 40).q / isq(10, 40).p,
+    wrongs: [[4, "The distance is × 4, but you need to square it: 4 × 4."], [8, "Squaring means multiplying a number by itself: 4 × 4, not 4 × 2."], [30, "Don't subtract. Find how many times bigger the distance is: 40 ÷ 10."], [1600, "Square the change in distance (× 4), not the distance itself."], [.0625, "Type the number under the 1: the intensity falls to 1 ÷ ?"]],
+    generic: "Distance × 4. Square it, then the intensity is 1 ÷ that.", stuck: "maths",
+    working: () => isqWork(10, 40),
+    hints: ["How many times further away is 40 cm than 10 cm?", "The distance is × 4. Now square it.", "4 × 4 = 16, so it falls to 1/16."] },
+  { id: "imp", kind: "gaps", pair: true, lesson: "L2 s26–28, s31 Q4", text: "Suggest one improvement to the method and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab,
+    rows: [["i", "One improvement is to", null, ["use a gas syringe", "add a beaker of water as a heat screen", "darken the room"]], ["r", "This helps because", null, ["bubbles vary in size, so it measures the true volume of oxygen", "the lamp heats the water, so it keeps the temperature the same", "room light reaches the plant, so only the lamp changes the light intensity", "it makes the test fair", "it makes the plant photosynthesise more"]]],
+    PAIRS: { "use a gas syringe": "bubbles vary in size, so it measures the true volume of oxygen", "add a beaker of water as a heat screen": "the lamp heats the water, so it keeps the temperature the same", "darken the room": "room light reaches the plant, so only the lamp changes the light intensity" },
+    answerSet: ["use a gas syringe", "bubbles vary in size, so it measures the true volume of oxygen"],
+    explain: "Any one pair: gas syringe (bubbles vary in size, so it measures the volume); heat screen (the lamp heats the water); darken the room (room light reaches the plant).",
+    hints: ["Think about the problems: bubble size, the lamp's heat, the room's light.", "Choose an improvement, then the reason that matches that problem.", "For example: use a gas syringe, because bubbles vary in size, so it measures the true volume of oxygen."] },
+  { id: "hinge", kind: "choice", lesson: "L2 s30", text: "The rate rose as the lamp moved closer. The water also warmed by 4 °C. What is the main problem?", setup: m => { m.tab = "rp"; m.d = 10; m.screen = false; },
+    options: [{ t: "The temperature was not controlled.", ok: () => Math.abs(labT(10, false) - 24) < 1e-9 && labT(10, true) === 20 },
+      { t: "There was not enough pondweed.", why: "The amount of pondweed was the same each time. The problem is that two variables changed at once." },
+      { t: "The bubbles are not oxygen.", why: "The bubbles are oxygen. The problem is that the temperature changed as well as the light." },
+      { t: "There were too few repeats.", why: "More repeats would not fix it. The temperature changed as well as the light, so the test is not valid." }],
+    explain: "Two variables changed at once, so the effect of light alone cannot be judged. A heat screen keeps the temperature the same.",
+    hints: ["Look at the thermometer with the lamp at 10 cm.", "How many variables changed: just light, or light and something else?", "Temperature changed too: it was not controlled."] }
+];
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [], F = m => errs.push(m);
+  if (rate(10, 10, 60) !== 0) F("model: 60 °C must give zero (L1 s21)");
+  { let bt = 0, br = -1; for (let T = 0; T <= 60; T += .5) { const r = rate(10, 10, T); if (r > br) { br = r; bt = T; } } if (bt < 36 || bt > 41) F("model: temperature peak near 40 °C (L1 s21), got " + bt); }
+  if (limiting(9, 5, 30) === "light" || limiting(2, 5, 30) !== "light") F("model: light graph P light-limited, plateau not (L1 s18)");
+  if (!(rate(8, 9, 30) > rate(3, 9, 30) + 2)) F("model: more light lifts the CO₂ plateau (L1 s24)");
+  for (const [L, C] of [[3, 5], [10, 10], [1, 1], [5, 2]]) if (!(rate(L, C, 45) < rate(L, C, 40) && rate(L, C, 50) < rate(L, C, 45) && rate(L, C, 40) >= rate(L, C, 30) - 1e-9)) F(`model: rate must fall above 40 °C at light ${L}, CO₂ ${C} (L1 s21)`);
+  if (limiting(3, 5, 45) !== "hot") F("model: above 40 °C the readout must say too hot");
+  { const v = LAB.D.map(d => labMu(d, { dark: true, screen: true })); if (v.some((x, i) => Math.abs(x - EXAMPLE_MEANS[i]) > 1.5)) F("lab: dark-room model should match the deck's example data (L2 s24): " + v.map(x => x.toFixed(1))); }
+  if (labT(10, false) !== 24) F("lab: lamp warms the water by 4 °C at 10 cm (L2 s30)");
+  const fr = (a, b, p, q) => { const o = isq(a, b); if (o.p !== p || o.q !== q) F(`inverse square ${a}→${b} should be ${p}/${q}`); };
+  fr(10, 20, 1, 4); fr(10, 30, 1, 9); fr(10, 40, 1, 16); fr(20, 10, 4, 1); fr(5, 15, 1, 9); fr(10, 50, 1, 25);
+  [[[30, 31, 12], 2, 30.5], [[16, 40, 15], 1, 15.5], [[8, 9, 8], -1, 8.33], [[5, 5, 11], 2, 5], [[32, 30, 34], -1, 32], [[15, 16, 14], -1, 15]].forEach(([a, i, m]) => {
+    if (anomIdx(a, false) !== i) F("anomaly rule on " + a); if (Math.abs(goodMean(a, false) - m) > .01) F("mean of " + a); if (!judgeMean(a, false, m).ok) F("mean check " + a); });
+  if (judgeMean([30, 31, 12], false, meanOf([30, 31, 12])).ok) F("mean check must reject the anomaly mean");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") { if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
+    if (t.kind === "gaps" && !t.pair) { t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("answer missing from bank " + k);
+      t.bank.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); }); }
+    if (t.kind === "gaps" && t.pair) { const [a, b] = t.answerSet; if (t.PAIRS[a] !== b) E("answer pair"); Object.entries(t.PAIRS).forEach(([x, y]) => { if (!t.rows[0][3].includes(x) || !t.rows[1][3].includes(y)) E("pair option missing"); }); }
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
+    if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
+      c.forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); }
+    if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
+    if (t.lock && t.kind === "goal") E("a goal can't lock the model");
+  });
+  return errs;
+}
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task;
+  return { choice: null, gap: {}, val: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
+    rowOrder: t.rows ? t.rows.map(r => shuffled(r[3] ? r[3].length : t.bank.length)) : [] }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").innerHTML = `Question ${idx + 1} of ${lst.length}` + (task.ht ? ' <span class="badge" title="Higher tier only">HT</span>' : "");
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll();
+}
+function renderAnswer() {
+  const a = $("answer"), t = task, fr = t.frame ? `<p class="frame">${esc(t.frame)}</p>` : "";
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
+    a.innerHTML = fr + (t.fixed || t.pair ? "" : `<p class="small" style="margin:0 0 6px">Word bank: ${S.order.map(i => esc(t.bank[i])).join(" · ")}</p>`) +
+      `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
+    const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  } else if (t.kind === "build") {
+    a.innerHTML = fr + `<div class="opts build" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">+</span><span>${esc(t.stm[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.i, j = S.list.indexOf(i); if (j >= 0) S.list.splice(j, 1); else S.list.push(i); paintBuild(); }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = `<p style="margin:0">Use the <b>Virtual RP5 / RP6</b> tab in the model, then press Check.</p>`;
+  }
+}
+function hideWrongStm() { document.querySelectorAll("#answer .opts.build .opt").forEach(b => { if (!task.stm[+b.dataset.i].c) b.hidden = true; }); }   // once finished, show only the answer
+function paintBuild() { document.querySelectorAll("#answer .opt").forEach(b => { const j = S.list.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? String(j + 1) : "+"; }); }
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+function rightBuild(t) { return t.stm.map((s, i) => [s, i]).filter(x => x[0].c).sort((a, b) => a[0].c - b[0].c).map(x => x[1]); }
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach((r, ri) => { S.gap[r[0]] = t.pair ? t.answerSet[ri] : r[2]; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.gap[s.dataset.r]; }); }
+  else if (t.kind === "num") { S.val = num(t.ans()); const inp = $("numIn"); if (inp) inp.value = S.val; }
+  else if (t.kind === "build") { S.list = rightBuild(t); paintBuild(); hideWrongStm(); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+  revealModel();
+}
+function revealModel() {
+  const t = task; if (!t.after) return;
+  lock = ""; stopAll();
+  if (t.after === "t60") M.T = 60;
+  if (t.after === "isq") { M.tab = "isq"; M.d1 = 10; M.d2 = 40; M.hideWork = false; }
+  drawAll();
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${t.ht ? " (Higher tier)" : ""}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Photosynthesis", DEF.photosynthesis], ["Endothermic", DEF.endothermic], ["Chlorophyll", DEF.chlorophyll], ["Limiting factor", DEF.limiting],
+  ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv], ["Control variable", DEF.cv], ["Anomaly", DEF.anomaly]];
+function renderSupport() {
+  $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
+  $("eqBox").innerHTML = `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Light energy is taken in (endothermic). Chlorophyll absorbs the light.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`;
+  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>mean = total ÷ number of counts (leave out any anomaly)</p><p>rate = amount ÷ time (change seconds into minutes first)</p><p><span class="badge">HT</span> light intensity ∝ 1 ÷ distance²</p>`;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (M.tab === "lim") { drawBars(); morphHTML($("lread"), limRead()); }
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) { tourSignal("sup-" + k); if (k === "limits") tried(1); }
+}));
+
+/* ===== Marking ===== */
+function parseNum(s) {
+  s = String(s || "").trim().replace(/\s+/g, ""); if (/^\d{1,3}(,\d{3})+(\.\d+)?/.test(s)) s = s.replace(/,/g, ""); else s = s.replace(",", ".");
+  const fm = s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)/); if (fm) return parseFloat(fm[1]) / parseFloat(fm[2]);
+  const m = s.match(/^-?\d*\.?\d+/); return m ? parseFloat(m[0]) : NaN;
+}
+const workHTML = t => t.working ? `<ol class="ms">${t.working().map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : "";
+function buildMarks(t, list) {   // credited points, wrong statements, order
+  const got = list.map(i => t.stm[i]).filter(s => s.c), bad = list.map(i => t.stm[i]).filter(s => !s.c), all = t.stm.filter(s => s.c);
+  const inOrder = got.every((s, i) => !i || s.c > got[i - 1].c);
+  const missing = all.filter(s => !got.includes(s));
+  return { got, bad, all, inOrder, missing };
+}
+function levelOf(b) { const d = b.got.filter(s => s.d).length, e = b.got.filter(s => s.e).length;
+  if (b.bad.length) return null; if (d === 3 && e === 2) return 4; if (d >= 2 && e >= 1) return 3; if (d >= 2 || e >= 1) return 2; return d || e ? 1 : 0; }
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    if (t.pair) { const i = S.gap.i, r = S.gap.r;
+      if (t.PAIRS[i] === r) return { ok: true, html: esc(`Correct. “${i}”: ${r}.`) };
+      if (r === "it makes the test fair") return { ok: false, html: esc("“To make it fair” alone does not score. Say what the improvement measures or keeps the same.") };
+      if (r === "it makes the plant photosynthesise more") return { ok: false, html: esc("The improvement is about better results, not more photosynthesis. Match it to a problem with the method.") };
+      return { ok: false, html: esc("That reason goes with a different improvement. Match the improvement to the problem it fixes.") }; }
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const n = t.rows.filter(([k, , a]) => S.gap[k] !== a).length;
+    return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]}: ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
+  if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
+    const a = t.ans(); if (near(v, a)) return { ok: true, html: esc("Correct.") + workHTML(t) };
+    const hit = t.wrongs.find(([x]) => near(v, x)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
+  if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
+    const b = buildMarks(t, S.list), marks = t.ms ? levelOf(b) : null;
+    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
+    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${marks != null ? ` (about ${marks} of 4 marks)` : ""}. ${t.miss[b.missing[0].c]}`) };
+    if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. " + (t.ms ? "Describe each part of the graph, from left to right, then explain it." : "Start with the sentence starter.")) };
+    return { ok: true, html: esc("Correct. " + (t.ms ? "Level 2, 4 marks." : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") }; }
+  if (t.kind === "goal") { if (anim) return { skip: "Wait for the count to finish, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+const STUCKW = { eq: "Equation", limits: "Show what limits", maths: "Maths help", words: "Key words" };
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
+    revealModel();
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
+  if (t.kind === "num") return esc(`Answer: ${num(t.ans())}${t.unit ? " " + t.unit : ""}.`) + workHTML(t);
+  if (t.kind === "goal") return esc("Answer: the model has done it for you. " + t.done(M));
+  if (t.kind === "build") return esc("Answer: " + (t.ms ? "the numbers above show the order. " : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
+  return esc("Answer: " + t.explain);
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState();
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions tour ===== */
+const TOUR = [
+  { el: "#tabs", tab: "lim", text: "Three parts: limiting factors, the pondweed practical, and (Higher) the inverse square law." },
+  { el: "#lightRow", tab: "lim", text: "Change light intensity, carbon dioxide or temperature. The graph redraws.", do: "light", doText: "Move the Light intensity slider." },
+  { el: "#lsvg", tab: "lim", text: "The ring shows the rate now. Where the line is flat, another factor is limiting." },
+  { el: "#xvRow", tab: "lim", text: "Choose what goes on the x-axis.", do: "xv-temp", doText: "Press Temperature." },
+  { el: "#pinRow", tab: "lim", text: "Higher: pin a curve, then change another factor. Two curves on one graph." },
+  { el: "#tabs", text: "Now do the practical.", do: "tab-rp", doText: "Press Virtual RP5 / RP6." },
+  { el: "#distRow", tab: "rp", text: "Move the lamp to a new distance. You can also drag the lamp.", do: "dist", doText: "Choose a different distance." },
+  { el: "#countBtn", tab: "rp", text: "Wait 2 minutes, then count the bubbles for 1 minute (sped up).", do: "count", doText: "Press Count for 1 minute and wait." },
+  { el: "#rtable", tab: "rp", text: "Three counts per distance. Press a count to mark an anomaly. Type the mean, then Check my means to plot it." },
+  { el: "#impRow", tab: "rp", text: "Try the improvements: a heat screen, a dark room, or a gas syringe." },
+  { el: "#tabs", text: "Higher: the Inverse square law tab works out how light intensity changes with distance." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-photosynthesis-lab", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: controls ===== */
+const svgPt = (svg, e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+function guard(ev, revert) { if (locked()) { if (revert) revert(); lockMsg(); return true; } return false; }
+[["sL", "L"], ["sC", "C"], ["sT", "T"]].forEach(([id, k]) => $(id).addEventListener("input", e => {
+  if (guard(e, () => { e.target.value = M[k]; })) return;
+  M[k] = +e.target.value; drawAll();
+  if (k === "L") { tourSignal("light"); if (M.xv === "light" && M.L >= 7) tried(0); }
+  if (k === "T" && M.xv === "temp" && M.T > 45) tried(3);
+}));
+$("xvSeg").addEventListener("click", e => { const b = e.target.closest("button[data-xv]"); if (!b || guard()) return; if (M.xv !== b.dataset.xv) { M.xv = b.dataset.xv; M.pin = null; M.nowName = ""; } drawAll(); tourSignal("xv-" + M.xv); });
+$("pinBtn").addEventListener("click", () => { if (guard()) return; M.pin = { xv: M.xv, L: M.L, C: M.C, T: M.T }; M.nowName = ""; drawAll(); tourSignal("pin"); });
+$("unpinBtn").addEventListener("click", () => { if (guard()) return; M.pin = null; M.nowName = ""; drawAll(); });
+function setD(d) { if (guard()) return; if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } d = clamp(Math.round(d / 10) * 10, 10, 50); const was = M.d; M.d = d; M.rmsg = ""; drawAll(); if (d !== was) tourSignal("dist"); }
+$("dSeg").addEventListener("click", e => { const b = e.target.closest("button[data-d]"); if (b) setD(+b.dataset.d); });
+[["screenSw", "screen"], ["darkSw", "dark"], ["syrSw", "syr"]].forEach(([id, k]) => $(id).addEventListener("click", () => { if (guard()) return; if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } M[k] = !M[k]; M.rmsg = ""; drawAll(); tourSignal("imp"); }));
+$("fitSw").addEventListener("click", () => { if (guard()) return; M.fit = !M.fit; drawAll(); });
+$("countBtn").addEventListener("click", startCount);
+$("clearRow").addEventListener("click", () => { if (guard() || anim) return; clearRow(M.d); M.rmsg = `Row ${M.d} cm cleared.`; drawAll(); });
+$("clearAll").addEventListener("click", () => { if (guard() || anim) return; LAB.D.forEach(clearRow); M.rmsg = "Table cleared."; drawAll(); });
+$("rtable").addEventListener("click", e => { const b = e.target.closest(".cnt"); if (!b || guard()) return; const k = meth(M), d = +b.dataset.d, i = +b.dataset.i;
+  if (M.ok[k][d]) { M.rmsg = "This mean is already checked."; morphHTML($("rread"), labRead()); return; }
+  const mk = M.mark[k][d] || (M.mark[k][d] = []), j = mk.indexOf(i); if (j >= 0) mk.splice(j, 1); else mk.push(i); drawTable(); });
+$("rtable").addEventListener("input", e => { const n = e.target.closest(".meanin"); if (!n) return; const k = meth(M); M.inp[k][+n.dataset.d] = n.value; if (M.ok[k][+n.dataset.d] === false) M.ok[k][+n.dataset.d] = undefined; });
+$("rtable").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".meanin")) { e.preventDefault(); $("checkMeans").click(); } });
+$("checkMeans").addEventListener("click", () => {
+  if (guard()) return;
+  const k = meth(M), vol = k === "v", msgs = [], good = [];
+  LAB.D.forEach(d => { const a = M.data[k][d]; if (a.length < 3 || M.ok[k][d]) return; const s = (M.inp[k][d] || "").trim(); if (!s) return;
+    const v = parseNum(s); if (!isFinite(v)) { msgs.push(`${d} cm: type a number.`); return; }
+    const mk = M.mark[k][d] || [], ai = anomIdx(a, vol), wrongMark = mk.find(i => i !== ai);
+    const j = judgeMean(a, vol, v);
+    if (j.ok) { M.ok[k][d] = true; if (wrongMark != null) msgs.push(`${d} cm: right mean, but ${vol ? a[wrongMark].toFixed(2) : a[wrongMark]} fits the pattern${ai >= 0 ? `; the anomaly is ${vol ? a[ai].toFixed(2) : a[ai]}` : ""}.`); M.mark[k][d] = ai >= 0 ? [ai] : []; good.push(d); }
+    else { M.ok[k][d] = false; msgs.push(`${d} cm: ` + (wrongMark != null && wrongMark !== undefined ? `${vol ? a[wrongMark].toFixed(2) : a[wrongMark]} fits the pattern, so keep it. ` : "") + j.why); } });
+  if (!good.length && !msgs.length) M.rmsg = "Do three counts at a distance, type the mean in the table, then press Check my means.";
+  else M.rmsg = (good.length ? `✓ Correct mean at ${good.join(", ")} cm: plotted on the graph. ` : "") + esc(msgs.join(" "));
+  if (good.length) { tourSignal("means"); tried(2); }
+  drawAll();
+});
+/* lamp: drag along the metre rule (snaps to 10, 20, 30, 40, 50 cm), arrow keys, or the buttons */
+(function lampWire() {
+  const svg = $("rsvg"); let dr = null, pend = 0, last = null;
+  const toD = p => (labGeo().tube - p.x) / pxcm(labGeo());
+  const go = () => { pend = 0; if (!dr || !last) return; const d = clamp(Math.round(toD(last) / 10) * 10, 10, 50); if (d !== M.d) { M.d = d; drawAll(); } };
+  svg.addEventListener("pointerdown", e => { if (!e.target.closest("[data-lamp]")) return; e.preventDefault(); if (guard()) return; if (anim) return;
+    dr = { d0: M.d }; last = svgPt(svg, e); try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
+  svg.addEventListener("pointermove", e => { if (!dr) return; last = svgPt(svg, e); if (!pend) pend = paceFrame(go, 20); });
+  const up = () => { if (!dr) return; if (pend) { paceCancel(pend); pend = 0; } go(); const was = dr.d0; dr = null; M.rmsg = ""; drawAll(); if (M.d !== was) tourSignal("dist");
+    const n = document.querySelector("#rsvg [data-lamp]"); if (n && document.activeElement === n) n.focus({ preventScroll: true }); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest(".drag")) e.preventDefault(); }, { passive: false });
+  svg.addEventListener("keydown", e => { if (!e.target.closest || !e.target.closest("[data-lamp]")) return; const k = e.key; if (!/^Arrow/.test(k)) return; e.preventDefault();
+    setD(M.d + (k === "ArrowLeft" || k === "ArrowUp" ? 10 : -10)); const n = document.querySelector("#rsvg [data-lamp]"); if (n) n.focus({ preventScroll: true }); });
+})();
+[["s1", "d1"], ["s2", "d2"]].forEach(([id, k]) => $(id).addEventListener("input", e => {
+  if (guard(e, () => { e.target.value = M[k]; })) return; M[k] = +e.target.value; drawAll(); if (M.d2 === 2 * M.d1) tried(4); }));
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  /* the Support switches live in the quiz panel; in Demo they sit in the Demo panel */
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+}
+let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; stopAll(); $("rBg")._h = null; drawAll(); } }, 80); });
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
+try { if (localStorage.getItem("ks3tools-toured:gcse-photosynthesis-lab")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
