@@ -82,6 +82,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Specific Heat Capacity | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-specific-heat-capacity.html |
 | Chromatography | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-chromatography.html |
 | Thermal Insulation | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-thermal-insulation.html |
+| I–V Characteristics | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-iv-characteristics.html |
 
 ## Adding a tool
 
