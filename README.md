@@ -86,6 +86,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Making Salts | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-making-salts.html |
 | Force and Acceleration | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-acceleration.html |
 | Electrolysis | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-electrolysis.html |
+| Density | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-density.html |
 
 ## Adding a tool
 
