@@ -527,7 +527,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="cread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The heater power (38–42 W, a little different each run), the heat losses, the thermometer’s response and the room temperature are invented example values with random scatter, not real results; about 1 run in 5 is an invented anomaly that loses extra energy. Time is sped up (1 minute = 1.5 s) and the clock pauses while you read the thermometer. The joulemeter readings every 2 minutes are recorded for you; you read it yourself at switch-off. The heater itself also warms up a little, so even with no heat loss c would come out 1–3 % high. A lighter block gets hotter, so it loses a bigger share of its energy and its measured c is further from the true value; the true c does not depend on the mass. Values of c are the lesson’s: water 4200, aluminium 900, sand 830, iron and steel 450, copper 385 J/kg °C.</p>
+      <p class="limits"><b>Model limits:</b> The heater power (38–42 W, a little different each run), the heat losses, the thermometer’s response and the room temperature are invented example values with random scatter, not real results; about 1 run in 5 is an invented anomaly that loses extra energy. Time is sped up (1 minute = 1.5 s) and the clock pauses while you read the thermometer. The joulemeter readings every 2 minutes are recorded for you; you read it yourself at switch-off. The heater itself also warms up a little, so even with no heat loss c would come out 1–3 % high. A lighter block gets hotter, so it loses a bigger share of its energy and its measured c is further from the true value; the true c does not depend on the mass. Values of c are the lesson’s values.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -668,7 +668,7 @@ const setupOf = m => ({ block: m.block, mass: m.mass, ins: m.ins, lid: m.lid, oi
 const gkey = o => [o.block, o.mass, o.ins ? 1 : 0, o.lid ? 1 : 0, o.oil ? 1 : 0].join("|");
 const setupName = o => `${MAT[o.block].n}, ${o.mass} kg · insulation ${o.ins ? "on" : "off"} · lid ${o.lid ? "on" : "off"} · oil ${o.oil ? "on" : "off"}`;
 function freshM() { const m = { tab: "rp", block: "aluminium", mass: 1, ins: true, lid: true, oil: true, fit: false, runs: [], rep: {}, conc: {}, concMsg: "", concOK: false,
-  ca: "water", cb: "copper", E: 10000, ma: 1, mb: 1, cHide: false, note: "" }; m.run = newRunFor(m); return m; }
+  ca: "water", cb: "copper", E: 10000, ma: 1, mb: 1, cHide: false, hideC: false, note: "" }; m.run = newRunFor(m); return m; }
 function newRunFor(m, opt) {   // at most one invented anomaly among the repeats of one set-up
   const o = setupOf(m), k = gkey(o), g = m.runs.filter(r => r.key === k);
   opt = Object.assign({}, opt); if (opt.anom == null && g.some(r => r.anom)) opt.anom = false;
@@ -1085,7 +1085,7 @@ function drawCmp() {
     for (let T = 0; T <= 130; T += 10) { const y = ty(T); o += `<path d="M${tx + 7} ${f1(y)}h${T % 20 ? 5 : 10}" style="stroke:var(--ink);stroke-width:1.2"/>`; if (T % 20 === 0) o += T_(tx + 20, y + fs * .35, String(T), fs - 3, ""); }
     const show = !M.cHide, Tc = show ? Math.min(Tf, 132) : 20;
     o += `<rect class="therm" x="${tx - 2.5}" y="${f1(ty(Tc))}" width="5" height="${f1(G.t0 + 10 - ty(Tc))}"/><circle class="therm" cx="${tx}" cy="${G.t0 + 10}" r="7"/>`;
-    o += T_(cx - 30, 26, `${L}: ${MAT[k].n}`, fs + 1, 'text-anchor="middle" class="bold"') + T_(cx - 30, 26 + fs + 6, `c = ${MAT[k].c} J/kg °C · m = ${m} kg`, fs - 2, 'text-anchor="middle"');
+    o += T_(cx - 30, 26, `${L}: ${MAT[k].n}`, fs + 1, 'text-anchor="middle" class="bold"') + T_(cx - 30, 26 + fs + 6, `c = ${M.hideC ? "?" : MAT[k].c} J/kg °C · m = ${m} kg`, fs - 2, 'text-anchor="middle"');
     o += tag(cx - 30, G.bench - G.sh - 16, show ? (Tf > 130 ? "over 130 °C" : `20 °C → ${fmt(Tf, 1)} °C`) : "20 °C → ?", fs, "acc"); });
   setLayer($("cG"), o);
 }
@@ -1212,12 +1212,12 @@ TASKS.easy = [
     explain: "Too high. The joulemeter counts all the energy supplied, but some is lost to the surroundings, so the temperature rise is smaller. It seems more energy was needed, so c = ΔE ÷ (m × Δθ) is too high.",
     hints: ["The joulemeter counts every joule supplied, even the ones that escape.", "If some energy escapes, is the temperature rise bigger or smaller?", "A smaller Δθ on the bottom of c = ΔE ÷ (m × Δθ) makes c too high."] }
 ];
-const MS6 = ["Level 3 (5–6 marks): a coherent method in a logical order that would give a valid value for c, including a way to reduce energy losses.",
-  "Level 2 (3–4 marks): most of the method, mostly in order, with some detail missing.", "Level 1 (1–2 marks): simple relevant steps that would not give a valid result.",
+const MS6 = ["Level 3 (5–6 marks): a complete, valid method: every essential step (weigh, start temperature, heater and joulemeter on, switch off and read the joulemeter, highest temperature, calculate c) in a logical order; 6 marks also reduces energy losses.",
+  "Level 2 (3–4 marks): most of the method; an essential step missing or out of order.", "Level 1 (1–2 marks): simple relevant steps that would not give a valid result.",
   "Indicative content: weigh the block; oil in the thermometer hole; start temperature; heater and joulemeter on together; switch off after a set time and read the joulemeter; highest temperature; Δθ and c = ΔE ÷ (m × Δθ); insulation or a lid."];
 TASKS.hard = [
   { id: "sand", kind: "build", ordered: true, lesson: "L6 s14 Q3", text: "Equal masses of water and sand get the same energy. Water has the higher specific heat capacity. Explain which reaches the higher temperature. [3 marks]",
-    frame: "Say which gets hotter, then explain using specific heat capacity.", setup: SU.cmp("water", "sand", 1, 1, 10000),
+    frame: "Say which gets hotter, then explain using specific heat capacity.", lock: "all", after: "cmp", setup: SU.cmp("water", "sand", 1, 1, 10000, true),
     stm: [{ t: "Sand reaches the higher temperature.", c: 1 }, { t: "Sand has a lower c: fewer joules warm each kg by 1 °C,", c: 2 }, { t: "so for the same energy and mass, it rises more.", c: 3 },
       { t: "Water gets hotter: it has the higher specific heat capacity.", why: "A higher specific heat capacity means more energy for each °C, so water rises less." },
       { t: "Sand gets hotter because it is heavier.", why: "The masses are equal. And a heavier sample would rise less, not more, for the same energy." },
@@ -1246,7 +1246,7 @@ TASKS.hard = [
       "the mass of the block": "Keep the mass the same: it is a control variable.", "the specific heat capacity": "You calculate c from your results. It is a property of the metal: it doesn’t change, and it doesn’t depend on the mass." })[w],
     explain: "Independent: the energy supplied (heat for longer to supply more). Dependent: the temperature of the block. Control: the mass and the metal of the block, and the insulation.", stuck: "words",
     hints: ["Which one goes up as the joulemeter counts?", "You read the thermometer to measure it. You weigh the block once and keep it.", "Energy supplied (change), temperature (measure), mass of the block (keep the same)."] },
-  { id: "steel", kind: "num", lesson: "L7 s10 (We do)", text: "A 2 kg steel block is given 18 000 J. Its temperature rises from 18 °C to 38 °C. Calculate its specific heat capacity.", setup: SU.lab("steel"),
+  { id: "steel", kind: "num", lesson: "L7 s10 (We do)", text: "A 2 kg steel block is given 18 000 J. Its temperature rises from 18 °C to 38 °C. Calculate its specific heat capacity.", lock: "all", after: "cmp", setup: m => { SU.lab("steel")(m); m.hideC = true; },
     frame: "Calculate: first Δθ = final − start, then c = ΔE ÷ (m × Δθ).", lbl: "c =", unit: "J/kg °C", ans: () => 18000 / (2 * (38 - 18)),
     wrongs: [[18000 / (2 * 38), "You used 38 °C. Use the temperature rise: Δθ = 38 − 18 = 20 °C."], [500, "You used 18 °C. Use the temperature rise: Δθ = 38 − 18 = 20 °C."], [900, "You left out the mass. Divide by (2 × 20)."],
       [720000, "You multiplied. c = ΔE ÷ (m × Δθ)."], [40 / 18000, "You divided the wrong way. c = 18 000 ÷ (2 × 20)."], [18000 / 112, "You multiplied 2 by 56 (18 + 38). Use the rise: 38 − 18 = 20 °C."]],
@@ -1292,8 +1292,8 @@ TASKS.hard = [
       { t: "Record the temperature at switch-off.", why: "It keeps warming after switch-off: record the highest." },
       { t: "Leave the oil out of the thermometer hole.", why: "Oil gives good thermal contact with the block." },
       { t: "Measure the time with the joulemeter.", why: "A joulemeter measures energy; a stopwatch, time." }],
-    miss: { 1: "What do you measure first?", 2: "What do you record before heating?", 3: "How does the heating start?",
-      4: "When do you stop? What do you read?", 5: "Which temperature do you record at the end?", 6: "How do you use your results?", free: "Level 3 already. For 6 marks, add a way to cut the energy lost to the surroundings." },
+    miss: { 1: "Missing essential step: weigh the block.", 2: "Missing essential step: start temperature.", 3: "Missing essential step: switch on.",
+      4: "Missing essential step: read the joulemeter.", 5: "Missing essential step: highest temperature.", 6: "Missing essential step: calculate c.", free: "Level 3 already. For 6 marks, add a way to cut the energy lost to the surroundings." },
     orderMsg: "All the right steps, but not in a logical order. Mass and start temperature before heating; the calculation last.", ms: MS6,
     explain: "Mass; oil and start temperature; switch on heater and joulemeter; after 10 minutes switch off and read the joulemeter; highest temperature; Δθ and c = ΔE ÷ (m × Δθ). Plus insulation to cut energy losses.",
     hints: ["What do you do before, during and after heating?", "Six steps in order, plus cutting energy losses.", "Weigh, start, on, off, highest, c; insulate."] }
@@ -1328,6 +1328,10 @@ function bankCheck() {
     put([960], [1037]); if (massNote() !== MASS_NOTE2) F("mass note: 2 kg further from the true value");
     put([960, 1200, 962], [1000]); if (massNote() !== MASS_NOTE2) F("mass note: the 1 kg anomaly (1200) must be left out of its mean");
     put([960], []); if (massNote() || repHTML().includes("massNote")) F("results: mass note shown without both masses"); M = keep; }
+  { const t = TASKS.hard.find(x => x.ms6); if (t) { const full = rightBuild(t);
+      if (marks6(buildMarks(t, full)).L !== 3 || marks6(buildMarks(t, full)).mk !== 6) F("6-mark: the full answer must be Level 3, 6 marks");
+      t.stm.forEach((st2, i) => { if (st2.c && !st2.free && marks6(buildMarks(t, full.filter(j => j !== i))).L >= 3) F("6-mark: leaving out an essential step must not give Level 3: " + st2.t); });
+      const L = new Set(); [[], [full[0]], full.slice(0, 3), full.slice(0, 5), full].forEach(l => L.add(marks6(buildMarks(t, l.length ? l : [t.stm.findIndex(x => !x.c)])).L)); if (L.size < 4) F("6-mark: every level 0–3 must be reachable"); } }
   if (Math.abs(dTheta(10000, 1, 450) - 22.22) > .01 || Math.abs(dTheta(11550, 3, 385) - 10) > 1e-9) F("compare: Δθ = ΔE ÷ (m × c)");
   const deck = [[2 * 4200 * 10, 84000], [9000 / (.5 * 40), 450], [.5 * 900 * 20, 9000], [.2 * 4200 * 15, 12600], [11000 / 25, 440], [4 * 6 * 4000, 96000], [6000 / 2000, 3], [12 * 24 * 500, 144000], [2500 / 10, 250], [18000 / 20, 900], [4500 / 10, 450], [15000 / 30, 500], [36000 / 1800, 20]];
   deck.forEach(([a, b], i) => { if (Math.abs(a - b) > 1e-9) F("deck worked example " + (i + 1)); });
@@ -1420,7 +1424,7 @@ function setAnswerState() {
 function revealModel() {
   const t = task; if (!t.after) return;
   lock = ""; stopAll();
-  if (t.after === "cmp") M.cHide = false;
+  if (t.after === "cmp") { M.cHide = false; M.hideC = false; }
   drawAll();
 }
 function renderDots() {
@@ -1460,9 +1464,9 @@ function buildMarks(t, list) {
   return { got, bad, all, main, inOrder, missing, free: got.filter(s => s.free).length, nMain: all.filter(s => !s.free).length };
 }
 function marks6(b) {   // levels of response, from the points built (bad statements cost a level)
-  const n = b.main.length; let L = n >= 5 && b.inOrder ? 3 : n >= 3 ? 2 : n >= 1 || b.free ? 1 : 0;
+  const n = b.main.length; let L = n === b.nMain && b.inOrder ? 3 : n >= 3 ? 2 : n >= 1 || b.free ? 1 : 0;   // Level 3 needs every essential step
   if (b.bad.length && L > 0) L--;
-  const mk = L === 3 ? (n === 6 && b.free ? 6 : 5) : L === 2 ? (n >= 4 ? 4 : 3) : L === 1 ? (n >= 2 ? 2 : 1) : 0; return { L, mk };
+  const mk = L === 3 ? (b.free ? 6 : 5) : L === 2 ? (n >= 5 ? 4 : 3) : L === 1 ? (n >= 2 ? 2 : 1) : 0; return { L, mk };
 }
 function evaluate() {
   const t = task;

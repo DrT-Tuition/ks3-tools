@@ -505,7 +505,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="tread" aria-live="polite"></div>
         <div class="recbox" id="recRow"></div>
         <div class="readout" id="recFb" aria-live="polite" hidden></div>
-        <details class="method"><summary>Method and safety (from the lesson)</summary><ol id="methodList"></ol><p class="small" id="safetyLine"></p></details>
+        <p class="small" id="methodHid" hidden>Method and safety list: hidden for this question. Answer it or press Show answer to see it again.</p><details class="method" id="methodBox"><summary>Method and safety (from the lesson)</summary><ol id="methodList"></ol><p class="small" id="safetyLine"></p></details>
       </div>
 
       <div class="pane" id="pane-res" hidden>
@@ -594,8 +594,8 @@ main.layout{min-height:calc(100vh - 70px)}
 const DEF = {   // s9
   reagent: "A chemical added to a sample to test for something.", positive: "The colour change that shows the nutrient is there.",
   biuret: "The reagent that tests for protein.", emulsion: "Tiny droplets of one liquid spread through another.",
-  iv: "What we change: the food sample tested.", dv: "What we measure: the colour of the mixture.",   // s18
-  cv: "What we keep the same: the volume of food sample, the volume of reagent added, and the heating time and temperature." };
+  iv: "The variable you choose to change.", dv: "The variable you measure or observe.",   // generic, so Key words never gives a question's answer
+  cv: "A variable you keep the same so the test is fair. Look for amounts and conditions that could change the result." };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const f1 = v => (+v).toFixed(1);
@@ -891,10 +891,12 @@ function sampleSegs() {
   document.querySelectorAll(".sampseg").forEach(s => { if (s._k !== k) { s.innerHTML = ids.map(id => `<button type="button" data-s="${id}" aria-pressed="false">${id === "X" ? "Mystery X" : id}</button>`).join(""); s._k = k; }
     s.querySelectorAll("button").forEach(b => { const on = b.dataset.s === M.cur; if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); }); });
 }
+function methodHidden() { if (mode === "demo" || !task || !task.hideMethod) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; }
 function drawPane() {
   ["prep", "test", "res"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
   if (M.tab === "prep") { drawMortar(); drawCyl(); morphHTML($("pread"), prepRead()); }
   else if (M.tab === "test") { drawBathBg(); drawBathDyn(); drawRack(); morphHTML($("tread"), testRead()); renderRec(); morphHTML($("methodList"), methodHTML());
+    const hm = methodHidden(); $("methodBox").hidden = hm; $("methodHid").hidden = !hm;
     const f = $("recFb"); f.hidden = !M.rmsg; morphHTML(f, M.rmsg); }
   else drawRes();
 }
@@ -1012,7 +1014,7 @@ TASKS.easy = [
   { id: "iod", kind: "choice", lesson: "s9–14", text: "A food turns iodine solution blue-black. Which nutrient does it contain?", setup: SU.bench("A"),
     options: [{ t: "Starch", ok: () => IOD[1][0] === "blue-black" }, { t: "Sugar", why: "Iodine does not test for sugar. Blue-black with iodine means starch. Benedict’s tests for sugar." },
       { t: "Protein", why: "Protein is tested with Biuret, which turns lilac or purple." }, { t: "Lipid", why: "Lipid is tested with ethanol: look for a cloudy white layer." }],
-    explain: "Iodine solution tests for starch. It turns from orange-brown to blue-black.", stuck: "key",
+    explain: "Iodine solution tests for starch. It turns from orange-brown to blue-black.",
     hints: ["Which nutrient does iodine test for?", "Iodine starts orange-brown. It turns blue-black with one nutrient, found in bread and pasta.", "Blue-black with iodine means starch."] },
   { id: "match", kind: "gaps", lesson: "s12–14", text: "Match each test to its result.", setup: SU.bench("A"),
     rows: [["h", "Benedict’s (heated), with sugar →", "Blue turns brick-red"], ["i", "Iodine, with starch →", "Orange-brown turns blue-black"], ["n", "Benedict’s with no heat →", "No colour change"]],
@@ -1021,19 +1023,19 @@ TASKS.easy = [
       "Orange-brown turns blue-black": "That is the iodine result for starch. Benedict’s starts blue.",
       "No colour change": k === "h" ? "Heated Benedict’s with sugar does change: blue turns brick-red." : "Iodine changes colour with starch: orange-brown turns blue-black.",
       "Blue turns lilac": "Blue to lilac is the Biuret test for protein." })[w],
-    explain: "Heated Benedict’s: blue turns brick-red. Iodine: orange-brown turns blue-black. Benedict’s with no heat: no colour change.", stuck: "key",
+    explain: "Heated Benedict’s: blue turns brick-red. Iodine: orange-brown turns blue-black. Benedict’s with no heat: no colour change.",
     hints: ["Which reagent starts blue, and which starts orange-brown?", "Benedict’s must be heated to work.", "Heated: blue → brick-red. Iodine: orange-brown → blue-black. No heat: no change."] },
   { id: "semi", kind: "choice", lesson: "s12, s28", text: "Two foods are heated with Benedict’s at 80–90 °C for 5 minutes. Food 1 turns green. Food 2 turns brick-red. What does this show?", setup: SU.bench("A"),
     options: [{ t: "Both contain sugar. Food 2 contains more.", ok: () => BEN.findIndex(x => x[0] === "brick-red") > BEN.findIndex(x => x[0] === "green") && BEN.findIndex(x => x[0] === "green") > 0 },
       { t: "Only food 2 contains sugar.", why: "Green is a positive result too. Any change from blue shows sugar." },
       { t: "Food 1 contains more sugar.", why: "Green comes first after blue. Brick-red is furthest along the colour sequence, so food 2 has more." },
       { t: "Both changed colour, so both contain lots of sugar.", why: "A colour change does not mean lots. The colour shows roughly how much: green means a little, brick-red the most." }],
-    explain: "Both are positive. The colours go blue → green → yellow → orange → brick-red as there is more sugar, so food 2 has more.", stuck: "key",
+    explain: "Both are positive. The colours go blue → green → yellow → orange → brick-red as there is more sugar, so food 2 has more.",
     hints: ["Is green a positive Benedict’s result?", "The further along blue → green → yellow → orange → brick-red, the more sugar.", "Both contain sugar; brick-red means more."] },
   { id: "biusort", kind: "gaps", fixed: true, grid: true, lesson: "s15–17", text: "Sort each Biuret result: positive or negative for protein?", setup: SU.bench("B"),
     rows: [["a", "Purple", "Positive"], ["b", "Stays blue", "Negative"], ["c", "Blue to purple", "Positive"], ["d", "Lilac", "Positive"]], bank: ["Positive", "Negative"],
     why: (k, w) => k === "b" ? "Biuret starts blue. Staying blue means no protein: negative." : "Lilac or purple shows protein: that is positive.",
-    explain: "Positive: purple, blue to purple, lilac. Negative: stays blue, because Biuret starts blue.", stuck: "key",
+    explain: "Positive: purple, blue to purple, lilac. Negative: stays blue, because Biuret starts blue.",
     hints: ["What colour is Biuret before you add it to the food?", "Biuret starts blue. Protein turns it lilac or purple.", "Only “stays blue” is negative."] },
   { id: "iv", kind: "choice", lesson: "s18", text: "In the food tests, what is the independent variable?", setup: SU.bench("A"),
     options: [{ t: "The food sample tested", ok: () => true }, { t: "The colour of the mixture", why: "That is what you observe and record: the dependent variable." },
@@ -1045,7 +1047,7 @@ TASKS.easy = [
     not: M => { const v = M.sm.A.vol; if (M.cur !== "A") return "Choose sample A."; if (!v) return "Squeeze the pipette to put some filtrate in the measuring cylinder."; return v < VOL ? "Not 2.0 cm³ yet: the level is below the 2.0 line. Add a drop." : "Too much: the level is above the 2.0 line. Remove a drop."; },
     done: M => "2.0 cm³. The same volume of food sample in every tube keeps the test fair.",
     reveal: M => { M.cur = "A"; M.tab = "prep"; M.sm.A.vol = VOL; },
-    hints: ["Squeeze the pipette, then look at the close-up of the scale.", "Each small line is 0.1 cm³. Add or remove one drop at a time.", "Stop when the level is on the 2.0 line."], stuck: "read" },
+    hints: ["Squeeze the pipette, then look at the close-up of the scale.", "Each small line is 0.1 cm³. Add or remove one drop at a time.", "Stop when the level is on the 2.0 line."] },
   { id: "ben", kind: "choice", lesson: "s19", text: "Test sample C for sugar: add Benedict’s, then heat it in the water bath at 80–90 °C for 5 minutes. What colour is it now?", setup: SU.bench("C"),
     options: [{ t: "Brick-red", ok: () => BEN[SAMPLES.C.sugar][0] === "brick-red" }, { t: "Still blue", why: "If it is still blue, it was not heated for long enough. Benedict’s only works when heated: 80–90 °C for 5 minutes." },
       { t: "Blue-black", why: "Blue-black is the iodine result for starch, not a Benedict’s colour." }, { t: "Lilac or purple", why: "Lilac or purple is the Biuret result for protein." }],
@@ -1054,7 +1056,7 @@ TASKS.easy = [
     doIt: m => { m.tab = "test"; m.cur = "C"; m.goggles = true; m.bunsen = true; m.Tset = 85; m.T = 85; const sm = m.sm.C; let i = tubeOf(sm, "ben"); if (i < 0) { i = sm.tubes.findIndex((t, j) => !t.r && j !== LT); sm.tubes[i].r = "ben"; } sm.tubes[i].heat = HEAT; sm.tubes[i].bath = true; m.sel = i; m.sw.t = HEAT; },
     explain: "Sample C turns brick-red: it contains a lot of sugar.", stuck: "names",
     hints: ["Goggles on, then add Benedict’s to tube 1.", "Light the Bunsen. At 80–90 °C, put the tube in the bath and start the stopwatch.", "After 5 minutes sample C is brick-red."] },
-  { id: "lip", kind: "choice", lesson: "s22", text: "Do the lipid test on sample D: add ethanol to the ground food in tube 4, shake well, then pour it into the tube of water. What do you see?", setup: SU.bench("D", { goggles: true, bunsen: true }),
+  { hideMethod: true, id: "lip", kind: "choice", lesson: "s22", text: "Do the lipid test on sample D: add ethanol to the ground food in tube 4, shake well, then pour it into the tube of water. What do you see?", setup: SU.bench("D", { goggles: true, bunsen: true }),
     options: [{ t: "A cloudy white layer", ok: () => ETH[SAMPLES.D.lipid] === "cloudy white layer" }, { t: "It stays clear", why: "Sample D does contain lipid, so a cloudy white layer forms. Did you shake it with the ethanol first?" },
       { t: "It turns lilac or purple", why: "Lilac or purple is the Biuret result for protein." }, { t: "It turns blue-black", why: "Blue-black is the iodine result for starch." }],
     need: m => { const sm = m.sm.D, i = tubeOf(sm, "eth"); if (i < 0) return m.bunsen ? "Ethanol is flammable. Turn off the Bunsen first, then add ethanol to tube 4 (ground food) of sample D." : "Choose tube 4 (ground food) and add ethanol first.";
@@ -1062,15 +1064,15 @@ TASKS.easy = [
     doIt: m => { m.tab = "test"; m.cur = "D"; m.bunsen = false; const sm = m.sm.D; let i = tubeOf(sm, "eth"); if (i < 0) { i = LT; sm.tubes[i].r = "eth"; } Object.assign(sm.tubes[i], { shaken: true, poured: true }); sm.water.got = true; sm.water.cloudy = true; m.sel = i; },
     explain: "A cloudy white layer forms: sample D contains lipid. The lipid makes an emulsion in the water.", stuck: "names",
     hints: ["Look at the Bunsen first: what is the hazard with ethanol?", "Bunsen off, then tube 4: add ethanol, shake, pour into the tube of water.", "Sample D gives a cloudy white layer."] },
-  { id: "safe", kind: "choice", lesson: "s22, s27 Q3", text: "Which safety rule goes with the ethanol test for lipids?", setup: SU.bench("D"),
+  { hideMethod: true, id: "safe", kind: "choice", lesson: "s22, s27 Q3", text: "Which safety rule goes with the ethanol test for lipids?", setup: SU.bench("D"),
     options: [{ t: "No flames: ethanol is flammable.", ok: () => true }, { t: "Heat it in a hot water bath.", why: "The lipid test needs no heating. Ethanol is flammable, so keep flames away." },
       { t: "Wipe up iodine: it stains.", why: "That goes with the iodine test." }, { t: "Biuret contains corrosive alkali.", why: "That goes with the Biuret test. The hazard in the ethanol test is fire." }],
-    explain: "Ethanol is flammable: no flames. Goggles on for every test.", stuck: "words",
+    explain: "Ethanol is flammable: no flames. Goggles on for every test.",
     hints: ["What could ethanol do near a flame?", "Ethanol is flammable.", "No flames: ethanol is flammable."] },
   { id: "hinge", kind: "choice", lesson: "s26", text: "A food is tested with Biuret solution. Which result shows protein?", setup: SU.bench("B"),
     options: [{ t: "The mixture turns lilac or purple.", ok: () => BIU[1][0] === "lilac or purple" }, { t: "The mixture stays blue.", why: "Biuret starts blue. Staying blue means no protein." },
       { t: "The mixture turns brick-red.", why: "Brick-red is a Benedict’s result for sugar. Biuret does not test for sugar." }, { t: "The mixture turns blue-black.", why: "Blue-black is the iodine result for starch." }],
-    explain: "Biuret starts blue and turns lilac or purple with protein.", stuck: "key",
+    explain: "Biuret starts blue and turns lilac or purple with protein.",
     hints: ["What colour is Biuret before it is added?", "If it starts blue, can staying blue show protein?", "Lilac or purple shows protein."] }
 ];
 const FIXES = ["Heat it in a water bath at 80–90 °C", "Use iodine solution for starch", "Look for lilac or purple, not blue", "Add more Benedict’s and wait", "Look for a brick-red result"];
@@ -1082,21 +1084,21 @@ TASKS.hard = [
     options: [{ t: "A positive Benedict’s test can be green, yellow or brick-red.", ok: () => [1, 2, 4].every(i => BEN[i][0] !== "blue") },
       { t: "A hot water bath is needed for the iodine test.", why: "False: iodine needs no heating. Only Benedict’s is heated." },
       { t: "Iodine tests for sugar.", why: "False: iodine tests for starch. Benedict’s tests for sugar." }, { t: "Benedict’s starts brick-red.", why: "False: Benedict’s starts blue. Brick-red is a positive result." }],
-    explain: "Benedict’s starts blue; green, yellow or brick-red are all positive.", stuck: "key",
+    explain: "Benedict’s starts blue; green, yellow or brick-red are all positive.",
     hints: ["Which reagent needs heating?", "Iodine tests for starch, and Benedict’s starts blue.", "A positive Benedict’s test can be green, yellow or brick-red."] },
   { id: "who", kind: "choice", lesson: "s16–17", text: "A food sample is still blue after adding Biuret solution. Who is right?", frame: "…is right because Biuret starts…", setup: SU.bench("C"),
     options: [{ t: "Ben: it does not contain protein. Biuret stays blue if there is none.", ok: () => BIU[0][0] === "blue" },
       { t: "Ana: it contains protein, because blue is the Biuret colour.", why: "Blue is the colour Biuret starts. Protein turns it lilac or purple, so blue means no protein." },
       { t: "Cy: the test did not work. Add more Biuret and heat it.", why: "The test worked: staying blue is a negative result. Biuret needs no heating." }],
-    explain: "Ben is right because Biuret starts blue. Only protein turns it lilac or purple.", stuck: "key",
+    explain: "Ben is right because Biuret starts blue. Only protein turns it lilac or purple.",
     hints: ["What colour is Biuret at the start?", "Does Biuret need heating?", "Ben: blue means no protein."] },
-  { id: "cv", kind: "build", lesson: "s18", text: "Name the control variables in the food tests. [3 marks] Choose the statements.", frame: "Keep the same: …", setup: SU.bench("A"),
+  { hideMethod: true, id: "cv", kind: "build", lesson: "s18", text: "Name the control variables in the food tests. [3 marks] Choose the statements.", frame: "Keep the same: …", setup: SU.bench("A"),
     stm: [{ t: "the volume of food sample", c: 1 }, { t: "the volume of reagent added", c: 2 }, { t: "the heating time and temperature", c: 3 },
       { t: "the food sample tested", why: "That is what you change: the independent variable." }, { t: "the colour of the mixture", why: "That is what you observe: the dependent variable." }],
     miss: { 1: "What about the amount of food sample in each tube?", 2: "What about the amount of each reagent?", 3: "What about the Benedict’s heating?" },
     explain: "Control variables: the volume of food sample, the volume of reagent added, and the heating time and temperature.", stuck: "words",
     hints: ["Control variables are kept the same so the test is fair.", "Think about volumes, and the water bath.", "Volume of sample, volume of reagent, heating time and temperature."] },
-  { id: "eval", kind: "gaps", fixed: true, lesson: "s18–19", text: "Food 1 is heated with Benedict’s for 5 minutes: orange. Food 2 is heated for 2 minutes: green. A student says food 1 has more sugar. Evaluate the method.", frame: "The comparison is not fair because… To improve it…", setup: SU.bench("A"),
+  { hideMethod: true, id: "eval", kind: "gaps", fixed: true, lesson: "s18–19", text: "Food 1 is heated with Benedict’s for 5 minutes: orange. Food 2 is heated for 2 minutes: green. A student says food 1 has more sugar. Evaluate the method.", frame: "The comparison is not fair because… To improve it…", setup: SU.bench("A"),
     rows: [["p", "The comparison is not fair because", "the heating time was not the same", ["the heating time was not the same", "the food samples were different", "green means there is no sugar", "they did not use iodine"]],
       ["f", "To improve it,", "heat both for 5 minutes at 80–90 °C", ["heat both for 5 minutes at 80–90 °C", "test more foods", "use Biuret instead", "leave both on the bench"]]],
     why: (k, w) => ({ "the food samples were different": "The food sample is meant to change: it is the independent variable. Look at what else changed.", "green means there is no sugar": "Green is a positive result: it shows a little sugar.",
@@ -1104,7 +1106,7 @@ TASKS.hard = [
       "leave both on the bench": "Benedict’s must be heated, or there is no colour change." })[w],
     explain: "Heating time is a control variable. Food 2 had less time to change colour, so the colours can’t be compared. Heat both for 5 minutes at 80–90 °C.",
     hints: ["Compare the two tests. What was different apart from the food?", "Heating time and temperature are control variables.", "Not the same heating time: heat both for 5 minutes at 80–90 °C."] },
-  { id: "order", kind: "build", ordered: true, lesson: "s20–21", text: "Put the Benedict’s test in the right order. Build your answer in order.", setup: SU.bench("A"),
+  { hideMethod: true, id: "order", kind: "build", ordered: true, lesson: "s20–21", text: "Put the Benedict’s test in the right order. Build your answer in order.", setup: SU.bench("A"),
     stm: [{ t: "D: Add Benedict’s to the sample", c: 1 }, { t: "A: Heat in a water bath at 80–90 °C", c: 2 }, { t: "B: Wait about 5 minutes", c: 3 }, { t: "C: Record the colour", c: 4 }],
     miss: { 1: "Start with what goes into the tube.", 2: "What do you do to the tube next?", 3: "How long does it stay in the bath?", 4: "Finish by writing down the result." },
     explain: "D → A → B → C: add Benedict’s, heat at 80–90 °C, wait about 5 minutes, record the colour.", orderMsg: "Add the reagent before you heat it, and record last.",
@@ -1115,14 +1117,14 @@ TASKS.hard = [
       { t: "It contains no protein, because Biuret is blue.", why: "The Biuret turned lilac, so protein is present." },
       { t: "It contains sugar, because the Biuret changed colour.", why: "Biuret tests for protein, not sugar. Use Benedict’s for sugar." }],
     miss: { 1: "Link the Biuret colour to its nutrient.", 2: "Link the iodine colour to its nutrient." },
-    explain: "Lilac Biuret means protein (1); orange-brown iodine means no starch (1).", stuck: "key",
+    explain: "Lilac Biuret means protein (1); orange-brown iodine means no starch (1).",
     hints: ["Two colours, two nutrients.", "Did each reagent change colour, or stay at its starting colour?", "Protein yes (lilac); starch no (orange-brown)."] },
-  { id: "fix", kind: "gaps", fixed: true, lesson: "s25", text: "Fix the plan: choose the fix for the mistake in each plan.", setup: SU.bench("A"),
+  { hideMethod: true, id: "fix", kind: "gaps", fixed: true, lesson: "s25", text: "Fix the plan: choose the fix for the mistake in each plan.", setup: SU.bench("A"),
     rows: [["p1", "1. Sugar: add Benedict’s and leave it on the bench", FIXES[0], FIXES], ["p2", "2. Starch: add Biuret solution", FIXES[1], FIXES], ["p3", "3. Protein: look for a blue result", FIXES[2], FIXES]],
     why: (k, w) => ({ p1: { [FIXES[1]]: "Plan 1 tests for sugar, so it uses Benedict’s. What is missing?", [FIXES[2]]: "That fixes the protein plan.", [FIXES[3]]: "More Benedict’s won’t help. It must be heated.", [FIXES[4]]: "Green and yellow count too, and it still needs heating." },
       p2: { [FIXES[0]]: "Heating won’t fix it: Biuret tests for protein. Use the starch reagent.", [FIXES[2]]: "That is the protein result. Plan 2 tests for starch.", [FIXES[3]]: "Benedict’s tests for sugar, not starch.", [FIXES[4]]: "Brick-red is a sugar result. Plan 2 tests for starch." },
       p3: { [FIXES[0]]: "Biuret needs no heating. The mistake is the colour.", [FIXES[1]]: "Plan 3 tests for protein, so Biuret is right. The mistake is the colour.", [FIXES[3]]: "Benedict’s tests for sugar. Plan 3 tests for protein.", [FIXES[4]]: "Brick-red is a Benedict’s result. Biuret starts blue and protein turns it lilac or purple." } })[k][w],
-    explain: "1: heat it in a water bath at 80–90 °C. 2: use iodine solution for starch. 3: a positive result is lilac or purple, not blue.", stuck: "key",
+    explain: "1: heat it in a water bath at 80–90 °C. 2: use iodine solution for starch. 3: a positive result is lilac or purple, not blue.",
     hints: ["Check each plan’s reagent, heating and colour.", "Only Benedict’s is heated; iodine is for starch; Biuret starts blue.", "1 heat it; 2 use iodine; 3 look for lilac or purple."] },
   { id: "which", kind: "choice", noKey: true, lesson: "s27 Q5", text: "Which sample contains both protein and starch? Test the samples with iodine and Biuret to find out.", setup: SU.bench("A", { goggles: true }),
     options: IDS.map(id => ({ t: "Sample " + id, id, ok: () => SAMPLES[id].protein === 1 && SAMPLES[id].starch === 1,
@@ -1131,7 +1133,7 @@ TASKS.hard = [
     doIt: m => { const id = ID_OK(), sm = m.sm[id]; m.tab = "test"; m.cur = id; m.goggles = true; ["iod", "biu"].forEach(k => { if (tubeOf(sm, k) < 0) sm.tubes[sm.tubes.findIndex((t, j) => !t.r && j !== LT)].r = k; }); },
     explain: `Sample ${IDS.find(id => SAMPLES[id].protein && SAMPLES[id].starch)}: Biuret turns lilac or purple (protein) and iodine turns blue-black (starch).`, stuck: "names",
     hints: ["Use a clean tube for each test: iodine in one, Biuret in another.", "You need blue-black with iodine and lilac or purple with Biuret.", `Try sample ${IDS.find(id => SAMPLES[id].protein && SAMPLES[id].starch)}.`] },
-  { id: "desc", kind: "build", ordered: true, lesson: "s27 Q4, s28", text: "Describe how to test a food for sugar. [3 marks] Build your answer in order.", frame: "Add…, heat in a…, look for a colour change to…", setup: SU.bench("C"),
+  { hideMethod: true, id: "desc", kind: "build", ordered: true, lesson: "s27 Q4, s28", text: "Describe how to test a food for sugar. [3 marks] Build your answer in order.", frame: "Add…, heat in a…, look for a colour change to…", setup: SU.bench("C"),
     stm: [{ t: "Add Benedict’s solution to the food sample.", c: 1 }, { t: "Heat it in a water bath at 80–90 °C.", c: 2 }, { t: "A positive result is green, yellow or brick-red.", c: 3 },
       { t: "Put it next to the water bath without heating it.", why: "Using a water bath is not enough: the mixture must be heated." },
       { t: "A positive result is blue-black.", why: "Blue-black is the iodine result for starch." },
@@ -1140,7 +1142,7 @@ TASKS.hard = [
     miss: { 1: "Name the reagent you add.", 2: "Say how it must be treated, and at what temperature.", 3: "Give the positive result." }, ms: MS3,
     explain: "Add Benedict’s (1), heat in a water bath at 80–90 °C (1), positive result green, yellow or brick-red (1).", orderMsg: "Use the frame: add, heat, then the result.",
     hints: ["Three marks: reagent, heating, result.", "Benedict’s is the reagent. It must be heated.", "Add Benedict’s, heat at 80–90 °C, look for green, yellow or brick-red."] },
-  { id: "plan", kind: "build", lesson: "s19, s22, s27–28", text: "Plan how to find which nutrients a food contains. [6 marks]",
+  { hideMethod: true, id: "plan", kind: "build", lesson: "s19, s22, s27–28", text: "Plan how to find which nutrients a food contains. [6 marks]",
     frame: "Prepare first, then each test: reagent → method → result.", setup: SU.bench("A"),
     stm: [{ t: "Grind with water; keep some ground food for the lipid test; filter.", c: 1, p: 1 },
       { t: "Sugar: Benedict’s, heat 80–90 °C → green, yellow or brick-red.", c: 2, x: 1 },
@@ -1258,7 +1260,7 @@ function renderDots() {
 }
 
 
-function revealModel() { const t = task; if (t.doIt && t.need) { const ri = t.options.findIndex(o => o.ok && o.ok()); if (t.need(M, ri)) { t.doIt(M); M.tmsg = "The model has done the test for you."; drawAll(); } } }
+function revealModel() { const t = task; if (t.hideMethod) drawAll(); if (t.doIt && t.need) { const ri = t.options.findIndex(o => o.ok && o.ok()); if (t.need(M, ri)) { t.doIt(M); M.tmsg = "The model has done the test for you."; drawAll(); } } }
 
 /* ===== Support (off on load, never stored) ===== */
 const WORDS = [["Reagent", DEF.reagent], ["Positive result", DEF.positive], ["Biuret", DEF.biuret], ["Emulsion", DEF.emulsion], ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv], ["Control variables", DEF.cv]];

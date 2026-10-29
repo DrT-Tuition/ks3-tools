@@ -36,10 +36,13 @@
     - Ink pen for the start line (the line runs; Easy 5–6, Hard 3, Hard 10 feedback).
     - Solvent above the start line (spots dissolve into the beaker; Easy 5–6, Hard 3, Hard 10).
     - Rf can be more than 1 (judgeRf names it; Easy 1, Easy 10, Hard 4; Rf boxes in the table).
-    - The bigger the spot, the more dyes / a different dye (Hard 2; conclusion "why" box).
+    - The bigger the spot, the more dyes / a different dye (Hard 2; conclusion "why" box; the Model limits line about spot size shows in Demo only).
+  Answer leaks closed (audit 29 Oct): in the Knowledge check the Run tab's method list and its reasons, the conclusion frame and
+    the spot-size Model limits line are hidden; the F-deck pictures name their lines "Line P" / "Spot Q"; Key-words Stuck lines
+    are not offered where Key words states the answer; the Maths help example uses different numbers from Hard 4.
     - A pure substance gives several spots (Easy 3; conclusion "pure" box).
     - One matching spot means a match (Hard 1, Hard 10, conclusion; s35).
-    - Naming the method "colour separation" (Easy 9, F s27); separation by particle size or boiling point (Hard 7, Hard 9, H s27).
+    - Naming the method "colour separation" (Easy 9 feedback, F s27); separation by particle size or boiling point (Hard 7, Hard 9, H s27).
   Facts used: paper = stationary phase, solvent = mobile phase; each dye gives one spot; same spots at the same heights =
     same dyes; pure substance = one spot; black ink is a mixture of dyes that dissolve in the solvent to different extents
     and move different distances; Rf = distance moved by spot ÷ distance moved by solvent; method s22; safety: eye
@@ -428,7 +431,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <span class="gl" id="rLbl">Ruler:</span><span role="group" aria-labelledby="rLbl" class="controls" style="gap:6px"><button class="btn rbtn" type="button" id="rUp" aria-label="Slide the ruler up 1 mm">▲</button><button class="btn rbtn" type="button" id="rDn" aria-label="Slide the ruler down 1 mm">▼</button></span>
           <button class="linkbtn" type="button" id="useEx">Use the lesson's example</button></div>
         <svg id="msvg" class="scene" viewBox="0 0 960 440" role="img" aria-label="The dried chromatogram with a ruler beside it, and a magnified view of the ruler level with the chosen spot."><g id="mBg"></g><g id="mRule"></g><g id="mMag"></g></svg>
-        <div class="rec" id="recRow" data-off="1"><label class="ctl-lbl" for="dIn">Distance from the start line:</label><input class="numin" id="dIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" disabled> <span class="unit">cm</span><button class="btn primary" type="button" id="dBtn" disabled>Record</button><span class="small" id="recHint"></span></div>
+        <div class="rec" id="recRow" data-off="1"><label class="ctl-lbl" for="dIn" id="dLab">Distance from the start line:</label><input class="numin" id="dIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" disabled> <span class="unit">cm</span><button class="btn primary" type="button" id="dBtn" disabled>Record</button><span class="small" id="recHint"></span></div>
       </div>
       <div class="readout" id="rread" aria-live="polite"></div>
 
@@ -438,7 +441,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="concl" id="concl"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The paper size, the speed of the water and the small differences between papers are invented example values, not real measurements. Time is sped up. The Rf values come from the lesson’s example chromatogram. Real spots spread and streak more, and the Rf of a dye depends on the solvent and the paper. Spot size here only shows how much ink was put on the line.</p>
+      <p class="limits"><b>Model limits:</b> The paper size, the speed of the water and the small differences between papers are invented example values, not real measurements. Time is sped up. The Rf values come from the lesson’s example chromatogram. Real spots spread and streak more, and the Rf of a dye depends on the solvent and the paper. <span id="limSize">Spot size here only shows how much ink was put on the line.</span></p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -602,8 +605,9 @@ const EXAMPLE = () => mkChrom(8.0, [["P", "red", 4.8], ["P", "blue", 2.4], ["Q",
 const FDECK = () => mkChrom(6.0, [["", "red", 4.5]], "fdeck", { callouts: true });    // F s19–s21, F s25 I do
 const FEXAM = () => mkChrom(5.0, [["", "red", 3.0]], "fexam", { callouts: true });    // F s30 Q2 (3.0 ÷ 5.0)
 const rfOf = (c, sp) => sp.d / c.D;
-const spotName = (sp) => (sp.s ? (sp.s === "P" ? "P (note)" : "Pen " + sp.s) + ", " : "") + DYES[sp.dye].w + " spot";
-const tgtList = c => [{ k: "front", w: "Solvent front", d: c.D }, ...c.spots.map(sp => ({ k: String(sp.i), w: spotName(sp), d: sp.d, sp }))];
+const spotName = (sp) => sp.s ? (sp.s === "P" ? "P (note)" : "Pen " + sp.s) + ", " + DYES[sp.dye].w + " spot" : "Spot Q";
+// the F-deck pictures keep their P/Q/R labels, so naming the targets "Line P" / "Spot Q" doesn't give Easy 4 away
+const tgtList = c => [{ k: "front", w: c.callouts ? "Line P" : "Solvent front", d: c.D }, ...c.spots.map(sp => ({ k: String(sp.i), w: spotName(sp), d: sp.d, sp }))];
 const tgtOf = (c, k) => tgtList(c).find(x => x.k === String(k)) || tgtList(c)[0];
 
 /* ===== Running the paper (each action takes the model, so Show answer can run them too) ===== */
@@ -807,6 +811,7 @@ const MSTEPS = [
   ["Remove the paper when the water is near the top.", "You must see where the water reached.", m => ["removed", "marked", "dry"].includes(m.run.phase)],
   ["Mark the solvent front in pencil. Leave to dry.", "Once dry you can't see the front, and Rf needs its distance.", m => m.run.phase === "dry" && !m.run.spoilt]];
 function drawMethod() {
+  if (mode !== "demo" && task.id !== "runit") { morphHTML($("method"), '<li class="now">The method list is hidden during this question.<span class="why">It comes back in Demo and in the “Do it: run a paper” question.</span></li>'); return; }   // it would give the method-order answers away
   const v = MSTEPS.map(x => x[2](M)), now = v.findIndex(x => !x);
   morphHTML($("method"), MSTEPS.map((x, i) => `<li class="${v[i] === "bad" ? "bad" : v[i] ? "done" : i === now ? "now" : ""}">${esc(x[0])}${v[i] === "bad" ? ` <b>✗ ${i === 1 ? "ink pen used" : M.run.water + " cm poured"}</b>` : ""}<span class="why">${esc(x[1])}</span>${v[i] === true ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""));
 }
@@ -858,7 +863,7 @@ function drawMsMov() {
   const G = mgeo(), c = M.chrom, s = G.s, fs = G.fs;
   if (!c) { setLayer($("mRule"), ""); setLayer($("mMag"), ""); return; }
   const y0 = G.pbot - M.ms.off * s;
-  setLayer($("mRule"), `<g class="rulerg" id="rulerG" tabindex="0" role="slider" aria-label="Ruler. Arrow keys slide it 1 mm." aria-valuemin="0" aria-valuemax="${RMAX}" aria-valuenow="${M.ms.off}" aria-valuetext="Ruler 0 is ${f1(M.ms.off)} cm above the bottom of the paper${Math.abs(M.ms.off - LINE) < .05 ? ", on the start line" : ""}">` + rulerSvg(G, y0, s, G.rx0, G.rw) + `</g>`);
+  setLayer($("mRule"), `<g class="rulerg" id="rulerG" tabindex="0" role="slider" aria-label="Ruler. Arrow keys slide it 1 mm." aria-valuemin="0" aria-valuemax="${RMAX}" aria-valuenow="${M.ms.off}" aria-valuetext="Ruler 0 is ${f1(M.ms.off)} cm above the bottom of the paper${Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? ", on line R" : ", on the start line") : ""}">` + rulerSvg(G, y0, s, G.rx0, G.rw) + `</g>`);
   /* selection ring on the paper + the magnified view */
   const t = tgtOf(c, M.ms.tgt), [mx0, mx1, my0, my1] = G.mag, Z = G.Z, px = G.px, Y = h => G.pbot - h * s;
   const pw = paperW(c.lanes.length) * s;
@@ -882,8 +887,8 @@ function drawMsTable() {
   const c = M.chrom, ms = M.ms;
   if (!c) { morphHTML($("mtable"), ""); morphHTML($("concl"), ""); $("concl").hidden = true; return; }
   const cell = k => ms.rec[k] != null ? `<b>${f1(ms.rec[k])}</b>` : (String(ms.tgt) === String(k) ? '<span class="wait">?</span>' : '<span class="emp">–</span>');
-  let h = `<table class="rt"><caption>${c.src === "run" ? "Your results" : "Results: the lesson's example"} (distances from the start line)</caption><thead><tr><th scope="col">Ink</th><th scope="col">Spot</th><th scope="col">Distance moved (cm)</th><th scope="col">Rf</th></tr></thead><tbody>`;
-  h += `<tr${ms.tgt === "front" ? ' class="cur"' : ""}><td class="dst">Solvent</td><td>front</td><td>${cell("front")}</td><td><span class="emp">–</span></td></tr>`;
+  let h = `<table class="rt"><caption>${c.src === "run" ? "Your results" : c.callouts ? "Results" : "Results: the lesson's example"} (distances from ${c.callouts ? "line R" : "the start line"})</caption><thead><tr><th scope="col">Ink</th><th scope="col">Spot</th><th scope="col">Distance moved (cm)</th><th scope="col">Rf</th></tr></thead><tbody>`;
+  h += `<tr${ms.tgt === "front" ? ' class="cur"' : ""}><td class="dst">${c.callouts ? "Line P" : "Solvent"}</td><td>${c.callouts ? "top line" : "front"}</td><td>${cell("front")}</td><td><span class="emp">–</span></td></tr>`;
   c.spots.forEach(sp => { const k = sp.i, ok = ms.rfOk[k], can = ms.rec[k] != null && ms.rec.front != null;
     h += `<tr${String(ms.tgt) === String(k) ? ' class="cur"' : ""}><td class="dst">${sp.s ? esc(sp.s === "P" ? "P (note)" : "Pen " + sp.s) : (c.callouts ? "Q" : "Spot")}</td><td><span class="dye" style="background:${DYES[sp.dye].c}"></span>${DYES[sp.dye].w}</td><td>${cell(k)}</td>` +
       `<td>${can ? `<input class="cellin${ok ? " ok" : ok === false ? " no" : ""}" data-i="${k}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(ms.rf[k] || "")}" aria-label="Rf of ${esc(spotName(sp))}"${ok ? " readonly" : ""}>${ok ? " ✓" : ""}` : '<span class="emp">–</span>'}</td></tr>`; });
@@ -891,7 +896,7 @@ function drawMsTable() {
   const el = $("mtable"), a = document.activeElement, foc = a && a.classList && a.classList.contains("cellin") ? a.dataset.i : null;
   if (el._h !== h) { el.innerHTML = h; el._h = h; if (foc) { const n = el.querySelector(`.cellin[data-i="${foc}"]`); if (n) { n.focus({ preventScroll: true }); const L = n.value.length; try { n.setSelectionRange(L, L); } catch (e) {} } } }
   /* conclusion frame (only for the four-ink papers) */
-  const cc = $("concl"); cc.hidden = c.lanes.length < 4;
+  const cc = $("concl"); cc.hidden = c.lanes.length < 4 || mode !== "demo";   // the frame states "one spot … pure": Demo only
   if (!cc.hidden) {
     const C = ms.concl, sel = (id, v, list, lab) => `<select id="${id}" aria-label="${esc(lab)}"><option value="">choose…</option>${list.map(([k, w]) => `<option value="${k}"${v === k ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>`;
     const hh = `<h3>Conclusion${ms.conclOk ? " ✓" : ""}</h3>` +
@@ -909,7 +914,7 @@ function readHTML() {
     const st = { setup: "setting up", running: "running", removed: "out of the beaker, wet", marked: "front marked, wet", dry: r.spoilt ? "dry, spoilt" : "dry", top: "water reached the top" }[r.phase];
     h += `<p class="r1">Paper: ${st}</p>`;
   } else { const c = M.chrom;
-    h += `<p class="r1">${c ? (c.src === "run" ? "Your chromatogram" : "The lesson's example chromatogram") : "Nothing to measure yet"}${c ? ` · ruler 0 ${Math.abs(M.ms.off - LINE) < .05 ? "on the start line ✓" : "not on the start line"}` : ""}</p>`; }
+    h += `<p class="r1">${c ? (c.src === "run" ? "Your chromatogram" : c.callouts ? "The chromatogram from the question" : "The lesson's example chromatogram") : "Nothing to measure yet"}${c ? ` · ruler 0 ${Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? "on line R ✓" : "on the start line ✓") : (c.callouts ? "not on line R" : "not on the start line")}` : ""}</p>`; }
   if (M.msg) h += `<p class="r3">${esc(M.msg)}</p>`;
   return h;
 }
@@ -931,6 +936,7 @@ function renderCtl() {
   $("recHint").textContent = !c ? "Nothing to measure yet." : aw ? "Read to the nearest mm (0.1 cm)." : "Recorded. Choose another spot to measure.";
   if (!aw && rd.value) rd.value = "";
   if (!locked()) $("lockNote").hidden = true;
+  const cl = !!(c && c.callouts), lab = cl ? "Distance from line R:" : "Distance from the start line:"; if ($("dLab").textContent !== lab) $("dLab").textContent = lab;
 }
 function drawPane() {
   ["run", "ms"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
@@ -984,7 +990,7 @@ function doRecord() {
   const j = judgeDist(v, t, M);
   if (!j.ok) { M.msg = "✗ " + j.why; inp.classList.add("no"); morphHTML($("rread"), readHTML()); return; }
   inp.classList.remove("no"); inp.value = ""; M.ms.rec[t.k] = t.d;
-  M.msg = `✓ ${t.w}: ${f1(t.d)} cm from the start line.`;
+  M.msg = `✓ ${t.w}: ${f1(t.d)} cm from ${c.callouts ? "line R" : "the start line"}.`;
   const next = tgtList(c).find(x => M.ms.rec[x.k] == null); if (next) M.ms.tgt = next.k;
   M.msg += next ? ` Next: ${next.w}.` : " Everything is measured. Now type the Rf values in the table.";
   if (M.ms.rec.front != null && Object.keys(M.ms.rec).length >= 2) tried(3);
@@ -1032,21 +1038,21 @@ TASKS.easy = [
       { t: "The water (the solvent)", why: "The solvent moves up the paper: it is the mobile phase. The paper stays still." },
       { t: "The ink spots", why: "The spots are the mixture being separated. The stationary phase is the paper." },
       { t: "The beaker", why: "The beaker only holds the solvent. The stationary phase is the paper the dyes move along." }],
-    explain: "The paper is the stationary phase. The solvent is the mobile phase.", stuck: "words",
+    explain: "The paper is the stationary phase. The solvent is the mobile phase.",
     hints: ["Stationary means it stays still.", "Which part doesn't move: the paper or the water?", "The paper."] },
   { id: "pure", kind: "choice", lesson: "s19", text: "A pure substance is tested by paper chromatography. What do you see on the paper?", setup: SU.ex(LINE),
     options: [{ t: "One spot", ok: () => ONESPOT.length === 1 && SAMPLES.find(s => s.id === ONESPOT[0]).dyes.length === 1 },
       { t: "Several spots, one for each part of it", why: "A pure substance has only one substance in it, so it gives one spot. Several spots means a mixture." },
       { t: "No spots: a pure substance doesn't move", why: "A pure substance still dissolves and moves up the paper. It gives one spot." },
       { t: "A smear all the way up the paper", why: "A pure substance gives one neat spot. Several spots or a smear shows a mixture." }],
-    explain: "A pure substance gives one spot. A mixture gives more than one.", stuck: "words",
+    explain: "A pure substance gives one spot. A mixture gives more than one.",
     hints: ["Each dye gives one spot.", "How many substances are in a pure substance?", "One spot."] },
   { id: "label", kind: "gaps", lesson: "F s20–21", text: "The chromatogram has three labels: P, Q and R. What does each label show?", setup: SU.fdeck, lock: "paper",
     rows: [["P", "Label P:", "the solvent front"], ["Q", "Label Q:", "a spot of dye"], ["R", "Label R:", "the pencil start line"]],
     bank: ["the solvent front", "a spot of dye", "the pencil start line", "the water level in the beaker"],
     why: (k, w) => w === "the water level in the beaker" ? "The water level isn't on the paper: the paper has been taken out. Look at where each label points." :
       ({ P: "P points at the top line: the line the solvent reached (the solvent front).", Q: "Q points at the coloured spot: a spot of dye.", R: "R points at the bottom line, where the spots started: the pencil start line." })[k],
-    explain: "P is the solvent front, Q is a spot of dye, R is the pencil start line.", stuck: "words",
+    explain: "P is the solvent front, Q is a spot of dye, R is the pencil start line.",
     hints: ["The spots start on one line and the water stops at another.", "The bottom line is where the spots were put. The top line is how far the water went.", "P: solvent front. Q: spot of dye. R: pencil start line."] },
   { id: "order", kind: "build", ordered: true, compact: true, lesson: "s22", text: "Put the method in order. Choose the steps you need, in order.", setup: SU.run,
     stm: [{ t: "Pencil line 2 cm from the bottom.", c: 1 }, { t: "A small ink spot on the line.", c: 2 }, { t: "Water 1 cm deep in the beaker.", c: 3 }, { t: "Hang the paper: bottom just in the water.", c: 4 },
@@ -1074,7 +1080,7 @@ TASKS.easy = [
       { t: "So the water rises faster", why: "Sharing a paper doesn't change how fast the water rises. It keeps the paper and solvent the same for every ink." },
       { t: "So the dyes mix together", why: "The dyes must not mix: each ink has its own lane. Sharing the paper keeps the paper and solvent the same for every ink." },
       { t: "Because the type of ink is the dependent variable", why: "The ink is what you change (the independent variable). You measure how far each spot moves (the dependent variable)." }],
-    explain: "The paper and the solvent are control variables: keeping them the same means any difference is caused by the inks.", stuck: "words",
+    explain: "The paper and the solvent are control variables: keeping them the same means any difference is caused by the inks.",
     hints: ["What must be kept the same to compare the inks fairly?", "If each ink had different paper or solvent, could you compare the heights?", "Same paper, same solvent: a fair comparison."] },
   { id: "black", kind: "choice", lesson: "s8, s23–24", text: "Black ink splits into coloured spots. Why?", setup: SU.ex(LINE),
     options: [{ t: "Black ink is a mixture of dyes. They dissolve in the solvent and move different distances.", ok: () => SAMPLES[0].dyes.length > 1 },
@@ -1083,17 +1089,18 @@ TASKS.easy = [
       { t: "The paper adds colour as the water passes", why: "The colours come from the ink, not the paper. The ink is a mixture of dyes." }],
     explain: "Black ink is a mixture of dyes. Each dye dissolves in the solvent to a different extent, so each moves a different distance.",
     hints: ["Is black ink one substance or several?", "Each dye gives one spot. Why do they end up at different heights?", "A mixture of dyes that move different distances."] },
-  { id: "name", kind: "choice", lesson: "F s27 hinge", text: "A student separates the colours in black ink using paper and water. What is the method called?", setup: SU.ex(LINE),
-    options: [{ t: "Chromatography", ok: () => /solvent moving through paper/.test(DEF.chrom) },
-      { t: "Colour separation", why: "That describes it, but it doesn't name it. The method is called chromatography." },
-      { t: "Filtration", why: "Filtration separates an insoluble solid from a liquid. Dyes are separated by chromatography." },
-      { t: "Distillation", why: "Distillation separates a liquid from a solution by boiling it. Dyes are separated by chromatography." }],
-    explain: "The method is called chromatography. Name the technique, not what it does.", stuck: "words",
-    hints: ["The question asks for the name of the method.", "Chromato- means colour; -graphy means writing.", "Chromatography."] },
+  { id: "method", kind: "gaps", lesson: "s28 formative check", text: "Name the best method to separate each mixture.", setup: SU.run,
+    rows: [["w", "Pure water from sea water:", "simple distillation"], ["e", "Ethanol from a mixture of ethanol and water:", "fractional distillation"], ["d", "The dyes in a felt-tip ink:", "chromatography"]],
+    bank: ["simple distillation", "fractional distillation", "chromatography", "filtration", "colour separation"],
+    why: (k, w) => w === "colour separation" ? "“Colour separation” describes it, but it doesn't name a method. Name the technique." :
+      w === "filtration" ? "Filtration only separates an insoluble solid from a liquid. Here everything is dissolved or liquid." :
+      ({ w: "Water boils off and condenses; the salt stays behind. One liquid from a solution: simple distillation.", e: "Two liquids with different boiling points (78 °C and 100 °C): fractional distillation.", d: "Dyes are separated because they differ in solubility: chromatography." })[k],
+    explain: "Sea water: simple distillation (water boils, salt does not). Ethanol and water: fractional distillation (ethanol has the lower boiling point). Felt-tip ink: chromatography (the dyes differ in solubility).",
+    hints: ["Which mixtures are separated by boiling? Which by dissolving?", "One liquid from a solution, or two liquids with different boiling points?", "Simple distillation; fractional distillation; chromatography."] },
   { id: "rfQ", kind: "num", lesson: "F s30 Q2, s31", text: "Calculate the Rf value of spot Q on the paper shown. [2 marks] Measure P and Q in tab 2.", setup: SU.fexam, lock: "paper",
     frame: "Start with: Rf = … ÷ …", lbl: "Rf =", unit: "", tol: .011, ans: () => FEXAM().spots[0].d / FEXAM().D,
     wrongs: [[5 / 3, "Rf can't be more than 1: a spot never moves further than the solvent. You divided the wrong way."], [3, "3.0 cm is how far Q moved. Divide it by how far the solvent moved."], [5, "5.0 cm is how far the solvent moved. Rf = spot ÷ solvent."], [.4, "You used the gap between the spot and the front. Use Q's distance from the start line (R)."], [5 / 7, "You measured from the bottom of the paper. Measure from the start line (R)."]],
-    generic: "Measure from the start line (R) to Q, and from R to the solvent front (P). Then divide.", stuck: "maths",
+    generic: "Measure from the start line (R) to Q, and from R to line P. Then divide.", stuck: "maths",
     working: () => [RF_FRAME, "Q moved 3.0 cm. The solvent moved 5.0 cm.", "Rf = 3.0 ÷ 5.0", "Rf = 0.6 (or 0.60)"],
     hints: ["Use the ruler in tab 2: 0 is on the start line, R.", "Read the ruler level with Q's middle and with line P, both measured from R (0).", "Q is at 3.0 cm and P at 5.0 cm: 3.0 ÷ 5.0 = 0.6."] }
 ];
@@ -1171,7 +1178,7 @@ TASKS.hard = [
       { t: "One matching spot is enough.", why: "Every spot must match." }],
     miss: { 1: "Include the start line, and what you draw it with.", 2: "Say what goes on the line.", 3: "Say how much water goes in the beaker.", 4: "Say how the paper goes into the water.", 5: "Say when you take the paper out, and what you mark.", 6: "Say how you decide which pen wrote the note." },
     explain: "Pencil line 2 cm up → spots of the note and each pen → water 1 cm deep → hang so the bottom touches the water → remove near the top, mark the front → the pen whose spots all match (colour and Rf) wrote it.",
-    ms: ["Level 3 (5–6): a full method in a logical order, and how to decide the match. Level 2 (3–4): most of the method, or the method without the match. Level 1 (1–2): a few relevant steps."],
+    ms: ["Level 3 (5–6): a complete, valid method in order, every step above, plus the match. Level 2 (3–4): a step missing. Level 1 (1–2): a few steps. A wrong step lowers the level."],
     hints: ["Think: set up the paper, run it, then compare.", "Water below the line. When does the paper come out?", "Line, spots, water, hang, remove and mark, then match every spot."] }
 ];
 
@@ -1195,8 +1202,13 @@ function bankCheck() {
   if (!judgeConcl({ pen: "R", why: "all", pure: "S" }).ok || judgeConcl({ pen: "S", why: "one", pure: "S" }).ok) F("conclusion judge");
   { const m = freshM(); SU.ex(LINE)(m); const t = tgtOf(m.chrom, "0"), d = t.d;
     if (!judgeDist(d + .1, t, m).ok || judgeDist(d + .2, t, m).ok || !/edge/.test(judgeDist(r1(d + t.sp.ry), t, m).why || "")) F("spot reading tolerance ±0.1 cm and edge message"); }
-  { const six = TASKS.hard.find(x => x.id === "six"); if (six) { const L = ids => sixLevel(buildMarks(six, ids.map(c => six.stm.findIndex(s => s.c === c))));
-    if (!/Level 2/.test(L([1, 2, 3, 4, 5])) || !/Level 3/.test(L([1, 2, 3, 4, 6])) || !/Level 1/.test(L([1])) || !/Level 2/.test(L([1, 2, 3, 6, 4, 5].slice(0, 3).concat([6]))) || /Level 3/.test(L([2, 1, 3, 4, 5, 6]))) F("6-mark level rule"); } }
+  { const six = TASKS.hard.find(x => x.id === "six"); if (six) {
+    const ix = c => six.stm.findIndex(s => s.c === c), wr = six.stm.findIndex(s => !s.c), all = six.stm.filter(s => s.c).map(s => s.c).sort((x, y) => x - y);
+    const L = list => sixLevel(buildMarks(six, list));
+    if (!/Level 3/.test(L(all.map(ix)))) F("6-mark: the full method should be Level 3");
+    all.forEach(c => { if (/Level 3/.test(L(all.filter(x => x !== c).map(ix)))) F("6-mark: leaving out essential step " + c + " must not give Level 3"); });
+    if (/Level 3/.test(L([...all.map(ix), wr])) || /Level 3/.test(L([ix(2), ix(1), ...all.slice(2).map(ix)]))) F("6-mark: a wrong step or the wrong order must not give Level 3");
+    if (!/Level 1/.test(L([ix(1)])) || L([ix(1), wr]) !== "" || !/Level 2/.test(L(all.slice(0, 3).map(ix)))) F("6-mark: levels 0–2 must be reachable"); } }
   if (sf2(3.7 / 8.0) !== "0.46" || sf2(.75) !== "0.75") F("significant figures");
   { const m = freshM(); SU.ex(0)(m); autoMeasure(m); if (Object.keys(m.ms.rfOk).length !== 7) F("auto measure"); }
   /* every question */
@@ -1227,6 +1239,7 @@ function newS() { const t = task;
   return { choice: null, gap: {}, val: "", list: [], dir: "", type: "", order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
     rowOrder: t.rows ? t.rows.map(r => r[3] && r[3][0] === "True" ? [0, 1] : shuffled((r[3] || t.bank).length)) : [] }; }
 function loadTask() {
+  $("limSize").hidden = mode !== "demo";
   if (mode === "demo") return loadDemo();
   const lst = LEVELS[level]; task = lst[idx]; S = newS();
   applyTaskModel();
@@ -1295,7 +1308,7 @@ const WORDS = [["Chromatography", DEF.chrom], ["Rf value", DEF.rf], ["Stationary
 function renderSupport() {
   $("readBox").hidden = !support.read; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("readBox").innerHTML = `<h3>Read it for me</h3><p>In tab 2, the magnified view shows what the ruler reads level with the chosen spot. Press Record with the box empty to record it. (Check the ruler's 0 is on the start line.)</p>`;
-  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Rf = distance moved by spot ÷ distance moved by solvent</p><p>Measure both distances from the start line.</p><p>Rf has no unit, and it is never more than 1.</p><p>Rearranged: spot distance = Rf × solvent distance.</p><p>2 significant figures: 0.4625 → 0.46.</p>`;
+  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Rf = distance moved by spot ÷ distance moved by solvent</p><p>Measure both distances from the start line.</p><p>Rf has no unit, and it is never more than 1.</p><p>Rearranged: spot distance = Rf × solvent distance.</p><p>2 significant figures: keep the first two digits that aren't 0 and round (0.3875 → 0.39).</p>`;
   $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   morphHTML($("rread"), readHTML()); if (M.tab === "ms" && M.chrom) drawMsMov();
@@ -1312,9 +1325,10 @@ function buildMarks(t, list) {
   const inOrder = got.every((s, i) => !i || s.c > got[i - 1].c);
   return { got, bad, all, inOrder, missing: all.filter(s => !got.includes(s)) };
 }
-function sixLevel(b) {   // Level 3 needs the match (the last point) and at least 4 method points in a logical order; the method alone caps at Level 2
-  const top = Math.max(...b.all.map(s => s.c)), match = b.got.some(s => s.c === top), meth = b.got.length - (match ? 1 : 0);
-  return match && meth >= 4 && b.inOrder ? "Level 3 (5–6 marks)" : meth >= 3 || (match && meth >= 2) ? "Level 2 (3–4 marks)" : b.got.length >= 1 ? "Level 1 (1–2 marks)" : "no marks yet"; }
+function sixLevel(b) {   // every step is essential: Level 3 needs all of them, in order, with no wrong step; a missing step caps it at Level 2; a wrong step lowers it by one
+  let L = b.got.length === b.all.length && b.inOrder ? 3 : b.got.length >= 3 ? 2 : b.got.length >= 1 ? 1 : 0;
+  if (b.bad.length) L = Math.max(0, L - 1);
+  return ["", "Level 1 (1–2 marks)", "Level 2 (3–4 marks)", "Level 3 (5–6 marks)"][L]; }
 function evaluate() {
   const t = task;
   if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
@@ -1328,9 +1342,9 @@ function evaluate() {
     const hit = t.wrongs.find(([x]) => near(v, x, t.tol)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list);
-    const est = t.six ? (b.got.length ? ` So far: about ${sixLevel(b).replace(" marks", "")}.` : " Right points so far: none yet.") : "";
+    const lv = t.six ? sixLevel(b) : "", est = t.six ? (lv ? ` So far: about ${lv.replace(" marks", "")}.` : " So far: no marks yet.") : "";
     if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}${est}`) };
-    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${t.six ? ` (about ${sixLevel(b)})` : ""}. ${t.miss[b.missing[0].c]}`) };
+    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${t.six ? ` (about ${lv || "no marks yet"})` : ""}. ${t.six ? "Missing an essential step: " : ""}${t.miss[b.missing[0].c]}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc((t.six ? "Right points, wrong order." + est : "All the right points, but not in order. Start with the sentence starter.")) };
     return { ok: true, html: esc("Correct. " + (t.six ? "Level 3: 6 marks." : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") }; }
   if (t.kind === "goal") {

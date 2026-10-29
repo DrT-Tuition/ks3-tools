@@ -69,6 +69,11 @@
     the digest animation (about 14 small circles), paced by paceFrame (sampling 10 fps, digest 12 fps caps, adaptive slow-down), both stop
     when done; sampling stops when the tab is hidden. The stopwatch shows 10 s steps (30 s steps with reduced motion); digesting
     finishes at once.
+  Answer leaks (audit 29 Oct): while a question is open and unanswered (quizOpen()), the Active site readout and fit tag
+    are neutral (no explanation, no rate, no "denatured" label), the Evaluate box is hidden, the class-results button is
+    hidden in the Knowledge check, Variables support gives the method not the answer, Key words hides the word a question
+    asks about, Iodine colours gives the method for Easy 5, and Model limits no longer lists the class-result times.
+    Everything returns once the question is answered or Show answer is pressed.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -461,7 +466,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="sread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The times come from the lesson’s class results (pH 4 to 8: 10, 5, 2.5, 2 and 4 minutes) with invented random scatter and an invented anomaly in about one row in four, so your results will differ from run to run. Time is sped up: 30 s takes about half a second. Here the iodine is either blue-black or orange-brown; in a real tile the colour fades over a few samples. The Active site picture is not to scale: one amylase molecule is far too small to see, a tube holds millions of them, and the change of shape is exaggerated so you can see it.</p>
+      <p class="limits"><b>Model limits:</b> The times are values chosen to match the lesson’s class results, with invented random scatter and an invented anomaly in about one row in four, so your results will differ from run to run. Time is sped up: 30 s takes about half a second. Here the iodine is either blue-black or orange-brown; in a real tile the colour fades over a few samples. The Active site picture is not to scale: one amylase molecule is far too small to see, a tube holds millions of them, and the change of shape is exaggerated so you can see it.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -639,6 +644,7 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 const locked = () => mode !== "demo" && !!lock;
+const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open and unanswered: hide anything that explains its answer
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== Drawing helpers ===== */
@@ -782,6 +788,7 @@ function drawGraph() {
   setLayer($("gG"), o);
 }
 function evalHTML() {
+  if (quizOpen()) return "";
   const rows = PHS.filter(ph => M.data[ph].length >= 3);
   if (!rows.length && !M.example) return "";
   let h = `<h3>Evaluate</h3><ul><li><b>Resolution:</b> you sample every 30 s, so each time could be up to 30 s longer than the moment the starch really went. Sampling more often would give a more exact time.</li>`;
@@ -815,7 +822,7 @@ function chainStart(G) { const P = pocket(G); const gap = Math.max(0, G.u - P.pr
 function drawSiteBg() {
   const G = siteGeo(), fs = G.fs, P = pocket(G); setVB($("ssvg"), G.W, G.H);
   let o = `<path class="enz" d="${enzPath(G)}"/>`;
-  o += T_(G.ex, G.ey + G.R + fs + 14, M.denat ? "amylase (denatured)" : "amylase (enzyme)", fs, 'text-anchor="middle" class="bold"');
+  o += T_(G.ex, G.ey + G.R + fs + 14, M.denat && !quizOpen() ? "amylase (denatured)" : "amylase (enzyme)", fs, 'text-anchor="middle" class="bold"');
   const lx = P.cx - P.pr * .4, ly = P.cy - P.pr - 4;
   o += `<path d="M${f1(lx)} ${f1(ly)}L${f1(lx - 20)} ${f1(G.ey - G.R - 18)}" style="stroke:var(--ink);stroke-width:1.5"/>` + T_(lx - 24, G.ey - G.R - 24, "active site", fs, 'text-anchor="middle"');
   setLayer($("sG"), o);
@@ -842,13 +849,14 @@ function drawSiteMov(now) {   // house-look particles (guide §4c): fill, dark o
   for (let k = 0; k < cut; k++) { const p = sugarPos(G, k); L.push({ x: p.x, y: p.y, r: G.u * .9 }); }
   fly.forEach(q => { const s = chainPos(G, q.k, q.k), e = sugarPos(G, q.k), f = q.f; L.push({ x: s.x + (e.x - s.x) * f, y: s.y + (e.y - s.y) * Math.sqrt(f) + Math.sin(f * Math.PI) * 12, r: G.u * (1 - .1 * f) }); });
   poolDraw($("sMov"), L);
-  let o = ""; if (gone < NCH && !a) { const p = chainPos(G, gone, gone); o = tag(p.x + G.u * 4, p.y - G.u - 14, `starch (${fitWord(M.sph)})`, G.fs - 1, "", "start"); }
+  let o = ""; if (gone < NCH && !a) { const p = chainPos(G, gone, gone); o = tag(p.x + G.u * 4, p.y - G.u - 14, quizOpen() ? "starch" : `starch (${fitWord(M.sph)})`, G.fs - 1, "", "start"); }
   else if (gone < NCH) { const p = chainPos(G, gone, gone); o = T_(p.x + G.u * 4, p.y - G.u - 14, "starch", G.fs, 'class="bold"'); }
   if (cut + fly.length > 0) { const lt = LK() === "tall"; o += T_(lt ? G.W - 12 : G.sx + 4, G.sy - 44 + (lt ? 4 : 0), "simple sugars", G.fs, `${lt ? 'text-anchor="end" ' : ""}class="bold"`); }
   setLayer($("sTag"), o);
 }
 function siteRead() {
   const ph = M.sph, r = M.denat ? 0 : SITE_RATE[ph];
+  if (quizOpen()) return `<p class="r1">pH ${ph}${M.denat && ph !== 2 ? " · this amylase was at pH 2 earlier" : ""}</p><p class="r2">Look at the shape of the active site. Does the starch fit it?</p><p class="r3">The explanation appears here once you have answered (or pressed Show answer).</p>` + (M.smsg ? `<p class="r3">${esc(M.smsg)}</p>` : "");
   let h = `<p class="r1">pH ${ph} · rate in the practical: ${num(r)} per minute${ph === 2 ? " (amylase stops working at pH 2)" : M.denat ? " (denatured amylase)" : " (class results)"}</p>`;
   const ex = M.denat && ph !== 2 ? "This amylase was denatured at pH 2. Its active site does not change back, even at a better pH. Press Fresh amylase."
     : ph === 2 ? "pH 2 is far from the optimum, so the active site changes shape and the starch no longer fits: the amylase is denatured. It isn’t killed: enzymes are not alive."
@@ -865,7 +873,7 @@ function startDig() {
   if (M.cut >= NCH) { M.smsg = "All the starch in this picture has been digested. Press Fresh amylase to start again."; drawAll(); return; }
   if (!n) { M.smsg = "No simple sugars made: the starch no longer fits the active site."; drawAll(); return; }
   M.smsg = "";
-  const done = () => { M.cut += n; M.smsg = `${n} simple sugar${n > 1 ? "s" : ""} made in 1 minute at pH ${M.sph}.`; $("digStat").textContent = ""; drawAll(); tourSignal("dig"); };
+  const done = () => { M.cut += n; M.smsg = `${n} simple sugar${n > 1 ? "s" : ""} made in 1 minute.`; $("digStat").textContent = ""; drawAll(); tourSignal("dig"); };
   if (reduced()) { done(); return; }
   const a = anim = { kind: "dig", t0: performance.now(), n, dur: 3000, finish: null }; a.finish = () => { M.cut += n; drawAll(); };
   $("digStat").textContent = "Digesting…"; renderCtl();
@@ -890,6 +898,7 @@ function renderCtl() {
   $("autoBtn").textContent = running && anim.kind === "auto" ? "Stop sampling" : "4 · Sample every 30 s";
   $("quick").hidden = !M.knows;
   $("freshTile").hidden = !(R.starch && !R.rec && R.n - R.tile0 >= NW && R.R > (R.tile0 + NW) * STEP);
+  $("exampleBtn").hidden = mode !== "demo";
   $("exampleBtn").textContent = M.example ? "Show my own results" : "Show the lesson’s class results";
   if (!locked()) $("lockNote").hidden = true;
 }
@@ -994,14 +1003,14 @@ const SU = {
 };
 const MS10 = ["Amylase, starch and buffer at several pH values (1)", "Same temperature in a water bath (1)", "Sample onto iodine every 30 s (1)", "Shortest time = optimum pH (1)"];
 TASKS.easy = [
-  { id: "amy", kind: "choice", lesson: "s9–11", text: "What does amylase digest?", setup: SU.rp, stuck: "words",
+  { id: "amy", kind: "choice", lesson: "s9–11", text: "What does amylase digest?", setup: SU.rp, stuck: "words", hideWords: ["Amylase"],
     options: [{ t: "Starch into simple sugars", ok: () => true },
       { t: "Simple sugars into starch", why: "That is backwards. Amylase breaks starch down. It doesn’t make starch." },
       { t: "Starch into iodine", why: "Iodine is the test solution, not a product. Amylase digests starch into simple sugars." },
       { t: "Fats into simple sugars", why: "Amylase works on starch. That is why we test for starch with iodine." }],
     explain: "Amylase is the enzyme that digests starch into simple sugars.",
     hints: ["Which substance does the iodine test look for in this practical?", "Amylase breaks a big molecule down into smaller ones.", "Starch into simple sugars."] },
-  { id: "buf", kind: "choice", lesson: "s9–11", text: "Why do we add a buffer to each tube?", setup: SU.rp, stuck: "words",
+  { id: "buf", kind: "choice", lesson: "s9–11", text: "Why do we add a buffer to each tube?", setup: SU.rp, stuck: "words", hideWords: ["Buffer"],
     options: [{ t: "It keeps the pH steady in each tube.", ok: () => true },
       { t: "It keeps the temperature the same.", why: "The water bath does that. The buffer keeps the pH steady." },
       { t: "It cushions the tube so it doesn’t break.", why: "That is the everyday meaning of buffer. In science, a buffer is a solution that keeps the pH steady." },
@@ -1025,7 +1034,7 @@ TASKS.easy = [
       e: "Keep it the same, so only the pH affects the rate.", f: "Keep it the same, so only the pH affects the rate." })[k],
     explain: "Change: pH of the buffer. Measure: time for the starch to go, colour of the iodine. Keep the same: temperature, volume of amylase, volume of starch.",
     hints: ["Only one thing is changed on purpose.", "The water bath and the measuring cylinders keep things the same.", "Change: pH. Measure: time, iodine colour. Keep the same: temperature, both volumes."] },
-  { id: "res", kind: "gaps", fixed: true, lesson: "s16–18 (F s17)", text: "Samples were taken every 30 s (see the tile). Is starch present in each sample?", lock: "all", setup: SU.tile(90, 3), stuck: "iodine",
+  { id: "res", kind: "gaps", fixed: true, lesson: "s16–18 (F s17)", text: "Samples were taken every 30 s (see the tile). Is starch present in each sample?", lock: "all", setup: SU.tile(90, 3), stuck: "iodine", iodineMethod: true,
     rows: [["a", "30 s, blue-black:", "yes"], ["b", "60 s, blue-black:", "yes"], ["c", "90 s, orange-brown:", "no"]], bank: ["yes", "no"],
     why: (k, w) => k === "c" ? "Orange-brown means all the starch has gone: it has been digested. Iodine doesn’t make starch; it shows whether starch is there." : "Blue-black means starch is still there, so the answer is yes.",
     explain: "Blue-black: starch present (30 s yes, 60 s yes). Orange-brown: all the starch has gone (90 s no).",
@@ -1064,7 +1073,7 @@ TASKS.easy = [
     hints: ["What does a water bath control?", "Why does that matter for a fair test?", "It keeps the temperature the same, so only the pH changes."] }
 ];
 TASKS.hard = [
-  { id: "stom", kind: "build", ordered: true, lesson: "s3 stretch", text: "Explain why amylase stops working in the stomach at pH 2. Build your answer in order.", frame: "Start with: pH 2 is far from…", lock: "all", setup: SU.site(2), stuck: "words",
+  { id: "stom", kind: "build", ordered: true, lesson: "s3 stretch", text: "Explain why amylase stops working in the stomach at pH 2. Build your answer in order.", frame: "Start with: pH 2 is far from…", lock: "all", setup: SU.site(2), stuck: "words", hideWords: ["Denatured"],
     stm: [{ t: "pH 2 is far from its optimum,", c: 1 }, { t: "so the active site changes shape", c: 2 }, { t: "and the starch no longer fits: the amylase is denatured.", c: 3 },
       { t: "so the acid kills the amylase.", why: "Enzymes are not alive, so they can’t be killed. Say what happens to the active site: it changes shape (denatured)." },
       { t: "so the amylase is used up.", why: "The amylase isn’t used up. It is still there, but its active site is the wrong shape." },
@@ -1072,7 +1081,7 @@ TASKS.hard = [
     miss: { 1: "Start by comparing pH 2 with the optimum.", 2: "What happens to the active site?", 3: "What does that mean for the starch?" },
     explain: "pH 2 is far from its optimum, so the active site changes shape and the starch no longer fits: the amylase is denatured.",
     hints: ["Is pH 2 near or far from the optimum?", "Far from the optimum, the active site changes shape.", "pH 2 is far from its optimum, so the active site changes shape and the starch no longer fits."] },
-  { id: "samp", kind: "choice", lesson: "s12–14", text: "Explain why we take a sample every 30 seconds.", setup: SU.rp, stuck: "words",
+  { id: "samp", kind: "choice", lesson: "s12–14", text: "Explain why we take a sample every 30 seconds.", setup: SU.rp, stuck: "words", hideWords: ["Continuous sampling"],
     options: [{ t: "Sampling again and again tells us when the starch has all gone, so we get the time.", ok: () => true },
       { t: "It gives the amylase time to rest between tests.", why: "Enzymes don’t get tired or rest. We sample often to find when the starch has gone." },
       { t: "Each sample adds more starch for the amylase.", why: "A sample takes a drop out; it doesn’t add starch. Repeated samples show when the starch has gone." },
@@ -1114,7 +1123,7 @@ TASKS.hard = [
     miss: { 1: "Describe the left side of the curve: pH 4 to 7.", 2: "Say where the peak is and what it is called.", 3: "Describe the right side of the peak." },
     explain: "The rate rises from pH 4 to a peak at pH 7 (the optimum), then falls at pH 8.",
     hints: ["Describe both sides of the peak.", "Left of the peak the rate rises; at the peak is the optimum; then…", "Rises from pH 4 to 7, peak at pH 7 (optimum), then falls at pH 8."] },
-  { id: "why7", kind: "choice", lesson: "s3, s15, s24", text: "Why is the rate fastest at pH 7?", lock: "all", setup: SU.site(7), stuck: "words",
+  { id: "why7", kind: "choice", lesson: "s3, s15, s24", text: "Why is the rate fastest at pH 7?", lock: "all", setup: SU.site(7), stuck: "words", hideWords: ["Active site", "Optimum"],
     options: [{ t: "The active site is the right shape, so the starch fits it best.", ok: () => dist(7) === 0 && SITE_RATE[7] === Math.max(...PHS.map(p => SITE_RATE[p])) },
       { t: "The amylase works hardest at pH 7 because it is its best pH.", why: "Enzymes don’t try harder. At the optimum the active site has the right shape, so the starch fits it best." },
       { t: "More amylase is made at pH 7.", why: "The amount of amylase is a control variable: it stays the same. The shape of the active site changes with pH." },
@@ -1249,10 +1258,12 @@ const WORDS = [["Amylase", DEF.amylase], ["Buffer", DEF.buffer], ["Continuous sa
   ["Active site", DEF.site], ["Denatured", DEF.denat], ["Optimum", DEF.optimum]];
 function renderSupport() {
   ["iodine", "vars", "maths", "words"].forEach(k => { $(k + "Box").hidden = !support[k]; });
-  $("iodineBox").innerHTML = "<h3>Iodine colours</h3><p><b>Blue-black:</b> starch is still there. Keep sampling.</p><p><b>Orange-brown:</b> all the starch has gone. Record this time.</p><p>Name the solution as well as the colour: “the iodine stays orange-brown”.</p>";
-  $("varsBox").innerHTML = "<h3>Variables</h3><p><b>Independent</b> (what we change): the pH of the buffer.</p><p><b>Dependent</b> (what we measure): the time for the starch to disappear.</p><p><b>Control</b> (what we keep the same): temperature (water bath); volume and concentration of amylase and starch.</p><p>Hypothesis: amylase will work fastest near pH 7.</p>";
-  $("mathsBox").innerHTML = "<h3>Maths help</h3><p>rate = 1 ÷ time (time in minutes)</p><p>seconds → minutes: ÷ 60 (150 s = 2.5 min)</p><p>mean = total ÷ number of times (leave out any anomaly)</p><p>times faster = bigger rate ÷ smaller rate</p>";
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("iodineBox").innerHTML = quizOpen() && task.iodineMethod ? "<h3>Iodine colours</h3><p>Iodine solution is orange-brown. It changes colour when starch is there, and stays orange-brown when there is none.</p><p>Which colour do the 30 s and 60 s wells show?</p>" : "<h3>Iodine colours</h3><p><b>Blue-black:</b> starch is still there. Keep sampling.</p><p><b>Orange-brown:</b> all the starch has gone. Record this time.</p><p>Name the solution as well as the colour: “the iodine stays orange-brown”.</p>";
+  $("varsBox").innerHTML = quizOpen() ? "<h3>Variables</h3><p><b>Independent:</b> the one you change on purpose.</p><p><b>Dependent:</b> the one you measure.</p><p><b>Control:</b> the ones you keep the same, so only the independent variable affects the result. Look at the equipment list: what keeps each tube the same?</p>"
+    : "<h3>Variables</h3><p><b>Independent</b> (what we change): the pH of the buffer.</p><p><b>Dependent</b> (what we measure): the time for the starch to disappear.</p><p><b>Control</b> (what we keep the same): temperature (water bath); volume and concentration of amylase and starch.</p><p>Hypothesis: amylase will work fastest near pH 7.</p>";
+  $("mathsBox").innerHTML = "<h3>Maths help</h3><p>rate = 1 ÷ time (time in minutes)</p><p>seconds → minutes: ÷ 60 (90 s = 1.5 min)</p><p>mean = total ÷ number of times (leave out any anomaly)</p><p>times faster = bigger rate ÷ smaller rate</p>";
+  const hideW = quizOpen() && task.hideWords || [];
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${hideW.includes(w[0]) ? "hidden for this question: try it first." : esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
@@ -1308,6 +1319,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
+    drawAll(); renderSupport();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1322,7 +1334,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); drawAll(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {

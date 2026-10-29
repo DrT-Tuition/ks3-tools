@@ -1148,7 +1148,7 @@ TASKS.easy = [
       { t: "To warm the agar", why: "The loop is cooled before it touches anything. The flame kills microorganisms on the loop." }],
     explain: "Heating the loop until red hot kills microorganisms on it, so the culture is not contaminated.", stuck: "words",
     hints: ["What could be on a loop taken from the drawer?", "Very high temperatures kill living things.", "It kills microorganisms on the loop."] },
-  { id: "tape", kind: "choice", lesson: "s8, s13", text: "The lid is held on with a few strips of tape, not sealed all the way round. Why?", lock: "all", setup: SU.asep(4),
+  { id: "tape", kind: "choice", lesson: "s8, s13", text: "The lid is held on with a few strips of tape, not sealed all the way round. Why?", lock: "all", setup: SU.asep(3),
     options: [{ t: "So oxygen can get in", ok: () => true },
       { t: "Sealing it all round would be better: no microbes at all could get in", why: "Don’t seal it all round. A few strips stop microbes getting in, and still let oxygen in." },
       { t: "So you can open it easily after incubation", why: "Never open a plate after incubation: that is a safety rule." },
@@ -1198,7 +1198,7 @@ TASKS.easy = [
 ];
 TASKS.easy.find(t => t.id === "hinge").options.forEach(o => { if (!o.ok) o.why = { W: "W is only 8 mm across, the smallest zone.", X: "X has a radius of 5 mm, so its diameter is 10 mm. Y is bigger (14 mm).", Z: "Z has a radius of 6 mm, so its diameter is 12 mm. That is less than Y’s 14 mm." }[o.q]; });
 
-const SIXMS = ["5–6 marks: a clear, logical method with the aseptic steps and measuring.", "3–4: most main steps, mostly in order.", "1–2: a few relevant steps."];
+const SIXMS = ["5–6 marks: a complete, valid method in order (spread the bacteria, add the discs, incubate, measure the zones) with the aseptic steps.", "3–4: most main steps, mostly in order.", "1–2: a few relevant steps."];
 TASKS.hard = [
   { id: "flame2", kind: "build", lesson: "s8, s15 Q2", text: "Explain why an inoculating loop is passed through a flame before use. [2 marks] Choose the statements for your answer.",
     frame: "The loop is passed through a flame…", lock: "all", setup: SU.asep(1),
@@ -1221,14 +1221,14 @@ TASKS.hard = [
   { id: "six", kind: "build", ordered: true, six: true, two: true, lesson: "s8–s9, s13, s17", text: "Describe how to test antiseptics on bacteria, using aseptic technique. [6 marks] Press the steps in order.",
     lock: "all", setup: SU.asep(0),
     stm: [{ t: "Sterilise the dish and agar first.", c: 1 }, { t: "Flame the loop until red hot; let it cool.", c: 2 },
-      { t: "Lift the lid slightly, near a flame; spread the bacteria.", c: 3 }, { t: "Add same-size antiseptic discs and a control disc.", c: 4 },
-      { t: "Tape with a few strips; store upside down.", c: 5 }, { t: "Incubate at 25 °C for about 48 hours.", c: 6 },
-      { t: "Measure each clear zone: biggest = most effective.", c: 7 },
+      { t: "Lift the lid slightly, near a flame; spread the bacteria.", c: 3, ess: 1 }, { t: "Add same-size antiseptic discs and a control disc.", c: 4, ess: 1 },
+      { t: "Tape with a few strips; store upside down.", c: 5 }, { t: "Incubate at 25 °C for about 48 hours.", c: 6, ess: 1 },
+      { t: "Measure each clear zone: biggest = most effective.", c: 7, ess: 1 },
       { t: "Seal the lid all round with tape.", why: "Use only a few strips of tape, so oxygen can get in." },
       { t: "Incubate at 37 °C so it grows faster.", why: "Not in school: harmful pathogens grow best at 37 °C. Use 25 °C." },
       { t: "Open the plate to measure the zones.", why: "Never open a plate after incubation. Measure through the closed plate." }],
-    miss: { 1: "What must you do first, so no microorganisms are already in the dish or agar?", 2: "What do you do to the loop before it touches the bacteria?", 3: "How do you get the bacteria onto the agar without contaminating it?",
-      4: "What do you put on the agar to test the antiseptics (and to compare with)?", 5: "How do you secure the lid, and which way up is the plate stored?", 6: "How warm, and for how long?", 7: "How do you find out which antiseptic is best?" },
+    miss: { 1: "What do you do first to the dish and agar?", 2: "What do you do to the loop first?", 3: "How do the bacteria get onto the agar?",
+      4: "What goes on the agar to test the antiseptics?", 5: "How is the lid held, and which way up?", 6: "How warm, and for how long?", 7: "How do you find out which antiseptic is best?" },
     explain: "Sterilise the dish and agar → flame the loop → lift the lid slightly near the flame and spread the bacteria → add same-size discs and a control → tape with a few strips, upside down → incubate at 25 °C → measure the zones.", ms: SIXMS,
     hints: ["Think of the order you did it in the model, from sterilising to measuring.", "Seven steps. Leave out anything unsafe or that would let microbes in or keep oxygen out.", "Sterilise, flame, spread, discs, tape, 25 °C, measure."] },
   { id: "vars", kind: "gaps", fixed: true, grid: true, lesson: "s10", text: "Sort each one: independent, dependent or control variable.", lock: "all", setup: SU.ready,
@@ -1331,6 +1331,12 @@ function bankCheck() {
     if (t.kind === "sf") { const p = sfParts(t.ans()); if (!t.judge(p.m, p.e).ok) E("sf answer rejected"); t.slips.forEach(([a, n]) => { const j = t.judge(a, n); if (j.ok || !j.why) E("sf slip accepted " + a + "e" + n); }); }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
       c.forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); }
+    if (t.six) { const R = rightBuild(t), L = list => sixLevel(t, buildMarks(t, list)), bad = t.stm.findIndex(s => !s.c), seen = new Set();
+      if (L(R) !== 3) E("6-mark: the full method must reach Level 3");
+      R.forEach(i => { if (t.stm[i].ess && L(R.filter(j => j !== i)) === 3) E("6-mark: Level 3 without an essential step: " + t.stm[i].t); });
+      if (t.stm.filter(s => s.ess).length < 4) E("6-mark: essential steps not marked");
+      [[], [R[0]], R.slice(0, 4), R, [bad]].forEach(l => seen.add(L(l))); if (seen.size !== 4) E("6-mark: every level 0–3 must be reachable");
+      if (L(R.concat(bad)) !== 2) E("6-mark: a wrong statement must lower the level"); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); if (t.lock) E("a goal can't lock the model"); }
   });
   return errs;
@@ -1439,6 +1445,11 @@ function buildMarks(t, list) {
   return { got, bad, all, inOrder, missing };
 }
 const msList = t => t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+function sixLevel(t, b) {   // Level 3 needs a complete, valid method: every essential step, 6+ points, in order. Each wrong statement drops a level.
+  const n = b.got.length, essOk = b.all.filter(s => s.ess).every(s => b.got.includes(s));
+  const lv = n >= 6 && b.inOrder && essOk ? 3 : n >= 4 ? 2 : n ? 1 : 0;
+  return Math.max(0, lv - b.bad.length);
+}
 function evaluate() {
   const t = task;
   if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
@@ -1455,11 +1466,14 @@ function evaluate() {
     const j = t.judge(a, n); return j.ok ? { ok: true, html: esc("Correct.") + workHTML(t) } : { ok: false, html: esc(j.why) }; }
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list);
-    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
-    if (t.six) { const n = b.got.length, lv = n >= 6 && b.inOrder ? 3 : n >= 4 ? 2 : n ? 1 : 0, mk = ["0", "1–2", "3–4", "5–6"][lv];
-      if (b.missing.length) return { ok: false, html: esc(`Not yet: ${n} of ${b.all.length} points (about Level ${lv}, ${mk} marks). ${t.miss[b.missing[0].c]}`) };
-      if (!b.inOrder) return { ok: false, html: esc(`All ${n} points, but not in the order you would do them (about Level 2). Put them in method order.`) };
+    if (t.six) { const lv = sixLevel(t, b), mk = ["0", "1–2", "3–4", "5–6"][lv], est = `(about Level ${lv}, ${mk} marks)`, n = b.got.length;
+      const ess = b.missing.find(s => s.ess);
+      if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong ${est}. ${b.bad[0].why}`) };
+      if (ess) return { ok: false, html: esc(`Not yet: ${n} of ${b.all.length} points ${est}. Essential step missing: ${t.miss[ess.c]}`) };
+      if (b.missing.length) return { ok: false, html: esc(`Not yet: ${n} of ${b.all.length} points ${est}. ${t.miss[b.missing[0].c]}`) };
+      if (!b.inOrder) return { ok: false, html: esc(`All ${n} points, but not in the order you would do them ${est}. Put them in method order.`) };
       return { ok: true, html: esc("Correct. Level 3 (6 marks): a full method in a logical order.") + ` <span class="msl">${esc("Levels: " + t.ms.join(" "))}</span>` }; }
+    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
     if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. Start with the sentence starter.") };
     return { ok: true, html: esc("Correct. " + t.explain) }; }

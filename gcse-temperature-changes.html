@@ -447,7 +447,7 @@ main.layout{min-height:calc(100vh - 70px)}
       <div id="rpLab" hidden>
         <div class="labgrid">
           <div id="rtable"></div>
-          <div><svg id="gsvg" class="scene" viewBox="0 0 480 340" role="img" aria-label="Graph of mean highest temperature against the volume of sodium hydroxide added"><g id="gG"></g></svg>
+          <div><svg id="gsvg" class="scene" viewBox="0 0 480 340" role="img" aria-label="Graph of mean highest temperature against sodium hydroxide added"><g id="gG"></g></svg>
             <div class="controls" style="margin-top:6px"><button class="sw" type="button" id="fitSw" aria-pressed="false"><span class="dot"></span>Lines of best fit <span class="state">off</span></button></div></div>
         </div>
         <div class="controls" id="meanRow"><button class="btn" type="button" id="checkMeans">Check my means</button><button class="linkbtn" type="button" id="clearAll">Clear table</button></div>
@@ -459,7 +459,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <div class="controls"><button class="btn" type="button" id="checkConcl">Check my conclusion</button><span class="status" id="conclMsg" aria-live="polite"></span></div></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The temperatures are invented example data, shaped to the lesson’s results, with random scatter and the odd anomaly. They are not real measurements. Time is sped up. Each solution starts at room temperature. Station 1 uses the 6.5 °C rise from the lesson’s hook (neutralisation is exothermic). In the practical, the temperature falls after about 20 cm³ (as in the lesson’s results). Energy is never made or destroyed: it is transferred between the chemicals and the surroundings, and the temperature change shows that transfer. Real heat losses depend on the room, the cup and how fast you work.</p>
+      <p class="limits"><b>Model limits:</b> The temperatures are invented example data, shaped to the lesson’s results, with random scatter and the odd anomaly. They are not real measurements. Time is sped up. Each solution starts at room temperature. Station 1 uses the 6.5 °C rise from the lesson’s hook (neutralisation is exothermic). In the practical, the temperature falls after the highest point, as in the lesson’s results. Energy is never made or destroyed: it is transferred between the chemicals and the surroundings, and the temperature change shows that transfer. Real heat losses depend on the room, the cup and how fast you work.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -975,7 +975,7 @@ function drawGraph() {
   o += `<path class="ax" d="M${x0} ${y0 - 4}V${y0 + h}H${x0 + w + 4}"/>`;
   for (let x = 0; x <= 40; x += 10) o += T_(px(x), y0 + h + fs + 5, String(x), fs, 'text-anchor="middle"');
   for (let y = Math.ceil(lo / step) * step; y <= hi + 1e-9; y += step) o += T_(x0 - 6, py(y) + 5, String(y), fs, 'text-anchor="end"');
-  o += T_(x0 + w / 2, H - 10, "Volume of sodium hydroxide added (cm³)", fs, 'text-anchor="middle" class="bold"');
+  o += T_(x0 + w / 2, H - 10, "Sodium hydroxide added (cm³)", fs, 'text-anchor="middle" class="bold"');
   o += `<text x="${fs + 2}" y="${y0 + h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 2} ${y0 + h / 2})">Mean highest temperature (°C)</text>`;
   if (M.rp.fit) { const L = twoLines(pts);
     if (L) { o += `<path class="fit" d="M${f1(px(L.x0))} ${f1(py(L.a.m * L.x0 + L.a.c))}L${f1(px(L.x))} ${f1(py(L.y))}L${f1(px(L.x1))} ${f1(py(L.b.m * L.x1 + L.b.c))}"/><circle cx="${f1(px(L.x))}" cy="${f1(py(L.y))}" r="6" style="fill:none;stroke:var(--curve2);stroke-width:2.5"/>`; }
@@ -992,7 +992,7 @@ function readHTML() {
   } else { const p = M.rp;
     h += `<p class="r1">Run ${p.r + 1} · ${p.phase === "empty" ? "cup empty" : `30 cm³ acid + ${VOLS[Math.max(0, p.vi)]} cm³ sodium hydroxide`} · ${esc(CNAME[M.cont])}</p>`;
     if (p.vi > 4 && p.phase !== "empty" && !p.example) { const d = p.data[p.r], st0 = d[0], above = st0 != null && d.slice(1, p.vi + 1).every(v => v == null || v > st0);
-      h += `<p class="r3">After about 20 cm³ the temperature falls${above ? ", but every reading is still above the start temperature, so the reaction is exothermic" : ". Apart from any anomaly, the readings stay above the start temperature, so the reaction is exothermic"}.</p>`; } }
+      h += `<p class="r3">After the highest point the temperature falls${above ? ", but every reading is still above the start temperature, so the reaction is exothermic" : ". Apart from any anomaly, the readings stay above the start temperature, so the reaction is exothermic"}.</p>`; } }
   if (support.read && awaiting(M) && !locked()) h += `<p class="r2">Read it for me: the thermometer shows <b>${t1(autoRead(T, M.therm))} °C</b>.</p>`;
   if (M.msg) h += `<p class="r3">${esc(M.msg)}</p>`;
   if (M.tab === "rp" && M.rp.fit) { const L = twoLines(rpPoints()); h += L ? `<p class="r3">The two lines of best fit cross at about ${num(Math.round(L.x * 2) / 2)} cm³ and ${t1(L.y)} °C: the highest temperature.</p>` : `<p class="r3">Lines of best fit: plot at least three means on each side of the highest point, including the volumes next to it.</p>`; }
@@ -1088,7 +1088,7 @@ const SU = {
   exo: m => { m.tab = "exo"; },
   rp: m => { m.tab = "rp"; },
   read: m => { m.tab = "rp"; m.eye = true; m.therm = "fine"; const p = m.rp; p.phase = "show"; p.vi = 1; p.T = 24.6; p.data[0][0] = 20.5; },
-  example: m => { m.tab = "rp"; const p = m.rp; p.example = true; p.fit = true; p.phase = "show"; p.r = 1; p.vi = 8; p.T = 21.4;
+  example: m => { m.tab = "rp"; const p = m.rp; p.example = true; p.fit = false; p.phase = "show"; p.r = 1; p.vi = 8; p.T = 21.4;
     DECK_TRIALS.forEach((a, i) => { p.data[0][i] = a[0]; p.data[1][i] = a[1]; p.ok[i] = true; p.inp[i] = t1(meanR(a)); }); }
 };
 const exMeans = () => DECK_TRIALS.map(a => meanR(a));
@@ -1117,7 +1117,7 @@ TASKS.easy = [
     generic: "Find the numbered mark below the top of the red liquid, then count the small marks up: each is 0.1 °C.",
     working: () => ["The numbered mark just below the liquid is 24 °C.", "The liquid is 6 small marks higher: 6 × 0.1 = 0.6 °C.", "Reading = 24.6 °C"],
     hints: ["Look at the magnified view. Which numbered mark is just below the top of the red liquid?", "It is above 24. The long mark halfway up is 24.5. Each small mark is 0.1 °C.", "24 + 0.6 = 24.6 °C."] },
-  { id: "iv", kind: "choice", lesson: "C2 s11, s19 Q1", text: "Different volumes of sodium hydroxide are added to a fixed volume of acid. Name the independent variable.", setup: SU.rp,
+  { id: "iv", kind: "choice", lesson: "C2 s11, s19 Q1", text: "Different volumes of sodium hydroxide are added to a fixed volume of acid. Name the independent variable.", setup: SU.exo,
     options: [{ t: "The volume of sodium hydroxide added", ok: () => VOLS.length === 9 && VOLS[1] - VOLS[0] === 5 },
       { t: "The temperature", why: "Temperature is what you measure: the dependent variable. You change the volume of sodium hydroxide." },
       { t: "The highest temperature reached", why: "That is the dependent variable: the one you measure." },
@@ -1224,7 +1224,7 @@ TASKS.hard = [
     done: m => { const d = m.rp.data[0], k = d.indexOf(Math.max(...d)); return `Run 1 done: the highest temperature was ${t1(d[k])} °C, after ${VOLS[k]} cm³ of sodium hydroxide.`; },
     reveal: m => { autoRP(m, 0); },
     hints: ["Eye protection on, then Add 30 cm³ acid and record the start.", "Add 5 cm³, wait for the reading to settle, record it. Repeat.", "Nine readings: 0, 5, 10 … 40 cm³."] },
-  { id: "peak", kind: "choice", lesson: "C2 s9 notes, s10 step 6, s13", text: "The graph shows the lesson’s example results. Which volume of sodium hydroxide gave the highest mean temperature?", setup: SU.example, lock: "all",
+  { id: "peak", kind: "choice", lesson: "C2 s9 notes, s10 step 6, s13", text: "The graph shows the lesson’s example results. Which volume of sodium hydroxide gave the highest mean temperature?", setup: SU.example, lock: "all", after: m => { m.rp.fit = true; },
     options: [{ t: "20 cm³: after it, the temperature falls", ok: () => { const e = exMeans(); return VOLS[e.indexOf(Math.max(...e))] === 20 && Math.abs(twoLines(VOLS.map((x, i) => ({ x, y: e[i] }))).x - 20) < 2.5; } },
       { t: "40 cm³: the most alkali gives the most energy", why: "Look at the graph: after 20 cm³ the temperature falls. At 40 cm³ it is nearly back to the start." },
       { t: "10 cm³: the rise is steepest there", why: "The line is steep there, but the temperature keeps rising until 20 cm³." },
@@ -1242,14 +1242,14 @@ TASKS.hard = [
     hints: ["Energy is never destroyed. If it didn't stay in the solution, where did it go?", "Reason, then improvement, then repeats.", "More energy lost to the surroundings; an insulated cup with a lid; spot anomalies and find a mean."] },
   { id: "plan6", kind: "build", ordered: true, six: true, lesson: "C2 s7–s11 (exam-style)", text: "Plan how to find the effect of the volume of sodium hydroxide on the highest temperature. [6 marks]",
     frame: "Start with: First, put on eye protection…", setup: SU.rp,
-    stm: [{ t: "Put on eye protection (irritants).", c: 1, free: true }, { t: "Measure 30 cm³ acid (measuring cylinder) into a polystyrene cup.", c: 2 },
-      { t: "Record the starting temperature.", c: 3 }, { t: "Add 5 cm³ alkali (measuring cylinder); lid, stir, record the highest.", c: 4 },
-      { t: "Repeat in 5 cm³ steps to 40 cm³.", c: 5 }, { t: "Keep acid volume and concentration the same.", c: 6, free: true }, { t: "Repeat the run; find a mean for each volume.", c: 7 },
+    stm: [{ t: "Put on eye protection (irritants).", c: 1, free: true }, { t: "Measure 30 cm³ acid (measuring cylinder) into a polystyrene cup.", c: 2, ess: "measure the acid" },
+      { t: "Record the starting temperature.", c: 3 }, { t: "Add 5 cm³ alkali (measuring cylinder); lid, stir, record the highest.", c: 4, ess: "record the highest temperature" },
+      { t: "Repeat in 5 cm³ steps to 40 cm³.", c: 5, ess: "change the volume in 5 cm³ steps" }, { t: "Keep acid volume and concentration the same.", c: 6, free: true }, { t: "Repeat the run; find a mean for each volume.", c: 7 },
       { t: "Heat the cup with a Bunsen burner.", why: "Don't heat it: the reaction changes the temperature itself." },
       { t: "Read it 2 minutes after adding.", why: "By then it has cooled. Record the highest temperature." }],
     miss: { 1: "Include the safety step.", 2: "Say what you measure, with what, into what.", 3: "You need the starting temperature.", 4: "Say how you add the alkali, that you fit the lid and stir, and what you record.", 5: "Say how you change the independent variable, and how far.", 6: "Name a control variable.", 7: "Say how you make the results repeatable." },
     explain: "Eye protection; measure 30 cm³ acid with a measuring cylinder into a polystyrene cup in a beaker; start temperature; add 5 cm³ alkali, lid, stir, record the highest; repeat to 40 cm³; same acid volume and concentration; repeat the run and find means.",
-    ms: ["Level 3 (5–6): a coherent, detailed method, logically ordered, that would give valid results.", "Level 2 (3–4): most of a method with mostly relevant detail; may not be fully logical or may miss some detail.", "Level 1 (1–2): simple relevant statements; lacks logical structure; would not give valid results."],
+    ms: ["Level 3 (5–6): a complete, valid method: coherent, detailed and logically ordered, including every essential step.", "Level 2 (3–4): most of a method with mostly relevant detail; may not be fully logical or may miss some detail.", "Level 1 (1–2): simple relevant statements; lacks logical structure; would not give valid results."],
     hints: ["Think: safety, apparatus, measuring, changing the variable, control, repeats.", "What do you record before adding alkali? What stays the same?", "Safety, measure acid, start temp, add and record, to 40 cm³, control, repeat."] }
 ];
 
@@ -1285,6 +1285,10 @@ function bankCheck() {
       list.forEach(w => { if (w !== r[2] && !t.why(r[0], w)) E(`no feedback for ${r[0]}: ${w}`); }); });
     if (t.kind === "num") { const m = freshM(); if (t.setup) t.setup(m); const a = t.ans(m); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a, t.tol) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
     if (t.kind === "dt") { if (!(t.s !== t.e) || !t.explain) E("dt needs two temperatures"); }
+    if (t.kind === "build" && t.six) { const right = rightBuild(t);   // Fault B: dropping any essential step can never give Level 3
+      if (!sixLevel(buildMarks(t, right)).startsWith("Level 3")) E("full answer must be Level 3");
+      t.stm.forEach((s, i) => { if (s.ess && sixLevel(buildMarks(t, right.filter(j => j !== i))).startsWith("Level 3")) E("Level 3 without essential step: " + s.ess); });
+      const seen = new Set([sixLevel(buildMarks(t, []))[6], sixLevel(buildMarks(t, right.slice(0, 1)))[6], sixLevel(buildMarks(t, right.slice(0, 4)))[6], sixLevel(buildMarks(t, right))[6]]); if (seen.size < 4) E("levels 0–3 must all be reachable"); }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
       c.forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); if (t.lock) E("a goal can't lock the model"); }
@@ -1396,7 +1400,7 @@ function buildMarks(t, list) {
 }
 const msDetails = t => `<details class="msd"><summary>Mark scheme: levels</summary><ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
 function sixLevel(b) {   // levels of response: points, order, and no wrong steps
-  const n = b.got.length; let L = n >= 6 && b.inOrder ? 3 : n >= 4 ? 2 : n >= 1 ? 1 : 0;
+  const n = b.got.length, essMiss = b.missing.some(s => s.ess); let L = n >= 6 && b.inOrder && !essMiss ? 3 : n >= 4 ? 2 : n >= 1 ? 1 : 0;
   if (b.bad.length && L > 1) L--;   // an incorrect step limits the level
   return L === 3 ? (n === b.all.length ? "Level 3 (6 marks)" : "Level 3 (5 marks)") : L === 2 ? (n >= 5 ? "Level 2 (4 marks)" : "Level 2 (3 marks)") : L === 1 ? (n >= 2 ? "Level 1 (2 marks)" : "Level 1 (1 mark)") : "no marks yet"; }
 function evaluate() {
@@ -1420,7 +1424,8 @@ function evaluate() {
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list), sl = t.six ? sixLevel(b) : "", lv = !t.six ? "" : sl === "no marks yet" ? "No marks yet. " : `About ${sl}. `;
     if (b.bad.length) return { ok: false, html: esc(`${lv}“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
-    if (b.missing.length) return { ok: false, html: esc(`${lv}${t.six ? "" : "Not yet: "}${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };
+    if (b.missing.length) { const em = b.missing.find(s => s.ess), first = em || b.missing[0];
+      return { ok: false, html: esc(`${lv}${t.six ? "" : `Not yet: ${b.got.length} of ${b.all.length} points. `}${em ? `Essential step missing: ${em.ess}.` : t.miss[first.c]}`) }; }
     if (t.ordered && !b.inOrder) return { ok: false, html: esc(lv + "All the right points, but not in order. " + (t.six ? "Put the steps in the order you would do them." : "Start with the sentence starter.")) };
     return { ok: true, html: esc("Correct. " + (t.six ? "Level 3: 6 marks." : t.explain)) + (t.six ? msDetails(t) : t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") }; }
   if (t.kind === "goal") { if (anim) return { skip: "Wait for the reading to settle, then press Check." };
@@ -1436,7 +1441,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); }
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -1456,7 +1461,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); if (task.after) { task.after(M); drawAll(); }
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {

@@ -509,7 +509,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="cread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The masses and percentage changes are invented example data. They follow the lesson’s class results (22, 10, −2, −14 and −26 % from 0 to 0.8 mol/dm³) with random scatter (about ±1.5 %) and the odd anomaly. Real class repeats often differ by more than this, so anomalies are harder to spot; real potatoes vary, and real graphs are often curved. 30 minutes is sped up to a few seconds. In the cell picture, the particles are far too big and far too few, the numbers are rounded, and the cell wall is left out.</p>
+      <p class="limits"><b>Model limits:</b> The masses and percentage changes are invented example data. The values are chosen to match the lesson’s class results, with random scatter (about ±1.5 %) and the odd anomaly. Real class repeats often differ by more than this, so anomalies are harder to spot; real potatoes vary, and real graphs are often curved. 30 minutes is sped up to a few seconds. In the cell picture, the particles are far too big and far too few, the numbers are rounded, and the cell wall is left out.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -1103,7 +1103,9 @@ function renderCtl() {
   if (!locked()) $("lockNote").hidden = true;
 }
 function drawAll() { drawPane(); renderCtl(); }
-function setTab(t) { if (anim) stopAll(); M.tab = t; M.cur.on = false; drawAll(); tourSignal("tab-" + t); }
+function tabBlocked(t) { if (mode === "demo" || !task.tabs || task.tabs.includes(t)) return false; const p = prog(); return !(p.solved || p.revealed); }
+function setTab(t) { if (tabBlocked(t)) { const n = $("lockNote"); n.hidden = false; n.textContent = "That part of the model is closed for this question. Answer it first, or press Show answer."; return; }
+  if (anim) stopAll(); M.tab = t; M.cur.on = false; drawAll(); tourSignal("tab-" + t); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); if (a.finish) a.finish(); }
 
 /* ===== Animations: 30 minutes in the beakers; water crossing the membrane ===== */
@@ -1175,7 +1177,7 @@ TASKS.easy = [
     done: m => `Five cylinders, all ${num(m.cyl[0].L)} cm long, and every start mass recorded.`,
     reveal: m => { if (!sameLen(m) || m.placed) { const L = m.knife; Object.assign(m, freshM(), { tab: "rp", knife: L }); } fillAll(m, "w1"); },
     hints: ["Choose Cut five cylinders, then press Cut five times without moving the knife.", "Then choose Blot and weigh. Press each cylinder button to put it on the balance.", "Type each balance reading in the Start mass column, then press Check my table."] },
-  { id: "pred", kind: "choice", lesson: "s14–15", text: "Predict: what will happen to the mass of the cylinder in 0.8 mol/dm³ sugar solution?", lock: "all", setup: SU.cell(0), after: "pred",
+  { id: "pred", kind: "choice", tabs: ["cell"], lesson: "s14–15", text: "Predict: what will happen to the mass of the cylinder in 0.8 mol/dm³ sugar solution?", lock: "all", setup: SU.cell(0), after: "pred",
     options: [{ t: "It will decrease: water moves out of the cells by osmosis.", ok: () => pctMu(.8) < 0 && flows(.8).net < 0 },
       { t: "It will increase: sugar moves into the cells.", why: "Sugar does not move into the potato. The solution is more concentrated than the cell contents, so water moves out." },
       { t: "It will stay the same.", why: "Only a solution with the same concentration as the cell contents gives no change. 0.8 mol/dm³ is more concentrated, so water moves out." },
@@ -1191,7 +1193,7 @@ TASKS.easy = [
     hints: ["Only one is changed on purpose.", "Two are what you measure. The rest are kept the same.", "Independent F; dependent A and C; control B, D and E."] },
   pctQ("we", "s19 We do", 5, 5.5, { hints: ["Change = end − start = 5.5 − 5.0.", "The change is 0.5 g. Divide it by the start mass (5.0 g).", "0.5 ÷ 5.0 × 100 = +10 %."] }),
   pctQ("you2", "s20 You do Q2", 5, 4, { hints: ["Change = end − start. Is it positive or negative?", "The change is −1.0 g. Divide by the start mass, then × 100.", "−1.0 ÷ 5.0 × 100 = −20 %."] }),
-  { id: "read", kind: "num", lesson: "s21–23", text: "The class results are plotted with a line of best fit. Read where the line crosses 0 %.", lock: "all", setup: SU.example,
+  { id: "read", kind: "num", tabs: ["res"], lesson: "s21–23", text: "The class results are plotted with a line of best fit. Read where the line crosses 0 %.", lock: "all", setup: SU.example,
     frame: "Find 0 % on the y-axis. Go across to the line, then down to the x-axis.", lbl: "It crosses at", unit: "mol/dm³",
     ans: () => crossOf(DECK_MEANS), accept: v => v >= .35 - 1e-9 && v <= .40 + 1e-9, show: "about 0.37 mol/dm³ (accept 0.35 to 0.40)",
     wrongs: [[22, "22 is where the line meets the y-axis: the % change in pure water. Read the concentration where the line crosses 0 %."], [0, "0 % is the value on the y-axis. Read the concentration below that point, on the x-axis."],
@@ -1206,7 +1208,7 @@ TASKS.easy = [
       { t: "It removes the need to dry the cylinders", why: "You still blot them dry. % change is used because the cylinders start at different masses." }],
     explain: "Cylinders start at different masses, so percentage change makes them comparable.", stuck: "eq",
     hints: ["Do all five cylinders start with exactly the same mass?", "A 1 g change matters more to a small cylinder than to a big one.", "The cylinders started with different masses."] },
-  { id: "lose", kind: "build", ordered: true, lesson: "s27 Q4, s28, s29 exit", text: "Explain why the potato loses mass at 0.8 mol/dm³. [2 marks] Build your answer in order.", frame: "Water moves out by … because …", setup: SU.cell(.8),
+  { id: "lose", kind: "build", ordered: true, tabs: ["rp"], lesson: "s27 Q4, s28, s29 exit", text: "Explain why the potato loses mass at 0.8 mol/dm³. [2 marks] Build your answer in order.", frame: "Water moves out by … because …", setup: SU.rp, after: "lose",
     stm: [{ t: "Water moves out of the cells by osmosis,", c: 1 }, { t: "because the solution is more concentrated than the cell contents.", c: 2 },
       { t: "Sugar moves into the cells.", why: "Sugar does not move into the potato. This answer scores 0." },
       { t: "because the solution is more dilute than the cell contents.", why: "The wrong way round: 0.8 mol/dm³ is more concentrated than the cell contents." },
@@ -1215,7 +1217,7 @@ TASKS.easy = [
     explain: "Water moves out of the cells by osmosis (1), because the solution is more concentrated than the cell contents (1).",
     hints: ["Two marks: what happens, and why.", "Water moves out, by osmosis. Compare the solution with the cell contents.", "Water moves out of the cells by osmosis, because the solution is more concentrated than the cell contents."] }
 ];
-const MS6 = ["Level 3 (5–6): a coherent method, in a logical order, giving valid results.", "Level 2 (3–4): some relevant detail; may not be in a logical order.", "Level 1 (1–2): simple relevant statements; little logical structure."];
+const MS6 = ["Level 3 (5–6): a complete, valid method in a logical order (every essential step).", "Level 2 (3–4): some relevant detail; may not be in a logical order.", "Level 1 (1–2): simple relevant statements; little logical structure."];
 TASKS.hard = [
   { id: "cv2", kind: "multi", need: 2, lesson: "s12, s27 Q2", text: "Give two control variables. [2 marks] Choose only two.", setup: SU.rp,
     options: [{ t: "The diameter and length of each cylinder", ok: () => true }, { t: "The volume of solution in each beaker", ok: () => true }, { t: "The time in the solution", ok: () => true }, { t: "The type of potato", ok: () => true },
@@ -1283,7 +1285,7 @@ TASKS.hard = [
     miss: { 1: "Start with the sentence starter: what happens to the sugar concentration?", 2: "Say what happens to the % change in mass." },
     explain: "As the sugar concentration increases (1), the percentage change in mass decreases / becomes more negative (1). Accept: from +22 % to −26 %.",
     hints: ["Read the line from left to right.", "As the concentration goes up, does the % change go up or down?", "As the sugar concentration increases, the % change in mass decreases."] },
-  { id: "zero", kind: "build", ordered: true, ht: true, lesson: "s27 Q1 [H], s28", text: "Explain why the mass does not change where the line crosses 0 %. [3 marks] Build your answer in order.", frame: "There is no … of water because …", setup: SU.cell(CELL), lock: "all",
+  { id: "zero", kind: "build", ordered: true, ht: true, tabs: ["rp"], after: "zero", lesson: "s27 Q1 [H], s28", text: "Explain why the mass does not change where the line crosses 0 %. [3 marks] Build your answer in order.", frame: "There is no … of water because …", setup: SU.rp, lock: "all",
     stm: [{ t: "There is no net movement of water,", c: 1 }, { t: "because the solution has the same concentration as the cell contents,", c: 2 }, { t: "so water moves in and out of the cells equally.", c: 3 },
       { t: "because no osmosis happens.", why: "“No osmosis happens” is rejected. Osmosis still happens: water moves in and out equally." },
       { t: "because the membrane stops water moving.", why: "Water can still pass through the membrane. It moves in and out at the same rate." },
@@ -1311,6 +1313,12 @@ function bankCheck() {
   if (judgeMean([-2.1, -1.5, 6.8], r1(meanOf([-2.1, -1.5, 6.8]))).ok) F("mean check must reject the anomaly mean");
   CPRE.forEach(p => { const n = flows(p.c).net, m = pctMu(p.c); if (Math.abs(m) < 1e-9 ? n !== 0 : Math.sign(n) !== Math.sign(m)) F(`particles: net water at ${num(p.c)} must match the model`); });
   { const m = freshM(); m.knife = 3; for (let i = 0; i < 5; i++) doCut(m); if (!sameLen(m) || METHOD.some(k => k !== "cut" && !blocker(m, k) && ["place", "leave", "w2", "calc"].includes(k))) F("method: later steps must wait"); }
+  { const t = TASKS.hard.find(x => x.id === "meth"), full = rightBuild(t), lv = list => level6(buildMarks(t, list)).L;
+    if (lv(full) !== 3) F("6-mark: the full method must be Level 3");
+    ESS6.forEach(c => { if (lv(full.filter(i => t.stm[i].c !== c)) === 3) F("6-mark: Level 3 without essential step " + c); });
+    if (lv(full.filter(i => t.stm[i].c !== 2)) !== 3) F("6-mark: missing only the safety point can still be Level 3");
+    const bad = t.stm.findIndex(s => !s.c);
+    if (lv(full.slice(0, 4)) !== 2 || lv(full.slice(0, 1)) !== 1 || lv([bad]) !== 0 || lv(full.concat([bad])) !== 2) F("6-mark: levels 0–3 must all be reachable, and a wrong statement must lower the level"); }
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
     if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
@@ -1399,7 +1407,8 @@ function setAnswerState() {
 function revealModel() {
   const t = task; if (!t.after) return;
   lock = ""; stopAll();
-  if (t.after === "pred") { M.tab = "cell"; M.cc = CPRE.findIndex(p => p.c === .8); M.cAfter = true; }
+  if (t.after === "pred" || t.after === "lose") { M.tab = "cell"; M.cc = CPRE.findIndex(p => p.c === .8); M.cAfter = true; }
+  if (t.after === "zero") { M.tab = "cell"; M.cc = CPRE.findIndex(p => p.cell); M.cAfter = true; }
   drawAll();
 }
 function renderDots() {
@@ -1444,7 +1453,15 @@ function buildMarks(t, list) {
   const got = list.map(i => t.stm[i]).filter(s => s.c), bad = list.map(i => t.stm[i]).filter(s => !s.c), all = t.stm.filter(s => s.c);
   return { got, bad, all, inOrder: orderOK(t, list), missing: all.filter(s => !got.includes(s)) };
 }
-function marks6(b) { const n = b.got.length; return n >= 6 && b.inOrder ? "5–6" : n >= 4 ? "3–4" : n >= 1 ? "1–2" : "0"; }
+const ESS6 = [1, 3, 4, 5, 6, 7];   // essential steps (all but safety): samples, start mass, the range of solutions, 30 minutes in them, end mass, % change
+function level6(b) {   // Level 0–3: Level 3 needs every essential step, in order; each wrong statement drops a level
+  const n = b.got.length, have = new Set(b.got.map(s => s.c)), missEss = ESS6.filter(c => !have.has(c));
+  let L = n >= 6 && b.inOrder && !missEss.length ? 3 : n >= 4 ? 2 : n >= 1 ? 1 : 0;
+  if (L === 3 && missEss.length) L = 2;
+  L = Math.max(0, L - b.bad.length);
+  return { L, missEss, txt: `Level ${L} (${["0", "1–2", "3–4", "5–6"][L]} marks)` };
+}
+function marks6(b) { return level6(b).txt; }
 function evaluate() {
   const t = task;
   if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
@@ -1463,8 +1480,9 @@ function evaluate() {
     const hit = (t.wrongs || []).find(([x]) => Math.abs(v - x) <= Math.max(.02 * Math.abs(x), .011)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list);
-    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
-    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${t.ms ? ` (about ${marks6(b)} marks)` : ""}. ${t.miss[b.missing[0].c]}`) };
+    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}${t.ms ? ` So far: about ${marks6(b)}.` : ""}`) };
+    if (b.missing.length) { const lv = t.ms ? level6(b) : null, ess = lv && lv.missEss.length ? lv.missEss[0] : null;
+      return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${lv ? ` (about ${lv.txt})` : ""}. ${ess ? "Level 3 needs this essential step: " + t.miss[ess] : t.miss[b.missing[0].c]}`) }; }
     if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. " + (t.ms ? "Put the steps in the order you would do them." : "Start with the sentence starter.")) };
     return { ok: true, html: esc("Correct. " + (t.ms ? "Level 3, 6 marks." : t.explain)) + (t.ms ? `<span class="lvl">${t.ms.map(x => esc(x)).join("<br>")}</span>` : "") }; }
   if (t.kind === "goal") { if (anim) return { skip: "Wait for the model to finish, then press Check." };
