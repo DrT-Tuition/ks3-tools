@@ -79,6 +79,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Temperature Changes | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-temperature-changes.html |
 | Microbiology Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-microbiology-practical.html |
 | Osmosis Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-osmosis-practical.html |
+| Specific Heat Capacity | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-specific-heat-capacity.html |
 
 ## Adding a tool
 
