@@ -446,7 +446,7 @@ main.layout{min-height:calc(100vh - 70px)}
 <body>
 <div class="wrap">
   <header>
-    <h1>Quadrat Sampling<small>Sample a 10 m by 10 m field with quadrats and a transect, then estimate the population. GCSE Biology and Combined Science · Required practical 7.</small></h1>
+    <h1>Quadrat Sampling<small>Sample a 10 m by 10 m field with quadrats and a transect, then estimate the population. Required practical · Combined Science RP7 · Biology RP9.</small></h1>
     <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
   </header>
 
@@ -890,19 +890,19 @@ const TASKS = {
         { t: "…increases, so light is the only factor that affects daisies.", why: "The graph shows a pattern with light. It doesn't show light is the only factor: water or soil can matter too." }],
       explain: "As the light intensity increases, the number of daisies increases: fewer in the shade, more in the open.",
       hints: ["Read the daisies line from left (shade) to right (open).", "Compare the daisies line with the light line.", "Where the light is low, the daisies line is low."] },
-    { id: "describeTr", kind: "build", setup: SU.tr0, src: "slides 21, 24–25", text: "Describe how a transect would show the effect of shade on the daisies. [4 marks]",
+    { id: "describeTr", kind: "build", setup: SU.rand0, lock: "all", src: "slides 21, 24–25", text: "Describe how a transect would show the effect of shade on the daisies. [4 marks]",
       frame: "Number the steps you use: First, … Then, … Finally, …",
       items: [
-        { id: "a", t: "Lay a tape from the shade to open ground.", rank: 1, miss: "Say where the tape goes: across the change, from shade to open." },
-        { id: "b", t: "Place quadrats at regular intervals along it.", rank: 2, miss: "Say where the quadrats go along the tape." },
-        { id: "c", t: "Count the daisies and measure the light intensity in each quadrat.", rank: 3, miss: "Say what you count, and the abiotic factor you measure." },
+        { id: "a", t: "Lay a tape from the shade to open ground.", rank: 1, ess: 1, miss: "Say where the tape goes: across the change, from shade to open." },
+        { id: "b", t: "Place quadrats at regular intervals along it.", rank: 2, ess: 1, miss: "Say where the quadrats go along the tape." },
+        { id: "c", t: "Count the daisies and measure the light intensity in each quadrat.", rank: 3, ess: 1, miss: "Say what you count, and the abiotic factor you measure." },
         { id: "e", t: "Repeat, and find the mean at each distance.", rank: 4, miss: "Say how you make the results more reliable." },
         { id: "f", t: "Compare the daisies with the light intensity.", rank: 4, miss: "Say how the results show the effect of shade." },
         { id: "w1", t: "Throw the quadrat along the tape.", why: "Throwing is biased. On a transect, quadrats go at regular intervals." },
         { id: "w3", t: "Use random coordinates for the quadrats.", why: "Random coordinates are for estimating a population. A transect uses regular intervals along the line." }],
-      ms: ["Level 2 (3–4 marks): clear, logical method, including light.", "Level 1 (1–2 marks): some relevant steps."], msLabel: "Suggested mark scheme",
+      ms: ["Level 2 (3–4 marks): a complete, valid method.", "Level 1 (1–2 marks): some steps only."], msLabel: "Suggested mark scheme",
       hints: ["Start with where the tape goes.", "Then: where the quadrats go, what you count and what you measure.", "End with repeat and compare. Leave out throwing and random coordinates."] },
-    { id: "vars", kind: "gaps", setup: SU.tr0, src: "slide 24", text: "Choose the right variable for each line of the transect practical.",
+    { id: "vars", kind: "gaps", setup: SU.rand0, lock: "all", src: "slide 24", text: "Choose the right variable for each line of the transect practical.",
       bank: ["Distance along the transect", "Number of plants in each quadrat", "Size of the quadrat", "Where the thrown quadrat lands"],
       rows: [["iv", "Independent variable (what we change):", "Distance along the transect"], ["dv", "Dependent variable (what we measure):", "Number of plants in each quadrat"], ["cv", "A control variable (kept the same):", "Size of the quadrat"]],
       rowWhy: { iv: "The independent variable is the one you change as you move along the tape.", dv: "The dependent variable is what you count in each quadrat.", cv: "A control variable stays the same in every quadrat. Quadrats are never thrown on a transect." },
@@ -928,6 +928,16 @@ const TASKS = {
 const optT = o => o.t;
 
 /* ===== Load-time bank check ===== */
+/* 4-mark method: marks from the steps in order; a missing essential step caps it at Level 1; each wrong statement takes off a mark */
+function buildScore(t, its) {
+  const good = its.filter(x => x.rank), bad = its.filter(x => !x.rank);
+  const got = good.filter((x, j) => j === 0 || good[j - 1].rank <= x.rank).length;
+  let mk = got >= 5 ? 4 : got >= 4 ? 3 : got >= 2 ? 2 : got ? 1 : 0;
+  const missEss = t.items.filter(x => x.ess && !good.includes(x));
+  if (missEss.length) mk = Math.min(mk, 2);
+  mk = Math.max(0, mk - bad.length);
+  return { mk, lvl: mk >= 3 ? 2 : mk >= 1 ? 1 : 0, good, bad, missEss, miss: t.items.filter(x => x.rank && !good.includes(x)), ordered: good.every((x, j) => j === 0 || good[j - 1].rank <= x.rank) };
+}
 function bankCheck() {
   const errs = [];
   /* facts */
@@ -974,7 +984,12 @@ function bankCheck() {
       const right = {}; t.fields.forEach(k => { right[k] = W[k]; }); const mk = markSteps(W, right); if (t.fields.some(k => !mk[k] || !mk[k].ok)) E("the computed answer does not mark as right");
       const slips = [[W.tot, "mean"], [W.mean * W.qa, "m2"], [W.m2, "est"]]; slips.forEach(([v, k]) => { if (t.fields.includes(k) && W.n > 1 && near(v, W[k])) E("a slip equals the answer: " + k); }); }
     if (t.kind === "build") { const req = t.items.filter(x => x.rank), bad = t.items.filter(x => !x.rank);
-      if (req.length < 4 || bad.some(x => !x.why) || req.some(x => !x.miss) || !t.ms) E("statements need ranks, reasons and a mark scheme"); }
+      if (req.length < 4 || bad.some(x => !x.why) || req.some(x => !x.miss) || !t.ms) E("statements need ranks, reasons and a mark scheme");
+      const full = req.slice().sort((a, b) => a.rank - b.rank), ess = req.filter(x => x.ess);
+      if (!ess.length) E("a levels question needs essential steps");
+      if (buildScore(t, full).mk !== 4) E("the full answer must score 4");
+      ess.forEach(x => { if (buildScore(t, full.filter(y => y !== x)).lvl > 1) E("leaving out an essential step must cap at Level 1: " + x.id); });
+      bad.forEach(x => { if (buildScore(t, full.concat([x])).mk >= 4) E("a wrong statement must lower the mark: " + x.id); }); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal already met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
   });
   return errs;
@@ -998,6 +1013,8 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 const locked = () => mode !== "demo" && !!lock;
+/* audit Fault A: the IV/DV line is the answer to the variables questions, so it waits until they are answered */
+const hideVars = () => { if (mode === "demo" || !task || !["vars", "describeTr"].includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
 const LOCKW = { run: "Predict first. The model shows the result when you get it right, or press Show answer.", all: "The model is set for this question." };
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
 
@@ -1168,7 +1185,7 @@ function trRead(T) {
     else if (c) r1 = `At ${c.d} m: ${c.tap.length} ${c.tap.length === 1 ? "daisy" : "daisies"}, light ${lux(c.light)}. Place the next quadrat.`;
     else r1 = `Transect ${ri}: tape at y = ${mStr(run.ty)}, from the shade (0 m) to open ground (10 m). Press Place next quadrat.`;
   }
-  return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(`Transect ${ri}: ${run.q.length} of ${mk.length} quadrats, one every ${T.step} m`)}</p><p class="r3">Independent variable: distance along the transect. Dependent variable: number of daisies in each quadrat.</p>`;
+  return `<p class="r1">${esc(r1)}</p><p class="r2">${esc(`Transect ${ri}: ${run.q.length} of ${mk.length} quadrats, one every ${T.step} m`)}</p>${hideVars() ? "" : `<p class="r3">Independent variable: distance along the transect. Dependent variable: number of daisies in each quadrat.</p>`}`;
 }
 
 /* ===== Work it out (Demo) ===== */
@@ -1374,7 +1391,7 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) return;
+  const t = task; if (!t.after) { if (["vars", "describeTr"].includes(t.id)) drawAll(); return; }
   lock = ""; if (t.after === "bare") { M.R.hide = false; M.R.truth = true; M.R.cur = 0; }
   drawAll();
 }
@@ -1435,13 +1452,12 @@ function evaluate() {
     const used = Object.keys(S.step).filter(k => S.step[k]).map(Number);
     if (!used.length) return { skip: "Give a step number to each statement you want to use." };
     if (new Set(used.map(k => S.step[k])).size !== used.length) return { skip: "Give each statement a different step number." };
-    const its = used.sort((x, y) => S.step[x] - S.step[y]).map(i => t.items[i]), w = its.find(x => !x.rank); if (w) return { ok: false, html: esc(`“${w.t}” – ${w.why}`) };
-    const miss = t.items.filter(x => x.rank && !its.includes(x));
-    const ordered = its.every((x, j) => j === 0 || its[j - 1].rank <= x.rank);
-    const got = its.filter((x, j) => j === 0 || its[j - 1].rank <= x.rank).length, mk = got >= 5 ? 4 : got >= 4 ? 3 : got >= 2 ? 2 : 1;
-    if (miss.length) return { ok: false, html: esc(`${miss[0].miss} (So far: Level ${mk >= 3 ? 2 : 1}, about ${mk} of 4 marks.)`) };
-    if (!ordered) { const j = its.findIndex((x, k) => k > 0 && its[k - 1].rank > x.rank); return { ok: false, html: esc(`Check the order: “${its[j].t}” should come before “${its[j - 1].t}”`) }; }
-    return { ok: true, html: esc("Correct. Level 2, 4 marks: a clear method in a logical order.") };
+    const its = used.sort((x, y) => S.step[x] - S.step[y]).map(i => t.items[i]), B = buildScore(t, its), lv = ` (So far: Level ${B.lvl}, about ${B.mk} of 4 marks.)`;
+    if (B.bad.length) return { ok: false, html: esc(`“${B.bad[0].t}” – ${B.bad[0].why}${lv}`) };
+    if (B.missEss.length) return { ok: false, html: esc(`Essential step missing: ${B.missEss[0].miss}${lv} Level 2 needs every essential step.`) };
+    if (B.miss.length) return { ok: false, html: esc(`${B.miss[0].miss}${lv}`) };
+    if (!B.ordered) { const g = B.good, j = g.findIndex((x, k) => k > 0 && g[k - 1].rank > x.rank); return { ok: false, html: esc(`Check the order: “${g[j].t}” should come before “${g[j - 1].t}”${lv}`) }; }
+    return { ok: true, html: esc("Correct. Level 2, 4 marks: a complete, valid method in a logical order.") };
   }
   return { skip: "" };
 }

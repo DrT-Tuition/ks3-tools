@@ -448,7 +448,7 @@ main.layout{min-height:calc(100vh - 70px)}
         </div>
         <div class="controls" id="xvRow"><span class="gl" id="xvLbl">Graph against:</span><span class="seg" role="group" aria-labelledby="xvLbl" id="xvSeg"><button type="button" data-xv="light" aria-pressed="true">Light</button><button type="button" data-xv="co2" aria-pressed="false">CO₂</button><button type="button" data-xv="temp" aria-pressed="false">Temperature</button></span></div>
         <svg id="lsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="Graph of the rate of photosynthesis against the chosen factor"><g id="lG"></g></svg>
-        <div class="controls" id="pinRow"><button class="btn" type="button" id="pinBtn">Pin this curve</button><span class="badge" title="Higher tier only">HT</span><button class="linkbtn" type="button" id="unpinBtn">Clear pinned curve</button><span class="small" id="pinNote">Pin a curve, then change another factor to compare two curves.</span></div>
+        <div class="controls" id="pinRow"><button class="btn" type="button" id="pinBtn">Pin this curve</button><span class="badge" title="Higher tier only">HT</span><button class="linkbtn" type="button" id="unpinBtn">Clear pinned curve</button><span class="small" id="pinNote">Pin a curve, then change a different factor to compare two curves.</span></div>
         <svg id="barsvg" class="scene" viewBox="0 0 960 170" role="img" aria-label="Bars: the rate each factor allows. The shortest bar sets the rate." hidden><g id="barG"></g></svg>
         <div class="readout" id="lread" aria-live="polite"></div>
         <p class="small" id="chlNote">Chlorophyll is a limiting factor too: disease can reduce the amount. <span class="badge bio">Biology only</span> A lack of magnesium also reduces it.</p>
@@ -481,7 +481,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="iread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> Rates are in arbitrary units from a simple model with the same shapes as the lesson’s graphs; real plants differ. In the Virtual RP, the bubble counts, volumes, the lamp’s warming of the water and the room light are invented example data with random scatter and the odd anomaly, not real results. One minute is sped up to 6 seconds. The lamp is treated as a tiny point of light, so its light intensity follows the inverse square law exactly. The rate of photosynthesis does not fall by the same factor: at high light intensity another factor limits the rate, so the rate levels off (Limiting factors tab).</p>
+      <p class="limits"><b>Model limits:</b> Rates are in arbitrary units from a simple model with the same shapes as the lesson’s graphs; real plants differ. In the Virtual RP, the bubble counts, volumes, the lamp’s warming of the water and the room light are invented example data with random scatter and the odd anomaly, not real results. One minute is sped up to 6 seconds. The lamp is treated as a tiny point of light, so its light intensity follows the inverse square law exactly. The rate of photosynthesis does not change by the same factor as the light intensity (see the Limiting factors tab).</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -690,6 +690,9 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 const locked = () => mode !== "demo" && !!lock;
+/* a quiz question that is still open: supports give the method, never the answer (audit Fault A) */
+const openQ = () => { if (mode === "demo" || !task || !task.id) return false; const p = prog(); return !(p.solved || p.revealed); };
+const LIM_METHOD = "How to tell: at a point on the graph, ask whether more of the factor on the x-axis would raise the rate there. Look at the slope of the line. (The bars come back once you have answered.)";
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== Drawing helpers ===== */
@@ -742,7 +745,7 @@ function drawLimGraph() {
 }
 const pinName = p => `Pinned: light ${num(p.L)} · CO₂ ${num(p.C)} · ${num(p.T)} °C`;
 function drawBars() {
-  const show = support.limits && M.tab === "lim"; $("barsvg").toggleAttribute("hidden", !show); if (!show) return;   // SVG has no .hidden property
+  const show = support.limits && M.tab === "lim" && !openQ(); $("barsvg").toggleAttribute("hidden", !show); if (!show) return;   // SVG has no .hidden property
   const t = LK() === "tall", W = t ? 600 : 960, H = t ? 230 : 170, fs = t ? 21 : 17; setVB($("barsvg"), W, H);
   const tm = terms(M.L, M.C, M.T), r = rate(M.L, M.C, M.T), lk = limiting(M.L, M.C, M.T);
   if (lk === "hot") tm.temp = r;   // too hot: denaturing (× den(T)) sets the rate, so the temperature bar shrinks to the rate line
@@ -761,7 +764,8 @@ function drawBars() {
 function limRead() {
   const r = rate(M.L, M.C, M.T), lk = limiting(M.L, M.C, M.T);
   let h = `<p class="r1">Rate of photosynthesis: ${num(r1(r))}</p><p class="r2">Light ${num(M.L)} · CO₂ ${num(M.C)} · ${num(M.T)} °C</p>`;
-  if (support.limits) h += `<p class="r3">${lk === "hot" ? (r < .05 ? "Too hot: the enzymes are denatured, so the rate has fallen to zero." : "Too hot: the enzymes are being denatured, so the rate falls.") : `Shortest supply: <b>${FNAME[lk]}</b>. Raising it would raise the rate.`}</p>`;
+  if (support.limits && openQ()) h += `<p class="r3">${LIM_METHOD}</p>`;
+  else if (support.limits) h += `<p class="r3">${lk === "hot" ? (r < .05 ? "Too hot: the enzymes are denatured, so the rate has fallen to zero." : "Too hot: the enzymes are being denatured, so the rate falls.") : `Shortest supply: <b>${FNAME[lk]}</b>. Raising it would raise the rate.`}</p>`;
   if (M.pin && M.pin.xv !== M.xv) h += `<p class="r3">The pinned curve is for a different graph.</p>`;
   return h;
 }
@@ -922,7 +926,7 @@ function isqRead() {
   const o = isq(M.d1, M.d2);
   if (M.hideWork) return `<p class="r1">light intensity ∝ 1 ÷ distance²</p><p class="r3">The working is hidden for this question. The picture shows 10 cm → 20 cm as an example.</p>`;
   const L = isqWork(M.d1, M.d2);
-  return `<p class="r1">light intensity ∝ 1 ÷ distance²</p><ol class="r2">${L.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="r3">This is the change in light intensity, not in the rate. The rate levels off when another factor limits it.</p>`;
+  return `<p class="r1">light intensity ∝ 1 ÷ distance²</p><ol class="r2">${L.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="r3">This is the change in light intensity, not in the rate.${openQ() ? "" : " The rate levels off when another factor limits it."}</p>`;
 }
 
 /* ===== Draw everything that is showing ===== */
@@ -1081,7 +1085,8 @@ TASKS.easy = [
     explain: "Closer lamp, faster rate. The rate falls steeply (52 → 30 bubbles per minute), then levels out (11 → 8) as the lamp moves away, because the light intensity falls.",
     hints: ["Read the means: 52, 30, 18, 11, 8.", "Compare the fall from 10 to 20 cm with the fall from 40 to 50 cm.", "It falls steeply, then levels out."] }
 ];
-const L3MS = ["Level 2 (3–4 marks): the rise, the peak near 40 °C and the fall, with both explanations.", "Level 1 (1–2 marks): the pattern only, or one explanation."];
+const L3MS = ["Level 2 (3–4 marks): the pattern and one explanation. 4 marks: all of it.", "Level 1 (1–2 marks): the pattern only, or explanations only."];
+const msLevel = m => m >= 3 ? "Level 2" : m >= 1 ? "Level 1" : "Level 0";
 TASKS.hard = [
   { id: "endo", kind: "build", lesson: "L1 s11, s29 Q2", text: "Explain why photosynthesis is an endothermic reaction. [2 marks] Choose the statements for your answer.", frame: "Photosynthesis is endothermic because…", setup: m => { m.tab = "lim"; },
     stm: [{ t: "energy is taken in,", c: 1 }, { t: "from the surroundings, as light.", c: 2 },
@@ -1273,9 +1278,15 @@ const WORDS = [["Photosynthesis", DEF.photosynthesis], ["Endothermic", DEF.endot
   ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv], ["Control variable", DEF.cv], ["Anomaly", DEF.anomaly]];
 function renderSupport() {
   $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
-  $("eqBox").innerHTML = `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Light energy is taken in (endothermic). Chlorophyll absorbs the light.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`;
+  const oq = openQ() ? task.id : "";
+  $("eqBox").innerHTML = oq === "eq" ? `<h3>Equation</h3><p>Reactants go before the arrow, products after it.</p><p>Think: what does a plant take in through its roots? What gas does it give out?</p>`
+    : oq === "sort" ? `<h3>Equation</h3><p>Reactants are used up, products are made. Something that is needed but not used up or made is neither.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`
+    : oq === "endo" ? `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Think about which way the energy moves, and what form it is in.</p>`
+    : `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Light energy is taken in (endothermic). Chlorophyll absorbs the light.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>mean = total ÷ number of counts (leave out any anomaly)</p><p>rate = amount ÷ time (change seconds into minutes first)</p><p><span class="badge">HT</span> light intensity ∝ 1 ÷ distance²</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  const wd = w => oq === "endo" && w[0] === "Endothermic" ? "Endo- means ‘in’. Think about which way the energy moves."
+    : (oq === "eq" || oq === "sort") && w[0] === "Photosynthesis" ? "The reaction plants use to make their own food, using light." : w[1];
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(wd(w))}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (M.tab === "lim") { drawBars(); morphHTML($("lread"), limRead()); }
   if (mode !== "demo") requestAnimationFrame(keepInView);
@@ -1318,7 +1329,7 @@ function evaluate() {
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list), marks = t.ms ? levelOf(b) : null;
     if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
-    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${marks != null ? ` (about ${marks} of 4 marks)` : ""}. ${t.miss[b.missing[0].c]}`) };
+    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${marks != null ? ` (about ${marks} of 4 marks, ${msLevel(marks)})` : ""}. ${t.miss[b.missing[0].c]}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. " + (t.ms ? "Describe each part of the graph, from left to right, then explain it." : "Start with the sentence starter.")) };
     return { ok: true, html: esc("Correct. " + (t.ms ? "Level 2, 4 marks." : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") }; }
   if (t.kind === "goal") { if (anim) return { skip: "Wait for the count to finish, then press Check." };
@@ -1339,7 +1350,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    revealModel();
+    revealModel(); renderSupport();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1354,7 +1365,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {

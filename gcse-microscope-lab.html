@@ -423,7 +423,7 @@ main.layout{min-height:calc(100vh - 70px)}
 <body>
 <div class="wrap">
   <header>
-    <h1>Microscope lab<small>Make a slide, focus a light microscope, draw and measure cells, and calculate magnification.</small><span class="tier">AQA GCSE Biology and Combined Science · Foundation and Higher · <span class="badge">HT</span> = Higher tier only</span></h1>
+    <h1>Microscope lab<small>Make a slide, focus a light microscope, draw and measure cells, and calculate magnification.</small><span class="tier">Required practical · Combined Science RP1 · Biology RP1 · Foundation and Higher · <span class="badge">HT</span> = Higher tier only</span></h1>
     <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
   </header>
 
@@ -523,8 +523,8 @@ main.layout{min-height:calc(100vh - 70px)}
       <!-- 4. Light or electron -->
       <div class="pane" id="pane-em" hidden>
         <div class="emRow">
-          <figure><canvas id="lmC" width="400" height="300" role="img" aria-label="The cell seen with a light microscope"></canvas><figcaption><b>Light microscope</b>Uses light and glass lenses. Lower magnification and resolution. Cheap and easy to use in a lab.</figcaption></figure>
-          <figure><canvas id="emC" width="400" height="300" role="img" aria-label="The cell seen with an electron microscope"></canvas><figcaption><b>Electron microscope</b>Uses a beam of electrons. Much higher magnification and resolution. Shows tiny structures in fine detail.</figcaption></figure>
+          <figure><canvas id="lmC" width="400" height="300" role="img" aria-label="The cell seen with a light microscope"></canvas><figcaption><b>Light microscope</b>Uses light and glass lenses. <span class="emcmp">Lower magnification and resolution. </span>Cheap and easy to use in a lab.</figcaption></figure>
+          <figure><canvas id="emC" width="400" height="300" role="img" aria-label="The cell seen with an electron microscope"></canvas><figcaption><b>Electron microscope</b>Uses a beam of electrons.<span class="emcmp"> Much higher magnification and resolution. Shows tiny structures in fine detail.</span></figcaption></figure>
         </div>
         <div class="controls"><span class="gl" id="emvLbl">Show:</span><span class="seg" role="group" aria-labelledby="emvLbl" id="emvSeg"><button type="button" data-emv="cell" aria-pressed="true">A cell</button><button type="button" data-emv="points" aria-pressed="false">Two close points</button></span></div>
         <div class="controls" id="sizeRow"><span class="gl" id="sizeLbl">Picture size:</span><span class="seg" role="group" aria-labelledby="sizeLbl" id="sizeSeg"><button type="button" data-size="1" aria-pressed="true">Normal</button><button type="button" data-size="2" aria-pressed="false">2 times bigger</button><button type="button" data-size="4" aria-pressed="false">4 times bigger</button></span></div>
@@ -644,8 +644,8 @@ const WORDS = [["Specimen", "The thing you look at under the microscope."], ["St
   ["Micrograph", "A photograph taken through a microscope."]];
 const EQS = ["total magnification = eyepiece lens × objective lens", "magnification = size of image ÷ size of real object",
   "1 mm = 1000 µm. Change both sizes to the same unit before you divide."];
-const LIMITS = ["Example data: the cell sizes, the field of view and the picture you measure are invented for this model. The Calculate tab uses the lessons' own values.",
-  "Focus moves in steps. A real focusing wheel turns smoothly.",
+const LIMITS = ["Example data: the cell sizes, how much of the slide you can see at each lens and the picture you measure are invented for this model. The Calculate tab uses the lessons' own values.",
+  "Focus moves in steps here. On a real microscope, focusing is smooth.",
   "A real × 100 lens needs a special technique. It is left out here.",
   "The prepared cheek cell slide is already stained. Its colour is an example.",
   "The on-screen ruler measures the picture as if it were printed. Its millimetres are not real screen millimetres.",
@@ -1082,6 +1082,8 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 const locked = () => mode !== "demo" && !!lock;
+/* audit Fault A: while one of these questions is open, the view or support that states its answer gives the method instead */
+const openQ = (...ids) => { if (mode === "demo" || !task || !ids.includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
 const LOCKW = { run: "Predict first. The model changes when you get it right, or press Show answer." };
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || "The model is set for this question."; }
 const isCalcQ = () => mode !== "demo" && (task.kind === "num" || task.kind === "sf");
@@ -1241,7 +1243,7 @@ function drawFov() {
     [[[-1, -.3], [-.4, -.1], [-.05, .12], [.35, .02], [1, .3]], [[-.05, .12], [.1, .5], [.05, 1]], [[-.4, -.1], [-.55, -.7]]].forEach(line => line.forEach((p, i) => { const q = P(p[0], p[1]); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }));
     c.stroke(); }
   c.restore(); c.drawImage(overlay(W), 0, 0);
-  const d = v === "empty" ? STATUS.empty : v === "none" ? STATUS.none : `${M.spec === "onion" ? "Onion" : "Cheek"} cells, ${v}${bubblesOf(M) ? ", with air bubbles" : ""}${M.cracked ? ". The slide is cracked" : ""}.`;
+  const d = v === "empty" ? STATUS.empty : v === "none" ? STATUS.none : `${M.spec === "onion" ? "Onion" : "Cheek"} cells, ${v}${bubblesOf(M) && !openQ("coverslip") ? ", with air bubbles" : ""}${M.cracked ? ". The slide is cracked" : ""}.`;
   setAttr(cv, "aria-label", "Down the eyepiece: " + d);
 }
 /* ===== Draw and measure (SVG) ===== */
@@ -1411,16 +1413,17 @@ function readout() {
         (aligned(M) ? `<p class="r2 okm">✓ 0 on the ruler is lined up with the left end of the marked cell. Read the ruler at the right end.</p>` : `<p class="r2">Line up 0 on the ruler with the left end of the marked cell.</p>`) +
         (mode === "demo" || support.eq ? `<p class="r3">Then: real size = size of image ÷ magnification.</p>` : ""); }
     const left = FIXK.filter(k => !M.dr[k]).length;
-    return `<p class="r1">A scientific drawing is a clear, accurate record of what you see.</p><p class="r2">${RULES.map(esc).join(" ")}</p>` +
+    const rules = openQ("drawWho") ? "Which rules does Drawing A break? Compare it with Drawing B." : openQ("fixDrawing") ? "Which rules does Drawing A break? Use the buttons to fix it." : RULES.map(esc).join(" ");
+    return `<p class="r1">A scientific drawing is a clear, accurate record of what you see.</p><p class="r2">${rules}</p>` +
       (mode === "demo" ? `<p class="r3">${left ? `Drawing A breaks ${left} rule${left === 1 ? "" : "s"}. Use the buttons to fix it.` : "✓ Drawing A now follows every rule."}</p>` : "");
   }
   if (M.tab === "calc") return `<p class="r1">Write the equation in words. Change to the same unit. Substitute. Give the unit.</p><p class="r3">Magnification is a number of times, so it has no units.</p>`;
   if (M.em.view === "points") { const a = seenTwo("lm", M.em.d), b = seenTwo("em", M.em.d);
     return `<p class="r1">Light microscope: ${a ? "seen as two points" : "seen as one blur"} · Electron microscope: ${b ? "seen as two points" : "seen as one blur"}</p>` +
-      `<p class="r3">Resolution is the smallest distance between two points that can still be seen as separate.</p>`; }
+      `<p class="r3">${openQ("magDef") ? "Move the slider. When can each microscope still show two points?" : "Resolution is the smallest distance between two points that can still be seen as separate."}</p>`; }
   return `<p class="r1">Same cell, two resolutions. Picture size: ${SIZEW[M.em.size]}.</p>` +
     `<p class="r2">Light: the ribosomes are too small to see${M.em.size > 1 ? ". Making the picture bigger only gives a bigger blur" : ""}.</p>` +
-    `<p class="r3">Electron: much higher resolution, so tiny structures such as ribosomes can be seen.</p>`;
+    `<p class="r3">${openQ("higherRes", "emWhy") ? "Electron: compare the detail you can see with the light picture." : "Electron: much higher resolution, so tiny structures such as ribosomes can be seen."}</p>`;
 }
 function drawPane() {
   const t = M.tab;
@@ -1448,7 +1451,7 @@ function renderCtl() {
   document.querySelectorAll("#dsubSeg button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.dsub === M.dsub)));
   document.querySelectorAll("#mspecSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.ms === M.mspec)); dis(b, lk); });
   document.querySelectorAll("[data-rm]").forEach(b => dis(b, lk));
-  document.querySelectorAll("[data-fix]").forEach(b => { const k = b.dataset.fix, on = M.dr[k], t = FIXW[k][on ? 1 : 0]; if (b.textContent !== t) b.textContent = t; setAttr(b, "aria-pressed", String(on)); b.classList.toggle("on", on); dis(b, lk); });
+  $("fixRow").hidden = openQ("drawWho"); { const hc = openQ("higherRes", "emWhy"); document.querySelectorAll(".emcmp").forEach(e => { if (e.hidden !== hc) e.hidden = hc; }); } document.querySelectorAll("[data-fix]").forEach(b => { const k = b.dataset.fix, on = M.dr[k], t = FIXW[k][on ? 1 : 0]; if (b.textContent !== t) b.textContent = t; setAttr(b, "aria-pressed", String(on)); b.classList.toggle("on", on); dis(b, lk); });
   document.querySelectorAll("#emvSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.emv === M.em.view)); dis(b, lk); });
   document.querySelectorAll("#sizeSeg button").forEach(b => { setAttr(b, "aria-pressed", String(+b.dataset.size === M.em.size)); dis(b, lk); });
   $("sizeRow").hidden = M.em.view !== "cell"; $("distRow").hidden = M.em.view !== "points";
@@ -1603,7 +1606,7 @@ function revealModel() {
   const t = task;
   if (t.after) { lock = ""; if (t.after === "big4") { M.em.view = "cell"; M.em.size = 4; } }
   if (t.calc) { M.tab = "calc"; Object.assign(M.calc, CALC0, t.calc); fillCalcInputs(); }
-  drawAll();
+  drawAll(); renderSupport();
 }
 function renderDots() {
   const lst = LEVELS[level];
@@ -1615,7 +1618,10 @@ function renderDots() {
 /* ===== Support (off on load, never stored) ===== */
 function renderSupport() {
   $("wordsBox").hidden = !support.words; $("eqBox").hidden = !support.eq;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  const KW = openQ("magDef") ? { Magnification: "One of these two words is about size.", Resolution: "One of these two words is about detail." }
+    : openQ("higherRes", "emWhy") ? { "Electron microscope": "A microscope that uses a beam of electrons instead of light." }
+    : openQ("iodine") ? { Stain: "A dye. Think about what a dye does to the parts of a cell." } : {};
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(KW[w[0]] || w[1])}</p>`).join("");
   $("eqBox").innerHTML = "<h3>Equations (learn these: they are not on the equation sheet)</h3>" + EQS.map(w => `<p>${esc(w)}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
