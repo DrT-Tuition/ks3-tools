@@ -83,6 +83,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Chromatography | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-chromatography.html |
 | Thermal Insulation | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-thermal-insulation.html |
 | I–V Characteristics | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-iv-characteristics.html |
+| Making Salts | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-making-salts.html |
 
 ## Adding a tool
 
