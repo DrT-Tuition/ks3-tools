@@ -113,7 +113,7 @@ for s in STAGES:
     chips = "".join(
         f'<a href="{s["id"]}-{sub}.html">{SUBJ[sub]}</a>' if count(s["id"], sub) else f'<span>{SUBJ[sub]}: soon</span>'
         for sub in s["subjects"])
-    ntext = f"{n} tools" if n else "Coming soon"
+    ntext = (f"{n} tool" if n == 1 else f"{n} tools") if n else "Coming soon"
     cards.append(
         f'    <div class="big{"" if n else " soon"}"><a href="{s["id"]}.html" style="text-decoration:none;color:inherit;display:grid;gap:8px">'
         f'<span class="t">{s["label"]}</span><span class="y">{s["years"]}</span>'
@@ -132,7 +132,7 @@ for s in STAGES:
         n = count(s["id"], sub)
         cards.append(
             f'    <a class="big s-{sub}{"" if n else " soon"}" href="{s["id"]}-{sub}.html">'
-            f'<span class="t">{SUBJ[sub]}</span><span class="n">{f"{n} tools" if n else "Coming soon"}</span></a>')
+            f'<span class="t">{SUBJ[sub]}</span><span class="n">{(f"{n} tool" if n == 1 else f"{n} tools") if n else "Coming soon"}</span></a>')
     page(f'{s["id"]}.html', f'{s["label"]} Science Tools', f'{s["years"]}. Choose a subject.',
          [("Home", "index.html"), (s["label"], f'{s["id"]}.html')],
          '  <div class="choose">\n' + "\n".join(cards) + "\n  </div>")

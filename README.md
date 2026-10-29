@@ -73,6 +73,11 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Natural Selection | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-natural-selection.html |
 | Selective Breeding | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-selective-breeding.html |
 | How Diseases Spread | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-how-diseases-spread.html |
+| Enzymes and pH | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-enzymes-and-ph.html |
+| Food Tests | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-food-tests.html |
+| Reaction Time | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-reaction-time.html |
+| Temperature Changes | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-temperature-changes.html |
+| Microbiology Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-microbiology-practical.html |
 
 ## Adding a tool
 

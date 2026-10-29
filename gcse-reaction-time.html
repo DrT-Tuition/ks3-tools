@@ -1,0 +1,1743 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Time</title>
+<!--
+  SCIENCE SPEC — Reaction Time (KS4 Biology, AQA GCSE Biology 8461 / Combined Science Trilogy 8464, 4.5.2 The human nervous
+  system; required practical: Combined Science RP6, Biology RP7)
+  Courses: Combined Science Trilogy and separate Biology, Foundation and Higher. Nothing in 4.5.2 / RP6 / RP7 is Higher-only, so there
+    are no HT badges (Hard 10 is from the Higher lesson's exam Q4; its content is taught in both). Nothing is separate-Biology-only.
+  Models, in four tabs. Everything is drawn in code (SVG); no pictures.
+    1. Ruler drop: a partner holds a 30 cm ruler with 0 cm level with the top of the catcher's thumb (forearm resting on the
+       desk edge). The partner drops it without warning; it falls like a real ruler (distance = ½ × g × t², g = 9.8 m/s², in
+       real time); the catcher's thumb and finger close on it. A zoom shows the ruler at the top of the thumb with 1 mm marks,
+       and the pupil reads and types the distance (to 0.1 cm), then records it. Two catchers:
+       - Model catcher: seeded random readings around the deck's class means (dominant 14 cm, non-dominant 19 cm, s26), with
+         realistic scatter and an occasional anomaly (a much longer drop). "Partner warns Go!" (a fair-test mistake): the
+         catcher gets ready, catches almost at once, and the reading is not recorded. Slow motion slows the fall 10×.
+       - You catch: the pupil's OWN on-screen reaction time. After a random wait the ruler drops; the pupil presses Catch,
+         the space bar or taps the picture. The device times it, works out how far the ruler fell, and records it in a
+         separate table ("Your own data", never mixed with the model data). Pressing before it moves = "too early".
+    2. Results: the pupil's readings (5 per hand). Tap a reading to mark it as an anomaly; type each mean (leaving anomalies
+       out) and the reaction time from the conversion row; plot the two bar heights (drag or arrow keys); complete the
+       conclusion frame. Each part is checked in code against the pupil's own readings, with slip-specific feedback.
+       Below: the pupil's own on-screen data, with means worked out by the tool.
+    3. Plan: equipment, method (each step with its reason), safety, variables and hypothesis (s18–19), evaluating
+       (repeats, anomalies, random error, improvements: s3, s28–29) and "Watch out" (s5 misconceptions).
+    4. Exam graph: the s28 graph (mean reaction time against number of attempts) redrawn in code for the exam questions.
+  Computed in code (nothing hard-coded): readings from a seeded generator (mulberry32) — scatter SD 2.5 cm, capped at ±4 cm; with an anomaly, it is ≥ 7 cm above every other reading; with none, no reading is
+    2.5 cm or more clear of the rest
+    (so single drops can mislead), anomalies 9–11 cm longer and well clear of the rest, at most one per hand; the anomaly is judged
+    from the readings (largest, ≥ 3.5 cm above the next and ≥ 7 cm above the median), as a pupil would; means, anomaly checks, conversion row (t = √(2d ÷ g)) and its
+    look-up, the bar checks and the conclusion (which hand had the shorter mean drop); the own-data time from the device clock.
+  Sources: Y10 T2 L4 Reaction time (RP6), Higher deck (Foundation deck identical apart from exam Q4 and a sentence starter on
+    Q2): s1 equipment and safety; s3–4 starter (mean; repeating reduces the effect of random errors and shows anomalies);
+    s5 misconceptions (no-caffeine drink is the control group, not a control variable; reaction time is shorter/longer, not
+    "speeds up"; "same ruler" is not the key control); s7 hook; s9 key words (reaction time, control variable, mean,
+    anomalous result); s10–11 key-word tasks (shorter time = faster reaction; 21, 19, 20 → 20 cm; 15, 14, 36, 16 → 36 is
+    anomalous; reject "same ruler" alone); s12 ruler drop measures distance first; shorter distance = shorter time = faster
+    reaction; voluntary; s13–14 true/false; s15–17 reflex vs ruler drop sort (reflex only B, G; both A, C, F; ruler drop only
+    D, E); s18 variables (IV hand used; DV distance then reaction time; controls: same person, hand starts at 0 cm, same
+    sitting position, same number of drops; hypothesis); s19 method (6 steps), equipment, safety; s20–21 predict–observe–
+    explain; s22–24 processing (mean, leave out anomaly, conversion row; 12, 14, 13 → 13 cm; 15, 14, 16 → 15 cm); s26 rank the
+    answers (dominant 14 cm, non-dominant 19 cm; C best, then B, then A); s27 hinge (caffeine, shorter time = reacts more
+    quickly); s28–29 exam questions and mark scheme (pattern; IV/DV; improvement; HT Q4 evaluate one drop each); s30
+    plenary (control variable; mean 12, 14, 13; 20 cm or 15 cm; exit ticket). AQA spec 4.5.2 (RP6/RP7).
+  Simplifications (on screen as "Model limits"): the model catcher's readings are invented example data around the deck's
+    class means; real people vary much more. The conversion row is worked out by the tool from how a ruler falls (the deck
+    refers to a conversion row but doesn't print one). The ruler and hands are simplified and not to scale. Your own
+    on-screen time includes your screen's and keyboard's delay, and you react to a picture, not a real ruler, so it is
+    usually longer than a real ruler drop: keep it separate from the model data.
+  Misconceptions designed out: catching is a reflex (Plan "Watch out", Easy 4, Hard 2); a shorter distance/"catching lower
+    down" is slower or faster the wrong way (readout: "a shorter drop means a shorter reaction time: a faster reaction";
+    Easy 10); reaction time "speeds up" (Easy 1, Easy 9 hinge); one trial is enough (method needs 5 drops; Hard 3, 9, 10);
+    the person holding the ruler can warn the catcher (Partner warns switch: not recorded, not a fair test; Hard 3, 9);
+    "same ruler" as the key control (Easy 5); the control group is a control variable (Plan "Watch out"); "time" alone as the
+    DV and "reaction time gets faster" (Hard 7, 8 REJECTs); "not a fair test" alone (Hard 10 REJECT).
+  Facts and values used: only the deck statements above, plus g = 9.8 m/s² for the falling ruler and its conversion row
+    (not in the decks: listed in the report).
+  SoW lessons served: Y10 T2 L4 Reaction time (RP6), Combined Higher and Foundation; separate Biology RP7.
+  Support starts OFF on every visit (inside the panel; in Demo it sits in the Demo panel): Key words, Mean steps, Variables.
+  Idea credit: none (designed from scratch).
+  Checks: on load, the deck values (class means, method length, 5 drops), the reflex/ruler-drop sort (s17), the exam graph
+    (falls by smaller amounts each time), the conversion row (rises with distance; 20 cm ≈ 0.20 s), the generator (400 sets of five
+    per hand: scatter and anomalies stay apart, anomalies stand out, at most one in five, dominant mean shorter; single drops
+    reverse the pattern in some pairs), every worked mean, and
+    every question (3 hints; exactly one right option, or at least two in a tick-all; feedback for every wrong option and
+    word; gap answers in their lists; numeric answers equal the worked value and no listed slip equals the answer; build
+    statements ranked with reasons and a mark scheme; goals not met at the start and reached by Show answer). Any failure
+    shows a visible error box and switches that question off.
+  Performance: drawn on demand. A paced loop (paceFrame, 30 fps cap, adaptive slow-down, time-based motion) runs only while
+    the ruler is falling (under 2.5 s, 25 s in slow motion), patching one transform and two hand shapes per frame; waits use
+    timers. Loops pause when the tab is hidden or the model is off-screen. No CSS filters; no backdrop-filter. Reduced
+    motion: the fall is drawn 8 times a second.
+  Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Placement: KS4 · Biology · "4.5.2 The human nervous system".
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.seg button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 8px}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:12px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene [tabindex]{outline:none}
+.scene [tabindex]:focus-visible .fr{display:inline}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .tap{cursor:pointer}
+.scene .hit{fill:transparent;stroke:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:48px}
+.btn:disabled{opacity:.45;cursor:default}
+.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.readout th,.readout td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left}
+.readout th{font-size:15px;color:var(--muted)}
+.readout tr.me td{font-weight:700}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.slider{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:10px;align-items:center}
+.slider input[type=range]{width:100%;height:44px;accent-color:var(--accent);margin:0}
+.slider output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;min-width:5.6em;text-align:right}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:4px}
+.sscene{position:relative}
+#model{grid-template-columns:minmax(0,1fr)}
+.scene.ov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none}
+.scene.ov [data-earth],.scene.ov [data-spin]{pointer-events:auto}
+.scene .drag{cursor:grab;touch-action:none}
+@media (max-width:560px){.slider{grid-template-columns:minmax(0,1fr) auto}.slider input[type=range]{grid-column:1 / -1;grid-row:2}
+  .readout th,.readout td{padding:3px 5px}.readout table{font-size:15px}}
+@media (max-width:400px){.readout{padding:8px 8px}.readout table{font-size:14px}.readout th{font-size:13px}.readout th,.readout td{padding:3px 3px}}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.grow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:8px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.small{font-size:16px;color:var(--muted);margin:6px 0 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (min-width:901px){.scene{max-height:min(520px,62vh)}}
+@media (min-width:901px) and (max-height:820px){
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:5px 8px;font-size:16px}
+}
+/* ---- Reaction Time: ruler drop, zoom, results table, bar chart, plan, exam graph ---- */
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+@container (max-width:520px){.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs button{border-top:1px solid var(--line)!important}.tabs button:nth-child(3){border-left:0}}
+.course{display:block;font-weight:400;font-size:16px;color:var(--muted);margin-top:6px}
+.ht{display:inline-block;font:700 13px/1.35 var(--f-body);padding:0 6px;border-radius:6px;border:1.5px solid var(--accent);color:var(--accent);letter-spacing:.02em;vertical-align:.08em;white-space:nowrap}
+.qtext .ht{font-size:14px;margin-right:6px}
+.cnote{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-radius:8px}
+.frame{margin:0 0 6px;font-size:16px;padding:5px 10px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.ms{display:block;margin-top:6px}
+.dots.hasht{padding-bottom:12px}
+.dot-q{position:relative}
+.dot-q.htq::after{content:"HT";position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:1px;font:700 11px/1.1 var(--f-body);color:var(--accent)}
+.opt.multi[aria-pressed="true"]::after{content:"✓ ticked"}
+.gtab{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;align-items:center;font-size:16px;line-height:1.3}
+.gtab select{font:700 16px var(--f-body);padding:6px 8px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+@media (max-width:480px){.gtab{grid-template-columns:minmax(0,1fr)}.gtab select{margin-bottom:6px}}
+@media (min-width:901px) and (max-height:820px){.gtab select{min-height:38px;padding:4px 6px;font-size:15px}.gtab{gap:3px 8px;font-size:15px}}
+.calc{display:grid;gap:8px}
+.calc .numrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.calc .numrow label{font-weight:700;font-size:16px;min-width:11ch}
+.numin{font:700 19px var(--f-body);width:8ch;max-width:100%;padding:6px 10px;min-height:44px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.numin:disabled{opacity:.5}
+.numin.ok{border-color:var(--good)}.numin.no{border-color:var(--bad)}
+.unit{font-weight:700}
+.mk{font-weight:700;font-size:15px}
+.mk.ok{color:var(--good)}.mk.no{color:var(--bad)}
+.work{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:16px;margin-top:6px}
+.work p{margin:2px 0}
+.tag{display:inline-block;font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-left:6px;color:var(--muted)}
+.bstm{gap:5px}
+.bstm .grow{font-size:16px;line-height:1.3;flex-wrap:nowrap;align-items:center}
+.bstm .grow select{flex:none;min-height:40px;padding:4px 6px;font-size:15px}
+@media (max-width:480px){.calc .numrow label{min-width:0;width:100%}}
+:root{--skin-a:#C98E62;--skin-a-edge:#7A4A2A;--skin-b:#8D5A3B;--skin-b-edge:#4E2C17;--ruler:#F3DE8A;--ruler-edge:#8A6A1E;--rmark:#1E252E;--desk:#B98A5A;--desk-edge:#7A5530;--bar-a:#2D5B8C;--bar-b:#C2571A;--grid:#D5DCE5;--anom:#A32020}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--skin-a:#B07A52;--skin-a-edge:#F0C8A6;--skin-b:#7A4B30;--skin-b-edge:#E2B48F;--ruler:#E6CF78;--ruler-edge:#F5E3A0;--rmark:#1E252E;--desk:#6B5034;--desk-edge:#C9A27A;--bar-a:#8CC4FF;--bar-b:#F5A97A;--grid:#2E4A70;--anom:#FF9A90}}
+:root[data-theme="dark"]{--skin-a:#B07A52;--skin-a-edge:#F0C8A6;--skin-b:#7A4B30;--skin-b-edge:#E2B48F;--ruler:#E6CF78;--ruler-edge:#F5E3A0;--rmark:#1E252E;--desk:#6B5034;--desk-edge:#C9A27A;--bar-a:#8CC4FF;--bar-b:#F5A97A;--grid:#2E4A70;--anom:#FF9A90}
+.scene .skA{fill:var(--skin-a);stroke:var(--skin-a-edge);stroke-width:2;stroke-linejoin:round}
+.scene .skB{fill:var(--skin-b);stroke:var(--skin-b-edge);stroke-width:2;stroke-linejoin:round}
+.scene .nail{fill:none;stroke:var(--skin-b-edge);stroke-width:1.2;opacity:.7}
+.scene .nailA{fill:none;stroke:var(--skin-a-edge);stroke-width:1.2;opacity:.7}
+.scene .rul{fill:var(--ruler);stroke:var(--ruler-edge);stroke-width:1.6}
+.scene .rtk{stroke:var(--rmark);stroke-width:1}
+.scene .rnum{fill:var(--rmark)!important;font-weight:700}
+.scene .desk{fill:var(--desk);stroke:var(--desk-edge);stroke-width:1.5}
+.scene .rline{stroke:var(--bad);stroke-width:2;stroke-dasharray:5 3}
+.scene .zframe{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.scene .ax{stroke:var(--muted);stroke-width:1.5;fill:none}
+.scene .gridl{stroke:var(--grid);stroke-width:1}
+.scene .gl1{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.scene .ptx{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.scene .barA{fill:var(--bar-a);stroke:var(--ink);stroke-width:1.2}
+.scene .barB{fill:var(--bar-b);stroke:var(--ink);stroke-width:1.2}
+.scene .barB.hatch{fill:url(#hatchB)}
+.scene .hand{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.scene .bubble{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+.scene .bar-g{cursor:ns-resize;touch-action:none;outline:none}
+.scene .bar-g:focus-visible .fr{display:inline}
+.dgrid{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:10px;align-items:start;--sh:clamp(300px,calc(100vh - 340px),440px)}
+.dctl{display:grid;gap:10px;align-content:start;min-width:0}
+.dctl .controls{gap:8px}
+#handSeg,#whoSeg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+#handSeg button,#whoSeg button{font-size:15px;padding:8px 8px;line-height:1.25}
+@container (max-width:640px){.dgrid{grid-template-columns:auto auto;justify-content:center}.dctl{grid-column:1 / -1}#actRow{order:1}#readRow{order:2}#read{order:3}#setRow{order:4}#swRow{order:5}}
+#rscene .scene,#zscene .scene{max-height:none}
+#rscene{width:calc(var(--sh) * .55)}#zscene{width:calc(var(--sh) * .5)}
+@container (max-width:640px){#rscene{width:min(calc(var(--sh) * .55),calc(50cqw - 8px))}#zscene{width:min(calc(var(--sh) * .5),calc(50cqw - 8px))}}
+.tapzone{cursor:pointer}
+.readrow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.inrow{display:inline-flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.btn.catch{min-width:9em}
+.readout .big{font-size:20px;font-weight:700;color:var(--accent)}
+.rbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;min-width:0}
+.rbox.own{border-style:dashed;border-color:var(--accent)}
+.rbox .btn{justify-self:start}
+.rh{margin:0;font-size:18px;color:var(--accent);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.tagd{font-size:14px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 10px;background:var(--surface)}
+.rnote{margin:0!important}
+.tscroll{overflow-x:auto;max-width:100%}
+.rtab{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums;background:var(--surface);border-radius:8px}
+.rtab th,.rtab td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:middle}
+.rtab th{font-size:15px;color:var(--muted)}
+.rtab .cellb{font:700 17px var(--f-body);min-height:40px;min-width:5.6em;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left}
+.rtab .cellb[aria-pressed="true"]{text-decoration:line-through;color:var(--anom);border-color:var(--anom);border-style:dashed}
+.rtab .cellb[aria-pressed="true"]::after{content:" ✗ anomaly";text-decoration:none;display:inline-block;margin-left:4px;font-size:13px}
+.rtab .numin{width:6.5ch;font-size:17px;min-height:40px;padding:4px 8px}
+.rtab tr.sum td{background:var(--sunk)}
+.conv{display:grid;gap:4px}
+.conv h4{margin:0;font-size:15px;color:var(--muted)}
+.cvr{display:flex;flex-wrap:wrap;gap:3px}
+.cvr span{display:grid;text-align:center;font-size:14px;line-height:1.25;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:2px 5px;min-width:3.6em;font-variant-numeric:tabular-nums}
+.cvr span b{color:var(--accent)}
+#bscene{max-width:440px;width:100%}
+#bscene .scene{max-height:none}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@container (max-width:620px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+.pcard{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;align-content:start;min-width:0}
+.pcard.wide{grid-column:1 / -1}
+.pcard h3{margin:0;font-size:18px;color:var(--accent)}
+.pcard ul,.pcard ol{margin:0;padding-left:22px;font-size:16px;line-height:1.45;display:grid;gap:4px}
+.pcard p{margin:0;font-size:16px}
+.why{font:700 14px var(--f-body);margin-left:6px;padding:2px 10px;min-height:32px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--accent);cursor:pointer}
+.why[aria-expanded="true"]{border-color:var(--accent)}
+.whyt{display:block;color:var(--muted);font-size:15px;margin-top:2px}
+#escene .scene{max-height:min(420px,56vh)}
+@media (max-width:420px){.tabs button{font-size:15px;padding:10px 3px}.rtab th,.rtab td{padding:3px 4px}.rtab .cellb{min-width:4.8em;font-size:16px;padding:4px 5px}}
+#rscene,#zscene,#read{contain:layout paint}
+.readout .rm{margin-top:2px;font-size:17px}.readout .rm.bad{color:var(--bad)}.readout .rm.tip{color:var(--ink)}
+.rtab th[scope=row]{width:1%;white-space:nowrap}.rtab tr.sum th{white-space:normal;min-width:9em}
+.dctl .sw{font-size:14px;padding:6px 10px;gap:6px;min-height:44px}
+.dctl #actRow{gap:6px}
+.dctl .readout{min-height:0;padding:6px 10px}.dctl .readout .r1{font-size:17px}.dctl .readout .r2,.dctl .readout .r3{font-size:16px}
+@media (min-width:901px) and (max-height:820px){.dctl .readout .r3{display:none}}
+@media (min-width:901px) and (max-height:820px){.qpanel .bstm{gap:3px}.qpanel .bstm .grow{font-size:15px;line-height:1.25}.qpanel .bstm .grow select{min-height:36px;padding:2px 4px}.qpanel .frame{margin-bottom:4px;padding:3px 8px;font-size:15px}}
+.feedback .ms{font-size:16px;line-height:1.45}
+@media (min-width:901px) and (max-height:820px){.qpanel .feedback .msg{font-size:17px;line-height:1.45}.qpanel .feedback .ms{font-size:15px}}
+@media (min-width:901px) and (max-height:740px){.qpanel .actions{padding:6px 0 7px}.qpanel .opts{gap:5px}.qpanel .opt{padding:5px 12px;min-height:38px;line-height:1.3}.qpanel .qtext{font-size:18px}}
+#swRow{gap:6px}
+@media (min-width:901px) and (max-height:820px){#demoPanel{gap:8px}#demoPanel .try{gap:3px;font-size:17px;line-height:1.45}#demoPanel .newhere{padding:6px 10px;font-size:16px}#demoPanel .sw{padding:5px 12px}}
+@media (min-width:901px) and (max-height:740px){.qpanel .bstm{gap:2px}.qpanel .bstm .grow select{min-height:33px}.qpanel .bstm .grow{font-size:15px;line-height:1.2}}
+.bstm .grow select{min-width:3.6em}
+.feedback .ms.inl{display:inline;margin-left:4px}
+@media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg{font-size:16px;line-height:1.4;padding:6px 10px}.qpanel .feedback .ms{font-size:14px}}
+@media (min-width:901px) and (max-height:820px){.qpanel .bstm{gap:2px}.qpanel .bstm .grow select{min-height:34px}.qpanel .feedback .ms{font-size:15px;line-height:1.4}}
+@media (min-width:901px) and (max-height:740px){.qpanel .bstm .grow select{min-height:32px}.qpanel .feedback .ms{font-size:14px}}
+@media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg{padding:5px 9px;line-height:1.35}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Reaction Time<small>Catch a falling ruler. Read how far it fell, repeat, and compare your two hands.</small><span class="course">Required practical · Combined Science RP6 · Biology RP7 · Foundation and Higher</span></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Reaction Time</span></a>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
+      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout">
+    <section class="card model" aria-label="Ruler drop practical" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the practical"><button type="button" data-tab="drop" aria-pressed="true">Ruler drop</button><button type="button" data-tab="res" aria-pressed="false">Results</button><button type="button" data-tab="plan" aria-pressed="false">Plan</button><button type="button" data-tab="exam" aria-pressed="false">Exam graph</button></div>
+
+      <div class="pane" id="pane-drop">
+        <div class="dgrid">
+          <div class="sscene" id="rscene"><svg id="rsvg" class="scene tapzone" viewBox="0 0 220 400" role="img" aria-label="A partner holds a 30 cm ruler above the catcher's open thumb and finger. 0 cm is level with the top of the thumb."><g id="rBg"></g><g id="rRuler"></g><g id="rFront"></g></svg></div>
+          <div class="sscene" id="zscene"><svg id="zsvg" class="scene" viewBox="0 0 220 330" role="img" aria-label="Zoom: the ruler at the top of the thumb, with 1 mm marks."><g id="zDyn"></g></svg></div>
+          <div class="dctl">
+            <div class="controls" id="setRow">
+              <div class="seg" id="whoSeg" role="group" aria-label="Who catches"><button type="button" data-who="model" aria-pressed="true">Model catcher</button><button type="button" data-who="you" aria-pressed="false">You catch</button></div>
+              <div class="seg" id="handSeg" role="group" aria-label="Hand used to catch"><button type="button" data-hand="dom" aria-pressed="true">Dominant hand</button><button type="button" data-hand="non" aria-pressed="false">Non-dominant hand</button></div>
+            </div>
+            <div class="controls" id="actRow">
+              <button class="btn primary go" type="button" id="dropBtn">Drop the ruler</button>
+              <button class="btn primary go catch" type="button" id="catchBtn" hidden>Start</button>
+            </div>
+            <div class="readrow" id="readRow">
+              <label class="ctl-lbl" for="readIn">Reading at the thumb</label>
+              <span class="inrow"><input class="numin" id="readIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" disabled><span class="unit">cm</span>
+              <button class="btn primary" type="button" id="recBtn" disabled>Record</button><button class="linkbtn" type="button" id="readForMe" hidden>Read it for me</button></span>
+            </div>
+            <div class="readout" id="read" aria-live="polite"></div>
+            <div class="controls" id="swRow">
+              <button class="sw" type="button" id="warnSw" aria-pressed="false"><span class="dot"></span>Partner warns “Go!” <span class="state">off</span></button>
+              <button class="sw" type="button" id="slowSw" aria-pressed="false"><span class="dot"></span>Slow motion <span class="state">off</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-res" hidden>
+        <div class="rbox">
+          <h3 class="rh">Model catcher: your readings <span class="tagd">model data</span></h3>
+          <p class="small rnote">Tap a reading to mark it as an anomaly. Tap it again to unmark it.</p>
+          <div class="tscroll"><table class="rtab" id="resTable"></table></div>
+          <button class="btn" type="button" id="chkMeans">Check means and times</button>
+          <div class="conv" id="convRow"></div>
+        </div>
+        <div class="rbox">
+          <h3 class="rh">Bar chart of the means</h3>
+          <p class="small rnote">Drag each bar (or use the arrow keys) to the mean you worked out.</p>
+          <div class="sscene" id="bscene"><svg id="bsvg" class="scene" viewBox="0 0 340 230" role="group" aria-label="Bar chart: mean distance the ruler fell for each hand"><g id="bBg"></g><g id="bDyn"></g></svg></div>
+          <button class="btn" type="button" id="chkGraph">Check graph</button>
+        </div>
+        <div class="rbox">
+          <h3 class="rh">Conclusion</h3>
+          <div class="grow" id="conclRow"></div>
+          <button class="btn" type="button" id="chkConcl">Check conclusion</button>
+        </div>
+        <div class="feedback" id="resFb" aria-live="polite"></div>
+        <div class="rbox own">
+          <h3 class="rh">Your own on-screen data <span class="tagd">measured by this device, not the model</span></h3>
+          <div class="tscroll"><table class="rtab" id="ownTable"></table></div>
+          <p class="small" id="ownNote"></p>
+        </div>
+        <div class="controls"><button class="linkbtn" type="button" id="clearRes">Clear all results</button></div>
+      </div>
+
+      <div class="pane" id="pane-plan" hidden>
+        <div class="pgrid" id="planBox"></div>
+      </div>
+
+      <div class="pane" id="pane-exam" hidden>
+        <p class="cnote">From the exam question: a student’s mean reaction time after each attempt.</p>
+        <div class="sscene" id="escene"><svg id="esvg" class="scene" viewBox="0 0 400 250" role="img" aria-label="Graph: mean reaction time in seconds against number of attempts. 1: 0.30 s, 2: 0.26 s, 3: 0.23 s, 4: 0.21 s, 5: 0.20 s."><g id="eBg"></g></svg></div>
+      </div>
+
+      <p class="limits"><b>Model limits:</b> The model catcher’s readings are invented example data: scattered by a few centimetres around the deck’s class means (dominant 14 cm, non-dominant 19 cm), with the odd anomaly, so one drop can mislead. The conversion row is worked out by this tool from how a ruler falls. The ruler and hands are simplified and not to scale. Your own on-screen time includes your screen’s and keyboard’s delay, and you react to a picture, not a real ruler, so keep it separate from the model data.</p>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Run the ruler drop practical.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <h3 class="try-h">Things to try</h3>
+        <ul class="try" id="tryList"></ul>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="mean" aria-pressed="false"><span class="dot"></span>Mean steps <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="vars" aria-pressed="false"><span class="dot"></span>Variables <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="meanBox" hidden></div>
+            <div class="support-box" id="varsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (Y10 T2 L4 Reaction time RP6, Higher deck; the Foundation deck is identical apart from exam Q4) ===== */
+const DECK = {
+  means: { dom: 14, non: 19 },          // s26: class means (cm)
+  drops: 5,                             // s19 step 5: "Repeat to give five drops"
+  ruler: 30,                            // s1, s19: 30 cm ruler
+  equipment: ["30 cm ruler", "Chair", "Pencil"],
+  method: [                             // s19, with the reason for each step (s3, s12, s18, s22)
+    ["Rest your dominant forearm on the desk edge.", "Keeps the same sitting position for every drop: a control variable."],
+    ["Your partner holds the ruler at 0 cm by your thumb.", "Your hand starts at the 0 cm mark, so the reading is the distance the ruler fell."],
+    ["Your partner drops it without warning.", "You must react to the stimulus: seeing the ruler fall. A warning lets you get ready, so it doesn’t measure your reaction time."],
+    ["Catch it. Record the distance at your thumb.", "This is the dependent variable. A shorter distance means a shorter reaction time."],
+    ["Repeat to give five drops.", "Repeating reduces the effect of random errors and shows any anomalies. Then you can calculate a mean."],
+    ["Repeat with your other hand, then swap roles.", "The hand used is the independent variable. Keep everything else the same."]],
+  safety: ["Sit down while testing.", "Keep the floor clear.", "Do not throw the ruler."],
+  iv: "The hand used to catch the ruler", dv: "Distance the ruler falls (cm), then reaction time (s)",
+  controls: ["The same person catching", "Hand starts at the 0 cm mark", "The same sitting position", "The same number of drops"],
+  hyp: "The dominant hand will catch the ruler after a shorter drop.",
+  attempts: [[1, .30], [2, .26], [3, .23], [4, .21], [5, .20]],   // s28 graph
+  words: [["Reaction time", "The time between a stimulus and the response.", "Everyday meaning: a chemical reaction is different."],
+    ["Control variable", "A variable you keep the same in an investigation.", ""],
+    ["Mean", "The total of the values divided by how many there are.", "Everyday meaning: mean can also mean unkind."],
+    ["Anomalous result", "A result that does not fit the pattern.", "a- (not) + nomos (rule)"]] };
+/* s15–17: reflex action or ruler drop catch? Each feature: [letter, text, in a reflex, in the ruler drop catch] */
+const FEAT = [["A", "Uses effectors", 1, 1], ["B", "Protects from harm", 1, 0], ["C", "Has receptors", 1, 1], ["D", "The brain decides", 0, 1],
+  ["E", "Needs conscious thought", 0, 1], ["F", "Has a stimulus", 1, 1], ["G", "Automatic", 1, 0]];
+const ZONE = ["Reflex only", "Both", "Ruler drop only"];
+const zoneOf = f => f[2] && f[3] ? ZONE[1] : f[2] ? ZONE[0] : ZONE[2];
+const HANDS = ["dom", "non"], HN = { dom: "Dominant hand", non: "Non-dominant hand" }, hn = { dom: "dominant hand", non: "non-dominant hand" };
+
+/* ===== How a ruler falls (not in the deck: the tool needs it to drop the ruler and to make the conversion row) ===== */
+const GRAV = 9.8;                                   // m/s²
+const dOf = t => 50 * GRAV * t * t;                 // distance fallen in cm after t seconds (½ g t², × 100 for cm)
+const tOf = d => Math.sqrt(Math.max(0, d) / (50 * GRAV));   // reaction time in s for a drop of d cm
+const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
+const CONV = Array.from({ length: 15 }, (_, i) => [(i + 1) * 2, r2(tOf((i + 1) * 2))]);   // the conversion row: every 2 cm
+function convRange(d) { const lo = Math.max(0, Math.floor(d / 2 + 1e-9) * 2), hi = Math.min(30, Math.ceil(d / 2 - 1e-9) * 2);
+  return [Math.min(r2(tOf(lo)), r2(tOf(d))) - .0051, Math.max(r2(tOf(hi)), r2(tOf(d))) + .0051]; }
+const convOK = (d, v) => { const [a, b] = convRange(d); return v >= a && v <= b; };
+
+/* ===== The model catcher: seeded random readings (invented example data around the s26 class means) ===== */
+const SD = 2.5, SPREAD = 4, ANOM_P = .18, ANOM_LO = 9, ANOM_W = 2;   // real repeats vary by a few cm; an anomaly is 9–11 cm longer
+function rngOf(seed) { let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const gauss = r => Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(2 * Math.PI * r());
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function genDrop(M, h) {
+  const r = M.rng, mu = DECK.means[h], set = M.data[h], prev = set.map(e => e.r), last = set.length === DECK.drops - 1;
+  if (M.warn) return { d: r1(3 + r() * 3), anom: false, warned: true };   // warned: the catcher gets ready and catches almost at once
+  const spike = set.find(e => e.anom);
+  let anom = M.force ? M.force[h] === set.length : !spike && r() < ANOM_P;   // at most one anomaly in a hand's five
+  const normal = () => r1(clamp(mu + clamp(gauss(r) * SD, -SPREAD, SPREAD), 4, 29.5));
+  /* keep the five readings honest: a long drop must stand clear of the rest (anomalyOf finds it), and a set with no long drop must not look anomalous */
+  const fits = (d, a) => { const vals = [...prev, d]; if (spike && spike.r - d < 7) return false;   // the anomaly stays at least 7 cm above every other reading
+    if (!last) return true;
+    const f = anomalyOf(vals); if (a || spike) return f === (a ? d : spike.r);
+    const s2 = [...vals].sort((x, y) => x - y); return f == null && s2[s2.length - 1] - s2[s2.length - 2] < 2.5; };   // no anomaly: no reading stands clear of the rest
+  for (let k = 0; k < 40; k++) {
+    let d;
+    if (anom) { const top = prev.length ? Math.max(...prev) : mu, s2 = [...prev].sort((x, y) => x - y), med = prev.length ? s2[s2.length >> 1] : mu;
+      d = r1(Math.min(29.5, Math.max(mu + ANOM_LO, top + 7) + r() * ANOM_W)); if (prev.some(v => d - v < 7) || !fits(d, true)) { if (!M.force) anom = false; continue; } }
+    else { d = normal(); if (!fits(d, false)) continue; }
+    return { d, anom, warned: false };
+  }
+  return { d: normal(), anom: false, warned: false };
+}
+function freshM(seed) {
+  return { tab: "drop", who: "model", hand: "dom", warn: false, slow: false, rng: rngOf(seed == null ? (Date.now() ^ Math.floor(Math.random() * 1e9)) : seed), force: null,
+    data: { dom: [], non: [] }, own: { dom: [], non: [] }, ph: "ready", pos: 0, pend: null, fall0: 0, target: 0, tries: 0, readIn: "", rmsg: null, lastOwn: null,
+    meanIn: { dom: "", non: "" }, rtIn: { dom: "", non: "" }, bars: { dom: 0, non: 0 }, concl: { c1: "", c2: "", c3: "" }, resMsgs: [] };
+}
+function autoDrops(M, h, n) { const w = M.warn; M.warn = false; while (M.data[h].length < n) { const e = genDrop(M, h); M.data[h].push({ r: e.d, d: e.d, anom: e.anom, flag: false }); } M.warn = w; }
+
+/* ===== Working out (shared by the Results tab and the questions) ===== */
+const sum = a => a.reduce((s, v) => s + v, 0), avg = a => a.length ? sum(a) / a.length : NaN;
+const near = (a, b, tol) => Math.abs(a - b) <= (tol == null ? .051 : tol);
+const fmt = v => String(r2(v));
+const cm1 = v => (+v).toFixed(1);
+const dp1 = v => (Math.round(v * 10 + 1e-9) / 10).toFixed(1);   // a mean is quoted to the same precision as the readings (0.1 cm)
+function parseNum(s) { const t = String(s == null ? "" : s).replace(/,/g, ".").replace(/[^0-9.\-]/g, ""); return t === "" || t === "." || t === "-" ? NaN : parseFloat(t); }
+/* The anomaly is judged from the readings themselves (as a pupil would): the largest one, well clear of the rest (anomalyOf) */
+function handStats(M, h) { const set = M.data[h], all = set.map(e => e.r), av = set.length >= DECK.drops ? anomalyOf(all) : null, ai = av == null ? -1 : all.indexOf(av);
+  const keep = all.filter((v, i) => i !== ai);
+  return { n: set.length, set, keep, all, mean: avg(keep), incl: avg(all), anom: ai >= 0 ? set[ai] : null, ai }; }
+function flagIssue(S) {
+  const wrong = S.set.findIndex((e, i) => e.flag && i !== S.ai); if (wrong >= 0) return `drop ${wrong + 1} (${cm1(S.set[wrong].r)} cm) is close enough to the others to keep. An anomaly, if there is one, stands far apart from the rest.`;
+  if (S.anom && !S.anom.flag) return "one reading doesn't fit the pattern. Tap it to mark it as an anomaly, so you can leave it out of the mean.";
+  return "";
+}
+function meanSlip(vals, all, v) {   // vals: the readings to keep; all: every reading
+  const k = vals.length, tot = sum(vals), m = tot / k;
+  if (near(v, m)) return "";
+  if (all.length > k && near(v, avg(all))) return `You included the anomaly. Leave it out, then divide by the number left (${k}).`;
+  if (near(v, tot)) return `That is the total (${fmt(tot)} cm). Now divide by the number of readings (${k}).`;
+  if (all.length > k && near(v, tot / all.length)) return `You left the anomaly out of the total but still divided by ${all.length}. Divide by ${k}.`;
+  if (k > 2 && near(v, tot / (k - 1))) return `You divided by ${k - 1}. There are ${k} readings to keep, so divide by ${k}.`;
+  if (near(v, sum(all))) return `That is the total of every reading. Leave out the anomaly, add the rest, then divide by ${k}.`;
+  return `Add up the ${k} readings you keep, then divide by ${k}.`;
+}
+function timeSlip(d, v) {
+  if (convOK(d, v)) return "";
+  if (near(v, d / 100, .0051)) return "That is the distance in metres. Look up the reaction time in the conversion row.";
+  if (near(v, d)) return "That is the mean distance. Find it in the conversion row and read the time underneath (in s).";
+  return `Find ${Number.isInteger(d) ? d : dp1(d)} cm in the conversion row and read the time underneath (in s). Between two values? Use the nearer one.`;
+}
+function readSlip(v, d) {
+  if (near(v, d, .1001)) return "";
+  if (near(v, d * 10, 1.01)) return "That looks like millimetres. Record it in cm: 10 mm = 1 cm.";
+  if (near(v, DECK.ruler - d, .1001)) return "You read the scale from the wrong end. The numbers go up from 0 cm at the thumb.";
+  if (near(v, Math.floor(d), .001)) return "That is the last whole centimetre. Add the small marks above it: each one is 1 mm = 0.1 cm.";
+  if (Math.abs(v - d) <= 1.5) return "Find the last number below the dashed line. Count the small marks up to the line: each is 1 mm (0.1 cm).";
+  return "Read the ruler where the dashed line (the top of the thumb) crosses it. The numbers are in cm.";
+}
+const meanLines = vals => [`Total = ${vals.join(" + ")} = ${fmt(sum(vals))}.`, `Mean = ${fmt(sum(vals))} ÷ ${vals.length} = ${Number.isInteger(avg(vals)) ? avg(vals) : dp1(avg(vals))} cm.`];
+const anomalyOf = vals => { const s = [...vals].sort((a, b) => a - b), n = s.length, med = (s[(n - 1) >> 1] + s[n >> 1]) / 2;   // the largest value, well clear of the rest and of the median
+  return n > 2 && s[n - 1] - s[n - 2] >= 3.5 && s[n - 1] - med >= 7 ? s[n - 1] : null; };
+
+/* ===== Checks of the model (run on load) ===== */
+const GEN = (() => { const out = {};
+  for (const h of HANDS) { const M = freshM(12345), all = []; let bad = 0, miss = 0, sets = 0;
+    for (let k = 0; k < 400; k++) { M.data[h] = []; for (let i = 0; i < DECK.drops; i++) { const e = genDrop(M, h); M.data[h].push({ r: e.d, d: e.d, anom: e.anom, flag: false }); all.push(e); }
+      sets++; const set = M.data[h], spikes = set.filter(e => e.anom), S = handStats(M, h);
+      if (spikes.length > 1) bad++;
+      if (spikes.length ? !S.anom || !S.anom.anom : !!S.anom) miss++;
+      const srt = set.map(e => e.r).sort((x, y) => x - y); if (!spikes.length && srt[4] - srt[3] >= 2.5) miss++;   // a set with no anomaly must have no reading standing clear
+      if (spikes.length && set.some(e => !e.anom && Math.abs(e.r - DECK.means[h]) > 4.05)) miss++;   // with an anomaly, the other four stay clustered
+      M.data[h] = []; }   // a long drop that doesn't stand out, or a normal one that does
+    const mu = DECK.means[h]; all.forEach(e => { if (e.anom ? e.d < Math.min(mu + ANOM_LO, 29.5) - .05 : Math.abs(e.d - mu) > SPREAD + .05) bad++; if (e.d > DECK.ruler || e.d <= 0) bad++; });
+    out[h] = { bad, miss: miss / sets, mean: avg(all.filter(e => !e.anom).map(e => e.d)), anoms: all.filter(e => e.anom).length }; }
+  { const M = freshM(99); let rev = 0; for (let i = 0; i < 400; i++) { M.data.dom = []; M.data.non = []; if (genDrop(M, "dom").d >= genDrop(M, "non").d) rev++; } out.reversed = rev; }
+  return out; })();
+
+/* ===== Question bank (wording from the deck; answers are worked out from the tables and the model) ===== */
+const ABC = "ABCDEF";
+const SEED_E = 7, SEED_H = 11;
+const SU = {
+  drop: M => { M.tab = "drop"; }, res: M => { M.tab = "res"; }, plan: M => { M.tab = "plan"; }, exam: M => { M.tab = "exam"; },
+  rec5: M => { M.tab = "drop"; M.rng = rngOf(SEED_E); },
+  anomSet: M => { M.tab = "res"; M.rng = rngOf(SEED_H); M.force = { dom: 3, non: -1 }; autoDrops(M, "dom", DECK.drops); M.force = null; } };
+const PRESET = (() => { const M = freshM(); SU.anomSet(M); return handStats(M, "dom"); })();
+const EXAM_DIFF = DECK.attempts.slice(1).map((p, i) => r2(DECK.attempts[i][1] - p[1]));
+const W = { // worked numbers
+  m3: { vals: [21, 19, 20], all: [21, 19, 20] },
+  m4: { vals: [15, 14, 16], all: [15, 14, 36, 16] } };
+const TASKS = {
+  easy: [
+    { id: "shorter", kind: "choice", setup: SU.drop, stuck: "words", src: "slides 10–11", text: "Is a shorter reaction time a faster or a slower reaction?", frame: "Start with ▸ A shorter reaction time means a … reaction.",
+      options: [{ t: "A faster reaction", ok: () => tOf(10) < tOf(20) },
+        { t: "A slower reaction", why: "It is the other way round. A shorter reaction time means less time to react: a faster reaction." },
+        { t: "The reaction time is speeding up", why: "A time can't speed up. The reaction is faster; the reaction time is shorter." }],
+      explain: "A shorter reaction time means a faster reaction.",
+      hints: ["Reaction time is the time between the stimulus and the response.", "Less time to react: is that quicker or slower?", "A f… reaction."] },
+    { id: "mean3", kind: "num", setup: SU.res, stuck: "mean", src: "slides 10–11", text: "Calculate the mean of 21, 19 and 20 cm.", frame: "Start with ▸ (21 + 19 + 20) ÷ 3 = …",
+      fields: [{ k: "m", label: "Mean", unit: "cm", ans: avg(W.m3.vals), slip: v => meanSlip(W.m3.vals, W.m3.all, v) }], lines: meanLines(W.m3.vals),
+      hints: ["Add the three distances first.", "The total is 60 cm. How many values are there?", "60 ÷ 3 = …"] },
+    { id: "anom", kind: "choice", setup: SU.res, stuck: "words", src: "slides 10–11", text: "Drops of 15, 14, 36 and 16 cm. Which result is anomalous?", frame: "Start with ▸ … is anomalous because …",
+      options: [{ t: "36 cm: it is much larger than the others", ok: () => anomalyOf([15, 14, 36, 16]) === 36 },
+        { t: "14 cm: it is the smallest", why: "14 cm is close to 15 and 16 cm. It fits the pattern." },
+        { t: "16 cm: it is the last one", why: "16 cm is close to 14 and 15 cm. It fits the pattern." },
+        { t: "None: every result counts", why: "36 cm is much larger than the others. An anomalous result doesn't fit the pattern, so you leave it out." }],
+      explain: "36 cm is anomalous: it is much larger than the others, so it doesn't fit the pattern.",
+      hints: ["An anomalous result doesn't fit the pattern.", "Three of the drops are close together. One isn't.", "Look at 36 cm."] },
+    { id: "reflex", kind: "choice", setup: SU.plan, stuck: "words", src: "slides 12–15", text: "True or false? Catching the falling ruler is a reflex action.",
+      options: [{ t: "False: it is voluntary. The brain decides to catch.", ok: () => FEAT.find(f => f[0] === "D")[3] && !FEAT.find(f => f[0] === "G")[3] },
+        { t: "True: it is automatic and rapid", why: "Reflexes are automatic, with no conscious thought. Catching the ruler is voluntary: the brain decides to catch." },
+        { t: "True: it has a stimulus and receptors", why: "Reflexes and the ruler drop both have a stimulus and receptors, so that doesn't make it a reflex. The brain decides to catch: it is voluntary." }],
+      explain: "False. The ruler drop is a voluntary action: it needs conscious thought, because the brain decides to catch.",
+      hints: ["Does a reflex need you to think about it?", "In the ruler drop, does your brain decide to catch?", "It is v… : the brain decides."] },
+    { id: "control", kind: "choice", setup: SU.plan, stuck: "vars", src: "slides 10–11, 18", text: "You compare the dominant and non-dominant hand. Which is a control variable?", frame: "Start with ▸ I would keep the … the same because …",
+      options: [{ t: "The hand starts at the 0 cm mark", ok: () => DECK.controls.includes("Hand starts at the 0 cm mark") },
+        { t: "The hand used to catch the ruler", why: "That is the independent variable: the thing you change." },
+        { t: "The distance the ruler falls", why: "That is the dependent variable: what you measure." },
+        { t: "Using the same ruler", why: "“Same ruler” alone isn't the key control. Control what affects the catcher's reaction, like where the hand starts." }],
+      explain: "Control variables: the same person catching, the hand starts at the 0 cm mark, the same sitting position and the same number of drops.",
+      hints: ["A control variable is kept the same.", "It must affect the catcher's reaction, not just the equipment.", "Where the hand starts on the ruler."] },
+    { id: "vars", kind: "gaps", setup: SU.plan, stuck: "vars", src: "slide 18", text: "Name the independent and dependent variables for the hand investigation.",
+      rows: [["iv", "Independent variable (what we change):", "the hand used to catch", "", ["the hand used to catch", "the distance the ruler falls", "the same person catching"]],
+        ["dv", "Dependent variable (what we measure):", "the distance the ruler falls", "", ["the distance the ruler falls", "the hand used to catch", "the 30 cm ruler"]]],
+      whyRow: { iv: { "the distance the ruler falls": "That is what you measure: the dependent variable.", "the same person catching": "That is kept the same: a control variable." },
+        dv: { "the hand used to catch": "That is what you change: the independent variable.", "the 30 cm ruler": "The ruler is equipment. You measure the distance it falls." } },
+      explain: "Independent: the hand used to catch. Dependent: the distance the ruler falls (then the reaction time).",
+      hints: ["The independent variable is what you change. The dependent variable is what you measure.", "You switch hands. You read a distance.", "IV: the hand used. DV: the distance the ruler falls."] },
+    { id: "rec5", kind: "goal", setup: SU.rec5, src: "slide 19", text: "Do it: drop the ruler for the model catcher's dominant hand. Read and record five drops. Then press Check.",
+      test: M => M.data.dom.length >= DECK.drops,
+      not: M => { const n = M.data.dom.length; if (M.who !== "model") return "Choose Model catcher first."; return n ? `${n} of ${DECK.drops} recorded so far. Keep going: drop, read the zoom, and press Record.` : "No drops recorded yet. Press Drop the ruler, read the zoom, type the distance and press Record."; },
+      done: M => `Five readings: ${M.data.dom.map(e => cm1(e.r)).join(", ")} cm. Repeating reduces the effect of random errors and shows any anomalies.`,
+      reveal: M => { M.who = "model"; M.hand = "dom"; autoDrops(M, "dom", DECK.drops); M.ph = "rec"; M.pos = M.data.dom[DECK.drops - 1].d; },
+      hints: ["Press Drop the ruler, then read the zoom at the dashed line.", "Type the distance in cm (to 0.1 cm), then press Record.", "Do this five times with the dominant hand."] },
+    { id: "mean4", kind: "num", setup: SU.res, stuck: "mean", src: "slides 22–24", text: "Drops: 15, 14, 36 and 16 cm. 36 is anomalous. Calculate the mean of the others.", frame: "Start with ▸ (15 + 14 + 16) ÷ 3 = …",
+      fields: [{ k: "m", label: "Mean", unit: "cm", ans: avg(W.m4.vals), slip: v => meanSlip(W.m4.vals, W.m4.all, v) }], lines: ["Leave out 36 cm.", ...meanLines(W.m4.vals)],
+      hints: ["Leave out the anomalous result first.", "Add 15, 14 and 16. How many values are left?", "45 ÷ 3 = …"] },
+    { id: "hinge", kind: "choice", setup: SU.plan, stuck: "words", src: "slide 27", text: "After caffeine, a person's reaction time is shorter. What does this show?",
+      options: [{ t: "The person reacts more quickly", ok: () => tOf(10) < tOf(20) },
+        { t: "The person reacts more slowly", why: "A shorter time means a faster reaction, not a slower one." },
+        { t: "Their reaction time is speeding up", why: "A time can't speed up. The time is shorter, so the reaction is faster." },
+        { t: "Caffeine slows their impulses", why: "A shorter reaction time means the response came sooner, so nothing was slowed." }],
+      explain: "The person reacts more quickly. A shorter time means a faster reaction. The time itself can't “speed up”.",
+      hints: ["Shorter reaction time: more or less time to react?", "Say the reaction is faster or slower, and the time is shorter or longer.", "Reacts more q…"] },
+    { id: "faster", kind: "choice", setup: SU.drop, src: "slide 30", text: "Which is the faster reaction: a drop of 20 cm or 15 cm?",
+      options: [{ t: "15 cm: the ruler fell a shorter distance", ok: () => tOf(15) < tOf(20) },
+        { t: "20 cm: the ruler was caught lower down", why: "At 20 cm the ruler ended up lower because it fell further before the catch. That means a longer reaction time, so a slower reaction." },
+        { t: "Both the same: the ruler was caught both times", why: "The distances differ. The ruler fell further in the 20 cm drop, so that reaction took longer." }],
+      explain: "15 cm. A shorter drop before the catch means a shorter reaction time, so a faster reaction.",
+      hints: ["The ruler keeps falling until you catch it.", "Which drop gave the catcher less time?", "The shorter drop: 1… cm."] }
+  ],
+  hard: [
+    { id: "tf", kind: "gaps", setup: SU.plan, stuck: "words", grid: true, src: "slides 12–14", text: "True or false? Choose for each statement.",
+      rows: [["t1", "1  A shorter reaction time means a faster reaction.", "True", "", ["True", "False"]], ["t2", "2  A reaction time can speed up.", "False", "", ["True", "False"]],
+        ["t3", "3  A longer drop distance means a slower reaction.", "True", "", ["True", "False"]], ["t4", "4  Catching the ruler is a reflex action.", "False", "", ["True", "False"]]],
+      whyRow: { t1: { False: "It is true: less time to react means a faster reaction." }, t2: { True: "False: a reaction can be faster, but the time is shorter. A time can't speed up." },
+        t3: { False: "It is true: the ruler fell further before the catch, so the reaction took longer." }, t4: { True: "False: it is voluntary. It needs conscious thought: the brain decides to catch." } },
+      explain: "1 True. 2 False: a reaction can be faster; the time is shorter. 3 True. 4 False: it is voluntary, so it needs conscious thought.",
+      hints: ["Two are true and two are false.", "Can a time speed up? Does catching need conscious thought?", "True, False, True, False."] },
+    { id: "sort", kind: "gaps", setup: SU.plan, stuck: "words", grid: true, src: "slides 15–17", text: "Reflex or ruler drop? Sort each feature.",
+      rows: FEAT.map(f => [f[0], `${f[0]}  ${f[1]}`, zoneOf(f), "", ZONE]),
+      whyRow: Object.fromEntries(FEAT.map(f => [f[0], Object.fromEntries(ZONE.filter(z => z !== zoneOf(f)).map(z => [z,
+        zoneOf(f) === ZONE[1] ? `${f[1]}: both have this. Every response needs a stimulus, receptors and effectors.` : zoneOf(f) === ZONE[0] ? `${f[1]}: only a reflex. The ruler drop is voluntary.` : `${f[1]}: only the ruler drop. A reflex has no conscious thought.`]))])),
+      explain: ZONE.map(z => `${z}: ${FEAT.filter(f => zoneOf(f) === z).map(f => f[0]).join(", ")}`).join(". ") + ".",
+      hints: ["A reflex is automatic, rapid and protects the body. The ruler drop is voluntary.", "Both have a stimulus, receptors and effectors.", "Reflex only: B, G. Both: A, C, F. Ruler drop only: D, E."] },
+    { id: "method", kind: "build", setup: SU.plan, src: "slides 18–19, 22", text: "Plan a ruler drop test: does the dominant hand react faster? [6 marks]",
+      frame: "Number the steps in order. Leave wrong ones as –.",
+      items: [
+        { id: "a", t: "Same catcher, seat and number of drops.", rank: 1, after: [], miss: "Name the control variables: the same person, sitting position and number of drops." },
+        { id: "b", t: "Hold the ruler with 0 cm at the top of the thumb.", rank: 2, after: [], miss: "Say where the ruler starts: 0 cm at the thumb." },
+        { id: "c", t: "Drop the ruler without warning.", rank: 3, after: ["b"], miss: "Say how the ruler is dropped: without warning." },
+        { id: "d", t: "Catch it. Record the distance at the thumb.", rank: 4, after: ["c"], miss: "Say what you measure: the distance at the thumb." },
+        { id: "e", t: "Five drops. Find the mean without anomalies.", rank: 5, after: ["d"], miss: "Say how you make the results more reliable: repeat and calculate a mean." },
+        { id: "g", t: "Convert the mean to a time (conversion row).", rank: 6, after: ["e"], miss: "Say how the distance becomes a reaction time: the conversion row." },
+        { id: "f", t: "Repeat with the other hand. Compare the times.", rank: 7, after: ["d"], miss: "Say how you change the independent variable (the hand) and compare." },
+        { id: "x", t: "Say “Go!”, then drop the ruler.", why: "A warning lets the catcher get ready, so it no longer measures the reaction to the stimulus. Drop it without warning." },
+        { id: "y", t: "Drop the ruler once with each hand.", why: "One drop isn't enough: it could be anomalous. Repeat and calculate a mean." }
+        ],
+      ms: "Level 3 (5–6): coherent, logical, valid. Level 2 (3–4): most steps; gaps or order slips. Level 1 (1–2): one or two relevant steps. 0: nothing relevant. Indicative content: the seven numbered steps.",
+      hints: ["Follow the method on the Plan tab, step by step.", "Leave out anything that warns the catcher or uses only one drop.", "Controls; 0 cm; no warning; record; five drops and a mean; convert; other hand."] },
+    { id: "doMean", kind: "goal", setup: SU.anomSet, stuck: "mean", src: "slides 22–24", text: "Do it: on Results, mark the anomalous dominant-hand reading. Type the mean of the others in the Mean row. Then press Check.",
+      test: M => { const S = handStats(M, "dom"); return !flagIssue(S) && near(parseNum(M.meanIn.dom), S.mean); },
+      not: M => { const S = handStats(M, "dom"), f = flagIssue(S); if (f) return cap1(f); const v = parseNum(M.meanIn.dom); if (isNaN(v)) return "Now type the mean of the other readings in the dominant-hand Mean box."; return meanSlip(S.keep, S.all, v); },
+      done: M => { const S = handStats(M, "dom"); return `Leave out ${cm1(S.anom.r)} cm. (${S.keep.map(cm1).join(" + ")}) ÷ ${S.keep.length} = ${dp1(S.mean)} cm (to 1 decimal place).`; },
+      reveal: M => { const ai = handStats(M, "dom").ai; M.data.dom.forEach((e, i) => { e.flag = i === ai; }); M.meanIn.dom = dp1(handStats(M, "dom").mean); M.tab = "res"; },
+      hints: ["Which reading is much larger than the others? Tap it on the Results tab.", "Add the four readings you keep, then divide by 4.", "Leave out the anomaly; total of the rest ÷ 4."] },
+    { id: "conv", kind: "num", setup: SU.res, src: "slides 22, 26", text: "The class mean for the dominant hand was 14 cm. Use the conversion row on the Results tab to find the reaction time.",
+      fields: [{ k: "t", label: "Reaction time", unit: "s", ans: r2(tOf(DECK.means.dom)), ok: v => convOK(DECK.means.dom, v), slip: v => timeSlip(DECK.means.dom, v) }],
+      lines: [`Find ${DECK.means.dom} cm in the conversion row.`, `Read the time underneath: ${r2(tOf(DECK.means.dom))} s.`],
+      hints: ["The conversion row is under the results table.", `Find ${DECK.means.dom} cm along the row.`, "The time underneath is in seconds: 0.1… s."] },
+    { id: "rank", kind: "gaps", setup: SU.res, ordered: true, src: "slide 26", text: "Class means: dominant 14 cm, non-dominant 19 cm. Rank the three answers, best first.", frame: "Start with ▸ C is best because …",
+      rows: [["k1", "Best:", "C: ‘The dominant hand caught it after a shorter drop, so it reacted faster.’", ""], ["k2", "Next:", "B: ‘Dominant is 14 cm and non-dominant is 19 cm.’", ""], ["k3", "Last:", "A: ‘The dominant hand is better.’", ""]],
+      bank: ["C: ‘The dominant hand caught it after a shorter drop, so it reacted faster.’", "B: ‘Dominant is 14 cm and non-dominant is 19 cm.’", "A: ‘The dominant hand is better.’"],
+      whyVal: { "C: ‘The dominant hand caught it after a shorter drop, so it reacted faster.’": "C is best (2 marks): it uses the data and links it to the reaction.",
+        "B: ‘Dominant is 14 cm and non-dominant is 19 cm.’": "B comes next (1 mark): it quotes the data, but gives no pattern.", "A: ‘The dominant hand is better.’": "A comes last (0 marks): “better” is vague." },
+      orderMsg: "Right answers, wrong order. The best answer uses the data AND says what it means for the reaction. A vague answer scores nothing.",
+      explain: "Best: C (2 marks) uses the data and links it to reaction. Then B (1 mark): data only, no pattern. Last: A (0 marks): vague.",
+      hints: ["Which answer says what the data means for the reaction?", "Quoting the data alone earns 1 mark. A vague word earns none.", "C, then B, then A."] },
+    { id: "pattern", kind: "gaps", setup: SU.exam, src: "slides 28–29", text: "Look at the Exam graph. Describe the pattern in the results. [2 marks]", frame: "Start with ▸ As the number of attempts increases, …",
+      rows: [["p1", "As the number of attempts increases, the mean reaction time", EXAM_DIFF.every(d => d > 0) ? "decreases" : "increases", "", ["decreases", "increases", "gets faster"]],
+        ["p2", "and it changes", EXAM_DIFF.every((d, i) => i === 0 || d < EXAM_DIFF[i - 1]) ? "by smaller amounts each time (it levels off)" : "by the same amount each time", "", ["by smaller amounts each time (it levels off)", "by the same amount each time", "by larger amounts each time"]]],
+      whyRow: { p1: { increases: "Read the graph: the line goes down from 0.30 s to 0.20 s.", "gets faster": "A time can't get faster. Say the reaction time decreases (or the reactions get faster)." },
+        p2: { "by the same amount each time": "The drops get smaller: 0.04 s, then 0.03, 0.02 and 0.01 s. The curve levels off.", "by larger amounts each time": "The drops get smaller, not larger: 0.04 s, then 0.03, 0.02 and 0.01 s." } },
+      explain: "The mean reaction time decreases (1), by smaller amounts each time: it levels off (1).",
+      ms: "Reaction time decreases (1); by smaller amounts each time / levels off (1). Accept: reactions get faster. Reject: “reaction time gets faster”; quoting data only.",
+      hints: ["Follow the line from attempt 1 to attempt 5.", "Work out each drop: 0.30 → 0.26 → 0.23 → 0.21 → 0.20 s.", "Decreases, by smaller amounts each time."] },
+    { id: "ivdv", kind: "gaps", setup: SU.exam, stuck: "vars", src: "slides 28–29", text: "For the Exam graph, name the independent variable and the dependent variable. [2 marks]", frame: "Start with ▸ The independent variable is … The dependent variable is …",
+      rows: [["v1", "Independent variable:", "the number of attempts", "", ["the number of attempts", "the mean reaction time", "time"]],
+        ["v2", "Dependent variable:", "the reaction time", "", ["the reaction time", "time", "the number of attempts"]]],
+      whyRow: { v1: { "the mean reaction time": "That is what is measured: the dependent variable.", time: "“Time” alone is vague, and time is what is measured. The student changes the number of attempts." },
+        v2: { time: "“Time” alone doesn't get the mark. Say reaction time.", "the number of attempts": "That is what changes: the independent variable (on the x-axis)." } },
+      explain: "Independent: the number of attempts (1). Dependent: the reaction time (1).",
+      ms: "Independent: number of attempts (1); dependent: reaction time (1). Reject: “time” alone.",
+      hints: ["The independent variable goes on the x-axis.", "The dependent variable is on the y-axis. Name it in full.", "Number of attempts; reaction time."] },
+    { id: "improve", kind: "choice", setup: SU.plan, src: "slides 28–29", text: "Suggest one improvement to make the results more reliable. [2 marks]", frame: "Start with ▸ I would … to …",
+      options: [{ t: "More attempts with more people, and a mean, to reduce the effect of anomalies", ok: () => DECK.drops > 1 },
+        { t: "Let the partner say “Go!” so the catcher is ready", why: "A warning makes it unfair: the catcher gets ready, so you no longer measure their reaction to the stimulus." },
+        { t: "Use a longer ruler so it can fall further", why: "That doesn't make the results more reliable. Repeat and calculate a mean instead." },
+        { t: "Drop the ruler just once, more carefully", why: "One drop isn't enough: it could be anomalous. Repeat and calculate a mean." }],
+      explain: "",
+      ms: "Repeat with more people / more attempts (1); calculate a mean to reduce the effect of anomalies (1). Accept: any valid improvement with a reason.",
+      hints: ["Reliable results are repeated.", "What do you calculate from repeats?", "More attempts and a mean."] },
+    { id: "evaluate", kind: "multi", setup: SU.plan, src: "slides 28–29 (from the Higher lesson)", text: "A student drops the ruler once per hand and says the dominant hand is faster. Evaluate. [3 marks]",
+      frame: "Tick each point that gets a mark. Start with ▸ The conclusion is weak because only … so …",
+      options: [{ t: "Only one result for each hand: not repeated", ok: () => true }, { t: "That one result could be anomalous (a random error)", ok: () => true },
+        { t: "Repeat several times and find a mean", ok: () => DECK.drops > 1 },
+        { t: "It is not a fair test", why: "“Not a fair test” on its own gets no mark. Say exactly what is wrong: only one drop each." },
+        ],
+      explain: "",
+      ms: "Only one result for each hand / not repeated (1); could be anomalous / random error (1); repeat and calculate a mean (1). Reject: “not a fair test” alone.",
+      hints: ["How many drops did the student do for each hand?", "What could be wrong with just one result? How do you fix it?", "One result each; could be anomalous; repeat and find a mean."] }
+  ]
+};
+const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+const optT = o => o.t;
+
+/* ===== Load-time bank check ===== */
+function bankCheck() {
+  const errs = [];
+  if (DECK.means.dom !== 14 || DECK.means.non !== 19 || DECK.method.length !== 6 || DECK.drops !== 5) errs.push("deck values: class means 14 and 19 cm (s26), six method steps and five drops (s19)");
+  const z = {}; FEAT.forEach(f => { const k = zoneOf(f); z[k] = (z[k] || "") + f[0]; });
+  if (z[ZONE[0]] !== "BG" || z[ZONE[1]] !== "ACF" || z[ZONE[2]] !== "DE") errs.push("sort: s17 has reflex only B, G; both A, C, F; ruler drop only D, E");
+  if (!(EXAM_DIFF.every(d => d > 0) && EXAM_DIFF.every((d, i) => i === 0 || d < EXAM_DIFF[i - 1]))) errs.push("exam graph: must fall by smaller amounts each time (s29)");
+  if (!CONV.every((c, i) => i === 0 || c[1] > CONV[i - 1][1]) || Math.abs(tOf(20) - .2) > .005 || CONV[CONV.length - 1][0] !== DECK.ruler) errs.push("conversion row: must rise with distance up to 30 cm");
+  HANDS.forEach(h => { const g = GEN[h]; if (g.bad) errs.push(`model catcher (${h}): ${g.bad} readings out of range or too many anomalies`); if (g.miss > .01) errs.push(`model catcher (${h}): anomalies don't stand out clearly (${Math.round(g.miss * 100)} % of sets)`); if (Math.abs(g.mean - DECK.means[h]) > .5) errs.push(`model catcher (${h}): mean far from the class mean`); if (!g.anoms) errs.push(`model catcher (${h}): no anomalies ever`); });
+  if (!(GEN.dom.mean < GEN.non.mean)) errs.push("model catcher: the dominant hand must catch after a shorter drop (s18 hypothesis, s26)");
+  if (GEN.reversed < 20) errs.push("model catcher: single drops must sometimes mislead (one trial isn't enough)");
+  if (PRESET.n !== 5 || !PRESET.anom || PRESET.set.filter(e => e.anom).length !== 1 || !PRESET.anom.anom) errs.push("Hard 4 preset: needs five readings with exactly one clear anomaly");
+  if (avg(W.m3.vals) !== 20 || avg(W.m4.vals) !== 15 || anomalyOf(W.m4.all) !== 36) errs.push("worked means: s11 20 cm, s24 15 cm, 36 anomalous");
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (t.options.length < 3) E("needs at least 3 options");
+      if (new Set(t.options.map(optT)).size !== t.options.length) E("options must differ");
+    }
+    if (t.kind === "multi") {
+      if (t.options.filter(o => o.ok && o.ok()).length < 2) E("a tick-all needs at least two right options");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback");
+      if (!t.options.some(o => !(o.ok && o.ok()))) E("a tick-all needs a wrong option");
+    }
+    if (t.kind === "gaps") {
+      if (t.bank && new Set(t.bank).size !== t.bank.length) E("bank words must differ");
+      t.rows.forEach(([k, , a, , opts]) => {
+        if (opts) { if (!opts.includes(a)) E("answer missing from its list: " + k); opts.filter(o => o !== a).forEach(o => { if (!(t.whyRow && t.whyRow[k] && t.whyRow[k][o])) E("no feedback for " + k + ": " + o); }); }
+        else { if (!t.bank.includes(a)) E("gap answer missing from the bank: " + k); } });
+      if (t.bank) t.bank.forEach(w => { if (!(t.whyVal && t.whyVal[w])) E("no feedback for the word " + w); });
+      if (t.ordered && !t.orderMsg) E("an ordered task needs an order message");
+    }
+    if (t.kind === "num") { if (!t.fields.length || !t.lines || !t.lines.length) E("no working");
+      t.fields.forEach(f => { const ok = f.ok || (v => near(v, f.ans)); if (!ok(f.ans)) E("the worked answer isn't accepted: " + f.k); if (f.slip(f.ans)) E("the worked answer gets slip feedback: " + f.k); if (!f.slip(f.ans + 7)) E("no feedback for a wrong answer: " + f.k); }); }
+    if (t.kind === "build") { const req = t.items.filter(x => x.rank), bad = t.items.filter(x => !x.rank);
+      if (req.length < 4 || bad.some(x => !x.why) || req.some(x => !x.miss) || !t.ms || new Set(req.map(x => x.rank)).size !== req.length) E("statements need ranks, reasons and a mark scheme");
+      const byId = id => t.items.find(x => x.id === id), seq = ids => ids.map(byId);
+      if (t.id === "method") { if (orderBreak(t, seq(["a", "b", "c", "d", "e", "g", "f"])) || orderBreak(t, seq(["b", "c", "d", "f", "e", "g", "a"])) || !orderBreak(t, seq(["a", "c", "b", "d", "e", "g", "f"])) || !orderBreak(t, seq(["a", "b", "c", "d", "g", "e", "f"]))) E("order rules: s19 then s22 orders must pass; no warning before 0 cm, or convert before the mean, must fail"); } }
+    if (t.kind === "goal") { const m = freshM(1); if (t.setup) t.setup(m); if (t.test(m)) E("goal already met at the start"); if (!t.not(m)) E("no feedback at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
+  });
+  return errs;
+}
+
+/* ===== State ===== */
+const $ = id => document.getElementById(id);
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { words: false, mean: false, vars: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M;
+let anim = null, waitT = 0, lastCatch = 0, visOK = true;
+const PKEY = "ks3tools-progress:gcse-reaction-time";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+
+/* ===== Drawing ===== */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const f1 = v => (+v).toFixed(1);
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+const txt = (el, t) => { if (el.textContent !== t) el.textContent = t; };
+
+/* --- the ruler drop scene (viewBox 0 0 250 400): 9 px per cm; 0 cm level with the top of the thumb at y 300 --- */
+const PX = 9, Y0 = 300, RX0 = 96, RW = 44;
+const POSE = { thumb: { open: [70, 300], shut: [83, 300] }, fing: { open: [150, 302], shut: [134, 302] }, pthumb: { hold: [98, 26], open: [114, 16] }, pfing: { hold: [136, 26], open: [150, 18] } };
+function rulerScene() {
+  const thumbShape = c => `<rect x="0" y="0" width="46" height="19" rx="9.5" class="${c}"/><path d="M34 3.5 q7 1 7 6 q0 5 -7 6" class="${c === "skA" ? "nailA" : "nail"}"/>`;
+  const bg = `<rect x="-4" y="352" width="84" height="52" rx="3" class="desk"/>` + T_(8, 392, "desk", 12, 'class="mut"') +
+    `<rect x="-12" y="322" width="96" height="30" rx="14" class="skA"/><rect x="62" y="296" width="34" height="54" rx="13" class="skA"/>` +
+    `<g id="fingB"><rect x="0" y="0" width="38" height="15" rx="7.5" class="skA"/><rect x="-2" y="16" width="34" height="14" rx="7" class="skA"/></g>` +
+    `<path d="M262 -6 L262 34 C238 38 200 40 172 40 L166 18 C196 12 232 2 262 -6 Z" class="skB"/>` +
+    `<g id="pFingB"><rect x="0" y="0" width="40" height="14" rx="7" class="skB"/></g>`;
+  let r = `<g id="rulerG"><rect x="${RX0}" y="${Y0 - 30.9 * PX}" width="${RW}" height="${31.8 * PX}" rx="2" class="rul"/>`;
+  for (let v = 0; v <= 60; v++) { const y = Y0 - v * PX / 2, L = v % 10 === 0 ? 13 : v % 2 === 0 ? 8 : 4.5; r += `<line x1="${RX0 + RW}" x2="${RX0 + RW - L}" y1="${f1(y)}" y2="${f1(y)}" class="rtk"/>`; }
+  for (let c = 0; c <= 30; c += 5) r += T_(RX0 + 15, Y0 - c * PX + 4, String(c), 11, 'class="rnum" text-anchor="middle"');
+  r += T_(RX0 + 15, Y0 - 27.5 * PX + 4, "cm", 10, 'class="rnum" text-anchor="middle"') + `</g>`;
+  const front = `<g id="thumb">${thumbShape("skA")}</g><g id="pThumb">${thumbShape("skB")}</g>` +
+    `<line id="cline" x1="80" x2="156" y1="${Y0}" y2="${Y0}" class="rline" visibility="hidden"/>` +
+    `<g id="bub" visibility="hidden"><path d="M8 70 q0 -26 34 -26 q34 0 34 26 q0 22 -30 22 l-8 12 l0 -12 q-30 -2 -30 -22 Z" class="bubble"/>${T_(42, 76, "Go!", 18, 'text-anchor="middle" font-weight="700"')}</g>`;
+  $("rBg").innerHTML = bg; $("rRuler").innerHTML = r; $("rFront").innerHTML = front;
+}
+const SHUT = ["caught", "rec", "warned", "ycaught"];
+function patchRuler() {
+  const g = $("rulerG"); if (!g) return;
+  setAttr(g, "transform", `translate(0 ${f1(M.pos * PX)})`);
+  const shut = SHUT.includes(M.ph), dropped = M.ph !== "ready" && M.ph !== "wait" && M.ph !== "early";
+  const tp = shut ? POSE.thumb.shut : POSE.thumb.open, fp = shut ? POSE.fing.shut : POSE.fing.open;
+  setAttr($("thumb"), "transform", `translate(${tp[0]} ${tp[1]})`); setAttr($("fingB"), "transform", `translate(${fp[0]} ${fp[1]})`);
+  const pp = dropped ? POSE.pthumb.open : POSE.pthumb.hold, pf = dropped ? POSE.pfing.open : POSE.pfing.hold;
+  setAttr($("pThumb"), "transform", `translate(${pp[0]} ${pp[1]})`); setAttr($("pFingB"), "transform", `translate(${pf[0]} ${pf[1]})`);
+  setAttr($("cline"), "visibility", shut ? "visible" : "hidden");
+  setAttr($("bub"), "visibility", M.warn && M.who === "model" && M.ph === "wait" ? "visible" : "hidden");
+}
+/* --- the zoom (viewBox 0 0 220 330): 40 px per cm, the top of the thumb at y 178 --- */
+const ZY = 178, ZP = 40, ZX = 58, ZW = 118;
+function zoomHTML() {
+  let h = `<rect x="3" y="3" width="214" height="324" rx="10" class="zframe"/>` + T_(110, 24, "Zoom", 15, 'text-anchor="middle" font-weight="700" class="mut"');
+  const shut = SHUT.includes(M.ph);
+  if (!shut) {
+    const L = M.ph === "fall" ? ["Falling…"] : M.who === "you" ? ["The zoom shows", "where you caught", "the ruler."] : ["The zoom shows", "the ruler at the", "top of the thumb", "once it is caught."];
+    return h + L.map((s, i) => T_(110, 150 + i * 22, s, 15, 'text-anchor="middle" class="mut"')).join("");
+  }
+  const d = M.pos, top = Math.max(34, ZY - (30.9 - d) * ZP), bot = Math.min(322, ZY + (d + .9) * ZP);
+  h += `<defs><clipPath id="zc"><rect x="3" y="34" width="214" height="288"/></clipPath></defs><g clip-path="url(#zc)">`;
+  h += `<rect x="${ZX}" y="${f1(top)}" width="${ZW}" height="${f1(bot - top)}" class="rul"/>`;
+  const lo = Math.max(0, Math.ceil((d - 4) * 10)), hi = Math.min(300, Math.floor((d + 4) * 10));
+  for (let m = lo; m <= hi; m++) { const y = ZY - (m / 10 - d) * ZP, L = m % 10 === 0 ? 30 : m % 5 === 0 ? 19 : 11; h += `<line x1="${ZX + ZW}" x2="${ZX + ZW - L}" y1="${f1(y)}" y2="${f1(y)}" class="rtk" style="stroke-width:${m % 10 === 0 ? 2 : 1.2}"/>`;
+    if (m % 10 === 0) h += T_(ZX + 64, y + 7, String(m / 10), 20, 'class="rnum" text-anchor="middle"'); }
+  h += `<rect x="6" y="${ZY}" width="98" height="200" rx="26" class="skA"/><path d="M70 ${ZY + 10} q14 2 16 22" class="nailA"/>`;
+  h += `<line x1="26" x2="206" y1="${ZY}" y2="${ZY}" class="rline"/></g>` + T_(30, ZY - 22, "top of", 13, 'text-anchor="middle" font-weight="700"') + T_(30, ZY - 8, "thumb", 13, 'text-anchor="middle" font-weight="700"');
+  return h;
+}
+function drawZoom() { setLayer($("zDyn"), zoomHTML()); }
+
+/* --- results: table, conversion row, bar chart, conclusion, own data --- */
+function resTableHTML() {
+  const rows = [];
+  rows.push(`<tr><th scope="col">Drop</th><th scope="col">${HN.dom} (cm)</th><th scope="col">${HN.non} (cm)</th></tr>`);
+  for (let i = 0; i < DECK.drops; i++) rows.push(`<tr><th scope="row">${i + 1}</th>` + HANDS.map(h => { const e = M.data[h][i];
+    return `<td>${e ? `<button type="button" class="cellb" data-h="${h}" data-i="${i}" aria-pressed="${e.flag}" aria-label="${HN[h]} drop ${i + 1}: ${cm1(e.r)} cm${e.flag ? ", marked as an anomaly" : ""}">${cm1(e.r)}</button>` : "–"}</td>`; }).join("") + `</tr>`);
+  rows.push(`<tr class="sum"><th scope="row">Mean (cm), leaving out anomalies</th>` + HANDS.map(h => `<td><input class="numin" id="mean_${h}" data-h="${h}" data-f="meanIn" type="text" inputmode="decimal" autocomplete="off" aria-label="${HN[h]} mean in cm" value="${esc(M.meanIn[h])}"></td>`).join("") + `</tr>`);
+  rows.push(`<tr class="sum"><th scope="row">Reaction time (s), from the conversion row</th>` + HANDS.map(h => `<td><input class="numin" id="rt_${h}" data-h="${h}" data-f="rtIn" type="text" inputmode="decimal" autocomplete="off" aria-label="${HN[h]} reaction time in s" value="${esc(M.rtIn[h])}"></td>`).join("") + `</tr>`);
+  return rows.join("");
+}
+const CONV_HTML = `<h4>Conversion row: distance the ruler fell (cm) → reaction time (s)</h4><div class="cvr">` + CONV.map(([d, t]) => `<span><b>${d}</b>${t.toFixed(2)}</span>`).join("") + `</div><p class="small rnote">Worked out by this tool from how a ruler falls (g = 9.8 m/s²). Your worksheet’s table may differ by about 0.01 s.</p>`;
+const ownKeep = h => M.own[h].filter(e => !e.flag).map(e => e.t);
+function ownHTML() {
+  let h = `<tr><th scope="col">Try</th><th scope="col">${HN.dom}</th><th scope="col">${HN.non}</th></tr>`;
+  const cell = (hh, i) => { const e = M.own[hh][i]; if (!e) return "–";
+    const lab = `${e.t.toFixed(2)} s`, sub = e.d == null ? "off the ruler" : cm1(e.d) + " cm";
+    return `<button type="button" class="cellb" data-own="${hh}" data-i="${i}" aria-pressed="${!!e.flag}" aria-label="${HN[hh]} try ${i + 1}: ${lab}, ${sub}${e.flag ? ", marked as an anomaly" : ""}">${lab} <span class="small">(${sub})</span></button>`; };
+  for (let i = 0; i < 5; i++) h += `<tr><th scope="row">${i + 1}</th><td>${cell("dom", i)}</td><td>${cell("non", i)}</td></tr>`;
+  h += `<tr class="sum"><th scope="row">Mean time, leaving out anomalies (worked out for you)</th>` + HANDS.map(h2 => { const k = ownKeep(h2); return `<td>${k.length ? avg(k).toFixed(2) + " s" : "–"}</td>`; }).join("") + `</tr>`;
+  return h;
+}
+function ownNote() {
+  const a = M.own.dom, b = M.own.non, out = [];
+  if (!a.length && !b.length) return "No tries yet. On Ruler drop, press You catch, then Start.";
+  out.push("Tap a time to mark it as an anomaly: it is left out of the mean. This is a different method (the device times you), so don't mix it with the model data.");
+  if ([...a, ...b].some(e => e.d == null)) out.push("“Off the ruler” means the time was over 0.25 s, so a real 30 cm ruler would have passed your hand. That is common on screen: the device's delay makes on-screen times longer than a real catch. The time still counts.");
+  if (a.length >= 5 && b.length >= 5) { const ka = ownKeep("dom"), kb = ownKeep("non");
+    if (ka.length >= 3 && kb.length >= 3) { const ma = avg(ka), mb = avg(kb); out.push(Math.abs(ma - mb) < .005 ? "In these tries, your two hands had about the same mean time. Repeat to check." : `In these tries, your mean time was shorter with your ${ma < mb ? hn.dom : hn.non}. Repeat to check: one set of tries may not be typical.`); } }
+  else out.push("After five tries with each hand, you can compare them.");
+  return out.join(" ");
+}
+/* bar chart (viewBox 0 0 340 230): 0 cm at y 190, 25 cm at y 20 */
+const GB = { x0: 58, x1: 328, y0: 190, y1: 20, max: 25 }, gy = v => GB.y0 - (GB.y0 - GB.y1) * v / GB.max;
+const BARX = { dom: 104, non: 222 }, BARW = 66;
+function barBg() {
+  let h = `<defs><pattern id="hatchB" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" style="fill:var(--bar-b)"/><line x1="0" y1="0" x2="0" y2="8" style="stroke:var(--surface);stroke-width:3"/></pattern></defs>`;
+  for (let v = 0; v <= GB.max; v++) h += `<line x1="${GB.x0}" x2="${GB.x1}" y1="${f1(gy(v))}" y2="${f1(gy(v))}" class="gridl" style="${v % 5 ? "opacity:.55" : ""}"/>`;
+  for (let v = 0; v <= GB.max; v += 5) h += T_(GB.x0 - 6, gy(v) + 5, String(v), 13, 'text-anchor="end"');
+  h += `<path d="M${GB.x0} ${GB.y1 - 6} V${GB.y0} H${GB.x1}" class="ax"/>` + T_(16, (GB.y0 + GB.y1) / 2, "Mean distance (cm)", 13, `text-anchor="middle" transform="rotate(-90 16 ${(GB.y0 + GB.y1) / 2})"`);
+  h += T_(BARX.dom + BARW / 2, 208, "Dominant", 14, 'text-anchor="middle" font-weight="700"') + T_(BARX.non + BARW / 2, 208, "Non-dominant", 14, 'text-anchor="middle" font-weight="700"');
+  h += T_((GB.x0 + GB.x1) / 2, 226, "Hand used", 13, 'text-anchor="middle" class="mut"');
+  return h;
+}
+function barDyn() {
+  return HANDS.map(h => { const v = M.bars[h], y = gy(v), x = BARX[h];
+    return `<g class="bar-g" data-bar="${h}" tabindex="0" role="slider" aria-label="${HN[h]} bar" aria-valuemin="0" aria-valuemax="${GB.max}" aria-valuenow="${v}" aria-valuetext="${v} cm">` +
+      `<rect x="${x - 8}" y="${GB.y1 - 10}" width="${BARW + 16}" height="${GB.y0 - GB.y1 + 10}" class="hit"/>` +
+      `<rect x="${x}" y="${f1(y)}" width="${BARW}" height="${f1(GB.y0 - y)}" class="${h === "dom" ? "barA" : "barB hatch"}"/>` +
+      `<rect x="${x + BARW / 2 - 18}" y="${f1(y - 7)}" width="36" height="14" rx="7" class="hand"/><path d="M${x + BARW / 2 - 7} ${f1(y - 1)} l7 -4 l7 4 M${x + BARW / 2 - 7} ${f1(y + 2)} l7 4 l7 -4" style="fill:none;stroke:var(--accent);stroke-width:1.6"/>` +
+      T_(x + BARW / 2, Math.max(GB.y1 + 2, y - 12), `${v} cm`, 13, 'text-anchor="middle" font-weight="700"') +
+      `<rect x="${x - 4}" y="${f1(y - 10)}" width="${BARW + 8}" height="${f1(GB.y0 - y + 14)}" rx="4" class="fr"/></g>`; }).join("");
+}
+function conclHTML() {
+  const sel = (k, opts, lbl) => `<select data-c="${k}" aria-label="${lbl}"><option value="">choose…</option>${opts.map(o => `<option value="${o}"${M.concl[k] === o ? " selected" : ""}>${o}</option>`).join("")}</select>`;
+  return `The ${sel("c1", ["dominant hand", "non-dominant hand"], "Which hand")} caught the ruler after a ${sel("c2", ["shorter", "longer"], "Shorter or longer")} drop, so it reacted ${sel("c3", ["faster", "slower"], "Faster or slower")}.`;
+}
+/* --- exam graph (viewBox 0 0 400 250), redrawn from slide 28 --- */
+function examHTML() {
+  const X = a => 62 + a * 53, Y = s => 210 - s * 540;
+  let h = "";
+  for (let s = 0; s <= 35; s += 5) { const y = Y(s / 100); h += `<line x1="${X(0)}" x2="${X(6)}" y1="${f1(y)}" y2="${f1(y)}" class="gridl"/>` + T_(X(0) - 6, y + 5, String(+(s / 100).toFixed(2)), 12, 'text-anchor="end"'); }
+  for (let a = 0; a <= 6; a++) h += `<line x1="${X(a)}" x2="${X(a)}" y1="${Y(0)}" y2="${Y(.35)}" class="gridl"/>` + T_(X(a), Y(0) + 18, String(a), 13, 'text-anchor="middle"');
+  h += `<path d="M${X(0)} ${Y(.35) - 4} V${Y(0)} H${X(6) + 4}" class="ax"/>`;
+  const P = DECK.attempts.map(([a, s]) => [X(a), Y(s)]);
+  let d = `M${f1(P[0][0])} ${f1(P[0][1])}`;
+  for (let i = 0; i < P.length - 1; i++) { const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    d += ` C${f1(p1[0] + (p2[0] - p0[0]) / 6)} ${f1(p1[1] + (p2[1] - p0[1]) / 6)} ${f1(p2[0] - (p3[0] - p1[0]) / 6)} ${f1(p2[1] - (p3[1] - p1[1]) / 6)} ${f1(p2[0])} ${f1(p2[1])}`; }
+  h += `<path d="${d}" class="gl1"/>` + P.map(([x, y]) => `<path d="M${x - 5} ${y - 5} L${x + 5} ${y + 5} M${x - 5} ${y + 5} L${x + 5} ${y - 5}" class="ptx"/>`).join("");
+  h += T_(X(3), 246, "Number of attempts", 14, 'text-anchor="middle" font-weight="700"') + T_(16, Y(.175), "Mean reaction time (s)", 14, `text-anchor="middle" font-weight="700" transform="rotate(-90 16 ${f1(Y(.175))})"`);
+  return h;
+}
+function planHTML() {
+  const li = a => a.map(s => `<li>${esc(s)}</li>`).join("");
+  return `<div class="pcard"><h3>Equipment</h3><ul>${li(DECK.equipment)}</ul></div>` +
+    `<div class="pcard"><h3>Safety</h3><ul>${li(DECK.safety)}</ul></div>` +
+    `<div class="pcard wide" id="methodCard"><h3>Method</h3><ol>${DECK.method.map(([s, w], i) => `<li>${esc(s)} <button type="button" class="why" data-why="${i}" aria-expanded="false">Why?</button><span class="whyt" id="why${i}" hidden>${esc(w)}</span></li>`).join("")}</ol></div>` +
+    `<div class="pcard"><h3>Variables</h3><p><b>Independent</b> (what we change): ${esc(DECK.iv.toLowerCase())}.</p><p><b>Dependent</b> (what we measure): ${esc(DECK.dv.charAt(0).toLowerCase() + DECK.dv.slice(1))}.</p><p><b>Control</b> (kept the same):</p><ul>${li(DECK.controls)}</ul><p><b>Hypothesis:</b> ${esc(DECK.hyp)}</p></div>` +
+    `<div class="pcard"><h3>Evaluating</h3><ul>${li(["Repeating reduces the effect of random errors and shows any anomalies.", "Leave out an anomalous result before you calculate the mean.", "One drop for each hand isn't enough: it could be anomalous (a random error).", "Improve it: repeat with more people or more attempts, and calculate a mean."])}</ul></div>` +
+    `<div class="pcard wide"><h3>Watch out</h3><ul>${li(["Catching the ruler is not a reflex. It is voluntary: the brain decides to catch.", "A shorter drop means a shorter reaction time: a faster reaction.", "A reaction is faster or slower. A reaction time is shorter or longer: it can’t “speed up”.", "“Same ruler” isn’t the key control. Control what affects the catcher’s reaction, like the same person and the same starting position.", "In a caffeine test, the drink with no caffeine is the control group, not a control variable. Caffeine is the independent variable."])}</ul></div>`;
+}
+
+function readout() {
+  const n = M.data[M.hand].length, rows = [], hand = hn[M.hand];
+  const P = (c, s) => rows.push(`<p class="${c}">${s}</p>`);
+  if (M.who === "model") {
+    if (M.ph === "ready" || M.ph === "rec") {
+      if (M.ph === "rec" && M.data[M.hand].length) { const e = M.data[M.hand][n - 1]; P("r1", `Recorded: ${cm1(e.r)} cm (${hand}, drop ${n} of ${DECK.drops}).`); }
+      if (n >= DECK.drops) P(M.ph === "rec" ? "r2" : "r1", `Five drops done with the ${hand}. Switch hand, or open Results.`);
+      else P(M.ph === "rec" ? "r2" : "r1", `Press Drop the ruler. ${cap1(hand)}: drop ${n + 1} of ${DECK.drops}.`);
+      const first = M.data.dom.length === 1 && M.data.non.length === 1;
+      P(first ? "r2" : "r3", first ? `Is one drop enough? Compare your first drops: ${cm1(M.data.dom[0].r)} cm and ${cm1(M.data.non[0].r)} cm.` : "A shorter drop means a shorter reaction time: a faster reaction.");
+    } else if (M.ph === "wait") { P("r1", M.warn ? "Your partner says “Go!”… (a warning: not a fair test)" : "Get ready… your partner will drop it without warning."); }
+    else if (M.ph === "fall") P("r1", "Falling…");
+    else if (M.ph === "caught") { P("r1", "Caught! Read the zoom at the dashed line."); if (!M.rmsg) P("r2", "Type the distance in cm, to 0.1 cm. Press Record.");
+      if (M.rmsg) rows.push(`<p class="rm ${M.rmsg[0]}"><b>${M.rmsg[0] === "bad" ? "✗ Not quite." : "Tip:"}</b> ${esc(M.rmsg[1])}</p>`); }
+    else if (M.ph === "warned") { P("r1", `Not recorded. The partner said “Go!”, so the catcher got ready before it fell.`); P("r2", `It fell only ${cm1(M.pos)} cm. That doesn't measure reaction time. Drop it without warning: switch off Partner warns.`); }
+  } else {
+    const k = M.own[M.hand].length;
+    if (M.ph === "ready") { P("r1", k >= 5 ? `Five tries done with your ${hand}. Switch hand, or open Results.` : "Press Start. When the ruler moves, press Catch!, the space bar, or tap the picture."); P("r2", `Your ${hand}: try ${Math.min(k + 1, 5)} of 5.`); P("r3", "This is your own data. It is kept apart from the model data."); }
+    else if (M.ph === "wait") P("r1", "Watch the ruler… don't guess!");
+    else if (M.ph === "fall") P("r1", "Catch it!");
+    else if (M.ph === "early") { P("r1", "Too early! You pressed before the ruler moved."); P("r2", "That is a guess, not a reaction, so it isn't recorded. Press Start to try again."); }
+    else if (M.ph === "slowmiss") { P("r1", "No catch: over 1 s. Not recorded."); P("r2", "Press Start to try again."); }
+    else if (M.ph === "ycaught" && M.lastOwn) { P("r1", `Caught! The device timed it: ${M.lastOwn.t.toFixed(2)} s.`); P("r2", `The ruler fell ${cm1(M.lastOwn.d)} cm. Recorded in Your own data (Results tab).`); }
+    else if (M.ph === "miss" && M.lastOwn) { P("r1", `${M.lastOwn.t.toFixed(2)} s: off the 30 cm ruler.`); P("r2", "That is common on screen: the device's delay adds time. The time is recorded in Your own data."); }
+  }
+  return rows.join("");
+}
+
+const TABW = { drop: "Ruler drop", res: "Results", plan: "Plan", exam: "Exam graph" };
+let built = false;
+function buildStatic() { if (built) return; built = true; rulerScene(); $("bBg").innerHTML = barBg(); $("eBg").innerHTML = examHTML(); $("planBox").innerHTML = planHTML(); $("convRow").innerHTML = CONV_HTML; }
+function renderCtl() {
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === M.tab)));
+  ["drop", "res", "plan", "exam"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
+  document.querySelectorAll("#whoSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.who === M.who)));
+  document.querySelectorAll("#handSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.hand === M.hand)));
+  const you = M.who === "you", busy = M.ph === "wait" || M.ph === "fall";
+  $("dropBtn").hidden = you; $("catchBtn").hidden = !you; $("swRow").hidden = you; $("readRow").hidden = you;
+  const full = !M.warn && M.data[M.hand].length >= DECK.drops;
+  $("dropBtn").disabled = busy || M.ph === "caught" || full;
+  txt($("dropBtn"), full ? "Five drops done" : "Drop the ruler");
+  const yfull = M.own[M.hand].length >= 5;
+  txt($("catchBtn"), busy ? "Catch!" : yfull ? "Five tries done" : "Start");
+  $("catchBtn").disabled = !busy && yfull;
+  [["warnSw", M.warn], ["slowSw", M.slow]].forEach(([id, on]) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); txt(b.querySelector(".state"), on ? "on" : "off"); });
+  const cg = M.ph === "caught";
+  $("readIn").disabled = !cg; $("recBtn").disabled = !cg; $("readForMe").hidden = !(cg && M.tries >= 2);
+  if ($("readIn").value !== M.readIn) $("readIn").value = M.readIn;
+}
+function drawRes(full) {
+  const tb = $("resTable"), key = JSON.stringify(HANDS.map(h => M.data[h].map(e => [e.r, e.flag])));
+  if (full || tb._k !== key) { const fx = document.activeElement && document.activeElement.closest && document.activeElement.closest("#resTable .cellb"), fk = fx ? fx.dataset.h + fx.dataset.i : "";
+    tb.innerHTML = resTableHTML(); tb._k = key; if (fk) { const b = tb.querySelector(`.cellb[data-h="${fk.slice(0, 3)}"][data-i="${fk.slice(3)}"]`); if (b) b.focus({ preventScroll: true }); } }
+  HANDS.forEach(h => { const a = $("mean_" + h), b = $("rt_" + h); if (a && a.value !== M.meanIn[h] && document.activeElement !== a) a.value = M.meanIn[h]; if (b && b.value !== M.rtIn[h] && document.activeElement !== b) b.value = M.rtIn[h]; });
+  setLayer($("bDyn"), barDyn());
+  const cr = $("conclRow"); if (cr._k !== JSON.stringify(M.concl)) { cr.innerHTML = conclHTML(); cr._k = JSON.stringify(M.concl); }
+  morphHTML($("ownTable"), ownHTML()); txt($("ownNote"), ownNote());
+  morphHTML($("resFb"), M.resMsgs.map(([c, s]) => `<div class="msg ${c}">${c === "good" ? "<b>✓</b> " : c === "bad" ? "<b>✗</b> " : ""}${esc(s)}</div>`).join(""));
+}
+function drawAll() {
+  buildStatic(); renderCtl();
+  if (M.tab === "drop") { patchRuler(); drawZoom(); }
+  if (M.tab === "res") drawRes();
+  morphHTML($("read"), readout());
+}
+function setTab(t) { M.tab = t; drawAll(); tourSignal("tab-" + t); }
+
+/* ===== The drop: timers for the waits, one paced loop only while the ruler falls ===== */
+function stopAll() { if (waitT) { clearTimeout(waitT); waitT = 0; } if (anim) { paceCancel(anim.id); anim = null; } }
+function settle() { if (M.ph === "wait" || M.ph === "fall") { stopAll(); M.ph = "ready"; M.pos = 0; } }
+const YOU_MAX = 1.0;
+function runFall() {
+  const a = { id: 0 }; anim = a;
+  a.frame = () => {
+    if (anim !== a) return;
+    const tn = performance.now();
+    if (!visOK || document.hidden) {   // hidden or scrolled away mid-drop: the model catcher finishes at once; your own try is cancelled
+      anim = null; if (M.who === "model") { M.pos = M.target; caughtModel(); } else { M.ph = "ready"; M.pos = 0; drawAll(); } return; }
+    if (!M.fall0) M.fall0 = tn - 1000 / 60;
+    const t = (tn - M.fall0) / 1000 / (M.slow && M.who === "model" ? 10 : 1), p = dOf(t);
+    if (M.who === "model") { if (p >= M.target) { anim = null; M.pos = M.target; caughtModel(); return; } }
+    else if (M.ph === "fall" && t > YOU_MAX) { anim = null; M.ph = "slowmiss"; M.pos = 0; drawAll(); tourSignal("own"); return; }
+    else if (p > 45) { anim = null; M.pos = 45; patchRuler();   // out of view: stop drawing; a press still counts until 1 s
+      if (M.ph === "fall") waitT = setTimeout(() => { waitT = 0; if (M.ph === "fall") { M.ph = "slowmiss"; M.pos = 0; drawAll(); tourSignal("own"); } }, Math.max(0, YOU_MAX * 1000 - (tn - M.fall0)));
+      return; }
+    M.pos = p; patchRuler();
+    a.id = paceFrame(a.frame, reduced() ? 8 : 30);
+  };
+  a.id = paceFrame(a.frame, reduced() ? 8 : 30);
+}
+function startDrop() {
+  if (M.who !== "model" || M.ph === "wait" || M.ph === "fall") return;
+  if (!M.warn && M.data[M.hand].length >= DECK.drops) return;
+  stopAll(); M.pos = 0; M.pend = genDrop(M, M.hand); M.ph = "wait"; M.tries = 0; M.readIn = ""; M.rmsg = null; M.fall0 = 0;
+  drawAll(); tourSignal("drop"); showScene();
+  waitT = setTimeout(() => { waitT = 0; M.ph = "fall"; M.target = M.pend.d; drawZoom(); morphHTML($("read"), readout()); runFall(); }, M.warn ? 900 : 500 + Math.random() * 900);
+}
+function caughtModel() { M.ph = M.pend && M.pend.warned ? "warned" : "caught"; if (M.ph === "warned") tried(1); drawAll(); if (M.ph === "caught") showEl($("readRow")); }
+function showEl(el) {   // scroll just enough to bring el fully into view (below the sticky bars)
+  if (!el || !el.getClientRects().length || tourI >= 0) return; const r = el.getBoundingClientRect(), top = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8;
+  const d = r.bottom > innerHeight - 8 ? Math.min(r.bottom - innerHeight + 16, r.top - top) : r.top < top ? r.top - top : 0;
+  if (d) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" }); }
+function showScene() { if (innerWidth <= 900) { const sc = $("rscene"), b = $("actRow"); const r = sc.getBoundingClientRect(), rb = b.getBoundingClientRect(), top = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 6;
+  const d = r.top < top ? r.top - top : rb.bottom > innerHeight - 6 ? Math.min(rb.bottom - innerHeight + 10, r.top - top) : 0; if (d && tourI < 0) window.scrollBy({ top: d, behavior: "auto" }); } }
+function recordReading(auto) {
+  if (M.ph !== "caught") return;
+  const e = M.pend, v = auto ? e.d : parseNum(M.readIn);
+  if (isNaN(v)) { M.rmsg = ["tip", "Type the reading in cm first, for example 14.3."]; morphHTML($("read"), readout()); return; }
+  const w = readSlip(v, e.d);
+  if (w) { M.tries++; M.rmsg = ["bad", w]; renderCtl(); morphHTML($("read"), readout()); return; }
+  M.data[M.hand].push({ r: r1(v), d: e.d, anom: e.anom, flag: false });
+  M.ph = "rec"; M.rmsg = null; M.readIn = ""; drawAll(); tourSignal("record");
+  if (HANDS.every(h => M.data[h].length >= DECK.drops)) tried(0);
+}
+function startYou() {
+  if (M.who !== "you" || M.ph === "wait" || M.ph === "fall" || M.own[M.hand].length >= 5) return;
+  stopAll(); M.pos = 0; M.fall0 = 0; M.ph = "wait"; drawAll(); showScene();
+  waitT = setTimeout(() => { waitT = 0; M.ph = "fall"; drawZoom(); renderCtl(); morphHTML($("read"), readout()); runFall(); }, 1500 + Math.random() * 2000);
+}
+function catchPress() {
+  if (M.who !== "you") return;
+  const tn = performance.now();
+  if (M.ph === "wait" || (M.ph === "fall" && !M.fall0)) { stopAll(); M.ph = "early"; M.pos = 0; lastCatch = tn; drawAll(); tourSignal("own"); return; }
+  if (M.ph !== "fall") return;
+  const t = (tn - M.fall0) / 1000, d = dOf(t); lastCatch = tn;
+  const e = { t, d: d <= DECK.ruler ? r1(d) : null, flag: false }; M.own[M.hand].push(e); M.lastOwn = e;
+  if (e.d != null) { stopAll(); M.pos = d; M.ph = "ycaught"; } else { M.ph = "miss"; if (waitT) { clearTimeout(waitT); waitT = 0; } }
+  drawAll(); tourSignal("own"); if (M.own.dom.length && M.own.non.length) tried(2);
+}
+function setWho(w) { if (M.who === w) { tourSignal("who-" + w); return; } stopAll(); M.who = w; M.ph = "ready"; M.pos = 0; M.rmsg = null; drawAll(); tourSignal("who-" + w); }
+function setHand(h) { if (M.hand === h && M.ph !== "wait" && M.ph !== "fall") { tourSignal("hand"); return; } stopAll(); M.hand = h; M.ph = "ready"; M.pos = 0; M.rmsg = null; drawAll(); tourSignal("hand"); }
+
+/* ===== Results checks (the pupil's own readings) ===== */
+const needAll = () => HANDS.find(h => M.data[h].length < DECK.drops);
+function checkMeans() {
+  const out = []; let all = true;
+  for (const h of HANDS) {
+    const S = handStats(M, h), nm = HN[h];
+    if (S.n < DECK.drops) { out.push(["tip", `${nm}: record ${DECK.drops} drops first (${S.n} so far).`]); all = false; continue; }
+    const fl = flagIssue(S); if (fl) { out.push(["bad", `${nm}: ${fl}`]); all = false; continue; }
+    const v = parseNum(M.meanIn[h]);
+    if (isNaN(v)) { out.push(["tip", `${nm}: type the mean in the Mean row.`]); all = false; continue; }
+    const ms = meanSlip(S.keep, S.all, v); if (ms) { out.push(["bad", `${nm} mean: ${ms}`]); all = false; continue; }
+    const tv = parseNum(M.rtIn[h]);
+    if (isNaN(tv)) { out.push(["good", `${nm}: mean ${dp1(S.mean)} cm is right. Now find its reaction time in the conversion row.`]); all = false; continue; }
+    const ts = timeSlip(S.mean, tv); if (ts) { out.push(["bad", `${nm} reaction time: ${ts}`]); all = false; continue; }
+    out.push(["good", `${nm}: mean ${dp1(S.mean)} cm, reaction time about ${tv.toFixed(2)} s.`]);
+  }
+  M.resMsgs = out; drawRes(); if (all) { tried(3); tourSignal("means"); }
+  requestAnimationFrame(() => $("resFb").scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" }));
+}
+function meansReady() { return HANDS.every(h => { const S = handStats(M, h); return S.n >= DECK.drops && !flagIssue(S); }); }
+function checkGraph() {
+  let out = [];
+  if (!meansReady()) out = [["tip", "Record five drops with each hand and mark any anomaly first. Then plot each mean."]];
+  else { const m = { dom: handStats(M, "dom").mean, non: handStats(M, "non").mean }, ok = h => Math.abs(M.bars[h] - m[h]) <= .5;
+    if (HANDS.every(ok)) { out = [["good", `Both bars are right: ${dp1(m.dom)} cm and ${dp1(m.non)} cm (to the nearest 0.5 cm).`]]; tried(5); }
+    else if (Math.abs(M.bars.dom - m.non) <= .5 && Math.abs(M.bars.non - m.dom) <= .5 && Math.abs(m.dom - m.non) > 1) out = [["bad", "The bars are the wrong way round. Check which hand each mean belongs to."]];
+    else out = HANDS.filter(h => !ok(h)).map(h => ["bad", `${HN[h]} bar: it reaches ${M.bars[h]} cm, but the mean is ${dp1(m[h])} cm. Each line on the scale is 1 cm.`]); }
+  M.resMsgs = out; drawRes();
+}
+function checkConcl() {
+  let out;
+  const c = M.concl;
+  if (!meansReady()) out = [["tip", "Record five drops with each hand and mark any anomaly first."]];
+  else if (!c.c1 || !c.c2 || !c.c3) out = [["tip", "Choose a word for each gap."]];
+  else { const m = { dom: handStats(M, "dom").mean, non: handStats(M, "non").mean }, h = c.c1 === "dominant hand" ? "dom" : "non", o = h === "dom" ? "non" : "dom";
+    const want2 = m[h] < m[o] ? "shorter" : "longer", want3 = c.c2 === "shorter" ? "faster" : "slower";
+    if (c.c2 !== want2) out = [["bad", `Look at your means: the ${hn[h]} had the ${want2} mean drop (${dp1(m[h])} cm against ${dp1(m[o])} cm).`]];
+    else if (c.c3 !== want3) out = [["bad", c.c2 === "shorter" ? "A shorter drop means a shorter reaction time: a faster reaction." : "A longer drop means the ruler fell further before the catch: a longer reaction time, so a slower reaction."]];
+    else { out = [["good", `The ${hn[h]} caught the ruler after a ${c.c2} drop (${dp1(m[h])} cm against ${dp1(m[o])} cm), so it reacted ${c.c3}. This is one person: repeat with more people to check the pattern.`]]; tried(4); } }
+  M.resMsgs = out; drawRes();
+}
+function barSet(h, v) { M.bars[h] = clamp(Math.round(v * 2) / 2, 0, GB.max); setLayer($("bDyn"), barDyn()); tourSignal("bar"); }
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Record five drops with each hand.", "Switch on Partner warns “Go!”. Why isn't it recorded?",
+  "Press You catch. Test both of your hands.", "On Results, mark any anomaly. Find each mean and reaction time.", "Complete the conclusion.", "Plot both bars."];
+const TRIED = TRY.map(() => false);
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; M = DEMO_M; settle(); renderTry(); drawAll(); }
+function newS() { const t = task, ro = {}; if (t.rows) t.rows.forEach(r => { if (r[4]) ro[r[0]] = shuffled(r[4].length); });
+  const n = t.options ? t.options.length : t.items ? t.items.length : t.bank ? t.bank.length : 0;
+  return { choice: null, multi: new Set(), gap: {}, ro, typed: {}, step: {}, order: shuffled(n) }; }
+function loadTask() {
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").innerHTML = (task.ht ? '<span class="ht" title="Higher tier only">HT</span>' : "") + esc(task.text);
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { if (mode === "demo") return; stopAll(); const m = freshM(); if (task.setup) task.setup(m); M = m; drawAll(); }
+const frameHTML = t => t.frame ? `<p class="frame">${esc(t.frame)}</p>` : "";
+function renderAnswer() {
+  const a = $("answer"), t = task, fr = frameHTML(t);
+  if (t.kind === "choice" || t.kind === "multi") {
+    const multi = t.kind === "multi";
+    a.innerHTML = fr + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt${multi ? " multi" : ""}" data-i="${i}" aria-pressed="false"><span class="k">${multi ? "☐" : ABC[pos]}</span><span>${esc(optT(t.options[i]))}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.i;
+      if (multi) { if (S.multi.has(i)) S.multi.delete(i); else S.multi.add(i); b.setAttribute("aria-pressed", String(S.multi.has(i))); b.querySelector(".k").textContent = S.multi.has(i) ? "☑" : "☐"; }
+      else { S.choice = i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); } }));
+  } else if (t.kind === "gaps") {
+    const bank = t.bank ? S.order.map(i => t.bank[i]) : null;
+    const sel = (k, lbl, opts) => `<select data-r="${k}" aria-label="${esc(lbl || "Gap " + k)}"><option value="">choose…</option>${opts.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select>`;
+    const optsOf = r => r[4] ? S.ro[r[0]].map(i => r[4][i]) : bank;
+    if (t.grid) a.innerHTML = fr + `<div class="gtab">` + t.rows.map(r => `<span>${esc(r[1])}</span>${sel(r[0], r[1], optsOf(r))}`).join("") + `</div>`;
+    else a.innerHTML = fr + `<div class="opts">` + t.rows.map(r => `<label class="grow">${esc(r[1])} ${sel(r[0], r[1], optsOf(r))}${r[3] ? ` <span class="post">${esc(r[3])}</span>` : ""}</label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = fr + `<div class="calc">` + t.fields.map(f => `<div class="numrow"><label for="qf_${f.k}">${esc(f.label)}</label><input class="numin" id="qf_${f.k}" data-k="${f.k}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">${esc(f.unit)}</span><span class="mk" id="qk_${f.k}"></span></div>`).join("") + `</div>`;
+    a.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { S.typed[inp.dataset.k] = inp.value; }));
+  } else if (t.kind === "build") {
+    const nreq = t.items.filter(x => x.rank).length, opts = `<option value="">–</option>` + Array.from({ length: nreq }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+    a.innerHTML = fr + `<div class="opts bstm">` + S.order.map(i =>
+      `<label class="grow"><select data-b="${i}" aria-label="Step number for: ${esc(t.items[i].t)}">${opts}</select> <span>${esc(t.items[i].t)}</span></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.step[s.dataset.b] = s.value ? +s.value : 0; }));
+  } else if (t.kind === "goal") {
+    a.innerHTML = fr + `<p style="margin:0">Use the <b>${TABW[M.tab]}</b> tab in the model, then press Check.</p>`;
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
+    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+}
+const rightOpts = t => t.options.map((o, i) => o.ok && o.ok() ? i : -1).filter(i => i >= 0);
+function buildRight(t) { return t.items.map((x, i) => x.rank ? i : -1).filter(i => i >= 0).sort((a, b) => t.items[a].rank - t.items[b].rank); }
+const numStr = v => String(r2(v));
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = rightOpts(t)[0]; S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "multi") { S.multi = new Set(rightOpts(t)); document.querySelectorAll("#answer .opt").forEach(b => { const on = S.multi.has(+b.dataset.i); b.setAttribute("aria-pressed", String(on)); b.querySelector(".k").textContent = on ? "☑" : "☐"; }); }
+  else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
+  else if (t.kind === "num") { t.fields.forEach(f => { const v = numStr(f.ans); S.typed[f.k] = v; const inp = $("qf_" + f.k); if (inp) inp.value = v; const s = $("qk_" + f.k); if (s) { s.className = "mk ok"; s.textContent = "✓"; } }); }
+  else if (t.kind === "build") { S.step = {}; buildRight(t).forEach((i, j) => { S.step[i] = j + 1; }); document.querySelectorAll("#answer select[data-b]").forEach(x => { x.value = S.step[x.dataset.b] ? String(S.step[x.dataset.b]) : ""; }); }
+  else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${t.ht ? " htq" : ""}${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${t.ht ? " (Higher tier)" : ""}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").classList.toggle("hasht", lst.some(t => t.ht));
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (off on load, never stored) ===== */
+const SUPW = { words: "Key words", mean: "Mean steps", vars: "Variables" };
+function renderSupport() {
+  ["words", "mean", "vars"].forEach(k => { $(k + "Box").hidden = !support[k]; });
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + DECK.words.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}${w[2] ? ` <span class="small">(${esc(w[2])})</span>` : ""}</p>`).join("");
+  $("meanBox").innerHTML = "<h3>Mean steps</h3><p>Leave out any anomalous result first.</p><p>Drops: 18, 20, 22 cm</p><p>Total = 18 + 20 + 22 = 60</p><p>Mean = 60 ÷ 3 = 20 cm</p>";
+  $("varsBox").innerHTML = `<h3>Variables (hand investigation)</h3><p><b>Independent:</b> ${esc(DECK.iv.toLowerCase())}.</p><p><b>Dependent:</b> ${esc(DECK.dv.charAt(0).toLowerCase() + DECK.dv.slice(1))}.</p><p><b>Control:</b> ${esc(DECK.controls.join("; ").toLowerCase())}.</p>`;
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k); }));
+
+/* ===== Marking ===== */
+function gapWhy(t, k, v) { return (t.whyRow && t.whyRow[k] && t.whyRow[k][v]) || (t.whyVal && t.whyVal[v]) || ""; }
+/* levels marking for the plan: how much indicative content is there, and is it in a logical order? */
+/* order rules, not one fixed order: each step lists the steps that must come before it (if used); the controls can go anywhere */
+function orderBreak(t, its) { const pos = {}; its.forEach((x, j) => { pos[x.id] = j; });
+  for (const x of its) for (const a of (x.after || [])) if (a in pos && pos[a] > pos[x.id]) return [x, t.items.find(y => y.id === a)];
+  return null; }
+function buildLevel(t, its) { const req = its.filter(x => x.rank), n = req.length, all = t.items.filter(x => x.rank).length, ordered = !orderBreak(t, req), wrong = its.some(x => !x.rank);
+  if (!n) return 0; if (n >= all - 1 && ordered && !wrong) return 3; if (n >= 4 && (ordered || n >= all - 1)) return 2; return 1; }
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + (t.explain || o.t + ".")) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "multi") { if (!S.multi.size) return { skip: "Tick at least one answer." };
+    const w = [...S.multi].map(i => t.options[i]).find(o => !(o.ok && o.ok())); if (w) return { ok: false, html: esc(w.why) };
+    const need = rightOpts(t).length; if (S.multi.size < need) return { ok: false, html: esc(`Everything you ticked is creditworthy (${S.multi.size} of ${need} marks), but there is more to tick.`) };
+    return { ok: true, html: esc("Correct. " + (t.explain || "All the creditworthy points: " + rightOpts(t).map(i => t.options[i].t).join("; ") + ".")) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each gap." };
+    if (t.bank && t.ordered) { const got = t.rows.map(r => S.gap[r[0]]), dup = got.find((v, i) => got.indexOf(v) !== i); if (dup) return { ok: false, html: esc(`You used “${dup}” twice. Each one goes on one line only.`) };
+      const want = t.rows.map(r => r[2]); if (got.every(v => want.includes(v)) && got.some((v, i) => v !== want[i])) return { ok: false, html: esc(t.orderMsg) }; }
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const [k, pre] = wrong, v = S.gap[k];
+    return { ok: false, html: esc(`${pre.replace(/^\S+\s+(?=[A-Z])/, "").replace(/[.:]$/, "")}: “${v}” is not right. ${gapWhy(t, k, v)}`) }; }
+  if (t.kind === "num") {
+    const f = t.fields.find(x => isNaN(parseNum(S.typed[x.k]))); if (f) return { skip: "Type a number first." };
+    let bad = null; t.fields.forEach(x => { const v = parseNum(S.typed[x.k]), ok = x.ok ? x.ok(v) : near(v, x.ans), s = $("qk_" + x.k); if (s) { s.className = "mk " + (ok ? "ok" : "no"); s.textContent = ok ? "✓" : "✗"; } if (!ok && !bad) bad = [x, v]; });
+    if (!bad) return { ok: true, html: esc("Correct. " + t.lines.join(" ")) };
+    return { ok: false, html: esc(bad[0].slip(bad[1])) }; }
+  if (t.kind === "build") {
+    const used = Object.keys(S.step).filter(k => S.step[k]).map(Number);
+    if (!used.length) return { skip: "Give a step number to each statement you want to use." };
+    if (new Set(used.map(k => S.step[k])).size !== used.length) return { skip: "Give each statement a different step number." };
+    const its = used.sort((x, y) => S.step[x] - S.step[y]).map(i => t.items[i]), lv = buildLevel(t, its), so = `(So far: Level ${lv}${lv ? ` (${["", "1–2", "3–4", "5–6"][lv]} marks)` : ", 0 marks"}.)`;
+    const w = its.find(x => !x.rank); if (w) return { ok: false, html: esc(`“${w.t}” – ${w.why} ${so}`) };
+    const miss = t.items.filter(x => x.rank && !its.includes(x)).sort((a, b) => a.rank - b.rank);
+    if (miss.length) return { ok: false, html: esc(`${miss[0].miss} ${so}`) };
+    const br = orderBreak(t, its);
+    if (br) return { ok: false, html: esc(`Check the order: “${br[0].t}” should come after “${br[1].t}” ${so}`) };
+    return { ok: true, html: esc("Correct. Level 3 (6 marks): a coherent method in a logical order, with controls, no warning, repeats, a mean and the conversion to time.") };
+  }
+  if (t.kind === "goal") { if (M.ph === "wait" || M.ph === "fall") return { skip: "Wait for the ruler to be caught, then press Check." };
+    return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
+  return { skip: "" };
+}
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${SUPW[k]}</b> under Support.`; }
+function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + optT(t.options.find(o => o.ok && o.ok())).replace(/\.$/, "") + "." + (t.explain ? " " + t.explain : "");
+  if (t.kind === "multi") return "Answer (now ticked)." + (t.explain ? " " + t.explain : "");
+  if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
+  if (t.kind === "num") return "Answer: " + t.lines.join(" ");
+  if (t.kind === "build") return "Answer: one valid order is numbered; other logical orders also count.";
+  return "Answer: " + t.explain;
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (task.ms ? `<span class="ms${task.kind === "build" ? " inl" : ""}"><b>Mark scheme:</b> ${esc(task.ms)}</span>` : "") + (p.solved ? "" : " (No score for this one.)"));
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#tabs", tab: "drop", text: "Four parts: Ruler drop, Results, Plan and Exam graph." },
+  { el: "#whoSeg", tab: "drop", text: "Choose who catches: the model catcher, or you." },
+  { el: "#handSeg", tab: "drop", text: "Choose the hand. The hand used is the independent variable." },
+  { el: "#dropBtn", tab: "drop", text: "Your partner drops the ruler without warning.", do: "drop", doText: "Press Drop the ruler." },
+  { el: "#zscene", tab: "drop", text: "The zoom shows the ruler at the top of the thumb. Each small mark is 1 mm (0.1 cm)." },
+  { el: "#readRow", tab: "drop", pref: "above", text: "Read the distance at the dashed line and type it in cm. Then press Record.", do: "record", doText: "Record the reading." },
+  { el: "#warnSw", tab: "drop", text: "A fair test: the partner must not warn the catcher. Try it later to see why." },
+  { el: "#whoSeg", tab: "drop", text: "Now test your own reaction time on screen.", do: "who-you", doText: "Press You catch." },
+  { el: "#catchBtn", tab: "drop", text: "Press Start. As soon as the ruler moves, press Catch!, the space bar, or tap the picture.", do: "own", doText: "Have a go." },
+  { el: "#tabs", text: "Your readings go into a results table.", do: "tab-res", doText: "Press Results." },
+  { el: "#resTable", tab: "res", text: "Tap a reading to mark it as an anomaly. Type each mean (leaving anomalies out) and use the conversion row." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-reaction-time", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const stp = TOUR[i];
+  if (stp.tab && M.tab !== stp.tab) { M.tab = stp.tab; drawAll(); }
+  const el = document.querySelector(stp.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = stp.text;
+  tourWait = stp.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = stp.do ? "▶ " + stp.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : stp.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = TOUR[tourI].pref === "above" && fitsAbove ? "down" : fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring: pointer, touch and keyboard ===== */
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("whoSeg").addEventListener("click", e => { const b = e.target.closest("button[data-who]"); if (b) setWho(b.dataset.who); });
+$("handSeg").addEventListener("click", e => { const b = e.target.closest("button[data-hand]"); if (b) setHand(b.dataset.hand); });
+$("dropBtn").addEventListener("click", startDrop);
+$("warnSw").addEventListener("click", () => { settle(); M.warn = !M.warn; if (M.ph === "warned" || M.ph === "caught") { M.ph = "ready"; M.pos = 0; } drawAll(); });
+$("slowSw").addEventListener("click", () => { M.slow = !M.slow; renderCtl(); });
+let eatClick = 0;   // a press that caught the ruler is not also a Start
+$("catchBtn").addEventListener("pointerdown", e => { if (M.ph === "wait" || M.ph === "fall") { e.preventDefault(); eatClick = performance.now(); catchPress(); } });
+$("catchBtn").addEventListener("click", () => { if (performance.now() - eatClick < 700) { eatClick = 0; return; } if (M.ph === "wait" || M.ph === "fall") { catchPress(); return; } startYou(); });
+$("rsvg").addEventListener("pointerdown", e => { if (M.who === "you" && (M.ph === "wait" || M.ph === "fall")) { e.preventDefault(); catchPress(); } });
+document.addEventListener("keydown", e => {
+  if (e.key !== " " && e.key !== "Enter") return;
+  if (M.who !== "you" || M.tab !== "drop" || !(M.ph === "wait" || M.ph === "fall")) return;
+  if (e.target.closest && e.target.closest("input,select,textarea")) return;
+  e.preventDefault(); if (!e.repeat) catchPress();
+});
+$("readIn").addEventListener("input", e => { M.readIn = e.target.value; });
+$("readIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); recordReading(); } });
+$("recBtn").addEventListener("click", () => recordReading());
+$("readForMe").addEventListener("click", () => recordReading(true));
+$("resTable").addEventListener("click", e => { const b = e.target.closest(".cellb"); if (!b) return; const en = M.data[b.dataset.h][+b.dataset.i]; en.flag = !en.flag; M.resMsgs = []; drawRes(); tourSignal("flag"); });
+$("ownTable").addEventListener("click", e => { const b = e.target.closest(".cellb[data-own]"); if (!b) return; const en = M.own[b.dataset.own][+b.dataset.i]; en.flag = !en.flag; drawRes(); const nb = $("ownTable").querySelector(`.cellb[data-own="${b.dataset.own}"][data-i="${b.dataset.i}"]`); if (nb) nb.focus({ preventScroll: true }); });
+$("resTable").addEventListener("input", e => { const i = e.target.closest("input[data-f]"); if (i) M[i.dataset.f][i.dataset.h] = i.value; });
+$("chkMeans").addEventListener("click", checkMeans);
+$("chkGraph").addEventListener("click", checkGraph);
+$("chkConcl").addEventListener("click", checkConcl);
+$("conclRow").addEventListener("change", e => { const s = e.target.closest("select[data-c]"); if (s) { M.concl[s.dataset.c] = s.value; $("conclRow")._k = JSON.stringify(M.concl); } });
+$("clearRes").addEventListener("click", function confirmStep() {
+  const box = this.parentNode; box.innerHTML = 'Clear every reading? <button class="linkbtn warn" type="button" id="crYes">Yes, clear</button> <button class="linkbtn" type="button" id="crNo">Cancel</button>';
+  const back = () => { box.innerHTML = '<button class="linkbtn" type="button" id="clearRes">Clear all results</button>'; $("clearRes").addEventListener("click", confirmStep); };
+  $("crYes").addEventListener("click", () => { stopAll(); const k = { tab: M.tab, who: M.who, hand: M.hand }; Object.assign(M, freshM(), k); if (mode === "demo") DEMO_M = M; back(); drawAll(); });
+  $("crNo").addEventListener("click", back);
+});
+$("planBox").addEventListener("click", e => { const b = e.target.closest(".why"); if (!b) return; const on = b.getAttribute("aria-expanded") !== "true"; b.setAttribute("aria-expanded", String(on)); $("why" + b.dataset.why).hidden = !on; });
+/* bar chart: drag with mouse or touch, or arrow keys */
+let dragBar = null;
+function svgY(svg, ev) { const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; const m = svg.getScreenCTM(); return m ? p.matrixTransform(m.inverse()).y : 0; }
+$("bsvg").addEventListener("pointerdown", e => { const g = e.target.closest(".bar-g"); if (!g) return; e.preventDefault(); dragBar = g.dataset.bar; try { $("bsvg").setPointerCapture(e.pointerId); } catch (x) {} barSet(dragBar, (GB.y0 - svgY($("bsvg"), e)) / (GB.y0 - GB.y1) * GB.max); });
+$("bsvg").addEventListener("pointermove", e => { if (dragBar) barSet(dragBar, (GB.y0 - svgY($("bsvg"), e)) / (GB.y0 - GB.y1) * GB.max); });
+const endDrag = () => { if (dragBar) { const g = $("bDyn").querySelector(`[data-bar="${dragBar}"]`); dragBar = null; if (g) g.focus({ preventScroll: true }); } };
+$("bsvg").addEventListener("pointerup", endDrag); $("bsvg").addEventListener("pointercancel", endDrag);
+$("bsvg").addEventListener("keydown", e => { const g = e.target.closest(".bar-g"); if (!g) return; const h = g.dataset.bar, v = M.bars[h];
+  const nv = { ArrowUp: v + .5, ArrowRight: v + .5, ArrowDown: v - .5, ArrowLeft: v - .5, PageUp: v + 5, PageDown: v - 5, Home: 0, End: GB.max }[e.key];
+  if (nv == null) return; e.preventDefault(); barSet(h, nv); const ng = $("bDyn").querySelector(`[data-bar="${h}"]`); if (ng) ng.focus({ preventScroll: true }); });
+/* panel */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { settle(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; }).observe($("model"));   // a drop that is scrolled away finishes at once
+}
+
+const errs = bankCheck();
+if (errs.length) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+}
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
+bump(); setMode("demo"); renderSupport(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:gcse-reaction-time")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
