@@ -88,6 +88,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Electrolysis | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-electrolysis.html |
 | Density | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-density.html |
 | Force and Extension | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-force-extension.html |
+| Waves Practical | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-waves.html |
 
 ## Adding a tool
 
