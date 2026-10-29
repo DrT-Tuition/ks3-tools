@@ -41,7 +41,10 @@
        wrong divisor, typed the total; two runs > 3 °C apart → do a third run). Bar chart of the checked means. Conclusion
        frame from L6 s17 (best insulator … because … lowest … improvement …), checked against the pupil's own means (lid on,
        same layers); it warns when two means are within 1.5 °C or when a set-up has fewer than 3 runs.
-    Hard 10 levels: Level 3 needs the hot water (2), the readings and drop (4) and every material incl. none (5); missing one caps at Level 2.
+    Hard 10 levels: Level 3 needs all five key steps in a logical order (pack the material, 80 cm³ hot water, lid + start
+      temperature + clock, readings and drop, every material incl. none); missing any one caps at Level 2. The control/repeat
+      point turns Level 3 into 6 marks (5 without it). Level 2: 3+ steps or all five out of order; Level 1: 1–2 steps or only
+      the control point; a wrong statement costs a level.
     3. Walls (L5 s18, L6 s7). During a question the explanation line is hidden until the question is finished. Two walls, brick or insulating foam, thin/medium/thick; energy arrows from the warm inside to
        the cold outside with width ∝ relative rate = relative conductivity ÷ thickness (brick 1, foam 0.1: invented,
        relative values). The readout explains same-material (thicker → lower rate), same-thickness (lower thermal
@@ -1307,7 +1310,7 @@ TASKS.hard = [
     orderMsg: "All three points, but not in order. Property first, then the rate of energy transfer, then the result.",
     explain: "Polystyrene has the lowest thermal conductivity (1), so it has the lowest rate of energy transfer to the surroundings (1), so the water cooled least (1).",
     hints: ["Which property makes a good insulator?", "Low thermal conductivity → low rate of energy transfer → …", "Lowest thermal conductivity; lowest rate of energy transfer; the water cooled least."] },
-  { id: "plan", kind: "build", ms6: true, keySteps: [2, 4, 5], lesson: "L6 s8–s10, s13, s15–s16", text: "Describe a method to find which material is the best thermal insulator. [6 marks]", frame: "Describe it in order. Start with: Pack the…", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
+  { id: "plan", kind: "build", ms6: true, keySteps: [1, 2, 3, 4, 5], lesson: "L6 s8–s10, s13, s15–s16", text: "Describe a method to find which material is the best thermal insulator. [6 marks]", frame: "Describe it in order. Start with: Pack the…", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
     stm: [{ t: "Pack the material between two beakers.", c: 1 }, { t: "Pour 80 cm³ of hot water in the small one.", c: 2 },
       { t: "Fit the lid; record the start; start the clock.", c: 3 }, { t: "Read every 3 min for 15 min; find the drop.", c: 4 },
       { t: "Repeat for each material and no insulation.", c: 5 },
@@ -1365,7 +1368,7 @@ function bankCheck() {
       if (t.ms6) { const ix = f => t.stm.map((s, j) => [s, j]).filter(x => f(x[0])).map(x => x[1]), main = ix(s => s.c && !s.free), all = ix(s => s.c), bad = ix(s => !s.c);
         const lv6 = l => marks6(buildMarks(t, l)).L, got = [lv6([]), lv6(bad.slice(0, 1)), lv6(main.slice(0, 2)), lv6(main.slice(0, 4)), lv6(all), lv6(all.concat(bad.slice(0, 1)))];
         if (got.join() !== "0,0,1,2,3,2") E("levels of response: every level must be reachable " + got.join());
-        if (marks6(buildMarks(t, all)).mk !== 6 || marks6(buildMarks(t, main)).L !== 2 || marks6(buildMarks(t, all.slice(1))).mk !== 5) E("6 marks only with every step and the control variables");
+        if (marks6(buildMarks(t, all)).mk !== 6 || marks6(buildMarks(t, main)).L !== 3 || marks6(buildMarks(t, main)).mk !== 5 || marks6(buildMarks(t, all.slice(1))).L !== 2) E("6 marks only with every key step in order and the control/repeat point; 5 without it");
         (t.keySteps || []).forEach(c => { const l = all.filter(j => t.stm[j].c !== c); if (marks6(buildMarks(t, l)).L !== 2) E("missing key step " + c + " must cap at Level 2"); }); } }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
@@ -1477,8 +1480,9 @@ function buildMarks(t, list) {
 function marks6(b) {   // AQA-style levels of response from the statements built; a wrong statement costs a level
   const n = b.main.length, ctl = b.extras.includes("ctl"), ext = b.extras.length;
   const has = c => b.main.some(s => s.c === c), key = (b.keySteps || []).every(has);
-  let L = n >= 4 && b.inOrder && ctl && key ? 3 : n >= 3 ? 2 : n >= 1 || ext ? 1 : 0;
-  let mk = L === 3 ? (n === b.nMain ? 6 : 5) : L === 2 ? (n >= 4 || ext ? 4 : 3) : L === 1 ? (n + ext >= 2 ? 2 : 1) : 0;
+  // Level 3: every key step (all 5), in a logical order; 6 marks with the control/repeat point, 5 without
+  let L = key && b.inOrder ? 3 : n >= 3 ? 2 : n >= 1 || ext ? 1 : 0;
+  let mk = L === 3 ? (ctl ? 6 : 5) : L === 2 ? (n >= 4 || ext ? 4 : 3) : L === 1 ? (n + ext >= 2 ? 2 : 1) : 0;
   if (b.bad.length && L > 0) { L--; mk = L === 2 ? 4 : L === 1 ? 2 : 0; }
   return { L, mk };
 }
