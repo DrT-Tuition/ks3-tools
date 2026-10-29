@@ -78,6 +78,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Reaction Time | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-reaction-time.html |
 | Temperature Changes | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-temperature-changes.html |
 | Microbiology Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-microbiology-practical.html |
+| Osmosis Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-osmosis-practical.html |
 
 ## Adding a tool
 
