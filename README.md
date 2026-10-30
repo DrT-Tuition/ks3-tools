@@ -90,6 +90,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Force and Extension | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-force-extension.html |
 | Waves Practical | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-waves.html |
 | Decay Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-decay.html |
+| Titration | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-titration.html |
 
 ## Adding a tool
 
