@@ -780,7 +780,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const finished = () => mode !== "demo" && task && task.id && (prog().solved || prog().revealed);
 const open = () => mode !== "demo" && !finished();          // a question is open and unanswered: hide anything that would give it away
 const locked = () => mode !== "demo" && !!lock && !(task.unlockAfter && finished());
@@ -1431,7 +1431,7 @@ TASKS.hard = [
       { t: "All the same, because the force is the same.", why: "The force is the same, but the accelerations are different, so force ÷ acceleration is different for each object." }],
     explain: "With the same force, the smallest acceleration means the largest inertial mass (as in experiment 2: double the mass, half the acceleration).",
     hints: ["Inertial mass is how hard it is to change an object’s velocity.", "Inertial mass = force ÷ acceleration. The force is the same for all three.", "The smallest acceleration gives the largest inertial mass."] }, KN),
-  Object.assign({ id: "eval", kind: "gaps", fixed: true, src: "Evaluating the Experiments; Safety Considerations", text: "Choose the error type and the fix for each problem. For the hazard, choose the control.", setup: SU.force(), hideLim: ["anom", "mass", "press"],
+  Object.assign({ id: "evalLG", kind: "gaps", fixed: true, src: "Evaluating the Experiments; Safety Considerations", text: "Choose the error type and the fix for each problem. For the hazard, choose the control.", setup: SU.force(), hideLim: ["anom", "mass", "press"],
     rows: [["bench", "Masses taken off the hanger went on the bench.", "systematic: move them onto the trolley"], ["push", "The trolley was given a little push to start it.", "random: release it, don’t push it"], ["fast", "The trolley moved too fast to time well.", "random: use smaller masses so it’s slower"],
       ["lag", "Reaction time made each lap time a bit wrong.", "random: use light gates and a data logger"],
       ["stand", "Hazard: masses fall. Risk: they hurt a foot.", "control: don’t stand under the hanger"]],
