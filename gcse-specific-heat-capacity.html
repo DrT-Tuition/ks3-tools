@@ -64,6 +64,14 @@
     attribute (the magnified scale is one pre-drawn strip that slides); it stops at each reading and at the end, and skips
     drawing while the picture is scrolled off-screen or the tab is hidden.
     Reduced motion: the run jumps straight to each reading.
+  Coverage fixes (30 Oct 2026, from the notes EnergyChangesinaSystem RP1 and the AQA handbook): "Measure the energy with" switch:
+    joulemeter or ammeter + voltmeter (ammeter in series, voltmeter across the heater; steady supply, P = V × I = the run's
+    38–42 W). With the meters, pupils read V (0.1 V) and I (0.01 A) after switching on, the 2-minute energies are worked
+    out from their V and I, and at switch-off they type E = V × I × t (t = 600 s), accepted only when correctly rounded,
+    with named slips (minutes, no t, kJ, V + I, one meter, 8-minute value). Results shows the % difference. New questions:
+    Easy 7 thermometer resolution, Easy 8 hazard/risk/control, Hard 5 E = V I t then c, Hard 8 gradient of the straight
+    part (c = 1 ÷ (m × gradient), AQA). Easy radiators folded into Easy 2; Easy weigh goal dropped; Hard "systematic
+    error" folded into Hard 7; Hard 9 adds eye level / parallax.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -331,6 +339,7 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .scene .psu{fill:var(--psu);stroke:var(--metal-edge);stroke-width:2}
 .scene .wr{stroke:var(--wire-r);stroke-width:4;fill:none;stroke-linecap:round}
 .scene .wb{stroke:var(--wire-b);stroke-width:4;fill:none;stroke-linecap:round}
+.scene .wv{stroke:var(--ink);stroke-width:2.4;fill:none;stroke-linecap:round;opacity:.8}
 .scene .zoomw{fill:var(--zoom);stroke:var(--ink);stroke-width:2}
 .scene .zt{stroke:var(--ink);stroke-width:1.6}
 .scene .lead{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4;fill:none}
@@ -364,7 +373,8 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 #cmpSliders .slider{grid-template-columns:minmax(8.5em,auto) minmax(0,1fr) auto}
 @media (max-width:560px){#cmpSliders .slider{grid-template-columns:minmax(0,1fr) auto}}
 @media (min-width:901px) and (max-height:820px){.stepbox{padding:8px 12px;gap:6px}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}.qpanel .opts.build .opt{line-height:1.25}}
+@media (min-width:901px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{line-height:1.25}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 .sscene{position:relative}
@@ -372,6 +382,11 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .msd summary{cursor:pointer;font-weight:700;min-height:32px;padding-top:4px}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:3px}.qpanel .opts.build .opt{min-height:34px;padding:3px 10px}}
 @media (min-width:901px) and (max-height:740px){.qpanel .opts.build .opt{font-size:15px;line-height:1.2}.qpanel .qno{margin:0;font-size:13px}.qpanel > div{gap:6px}}
+/* long dropdown options must never widen the question panel (30 Oct) */
+.qpanel,#answer,#answer .opts{min-width:0;max-width:100%}
+#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer select{max-width:100%;min-width:0;text-overflow:ellipsis}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -493,11 +508,12 @@ main.layout{min-height:calc(100vh - 70px)}
       <div class="pane" id="pane-rp">
         <div class="controls" id="setupRow"><span class="gl" id="bLbl">Block:</span><span class="seg" role="group" aria-labelledby="bLbl" id="blockSeg"><button type="button" data-b="aluminium" aria-pressed="true">Aluminium</button><button type="button" data-b="steel" aria-pressed="false">Steel</button><button type="button" data-b="copper" aria-pressed="false">Copper</button></span>
           <span class="gl" id="mLbl">Mass:</span><span class="seg" role="group" aria-labelledby="mLbl" id="massSeg"><button type="button" data-m="1" aria-pressed="true">1 kg</button><button type="button" data-m="2" aria-pressed="false">2 kg</button></span></div>
+        <div class="controls" id="meterRow"><span class="gl" id="eLbl">Measure the energy with:</span><span class="seg" role="group" aria-labelledby="eLbl" id="meterSeg"><button type="button" data-e="jm" aria-pressed="true">Joulemeter</button><button type="button" data-e="vi" aria-pressed="false">Ammeter + voltmeter</button></span></div>
         <div class="controls" id="impRow"><span class="gl">Set-up:</span>
           <button class="sw" type="button" id="insSw" aria-pressed="true"><span class="dot"></span>Insulation <span class="state">on</span></button>
           <button class="sw" type="button" id="lidSw" aria-pressed="true"><span class="dot"></span>Lid <span class="state">on</span></button>
           <button class="sw" type="button" id="oilSw" aria-pressed="true"><span class="dot"></span>Oil in thermometer hole <span class="state">on</span></button></div>
-        <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="Cut-away view: a metal block on a wooden base with an immersion heater and a thermometer in two holes. A joulemeter connects the power supply to the heater. A stopwatch, a balance, and a magnified view of the thermometer scale."><g id="rBg"></g></svg><svg id="rsvgM" class="scene mov" viewBox="0 0 960 400" aria-hidden="true"><g id="rMov"></g></svg></div>
+        <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="Cut-away view: a metal block on a wooden base with an immersion heater and a thermometer in two holes. A joulemeter (or an ammeter and a voltmeter) connects the power supply to the heater. A stopwatch, a balance, and a magnified view of the thermometer scale."><g id="rBg"></g></svg><svg id="rsvgM" class="scene mov" viewBox="0 0 960 400" aria-hidden="true"><g id="rMov"></g></svg></div>
         <div class="stepbox" id="stepRow"></div>
         <div class="labgrid">
           <div id="rtable"></div>
@@ -510,7 +526,7 @@ main.layout{min-height:calc(100vh - 70px)}
       <div class="pane" id="pane-res" hidden>
         <div class="panel" id="calcBox"></div>
         <div class="panel" id="repBox"></div>
-        <div class="panel" id="energyBox"><h2>Where did the energy go?</h2><svg id="esvg" class="scene" viewBox="0 0 960 150" role="img" aria-label="Bar: the energy supplied, split into the energy that went into the block and the energy transferred to the surroundings"><g id="eG"></g></svg><p class="small" id="eNote"></p></div>
+        <div class="panel" id="energyBox"><h2>Where did the energy go?</h2><svg id="esvg" class="scene" viewBox="0 0 960 150" role="img" aria-label="Bar: where the energy supplied went"><g id="eG"></g></svg><p class="small" id="eNote"></p></div>
         <div class="panel" id="concBox"></div>
       </div>
 
@@ -527,7 +543,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="cread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The heater power (38–42 W, a little different each run), the heat losses, the thermometer’s response and the room temperature are invented example values with random scatter, not real results; about 1 run in 5 is an invented anomaly that loses extra energy. Time is sped up (1 minute = 1.5 s) and the clock pauses while you read the thermometer. The joulemeter readings every 2 minutes are recorded for you; you read it yourself at switch-off. The heater itself also warms up a little, so even with no heat loss c would come out 1–3 % high. A lighter block gets hotter, so it loses a bigger share of its energy and its measured c is further from the true value; the true c does not depend on the mass. Values of c are the lesson’s values.</p>
+      <p class="limits"><b>Model limits:</b> The heater power (38–42 W, a little different each run), the heat losses, the thermometer’s response and the room temperature are invented example values with random scatter, not real results; about 1 run in 5 is an invented anomaly that loses extra energy. Time is sped up (1 minute = 1.5 s) and the clock pauses while you read the thermometer. The joulemeter readings every 2 minutes are recorded for you; you read it yourself at switch-off. With the ammeter and voltmeter, the clock waits while you read the meters, and the supply is steady, so V and I stay the same during a run (real meters drift a little, so you would take several readings and average); the energy every 2 minutes is worked out from your V and I, and you work out E = V × I × t yourself at switch-off. The heater itself also warms up a little, so even with no heat loss c would come out 1–3 % high. A lighter block gets hotter, so it loses a bigger share of its energy and its measured c is further from the true value; the true c does not depend on the mass. Values of c are the lesson’s values.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -562,7 +578,6 @@ main.layout{min-height:calc(100vh - 70px)}
               <button class="sw" type="button" data-support="eq" aria-pressed="false"><span class="dot"></span>Equation <span class="state">off</span></button>
               <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Maths help <span class="state">off</span></button>
               <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
-              <button class="sw" type="button" data-support="read" aria-pressed="false"><span class="dot"></span>Read the thermometer for me <span class="state">off</span></button>
             </div>
             <div class="support-box" id="eqBox" hidden></div>
             <div class="support-box" id="mathsBox" hidden></div>
@@ -629,7 +644,9 @@ const DEF = {   // L6 s6, L7 s6
   joule: "An instrument that measures the energy supplied to the heater, in joules.",
   ins: "Material wrapped around the block to reduce energy lost to the surroundings.",
   contact: "How well heat passes between surfaces; improved by a drop of oil in the hole.",
-  sys: "An error that shifts every reading the same way, e.g. constant heat loss." };
+  sys: "An error that shifts every reading the same way, e.g. constant heat loss.",
+  res: "The smallest change an instrument can show: one scale division (not the range of the scale).",
+  vi: "Energy supplied = potential difference × current × time: E = V × I × t, with t in seconds." };
 const dTheta = (E, m, c) => E / (m * c);
 
 /* ===== The practical: INVENTED example model (heater, block, thermometer), stepped every 0.25 s ===== */
@@ -653,28 +670,33 @@ function makeRun(o, opt) {
   opt = opt || {}; const seed = opt.seed != null ? opt.seed : nextSeed(), R = mulberry(seed);
   const g = Math.round(o.mass * 1000 + R() * 7 - 3), room = Math.round((19 + R() * 3) * 10) / 10, u = R(), z = gaussR(R), pw = Math.round((38 + R() * 4) * 10) / 10;
   const run = { o: Object.assign({}, o), seed, g, room, P: pw, anom: opt.anom != null ? opt.anom : u < RP.pAnom, lf: 1 + clamp(z * .05, -.1, .1),
-    step: "weigh0", t: 0, rec: { mass: null, start: null, read: [], Eoff: null, high: null }, tries: 0, smsg: null,
+    step: "weigh0", t: 0, rec: { mass: null, start: null, read: [], Eoff: null, high: null, V: null, I: null }, tries: 0, smsg: null,
     calc: { dT: "", dE: "", c: "", ok: {}, msg: [] }, cOK: false, cVal: null, pushed: false };
+  const V = Math.round((11.5 + R() * 1) * 10) / 10, I = Math.round(pw / V * 100) / 100; run.V = V; run.I = I; run.P = V * I;   // steady supply: P = V × I
   physics(run); return run;
 }
 const Tm = (run, t) => { const i = Math.floor(t), f = t - i; if (i >= RP.N) return run.tm[RP.N]; return run.tm[i] + f * (run.tm[i + 1] - run.tm[i]); };
 const Ej = (run, t) => run.step === "weigh0" || run.step === "weigh" || run.step === "start" || run.step === "ready" ? 0 : Math.round(run.P * Math.min(t, RP.tOn));
+const isVI = run => run.o.meter === "vi";
+const heaterOn = run => ["volt", "amp", "heat", "read", "off"].includes(run.step);
+const eVI = (rec, t) => rec.V * rec.I * t;   // E = V × I × t from the pupil's own meter readings
+const accRound = (raw, v, want) => { const t = String(raw).trim().replace(/\s+/g, ""), u = /^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t) ? t.replace(/,/g, "") : t.replace(",", "."), m = u.match(/\.(\d+)$/), dp = Math.min(m ? m[1].length : 0, 3), k = Math.pow(10, dp); return Math.abs(v - Math.floor(want * k + .5 + 1e-9) / k) < 1e-9; };   // rounded half-up to the typed precision
 const half = v => Math.round(v * 2) / 2;
 const accC = o => MAT[o.block].c;
 const idealC = run => Math.round(run.P * RP.tOn) / (run.g / 1000 * (half(run.peak) - half(run.tm[0])));   // c from perfect readings of this run
 
 /* ===== Model state ===== */
-const setupOf = m => ({ block: m.block, mass: m.mass, ins: m.ins, lid: m.lid, oil: m.oil });
+const setupOf = m => ({ block: m.block, mass: m.mass, ins: m.ins, lid: m.lid, oil: m.oil, meter: m.meter });
 const gkey = o => [o.block, o.mass, o.ins ? 1 : 0, o.lid ? 1 : 0, o.oil ? 1 : 0].join("|");
 const setupName = o => `${MAT[o.block].n}, ${o.mass} kg · insulation ${o.ins ? "on" : "off"} · lid ${o.lid ? "on" : "off"} · oil ${o.oil ? "on" : "off"}`;
-function freshM() { const m = { tab: "rp", block: "aluminium", mass: 1, ins: true, lid: true, oil: true, fit: false, runs: [], rep: {}, conc: {}, concMsg: "", concOK: false,
+function freshM() { const m = { tab: "rp", block: "aluminium", mass: 1, ins: true, lid: true, oil: true, meter: "jm", fit: false, runs: [], rep: {}, conc: {}, concMsg: "", concOK: false,
   ca: "water", cb: "copper", E: 10000, ma: 1, mb: 1, cHide: false, hideC: false, note: "" }; m.run = newRunFor(m); return m; }
 function newRunFor(m, opt) {   // at most one invented anomaly among the repeats of one set-up
   const o = setupOf(m), k = gkey(o), g = m.runs.filter(r => r.key === k);
   opt = Object.assign({}, opt); if (opt.anom == null && g.some(r => r.anom)) opt.anom = false;
   return makeRun(o, opt);
 }
-const support = { eq: false, maths: false, words: false, read: false };
+const support = { eq: false, maths: false, words: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
 const st = {};
 let LEVELS = {}, TASKS = {};
@@ -689,7 +711,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -728,15 +750,25 @@ function drawLabBg() {
   /* stopwatch + joulemeter + power supply (text patched by the moving layer) */
   const [sx, sy, sw, sh] = G.sw; h += `<rect class="lcd" x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="8"/>`;
   h += T_(sx + sw + 8, sy + sh / 2 + fs * .35, "stopwatch", fs - 2, 'class="mut"');
-  const [jx, jy, jw, jh] = G.jm; h += `<rect class="psu" x="${jx}" y="${jy}" width="${jw}" height="${jh}" rx="8"/><rect class="lcd" x="${jx + 10}" y="${jy + 10}" width="${jw - 20}" height="${jh - 30}" rx="5"/>`;
-  h += `<text x="${jx + jw / 2}" y="${jy + jh - 7}" font-size="${fs - 3}" text-anchor="middle" style="fill:#E9EDF3">joulemeter</text>`;
+  const [jx, jy, jw, jh] = G.jm, vi = isVI(r);
+  if (!vi) { h += `<rect class="psu" x="${jx}" y="${jy}" width="${jw}" height="${jh}" rx="8"/><rect class="lcd" x="${jx + 10}" y="${jy + 10}" width="${jw - 20}" height="${jh - 30}" rx="5"/>`;
+    h += `<text x="${jx + jw / 2}" y="${jy + jh - 7}" font-size="${fs - 3}" text-anchor="middle" style="fill:#E9EDF3">joulemeter</text>`; }
+  else { const mw = (jw - 8) / 2; [["ammeter", jx], ["voltmeter", jx + mw + 8]].forEach(([nm, x]) => {
+      h += `<rect class="psu" x="${f1(x)}" y="${jy}" width="${f1(mw)}" height="${jh}" rx="8"/><rect class="lcd" x="${f1(x + 7)}" y="${jy + 8}" width="${f1(mw - 14)}" height="${jh - 30}" rx="5"/>` +
+        `<text x="${f1(x + mw / 2)}" y="${jy + jh - 7}" font-size="${G.W > 700 ? fs - 4 : fs - 6}" text-anchor="middle" style="fill:#E9EDF3">${nm}</text>`; }); }
   const [px, py, pw, ph] = G.psu; h += `<rect class="psu" x="${px}" y="${py}" width="${pw}" height="${ph}" rx="8"/>` +
     `<circle cx="${px + pw * .3}" cy="${py + ph * .42}" r="9" style="fill:var(--wire-r)"/><circle cx="${px + pw * .7}" cy="${py + ph * .42}" r="9" style="fill:var(--wire-b)"/>` +
     `<text x="${px + pw / 2}" y="${py + ph - 10}" font-size="${fs - 3}" text-anchor="middle" style="fill:#E9EDF3">power supply</text>`;
   /* wires: power supply → joulemeter → heater */
   const hx = G.hx, hTop = G.blk[1] - (G.W > 700 ? 86 : 74);
-  h += `<path class="wr" d="M${px + pw * .3} ${py + ph * .42}V${jy + jh + 8}H${jx + jw * .3}V${jy + jh}"/><path class="wb" d="M${px + pw * .7} ${py + ph * .42}V${jy + jh + 16}H${jx + jw * .7}V${jy + jh}"/>`;
-  h += `<path class="wr" d="M${jx + jw} ${jy + 22}C${jx + jw + 60} ${jy + 22} ${hx - 70} ${hTop - 40} ${hx - 4} ${hTop}"/><path class="wb" d="M${jx + jw} ${jy + 44}C${jx + jw + 70} ${jy + 44} ${hx - 50} ${hTop - 20} ${hx + 4} ${hTop}"/>`;
+  if (!vi) { h += `<path class="wr" d="M${px + pw * .3} ${py + ph * .42}V${jy + jh + 8}H${jx + jw * .3}V${jy + jh}"/><path class="wb" d="M${px + pw * .7} ${py + ph * .42}V${jy + jh + 16}H${jx + jw * .7}V${jy + jh}"/>`;
+    h += `<path class="wr" d="M${jx + jw} ${jy + 22}C${jx + jw + 60} ${jy + 22} ${hx - 70} ${hTop - 40} ${hx - 4} ${hTop}"/><path class="wb" d="M${jx + jw} ${jy + 44}C${jx + jw + 70} ${jy + 44} ${hx - 50} ${hTop - 20} ${hx + 4} ${hTop}"/>`; }
+  else { /* ammeter in series with the heater; voltmeter across the heater */
+    const mw = (jw - 8) / 2, ax = jx + mw / 2, vx1 = jx + mw + 8 + mw * .3, vx2 = jx + mw + 8 + mw * .7, wx = jx + jw + 14;
+    h += `<path class="wr" d="M${px + pw * .3} ${py + ph * .42}V${jy + jh + 10}H${f1(ax)}V${jy + jh}"/>`;
+    h += `<path class="wr" d="M${f1(jx + 10)} ${jy}V${jy - 8}C${jx + jw * .4} ${jy - 30} ${hx - 70} ${hTop - 50} ${hx - 4} ${hTop}"/>`;
+    h += `<path class="wb" d="M${px + pw * .7} ${py + ph * .42}V${jy + jh + 20}H${f1(wx)}V${jy + 30}C${wx + 40} ${jy + 30} ${hx - 40} ${hTop - 16} ${hx + 4} ${hTop}"/>`;
+    h += `<path class="wv" d="M${f1(vx1)} ${jy}V${jy - 14}C${f1(vx1 + 40)} ${jy - 40} ${hx - 60} ${hTop - 30} ${hx - 3} ${hTop + 4}"/><path class="wv" d="M${f1(vx2)} ${jy}V${jy - 6}C${f1(vx2 + 40)} ${jy - 20} ${hx - 30} ${hTop - 8} ${hx + 3} ${hTop + 4}"/>`; }
   /* base, insulation (behind), block (cut-away), holes */
   const [bx, by, bw, bh] = G.base; h += `<rect class="wood" x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="3"/>`;
   if (o.ins) { const [wx, wy, ww, wh] = G.wool; let bump = ""; if (!o.lid) for (let x = wx + 6; x < wx + ww - 16; x += 22) bump += `<circle class="wool" cx="${f1(x + 11)}" cy="${wy + 4}" r="11"/>`;
@@ -770,10 +802,11 @@ function drawLabBg() {
 function drawLabMov() {   // the parts that change while heating: built once per layout, then only attributes and text are patched
   const G = labGeo(), r = M.run, fs = G.fs, T = Tm(r, r.t), tx = G.tx, colTop = tY(G, T), s = r.step, onBal = s === "weigh0" || s === "weigh";
   const [sx, sy, sw, sh] = G.sw, [jx, jy, jw, jh] = G.jm, [lx, ly, lw, lh] = G.bal, [zx, zy, zw, zh] = G.zoom, ps = G.zs, mid = zy + zh / 2, cx = zx + zw * .3;
-  const g = $("rMov"), key = G.W + (onBal ? "b" : "p"); setVB($("rsvgM"), G.W, G.H);
+  const vi = isVI(r), g = $("rMov"), key = G.W + (onBal ? "b" : "p") + (vi ? "v" : "j"); setVB($("rsvgM"), G.W, G.H);
   if (g._key !== key) {
     let h = `<text id="swT" x="${sx + sw / 2}" y="${sy + sh / 2 + 12}" font-size="${G.W > 700 ? 32 : 30}" text-anchor="middle" class="lcdt"></text>`;
-    h += `<text id="jmT" x="${jx + jw - 18}" y="${jy + (jh - 30) / 2 + 20}" font-size="${G.W > 700 ? 28 : 26}" text-anchor="end" class="lcdt"></text>`;
+    if (!vi) h += `<text id="jmT" x="${jx + jw - 18}" y="${jy + (jh - 30) / 2 + 20}" font-size="${G.W > 700 ? 28 : 26}" text-anchor="end" class="lcdt"></text>`;
+    else { const mw = (jw - 8) / 2; h += `<text id="amT" x="${f1(jx + mw - 12)}" y="${jy + (jh - 30) / 2 + 17}" font-size="${G.W > 700 ? 22 : 18}" text-anchor="end" class="lcdt"></text><text id="vmT" x="${f1(jx + jw - 12)}" y="${jy + (jh - 30) / 2 + 17}" font-size="${G.W > 700 ? 22 : 18}" text-anchor="end" class="lcdt"></text>`; }
     h += `<text id="balT" x="${lx + lw - 26}" y="${ly + lh - 40 + 23}" font-size="${fs}" text-anchor="end" class="lcdt"></text>`;
     if (onBal) h += T_(zx + zw / 2, mid, G.W > 700 ? "Put the block in place first" : "Block not in place", fs - 1, 'text-anchor="middle" class="mut"');
     else {
@@ -789,7 +822,7 @@ function drawLabMov() {   // the parts that change while heating: built once per
     g.innerHTML = h; g._key = key; g._h = null;
   }
   const txt = (id, v) => { const e = document.getElementById(id); if (e && e.textContent !== v) e.textContent = v; };
-  txt("swT", mmss(r.t)); txt("jmT", grp(String(Ej(r, r.t))) + " J"); txt("balT", s === "weigh" ? r.g + " g" : "0 g");
+  txt("swT", mmss(r.t)); if (!vi) txt("jmT", grp(String(Ej(r, r.t))) + " J"); else { const on = heaterOn(r) && r.t < RP.tOn + .01; txt("amT", (on ? r.I : 0).toFixed(2) + " A"); txt("vmT", (on ? r.V : 0).toFixed(1) + " V"); } txt("balT", s === "weigh" ? r.g + " g" : "0 g");
   if (!onBal) { const c = $("colR"), st = $("zStrip"), ld = $("leadP");
     setAttr(c, "y", f1(colTop)); setAttr(c, "height", f1(G.t0y + 10 - colTop));
     setAttr(st, "transform", `translate(0 ${f1(mid + T * ps)})`); setAttr(ld, "d", `M${tx + 14} ${f1(colTop)}L${zx} ${f1(mid)}`); }
@@ -799,10 +832,11 @@ function drawTable() {
   rows.push([0, rec.start == null ? null : 0, rec.start]);
   for (let k = 1; k <= 5; k++) { const x = rec.read[k - 1]; rows.push([k * 2, x ? x.E : null, x ? x.T : null]); }
   const cell = v => v == null ? '<span class="emp">–</span>' : esc(fmt(v));
-  let h = `<table class="rt"><caption>Readings: ${esc(MAT[r.o.block].n)} block${rec.mass != null ? `, mass ${esc(fmt(rec.mass, 3))} kg` : ""}</caption><thead><tr><th scope="col">Time (min)</th><th scope="col">Energy supplied (J)</th><th scope="col">Temperature (°C)</th></tr></thead><tbody>`;
+  let h = `<table class="rt"><caption>Readings: ${esc(MAT[r.o.block].n)} block${rec.mass != null ? `, mass ${esc(fmt(rec.mass, 3))} kg` : ""}</caption><thead><tr><th scope="col">Time (min)</th><th scope="col">${isVI(r) ? "Energy V × I × t (J)" : "Energy supplied (J)"}</th><th scope="col">Temperature (°C)</th></tr></thead><tbody>`;
   rows.forEach(([t, E, T]) => { h += `<tr${r.step === "read" && t === readK(r) * 2 ? ' class="cur"' : ""}><td>${t}</td><td>${cell(E)}</td><td>${cell(T)}</td></tr>`; });
   h += `<tr${r.step === "after" || r.step === "stopped" ? ' class="cur"' : ""}><td class="lbl">Highest</td><td>${cell(rec.Eoff)}</td><td>${cell(rec.high)}</td></tr>`;
   h += `</tbody></table>`;
+  if (isVI(r) && rec.V != null && rec.I != null) h += `<p class="small">Your meter readings: V = ${esc(rec.V.toFixed(1))} V, I = ${esc(rec.I.toFixed(2))} A.</p>`;
   morphHTML($("rtable"), h);
 }
 const readK = r => Math.round(r.t / RP.every);
@@ -840,11 +874,14 @@ function stepHTML() {
   if (s === "weigh0") h = `<p class="stp"><b>Step 1 of 5:</b> Measure the mass of the block with a balance.</p>` + btn("Put the block on the balance");
   else if (s === "weigh") h = `<p class="stp"><b>Step 1 of 5:</b> Read the balance. Record the mass in kilograms.</p>` + inp("Mass =", "kg");
   else if (s === "start") h = `<p class="stp"><b>Step 2 of 5:</b> The block is in place. Read the magnified thermometer scale and record the starting temperature.</p>` + inp("Start temperature =", "°C");
-  else if (s === "ready") h = `<p class="stp"><b>Step 3 of 5:</b> Switch on the heater and joulemeter together, and start timing. <span class="small">Safety: the heater and block get hot. Don’t touch them.</span></p>` + btn("Switch on");
+  else if (s === "ready") h = `<p class="stp"><b>Step 3 of 5:</b> Switch on the heater${isVI(r) ? "" : " and joulemeter together"}, and start timing. <span class="small">Safety: the heater and block get hot. Don’t touch them.</span></p>` + btn("Switch on");
+  else if (s === "volt") h = `<p class="stp"><b>Step 3 of 5:</b> The heater is on. Read the voltmeter and record the potential difference. (The clock starts when you have read both meters.)</p>` + inp("Potential difference V =", "V");
+  else if (s === "amp") h = `<p class="stp"><b>Step 3 of 5:</b> Now read the ammeter and record the current.</p>` + inp("Current I =", "A");
   else if (s === "heat") h = `<p class="stp"><b>Step 4 of 5:</b> Heating. The clock stops every 2 minutes for a reading.</p>`;
-  else if (s === "read") h = `<p class="stp"><b>Step 4 of 5:</b> ${readK(r) * 2} minutes. Read the thermometer. ${readK(r) < 5 ? `The joulemeter reading (${grp(String(Ej(r, r.t)))} J) goes in the table for you.` : "You will read the joulemeter yourself when you switch off."}</p>` + inp("Temperature =", "°C");
-  else if (s === "off") h = `<p class="stp"><b>Step 4 of 5:</b> 10 minutes is the set time. Switch off the heater. The joulemeter stops counting.</p>` + btn("Switch off the heater");
-  else if (s === "joule") h = `<p class="stp"><b>Step 4 of 5:</b> The heater is off. Read the joulemeter and record the energy supplied. (The clock waits for you.)</p>` + inp("Energy supplied =", "J");
+  else if (s === "read") h = `<p class="stp"><b>Step 4 of 5:</b> ${readK(r) * 2} minutes. Read the thermometer. ${readK(r) < 5 ? (isVI(r) ? "The energy so far (V × I × t, from your meter readings) goes in the table for you." : `The joulemeter reading (${grp(String(Ej(r, r.t)))} J) goes in the table for you.`) : isVI(r) ? "You will work out the energy yourself when you switch off." : "You will read the joulemeter yourself when you switch off."}</p>` + inp("Temperature =", "°C");
+  else if (s === "off") h = `<p class="stp"><b>Step 4 of 5:</b> 10 minutes is the set time. Switch off the heater.${isVI(r) ? "" : " The joulemeter stops counting."}</p>` + btn("Switch off the heater");
+  else if (s === "joule") h = isVI(r) ? `<p class="stp"><b>Step 4 of 5:</b> The heater is off. Work out the energy supplied: E = V × I × t, using your meter readings and the heating time in seconds. (The clock waits for you.)</p>` + inp("Energy supplied E =", "J")
+    : `<p class="stp"><b>Step 4 of 5:</b> The heater is off. Read the joulemeter and record the energy supplied. (The clock waits for you.)</p>` + inp("Energy supplied =", "J");
   else if (s === "after") h = `<p class="stp"><b>Step 4 of 5:</b> The heater is off, but the block keeps warming. Watch the thermometer. Record the highest temperature it reaches.</p>` + inp("Highest temperature =", "°C");
   else if (s === "stopped") h = `<p class="stp"><b>Step 4 of 5:</b> The thermometer has stopped rising. Record the highest temperature.</p>` + inp("Highest temperature =", "°C");
   else if (s === "done") h = `<p class="stp"><b>Step 5 of 5:</b> Run complete. Work out the temperature rise and c on the Results tab.</p>` + btn("Go to Results");
@@ -858,20 +895,12 @@ function renderStep(focusIn) {
   const i = $("stepIn"); if (i) i.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); stepGo(); } });
   const b = $("stepGo"); if (b) b.addEventListener("click", stepGo);
   if ((had || focusIn) && (i || b)) (i || b).focus({ preventScroll: true });
-  if (support.read) autoRead();
-}
-let autoT = 0;
-function autoRead() {   // Support: read the thermometer (and balance) for me
-  clearTimeout(autoT); const r = M.run, s = r.step;
-  if (!["weigh", "start", "read", "joule", "stopped"].includes(s) || locked()) return;
-  autoT = setTimeout(() => { if (M.run !== r || r.step !== s || !support.read) return;
-    const v = s === "weigh" ? r.g / 1000 : s === "joule" ? Ej(r, RP.tOn) : half(s === "stopped" ? r.peak : Tm(r, r.t)); const i = $("stepIn"); if (i) i.value = String(v); stepGo(true); }, reduced() ? 50 : 500);
 }
 function smsg(cls, html) { M.run.smsg = [cls, html]; }
 function stepGo(auto) {
   if (guard()) return;
   const r = M.run, s = r.step, rec = r.rec, i = $("stepIn"), raw = i ? i.value : "", v = parseNum(raw);
-  const needNum = ["weigh", "start", "read", "joule", "after", "stopped"].includes(s);
+  const needNum = ["weigh", "start", "volt", "amp", "read", "joule", "after", "stopped"].includes(s);
   if (needNum && !isFinite(v)) { smsg("tip", "Type a number first."); renderStep(true); return; }
   const giveUp = () => r.tries >= 3;
   if (s === "weigh0") { r.step = "weigh"; r.smsg = null; tourSignal("weigh"); drawAll(); return; }
@@ -887,14 +916,33 @@ function stepGo(auto) {
     if (Math.abs(v - Tnow) <= .5) { rec.start = v; r.tries = 0; r.step = "ready"; smsg("good", `✓ Start temperature ${esc(fmt(v))} °C recorded.`); tourSignal("start"); drawAll(true); return; }
     r.tries++; if (giveUp()) { rec.start = half(Tnow); r.tries = 0; r.step = "ready"; smsg("tip", `${readWhy(v)} It reads ${fmt(half(Tnow))} °C, recorded for you.`); drawAll(true); return; }
     smsg("bad", "✗ " + readWhy(v)); renderStep(true); return; }
-  if (s === "ready") { r.step = "heat"; r.smsg = null; tourSignal("on"); tried(1); drawAll(); runTo(RP.every, atReading); return; }
+  if (s === "ready") { r.smsg = null; tourSignal("on"); tried(1); if (isVI(r)) { r.step = "volt"; drawAll(true); return; } r.step = "heat"; drawAll(); runTo(RP.every, atReading); return; }
+  if (s === "volt") {
+    if (Math.abs(v - r.V) < .026) { rec.V = r.V; r.tries = 0; r.step = "amp"; smsg("good", `✓ V = ${esc(r.V.toFixed(1))} V recorded.`); drawAll(true); return; }
+    const why = Math.abs(v - r.I) < .006 ? "That is the ammeter (current, in A). Read the voltmeter." : Math.abs(v - r.V) < .2 ? "Nearly: read every digit on the voltmeter, to 0.1 V." : "Read the voltmeter display, in volts (V).";
+    r.tries++; if (giveUp()) { rec.V = r.V; r.tries = 0; r.step = "amp"; smsg("tip", `${why} It reads ${r.V.toFixed(1)} V, recorded for you.`); drawAll(true); return; }
+    smsg("bad", "✗ " + why); renderStep(true); return; }
+  if (s === "amp") {
+    const go = () => { rec.I = r.I; r.tries = 0; r.step = "heat"; drawAll(); runTo(RP.every, atReading); };
+    if (Math.abs(v - r.I) < .0026) { smsg("good", `✓ I = ${esc(r.I.toFixed(2))} A recorded. Timing starts now.`); go(); return; }
+    const why = Math.abs(v - r.V) < .026 ? "That is the voltmeter (potential difference, in V). Read the ammeter." : Math.abs(v - r.I * 1000) < 6 ? "The ammeter reads in amps (A), not milliamps." : Math.abs(v - r.I) < .02 ? "Nearly: read every digit on the ammeter, to 0.01 A." : "Read the ammeter display, in amps (A).";
+    r.tries++; if (giveUp()) { smsg("tip", `${why} It reads ${r.I.toFixed(2)} A, recorded for you.`); go(); return; }
+    smsg("bad", "✗ " + why); renderStep(true); return; }
   if (s === "read") {
-    const k = readK(r), rec1 = T => { rec.read.push({ t: r.t, E: k < 5 ? Ej(r, r.t) : null, T }); r.tries = 0; tourSignal("read");
+    const k = readK(r), rec1 = T => { rec.read.push({ t: r.t, E: k < 5 ? (isVI(r) ? Math.round(eVI(rec, r.t)) : Ej(r, r.t)) : null, T }); r.tries = 0; tourSignal("read");
       if (k < 5) { r.step = "heat"; drawAll(); runTo((k + 1) * RP.every, atReading); } else { r.step = "off"; drawAll(true); } };
     if (Math.abs(v - Tnow) <= .5) { smsg("good", `✓ ${esc(fmt(v))} °C at ${k * 2} minutes.`); rec1(v); return; }
     r.tries++; if (giveUp()) { smsg("tip", `${readWhy(v)} It reads ${fmt(half(Tnow))} °C, recorded for you.`); rec1(half(Tnow)); return; }
     smsg("bad", "✗ " + readWhy(v)); renderStep(true); return; }
   if (s === "off") { r.step = "joule"; r.smsg = null; drawAll(true); return; }
+  if (s === "joule" && isVI(r)) {
+    const ex = eVI(rec, RP.tOn), E = Math.round(ex), go = v2 => { rec.Eoff = v2; if (rec.read[4]) rec.read[4].E = v2; r.tries = 0; r.step = "after"; drawAll(); runTo(r.peakAt, () => { if (M.run === r && r.step === "after") { r.step = "stopped"; drawAll(); } }); };
+    if (accRound(raw, v, ex)) { smsg("good", `✓ E = ${esc(rec.V.toFixed(1))} × ${esc(rec.I.toFixed(2))} × 600 = ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
+    const VI = rec.V * rec.I, nr = x => Math.abs(v - x) <= Math.max(.005 * Math.abs(x), .01), e8 = rec.read[3] && rec.read[3].E;
+    const why = nr(VI * 10) ? "You used the time in minutes. Change 10 minutes to 600 seconds." : nr(VI) ? "That is V × I (the power, in watts). Multiply by the time in seconds too." : nr(ex / 1000) ? "That is in kilojoules. Give the energy in joules."
+      : nr((rec.V + rec.I) * 600) ? "You added V and I. Multiply them: E = V × I × t." : nr(rec.V * 600) || nr(rec.I * 600) ? "Use both meters: E = V × I × t." : e8 && nr(e8) ? "That is the 8-minute value. The heater was on for 10 minutes: t = 600 s." : Math.abs(v - ex) < 2 ? "Nearly: round to the nearest joule." : "E = V × I × t, with V and I from your meters and t = 600 s.";
+    r.tries++; if (giveUp()) { smsg("tip", `${why} E = ${rec.V.toFixed(1)} × ${rec.I.toFixed(2)} × 600 = ${grp(String(E))} J, recorded for you.`); go(E); return; }
+    smsg("bad", "✗ " + why); renderStep(true); return; }
   if (s === "joule") {
     const E = Ej(r, RP.tOn), go = v2 => { rec.Eoff = v2; if (rec.read[4]) rec.read[4].E = v2; r.tries = 0; r.step = "after"; drawAll(); runTo(r.peakAt, () => { if (M.run === r && r.step === "after") { r.step = "stopped"; drawAll(); } }); };
     if (Math.abs(v - E) <= 1) { smsg("good", `✓ Energy supplied: ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
@@ -929,8 +977,9 @@ function runTo(target, after) {   // animate the clock from run.t to target (sim
 }
 function autoTo(m, until) {   // fill in a run with perfect readings, up to "ready" or "done" (Show answer)
   stopAll(); const r = m.run, rec = r.rec;
-  if (rec.mass == null) rec.mass = r.g / 1000; if (rec.start == null) rec.start = half(r.tm[0]);
+  if (rec.mass == null) rec.mass = r.g / 1000; if (rec.start == null) rec.start = half(r.tm[0]); if (isVI(r)) { if (rec.V == null) rec.V = r.V; if (rec.I == null) rec.I = r.I; }
   if (until === "ready") { if (["weigh0", "weigh", "start"].includes(r.step)) { r.step = "ready"; r.t = 0; } r.smsg = null; return; }
+  if (r.step === "volt" || r.step === "amp") r.t = 0;
   for (let k = rec.read.length + 1; k <= 5; k++) { const t = k * RP.every; rec.read.push({ t, E: Math.round(r.P * t), T: half(r.tm[t]) }); }
   rec.Eoff = Math.round(r.P * RP.tOn); rec.read[4].E = rec.Eoff; if (rec.high == null) rec.high = half(r.peak); r.t = r.peakAt; r.step = "done"; r.smsg = null;
   const c = calcWant(r); r.calc = { dT: fmt(c.dT), dE: String(c.dE), c: fmt(c.c, 0), ok: { dT: true, dE: true, c: true }, msg: [] }; r.cOK = true; r.cVal = Math.round(c.c); pushRun(m, r);
@@ -948,13 +997,15 @@ function calcHTML() {
   if (r.step !== "done") return `<h2>Work out c</h2><p class="small">Finish a run on the Do the practical tab first. You need the mass, the start temperature, the energy supplied and the highest temperature.</p>`;
   const cls = k => C.ok[k] ? " ok" : C.ok[k] === false ? " no" : "", ro = k => C.ok[k] ? " readonly" : "";
   const inp = (k, lbl, unit) => `<label class="cl" for="ci-${k}">${lbl} <input class="numin${cls(k)}" id="ci-${k}" data-k="${k}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(C[k])}"${ro(k)}> <span class="unit">${unit}</span></label>`;
-  let h = `<h2>Work out c from your readings</h2><div class="calc"><p class="given">Mass m = <b>${esc(fmt(rec.mass, 3))} kg</b> · start = <b>${esc(fmt(rec.start))} °C</b> · highest = <b>${esc(fmt(rec.high))} °C</b> · joulemeter at switch-off = <b>${esc(grp(String(rec.Eoff)))} J</b></p>`;
+  let h = `<h2>Work out c from your readings</h2><div class="calc"><p class="given">Mass m = <b>${esc(fmt(rec.mass, 3))} kg</b> · start = <b>${esc(fmt(rec.start))} °C</b> · highest = <b>${esc(fmt(rec.high))} °C</b> · ${isVI(r) ? "energy supplied (V × I × t)" : "joulemeter at switch-off"} = <b>${esc(grp(String(rec.Eoff)))} J</b></p>`;
   h += inp("dT", "Temperature rise Δθ =", "°C") + inp("dE", "Energy supplied ΔE =", "J") + inp("c", "c = ΔE ÷ (m × Δθ) =", "J/kg °C");
   h += `<div class="row"><button class="btn primary" type="button" id="calcGo">Check my working</button></div>`;
   if (C.msg.length) h += `<ul aria-live="polite">${C.msg.map(x => `<li class="${x[0]}">${x[1]}</li>`).join("")}</ul>`;
   if (r.cOK) { const w = calcWant(r); h += `<ol><li>Δθ = ${esc(fmt(rec.high))} − ${esc(fmt(rec.start))} = ${esc(fmt(w.dT))} °C</li><li>c = ΔE ÷ (m × Δθ) = ${esc(grp(String(w.dE)))} ÷ (${esc(fmt(w.m, 3))} × ${esc(fmt(w.dT))})</li><li>c = ${esc(grp(String(w.dE)))} ÷ ${esc(fmt(w.m * w.dT, 3))} = ${esc(fmt(w.c, 0))} J/kg °C</li></ol>`;
     const acc = accC(r.o), d = Math.round(w.c) - acc;
-    h += `<p class="given">Accepted value for ${esc(MAT[r.o.block].n.toLowerCase())}: <b>${acc} J/kg °C</b>. Yours is <b>${Math.abs(d)} J/kg °C ${d > 0 ? "higher" : d < 0 ? "lower" : "the same"}</b>${d > 0 ? ": some energy was lost to the surroundings." : "."}</p>`; }
+    if (hideHigh()) h += `<p class="given">Accepted value for ${esc(MAT[r.o.block].n.toLowerCase())}: <b>${acc} J/kg °C</b>. The comparison is shown once you finish the open question.</p>`; else {
+    h += `<p class="given">Accepted value for ${esc(MAT[r.o.block].n.toLowerCase())}: <b>${acc} J/kg °C</b>. Yours is <b>${Math.abs(d)} J/kg °C ${d > 0 ? "higher" : d < 0 ? "lower" : "the same"}</b>${d > 0 ? ": some energy was lost to the surroundings." : "."}</p>`;
+    h += `<p class="given">Percentage difference = (yours − accepted) ÷ accepted × 100 = (${Math.round(w.c)} − ${acc}) ÷ ${acc} × 100 = <b>${esc(fmt(d / acc * 100, 1))} %</b></p>`; } }
   return h + `</div>`;
 }
 function checkCalc() {
@@ -967,8 +1018,8 @@ function checkCalc() {
     else { C.ok.dT = false; msg.push(["no", "✗ Δθ: " + (Math.abs(v - rec.high) <= .051 ? "that is the highest temperature. Take away the start temperature." : Math.abs(v + w.dT) <= .051 ? "subtract the other way: highest − start." : Math.abs(v - (rec.read[4].T - rec.start)) <= .051 && Math.abs(rec.high - rec.read[4].T) > .05 ? "you used the temperature at switch-off. Use the highest temperature." : "Δθ = highest temperature − start temperature.")]); } }
   if (!C.ok.dE) { const v = P("dE");
     if (!isFinite(v)) msg.push(["no", "ΔE: type the energy supplied."]);
-    else if (Math.abs(v - w.dE) <= .5) { C.ok.dE = true; msg.push(["ok", "✓ ΔE is the joulemeter reading."]); }
-    else { C.ok.dE = false; msg.push(["no", "✗ ΔE: " + (v === 600 || v === 10 ? "that is the time. ΔE is the energy on the joulemeter, in joules." : Math.abs(v - w.dE / 1000) < .01 ? "that is in kJ. Give it in joules." : "use the joulemeter reading at switch-off, in joules.")]); } }
+    else if (Math.abs(v - w.dE) <= .5) { C.ok.dE = true; msg.push(["ok", isVI(r) ? "✓ ΔE is the energy you worked out: V × I × t." : "✓ ΔE is the joulemeter reading."]); }
+    else { C.ok.dE = false; msg.push(["no", "✗ ΔE: " + (v === 600 || v === 10 ? (isVI(r) ? "that is the time. ΔE = V × I × t, in joules." : "that is the time. ΔE is the energy on the joulemeter, in joules.") : Math.abs(v - w.dE / 1000) < .01 ? "that is in kJ. Give it in joules." : isVI(r) ? "use the energy supplied you worked out at switch-off (V × I × t), in joules." : "use the joulemeter reading at switch-off, in joules.")]); } }
   if (!C.ok.c) { const v = P("c");
     if (!isFinite(v)) msg.push(["no", "c: type your value."]);
     else if (!C.ok.dT || !C.ok.dE) msg.push(["no", "c: get Δθ and ΔE right first."]);
@@ -1027,15 +1078,15 @@ function checkMean() {
 /* where did the energy go */
 function drawEnergy() {
   const r = M.run, t = LK() === "tall", W = t ? 600 : 960, H = t ? 190 : 150, fs = t ? 20 : 17; setVB($("esvg"), W, H);
-  if (!r.cOK) { setLayer($("eG"), T_(W / 2, H / 2, "Work out c first. Then this shows where the energy went.", fs, 'text-anchor="middle" class="mut"')); $("eNote").textContent = ""; return; }
+  if (!r.cOK || hideHigh()) { setLayer($("eG"), T_(W / 2, H / 2, r.cOK ? "Shown once you finish the open question." : "Work out c first. Then this shows where the energy went.", fs, 'text-anchor="middle" class="mut"')); $("eNote").textContent = ""; return; }
   const sup = r.rec.Eoff, into = Math.round((r.C + RP.Ch) * (r.tb[r.peakAt] - r.room) / 100) * 100, lost = Math.max(0, sup - into), x0 = 20, w = W - 40, y = fs + 18, bh = t ? 54 : 44, fx = x0 + w * into / sup;
-  let o = T_(x0, fs + 2, `Energy supplied (joulemeter): ${grp(String(sup))} J`, fs, 'class="bold"');
+  let o = T_(x0, fs + 2, `Energy supplied (${isVI(r) ? "V × I × t" : "joulemeter"}): ${grp(String(sup))} J`, fs, 'class="bold"');
   o += `<rect class="eb1" x="${x0}" y="${y}" width="${f1(fx - x0)}" height="${bh}" rx="4"/><rect class="eb2" x="${f1(fx)}" y="${y}" width="${f1(x0 + w - fx)}" height="${bh}" rx="4"/>`;
   o += `<path d="M${f1(fx)} ${y - 4}v${bh + 8}" style="stroke:var(--ink);stroke-width:2"/>`;
   o += T_(x0, y + bh + fs + 8, `Into the block (and heater) ≈ ${grp(String(into))} J`, fs, "");
   o += T_(x0 + w, y + bh + (t ? fs * 2 + 16 : fs + 8), `To the surroundings ≈ ${grp(String(lost))} J`, fs, 'text-anchor="end"');
   setLayer($("eG"), o);
-  $("eNote").textContent = `Left bar: into the block and the heater inside it (true c × m × the block’s temperature rise, plus a little for the heater). Right bar: transferred to the surroundings (the air and the bench). This energy is wasted, but not destroyed. Your c is ${r.cVal > accC(r.o) ? "higher than" : "close to"} the true value because the joulemeter counts all ${grp(String(sup))} J.`;
+  $("eNote").textContent = `Left bar: into the block and the heater inside it (true c × m × the block’s temperature rise, plus a little for the heater). Right bar: transferred to the surroundings (the air and the bench). This energy is wasted, but not destroyed. Your c is ${r.cVal > accC(r.o) ? "higher than" : "close to"} the true value because ${isVI(r) ? "V × I × t counts" : "the joulemeter counts"} all ${grp(String(sup))} J.`;
 }
 /* conclusion frame */
 const CONC = {
@@ -1049,6 +1100,7 @@ function concWant() { const r = M.run, v = r.cVal, acc = accC(r.o); const a = v 
   return { a, b: a === "higher than" ? "some energy was transferred to the surroundings" : "my thermometer readings were slightly out", c: "wrap the block in more insulation and add a lid" }; }
 function concHTML() {
   const r = M.run; if (!r.cOK) return `<h2>Conclusion</h2><p class="small">Work out c first.</p>`;
+  if (hideHigh()) return `<h2>Conclusion</h2><p class="small">Shown once you finish the open question.</p>`;
   let h = `<h2>Conclusion</h2><div class="concl">`;
   Object.entries(CONC).forEach(([k, q]) => { h += `<label class="grow"><span>${q.lbl}</span> <select data-c="${k}" aria-label="${esc(q.lbl)}"${M.concOK ? " disabled" : ""}><option value="">choose…</option>${q.opts.map(x => `<option value="${esc(x)}"${M.conc[k] === x ? " selected" : ""}>${esc(x)}</option>`).join("")}</select>${q.tail ? ` <span>${q.tail}</span>` : ""}</label>`; });
   h += `</div><div class="row"><button class="btn" type="button" id="concGo"${M.concOK ? " disabled" : ""}>Check my conclusion</button></div>`;
@@ -1113,7 +1165,7 @@ function morphFocus(el, h) {   // rebuild a panel but keep focus in the same inp
 }
 function renderCtl() {
   const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => { const on = String(b.dataset[attr]) === String(v); if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
-  pr("#tabs button", "tab", M.tab); pr("#blockSeg button", "b", M.block); pr("#massSeg button", "m", M.mass); pr("#aSeg button", "k", M.ca); pr("#bSeg button", "k", M.cb);
+  pr("#tabs button", "tab", M.tab); pr("#blockSeg button", "b", M.block); pr("#massSeg button", "m", M.mass); pr("#meterSeg button", "e", M.meter); pr("#aSeg button", "k", M.ca); pr("#bSeg button", "k", M.cb);
   const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
   sw("insSw", M.ins); sw("lidSw", M.lid); sw("oilSw", M.oil); sw("fitSw", M.fit);
   [["sE", "E", "oE", v => grp(String(v)) + " J"], ["sMA", "ma", "oMA", v => v + " kg"], ["sMB", "mb", "oMB", v => v + " kg"]].forEach(([id, k, out, fm]) => {
@@ -1123,7 +1175,7 @@ function renderCtl() {
 function drawAll(focusIn) { drawPane(focusIn); renderCtl(); }
 function setTab(t) { if (anim) stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); if (t === "cmp") tried(4); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); if (a.finish) a.finish(); }
-const running = m => ["heat", "read", "off", "joule", "after", "stopped"].includes((m || M).run.step);
+const running = m => ["volt", "amp", "heat", "read", "off", "joule", "after", "stopped"].includes((m || M).run.step);
 
 /* ===== Demo: things to try ===== */
 const TRY = ["Weigh the block and record its mass in kg.", "Record the start temperature, then switch on.", "Work out c on the Results tab. Is it higher than the accepted value?",
@@ -1142,26 +1194,19 @@ function modelHigh() {   // heat loss always makes the measured c too high (chec
   return idealC(r) > accC(r.o);
 }
 TASKS.easy = [
-  { id: "def", kind: "choice", lesson: "L6 s6–s7, s14 Q1", text: "What is specific heat capacity?", setup: SU.cmp(),
+  { id: "def", kind: "choice", lesson: "L6 s6–s7, s14 Q1", text: "What is specific heat capacity?", setup: SU.cmp(), hideWords: ["shc"],
     options: [{ t: "The energy needed to raise the temperature of 1 kg of a substance by 1 °C.", ok: () => true },
       { t: "The energy needed to raise the temperature of a substance by 1 °C.", why: "Say how much substance: 1 kg. Specific heat capacity is per kilogram, so it does not depend on the mass." },
       { t: "How hot a substance gets when it is heated.", why: "That is temperature. Specific heat capacity is about energy: the joules needed for each kilogram and each °C." },
       { t: "The energy needed to raise the temperature of 1 kg of a substance by 10 °C.", why: "It is for a rise of 1 °C, not 10 °C." }],
     explain: "Specific heat capacity (c) is the energy needed to raise the temperature of 1 kg of a substance by 1 °C. Its unit is J/kg °C.", stuck: "words",
     hints: ["It is an amount of energy, for a set mass and a set temperature rise.", "Look at the unit: J/kg °C. Joules per kilogram per degree.", "The energy to raise 1 kg by 1 °C."] },
-  { id: "rad", kind: "choice", lesson: "L6 s9, s16 Q2", text: "Why is water used inside central-heating radiators?", setup: SU.cmp("water", "copper", 1, 1, 10000),
-    options: [{ t: "It has a high specific heat capacity, so each kilogram stores lots of energy for each °C.", ok: () => MAT.water.c > MAT.aluminium.c && MAT.water.c > MAT.copper.c },
-      { t: "It has a low specific heat capacity, so it heats up quickly.", why: "Water’s value is very high: 4200 J/kg °C. Metals are much lower." },
-      { t: "It heats up and cools down very quickly.", why: "A high specific heat capacity means slow to heat and slow to cool. Water stores lots of energy and releases it slowly." },
-      { t: "It stores temperature better than metal does.", why: "Temperature is not stored: energy is. Heat and temperature are not the same. Water stores lots of energy per kilogram for each °C." }],
-    explain: "Water has a high specific heat capacity (4200 J/kg °C). Each kilogram stores lots of energy for each °C, so it carries lots of energy and releases it slowly as it cools.", stuck: "words",
-    hints: ["Compare water’s specific heat capacity with a metal’s on the Compare materials tab.", "A high value means lots of energy for each °C.", "High specific heat capacity: each kilogram stores lots of energy for each °C."] },
   { id: "pred", kind: "choice", lesson: "L6 s10, s16 Q1", text: "Predict: 1 kg of water and 1 kg of iron each get 10 000 J. Which reaches the higher temperature?", lock: "all", after: "cmp", setup: SU.cmp("water", "iron", 1, 1, 10000, true),
     options: [{ t: "Iron", ok: () => dTheta(10000, 1, MAT.iron.c) > dTheta(10000, 1, MAT.water.c) },
       { t: "Water", why: "Water has the higher specific heat capacity, so it needs more energy for each °C. For the same energy it rises less." },
       { t: "Both the same: they get the same energy.", why: "The same energy does not give the same temperature rise. Energy and temperature are not the same thing: the rise depends on c." },
       { t: "Water, because water is heavier.", why: "They have the same mass (1 kg). And more mass would mean a smaller rise, not a bigger one." }],
-    explain: `Iron has a much lower specific heat capacity (450 J/kg °C) than water (4200 J/kg °C). It needs fewer joules for each °C, so it rises more: ${fmt(dTheta(10000, 1, 450), 1)} °C against ${fmt(dTheta(10000, 1, 4200), 1)} °C.`,
+    explain: `Iron has a much lower specific heat capacity (450 J/kg °C) than water (4200 J/kg °C). It needs fewer joules for each °C, so it rises more: ${fmt(dTheta(10000, 1, 450), 1)} °C against ${fmt(dTheta(10000, 1, 4200), 1)} °C. Water’s high value is why it is used in radiators: each kilogram stores lots of energy for each °C.`,
     hints: ["Which has the lower specific heat capacity: water (4200) or iron (450)?", "A lower value means fewer joules are needed for each °C.", "Iron: lower specific heat capacity, so a bigger rise."] },
   { id: "dE", kind: "num", lesson: "L6 s11, s14 Q2", text: "Calculate the energy needed to heat 4 kg of water by 20 °C. (c for water = 4200 J/kg °C)", setup: SU.cmp("water", "copper", 4, 1, 10000),
     frame: "ΔE = m × c × Δθ", lbl: "ΔE =", unit: "J", ans: () => 4 * MAT.water.c * 20,
@@ -1181,7 +1226,7 @@ TASKS.easy = [
     rows: [["m", "Mass of the block:", "balance"], ["e", "Energy supplied to the heater:", "joulemeter"], ["t", "Temperature of the block:", "thermometer"], ["s", "Time of heating:", "stopwatch"]],
     bank: ["balance", "joulemeter", "thermometer", "stopwatch", "ammeter", "ruler"],
     why: (k, w) => ({ balance: "A balance measures mass.", joulemeter: "A joulemeter measures the energy supplied, in joules.", thermometer: "A thermometer measures temperature.", stopwatch: "A stopwatch measures time.",
-      ammeter: "An ammeter measures current. Here the joulemeter measures the energy supplied directly.", ruler: "A ruler measures length. Nothing in this practical is measured with a ruler." })[w],
+      ammeter: "An ammeter measures current. With a voltmeter and a stopwatch you could work out the energy (E = V × I × t), but the meter that measures energy directly is the joulemeter.", ruler: "A ruler measures length. Nothing in this practical is measured with a ruler." })[w],
     explain: "Mass: balance. Energy supplied: joulemeter. Temperature: thermometer. Time: stopwatch.", stuck: "words",
     hints: ["Look at the apparatus on the Do the practical tab.", "The joulemeter is the meter between the power supply and the heater.", "Balance, joulemeter, thermometer, stopwatch."] },
   { id: "order", kind: "build", ordered: true, lesson: "L7 s8–s9", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.lab(),
@@ -1191,20 +1236,28 @@ TASKS.easy = [
     orderMsg: "All five steps, but not in order. Mass first, and the calculation last.",
     explain: "Mass first, then the start temperature, then heat, then the final readings, then calculate.",
     hints: ["Start with the measurement you make before the block is heated.", "You need the starting temperature before you switch on. The calculation comes last.", "Mass → start temperature → switch on → switch off and record → calculate."] },
-  { id: "weigh", kind: "goal", lesson: "L7 s8 steps 1–2", text: "Do steps 1 and 2 on the model: weigh the block, record its mass in kg, then record the starting temperature.", setup: SU.lab("aluminium"),
-    test: M => M.run.rec.mass != null && M.run.rec.start != null,
-    not: M => M.run.rec.mass == null ? (M.run.step === "weigh0" ? "Press Put the block on the balance first." : "Read the balance and record the mass in kg (grams ÷ 1000).") : "Now read the magnified thermometer scale and record the starting temperature.",
-    done: M => `Mass ${fmt(M.run.rec.mass, 3)} kg and start temperature ${fmt(M.run.rec.start)} °C recorded. Next you would switch on.`,
-    reveal: M => { autoTo(M, "ready"); },
-    hints: ["On the Do the practical tab, press Put the block on the balance.", "The balance reads in grams. Divide by 1000 for kg: 1002 g = 1.002 kg.", "Record the mass in kg. Then read the magnified scale and record the start temperature."] },
+  { id: "res", kind: "choice", lesson: "L7 s8 step 2 + notes: resolution", text: "Look at the magnified thermometer scale on the model. What is the resolution of this thermometer?", lock: "all", hideWords: ["res"], after: "lab", setup: m => { SU.lab()(m); m.run.step = "start"; },
+    options: [{ t: "1 °C", ok: () => true },
+      { t: "5 °C", why: "5 °C is the gap between the numbers. The resolution is the smallest scale division: the gap between the small marks." },
+      { t: "0.5 °C", why: "You can estimate halfway between two marks, but the resolution is the smallest scale division itself." },
+      { t: "110 °C", why: "That is about the range: how far the scale goes. The resolution is the smallest change the scale can show." }],
+    explain: "The resolution is the smallest change an instrument can show: one scale division. The small marks are 1 °C apart, so the resolution is 1 °C.", stuck: "words",
+    hints: ["Resolution means the smallest change the scale can show.", "Look at the small marks between the numbers. How far apart are they?", "Count the small marks between two numbers 5 °C apart."] },
+  { id: "safe", kind: "gaps", fixed: true, lesson: "L7 s8 step 3 + notes: safety", text: "Complete the safety plan for this practical: the hazard, the risk and a control.", lock: "all", setup: SU.lab(),
+    rows: [["h", "Hazard (the thing that could cause harm):", "the hot heater and block"], ["r", "Risk (the harm it could do):", "burns to the skin"], ["c", "Control (how to reduce the risk):", "don’t touch them; let them cool before packing away"]],
+    bank: ["the hot heater and block", "burns to the skin", "don’t touch them; let them cool before packing away", "use a higher voltage so it heats faster", "the thermometer scale"],
+    why: (k, w) => ({ "the hot heater and block": k === "h" ? "" : "That is the hazard: the object that could cause harm.", "burns to the skin": k === "r" ? "" : "A burn is the risk: the harm that could happen.",
+      "don’t touch them; let them cool before packing away": k === "c" ? "" : "That is a control: what you do to reduce the risk.",
+      "use a higher voltage so it heats faster": "A higher voltage makes the heater hotter, so it raises the risk. It is not a control.", "the thermometer scale": "The scale can’t harm you. The hazard is the hot heater and block." })[w],
+    explain: "Hazard: the hot heater and block. Risk: burns to the skin (run a burn under cold water for 10 minutes). Control: don’t touch them, and let everything cool before packing away.",
+    hints: ["A hazard is a thing. A risk is what it could do to you. A control is what you do about it.", "What gets hot in this practical? What could it do to your skin?", "Hazard: the hot heater and block. Risk: burns."] },
   { id: "c450", kind: "num", lesson: "L7 s13 Q2", text: "A 1 kg block is given 13 500 J and its temperature rises by 30 °C. Calculate its specific heat capacity.", setup: SU.lab(),
     frame: "c = ΔE ÷ (m × Δθ)", lbl: "c =", unit: "J/kg °C", ans: () => 13500 / (1 * 30),
-    wrongs: [[405000, "You multiplied. Rearrange: c = ΔE ÷ (m × Δθ)."], [1 / 450, "You divided the wrong way. c = ΔE ÷ (m × Δθ) = 13 500 ÷ 30."], [13500, "That is the energy. Divide it by (m × Δθ)."],
-      [13470, "You subtracted. Divide: c = 13 500 ÷ (1 × 30)."], [30, "That is the temperature rise. c = ΔE ÷ (m × Δθ)."]],
+    wrongs: [[405000, "You multiplied. Rearrange: c = ΔE ÷ (m × Δθ)."], [1 / 450, "You divided the wrong way. c = ΔE ÷ (m × Δθ) = 13 500 ÷ 30."], [13500, "That is the energy. Divide it by (m × Δθ)."], [30, "That is the temperature rise. c = ΔE ÷ (m × Δθ)."]],
     generic: "Rearrange: c = ΔE ÷ (m × Δθ), then substitute.", stuck: "eq",
     working: () => ["Rearrange: c = ΔE ÷ (m × Δθ)", "Substitute: c = 13 500 ÷ (1 × 30)", "Answer: c = 450 J/kg °C (close to iron or steel)"],
     hints: ["Rearrange ΔE = m c Δθ to make c the subject.", "c = ΔE ÷ (m × Δθ) = 13 500 ÷ (1 × 30).", "13 500 ÷ 30 = 450 J/kg °C."] },
-  { id: "high", kind: "choice", lesson: "L7 s12, s15 Q3", text: "Some energy from the heater is lost to the surroundings. Does this make your value for c too high or too low?", setup: SU.lab(),
+  { id: "high", kind: "choice", lesson: "L7 s12, s15 Q3", text: "Some energy from the heater is lost to the surroundings. Does this make your value for c too high or too low?", setup: SU.lab(), hideHigh: true, hideWords: ["sys"],
     options: [{ t: "Too high: it seems more energy was needed to warm the block.", ok: () => modelHigh() },
       { t: "Too low: less energy reached the block.", why: "Less energy did reach the block. But you divide all the energy on the joulemeter by m × Δθ, and Δθ is smaller, so c comes out too high." },
       { t: "No effect: the lost energy is destroyed, so it doesn’t count.", why: "Energy is never destroyed: it is transferred to the surroundings. The joulemeter still counts it, so c comes out too high." },
@@ -1214,12 +1267,12 @@ TASKS.easy = [
 ];
 const MS6 = ["Level 3 (5–6 marks): a complete, valid method: every essential step (weigh, start temperature, heater and joulemeter on, switch off and read the joulemeter, highest temperature, calculate c) in a logical order; 6 marks also reduces energy losses.",
   "Level 2 (3–4 marks): most of the method; an essential step missing or out of order.", "Level 1 (1–2 marks): simple relevant steps that would not give a valid result.",
-  "Indicative content: weigh the block; oil in the thermometer hole; start temperature; heater and joulemeter on together; switch off after a set time and read the joulemeter; highest temperature; Δθ and c = ΔE ÷ (m × Δθ); insulation or a lid."];
+  "Indicative content: weigh the block; oil in the thermometer hole; start temperature; heater and joulemeter on together; switch off after a set time and read the joulemeter (or read V and I and work out E = V × I × t); highest temperature; Δθ and c = ΔE ÷ (m × Δθ); insulation or a lid."];
 TASKS.hard = [
-  { id: "sand", kind: "build", ordered: true, lesson: "L6 s14 Q3", text: "Equal masses of water and sand get the same energy. Water has the higher specific heat capacity. Explain which reaches the higher temperature. [3 marks]",
+  { id: "sand2", kind: "build", ordered: true, lesson: "L6 s14 Q3", text: "Equal masses of water and sand get the same energy. Water has the higher specific heat capacity. Explain which reaches the higher temperature. [3 marks]",
     frame: "Say which gets hotter, then explain using specific heat capacity.", lock: "all", after: "cmp", setup: SU.cmp("water", "sand", 1, 1, 10000, true),
-    stm: [{ t: "Sand reaches the higher temperature.", c: 1 }, { t: "Sand has a lower c: fewer joules warm each kg by 1 °C,", c: 2 }, { t: "so for the same energy and mass, it rises more.", c: 3 },
-      { t: "Water gets hotter: it has the higher specific heat capacity.", why: "A higher specific heat capacity means more energy for each °C, so water rises less." },
+    stm: [{ t: "Sand reaches the higher temperature.", c: 1 }, { t: "Sand has the lower specific heat capacity,", c: 2 }, { t: "so the same energy gives a bigger rise.", c: 3 },
+      { t: "Water gets hotter: its c is higher.", why: "A higher specific heat capacity means more energy for each °C, so water rises less." },
       { t: "Sand gets hotter because it is heavier.", why: "The masses are equal. And a heavier sample would rise less, not more, for the same energy." },
       { t: "Water stores more heat, so it is hotter.", why: "Storing more energy per °C means a smaller temperature rise. Heat (energy) and temperature are not the same." }],
     miss: { 1: "Say which one reaches the higher temperature.", 2: "Compare their specific heat capacities: joules needed per °C?", 3: "Link it back: same energy and mass, so which rises more?" },
@@ -1246,43 +1299,46 @@ TASKS.hard = [
       "the mass of the block": "Keep the mass the same: it is a control variable.", "the specific heat capacity": "You calculate c from your results. It is a property of the metal: it doesn’t change, and it doesn’t depend on the mass." })[w],
     explain: "Independent: the energy supplied (heat for longer to supply more). Dependent: the temperature of the block. Control: the mass and the metal of the block, and the insulation.", stuck: "words",
     hints: ["Which one goes up as the joulemeter counts?", "You read the thermometer to measure it. You weigh the block once and keep it.", "Energy supplied (change), temperature (measure), mass of the block (keep the same)."] },
-  { id: "steel", kind: "num", lesson: "L7 s10 (We do)", text: "A 2 kg steel block is given 18 000 J. Its temperature rises from 18 °C to 38 °C. Calculate its specific heat capacity.", lock: "all", after: "cmp", setup: m => { SU.lab("steel")(m); m.hideC = true; },
-    frame: "Calculate: first Δθ = final − start, then c = ΔE ÷ (m × Δθ).", lbl: "c =", unit: "J/kg °C", ans: () => 18000 / (2 * (38 - 18)),
-    wrongs: [[18000 / (2 * 38), "You used 38 °C. Use the temperature rise: Δθ = 38 − 18 = 20 °C."], [500, "You used 18 °C. Use the temperature rise: Δθ = 38 − 18 = 20 °C."], [900, "You left out the mass. Divide by (2 × 20)."],
-      [720000, "You multiplied. c = ΔE ÷ (m × Δθ)."], [40 / 18000, "You divided the wrong way. c = 18 000 ÷ (2 × 20)."], [18000 / 112, "You multiplied 2 by 56 (18 + 38). Use the rise: 38 − 18 = 20 °C."]],
-    generic: "Find Δθ = 38 − 18 first, then c = ΔE ÷ (m × Δθ).", stuck: "maths",
-    working: () => ["Temperature rise: Δθ = 38 − 18 = 20 °C", "Rearrange: c = ΔE ÷ (m × Δθ)", "Substitute: c = 18 000 ÷ (2 × 20) = 18 000 ÷ 40", "Answer: c = 450 J/kg °C (matches steel)"],
-    hints: ["Δθ is a change: final − start.", "Δθ = 20 °C. Now c = 18 000 ÷ (2 × 20).", "18 000 ÷ 40 = 450 J/kg °C."] },
+  { id: "ivt", kind: "num", lesson: "L7 s10 + notes: E = I × V × t", text: "The heater runs at 12 V and 3.5 A for 10 minutes. It heats a 2 kg block from 18 °C to 46 °C. Calculate the specific heat capacity of the block.", lock: "all", after: "cmp", setup: m => { SU.lab("steel")(m); m.hideC = true; },
+    frame: "Calculate: E = V × I × t (t in seconds), Δθ = final − start, then c = ΔE ÷ (m × Δθ).", lbl: "c =", unit: "J/kg °C", ans: () => 12 * 3.5 * 600 / (2 * (46 - 18)),
+    wrongs: [[12 * 3.5 * 10 / 56, "You used the time in minutes. 10 minutes = 600 s, so E = 12 × 3.5 × 600 = 25 200 J."], [12 * 3.5 / 56, "You left out the time. E = V × I × t = 12 × 3.5 × 600."],
+      [25200 / (2 * 46), "You used 46 °C. Use the temperature rise: Δθ = 46 − 18 = 28 °C."], [25200 / (2 * 18), "You used 18 °C. Use the temperature rise: Δθ = 46 − 18 = 28 °C."], [25200 / 28, "You left out the mass. Divide by (2 × 28)."],
+      [25200 * 56, "You multiplied. c = ΔE ÷ (m × Δθ)."], [56 / 25200, "You divided the wrong way. c = 25 200 ÷ (2 × 28)."], [25.2 / 56, "You used the energy in kJ. Use joules: 25 200 J."], [15.5 * 600 / 56, "You added V and I. Multiply them: E = V × I × t."]],
+    generic: "Find E = 12 × 3.5 × 600 first, then Δθ = 46 − 18, then c = ΔE ÷ (m × Δθ).", stuck: "maths",
+    working: () => ["Energy: E = V × I × t = 12 × 3.5 × 600 = 25 200 J (10 min = 600 s)", "Temperature rise: Δθ = 46 − 18 = 28 °C", "Rearrange: c = ΔE ÷ (m × Δθ)", "Substitute: c = 25 200 ÷ (2 × 28) = 25 200 ÷ 56", "Answer: c = 450 J/kg °C (matches steel)"],
+    hints: ["Change 10 minutes to seconds, then E = V × I × t.", "E = 25 200 J and Δθ = 28 °C. Now c = ΔE ÷ (m × Δθ).", "25 200 ÷ (2 × 28) = 450 J/kg °C."] },
   { id: "run", kind: "goal", lesson: "L7 s8, s10", text: "Do a full run with the 1 kg copper block, then work out c on the Results tab from your own readings.", setup: SU.lab("copper"),
     test: M => M.run.o.block === "copper" && M.run.cOK,
     not: M => M.run.o.block !== "copper" ? "Choose the copper block (Block: Copper) and start a new run." : M.run.step !== "done" ? "Finish the run on the Do the practical tab: follow the steps under the picture." : "Now open Results and work out Δθ, ΔE and c. Press Check my working.",
     done: M => `Your value: c = ${M.run.cVal} J/kg °C. Copper’s value is 385 J/kg °C${M.run.cVal > 385 ? ", so yours is a little high: some energy was lost to the surroundings." : "."}`,
     reveal: M => { if (M.run.o.block !== "copper" || running(M)) { M.block = "copper"; M.run = newRunFor(M); } autoTo(M, "done"); M.tab = "res"; },
     hints: ["Follow the steps under the picture: weigh, start temperature, switch on.", "Read the thermometer at each stop. After switching off, record the highest temperature.", "On Results: Δθ = highest − start; ΔE = the joulemeter reading; c = ΔE ÷ (m × Δθ)."] },
-  { id: "why", kind: "build", ordered: true, lesson: "L7 s12, s14 Q3", text: "A student’s value for c is higher than the true value. Explain why, and suggest one improvement. [3 marks]", frame: "Explain, then suggest. Start with: Some energy…", setup: SU.lab(),
-    stm: [{ t: "Some energy from the heater is transferred to the surroundings,", c: 1 }, { t: "so it seems more energy was needed to warm the block, making c too high.", c: 2 }, { t: "Improvement: wrap the block in insulation, or add a lid, to reduce the energy lost.", c: 3 },
-      { t: "The lost energy is destroyed, so it is not counted.", why: "Energy is never destroyed. It is transferred to the surroundings, and the joulemeter still counts it." },
-      { t: "Improvement: use a heavier block, because heavier blocks heat up faster.", why: "A heavier block needs more energy for each °C, so it heats up more slowly. And c does not depend on the mass." },
-      { t: "The thermometer gives extra energy to the block.", why: "The thermometer only measures temperature." }],
+  { id: "why2", kind: "build", ordered: true, hideHigh: true, hideWords: ["ins", "sys"], lesson: "L7 s12, s14 Q3", text: "A student’s value for c is higher than the true value. Explain why, and suggest one improvement. [3 marks]", frame: "Explain, then suggest. Start with: Some energy…", setup: SU.lab(),
+    stm: [{ t: "Some energy is lost to the surroundings,", c: 1 }, { t: "so more energy seems needed: c is too high.", c: 2 }, { t: "Improve: add insulation or a lid.", c: 3 },
+      { t: "Lost energy is destroyed, so isn’t counted.", why: "Energy is never destroyed. It is transferred to the surroundings, and the joulemeter still counts it." },
+      { t: "Improve: use a heavier block; it heats faster.", why: "A heavier block needs more energy for each °C, so it heats up more slowly. And c does not depend on the mass." },
+      { t: "The thermometer gives the block energy.", why: "The thermometer only measures temperature." },
+      { t: "It’s a random error: repeat and average.", why: "Heat loss pushes every value the same way (too high), so it is a systematic error. Repeats and a mean don’t remove it." }],
     miss: { 1: "Say where some of the energy goes.", 2: "Explain why that makes c come out too high.", 3: "Suggest an improvement that reduces the energy lost." },
     orderMsg: "All the right points, but not in order. Explain first, then suggest the improvement.",
-    explain: "Some energy is lost to the surroundings (1), so it seems more energy was needed than m c Δθ, making c too high (1). Improvement: add insulation or a lid (1).",
+    explain: "Some energy is lost to the surroundings (1), so it seems more energy was needed than m c Δθ, making c too high (1). Improvement: add insulation or a lid (1). This is a systematic error: it pushes every value the same way, so repeats don’t remove it.",
     hints: ["Where can energy go, apart from into the block?", "The joulemeter still counts lost energy. Which way does that push c?", "Energy lost → c too high → insulation or a lid."] },
-  { id: "sys", kind: "choice", lesson: "L7 s6, s12", text: "Energy lost to the surroundings makes every value of c too high. What type of error is this?", setup: SU.lab(),
-    options: [{ t: "A systematic error", ok: () => modelHigh() },
-      { t: "A random error", why: "A random error makes readings scatter, some too high and some too low. This one pushes every value the same way: too high." },
-      { t: "An anomaly", why: "An anomaly is one result that doesn’t fit the pattern. Here every value is too high, so it is a systematic error." },
-      { t: "Not an error: the lost energy is destroyed", why: "Energy is never destroyed. It is transferred to the surroundings, and it makes every value of c too high." }],
-    explain: "A systematic error shifts every reading the same way. Constant heat loss makes every value of c too high. Insulation and a lid reduce it.", stuck: "words",
-    hints: ["Does the heat loss push c up on some runs and down on others, or always the same way?", "An error that shifts every reading the same way has a name in the key words.", "It is a systematic error."] },
-  { id: "imp", kind: "gaps", pair: true, lesson: "L7 s6–s7, s12", text: "Suggest one improvement to the method and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab(),
-    rows: [["i", "One improvement is to", null, ["add a drop of oil to the thermometer hole", "wrap the block in insulation and add a lid", "record the highest temperature after switching off"]],
-      ["r", "This helps because", null, ["it improves thermal contact, so the thermometer reads the block’s temperature", "it reduces the energy lost to the surroundings", "the block keeps warming after the heater is switched off", "it stops energy being destroyed", "it makes the test fair"]]],
+  { id: "grad", kind: "num", lesson: "AQA required practical: gradient of the graph", text: "A 2 kg block starts at 20 °C. Its temperature–energy graph curves at first, then is straight. On the straight part it rises from 24 °C to 34 °C while the energy goes from 6000 J to 24 000 J. Use c = 1 ÷ (m × gradient) to find c.", lock: "all", after: "cmp", setup: m => { SU.lab()(m); m.hideC = true; },
+    frame: "Calculate: gradient = change in temperature ÷ change in energy (straight part only). Then c = 1 ÷ (m × gradient).", lbl: "c =", unit: "J/kg °C", ans: () => 1 / (2 * (34 - 24) / (24000 - 6000)),
+    wrongs: [[1 / (2 * 14 / 24000), "You used the whole graph from 20 °C at 0 J. Use only the straight part: at the start the heater and thermometer are still warming up."], [1 / (10 / 18000), "You left out the mass: 1 ÷ gradient is 1800. c = 1 ÷ (2 × gradient)."],
+      [10 / 18000, "That is the gradient (or m × gradient). Now c = 1 ÷ (m × gradient)."], [1 / (2 * 34 / 24000), "Use the change in temperature and the change in energy on the straight part, not single readings."],
+      [2 * 18000 / 10, "Gradient = 10 ÷ 18 000 (temperature ÷ energy). Then c = 1 ÷ (m × gradient)."]],
+    generic: "Gradient = (34 − 24) ÷ (24 000 − 6000). Then c = 1 ÷ (2 × gradient).", stuck: "maths",
+    working: () => ["Straight part only: gradient = (34 − 24) ÷ (24 000 − 6000) = 10 ÷ 18 000 = 0.000 556 °C/J", "m × gradient = 2 × 0.000 556 = 0.001 11", "c = 1 ÷ 0.001 11", "Answer: c = 900 J/kg °C (close to aluminium). The start curves because the heater and thermometer take time to warm up."],
+    hints: ["Ignore the curved start. Use the two points on the straight part.", "Gradient = 10 °C ÷ 18 000 J. Multiply it by the mass, 2 kg.", "c = 1 ÷ (2 × 10 ÷ 18 000) = 900 J/kg °C."] },
+  { id: "imp2", kind: "gaps", pair: true, lesson: "L7 s6–s7, s12", text: "Suggest one improvement to the method and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab(),
+    rows: [["i", "One improvement is to", null, ["add a drop of oil to the thermometer hole", "wrap the block in insulation and add a lid", "record the highest temperature after switching off", "read the thermometer with your eye level with the liquid"]],
+      ["r", "This helps because", null, ["it improves thermal contact, so the thermometer reads the block’s temperature", "it reduces the energy lost to the surroundings", "the block keeps warming after the heater is switched off", "it avoids parallax error", "it stops energy being destroyed", "it makes the test fair"]]],
     PAIRS: { "add a drop of oil to the thermometer hole": "it improves thermal contact, so the thermometer reads the block’s temperature", "wrap the block in insulation and add a lid": "it reduces the energy lost to the surroundings",
-      "record the highest temperature after switching off": "the block keeps warming after the heater is switched off" },
+      "record the highest temperature after switching off": "the block keeps warming after the heater is switched off", "read the thermometer with your eye level with the liquid": "it avoids parallax error" },
     badR: { "it stops energy being destroyed": "Energy is never destroyed. Insulation reduces the energy transferred to the surroundings.", "it makes the test fair": "“To make it fair” alone does not score. Say what the improvement reduces or measures better." },
     answerSet: ["wrap the block in insulation and add a lid", "it reduces the energy lost to the surroundings"],
-    explain: "Any one pair: oil (better thermal contact, so the thermometer reads the block’s temperature); insulation and a lid (less energy lost to the surroundings); the highest temperature (the block keeps warming after switch-off).",
+    explain: "Any one pair: oil (better thermal contact, so the thermometer reads the block’s temperature); insulation and a lid (less energy lost to the surroundings); the highest temperature (the block keeps warming after switch-off); eye level with the liquid (avoids parallax error).",
     hints: ["Think about the problems: heat loss, the thermometer’s contact, the block warming after switch-off.", "Choose an improvement, then the reason that matches that problem.", "For example: wrap the block in insulation and add a lid, because it reduces the energy lost to the surroundings."] },
   { id: "plan", kind: "build", ordered: true, ms6: true, lesson: "L7 s3, s7–s8, s12", text: "Describe a method to find c for a metal block. [6 marks] Start with: First, weigh…", setup: SU.lab(),
     stm: [{ t: "Weigh the block on a balance.", c: 1 }, { t: "Add oil; record the start temperature.", c: 2 },
@@ -1292,9 +1348,9 @@ TASKS.hard = [
       { t: "Record the temperature at switch-off.", why: "It keeps warming after switch-off: record the highest." },
       { t: "Leave the oil out of the thermometer hole.", why: "Oil gives good thermal contact with the block." },
       { t: "Measure the time with the joulemeter.", why: "A joulemeter measures energy; a stopwatch, time." }],
-    miss: { 1: "Missing essential step: weigh the block.", 2: "Missing essential step: start temperature.", 3: "Missing essential step: switch on.",
-      4: "Missing essential step: read the joulemeter.", 5: "Missing essential step: highest temperature.", 6: "Missing essential step: calculate c.", free: "Level 3 already. For 6 marks, add a way to cut the energy lost to the surroundings." },
-    orderMsg: "All the right steps, but not in a logical order. Mass and start temperature before heating; the calculation last.", ms: MS6,
+    miss: { 1: "Missing essential step: weigh.", 2: "Missing essential step: start temperature.", 3: "Missing essential step: switch on.",
+      4: "Missing essential step: read the joulemeter.", 5: "Missing essential step: highest temperature.", 6: "Missing essential step: calculate c.", free: "For 6 marks, add a way to cut energy losses." },
+    orderMsg: "Right steps, wrong order: measure before heating, calculate last.", ms: MS6,
     explain: "Mass; oil and start temperature; switch on heater and joulemeter; after 10 minutes switch off and read the joulemeter; highest temperature; Δθ and c = ΔE ÷ (m × Δθ). Plus insulation to cut energy losses.",
     hints: ["What do you do before, during and after heating?", "Six steps in order, plus cutting energy losses.", "Weigh, start, on, off, highest, c; insulate."] }
 ];
@@ -1331,7 +1387,17 @@ function bankCheck() {
   { const t = TASKS.hard.find(x => x.ms6); if (t) { const full = rightBuild(t);
       if (marks6(buildMarks(t, full)).L !== 3 || marks6(buildMarks(t, full)).mk !== 6) F("6-mark: the full answer must be Level 3, 6 marks");
       t.stm.forEach((st2, i) => { if (st2.c && !st2.free && marks6(buildMarks(t, full.filter(j => j !== i))).L >= 3) F("6-mark: leaving out an essential step must not give Level 3: " + st2.t); });
+      { const w = t.stm.map((s2, i) => i).filter(i => !t.stm[i].c); if (marks6(buildMarks(t, full.concat(w.slice(0, 1)))).L !== 2 || marks6(buildMarks(t, full.concat(w.slice(0, 2)))).L !== 1 || (w.length > 2 && marks6(buildMarks(t, full.concat(w.slice(0, 3)))).L !== 0)) F("6-mark: each wrong statement must cost another level"); }
       const L = new Set(); [[], [full[0]], full.slice(0, 3), full.slice(0, 5), full].forEach(l => L.add(marks6(buildMarks(t, l.length ? l : [t.stm.findIndex(x => !x.c)])).L)); if (L.size < 4) F("6-mark: every level 0–3 must be reachable"); } }
+  /* ammeter + voltmeter: P = V × I is the run's power; E = V × I × t accepted only when correctly rounded; slips don't overlap */
+  for (let sd = 1; sd < 40; sd++) { const r = makeRun(Object.assign({}, base, { meter: "vi" }), { seed: sd, anom: false }), ex = r.V * r.I * RP.tOn;
+    if (!(r.P >= 37.5 && r.P <= 42.5) || Math.abs(r.V * 10 - Math.round(r.V * 10)) > 1e-9 || Math.abs(r.I * 100 - Math.round(r.I * 100)) > 1e-6) F("V and I: power or meter precision, seed " + sd);
+    if (!accRound(String(Math.round(ex)), Math.round(ex), ex) || accRound(String(Math.round(ex) + 1), Math.round(ex) + 1, ex)) F("E = VIt rounding, seed " + sd);
+    const sl = [r.V * r.I * 10, r.V * r.I, ex / 1000, (r.V + r.I) * 600, r.V * 600, r.I * 600, r.P * 480]; if (sl.some(x => Math.abs(x - ex) <= Math.max(.005 * ex, 2))) F("E = VIt: a slip matches the answer, seed " + sd);
+    sl.forEach((x, i) => sl.forEach((y, j) => { if (i < j && Math.abs(x - y) <= Math.max(.005 * Math.abs(x), .01)) F("E = VIt: two slips overlap, seed " + sd); })); }
+  if (accRound("100", 100, 100.5) || !accRound("101", 101, 100.5) || !accRound("100.5", 100.5, 100.5) || !accRound("24,031", 24031, 24030.6)) F("rounding rule (half a unit away must not count)");
+  { const r = makeRun(Object.assign({}, base, { meter: "vi" }), { seed: 9, anom: false }), r2 = makeRun(base, { seed: 9, anom: false }), m = { runs: [], rep: {} }, m2 = { runs: [], rep: {} }; m.run = r; m2.run = r2; autoTo(m, "done"); autoTo(m2, "done");
+    if (r.rec.Eoff !== r2.rec.Eoff || Math.abs(calcWant(r).c - calcWant(r2).c) > 1e-9 || r.rec.read.some((x, i) => Math.abs(x.E - Math.round(eVI(r.rec, x.t))) > 1)) F("ammeter + voltmeter must give the same energy as the joulemeter"); }
   if (Math.abs(dTheta(10000, 1, 450) - 22.22) > .01 || Math.abs(dTheta(11550, 3, 385) - 10) > 1e-9) F("compare: Δθ = ΔE ÷ (m × c)");
   const deck = [[2 * 4200 * 10, 84000], [9000 / (.5 * 40), 450], [.5 * 900 * 20, 9000], [.2 * 4200 * 15, 12600], [11000 / 25, 440], [4 * 6 * 4000, 96000], [6000 / 2000, 3], [12 * 24 * 500, 144000], [2500 / 10, 250], [18000 / 20, 900], [4500 / 10, 450], [15000 / 30, 500], [36000 / 1800, 20]];
   deck.forEach(([a, b], i) => { if (Math.abs(a - b) > 1e-9) F("deck worked example " + (i + 1)); });
@@ -1344,7 +1410,7 @@ function bankCheck() {
       t.bank.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); }); }
     if (t.kind === "gaps" && t.pair) { const [a, b] = t.answerSet; if (t.PAIRS[a] !== b) E("answer pair"); Object.entries(t.PAIRS).forEach(([x, y]) => { if (!t.rows[0][3].includes(x) || !t.rows[1][3].includes(y)) E("pair option missing"); });
       t.rows[1][3].forEach(y => { if (!Object.values(t.PAIRS).includes(y) && !t.badR[y]) E("no feedback for reason " + y); }); }
-    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); t.wrongs.forEach(([v], i) => t.wrongs.forEach(([u], j) => { if (i < j && (near(v, u) || near(u, v))) E("two slips overlap: " + v + " and " + u); })); if (!t.generic || !t.working) E("needs feedback and working"); }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
       c.filter(s => !s.free).forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); if (t.ordered && !t.orderMsg) E("needs an order message"); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
@@ -1435,18 +1501,21 @@ function renderDots() {
 }
 
 /* ===== Support (off on load, never stored) ===== */
-const WORDS = [["Specific heat capacity (c)", DEF.shc], ["Thermal energy store", DEF.store], ["Change in thermal energy (ΔE)", DEF.dE], ["Temperature change (Δθ)", DEF.dT],
-  ["Immersion heater", DEF.heater], ["Joulemeter", DEF.joule], ["Insulation", DEF.ins], ["Thermal contact", DEF.contact], ["Systematic error", DEF.sys]];
+const WORDS = [["Specific heat capacity (c)", DEF.shc, "shc"], ["Thermal energy store", DEF.store], ["Change in thermal energy (ΔE)", DEF.dE], ["Temperature change (Δθ)", DEF.dT],
+  ["Immersion heater", DEF.heater], ["Joulemeter", DEF.joule], ["Energy from an ammeter and voltmeter", DEF.vi], ["Insulation", DEF.ins, "ins"], ["Thermal contact", DEF.contact], ["Systematic error", DEF.sys, "sys"], ["Resolution", DEF.res, "res"]];
+const qOpen = () => { if (mode === "demo" || !task || task.kind === "demo") return false; const p = prog(); return !(p.solved || p.revealed); };   // the open question isn't finished yet
+const wordHidden = k => !!k && qOpen() && (task.hideWords || []).includes(k);
+const hideHigh = () => qOpen() && !!task.hideHigh;   // "your c is higher… lost to the surroundings" would answer the open question
 function renderSupport() {
   $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("eqBox").innerHTML = `<h3>Equation (given on the exam equation sheet)</h3><p><b>ΔE = m c Δθ</b></p><p>change in thermal energy (J) = mass (kg) × specific heat capacity (J/kg °C) × temperature change (°C)</p><p>c = ΔE ÷ (m × Δθ) · Δθ = ΔE ÷ (m × c) · m = ΔE ÷ (c × Δθ)</p>`;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Δθ = final temperature − start temperature</p><p>grams → kilograms: ÷ 1000 (1002 g = 1.002 kg)</p><p>Work out the bracket first: c = ΔE ÷ (m × Δθ)</p><p>mean = total ÷ number of values (leave out any anomaly)</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${wordHidden(w[2]) ? "<i>shown once you finish this question</i>" : esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
 document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
-  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k); if (k === "read" && support.read && M.tab === "rp") autoRead();
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
 }));
 
 /* ===== Marking ===== */
@@ -1465,7 +1534,7 @@ function buildMarks(t, list) {
 }
 function marks6(b) {   // levels of response, from the points built (bad statements cost a level)
   const n = b.main.length; let L = n === b.nMain && b.inOrder ? 3 : n >= 3 ? 2 : n >= 1 || b.free ? 1 : 0;   // Level 3 needs every essential step
-  if (b.bad.length && L > 0) L--;
+  L = Math.max(0, L - b.bad.length);   // each wrong statement costs another level
   const mk = L === 3 ? (b.free ? 6 : 5) : L === 2 ? (n >= 5 ? 4 : 3) : L === 1 ? (n >= 2 ? 2 : 1) : 0; return { L, mk };
 }
 function evaluate() {
@@ -1486,7 +1555,7 @@ function evaluate() {
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list), m6 = t.ms6 ? marks6(b) : null, mk = m6 ? ` (Level ${m6.L}, ${m6.mk} marks)` : "";
     if (b.bad.length) return { ok: false, html: esc(t.ms6 ? `Wrong step${mk}: ${b.bad[0].why}` : `“${b.bad[0].t}” is wrong${mk}. ${b.bad[0].why}`) };
-    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.main.length} of ${b.nMain} ${t.ms6 ? "steps" : "points"}${mk}. ${t.miss[b.missing[0].c]}`) };
+    if (b.missing.length) return { ok: false, html: esc(`${t.ms6 ? "" : "Not yet: "}${b.main.length} of ${b.nMain} ${t.ms6 ? "steps" : "points"}${mk}. ${t.miss[b.missing[0].c]}`) };
     if (t.ms6 && !b.free) return { ok: false, html: esc(`Not yet${mk}. ${t.miss.free}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc(t.orderMsg + mk) };
     return { ok: true, html: esc("Correct. " + (t.ms6 ? "Level 3, 6 marks." : t.explain)) + msHTML(t) }; }
@@ -1508,7 +1577,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    revealModel();
+    revealModel(); renderSupport(); drawAll();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints" : `Hint (${n + 1}/3)`; }
@@ -1523,7 +1592,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); renderSupport(); drawAll();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
@@ -1537,7 +1606,7 @@ function resetTask() {
 /* ===== Instructions tour ===== */
 const TOUR = [
   { el: "#tabs", tab: "rp", text: "Three parts: do the practical, work out your results, and compare materials." },
-  { el: "#setupRow", tab: "rp", text: "Choose the metal block and its mass. Below, switch the insulation, lid and oil on or off before you start." },
+  { el: "#setupRow", tab: "rp", text: "Choose the metal block, its mass, and how to measure the energy (a joulemeter, or an ammeter and voltmeter). Below, switch the insulation, lid and oil on or off." },
   { el: "#rsvg", tab: "rp", text: "The heater warms the block. The joulemeter measures the energy supplied. Read the thermometer in the magnified scale." },
   { el: "#stepRow", tab: "rp", text: "The method, one step at a time. Step 1: measure the mass.", do: "weigh", doText: "Press Put the block on the balance." },
   { el: "#stepRow", tab: "rp", text: "The balance reads in grams. Type the mass in kilograms (grams ÷ 1000), then press Record.", do: "mass", doText: "Record the mass in kg." },
@@ -1646,7 +1715,7 @@ window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventL
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
 function guard(ev, revert) { if (locked()) { if (revert) revert(); lockMsg(); return true; } return false; }
 function busyMsg() { M.run.smsg = ["tip", "This run has started, so the set-up is fixed. Finish it, or press Start a new run to change the set-up."]; renderStep(); }
-function setSetup(k, v) {   // block / mass / insulation / lid / oil
+function setSetup(k, v) {   // block / mass / insulation / lid / oil / meters
   if (guard()) return; if (running()) { busyMsg(); return; }
   M[k] = v; const r = M.run;
   if (k === "block" || k === "mass" || r.step === "done") M.run = newRunFor(M);
@@ -1655,6 +1724,7 @@ function setSetup(k, v) {   // block / mass / insulation / lid / oil
 }
 $("blockSeg").addEventListener("click", e => { const b = e.target.closest("button[data-b]"); if (b && b.dataset.b !== M.block) setSetup("block", b.dataset.b); });
 $("massSeg").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b && +b.dataset.m !== M.mass) setSetup("mass", +b.dataset.m); });
+$("meterSeg").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (b && b.dataset.e !== M.meter) setSetup("meter", b.dataset.e); });
 [["insSw", "ins"], ["lidSw", "lid"], ["oilSw", "oil"]].forEach(([id, k]) => $(id).addEventListener("click", () => setSetup(k, !M[k])));
 $("fitSw").addEventListener("click", () => { if (guard()) return; M.fit = !M.fit; drawAll(); });
 $("newRun").addEventListener("click", () => { if (guard()) return; stopAll(); M.run = newRunFor(M); M.note = ""; drawAll(); });

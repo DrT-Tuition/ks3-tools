@@ -381,13 +381,19 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .scene.mov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none;will-change:transform}
 .scene.mov #clipB,.scene.mov .hnd{pointer-events:auto}
 @media (min-width:901px) and (max-height:820px){.stepbox{padding:8px 12px;gap:6px}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}.qpanel .opts.build .opt{line-height:1.25}}
+@media (min-width:901px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{line-height:1.25}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 @media (max-width:560px){.rt .cnt.rc{min-width:0}.rt .cnt .rv{font-size:12px}.numin.sm{width:4.4em}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px}}
+@media (min-width:901px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px;line-height:1.25}}
 @media (min-width:901px) and (max-height:740px){.qpanel .ms{font-size:14px;line-height:1.25;padding-left:18px}.qpanel .opts.build.ms6 .opt{min-height:29px;padding:2px 10px}}
 .scene .slot.full{touch-action:none}
+/* long dropdown options must never widen the question panel (30 Oct) */
+.qpanel,#answer,#answer .opts{min-width:0;max-width:100%}
+#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer select{max-width:100%;min-width:0;text-overflow:ellipsis}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -610,6 +616,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmt = (v, dp) => { const k = Math.pow(10, dp == null ? 2 : dp); return String(Math.round(v * k) / k); };
 const fx = (v, dp) => (+v).toFixed(dp == null ? 2 : dp);   // fixed decimals, for meter readings and resistances
 const near = (v, a) => Math.abs(v - a) <= Math.max(.005 * Math.abs(a), .001);
+const accRound = (raw, v, want) => { const t = String(raw).trim().replace(/\s+/g, ""), u = t.replace(",", "."), m = u.match(/\.(\d+)$/), dp = Math.min(m ? m[1].length : 0, 3), k = Math.pow(10, dp); return Math.abs(v - Math.floor(want * k + .5 + 1e-9) / k) < 1e-9; };   // rounded half-up to the typed precision
 const ABC = "ABCDEFGHIJ";
 const nowMs = () => performance.now();
 
@@ -624,7 +631,8 @@ const DEF = {   // P5 s6, P4 s6, s8, P5 s13
   temp: "Kept the same, so heating does not change the wire’s resistance.",
   sys: "Caused by equipment set up or used wrongly. The error is the same each time.",
   zero: "A measuring instrument reads too high or too low because it was not set at zero properly.",
-  rand: "Caused by things not under our control. They change each time and make results slightly different." };
+  rand: "Unpredictable scatter either side of the true value: it changes each time. Repeats and a mean reduce its effect.",
+  res: "The smallest change an instrument can show: one scale division (not the range of the scale)." };
 
 /* ===== The practical: INVENTED example model (flagged in Model limits) =====
    A 1.5 V cell drives current through the ammeter, the leads and the length of resistance wire between the two clips.
@@ -895,7 +903,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 function guard() { if (locked()) { lockMsg(); return true; } return false; }
@@ -1218,6 +1226,10 @@ function amSym(x, y, r, val, fs, hide, below) {
   return `<circle class="msym am" cx="${f1(x)}" cy="${f1(y)}" r="${r}"/>` + T_(x, y + r * .36, "A", r * .95, 'text-anchor="middle" class="bold"') +
     tag(x, below ? y + r + fs + 10 : y - r - 10, hide ? "? A" : fx(val) + " A", fs - 1, "acc");
 }
+function vmSym(x, y, r, fs, hide, below) {   // voltmeter across the whole combination: the pupil reads it (ideal supply)
+  return `<circle class="msym" cx="${f1(x)}" cy="${f1(y)}" r="${r}"/>` + T_(x, y + r * .36, "V", r * .95, 'text-anchor="middle" class="bold"') +
+    tag(x, below ? y + r + fs + 10 : y - r - 10, hide ? "? V" : fx(SP.V, 1) + " V", fs - 1, "acc");
+}
 function drawSP() {
   const G = spGeo(), s = M.sp, fs = G.fs, R = s.R.slice(0, s.n), c = spCalc(s.arr, R), hide = s.hide, tall = G.W < 700; setVB($("ssvg"), G.W, G.H);
   let o = "";
@@ -1231,13 +1243,17 @@ function drawSP() {
     o += `<path class="cw" d="M${L} ${T}H${Rr}V${B}H${L}"/>`;
     const span = x2 - x1, w = tall ? 76 : 96;
     R.forEach((r, i) => { const x = x1 + span * (i + .5) / R.length; o += `<path class="cwb" d="M${f1(x - w / 2)} ${T}H${f1(x + w / 2)}"/>` + resSym(x, T, w, 30, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1); });
+    if (!s.hideVm) { const nL = x1 + span * .5 / R.length - w / 2 - 14, nR = x1 + span * (R.length - .5) / R.length + w / 2 + 14, vy = T + (tall ? 92 : 78), vx = (nL + nR) / 2;
+      o += `<path class="cw" d="M${f1(nL)} ${T}V${vy}H${f1(vx - 22)}M${f1(vx + 22)} ${vy}H${f1(nR)}V${T}"/><circle class="jn" cx="${f1(nL)}" cy="${T}" r="5"/><circle class="jn" cx="${f1(nR)}" cy="${T}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, true); }
     o += `<path class="cwb" d="M${L + 40} ${B}H${L + 96}"/>` + amSym(L + 68, B, 22, c.I, fs, hide, false);
     o += `<path class="cwb" d="M${Rr - 96} ${B}H${Rr - 40}"/>` + amSym(Rr - 68, B, 22, c.I, fs, hide, false);
     o += T_((L + Rr) / 2, B - 18, "Same current all the way round: both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"');
   } else {
     const xl = L + (tall ? 140 : 250), xr = Rr - (tall ? 60 : 160), n = R.length, top = T + (tall ? 70 : 54), bot = B - (tall ? 40 : 30), rowY = i => n === 1 ? (top + bot) / 2 : top + (bot - top) * i / (n - 1);
     o += `<path class="cw" d="M${L} ${T}H${xl}V${f1(rowY(n - 1))}M${xr} ${f1(rowY(0))}V${B}H${L}"/>`;
-    o += `<path class="cwb" d="M${L + (tall ? 50 : 80)} ${T}H${L + (tall ? 106 : 136)}"/>` + amSym(L + (tall ? 78 : 108), T, 22, c.I, fs, hide, true) + (tall ? "" : T_(L + 108, T + 22 + fs * 2 + 18, "main", fs - 3, 'text-anchor="middle" class="mut"'));
+    if (!s.hideVm) { const vx = xr + (tall ? 36 : 80), vy = (T + B) / 2, up = T - 26;   /* voltmeter across the whole combination: left node (top of the left bus) to right node (foot of the right bus) */
+      o += `<path class="cw" d="M${xl} ${T}V${up}H${vx}V${f1(vy - 22)}M${vx} ${f1(vy + 22)}V${B}H${xr}"/><circle class="jn" cx="${xl}" cy="${T}" r="5"/><circle class="jn" cx="${xr}" cy="${B}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, false); }
+    o += `<path class="cwb" d="M${L + (tall ? 50 : 80)} ${T}H${L + (tall ? 106 : 136)}"/>` + amSym(L + (tall ? 78 : 108), T, 22, c.I, fs, hide, true) + (tall || s.hideVm ? "" : T_(L + 108, T + 22 + fs * 2 + 18, "main", fs - 3, 'text-anchor="middle" class="mut"'));
     R.forEach((r, i) => { const y = rowY(i), xm = (xl + xr) / 2, w = tall ? 70 : 96;
       o += `<path class="cw" d="M${xl} ${f1(y)}H${xr}"/><circle class="jn" cx="${xl}" cy="${f1(y)}" r="5"/><circle class="jn" cx="${xr}" cy="${f1(y)}" r="5"/>`;
       o += `<path class="cwb" d="M${f1(xm - w / 2 - (tall ? 40 : 60))} ${f1(y)}H${f1(xm + w / 2)}"/>` + resSym(xm + (tall ? 18 : 30), y, w, 28, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1);
@@ -1245,15 +1261,34 @@ function drawSP() {
   }
   setLayer($("sG"), o);
 }
+const spKey = s => s.arr + "|" + s.R.slice(0, s.n).join(",");
+function spCalcBox(s) {   // R total from the pupil's own meter readings, checked in code
+  const k = spKey(s); if (!s.w || s.w.key !== k) s.w = { key: k, inp: "", ok: false, msg: "" }; return s.w; }
 function spRead() {
   const s = M.sp, R = s.R.slice(0, s.n), c = spCalc(s.arr, R), small = Math.min(...R), sub = i => "₁₂₃"[i];
-  if (s.hide) return `<p class="r1">Predict first. The readings are hidden until you answer.</p>`;
+  if (s.hide) return s.hideVm ? `<p class="r1">Answer first. The meters are hidden until you answer.</p>` : `<p class="r1">Predict first. The readings are hidden until you answer.</p>`;
+  const w = spCalcBox(s);
+  if (s.hideR) return `<p class="r1">Read the voltmeter and the ammeter in the main circuit, then answer in the question panel.</p>`;
+  if (!w.ok) return `<p class="r1">Read the voltmeter (across the ${s.arr === "series" ? "resistors" : "whole parallel set"}) and the ammeter in the main circuit. Work out the total resistance.</p>` +
+    `<div class="row"><label class="grow" for="spIn">R<sub>total</sub> = V ÷ I = <input class="numin sm" id="spIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(w.inp)}"> <span class="unit">Ω</span></label><button class="btn" type="button" id="spGo">Check</button></div>` +
+    (w.msg ? `<p class="small" role="status"><b>${w.msg}</b></p>` : "");
+  const head = `<p class="r1">✓ R<sub>total</sub> = V ÷ I = ${fx(SP.V, 1)} ÷ ${fx(c.I)} = ${fmt(c.tot, 2)} Ω, from your meter readings.</p>`;
   if (s.arr === "series") {
-    return `<p class="r1">Series: the resistances add up.</p><p class="r2">R<sub>total</sub> = ${R.map((x, i) => "R" + sub(i)).join(" + ")} = ${R.join(" + ")} = ${fmt(c.tot, 2)} Ω</p>` +
+    return head + `<p class="r2">Series: the resistances add up. R<sub>total</sub> = ${R.map((x, i) => "R" + sub(i)).join(" + ")} = ${R.join(" + ")} = ${fmt(c.tot, 2)} Ω</p>` +
       `<p class="r2">Current: I = V ÷ R<sub>total</sub> = ${SP.V} ÷ ${fmt(c.tot, 2)} = ${fx(c.I)} A, the same everywhere in the loop.</p>` + (R.length > 1 ? `<p class="r3">Adding a resistor in series increases the total resistance, so the current falls.</p>` : "");
   }
-  return `<p class="r1">Parallel: each branch is another path for the current.</p><p class="r2">Branch currents: ${R.map((x, i) => `${SP.V} ÷ ${x} = ${fx(c.br[i])} A`).join(" · ")}. Main current = ${fx(c.I)} A.</p>` +
-    `<p class="r2">R<sub>total</sub> = V ÷ I = ${SP.V} ÷ ${fx(c.I)} = ${fmt(c.tot, 2)} Ω${R.length > 1 ? `: less than the smallest resistor (${small} Ω)` : ""}.</p>` + (R.length > 1 && !s.noWhy ? `<p class="r3">More branches give the current more paths, so more current flows for the same pd: the total resistance drops.</p>` : "");
+  return head + `<p class="r2">Parallel: each branch is another path for the current. Branch currents: ${R.map((x, i) => `${SP.V} ÷ ${x} = ${fx(c.br[i])} A`).join(" · ")}. Main current = ${fx(c.I)} A.</p>` +
+    `<p class="r2">R<sub>total</sub> = ${fmt(c.tot, 2)} Ω${R.length > 1 ? `: less than the smallest resistor (${small} Ω)` : ""}.</p>` + (R.length > 1 && !s.noWhy ? `<p class="r3">More branches give the current more paths, so more current flows for the same pd: the total resistance drops.</p>` : "");
+}
+function spCheck() {
+  const s = M.sp, w = spCalcBox(s), el = $("spIn"); if (!el || w.ok) return; w.inp = el.value;
+  const v = parseNum(w.inp), R = s.R.slice(0, s.n), c = spCalc(s.arr, R), Id = +fx(c.I), want = SP.V / Id;
+  if (!isFinite(v)) { w.msg = "Type the total resistance first."; drawAll(); return; }
+  const ok = accRound(w.inp, v, c.tot) || accRound(w.inp, v, want), nr = x => Math.abs(v - x) <= Math.max(.005 * Math.abs(x), .006);
+  if (ok) { w.ok = true; w.msg = ""; tried(4); drawAll(); return; }
+  w.msg = "✗ " + (nr(SP.V * Id) ? "You multiplied. R = V ÷ I." : nr(Id / SP.V) ? "You divided the wrong way. R = V ÷ I: the pd on top." : nr(SP.V) ? "That is the pd. Divide it by the current." : s.arr === "parallel" && R.length > 1 && nr(R.reduce((a, x) => a + x, 0)) ? "That is R₁ + R₂, which is only true in series. Use your readings: R = V ÷ I."
+    : s.arr === "parallel" && c.br.some(b => nr(SP.V / +fx(b))) ? "That uses one branch’s current. Use the ammeter in the main circuit, where all the current flows." : nr(Id) ? "That is the current. Now work out V ÷ I." : nr(SP.V) ? "That is the pd. Divide it by the current." : "R = V ÷ I: the voltmeter reading ÷ the main ammeter reading.");
+  drawAll();
 }
 function spCtlHTML() {
   const s = M.sp, seg = (id, lbl, items, cur, attr) => `<span class="gl" id="${id}L">${lbl}</span><span class="seg" role="group" aria-labelledby="${id}L" id="${id}">${items.map(([v, t]) => `<button type="button" data-${attr}="${v}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join("")}</span>`;
@@ -1290,13 +1325,6 @@ TASKS.easy = [
     generic: "Substitute into V = I × R: 4 × 6.", stuck: "eq",
     working: () => ["Equation: V = I R", "Substitute: V = 4 × 6", "Answer: V = 24 V"],
     hints: ["Which equation links pd, current and resistance?", "V = I × R. Here I = 4 A and R = 6 Ω.", "4 × 6 = 24 V."] },
-  { id: "amm", kind: "choice", lesson: "P4 s9, s11", text: "You want to measure the current through a component. Where does the ammeter go?", setup: SU.lab(),
-    options: [{ t: "In series: in the loop, on either side of the component.", ok: () => circuitVerdict({ s1: "A", s2: null, p1: "V", p2: null }).ok && circuitVerdict({ s1: null, s2: "A", p1: "V", p2: null }).ok },
-      { t: "In parallel: across the component.", why: "That is where a voltmeter goes. An ammeter measures the current flowing through it, so it goes in series, in the loop." },
-      { t: "Before the component only, because the component uses up some of the current.", why: "Current is not used up. It is the same all the way round a series circuit, so either side of the component reads the same." },
-      { t: "Across the cell.", why: "Across the cell is in parallel. An ammeter must be in series, so the current through the component flows through it." }],
-    explain: "An ammeter goes in series, in the loop. The current is the same all the way round a series circuit, so either side of the component works.", stuck: "words",
-    hints: ["Does an ammeter measure something through a component, or across it?", "Current flows through the ammeter, so it must be in the loop.", "In series, on either side: the current is the same everywhere in the loop."] },
   { id: "r12", kind: "num", lesson: "P4 s14 (We do), s16 Q1", text: "A pd of 12 V drives a current of 2 A through a resistor. Calculate its resistance.", setup: SU.lab(),
     frame: "Calculate: rearrange V = I R to make R the subject.", lbl: "R =", unit: "Ω", ans: () => 12 / 2,
     wrongs: [[24, "You multiplied. R = V ÷ I."], [2 / 12, "You divided the wrong way. R = V ÷ I = 12 ÷ 2."], [10, "You subtracted. Divide: R = V ÷ I."], [14, "You added. Divide: R = V ÷ I."]],
@@ -1310,12 +1338,12 @@ TASKS.easy = [
       { t: "It is used up faster by the resistor.", why: "Current is not used up. With double the resistance the current halves: I = V ÷ R." }],
     explain: "I = V ÷ R. Double R with the same V and the current halves. Resistance opposes the current.", stuck: "eq",
     hints: ["Which equation gives the current? I = V ÷ ?", "Put a bigger number on the bottom of V ÷ R. What happens?", "It halves."] },
-  { id: "vars", kind: "gaps", fixed: true, lesson: "P5 s6–s7", text: "Choose the variables for the resistance practical.", setup: SU.lab(),
+  { id: "vars", kind: "gaps", fixed: true, lesson: "P5 s6–s7", text: "Choose the variables for the resistance practical.", hideWords: ["iv", "dv", "temp"], setup: SU.lab(),
     rows: [["iv", "Independent variable (you change it):", "the length of the wire"], ["dv", "Dependent variable (you find it):", "the resistance of the wire"], ["cv", "Control variable (keep it the same):", "the temperature of the wire"]],
     bank: ["the length of the wire", "the resistance of the wire", "the temperature of the wire", "the current used up by the wire"],
     why: (k, w) => ({ "the length of the wire": "You change the length by moving clip B: it is the independent variable.", "the resistance of the wire": "You find the resistance from V ÷ I for each length: it is the dependent variable.",
       "the temperature of the wire": "Keep the temperature constant, so heating does not change the resistance: a control variable.", "the current used up by the wire": "Current is not used up: it is the same all the way round the loop." })[w],
-    explain: "Independent: the length of the wire. Dependent: its resistance. Control: the temperature of the wire (keep it constant).", stuck: "words",
+    explain: "Independent: the length of the wire. Dependent: its resistance. Control: the temperature of the wire (keep it constant), and the same wire material and diameter.", stuck: "words",
     hints: ["Which one do you change by moving clip B?", "You work out the resistance; you keep the wire cool.", "Length (change), resistance (find), temperature (keep the same)."] },
   { id: "build", kind: "goal", lesson: "P5 s7", text: "Set up the circuit on the model: ammeter in series, voltmeter across the wire. Then press Check my circuit.", setup: SU.lab(),
     test: m => m.built,
@@ -1323,13 +1351,14 @@ TASKS.easy = [
     done: () => "The ammeter is in series and the voltmeter is across the wire.",
     reveal: m => { m.slots = { s1: "A", s2: null, p1: "V", p2: null }; m.built = true; m.cmsg = ["good", circuitVerdict(m.slots).why]; },
     hints: ["Drag each meter into a dashed circle (or press a meter, then a circle).", "The current flows through an ammeter, so it goes in the loop. A voltmeter goes across the wire.", "Ammeter in a loop circle; voltmeter in the circle across the wire. Then press Check my circuit."] },
-  { id: "cool", kind: "choice", lesson: "P5 s3, s7, s15 Q1", text: "Why should you keep the current low and switch off between readings?", setup: SU.lab({ built: true, zero: true }),
-    options: [{ t: "So the wire stays cool: heating would increase its resistance.", ok: () => MF.heatUp() },
-      { t: "So the wire doesn’t use up the current.", why: "Current is not used up. When current flows the wire heats up, and heating increases its resistance." },
-      { t: "Because a hot wire has less resistance.", why: "A hot wire has more resistance, not less." },
-      { t: "So the meters read zero.", why: "The meters read zero when it is off, but that isn’t why. The wire heats up when current flows, and heating increases its resistance." }],
-    explain: "Current heats the wire, and heating increases its resistance. Then R would change for a reason other than length: an unfair test.", stuck: "words",
-    hints: ["What happens to a wire when current flows through it for a while?", "Does heating make the resistance bigger or smaller?", "Keep it cool: heating increases the resistance."] },
+  { id: "safe", kind: "gaps", fixed: true, lesson: "P5 s3, s7 + notes: safety", text: "Complete the safety plan for this practical: the hazard, the risk and a control.", lock: "all", setup: SU.lab(),
+    rows: [["h", "Hazard (the thing that could cause harm):", "the thin wire, which gets hot"], ["r", "Risk (the harm it could do):", "burns to the skin"], ["c", "Control (how to reduce the risk):", "keep the current low, switch off between readings, don’t touch the wire"]],
+    bank: ["the thin wire, which gets hot", "burns to the skin", "keep the current low, switch off between readings, don’t touch the wire", "an electric shock from the 1.5 V cell", "use a big current so it is easy to read"],
+    why: (k, w) => ({ "the thin wire, which gets hot": "That is the hazard: the thing that could cause harm.", "burns to the skin": "A burn is the risk: the harm that could happen.",
+      "keep the current low, switch off between readings, don’t touch the wire": "That is a control: what you do to reduce the risk.",
+      "an electric shock from the 1.5 V cell": "The 1.5 V cell has a very low pd, so there is no real risk of a shock. The main hazard is the hot wire.", "use a big current so it is easy to read": "A big current makes the wire hotter, so it raises the risk. It is not a control." })[w],
+    explain: "Hazard: the thin wire gets hot. Risk: burns. Control: keep the current low, switch off between readings and don’t touch the wire. Switching off also keeps the wire cool, so heating doesn’t change its resistance.",
+    hints: ["A hazard is a thing. A risk is what it could do to you. A control is what you do about it.", "What gets hot when current flows? What could it do to your skin?", "Hazard: the hot wire. Risk: burns."] },
   { id: "order", kind: "build", ordered: true, lesson: "P5 s8", text: "Put the method (RP15) in order. Press the steps in the order you would do them.", setup: SU.lab(),
     stm: [{ t: "Set up the circuit: ammeter in series, voltmeter across the wire.", c: 1 }, { t: "Clip the wire at a chosen length; read the pd and the current.", c: 2 },
       { t: "Calculate the resistance: R = V ÷ I.", c: 3 }, { t: "Repeat for several lengths, switching off between readings.", c: 4 }, { t: "Plot a graph of resistance against length.", c: 5 }],
@@ -1337,19 +1366,27 @@ TASKS.easy = [
     orderMsg: "All five steps, but not in order. Set up first; the graph last.",
     explain: "Set up → clip a length and read V and I → R = V ÷ I → repeat for several lengths, switching off → plot R against length.",
     hints: ["Start with the step that comes before any readings.", "Read V and I, then calculate R. The graph is last.", "Set up → read → calculate → repeat → plot."] },
-  { id: "rec20", kind: "goal", lesson: "P5 s8–s9", text: "On the model, move clip B to 20 cm. Switch on, read both meters, and record one test at 20 cm.", setup: SU.lab({ built: true, zero: true, clipB: 10 }),
-    test: m => !!testAt(m, 20),
-    not: m => m.clipB !== 20 ? "Drag clip B to the 20 cm mark first (or select it and use the arrow keys)." : !m.on ? "Switch on, then read the magnified scales." : "Type the length, the pd and the current, then press Record.",
-    done: m => { const t = testAt(m, 20).tests.find(x => Math.abs(x.Ltrue - 20) < .01); return `R = ${fx(t.V)} ÷ ${fx(t.I)} = ${fx(t.R)} Ω at 20 cm.`; },
-    reveal: m => { m.tab = "lab"; autoRecord(m, 20); },
-    hints: ["Drag clip B along the ruler to the 20 cm mark.", "Switch on. Read the ammeter (small marks 0.02 A) and the voltmeter (small marks 0.05 V).", "Type 20 cm, the pd and the current, then press Record."] },
-  { id: "long", kind: "choice", lesson: "P5 s4, s14 A", text: "The wire between the clips is made twice as long. What happens to its resistance?", setup: SU.lab(),
-    options: [{ t: "It increases: a longer wire opposes the current more.", ok: () => MF.longer() },
-      { t: "It decreases, so more current flows.", why: "A longer wire does not let more current flow. It has more resistance, so less current flows." },
-      { t: "It stays the same: it is the same wire.", why: "It is the same material, but the current has to pass through more of it: the resistance increases." },
-      { t: "The current increases, so the resistance increases.", why: "Resistance and current are not the same thing. The resistance increases, so the current decreases." }],
-    explain: "A longer wire opposes the current more, so its resistance increases (and less current flows for the same pd).",
-    hints: ["Think about the practical: what happens to R as you move clip B further along?", "More wire for the current to pass through: more or less opposition?", "It increases."] }
+  { id: "res", kind: "choice", lesson: "P5 s8 + notes: resolution", text: "Look at the magnified ruler on the model. What is the resolution of the metre ruler?", lock: "all", setup: SU.lab({ built: true, zero: true, clipB: 30 }),
+    options: [{ t: "1 mm", ok: () => true },
+      { t: "1 cm", why: "1 cm is the gap between the numbers. The resolution is the smallest scale division: the small marks, 1 mm apart." },
+      { t: "0.5 cm", why: "Clip B moves in 0.5 cm steps on this model, but the ruler’s smallest scale division is 1 mm." },
+      { t: "100 cm", why: "That is the range of a metre ruler: how far it goes. The resolution is the smallest change it can show." }],
+    explain: "The resolution is the smallest change an instrument can show: one scale division. A metre ruler is marked in millimetres, so its resolution is 1 mm.", stuck: "words",
+    hints: ["Resolution means the smallest change the scale can show.", "Look at the small marks between two numbers on the magnified ruler.", "Count the small marks in 1 cm."] },
+  { id: "spm", kind: "choice", lesson: "P5 s10–s11 + notes: series and parallel practical", text: "In the practical, how do you find the total resistance of two resistors joined in series or in parallel?", lock: "all", after: "sp", setup: m => { SU.sp("parallel", [4, 6], true)(m); m.sp.hideVm = true; },
+    options: [{ t: "Put a voltmeter across the whole combination and an ammeter in the main circuit. Then R = V ÷ I.", ok: () => Math.abs(SP.V / spCalc("parallel", [4, 6]).I - spCalc("parallel", [4, 6]).tot) < 1e-9 },
+      { t: "Always add the two resistances together.", why: "That only works in series. Measuring V and I works for any combination: R = V ÷ I." },
+      { t: "Put the ammeter in one branch and divide the pd by its reading.", why: "One branch carries only part of the current. Use the main current, where all of it flows." },
+      { t: "Put the voltmeter in series with the resistors.", why: "A voltmeter goes across (in parallel with) the combination. The ammeter goes in series." }],
+    explain: "Measure the pd across the whole combination (voltmeter in parallel) and the current in the main circuit (ammeter in series), then R total = V ÷ I.",
+    hints: ["You find a resistance from two meter readings.", "Where does the whole current flow? Where do you measure the pd across both resistors?", "Voltmeter across both, ammeter in the main circuit, then R = V ÷ I."] },
+  { id: "prop", kind: "choice", lesson: "P5 s4, s14 A + notes: the graph", text: "A graph of resistance against length is a straight line through the origin. What does this show?", lock: "all", setup: SU.lab(),
+    options: [{ t: "R is directly proportional to L: double the length, double the resistance.", ok: () => MF.longer() },
+      { t: "R increases, but doubling the length does not double R.", why: "A straight line through the origin means directly proportional: doubling the length doubles the resistance." },
+      { t: "R decreases as the length increases.", why: "The line slopes upwards. A longer wire opposes the current more, so it has more resistance." },
+      { t: "The current is directly proportional to the length.", why: "Resistance and current are not the same thing. A longer wire has more resistance, so less current flows." }],
+    explain: "A straight line through the origin shows that R is directly proportional to L: a longer wire opposes the current more, and double the length gives double the resistance.",
+    hints: ["What does a straight line through the origin mean?", "Straight and through (0, 0): if one doubles, the other…", "Directly proportional."] }
 ];
 const MS6 = ["Level 3 (5–6 marks): coherent and logical: meters, length, V and I, R = V ÷ I, several lengths. 6 marks also keeps the wire cool.",
   "Level 2 (3–4 marks): most of the method, mostly in order.", "Level 1 (1–2 marks): simple relevant steps; not a valid result. 0 marks: nothing creditworthy."];
@@ -1379,14 +1416,14 @@ TASKS.hard = [
     generic: "Series: R total = R₁ + R₂ = 3 + 5.", stuck: "eq",
     working: () => ["Series: add the resistances", "R total = R₁ + R₂ = 3 + 5", "Answer: R total = 8 Ω"],
     hints: ["In series, do the resistances add up or does the total drop?", "R total = R₁ + R₂.", "3 + 5 = 8, and the unit is Ω (ohms)."] },
-  { id: "par", kind: "choice", lesson: "P5 s10, s12 Challenge", text: "Predict: two 10 Ω resistors are joined in parallel. Is the total resistance more or less than 10 Ω?", setup: SU.sp("parallel", [10, 10], true), lock: "all", after: "sp",
-    options: [{ t: "Less than 10 Ω: two paths let the current flow more easily.", ok: () => spCalc("parallel", [10, 10]).tot < 10 },
-      { t: "20 Ω: resistances always add up.", why: "They add up in series. In parallel the total is less than the smallest resistor." },
-      { t: "Exactly 10 Ω: both resistors are the same.", why: "Each branch is 10 Ω, but there are now two paths for the current, so the total is less than 10 Ω." },
-      { t: "More than 10 Ω: each branch uses up some of the current.", why: "Current is not used up. Two branches give it two paths, so more current flows and the total resistance is lower." }],
-    explain: `Less than 10 Ω. On the model: 0.6 A in each branch, 1.2 A in total, so R total = 6 ÷ 1.2 = ${fmt(spCalc("parallel", [10, 10]).tot, 2)} Ω.`,
-    hints: ["In parallel, how many paths does the current have?", "More paths: more current for the same pd. Is that more or less resistance?", "Less than 10 Ω (here 5 Ω)."] },
-  { id: "zero", kind: "choice", lesson: "P5 s13", text: "A student left clip A on the 5 cm mark and read each length at clip B. What type of error is this?", setup: SU.lab(),
+  { id: "parm", kind: "num", lesson: "P5 s10, s12 Challenge + notes: series and parallel practical", text: "Two 10 Ω resistors are joined in parallel on the model. Read the voltmeter and the ammeter in the main circuit, and calculate the total resistance.", setup: m => { SU.sp("parallel", [10, 10])(m); m.sp.hideR = true; }, lock: "all", after: "sp",
+    frame: "Calculate: R total = V ÷ I, using the main current.", lbl: "R total =", unit: "Ω", ans: () => SP.V / spCalc("parallel", [10, 10]).I,
+    wrongs: [[SP.V * spCalc("parallel", [10, 10]).I, "You multiplied. R = V ÷ I."], [spCalc("parallel", [10, 10]).I / SP.V, "You divided the wrong way. R = V ÷ I: the pd on top."], [20, "That is 10 + 10, which is only true in series. Use your meter readings: R = V ÷ I."],
+      [10, "That uses one branch’s current (0.6 A). Use the main ammeter: all the current flows through it."], [spCalc("parallel", [10, 10]).I, "That is the current. Now work out V ÷ I."], [SP.V, "That is the pd. Divide it by the main current."]],
+    generic: "R total = V ÷ I = 6.0 ÷ 1.20.", stuck: "eq",
+    working: () => ["Read: V = 6.0 V across both resistors; main current I = 1.20 A", "R total = V ÷ I = 6.0 ÷ 1.20", "Answer: R total = 5 Ω: less than either resistor (10 Ω), because parallel gives the current two paths"],
+    hints: ["Use the voltmeter reading and the ammeter in the main circuit (not a branch).", "R = V ÷ I.", "6.0 ÷ 1.20 = 5 Ω."] },
+  { id: "zero", kind: "choice", lesson: "P5 s13", text: "A student left clip A on the 5 cm mark and read each length at clip B. What type of error is this?", lock: "all", hideWords: ["sys", "zero", "rand"], setup: SU.lab(),
     options: [{ t: "A zero error (systematic): every length is 5 cm too long, so the line misses the origin.", ok: () => MF.zeroShift() },
       { t: "A random error: the lengths are a little different each time.", why: "Random errors change each time. This one is the same every time: a systematic (zero) error." },
       { t: "An anomaly: one result doesn’t fit the pattern.", why: "Every length is affected in the same way, not just one result. That is a systematic (zero) error." },
@@ -1410,7 +1447,7 @@ TASKS.hard = [
     miss: { 1: "Say what heating does to the wire’s resistance.", 2: "Say why that spoils the investigation of length." },
     explain: "If the wire heats up, its resistance increases (1), so R would change for a reason other than length: not a fair test (1).",
     hints: ["What does heating do to resistance?", "Two marks: the effect of heating, and why that spoils the test.", "Resistance increases; not a fair test of length alone."] },
-  { id: "parx", kind: "build", ordered: true, orderMsg: "Both points, but in the wrong order. Start with the paths, then the current.", lesson: "P5 s15 Q3 (also s10, s16)", text: "Explain why joining two resistors in parallel gives a total resistance lower than either resistor on its own. [2 marks]", frame: "Explain: start with: Parallel gives the current…", setup: m => { SU.sp("parallel", [4, 6])(m); m.sp.noWhy = true; },
+  { id: "parx", kind: "build", ordered: true, orderMsg: "Both points, but in the wrong order. Start with the paths, then the current.", lesson: "P5 s15 Q3 (also s10, s16)", text: "Explain why joining two resistors in parallel gives a total resistance lower than either resistor on its own. [2 marks]", lock: "all", after: "sp", frame: "Explain: start with: Parallel gives the current…", setup: m => { SU.sp("parallel", [4, 6])(m); m.sp.noWhy = true; },
     stm: [{ t: "Parallel provides more than one path for the current,", c: 1 }, { t: "so more current flows for the same pd: a lower total resistance.", c: 2 },
       { t: "Each resistor uses up half of the current.", why: "Current is not used up. It splits between the branches and joins up again." },
       { t: "In parallel the resistances add up.", why: "That is series. In parallel the total is less than the smallest resistor." },
@@ -1423,9 +1460,9 @@ TASKS.hard = [
       { t: "Switch on; read the pd and the current.", c: 3, key: true }, { t: "Calculate R = V ÷ I.", c: 4, key: true },
       { t: "Repeat for several lengths; 3 tests each, mean.", c: 5, key: true }, { t: "Plot resistance against length.", c: 6 },
       { t: "Switch off between readings to keep it cool.", c: 7, free: true },
-      { t: "Put the ammeter in parallel with the wire.", why: "An ammeter goes in series. In parallel it would not measure the current through the wire." },
-      { t: "Leave it switched on so the readings settle.", why: "The wire heats up and its resistance increases. Switch off between readings." },
-      { t: "Use a big current so the meters are easy to read.", why: "Keep the current low: a big current heats the wire and changes its resistance." }],
+      { t: "Put the ammeter in parallel with the wire.", why: "An ammeter goes in series with the wire." },
+      { t: "Leave it switched on so the readings settle.", why: "The wire heats up, so R rises. Switch off between readings." },
+      { t: "Use a big current so the meters are easy to read.", why: "Keep the current low: a big current heats the wire." }],
     miss: { 1: "How do you connect the two meters?", 2: "How do you set and measure each length?", 3: "What do you read for each length?", 4: "How do you get R from your readings?",
       5: "One length and one test aren’t enough. What next?", 6: "How do you show your results?", free: "Level 3 already. For 6 marks, add how you keep the temperature of the wire constant." },
     orderMsg: "All the right steps, but not in a logical order. Connect the meters first; the graph last.", ms: MS6,
@@ -1436,6 +1473,12 @@ TASKS.hard = [
 /* ===== Load-time bank check ===== */
 function bankCheck() {
   const errs = [], F = m => errs.push(m);
+  /* series and parallel: R total from the pupil's V and I readings (V ÷ main I) is the true total; correctly rounded answers accepted, half a unit away rejected */
+  ["series", "parallel"].forEach(arr => SP.vals.forEach(a => SP.vals.forEach(b => { [[a], [a, b], [a, b, 10]].forEach(R => { const c = spCalc(arr, R), want = SP.V / +fx(c.I);
+    if (Math.abs(SP.V / c.I - c.tot) > 1e-9) F(`series/parallel: V ÷ I must equal R total (${arr} ${R})`);
+    if (Math.abs(want - c.tot) > .02 * c.tot) F(`series/parallel: the meter's rounding moves R too far (${arr} ${R})`);
+    if (!accRound(fmt(c.tot, 2), +fmt(c.tot, 2), c.tot)) F(`series/parallel: the rounded answer must be accepted (${arr} ${R})`); }); })));
+  if (accRound("2", 2, 2.5) || !accRound("3", 3, 2.5) || accRound("3.3", 3.3, 3.35) || !accRound("3.4", 3.4, 3.35)) F("rounding rule: half a unit away must not count");
   /* circuit placements */
   const ok = s => circuitVerdict(Object.assign({ s1: null, s2: null, p1: null, p2: null }, s)).ok;
   if (!ok({ s1: "A", p1: "V" }) || !ok({ s2: "A", p1: "V" })) F("model: the ammeter either side of the wire must be accepted");
@@ -1567,7 +1610,7 @@ function setAnswerState() {
   else if (t.kind === "goal" && !t.test(M)) { t.reveal(M); drawAll(true); }
   revealModel();
 }
-function revealModel() { const t = task; if (!t.after) return; lock = ""; if (t.after === "sp") M.sp.hide = false; drawAll(); }
+function revealModel() { const t = task; if (!t.after) return; lock = ""; if (t.after === "sp") { M.sp.hide = false; M.sp.hideVm = false; if (M.sp.hideR) { M.sp.hideR = false; spCalcBox(M.sp).ok = true; } } drawAll(); }
 function renderDots() {
   const lst = LEVELS[level];
   $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
@@ -1576,13 +1619,13 @@ function renderDots() {
 }
 
 /* ===== Support (off on load, never stored) ===== */
-const WORDS = [["Resistance (R)", DEF.R], ["Ohm (Ω)", DEF.ohm], ["Series", DEF.series], ["Parallel", DEF.parallel], ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv],
-  ["Constant temperature", DEF.temp], ["Systematic error", DEF.sys], ["Zero error", DEF.zero], ["Random error", DEF.rand]];
+const WORDS = [["Resistance (R)", DEF.R], ["Ohm (Ω)", DEF.ohm], ["Series", DEF.series], ["Parallel", DEF.parallel], ["Independent variable", DEF.iv, "iv"], ["Dependent variable", DEF.dv, "dv"],
+  ["Constant temperature", DEF.temp, "temp"], ["Systematic error", DEF.sys, "sys"], ["Zero error", DEF.zero, "zero"], ["Random error", DEF.rand, "rand"], ["Resolution", DEF.res]];
 function renderSupport() {
   $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("eqBox").innerHTML = `<h3>Equations</h3><p><b>V = I R</b>: potential difference (V) = current (A) × resistance (Ω)</p><p>R = V ÷ I · I = V ÷ R</p><p>Series: R<sub>total</sub> = R₁ + R₂ · Parallel: the total is less than the smallest resistor.</p>`;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Ammeter: each small mark is ${LAB.aDiv} A. Voltmeter: each small mark is ${LAB.vDiv} V.</p><p>Count the small marks from the last number before the needle.</p><p>Mean = total ÷ number of values (leave out any anomaly).</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${wordHidden(w[2]) ? "<i>shown once you finish this question</i>" : esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
@@ -1644,7 +1687,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    revealModel();
+    revealModel(); renderSupport();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints" : `Hint (${n + 1}/3)`; }
@@ -1656,10 +1699,12 @@ function answerHTML(t) {
   if (t.kind === "build") return esc("Answer: " + (t.ms ? "these steps are the indicative content: Level 3, 6 marks. " : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
   return esc("Answer: " + t.explain);
 }
+const qOpen = () => { if (mode === "demo" || !task || task.kind === "demo") return false; const p = prog(); return !(p.solved || p.revealed); };
+const wordHidden = k => !!k && qOpen() && (task.hideWords || []).includes(k);
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
@@ -1677,7 +1722,7 @@ function drawPane(focusId) {
     const sb = $("switchBtn"); sb.textContent = M.on ? "Switch off" : "Switch on"; sb.setAttribute("aria-pressed", String(M.on)); sb.disabled = !M.built || !M.zeroDone;
     $("clipLeft").disabled = M.clipB <= minB(); $("clipRight").disabled = M.clipB >= LAB.maxB; }
   else if (M.tab === "res") { drawGraph(); morphFocus($("lineBox"), lineHTML()); morphFocus($("concBox"), concHTML()); }
-  else { morphFocus($("spCtl"), spCtlHTML()); drawSP(); morphHTML($("sread"), spRead()); }
+  else { morphFocus($("spCtl"), spCtlHTML()); drawSP(); morphFocus($("sread"), spRead()); }
 }
 function renderCtl() {
   document.querySelectorAll("#tabs button").forEach(b => { const on = b.dataset.tab === M.tab; if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
@@ -1841,6 +1886,9 @@ $("gwrap").addEventListener("keydown", e => { const h = e.target.closest(".hnd")
 /* series and parallel */
 $("spCtl").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || guard()) return; const s = M.sp;
   if (b.dataset.arr) s.arr = b.dataset.arr; else if (b.dataset.n) s.n = +b.dataset.n; else return; drawAll(); if (s.n > 1) tried(4); });
+$("sread").addEventListener("click", e => { const b = e.target.closest("#spGo"); if (!b || guard()) return; spCheck(); });
+$("sread").addEventListener("input", e => { if (e.target.id === "spIn") M.sp.w && (M.sp.w.inp = e.target.value); });
+$("sread").addEventListener("keydown", e => { if (e.target.id === "spIn" && e.key === "Enter") { e.preventDefault(); if (!guard()) spCheck(); } });
 $("spCtl").addEventListener("change", e => { const t = e.target; if (t.dataset.ri == null) return; if (guard()) { drawAll(); return; } M.sp.R[+t.dataset.ri] = +t.value; drawAll(); });
 
 $("toQuiz").addEventListener("click", () => setMode("easy"));

@@ -80,6 +80,11 @@
     column, sliding magnified scale), paced by paceFrame at 12 fps with adaptive slow-down; the changing parts sit in their
     own overlaid SVG, built once and patched by attribute; it stops at each reading, skips drawing while the picture is
     scrolled off-screen, and stops when the tab is hidden. Reduced motion: the clock jumps straight to each reading.
+  Coverage fixes (30 Oct 2026, from the notes EnergyChangesinaSystem RP2): Easy 4 hazard/risk/control (hot water, scalds,
+    small beaker in the large one before pouring, stand up), Easy 5 thermometer resolution (Key words: Resolution), Easy 8
+    adds a data-logger row, Hard 6 why the cooling curve levels off (temperature difference with the room), with a line
+    under the graph that is hidden while that question is open; Results bar note says why a bar chart (categorical data).
+    Easy "sort" and "steps" and Hard "wallgoal" removed to make room; Easy 8 and Easy 9 now lock the model.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -383,7 +388,8 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .scene.mov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none;will-change:transform}
 #laySeg button:disabled{opacity:.45;cursor:default}
 @media (min-width:901px) and (max-height:820px){.stepbox{padding:8px 12px;gap:6px}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}.qpanel .opts.build .opt{line-height:1.25}}
+@media (min-width:901px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{line-height:1.25}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 .qpanel,#answer{min-width:0}
@@ -393,6 +399,12 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 @media (max-width:560px){.mtab th,.mtab td{padding:2px 1px}.mtab .cnt{min-width:42px;padding:2px 2px}.mtab .meanin{width:3.6em;padding:4px}.mtab td.lbl{font-size:15px}}
 .mtab tr.mh th{text-align:left;font-size:15px;color:var(--ink);padding-top:6px;border-top:1px solid var(--line)}
 .mtab tr.mh+tr td{border-top:0}
+.msd summary{cursor:pointer;font-weight:700;min-height:32px;padding-top:4px}
+/* long dropdown options must never widen the question panel (30 Oct) */
+.qpanel,#answer,#answer .opts{min-width:0;max-width:100%}
+#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer select{max-width:100%;min-width:0;text-overflow:ellipsis}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -521,6 +533,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <div id="rtable"></div>
           <div><svg id="gsvg" class="scene" viewBox="0 0 480 340" role="img" aria-label="Cooling curves: temperature against time"><g id="gG"></g></svg>
             <p class="small gkey" id="gKey"></p>
+            <p class="small" id="curveNote" hidden>Why the curve levels off: at first the water is much hotter than the room, so the temperature difference is big and energy is transferred quickly. As the water cools, the difference gets smaller, so it cools more slowly.</p>
             <div class="controls" style="margin-top:6px"><button class="sw" type="button" id="fitSw" aria-pressed="false"><span class="dot"></span>Curve of best fit <span class="state">off</span></button></div></div>
         </div>
         <div class="controls"><button class="btn" type="button" id="newRun">Start a new run</button><span class="small" id="runNote"></span></div>
@@ -528,7 +541,7 @@ main.layout{min-height:calc(100vh - 70px)}
 
       <div class="pane" id="pane-res" hidden>
         <div class="panel" id="meanBox"></div>
-        <div class="panel" id="barBox"><h2>Mean temperature drop in 15 minutes</h2><svg id="bsvg" class="scene" viewBox="0 0 960 200" role="img" aria-label="Bar chart of the mean temperature drop for each set-up"><g id="bG"></g></svg><p class="small" id="barNote" hidden>A smaller drop means the water cooled more slowly: a better insulator.</p></div>
+        <div class="panel" id="barBox"><h2>Mean temperature drop in 15 minutes</h2><svg id="bsvg" class="scene" viewBox="0 0 960 200" role="img" aria-label="Bar chart of the mean temperature drop for each set-up"><g id="bG"></g></svg><p class="small" id="barNote" hidden>A smaller drop means the water cooled more slowly: a better insulator. This is a bar chart because the material is categorical (named types, not numbers); a line graph is for continuous data, such as temperature against time.</p></div>
         <div class="panel" id="concBox"></div>
       </div>
 
@@ -639,7 +652,8 @@ const DEF = {   // L6 s6, s11; L5 s6, s8; L6 s3
   cv: "A variable you keep the same so the test is fair.",
   tc: "A material that transfers energy quickly by conduction, e.g. a metal.",
   diss: "Energy transferred to the surroundings in a less useful way, often called wasted.",
-  anom: "A result that doesn’t fit the pattern. Leave it out of the mean." };
+  anom: "A result that doesn’t fit the pattern. Leave it out of the mean.",
+  res: "The smallest change an instrument can show: one scale division (not the range of the scale)." };
 
 /* ===== The practical: INVENTED example model, calibrated to the deck's mean drops =====
    T(t) = T_room + (T_start − T_room) e^(−k t), t in minutes.  k = k_side + k_top.
@@ -711,7 +725,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -866,6 +880,7 @@ function drawLabGraph() {
   for (let T = GR.lo; T <= GR.hi; T += 10) o += T_(GR.x0 - 6, gpy(T) + 5, String(T), fs, 'text-anchor="end"');
   o += T_(GR.x0 + GR.w / 2, GR.H - 6, "Time (min)", fs, 'text-anchor="middle" class="bold"');
   o += `<text x="${fs + 2}" y="${GR.y0 + GR.h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 2} ${GR.y0 + GR.h / 2})">Temperature (°C)</text>`;
+  { const n = M.qcurves ? 3 : ptsOf(M.run.rec.start, M.run.rec.read).length; $("curveNote").hidden = !!M.hideCurve || n < 3; }
   if (M.qcurves) {   // a question's graph: three model cooling curves, labelled only A, B and C
     M.qcurves.forEach(([L, mat]) => { const oo = { mat, n: 1, lid: true }, k = kOf(oo), f = t => RP.Tr + (RP.T0 - RP.Tr) * Math.exp(-k * t);
       o += `<path class="qc" d="${curvePath(f)}"/>` + tag(gpx(RP.tEnd) - 4, gpy(f(RP.tEnd)) + 6, L, fs + 1, "bold", "end"); });
@@ -1185,13 +1200,6 @@ TASKS.easy = [
       { t: "Air is a good conductor, so it spreads the heat around the loft.", why: "Air is a poor conductor: a thermal insulator. That is why trapping it slows energy transfer." }],
     explain: "Trapped air is a poor conductor (an insulator), so it slows down the energy transfer from the house. It doesn’t stop it.", stuck: "words",
     hints: ["Is air a good conductor or a poor conductor?", "Insulation slows energy transfer. It never stops it, and cold doesn’t move.", "Trapped air is a poor conductor, so it slows down the energy transfer."] },
-  { id: "sort", kind: "gaps", fixed: true, lesson: "L5 s22", text: "Sort each item: thermal conductor or thermal insulator?", setup: SU.lab(),
-    rows: [["cu", "Copper saucepan base:", "a conductor"], ["wool", "Woollen jumper:", "an insulator"], ["pl", "Plastic mug handle:", "an insulator"], ["al", "Aluminium radiator:", "a conductor"], ["air", "Trapped air in loft insulation:", "an insulator"], ["st", "Steel spoon:", "a conductor"]],
-    bank: ["a conductor", "an insulator"],
-    why: (k) => ({ cu: "Copper is a metal: it transfers energy quickly, so it is a conductor.", wool: "Wool traps air and transfers energy slowly: an insulator.", pl: "Plastic transfers energy slowly: an insulator. That’s why handles are plastic.",
-      air: "Trapped air transfers energy slowly: an insulator.", al: "Aluminium is a metal: it transfers energy quickly, so it is a conductor.", st: "Steel is a metal: it transfers energy quickly, so it is a conductor." })[k],
-    explain: "Conductors: copper saucepan base, aluminium radiator, steel spoon. Insulators: woollen jumper, plastic mug handle, trapped air. Metals conduct; non-metals and trapped air insulate.", stuck: "words",
-    hints: ["Which items are metals?", "Metals are conductors. Non-metals and trapped air are insulators.", "Copper, aluminium and steel: conductors. Wool, plastic and trapped air: insulators."] },
   { id: "order", kind: "build", ordered: true, lesson: "L6 s9", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
     stm: [{ t: "Put the small beaker inside the large one and pack the material into the gap.", c: 1 }, { t: "Pour 80 cm³ of hot water into the small beaker.", c: 2 },
       { t: "Add the lid and thermometer, record the starting temperature and start the stopclock.", c: 3 }, { t: "Record the temperature every 3 minutes for 15 minutes.", c: 4 },
@@ -1200,13 +1208,22 @@ TASKS.easy = [
     orderMsg: "All five steps, but not in order. Set up the beakers first; repeat for other materials last.",
     explain: "Set up the beakers and material, pour in 80 cm³ of hot water, lid and thermometer on and record the start, read every 3 minutes for 15 minutes, then repeat for each material.",
     hints: ["The insulation has to be in place before the hot water goes in.", "You record the starting temperature before the 3-minute readings. Repeating comes last.", "Beakers → 80 cm³ → lid, start, clock → every 3 min → repeat."] },
-  { id: "steps", kind: "goal", lesson: "L6 s9 steps 1–3", text: "Do steps 1 to 3 on the model: set up the beakers, measure exactly 80 cm³ of hot water and pour it in, then record the starting temperature.", setup: SU.lab("news"),
-    test: M => M.run.rec.start != null,
-    not: M => M.run.step === "setup" ? "Press Set up the beakers first (under the picture)." : M.run.step === "measure" ? "Use the −1 and +1 buttons until the cylinder reads 80 cm³, then pour." : "Now read the magnified thermometer scale and record the starting temperature.",
-    done: M => `80 cm³ poured and starting temperature ${fmt(M.run.rec.start)} °C recorded. Next you would start the stopclock.`,
-    reveal: M => { autoTo(M, "ready"); },
-    hints: ["Under the picture, press Set up the beakers.", "Read the bottom of the meniscus in the magnified view. Each small mark is 1 cm³.", "Make it exactly 80 cm³ and pour. Then read the thermometer to the nearest half degree and record it."] },
-  { id: "vars", kind: "gaps", fixed: true, lesson: "L6 s10", text: "Choose the variables for this practical.", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
+  { id: "safe", kind: "gaps", fixed: true, lesson: "L6 s9 step 2 + notes: safety", text: "Complete the safety plan for this practical: the hazard, the risk and a control.", lock: "all", setup: SU.lab("news"),
+    rows: [["h", "Hazard (the thing that could cause harm):", "the hot water"], ["r", "Risk (the harm it could do):", "scalds to the skin"], ["c", "Control (how to reduce the risk):", "put the small beaker in the large one before pouring, and stand up"]],
+    bank: ["the hot water", "scalds to the skin", "put the small beaker in the large one before pouring, and stand up", "use boiling water so it cools faster", "the stopclock"],
+    why: (k, w) => ({ "the hot water": "That is the hazard: the thing that could cause harm.", "scalds to the skin": "A scald is the risk: the harm that could happen.",
+      "put the small beaker in the large one before pouring, and stand up": "That is a control: what you do to reduce the risk.",
+      "use boiling water so it cools faster": "Hotter water makes a scald worse, so it raises the risk. It is not a control.", "the stopclock": "A stopclock can’t harm you. The hazard is the hot water." })[w],
+    explain: "Hazard: the hot water. Risk: scalds to the skin (run a burn under cold water for 10 minutes). Control: put the small beaker inside the large one before pouring (it gets very hot), and stand up so you can move away from a spill.",
+    hints: ["A hazard is a thing. A risk is what it could do to you. A control is what you do about it.", "What is hot in this practical? What could it do to your skin?", "Hazard: the hot water. Risk: scalds."] },
+  { id: "res", kind: "choice", lesson: "L6 s9 step 3 + notes: resolution", text: "Look at the magnified thermometer scale on the model. What is the resolution of this thermometer?", lock: "all", setup: m => { SU.lab("news")(m); m.run.step = "start"; m.run.vol = 80; },
+    options: [{ t: "1 °C", ok: () => true },
+      { t: "5 °C", why: "5 °C is the gap between the numbers. The resolution is the smallest scale division: the gap between the small marks." },
+      { t: "0.5 °C", why: "You can estimate halfway between two marks, but the resolution is the smallest scale division itself." },
+      { t: "100 °C", why: "That is about the range: how far the scale goes. The resolution is the smallest change the scale can show." }],
+    explain: "The resolution is the smallest change an instrument can show: one scale division. The small marks are 1 °C apart, so the resolution is 1 °C. A data logger with a probe can record more often, but a digital thermometer may have the same resolution.", stuck: "words",
+    hints: ["Resolution means the smallest change the scale can show.", "Look at the small marks between the numbers. How far apart are they?", "Count the small marks between two numbers 5 °C apart."] },
+  { id: "vars", kind: "gaps", fixed: true, lesson: "L6 s10", text: "Choose the variables for this practical.", hideWords: ["iv", "dv", "cv"], setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
     rows: [["iv", "Independent variable (you change it):", "the insulating material"], ["dv", "Dependent variable (you measure it):", "the temperature drop in 15 minutes"], ["cv", "Control variable (keep it the same):", "the volume of water"]],
     bank: ["the insulating material", "the temperature drop in 15 minutes", "the volume of water", "the temperature", "the energy made by the insulator"],
     why: (k, w) => ({ "the temperature": "Too vague: you measure the temperature drop in 15 minutes. Don’t just write “the temperature”.", "the insulating material": "You change the material: it is the independent variable.", "the temperature drop in 15 minutes": "You measure the temperature drop: it is the dependent variable.",
@@ -1219,14 +1236,14 @@ TASKS.easy = [
     generic: "Add 16 + 15 + 17, then divide by 3.", stuck: "maths",
     working: () => ["Add: 16 + 15 + 17 = 48", "Divide by how many values: 48 ÷ 3", "Mean = 16 °C"],
     hints: ["Mean = add the values ÷ how many values.", "16 + 15 + 17 = 48. How many values are there?", "48 ÷ 3 = 16 °C."] },
-  { id: "improve", kind: "gaps", fixed: true, lesson: "L6 s13", text: "Suggest an improvement for each problem in this student’s method.", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
+  { id: "improve2", kind: "gaps", fixed: true, lesson: "L6 s13", text: "Suggest an improvement for each problem in this student’s method.", lock: "all", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
     rows: [["st", "“I used water at a different starting temperature each time.”", "use the same starting temperature, e.g. 80 °C"], ["lid", "“I only put a lid on some of the beakers.”", "use the same lid on every beaker"],
-      ["once", "“I tested each material only once.”", "repeat and calculate a mean"], ["eye", "“I read the thermometer from above.”", "read it at eye level"]],
-    bank: ["use the same starting temperature, e.g. 80 °C", "use the same lid on every beaker", "repeat and calculate a mean", "read it at eye level", "use hotter water for the best material"],
+      ["once", "“I tested each material only once.”", "repeat and calculate a mean"], ["eye", "“I read the thermometer from above.”", "read it at eye level"], ["late", "“I was sometimes late reading the thermometer.”", "use a data logger with a temperature probe"]],
+    bank: ["use the same starting temperature, e.g. 80 °C", "use the same lid on every beaker", "repeat and calculate a mean", "read it at eye level", "use a data logger with a temperature probe", "use hotter water for the best material"],
     why: (k, w) => w === "use hotter water for the best material" ? "Hotter water for one material isn’t fair. Keep the starting temperature the same for every beaker." : "That fixes a different problem. Which fix matches this one?",
-    explain: "Same starting temperature (e.g. 80 °C); the same lid on every beaker; repeat and calculate a mean; read the thermometer at eye level.",
-    hints: ["Match each fix to the problem it solves.", "A problem with only one test is fixed by repeating. Reading from above is fixed by eye level.", "Same start temperature · same lid on every beaker · repeat and mean · eye level."] },
-  { id: "hinge", kind: "choice", lesson: "L6 s14 (hinge)", text: "All the beakers started at 80 °C. Which result shows the best thermal insulator?", setup: SU.lab("poly"),
+    explain: "Same start temperature; same lid; repeat and mean; eye level; a data logger (no reaction-time error).",
+    hints: ["Match each fix to the problem it solves.", "A problem with only one test is fixed by repeating. Reading from above is fixed by eye level.", "Same start · same lid · repeat and mean · eye level · data logger."] },
+  { id: "hinge", kind: "choice", lesson: "L6 s14 (hinge)", text: "All the beakers started at 80 °C. Which result shows the best thermal insulator?", lock: "all", setup: SU.lab("poly"),
     options: [{ t: "The smallest temperature drop in 15 minutes", ok: () => expDrop({ mat: "poly", n: 1, lid: true }) < expDrop({ mat: "none", n: 0, lid: true }) },
       { t: "The largest temperature drop in 15 minutes", why: "The largest drop means the water cooled fastest: that is the worst insulator." },
       { t: "The lowest final temperature after 15 minutes", why: "With the same start, the lowest final temperature is the biggest drop: the worst insulator." },
@@ -1244,12 +1261,6 @@ TASKS.easy = [
 const MS6 = ["Level 3 (5–6): coherent method, valid outcome; all key steps in logical order.", "Level 2 (3–4): leads to an outcome; most steps, some out of sequence.",
   "Level 1 (1–2): simple statements of some relevant steps; not valid.", "Level 0: nothing worthy of credit."];
 TASKS.hard = [
-  { id: "wallgoal", kind: "goal", lesson: "L5 s18; L6 s7", text: "On the Walls tab, make wall B thinner than wall A, but with a lower rate of energy transfer.", setup: SU.walls({ m: "brick", t: 2 }, { m: "brick", t: 2 }),
-    test: M => wallGoal(M),
-    not: M => !(M.wb.t < M.wa.t) ? "Wall B must be thinner than wall A. Change their thicknesses." : "Wall B is thinner, so with the same material its rate is higher. What else can you change about wall B?",
-    done: M => `Wall B (${wName(M.wb)}) has a lower rate than wall A (${wName(M.wa)}): its lower thermal conductivity matters more than the thickness.`,
-    reveal: M => { M.wa = { m: "brick", t: 3 }; M.wb = { m: "foam", t: 1 }; M.tab = "walls"; },
-    hints: ["Thinner on its own raises the rate. Two things set the rate: thickness and thermal conductivity.", "Change wall B’s material to the one with the lower thermal conductivity.", "Wall A: thick brick. Wall B: thin insulating foam."] },
   { id: "spoon", kind: "build", ordered: true, lesson: "L5 s24 Q2, s25", text: "Explain, in terms of energy transfer, why a metal spoon feels colder than a wooden spoon at the same temperature. [2 marks]", frame: "Explain: Metal has a … so …", setup: SU.lab(),
     stm: [{ t: "Metal has a higher thermal conductivity than wood,", c: 1 }, { t: "so it transfers energy away from your hand more quickly.", c: 2 },
       { t: "The metal spoon is at a lower temperature.", why: "They are at the same temperature. The difference is how fast each transfers energy away from your hand." },
@@ -1289,6 +1300,15 @@ TASKS.hard = [
       { t: "All the same: they all started at 80 °C.", why: "The same start makes it fair, but the curves fall by different amounts. The one that falls least is the best insulator." }],
     explain: `Curve Z falls least: about ${dropTxt("poly", 1)} °C in 15 minutes, against ${dropTxt("news", 1)} °C for Y and ${dropTxt("none", 1)} °C for X. The lowest rate of cooling shows the best insulator.`,
     hints: ["Read the temperature of each curve at 15 minutes.", "The best insulator has the smallest temperature drop: the least steep curve.", "Curve Z: it falls least steeply."] },
+  { id: "curve", kind: "build", ordered: true, lesson: "L6 s9, s14 + notes: shape of the cooling curve", text: "The cooling curves are steepest at the start, then level off. Explain why the water cools fastest at the start. [2 marks]", frame: "Explain: At the start… so…", setup: m => { SU.curves()(m); m.hideCurve = true; }, lock: "all", unhide: m => { m.hideCurve = false; },
+    stm: [{ t: "At the start the water is much hotter than the room,", c: 1 }, { t: "so the bigger temperature difference gives a faster rate of energy transfer.", c: 2 },
+      { t: "The insulation stops working after a few minutes.", why: "The insulation keeps working. The cooling slows because the water gets closer to room temperature." },
+      { t: "Cold from the room gets in faster at the start.", why: "Cold doesn’t move. Energy is transferred from the hot water to the cooler room." },
+      { t: "Hot water has a higher thermal conductivity.", why: "Thermal conductivity is about the insulator, not how hot the water is. It is the temperature difference that matters." }],
+    miss: { 1: "Compare the water with the room at the start.", 2: "Link the temperature difference to the rate of energy transfer." },
+    orderMsg: "Both points, but in the wrong order. Say how hot the water is compared with the room first, then what that does.",
+    explain: "At the start the water is much hotter than the room (1), so the bigger temperature difference gives a faster rate of energy transfer (1). As it cools the difference gets smaller, so the curve levels off.",
+    hints: ["What is the room temperature, and how hot is the water at the start?", "A bigger temperature difference means a faster rate of energy transfer.", "Much hotter than the room → big temperature difference → fast energy transfer."] },
   { id: "anom", kind: "num", lesson: "L6 s11 (We do), s12 Q3", text: "Bubble wrap: the temperature drops in three repeats were 14, 15 and 22 °C. Calculate the mean, leaving out the anomaly.", setup: SU.lab("bubble"),
     frame: "Calculate: leave out the value that doesn’t fit the pattern, then add ÷ how many.", lbl: "Mean =", unit: "°C", ans: () => goodMean([14, 15, 22]),
     wrongs: [[17, "You included the anomaly (22 °C). Leave it out, then divide by 2."], [51, "That is the total of all three. Leave out 22, then add and divide."], [29, "That is 14 + 15. Now divide by 2."], [29 / 3, "You left out 22 but still divided by 3. You used 2 values."], [18.5, "You left out 14. The value that doesn’t fit is 22."], [18, "You left out 15. The value that doesn’t fit is 22."]],
@@ -1362,12 +1382,13 @@ function bankCheck() {
       if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
     if (t.kind === "gaps") { t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("answer missing from bank " + k);
       t.bank.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); }); }
-    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); t.wrongs.forEach(([v], i) => t.wrongs.forEach(([u], j) => { if (i < j && near(v, u)) E("two slips overlap: " + v + " and " + u); })); if (!t.generic || !t.working) E("needs feedback and working"); }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
       c.forEach(s => { if (!t.miss[s.free || s.c]) E("no hint for a missing point"); }); if (t.ordered && !t.orderMsg) E("needs an order message");
       if (t.ms6) { const ix = f => t.stm.map((s, j) => [s, j]).filter(x => f(x[0])).map(x => x[1]), main = ix(s => s.c && !s.free), all = ix(s => s.c), bad = ix(s => !s.c);
         const lv6 = l => marks6(buildMarks(t, l)).L, got = [lv6([]), lv6(bad.slice(0, 1)), lv6(main.slice(0, 2)), lv6(main.slice(0, 4)), lv6(all), lv6(all.concat(bad.slice(0, 1)))];
         if (got.join() !== "0,0,1,2,3,2") E("levels of response: every level must be reachable " + got.join());
+        if (bad.length >= 2 && lv6(all.concat(bad.slice(0, 2))) !== 1) E("each wrong statement must cost another level");
         if (marks6(buildMarks(t, all)).mk !== 6 || marks6(buildMarks(t, main)).L !== 3 || marks6(buildMarks(t, main)).mk !== 5 || marks6(buildMarks(t, all.slice(1))).L !== 2) E("6 marks only with every key step in order and the control/repeat point; 5 without it");
         (t.keySteps || []).forEach(c => { const l = all.filter(j => t.stm[j].c !== c); if (marks6(buildMarks(t, l)).L !== 2) E("missing key step " + c + " must cap at Level 2"); }); } }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
@@ -1450,11 +1471,13 @@ function renderDots() {
 
 /* ===== Support (off on load, never stored) ===== */
 const WORDS = [["Thermal insulator", DEF.ins], ["Thermal conductivity", DEF.cond], ["Thermal conductor", DEF.tc], ["Rate of cooling", DEF.rate],
-  ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv], ["Control variable", DEF.cv], ["Dissipated", DEF.diss], ["Anomaly", DEF.anom]];
+  ["Independent variable", DEF.iv, "iv"], ["Dependent variable", DEF.dv, "dv"], ["Control variable", DEF.cv, "cv"], ["Dissipated", DEF.diss], ["Anomaly", DEF.anom], ["Resolution", DEF.res]];
+const qOpen = () => { if (mode === "demo" || !task || task.kind === "demo") return false; const p = prog(); return !(p.solved || p.revealed); };
+const wordHidden = k => !!k && qOpen() && (task.hideWords || []).includes(k);
 function renderSupport() {
   $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Temperature drop = starting temperature − temperature at 15 minutes</p><p>Mean = add the values ÷ how many values. Leave out anomalies first.</p><p>Rate of cooling = temperature drop ÷ time (°C per minute)</p><p>An anomaly doesn’t fit the pattern: here, more than 3 °C from the middle value.</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("") + "<p>Memory hook: low conductivity → slow energy transfer → slow cooling → good insulator.</p>";
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${wordHidden(w[2]) ? "<i>shown once you finish this question</i>" : esc(w[1])}</p>`).join("") + "<p>Memory hook: low conductivity → slow energy transfer → slow cooling → good insulator.</p>";
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
@@ -1483,7 +1506,7 @@ function marks6(b) {   // AQA-style levels of response from the statements built
   // Level 3: every key step (all 5), in a logical order; 6 marks with the control/repeat point, 5 without
   let L = key && b.inOrder ? 3 : n >= 3 ? 2 : n >= 1 || ext ? 1 : 0;
   let mk = L === 3 ? (ctl ? 6 : 5) : L === 2 ? (n >= 4 || ext ? 4 : 3) : L === 1 ? (n + ext >= 2 ? 2 : 1) : 0;
-  if (b.bad.length && L > 0) { L--; mk = L === 2 ? 4 : L === 1 ? 2 : 0; }
+  if (b.bad.length) { L = Math.max(0, L - b.bad.length); mk = L === 2 ? 4 : L === 1 ? 2 : 0; }   // each wrong statement costs another level
   return { L, mk };
 }
 function evaluate() {
@@ -1504,7 +1527,7 @@ function evaluate() {
       if (b.missing.length) return { ok: false, html: esc(lv + t.miss[b.missing[0].c]) };
       if (!b.inOrder) return { ok: false, html: esc(lv + t.orderMsg) };
       if (!b.extras.includes("ctl")) return { ok: false, html: esc(lv + t.miss.ctl) };
-      return { ok: true, html: esc("Correct. Level 3, 6 marks: the statements are the indicative content.") + `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` }; }
+      return { ok: true, html: esc("Correct. Level 3, 6 marks.") + `<details class="msd"><summary>Mark scheme: levels and indicative content</summary><ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>` }; }
     if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
     if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.main.length} of ${b.nMain} points. ${t.miss[b.missing[0].c]}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc(t.orderMsg) };
@@ -1527,7 +1550,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    if (M.tab === "walls") drawAll();
+    if (M.tab === "walls" || task.unhide) { if (task.unhide) task.unhide(M); drawAll(); } renderSupport();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1543,7 +1566,8 @@ function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
   setAnswerState();
-  if (M.tab === "walls") drawAll();
+  if (task.unhide) task.unhide(M);
+  if (M.tab === "walls" || task.unhide) drawAll(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
