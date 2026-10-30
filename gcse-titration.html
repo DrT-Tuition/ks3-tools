@@ -241,6 +241,8 @@ footer.brand a{color:inherit}
 .usebox{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:36px;cursor:pointer}
 .usebox input{width:22px;height:22px;accent-color:var(--accent);cursor:pointer}
 .qtab{margin:0 0 8px}
+#tbl{max-width:100%;overflow-x:auto}
+@media (max-width:500px){.rtab{font-size:14px}.rtab th,.rtab td{padding:3px 4px}.qpanel .rtab th,.qpanel .rtab td{padding:2px 3px}.qtab{font-size:13.5px}}
 .concl{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);grid-template-columns:minmax(0,1fr);min-width:0}
 .concl h3{margin:0;font-size:16px;color:var(--accent)}
 .concl.ok{border:2px solid var(--good)}
@@ -258,6 +260,11 @@ footer.brand a{color:inherit}
 @media (min-width:901px){.opts.build.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.opts.build.compact .opt{padding:5px 8px;font-size:15.5px}}
 .grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
 .grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+/* answers never wider than the panel: long dropdowns shrink (and wrap under their label) */
+#answer, #answer .opts, #answer .opts > *, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts .grow select{flex:1 1 220px}
 .numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
 .numin.wide{width:9em}
 .numin.no{border:2px solid var(--bad)}
@@ -372,6 +379,13 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -525,6 +539,8 @@ const PIP = 25.0;        // cm³ of sodium hydroxide (notes)
 const CB = 0.1;          // mol/dm³ sodium hydroxide (notes)
 const BUR = 50;          // cm³ burette (notes); scale 0 at the top, 0.1 cm³ marks
 const CONC_OK = 0.10;    // concordant: within 0.10 cm³ (notes)
+const MR_ACID = 2 * 1 + 32 + 4 * 16;   // Mr of H₂SO₄ = 98 (Ar: H = 1, S = 32, O = 16)
+const MR_NAOH = 23 + 16 + 1;          // Mr of NaOH = 40 (the slip)
 const MEN = 0.15;        // the meniscus edges sit 0.15 cm³ above its bottom (drawing)
 const DROP = 0.05;       // one drop, cm³ (INVENTED, a typical size)
 const FLOW = 2.5;        // cm³ per second with the tap open (INVENTED, sped up)
@@ -541,7 +557,7 @@ function freshRun(kind) {
     started: false, jud: 0, crossed: false, crossBy: "", final: null, finalTrue: null, titre: null, titreTry: null, drip: 0, done: false, spoilt: "" };
 }
 function freshM() { return { eye: false, tile: false, msg: "", bur: { level: null, funnel: false, dripped: false }, tap: false, runs: [], cur: freshRun("rough"),
-  use: {}, meanTry: "", meanOk: false, mean: null, calc: { nB: "", nA: "", c: "" }, calcOk: false, fx: null, recTry: null }; }
+  use: {}, meanTry: "", meanOk: false, mean: null, calc: { nB: "", nA: "", c: "", g: "" }, calcOk: false, fx: null, recTry: null }; }
 const support = { read: false, maths: false, words: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
 const st = {};
@@ -557,7 +573,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -765,15 +781,28 @@ function judgeMean(m, v, str) {
   if (Math.abs(v - meanOf(all)) <= .0051) return { why: "That is the mean of every titre, the rough one too. Use only the ones you ticked." };
   return { why: "Check the mean: add the titres you ticked, then divide by how many there are. Give it to 2 decimal places." };
 }
-function calcWant(m) { const nB = molB(PIP), nA = nB / 2; return { nB, nA, c: nA / (m.mean / 1000) }; }
+function calcWant(m) { const nB = molB(PIP), nA = nB / 2, c = nA / (m.mean / 1000); return { nB, nA, c, g: c * MR_ACID }; }
 function judgeCalc(m, x, raw) {   // x: {nB, nA, c} as numbers; raw: the typed strings (for the rounding check)
   const w = calcWant(m), rel = (a, b) => Math.abs(a - b) <= Math.abs(b) * .006 + 1e-12, rel2 = (a, b) => Math.abs(a - b) <= Math.abs(b) * .012 + 1e-12;
-  raw = raw || { nB: String(x.nB), nA: String(x.nA), c: String(x.c) };
-  if (![x.nB, x.nA, x.c].every(isFinite)) return { why: "Type a number in each box (standard form is fine, such as 1.5 × 10⁻⁴)." };
+  raw = raw || { nB: String(x.nB), nA: String(x.nA), c: String(x.c), g: String(x.g) };
+  if (![x.nB, x.nA, x.c, x.g].every(isFinite)) return { why: "Type a number in each box (standard form is fine, such as 1.5 × 10⁻⁴)." };
   if (!acceptR(raw.nB, w.nB, 4)) return { why: rel(x.nB, w.nB) ? "Step 1: give the moles of NaOH exactly (0.1 × 25.0 ÷ 1000)." : rel(x.nB, w.nB * 1000) ? "Moles of NaOH: change 25.0 cm³ into dm³ first (÷ 1000)." : rel(x.nB, w.nB / 2) ? "That is half the moles of sodium hydroxide. Step 1 is just concentration × volume (dm³)." : "Step 1: moles of NaOH = 0.1 mol/dm³ × 25.0 cm³ ÷ 1000." };
   if (!acceptR(raw.nA, w.nA, 5)) return { why: rel(x.nA, w.nA) ? "Step 2: give the moles of H₂SO₄ exactly (step 1 ÷ 2)." : rel(x.nA, w.nB) ? "Step 2: the equation shows 1 H₂SO₄ : 2 NaOH, so the moles of acid are half the moles of NaOH." : rel(x.nA, w.nB * 2) ? "1 H₂SO₄ reacts with 2 NaOH, so divide by 2 (don't multiply)." : "Step 2: moles of H₂SO₄ = moles of NaOH ÷ 2 (1 : 2 in the equation)." };
   if (!acceptR(raw.c, w.c, 3)) return { why: rel2(x.c, w.c) ? "Step 3: nearly. Round correctly, to at least 2 significant figures (for example 3 decimal places here)." : rel2(x.c, w.c / 1000) ? "Step 3: change your mean titre into dm³ (÷ 1000) before you divide." : rel2(x.c, 1 / w.c) ? "Step 3: concentration = moles ÷ volume. You divided the wrong way round." : rel2(x.c, w.nB / (m.mean / 1000)) ? "Use the moles of H₂SO₄ from step 2, not the moles of NaOH." : rel2(x.c, w.nA / (PIP / 1000)) ? "Divide by the acid's volume (your mean titre), not the 25.0 cm³ of alkali." : "Step 3: concentration of H₂SO₄ = moles ÷ (mean titre in dm³)." };
+  { const why = judgeG(raw.g, x.g, w.c, x.c, "Step 4: "); if (why) return { why }; }
   return { ok: true };
+}
+function judgeG(str, v, c, cTyped, pre) {   // (HT) g/dm³ = mol/dm³ × Mr. Accepts the exact value, or the pupil's own rounded mol/dm³ × 98, correctly rounded to 2 s.f. or more; "" = right
+  const say = w => pre ? pre + w[0].toLowerCase() + w.slice(1) : w; const ok = x => isFinite(x) && x > 0 && acceptR(str, x, Math.max(0, 1 - Math.floor(Math.log10(x))));
+  if (ok(c * MR_ACID) || (isFinite(cTyped) && Math.abs(cTyped - c) <= c * .012 && ok(cTyped * MR_ACID))) return "";
+  const near = (a, b) => Math.abs(a - b) <= Math.abs(b) * .012 + 1e-12, vs = [c * MR_ACID, cTyped * MR_ACID].filter(isFinite);
+  if (vs.some(g => Math.abs(v - g) <= g * .009)) return say("Nearly. Round correctly, to 2 significant figures or more.");
+  if (near(v, c)) return say("That is still in mol/dm³. Multiply by the relative formula mass of H₂SO₄ to get g/dm³.");
+  if (vs.some(g => near(v, g * 1000))) return say("Don't multiply by 1000: the volume is already in dm³. g/dm³ = mol/dm³ × Mr.");
+  if (near(v, c / MR_ACID)) return say("Multiply by Mr, don't divide: each mole of H₂SO₄ has a mass of 98 g.");
+  if (near(v, c * MR_NAOH)) return say("Use the Mr of the acid, H₂SO₄ (98), not of sodium hydroxide (40).");
+  if ([96, 50].some(k => Math.abs(v - c * k) <= c * k * .005)) return say("Check the Mr of H₂SO₄: (2 × 1) + 32 + (4 × 16) = 98.");
+  return say("Concentration in g/dm³ = concentration in mol/dm³ × Mr of H₂SO₄.");
 }
 const goodRunOne = (m, r) => !!(m.eye && r.done && IND_OK(r.ind) && r.tile && !r.drip && !r.alkRinse && !r.acidRinse && (r.kind === "rough" || r.crossBy === "drop"));
 function runFaults(r) {   // what went wrong in one titration (for the "Do it" feedback and the method list)
@@ -802,7 +831,7 @@ function autoRun(m, upto) {   // upto: "rough" stops after the rough titration; 
   m.msg = `Mean titre of the concordant titres: ${f2(m.mean)} cm³.`;
 }
 function parseNum(s) {
-  { const t = String(s == null ? "" : s).trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/(cm3|cm³|dm3|dm³|mol\/dm3|mol\/dm³|mol)$/i, "").replace(",", ".");   // standard form: 5 × 10⁻², 5x10^-2, 5e-2
+  { const t = String(s == null ? "" : s).trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/(cm3|cm³|g\/dm3|g\/dm³|mol\/dm3|mol\/dm³|dm3|dm³|mol)$/i, "").replace(",", ".");   // standard form: 5 × 10⁻², 5x10^-2, 5e-2
     const sup = { "⁰": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9 };
     const m1 = t.match(/^([+-]?\d*\.?\d+)[×x*]10(?:\^?([+-]?\d+)|([⁻⁺]?)([⁰¹²³⁴⁵⁶⁷⁸⁹]+))$/i);
     if (m1) { const e = m1[2] != null ? +m1[2] : (m1[3] === "⁻" ? -1 : 1) * +[...m1[4]].map(c => sup[c]).join(""); return parseFloat(m1[1]) * Math.pow(10, e); }
@@ -813,7 +842,7 @@ function parseNum(s) {
 
 /* ===== Rounded answers: accept only the exact value rounded half-up to the precision the pupil typed (never one half a unit away) ===== */
 function dpOf(str) {   // decimal places the pupil typed (standard form counts: 5.6 × 10⁻² → 3)
-  const t = String(str == null ? "" : str).trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/(cm3|cm³|dm3|dm³|mol\/dm3|mol\/dm³|mol)$/i, "").replace(",", ".");
+  const t = String(str == null ? "" : str).trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/(cm3|cm³|g\/dm3|g\/dm³|mol\/dm3|mol\/dm³|dm3|dm³|mol)$/i, "").replace(",", ".");
   const m = t.match(/^[+-]?\d*(?:\.(\d*))?/); if (!m) return null; const md = (m[1] || "").length, rest = t.slice(m[0].length);
   if (!rest) return md;
   const sup = { "⁰": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9 };
@@ -995,11 +1024,11 @@ function conclHTML(m) {
     return h;
   }
   h += `<p class="concline"><b>Conclusion:</b> 25.0 cm³ of 0.1 mol/dm³ sodium hydroxide was neutralised by a mean of <b>${f2(m.mean)} cm³</b> of the sulfuric acid.</p>`;
-  h += `<h3>Concentration of the acid <span class="badge" title="Higher tier">HT</span></h3><p class="frame">H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O</p>`;
+  h += `<h3>Concentration of the acid <span class="badge" title="Higher tier">HT</span></h3><p class="frame">H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O. Relative atomic masses: H = 1, O = 16, Na = 23, S = 32.</p>`;
   const C = m.calc, inp = (id, lab, v, u) => `<label class="grow"><span>${lab}</span> <input class="numin wide" id="${id}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(v)}"${m.calcOk ? " disabled" : ""}> <span class="unit">${u}</span></label>`;
-  h += inp("cB", "1. Moles of NaOH =", C.nB, "mol") + inp("cA", "2. Moles of H₂SO₄ =", C.nA, "mol") + inp("cC", "3. Concentration of H₂SO₄ =", C.c, "mol/dm³");
+  h += inp("cB", "1. Moles of NaOH =", C.nB, "mol") + inp("cA", "2. Moles of H₂SO₄ =", C.nA, "mol") + inp("cC", "3. Concentration of H₂SO₄ =", C.c, "mol/dm³") + inp("cG", "4. Concentration of H₂SO₄ =", C.g, "g/dm³");
   if (!m.calcOk) h += `<div class="controls"><button class="btn" type="button" id="calcBtn">Check calculation</button></div>`;
-  else { const w = calcWant(m); h += `<ol class="ms"><li>Moles of NaOH = 0.1 mol/dm³ × (25.0 ÷ 1000) dm³ = ${num(w.nB)} mol</li><li>1 H₂SO₄ : 2 NaOH, so moles of H₂SO₄ = ${num(w.nB)} ÷ 2 = ${num(w.nA)} mol</li><li>Concentration = ${num(w.nA)} mol ÷ (${f2(m.mean)} ÷ 1000) dm³ = ${w.c.toFixed(4)} mol/dm³ (about ${w.c.toPrecision(2)} mol/dm³)</li></ol><p class="small">In this model the acid's concentration was ${ACID_C.toFixed(4)} mol/dm³.</p>`; }
+  else { const w = calcWant(m); h += `<ol class="ms"><li>Moles of NaOH = 0.1 mol/dm³ × (25.0 ÷ 1000) dm³ = ${num(w.nB)} mol</li><li>1 H₂SO₄ : 2 NaOH, so moles of H₂SO₄ = ${num(w.nB)} ÷ 2 = ${num(w.nA)} mol</li><li>Concentration = ${num(w.nA)} mol ÷ (${f2(m.mean)} ÷ 1000) dm³ = ${w.c.toFixed(4)} mol/dm³ (about ${w.c.toPrecision(2)} mol/dm³)</li><li>Mr of H₂SO₄ = (2 × 1) + 32 + (4 × 16) = ${MR_ACID}, so ${w.c.toFixed(4)} mol/dm³ × ${MR_ACID} = ${w.g.toFixed(2)} g/dm³ (about ${w.g.toPrecision(2)} g/dm³)</li></ol><p class="small">In this model the acid's concentration was ${ACID_C.toFixed(4)} mol/dm³.</p>`; }
   return h;
 }
 function renderCtl() {
@@ -1073,7 +1102,7 @@ const TRY = ["Do a rough titration: run in acid 1–3 cm³ at a time (or open th
   "Then do accurate titrations, adding the acid one drop at a time near the end point. Can you get two concordant titres?",
   "Leave the funnel in the burette, or rinse the flask with something other than distilled water. What happens to the titre?",
   "Try to add universal indicator. Why won't the model let you use it?",
-  "Tick your concordant titres, work out the mean, then (HT) calculate the acid's concentration."];
+  "Tick your concordant titres, work out the mean, then (HT) calculate the acid's concentration in mol/dm³ and in g/dm³."];
 const TRIED = TRY.map(() => false);
 function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
 function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
@@ -1101,17 +1130,22 @@ const SU = {
 const QUICK_WHY = "Near the end point, a big portion of acid can go past it, so you add too much and the titre is too big. Add the acid one drop at a time.";
 const ROUGH_WHY = "The rough titre is only approximate: the acid went in quickly, so it went past the end point. Leave it out of the mean.";
 const UI_WHY = "Universal indicator changes colour gradually, so there is no sharp colour change to show the end point.";
+const SAFE = { h: "It is an irritant: it harms eyes and skin", r: "It could splash into your eyes as you swirl or pour", c: "Wear eye protection; use a pipette filler" };
+const SWAP = (k, w) => { const role = { [SAFE.h]: "hazard", [SAFE.r]: "risk", [SAFE.c]: "control" }[w], row = { h: "hazard", r: "risk", c: "control" }[k];
+  return role && role !== row ? `That is the ${role}, not the ${row}. ` + { hazard: "The hazard is what can cause harm.", risk: "The risk is how the harm could happen.", control: "The control is what you do to make it less likely." }[row] : ""; };
 const E10 = { rough: 23.40, t: [22.65, 22.35, 22.40] };   // the table in Easy 10 (example data)
 const H8 = { mean: 22.40 }, H9 = { cB: .15, vB: 25.00, vA: 12.80 }, H10 = { vA: 15.0, cA: .060, cB: .10 };
+const h8g = () => h8ans() * MR_ACID;
+const t8 = () => TASKS.hard.find(x => x.id === "calcg");
+const H8MOL = "That is still in mol/dm³. Multiply by the relative formula mass of H₂SO₄ to get g/dm³.", H8K = "Don't multiply by 1000: the volume is already in dm³. g/dm³ = mol/dm³ × Mr.",
+  H8NA = "Use the Mr of the acid, H₂SO₄ (98), not of sodium hydroxide (40).", H8DIV = "Multiply by Mr, don't divide: each mole of H₂SO₄ has a mass of 98 g.", H8MR = "Check the Mr of H₂SO₄: (2 × 1) + 32 + (4 × 16) = 98.";
+const H8SLIPS = [];   // filled after h8ans is defined
 const h8ans = () => molB(PIP) / 2 / (H8.mean / 1000), h9ans = () => H9.cB * H9.vB / 1000 * 2 / (H9.vA / 1000), h10ans = () => H10.cA * H10.vA / 1000 * 2 / H10.cB * 1000;
+H8SLIPS.push([molB(PIP) / (H8.mean / 1000) * MR_ACID, "You forgot the ratio: 1 H₂SO₄ reacts with 2 NaOH, so the moles of acid are half the moles of NaOH."],
+  [molB(PIP) * 2 / (H8.mean / 1000) * MR_ACID, "1 H₂SO₄ : 2 NaOH, so divide the moles of NaOH by 2, don't multiply."],
+  [molB(PIP) / 2 / H8.mean * MR_ACID, "Change 22.40 cm³ into dm³ first: divide by 1000."],
+  [molB(PIP) / 2 / (PIP / 1000) * MR_ACID, "Divide by the acid's volume (22.40 cm³), not the 25.0 cm³ of alkali."]);
 TASKS.easy = [
-  { id: "prod", kind: "choice", src: "Neutralisation of acids and salt production", text: "In this practical, sulfuric acid neutralises sodium hydroxide. What are the products?", setup: SU.fresh, lock: "all",
-    options: [{ t: "Sodium sulfate and water", ok: () => balanced(EQ) && EQ.includes("Na₂SO₄") && EQ.includes("H₂O") },
-      { t: "Sodium sulfate and hydrogen", why: "Hydrogen is made when an acid reacts with a metal. An acid and an alkali make a salt and water." },
-      { t: "Sodium sulfide and water", why: "Sulfuric acid makes sulfates, not sulfides." },
-      { t: "Sodium chloride and water", why: "Chlorides come from hydrochloric acid. Sulfuric acid makes sulfates." }],
-    explain: "sulfuric acid + sodium hydroxide → sodium sulfate + water (acid + base → salt + water).",
-    hints: ["It is a neutralisation reaction: acid + base → ?", "The salt's name comes from the metal (sodium) and the acid (sulfuric → sulfate).", "Sodium sulfate and water."] },
   { id: "ui", kind: "choice", src: "The pH scale and neutralisation (examiner tip)", text: "Why isn't universal indicator used in a titration?", setup: SU.fresh, lock: "all",
     options: [{ t: "Its colour changes gradually, so there is no sharp colour change at the end point", ok: () => { const m = freshM(); m.eye = true; actPip(m); return !actInd(m, "ui") && actInd(m, "phen"); } },
       { t: "It is too strongly coloured", why: "Indicators are intensely coloured, so only a few drops are needed. That isn't the problem: universal indicator has no sharp colour change." },
@@ -1126,6 +1160,14 @@ TASKS.easy = [
       { t: "Blue to red", why: "Those are litmus colours. Litmus isn't used for titrations: its colour change isn't sharp enough." }],
     explain: "Phenolphthalein is pink in alkali and colourless in acid, so the flask turns from pink to colourless at the end point.",
     hints: ["What is in the flask at the start: an acid or an alkali?", "Phenolphthalein is pink in alkali. What colour is it in acid?", "Pink to colourless."] },
+  { id: "safe", kind: "gaps", src: "Required practical: materials and safety (from the AQA practical)", text: "Sodium hydroxide solution is used in this titration. Choose the hazard, the risk and the control.", setup: SU.fresh, lock: "all",
+    frame: "Hazard: what could cause harm. Risk: how the harm could happen. Control: what you do to make it less likely.",
+    rows: [["h", "Hazard:", SAFE.h], ["r", "Risk:", SAFE.r], ["c", "Control:", SAFE.c]],
+    bank: [SAFE.h, SAFE.r, SAFE.c, "It is flammable", "Read the burette at eye level"],
+    why: (k, w) => SWAP(k, w) || (w === "It is flammable" ? "Sodium hydroxide solution doesn't burn. Think about what it does to eyes and skin." : w === "Read the burette at eye level" ? "That makes your reading accurate. It doesn't protect you." :
+      ({ h: "The hazard is the thing that can cause harm: what is harmful about sodium hydroxide?", r: "The risk is how the harm could actually happen during the practical.", c: "The control is what you do to make the harm less likely." })[k]),
+    explain: "Irritant → could splash into your eyes → eye protection, and a pipette filler (never your mouth).",
+    hints: ["The hazard is what makes the chemical harmful. The risk is how it could reach you.", "Swirling the flask and filling the pipette can splash or spill the alkali.", "Irritant → could splash into your eyes → eye protection and a pipette filler."] },
   { id: "pip", kind: "choice", src: "Required practical: materials and method step 1", text: "Which apparatus puts exactly 25.0 cm³ of sodium hydroxide into the conical flask?", setup: SU.fresh, lock: "all",
     options: [{ t: "A 25 cm³ volumetric pipette, with a pipette filler", ok: () => PIP === 25 },
       { t: "A 100 cm³ beaker", why: "A beaker's marks are only rough guides. A volumetric pipette measures exactly 25.0 cm³." },
@@ -1250,17 +1292,23 @@ TASKS.hard = [
     done: m => `Your mean titre is ${f2(m.mean)} cm³.`,
     reveal: m => { autoRun(m); },
     hints: ["Do the rough titration first. Then New titration for each accurate one.", "Open the tap to get close to the rough titre, close it, then add one drop at a time until the colour just changes.", "When two titres are within 0.10 cm³, tick them, type their mean and press Check mean."] },
-  { id: "calc", kind: "num", ht: true, src: "Titration calculations", text: "A mean titre of 22.40 cm³ of sulfuric acid neutralised 25.0 cm³ of 0.1 mol/dm³ NaOH. H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O. Calculate the acid's concentration to 2 significant figures.", setup: SU.fresh, lock: "all",
-    frame: "moles = concentration × volume (dm³); concentration = moles ÷ volume (dm³)", lbl: "Concentration =", unit: "mol/dm³", tol: .0004, minDp: 3, dpMsg: "Give it to 2 significant figures.", ans: h8ans, fmt: v => v.toPrecision(2),
-    wrongs: [[molB(PIP) / (H8.mean / 1000), "You forgot the ratio: 1 H₂SO₄ reacts with 2 NaOH, so the moles of acid are half the moles of NaOH."], [molB(PIP) * 2 / (H8.mean / 1000), "1 H₂SO₄ : 2 NaOH, so divide the moles of NaOH by 2, don't multiply."],
-      [molB(PIP) / 2 / H8.mean, "Change 22.40 cm³ into dm³ first: divide by 1000."], [(H8.mean / 1000) / (molB(PIP) / 2), "Concentration = moles ÷ volume. You divided the wrong way round."], [molB(PIP) / 2 / (PIP / 1000), "Divide by the acid's volume (22.40 cm³), not the 25.0 cm³ of alkali."]],
-    generic: "Step 1: moles of NaOH = 0.1 × 25.0 ÷ 1000. Step 2: ÷ 2 for H₂SO₄. Step 3: ÷ (22.40 ÷ 1000).", stuck: "maths",
-    working: () => ["NaOH: 0.1 × (25.0 ÷ 1000) = 0.0025 mol", "1 H₂SO₄ : 2 NaOH, so H₂SO₄: 0.0025 ÷ 2 = 0.00125 mol", "0.00125 ÷ (22.40 ÷ 1000) = 0.0558, so 0.056 mol/dm³"],
-    hints: ["Start with the solution you know both values for: the sodium hydroxide.", "Moles of NaOH = concentration × volume in dm³. Then use the 1 : 2 ratio in the equation.", "0.00125 mol ÷ 0.02240 dm³."] },
+  { id: "calcg", kind: "num", ht: true, src: "Titration calculations (mol/dm³ and g/dm³)", text: "A mean titre of 22.40 cm³ of sulfuric acid neutralised 25.0 cm³ of 0.1 mol/dm³ NaOH. H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O. Calculate the acid's concentration in g/dm³, to 2 significant figures. (Relative atomic masses: H = 1, O = 16, S = 32.)", setup: SU.fresh, lock: "all",
+    frame: "moles = concentration × volume (dm³); concentration (mol/dm³) = moles ÷ volume (dm³); concentration (g/dm³) = concentration (mol/dm³) × Mr", lbl: "Concentration =", unit: "g/dm³", ans: h8g, fmt: v => v.toPrecision(2),
+    judge: (v, m, str) => { str = str == null ? String(v) : str; const c = h8ans();
+      if (!judgeG(str, v, c, .056) || !judgeG(str, v, c, .0558)) return { ok: true };
+      { const p = precSlip(str, h8g(), 1, "Give it to 2 significant figures."); if (p) return { why: p }; }
+      if (/0$/.test(str.trim().replace(/\s*g\/dm(3|³)$/i, "")) && /\./.test(str) && Math.abs(v - roundHU(h8g(), 1)) < 1e-9) return { why: "To 2 significant figures that's 5.5 (5.50 would be 3 s.f., and to 3 s.f. the answer is 5.47)." };
+      const sf2 = x => acceptR(str, x, Math.max(0, 1 - Math.floor(Math.log10(Math.abs(x)))));   // a slip value, correctly rounded to 2 s.f. or more
+      const hit = t8().wrongs().find(([x]) => Math.abs(v - x) <= Math.abs(x) * .009 || sf2(x)); if (hit) return { why: hit[1] };
+      return { why: judgeG(str, v, c, .056) }; },
+    wrongs: () => H8SLIPS.concat([[h8ans(), H8MOL], [h8g() * 1000, H8K], [h8ans() * MR_NAOH, H8NA], [h8ans() / MR_ACID, H8DIV], [h8ans() * 96, H8MR]]),
+    generic: "Step 1: moles of NaOH = 0.1 × 25.0 ÷ 1000. Step 2: ÷ 2 for H₂SO₄. Step 3: ÷ (22.40 ÷ 1000). Step 4: × Mr of H₂SO₄.", stuck: "maths",
+    working: () => ["NaOH: 0.1 × (25.0 ÷ 1000) = 0.0025 mol; H₂SO₄: 0.0025 ÷ 2 = 0.00125 mol", "0.00125 ÷ (22.40 ÷ 1000) = 0.0558 mol/dm³", "Mr of H₂SO₄ = 2 + 32 + 64 = 98; 0.0558 × 98 = 5.47, so 5.5 g/dm³"],
+    hints: ["Find the concentration in mol/dm³ first, starting with the sodium hydroxide: you know both its values.", "Moles of NaOH = concentration × volume in dm³. Use the 1 : 2 ratio, then divide by the acid's volume in dm³.", "0.0558 mol/dm³ × Mr of H₂SO₄ (98)."] },
   { id: "ba", kind: "num", ht: true, src: "Titration calculations: worked example", text: "25.00 cm³ of 0.15 mol/dm³ barium hydroxide, Ba(OH)₂, neutralised 12.80 cm³ of nitric acid, HNO₃. Ba(OH)₂ + 2HNO₃ → Ba(NO₃)₂ + 2H₂O. Calculate the concentration of the nitric acid. Give your answer to 2 decimal places.", setup: SU.fresh, lock: "all",
     frame: "Step 1: moles of Ba(OH)₂ = concentration × volume (dm³). Then use the ratio.", lbl: "Concentration =", unit: "mol/dm³", tol: .005, minDp: 2, dpMsg: "Give it to 2 decimal places.", ans: h9ans, fmt: v => v.toFixed(2),
-    wrongs: [[H9.cB * H9.vB / 1000 / (H9.vA / 1000), "You forgot the ratio: 1 Ba(OH)₂ reacts with 2 HNO₃, so multiply the moles by 2."], [H9.cB * H9.vB / 1000 / 2 / (H9.vA / 1000), "1 Ba(OH)₂ : 2 HNO₃, so the moles of nitric acid are double, not half."],
-      [H9.cB * H9.vB / 1000 * 2 / H9.vA, "Change 12.80 cm³ into dm³ (÷ 1000) before you divide."], [(H9.vA / 1000) / (H9.cB * H9.vB / 1000 * 2), "Concentration = moles ÷ volume. You divided the wrong way round."], [H9.cB, "The concentrations aren't the same: work out the moles first."]],
+    wrongs: [[H9.cB * H9.vB / 1000 / (H9.vA / 1000), "You forgot the ratio: 1 Ba(OH)₂ reacts with 2 HNO₃, so multiply the moles by 2."], [H9.cB * H9.vB / 1000 / 2 / (H9.vA / 1000), "1 Ba(OH)₂ : 2 HNO₃, so the moles of nitric acid are double, not half.", .0012],
+      [H9.cB * H9.vB / 1000 * 2 / H9.vA, "Change 12.80 cm³ into dm³ (÷ 1000) before you divide."], [(H9.vA / 1000) / (H9.cB * H9.vB / 1000 * 2), "Concentration = moles ÷ volume. You divided the wrong way round."], [H9.cB, "The concentrations aren't the same: work out the moles first.", .0012]],
     generic: "Moles of Ba(OH)₂ = 0.15 × 0.025. Double it for HNO₃. Then ÷ 0.0128 dm³.", stuck: "maths",
     working: () => ["Moles of Ba(OH)₂ = 0.15 mol/dm³ × 0.02500 dm³ = 3.75 × 10⁻³ mol", "1 Ba(OH)₂ : 2 HNO₃, so moles of HNO₃ = 3.75 × 10⁻³ × 2 = 7.5 × 10⁻³ mol", "Concentration = 7.5 × 10⁻³ ÷ 0.0128 dm³ = 0.586 mol/dm³", "To 2 decimal places: 0.59 mol/dm³"],
     hints: ["Start with the barium hydroxide: you know its concentration and volume.", "Moles × 2 for the nitric acid (look at the 2 in front of HNO₃).", "7.5 × 10⁻³ mol ÷ 0.0128 dm³."] },
@@ -1289,7 +1337,9 @@ function bankCheck1() {
     if (b && b.some(r => r.kind === "rough")) F("the rough titre must never be in the concordant set");
     if (!(m.runs[0].titre > meanOf(b.map(r => r.titre)) - .3)) F("the rough titre should be at or above the accurate ones");
     if (!judgeMean(m, m.mean).ok) F("judgeMean should accept the auto mean");
-    const w = calcWant(m); if (!judgeCalc(m, w).ok || judgeCalc(m, { nB: w.nB, nA: w.nB, c: w.c }).ok || !/ratio|half|1 : 2/.test(judgeCalc(m, { nB: w.nB, nA: w.nB, c: w.c }).why)) F("calculation judge");
+    const w = calcWant(m); if (!judgeCalc(m, w).ok || judgeCalc(m, { nB: w.nB, nA: w.nB, c: w.c, g: w.g }).ok || !/ratio|half|1 : 2/.test(judgeCalc(m, { nB: w.nB, nA: w.nB, c: w.c, g: w.g }).why)) F("calculation judge");
+    { const c3 = w.c.toFixed(3), J = (g, c) => judgeCalc(m, { nB: w.nB, nA: w.nA, c: c == null ? w.c : +c, g: +g }, { nB: String(w.nB), nA: String(w.nA), c: c == null ? String(w.c) : c, g: String(g) });
+      if (!J(w.g.toPrecision(2)).ok || !J((+c3 * MR_ACID).toFixed(2), c3).ok || J(+w.c.toFixed(4)).ok || !/mol\/dm³/.test(J(+w.c.toFixed(4)).why) || !/1000/.test(J(w.g * 1000).why) || !/40/.test(J(w.c * 40).why) || !/divide/.test(J(w.c / 98).why) || !/= 98/.test(J(w.c * 96).why)) F("g/dm³ box (step 4): judge and named slips"); }
     if (Math.abs(w.c - ACID_C) / ACID_C > .02) F("the careful method should find the acid's concentration within 2 %");
     m.use[0] = true; if (judgeMean(m, m.mean).ok || !/rough/.test(judgeMean(m, m.mean).why)) F("ticking the rough titre must be named"); }
   { const m = freshM(); autoRun(m, "rough"); const r = m.runs[0]; if (!r || !r.done || Math.abs(r.titre - (r.final - r.first)) > 1e-6) F("rough titre = final − first"); }
@@ -1313,9 +1363,14 @@ function bankCheck1() {
     const wrs = six.stm.map((s, i) => [s, i]).filter(x => !x[0].c).map(x => x[1]);
     if (/Level [23]/.test(L([...all.map(ix), ...wrs])) || !/Level 2/.test(L([...all.map(ix), wrs[0]]))) F("6-mark: each wrong statement must lower the level by one more"); } }
   { const v = ["5.6 × 10⁻²", "5.6x10^-2", "5.6e-2", "0.056 mol/dm³"].map(parseNum); if (v.some(x => Math.abs(x - .056) > 1e-12)) F("standard form should parse"); }
-  if (Math.abs(h8ans() - .05580357) > 1e-6 || Math.abs(h9ans() - .5859375) > 1e-7 || Math.abs(h10ans() - 18) > 1e-9) F("hard calculation answers");
+  if (Math.abs(h8g() - 5.46875) > 1e-6 || Math.abs(h8ans() - .05580357) > 1e-6 || Math.abs(h9ans() - .5859375) > 1e-7 || Math.abs(h10ans() - 18) > 1e-9) F("hard calculation answers");
   if (!acceptR("0.59", h9ans(), 2) || !acceptR("0.586", h9ans(), 2) || acceptR("0.58", h9ans(), 2) || acceptR("0.6", h9ans(), 2)) F("Hard 9 rounding: 0.59 / 0.586 only");
-  if (!acceptR("0.056", h8ans(), 3) || !acceptR("5.6 × 10⁻²", h8ans(), 3) || !acceptR("0.0558", h8ans(), 3) || acceptR("0.055", h8ans(), 3) || acceptR("0.06", h8ans(), 3)) F("Hard 8 rounding: 0.056 accepted, 0.055 and 0.06 not");
+  { const t = TASKS.hard.find(x => x.id === "calcg"), J = x => t.judge(parseNum(x), null, x);
+    if (!["5.5", "5.47", "5.469", "5.49", "5.5 g/dm³", "5.5g/dm3"].every(x => J(x).ok) || ["5.4", "5.48", "5.46", "5", "6", "0.056"].some(x => J(x).ok) || !/2 significant/.test(J("5").why) || !/cut off/.test(J("5.46").why)) F("Hard 8 rounding: 5.5 / 5.47 / 5.49 accepted, 5.4 / 5.46 / 5 not");
+    t.wrongs().forEach(([v, w]) => { const j = t.judge(v, null); if (j.ok || j.why !== w) F("Hard 8 slip " + v.toPrecision(4) + " should say: " + w); });
+    t.wrongs().forEach(([v, w]) => { const s2 = v.toPrecision(2), j = t.judge(parseNum(s2), null, s2); if (j.ok || (j.why !== w && !/cut off|2 significant/.test(j.why))) F("Hard 8 slip rounded to 2 s.f. (" + s2 + ") should say: " + w); });
+    if (!/that's 5.5/.test(J("5.50").why) || !/sodium hydroxide \(40\)/.test(J("2.2").why)) F("Hard 8: 5.50 and 2.2 messages");
+    const W = t.wrongs().map(x => x[0]); W.forEach((a, i) => W.forEach((b, k) => { if (i < k && Math.abs(a - b) <= Math.max(a, b) * .02) F("Hard 8 slips overlap: " + a + " / " + b); })); }
   if (!acceptR("22.38", meanOf([22.35, 22.40]), 2) || acceptR("22.37", meanOf([22.35, 22.40]), 2) || !acceptR("22.375", meanOf([22.35, 22.40]), 2) || acceptR("22.4", meanOf([22.35, 22.40]), 2)) F("Easy 10: half-up rounding (22.38, not 22.37)");
   if (precSlip("22.4", 22.375, 2, "x") !== "x" || !/cut off/.test(precSlip("0.055", h8ans(), 3)) || precSlip("0.0560", h8ans(), 3) || precSlip("18.05", h10ans(), 0) || precSlip("0.06", h8ans(), 3, "sf") !== "sf") F("precision slip messages");
   if (!acceptR("18", h10ans(), 0) || !acceptR("18.0", h10ans(), 0) || acceptR("18.1", h10ans(), 0)) F("Hard 10 rounding");
@@ -1324,6 +1379,9 @@ function bankCheck1() {
     cases.forEach(([v, t, re]) => { const j = judgeRead(v, t); if (j.ok || !re.test(j.why)) F(`reading slip ${v} for ${t} should say ${re}`); }); }
   { const m = freshM(); autoRun(m); const a = accRuns(m).length; removeRun(m, String(m.runs.length - 1)); if (accRuns(m).length !== a - 1 || m.meanOk) F("Remove should take a titration out and reset the mean");
     const k = freshM(); autoRun(k, "rough"); actNew(k); actPip(k); actInd(k, "phen"); actFill(k); actFunnel(k); record(k, r05(k.bur.level)); actPortion(k); removeRun(k, "cur"); if (k.cur || !actNew(k)) F("Abandon should let a new titration start"); }
+  { const t = TASKS.easy.find(x => x.id === "safe"); if (!t || t.rows.map(r => r[2]).join() !== [SAFE.h, SAFE.r, SAFE.c].join() || TASKS.easy.indexOf(t) > TASKS.easy.findIndex(x => x.id === "pip")) F("hazard → risk → control question");
+    t.rows.forEach(r => t.rows.forEach(q => { if (q !== r && !/^That is the (hazard|risk|control), not the/.test(t.why(r[0], q[2]))) F("hazard question: a swapped row needs named feedback"); })); }
+  { const d0 = DONE; try { DONE = {}; const a = scoreNow(); DONE = { "easy:zz-removed": "solved", "hard:zz-removed": "solved" }; if (scoreNow() !== a) F("a stored id that is no longer a question must not change the score"); } finally { DONE = d0; } }
   /* every question */
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
@@ -1333,7 +1391,8 @@ function bankCheck1() {
     if (t.kind === "gaps") t.rows.forEach(r => { const list = r[3] || t.bank; if (!list.includes(r[2])) E("answer missing from options " + r[0]);
       list.forEach(w => { if (w !== r[2] && !t.why(r[0], w)) E(`no feedback for ${r[0]}: ${w}`); }); });
     if (t.kind === "num") { const m = freshM(); if (t.setup) t.setup(m); const a = t.ans(m); if (!isFinite(a)) E("no answer"); const W = typeof t.wrongs === "function" ? t.wrongs(m) : t.wrongs;
-      W.forEach(([v, w]) => { if ((t.judge ? t.judge(v, m).ok : t.minDp != null ? acceptR(String(v), a, t.minDp) || acceptR(String(+v.toFixed(4)), a, t.minDp) : near(v, a, t.tol)) || !w) E("a slip matches the answer: " + v); });
+      W.forEach(([v, w]) => { const first = W.find(([x, , tl]) => near(v, x, tl == null ? t.tol : tl)); if (!t.judge && first && first[1] !== w) E("slip " + v + " gets another slip's message (tolerances overlap)"); });
+      W.forEach(([v, w]) => { if ((t.judge ? t.judge(v, m, String(v)).ok : t.minDp != null ? acceptR(String(v), a, t.minDp) || acceptR(String(+v.toFixed(4)), a, t.minDp) : near(v, a, t.tol)) || !w) E("a slip matches the answer: " + v); });
       if (t.minDp != null && !acceptR(t.fmt ? t.fmt(a) : String(a), a, t.minDp)) E("the shown answer isn't accepted");
       if (t.judge && !t.judge(a, m).ok) E("the answer doesn't pass its own judge");
       if (!t.generic || !t.working) E("needs feedback and working"); }
@@ -1381,7 +1440,7 @@ function renderAnswer() {
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
     a.innerHTML = fr + `<div class="opts">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
-    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; s.title = s.value; }));   // title: the full choice, on a narrow screen where the box cuts it off
   } else if (t.kind === "num") {
     a.innerHTML = (t.table ? t.table() : "") + fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
     const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
@@ -1426,7 +1485,7 @@ function renderSupport() {
   $("readBox").hidden = !support.read; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("readBox").innerHTML = `<h3>Read it for me</h3><p>Reads the ${mode === "demo" ? "latest message" : "question and its answers"} aloud. You still read the burette yourself.</p><div class="controls"><button class="btn" type="button" id="sayBtn">Read aloud</button></div>`;
   const sb = $("sayBtn"); if (sb) sb.addEventListener("click", sayIt);
-  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Titre = final reading − first reading</p><p>Mean = add up the titres you use, then divide by how many you used</p><p><span class="badge">HT</span> moles = concentration (mol/dm³) × volume (dm³)</p><p><span class="badge">HT</span> concentration = moles ÷ volume (dm³); volume (dm³) = moles ÷ concentration</p><p>volume in dm³ = volume in cm³ ÷ 1000 (so 25.0 cm³ = 0.0250 dm³)</p><p>The numbers in front of each formula in the equation tell you how many moles react together.</p>`;
+  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Titre = final reading − first reading</p><p>Mean = add up the titres you use, then divide by how many you used</p><p><span class="badge">HT</span> moles = concentration (mol/dm³) × volume (dm³)</p><p><span class="badge">HT</span> concentration = moles ÷ volume (dm³); volume (dm³) = moles ÷ concentration</p><p>volume in dm³ = volume in cm³ ÷ 1000 (so 25.0 cm³ = 0.0250 dm³)</p><p><span class="badge">HT</span> concentration (g/dm³) = concentration (mol/dm³) × Mr</p><p>The numbers in front of each formula in the equation tell you how many moles react together.</p>`;
   $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.filter(w => mode === "demo" || !(task.hideWords || []).includes(w[0])).map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   morphHTML($("rread"), readHTML()); drawMov();
@@ -1462,10 +1521,10 @@ function evaluate() {
     const n = t.rows.filter(r => !okRow(r)).length;
     return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]} ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
   if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
-    const a = t.ans(M); if (t.judge) { const j = t.judge(v, M); return j.ok ? { ok: true, html: esc("Correct.") + workHTML(t) } : { ok: false, html: esc(j.why) }; }
+    const a = t.ans(M); if (t.judge) { const j = t.judge(v, M, S.val); return j.ok ? { ok: true, html: esc("Correct.") + workHTML(t) } : { ok: false, html: esc(j.why) }; }
     if (t.minDp != null ? acceptR(S.val, a, t.minDp) : near(v, a, t.tol)) return { ok: true, html: esc("Correct.") + workHTML(t) };
     if (t.minDp != null) { const p = precSlip(S.val, a, t.minDp, t.dpMsg); if (p) return { ok: false, html: esc(p) }; if (near(v, a, t.tol)) return { ok: false, html: esc("Nearly. Check the calculation and the rounding.") }; }
-    const hit = (typeof t.wrongs === "function" ? t.wrongs(M) : t.wrongs).find(([x]) => near(v, x, t.tol)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
+    const hit = (typeof t.wrongs === "function" ? t.wrongs(M) : t.wrongs).find(([x, , tl]) => near(v, x, tl == null ? t.tol : tl)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list);
     const lv = t.six ? sixLevel(b) : "", est = t.six ? (lv ? ` So far: about ${lv.replace(" marks", "")}.` : " So far: no marks yet.") : "";
@@ -1640,15 +1699,15 @@ $("dIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDe
 $("dIn").addEventListener("input", e => e.target.classList.remove("no"));
 $("tbl").addEventListener("click", e => { const x = e.target.closest("button[data-rm]"); if (!x || guard()) return; stopAll(); removeRun(M, x.dataset.rm); drawAll(); });
 $("tbl").addEventListener("change", e => { const c = e.target.closest("input[data-use]"); if (!c || guard()) return; M.use[+c.dataset.use] = c.checked; });
-$("concl").addEventListener("input", e => { const id = e.target.id; if (id === "meanIn") M.meanTry = e.target.value; else if (id === "cB") M.calc.nB = e.target.value; else if (id === "cA") M.calc.nA = e.target.value; else if (id === "cC") M.calc.c = e.target.value; });
-$("concl").addEventListener("keydown", e => { if (e.key !== "Enter") return; const id = e.target.id; if (id === "meanIn") { e.preventDefault(); doMean(); } else if (["cB", "cA", "cC"].includes(id)) { e.preventDefault(); doCalc(); } });
+$("concl").addEventListener("input", e => { const id = e.target.id; if (id === "meanIn") M.meanTry = e.target.value; else if (id === "cB") M.calc.nB = e.target.value; else if (id === "cA") M.calc.nA = e.target.value; else if (id === "cC") M.calc.c = e.target.value; else if (id === "cG") M.calc.g = e.target.value; });
+$("concl").addEventListener("keydown", e => { if (e.key !== "Enter") return; const id = e.target.id; if (id === "meanIn") { e.preventDefault(); doMean(); } else if (["cB", "cA", "cC", "cG"].includes(id)) { e.preventDefault(); doCalc(); } });
 $("concl").addEventListener("click", e => { if (e.target.id === "meanBtn") doMean(); else if (e.target.id === "calcBtn") doCalc(); });
 function doMean() { if (guard()) return; const j = judgeMean(M, parseNum(M.meanTry), M.meanTry);
   if (j.ok) { M.meanOk = true; M.mean = j.mean; const b = bestSet(M), used = M.runs.filter((r, i) => M.use[i]), extra = b && b.length > used.length ? " (You could also have used every titre within 0.10 cm³ of these.)" : "";
     M.msg = `✓ Mean titre ${f2(M.mean)} cm³, from ${used.length} concordant titres. The rough titre is left out.${extra}`; tried(4); }
   else M.msg = "✗ " + j.why;
   drawAll(); }
-function doCalc() { if (guard()) return; const x = { nB: parseNum(M.calc.nB), nA: parseNum(M.calc.nA), c: parseNum(M.calc.c) }, j = judgeCalc(M, x, { nB: M.calc.nB, nA: M.calc.nA, c: M.calc.c });
+function doCalc() { if (guard()) return; const x = { nB: parseNum(M.calc.nB), nA: parseNum(M.calc.nA), c: parseNum(M.calc.c), g: parseNum(M.calc.g) }, j = judgeCalc(M, x, { nB: M.calc.nB, nA: M.calc.nA, c: M.calc.c, g: M.calc.g });
   if (j.ok) { M.calcOk = true; M.msg = "✓ Calculation correct. The working is shown under your answers."; } else M.msg = "✗ " + j.why;
   drawAll(); }
 $("toQuiz").addEventListener("click", () => setMode("easy"));

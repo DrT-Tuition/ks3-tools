@@ -285,6 +285,11 @@ footer.brand a{color:inherit}
 @media (min-width:901px){.opts.build.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.qpanel .opts.build.compact .opt{gap:6px;padding:4px 8px;min-height:40px;font-size:15px;line-height:1.25}.opts.build.compact .opt .k{min-width:.9em}}
 .grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
 .grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+/* answers never wider than the panel: long dropdowns shrink (and wrap under their label) */
+#answer, #answer .opts, #answer .opts > *, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts .grow select{flex:1 1 220px}
 .numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
 .unit{font-weight:700}
 .support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
@@ -395,6 +400,13 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -681,8 +693,10 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
 const locked = () => mode !== "demo" && !!lock;
+const showFall = () => mode === "demo" || !!DONE[qkey("hard", { id: "fall" })];   // the reason for the fall: Demo, or once Hard 5 is answered
+const qOpen = id => mode !== "demo" && task && task.id === id && !(DONE[qkey(level, task)]);   // that question is open and not yet answered (or shown)
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 const curRow = m => m.ex.rows[m.ex.st];
 const shownT = m => m.tab === "exo" ? curRow(m).T : m.rp.T;
@@ -939,7 +953,7 @@ function drawExoTable() {
     else h += `<td><input class="cellin${w.chgOk === false ? " no" : ""}" id="chgIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(w.chg)}" aria-label="Change in temperature at station ${s.id}, end minus start"></td>` +
       `<td><select id="typeSel" aria-label="Reaction type at station ${s.id}"${w.typeOk === false ? ' style="border:2px solid var(--bad)"' : ""}><option value="">choose…</option>${["exothermic", "endothermic"].map(x => `<option${w.type === x ? " selected" : ""}>${x}</option>`).join("")}</select></td>`;
     h += `</tr>`; });
-  h += `</tbody></table><p class="small" style="margin-top:4px">▲ exothermic: temperature rises. ▼ endothermic: temperature falls.</p>`;
+  h += `</tbody></table>` + (qOpen("hinge1") ? "" : `<p class="small" style="margin-top:4px">▲ exothermic: temperature rises. ▼ endothermic: temperature falls.</p>`);   // the legend would answer Easy 2
   const el = $("etable"), foc = document.activeElement && document.activeElement.id;
   if (el._h !== h) { el.innerHTML = h; el._h = h; if (foc === "chgIn" || foc === "typeSel") { const n = $(foc); if (n) { n.focus({ preventScroll: true }); } } }
 }
@@ -992,17 +1006,17 @@ function readHTML() {
   } else { const p = M.rp;
     h += `<p class="r1">Run ${p.r + 1} · ${p.phase === "empty" ? "cup empty" : `30 cm³ acid + ${VOLS[Math.max(0, p.vi)]} cm³ sodium hydroxide`} · ${esc(CNAME[M.cont])}</p>`;
     if (p.vi > 4 && p.phase !== "empty" && !p.example) { const d = p.data[p.r], st0 = d[0], above = st0 != null && d.slice(1, p.vi + 1).every(v => v == null || v > st0);
-      h += `<p class="r3">After the highest point the temperature falls${above ? ", but every reading is still above the start temperature, so the reaction is exothermic" : ". Apart from any anomaly, the readings stay above the start temperature, so the reaction is exothermic"}.</p>`; } }
+      h += `<p class="r3">After the highest point the temperature falls${above ? ", but every reading is still above the start temperature, so the reaction is exothermic" : ". Apart from any anomaly, the readings stay above the start temperature, so the reaction is exothermic"}.${showFall() ? " " + FALL_WHY : ""}</p>`; } }
   if (support.read && awaiting(M) && !locked()) h += `<p class="r2">Read it for me: the thermometer shows <b>${t1(autoRead(T, M.therm))} °C</b>.</p>`;
   if (M.msg) h += `<p class="r3">${esc(M.msg)}</p>`;
-  if (M.tab === "rp" && M.rp.fit) { const L = twoLines(rpPoints()); h += L ? `<p class="r3">The two lines of best fit cross at about ${num(Math.round(L.x * 2) / 2)} cm³ and ${t1(L.y)} °C: the highest temperature.</p>` : `<p class="r3">Lines of best fit: plot at least three means on each side of the highest point, including the volumes next to it.</p>`; }
+  if (M.tab === "rp" && M.rp.fit) { const L = twoLines(rpPoints()); h += qOpen("cross") ? "" : L ? `<p class="r3">The two lines of best fit cross at about ${num(Math.round(L.x * 2) / 2)} cm³ and ${t1(L.y)} °C: that volume of sodium hydroxide exactly neutralises the acid.</p>` : `<p class="r3">Lines of best fit: plot at least three means on each side of the highest point, including the volumes next to it.</p>`; }
   return h;
 }
 /* --- controls --- */
 function actHTML() {
   if (M.tab === "exo") { const s = stOf(M.ex.st);
-    return `<button class="btn" type="button" id="aA" data-act="exoA">1. Add 10 cm³ of ${esc(s.a.replace("dilute ", ""))}</button><button class="btn primary" type="button" id="aB" data-act="exoB">2. Add the ${esc(s.b.replace(" solution", ""))} and stir</button>`; }
-  return `<button class="btn" type="button" id="aA" data-act="acid">Add 30 cm³ acid</button><button class="btn primary" type="button" id="aB" data-act="na">Add 5 cm³ sodium hydroxide</button><button class="btn" type="button" id="aW" data-act="wait">Wait 2 minutes</button><button class="btn" type="button" id="aN" data-act="run">Start the next run</button>`;
+    const e0 = curRow(M).phase === "empty"; return `<button class="btn${e0 ? " primary" : ""}" type="button" id="aA" data-act="exoA">1. Add 10 cm³ of ${esc(s.a.replace("dilute ", ""))}</button><button class="btn${e0 ? "" : " primary"}" type="button" id="aB" data-act="exoB">2. Add the ${esc(s.b.replace(" solution", ""))} and stir</button>`; }
+  const e1 = M.rp.phase === "empty"; return `<button class="btn${e1 ? " primary" : ""}" type="button" id="aA" data-act="acid">Add 30 cm³ acid</button><button class="btn${e1 ? "" : " primary"}" type="button" id="aB" data-act="na">Add 5 cm³ sodium hydroxide</button><button class="btn" type="button" id="aW" data-act="wait">Wait 2 minutes</button><button class="btn" type="button" id="aN" data-act="run">Start the next run</button>`;
 }
 function renderCtl() {
   const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => { const on = String(b.dataset[attr]) === String(v); if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
@@ -1089,11 +1103,13 @@ const SU = {
   rp: m => { m.tab = "rp"; },
   read: m => { m.tab = "rp"; m.eye = true; m.therm = "fine"; const p = m.rp; p.phase = "show"; p.vi = 1; p.T = 24.6; p.data[0][0] = 20.5; },
   example: m => { m.tab = "rp"; const p = m.rp; p.example = true; p.fit = false; p.phase = "show"; p.r = 1; p.vi = 8; p.T = 21.4;
-    DECK_TRIALS.forEach((a, i) => { p.data[0][i] = a[0]; p.data[1][i] = a[1]; p.ok[i] = true; p.inp[i] = t1(meanR(a)); }); }
+    DECK_TRIALS.forEach((a, i) => { p.data[0][i] = a[0]; p.data[1][i] = a[1]; p.ok[i] = true; p.inp[i] = t1(meanR(a)); }); },
+  exampleFit: m => { SU.example(m); m.rp.fit = true; }
 };
+const FALL_WHY = "It falls because all the acid has reacted, so no more energy is released; the extra sodium hydroxide absorbs energy and dilutes the mixture.";
 const exMeans = () => DECK_TRIALS.map(a => meanR(a));
 TASKS.easy = [
-  { id: "hinge1", kind: "choice", lesson: "C1 s15–16", text: "In an exothermic reaction, what happens to the energy and to the surroundings?", setup: SU.exo,
+  { id: "hinge1", kind: "choice", hideWords: ["Exothermic", "EXO"], after: () => {}, lesson: "C1 s15–16", text: "In an exothermic reaction, what happens to the energy and to the surroundings?", setup: SU.exo,
     options: [{ t: "Energy is released; the surroundings get hotter.", ok: () => ST.filter(s => s.dT > 0).every(s => exoType(20, 20 + s.dT) === "exothermic") },
       { t: "Energy is taken in; the surroundings get colder.", why: "That describes an endothermic reaction. Exothermic: energy EXits, so the surroundings get hotter." },
       { t: "Energy is created; the surroundings get hotter.", why: "Energy is never created or destroyed. It is transferred out to the surroundings, so they get hotter." },
@@ -1135,7 +1151,7 @@ TASKS.easy = [
     stm: [{ t: "Measure 30 cm³ of dilute hydrochloric acid into the cup.", c: 1 }, { t: "Record the starting temperature of the acid.", c: 2 },
       { t: "Add 5 cm³ of sodium hydroxide, stir, record the highest temperature.", c: 3 }, { t: "Repeat, adding 5 cm³ at a time, up to 40 cm³.", c: 4 },
       { t: "Repeat the whole run, then find a mean for each volume.", c: 5 },
-      { t: "Heat the acid with a Bunsen burner.", why: "Don't heat it. The reaction itself changes the temperature; heating would spoil the measurement." }],
+      { t: "Heat the acid with a Bunsen burner.", why: "Don't heat it: the reaction itself changes the temperature." }],
     miss: { 1: "Start by putting the acid in the cup.", 2: "You need the starting temperature before you add any alkali.", 3: "Say what you add, and what you record.", 4: "Keep adding 5 cm³ at a time, up to 40 cm³.", 5: "Finish by repeating the whole run and finding means." },
     explain: "Acid in the cup → starting temperature → add 5 cm³, stir, record the highest → repeat up to 40 cm³ → repeat the run and find means.",
     hints: ["What goes into the cup first?", "You need the starting temperature before adding any alkali.", "Acid, start temperature, add and record, repeat to 40 cm³, repeat the run."] },
@@ -1151,6 +1167,14 @@ TASKS.easy = [
     generic: "Add the three readings, then divide by 3.", stuck: "maths",
     working: () => ["Total = 6.2 + 6.6 + 6.4 = 19.2", "Mean = 19.2 ÷ 3", "Mean = 6.4 °C"],
     hints: ["Add the three readings first.", "6.2 + 6.6 + 6.4 = 19.2. How many readings are there?", "19.2 ÷ 3 = 6.4 °C."] },
+  { id: "cross", kind: "gaps", lesson: "C2 s13 example results; s9 notes (lines of best fit)", text: "The graph shows the lesson’s example results with two lines of best fit. Where do the lines cross, and what does that volume show?", setup: SU.exampleFit, lock: "all", after: () => {},
+    rows: [["v", "The lines cross at about:", "20 cm³", ["10 cm³", "20 cm³", "30 cm³", "40 cm³"]],
+      ["m", "That volume of sodium hydroxide:", "exactly neutralises the 30 cm³ of acid", ["exactly neutralises the 30 cm³ of acid", "makes the reaction endothermic", "is where the reaction starts", "is the most the cup can hold"]]],
+    why: (k, w) => ({ "10 cm³": "Follow both dashed lines to the point where they meet, then read down to the x-axis.", "30 cm³": "Follow both dashed lines to the point where they meet, then read down to the x-axis.", "40 cm³": "40 cm³ is the last addition. Find where the two dashed lines meet.",
+      "makes the reaction endothermic": "It stays exothermic: every temperature is still above the start. After this point no more acid is left to react.",
+      "is where the reaction starts": "The reaction starts with the first 5 cm³: the temperature rises straight away.", "is the most the cup can hold": "The lines show the chemistry, not the cup. Up to this point acid is left to react; after it, none is." })[w],
+    explain: "The lines cross at about 20 cm³. That is the volume of sodium hydroxide that exactly neutralises the 30 cm³ of acid.",
+    hints: ["Follow each dashed line until they meet. Read down to the x-axis.", "Before the crossing, acid is left to react. After it, there is none left.", "About 20 cm³: it exactly neutralises the acid."] },
   { id: "hinge2", kind: "choice", lesson: "C2 s17–18", text: "Why is a polystyrene cup with a lid used instead of an open glass beaker?", setup: SU.rp,
     options: [{ t: "It reduces energy loss, so the measured change is more accurate.", ok: () => CF.glass < CF.nolid && CF.nolid < CF.cup },
       { t: "It makes the reaction happen faster.", why: "The cup and lid don't change how fast the reaction goes. They stop energy escaping." },
@@ -1168,7 +1192,7 @@ TASKS.hard = [
       { t: "The reaction makes cold, which spreads out.", why: "Cold is not made. Energy is taken in from the surroundings, so they get colder." }],
     explain: "It has not gone: the reaction has taken in energy from its surroundings, so the surroundings (and the pack) cool down.", stuck: "words",
     hints: ["Is the pack's reaction exothermic or endothermic?", "Endothermic: energy is taken IN. From where?", "It took in energy from the surroundings, so they cooled down."] },
-  { id: "packQ3", kind: "build", ordered: true, lesson: "C1 s17 Q3, s18", text: "Explain why an endothermic reaction is suitable for use in a sports injury cold pack. [2 marks] Build your answer in order.", frame: "Start with: The reaction takes in energy… so…", setup: SU.exo,
+  { id: "packQ3", kind: "build", ordered: true, compact: true, lesson: "C1 s17 Q3, s18", text: "Explain why an endothermic reaction is suitable for use in a sports injury cold pack. [2 marks] Build your answer in order.", frame: "Start with: The reaction takes in energy… so…", setup: SU.exo,
     stm: [{ t: "The reaction takes in energy from the surroundings,", c: 1 }, { t: "so the pack and the injury get colder, easing swelling or pain.", c: 2 },
       { t: "The reaction destroys energy,", why: "Energy is never destroyed (REJECT in the mark scheme). It is taken in from the surroundings." },
       { t: "The reaction gives out energy to the surroundings,", why: "Giving out energy is exothermic: that would warm the injury." },
@@ -1199,7 +1223,7 @@ TASKS.hard = [
     bank: ["more energy lost, so the rise recorded is too small", "uneven mixing, so the reading is unreliable and lower", "it has cooled, so the rise recorded is too small", "less precise, so there is greater uncertainty", "the reaction releases more energy, so the rise is bigger"],
     why: (k, w) => w === "the reaction releases more energy, so the rise is bigger" ? "None of these changes how much energy the reaction releases. They change how much is lost, or how well you measure it."
       : ({ g: "A glass beaker with no lid lets more energy escape. Try it on the model.", s: "Without stirring, the solution doesn't mix evenly.", l: "Two minutes later the solution has cooled. Try Wait 2 minutes on the model.", t: "A thermometer marked every 1 °C has a lower resolution." })[k],
-    explain: "Glass beaker: more energy lost → rise too small. No stirring: uneven mixing → unreliable, lower reading. Reading late: it has cooled → rise too small. 1 °C thermometer: less precise → greater uncertainty.",
+    explain: "Glass: energy lost, rise too small. No stirring: uneven, lower. Late: cooled, rise too small. 1 °C marks: less precise.",
     hints: ["Two of these lose energy or let it cool. One is about mixing. One is about the scale.", "Which mistakes let energy escape before you read it? Which one is about resolution?", "Glass: energy lost; no stir: uneven mixing; late: cooled; 1 °C: less precise."] },
   { id: "resol", kind: "choice", lesson: "C2 s13 notes", text: "Run 1: 30.8 °C. Run 2: 31.3 °C. A student writes the mean as 31.05 °C. How should it be written?", setup: SU.rp,
     options: [{ t: "31.1 °C: 1 decimal place, the same resolution as the readings", ok: () => meanR([30.8, 31.3]) === 31.1 && Math.abs(meanX([30.8, 31.3]) - 31.05) < 1e-9 },
@@ -1208,7 +1232,7 @@ TASKS.hard = [
       { t: "31.0 °C: round down to be safe", why: "Check the rounding: a 5 in the next place rounds up, not down." }],
     explain: "31.05 has more decimal places than the readings. Give the mean to the same resolution: 31.1 °C.",
     hints: ["How many decimal places do the readings have?", "Give the mean to the same resolution as the readings.", "31.05 rounds to 31.1 °C."] },
-  { id: "cupQ3", kind: "build", ordered: true, lesson: "C2 s19 Q3, s20", text: "Explain why the reaction mixture is placed in a polystyrene cup with a lid. [2 marks] Build your answer in order.", frame: "Start with: Polystyrene insulates… so…", setup: SU.rp,
+  { id: "cupQ3", kind: "build", ordered: true, compact: true, lesson: "C2 s19 Q3, s20", text: "Explain why the reaction mixture is placed in a polystyrene cup with a lid. [2 marks] Build your answer in order.", frame: "Start with: Polystyrene insulates… so…", setup: SU.rp,
     stm: [{ t: "Polystyrene insulates and the lid stops energy escaping,", c: 1 }, { t: "so less energy is lost and the measured change is closer to the true value.", c: 2 },
       { t: "It speeds the reaction up,", why: "The cup doesn't speed the reaction up (REJECT in the mark scheme). It reduces energy loss." },
       { t: "The lid makes the reaction give out more energy,", why: "The lid doesn't make the reaction hotter or release more energy. It stops energy escaping." },
@@ -1231,7 +1255,15 @@ TASKS.hard = [
       { t: "25 cm³: halfway between 10 and 40", why: "Read the graph: the peak is at 20 cm³ (31.1 °C). At 25 cm³ it has already fallen to 29.1 °C." }],
     explain: "The mean rises to 31.1 °C at 20 cm³, then falls as more alkali is added. The two lines of best fit cross there.",
     hints: ["Find the highest point on the graph.", "Read down from the highest point to the x-axis.", "20 cm³ (31.1 °C)."] },
-  { id: "groupAB", kind: "build", ordered: true, lesson: "C2 s21 plenary, s3 Q5", text: "Group A recorded a rise of 6.5 °C; Group B only 4.1 °C. Give a reason, suggest one improvement, and say how repeating helps.",
+  { id: "fall", kind: "build", ordered: true, compact: true, lesson: "C2 s10 step 6; the notes' evaluation", text: "The example results rise to a peak at 20 cm³, then fall. Explain why the temperature falls after 20 cm³. [2 marks] Build your answer in order.", frame: "Start with: By 20 cm³… so…", setup: SU.example, lock: "all", after: () => {},
+    stm: [{ t: "By 20 cm³ all the acid has reacted, so no more energy is released,", c: 1 }, { t: "and the extra, cooler sodium hydroxide absorbs energy and dilutes the mixture.", c: 2 },
+      { t: "After 20 cm³ the reaction becomes endothermic,", why: "It is still exothermic: every reading stays above the start." },
+      { t: "Energy is destroyed once the acid runs out,", why: "Energy is never destroyed: it spreads into the extra liquid." },
+      { t: "so the sodium hydroxide reacts faster and takes in energy.", why: "No acid is left, so the extra alkali doesn't react." }],
+    miss: { 1: "Say what has happened to the acid, and so to the energy released.", 2: "Say what the extra sodium hydroxide does to the mixture's temperature." },
+    explain: "All the acid has reacted, so no more energy is released (1); the extra, cooler sodium hydroxide absorbs energy and dilutes the mixture, so it cools (1).",
+    hints: ["What is left to react after 20 cm³?", "Two marks: why no more energy is released, then what the extra alkali does.", "No acid left, so no more energy released; the extra alkali absorbs energy and dilutes it."] },
+  { id: "groupAB", kind: "build", ordered: true, compact: true, lesson: "C2 s21 plenary, s3 Q5", text: "Group A recorded a rise of 6.5 °C; Group B only 4.1 °C. Give a reason, suggest one improvement, and say how repeating helps.",
     frame: "Start with: Group B's rise was smaller because…", setup: SU.rp,
     stm: [{ t: "Group B lost more energy to the surroundings.", c: 1 }, { t: "Improvement: use an insulated cup with a lid.", c: 2 }, { t: "Repeating lets you spot anomalies and find a mean.", c: 3 },
       { t: "Group B's reaction destroyed energy.", why: "Energy is never destroyed: it went to the surroundings." },
@@ -1243,11 +1275,11 @@ TASKS.hard = [
   { id: "plan6", kind: "build", ordered: true, six: true, lesson: "C2 s7–s11 (exam-style)", text: "Plan how to find the effect of the volume of sodium hydroxide on the highest temperature. [6 marks]",
     frame: "Start with: First, put on eye protection…", setup: SU.rp,
     stm: [{ t: "Put on eye protection (irritants).", c: 1, free: true }, { t: "Measure 30 cm³ acid (measuring cylinder) into a polystyrene cup.", c: 2, ess: "measure the acid" },
-      { t: "Record the starting temperature.", c: 3 }, { t: "Add 5 cm³ alkali (measuring cylinder); lid, stir, record the highest.", c: 4, ess: "record the highest temperature" },
+      { t: "Record the starting temperature.", c: 3 }, { t: "Add 5 cm³ alkali; lid on, stir, record the highest.", c: 4, ess: "record the highest temperature" },
       { t: "Repeat in 5 cm³ steps to 40 cm³.", c: 5, ess: "change the volume in 5 cm³ steps" }, { t: "Keep acid volume and concentration the same.", c: 6, free: true }, { t: "Repeat the run; find a mean for each volume.", c: 7 },
-      { t: "Heat the cup with a Bunsen burner.", why: "Don't heat it: the reaction changes the temperature itself." },
-      { t: "Read it 2 minutes after adding.", why: "By then it has cooled. Record the highest temperature." }],
-    miss: { 1: "Include the safety step.", 2: "Say what you measure, with what, into what.", 3: "You need the starting temperature.", 4: "Say how you add the alkali, that you fit the lid and stir, and what you record.", 5: "Say how you change the independent variable, and how far.", 6: "Name a control variable.", 7: "Say how you make the results repeatable." },
+      { t: "Heat the cup with a Bunsen burner.", why: "Don't heat it: the reaction does that." },
+      { t: "Read it 2 minutes after adding.", why: "It has cooled by then: record the highest." }],
+    miss: { 1: "Include the safety step.", 2: "Say what you measure, with what, into what.", 3: "You need the starting temperature.", 4: "Say what you add, that you fit the lid and stir, and what you record.", 5: "Say how you change the independent variable, and how far.", 6: "Name a control variable.", 7: "Say how you make the results repeatable." },
     explain: "Eye protection; measure 30 cm³ acid with a measuring cylinder into a polystyrene cup in a beaker; start temperature; add 5 cm³ alkali, lid, stir, record the highest; repeat to 40 cm³; same acid volume and concentration; repeat the run and find means.",
     ms: ["Level 3 (5–6): a complete, valid method: coherent, detailed and logically ordered, including every essential step.", "Level 2 (3–4): most of a method with mostly relevant detail; may not be fully logical or may miss some detail.", "Level 1 (1–2): simple relevant statements; lacks logical structure; would not give valid results."],
     hints: ["Think: safety, apparatus, measuring, changing the variable, control, repeats.", "What do you record before adding alkali? What stays the same?", "Safety, measure acid, start temp, add and record, to 40 cm³, control, repeat."] }
@@ -1255,8 +1287,8 @@ TASKS.hard = [
 
 /* final order: by lesson, then slide (Dan's Check it slides name these numbers) */
 { const all = [...TASKS.easy, ...TASKS.hard], by = id => all.find(t => t.id === id);
-  TASKS.easy = ["decide", "hinge1", "station", "readT", "order", "iv", "resol", "chg", "mean", "hinge2"].map(by);
-  TASKS.hard = ["coldpack", "packQ3", "takeaway", "run1", "peak", "anom", "effect", "cupQ3", "groupAB", "plan6"].map(by); }
+  TASKS.easy = ["decide", "hinge1", "station", "readT", "order", "iv", "resol", "cross", "mean", "hinge2"].map(by);
+  TASKS.hard = ["packQ3", "takeaway", "run1", "peak", "fall", "anom", "effect", "cupQ3", "groupAB", "plan6"].map(by); }
 /* ===== Load-time bank check ===== */
 function bankCheck() {
   const errs = [], F = m => errs.push(m);
@@ -1272,9 +1304,16 @@ function bankCheck() {
   if (!judgeMean([30.8, 31.3], "31.1").ok || !judgeMean([30.8, 31.3], "31.05").res) F("mean judge resolution");
   if (DECK_TRIALS.some(a => meanInfo(a).need3)) F("deck example rows must not need a third run");
   { const e = exMeans(), L = twoLines(VOLS.map((x, i) => ({ x, y: e[i] }))); if (!L || Math.abs(L.x - 20) > 2.5) F("best-fit lines should cross near 20 cm³"); }
+  { const m = freshM(); SU.exampleFit(m); const L = twoLines(VOLS.map((x, i) => ({ x, y: exMeans()[i] }))); if (!m.rp.fit || !L || ["10", "20", "30", "40"].sort((a, b) => Math.abs(a - L.x) - Math.abs(b - L.x))[0] !== "20") F("Easy 8: the example lines must cross nearest 20 cm³"); }
+  { const d = DECK_TRIALS.map(a => meanX(a)); if (!(d[8] > d[0]) || !(d[5] < d[4])) F("Hard 5: the example must fall after 20 cm³ but stay above the start (still exothermic)"); }
   if (!judgeRead(24.6, 24.6, "fine").ok || judgeRead(24.0, 24.6, "fine").ok || !judgeRead(24.5, 24.6, "coarse").ok || judgeRead(23.5, 24.6, "coarse").ok) F("reading tolerance");
   { const m = freshM(); autoStation(m, 2); if (!(m.ex.rows[2].e < m.ex.rows[2].s) || judgeRow(m.ex.rows[2], stOf(2)).length) F("station 2 should fall and check"); }
   { const m = freshM(); autoRP(m, 0); if (m.rp.data[0].some(v => v == null)) F("auto run"); }
+  { const t = TASKS.hard.find(x => x.id === "plan6"), right = rightBuild(t), wr = t.stm.map((s, i) => [s, i]).filter(x => !x[0].c).map(x => x[1]);
+    if (!sixLevel(buildMarks(t, [...right, wr[0]])).startsWith("Level 2") || !sixLevel(buildMarks(t, [...right, ...wr])).startsWith("Level 1")) F("6-mark: each wrong statement must cost another level"); }
+  { const t = TASKS.easy.find(x => x.id === "hinge1"); if (!t.hideWords || !t.hideWords.includes("EXO")) F("Easy 2: Key words must hide the EXO line"); }
+  if (!/DONE\[qkey\(level, task\)\]/.test(String(renderSupport))) F("Key words: entries hidden only while the question is unanswered");
+  { const d0 = DONE; try { DONE = {}; const a = scoreNow(); DONE = { "easy:zz-removed": "solved", "hard:zz-removed": "solved" }; if (scoreNow() !== a) F("a stored id that is no longer a question must not change the score"); } finally { DONE = d0; } }
   /* every question */
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
@@ -1331,8 +1370,8 @@ function renderAnswer() {
     a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
-    a.innerHTML = fr + `<div class="opts">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
-    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+    a.innerHTML = fr + `<div class="opts">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w).replace(/\u00a0/g, " ")}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; s.title = s.value; }));   // title: the full choice, on a narrow screen where the box cuts it off
   } else if (t.kind === "num") {
     a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
     const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
@@ -1343,7 +1382,7 @@ function renderAnswer() {
     $("dtDir").addEventListener("change", e => { S.dir = e.target.value; }); $("dtTy").addEventListener("change", e => { S.type = e.target.value; });
     $("dtIn").addEventListener("input", e => { S.val = e.target.value; }); $("dtIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
   } else if (t.kind === "build") {
-    a.innerHTML = fr + `<div class="opts build${t.six ? " compact" : ""}" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
+    a.innerHTML = fr + `<div class="opts build${t.six || t.compact ? " compact" : ""}" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
       `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">+</span><span>${esc(t.stm[i].t)}</span></button>`).join("") + `</div>`;
     a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.i, j = S.list.indexOf(i); if (j >= 0) S.list.splice(j, 1); else S.list.push(i); paintBuild(); }));
   } else if (t.kind === "goal") {
@@ -1382,7 +1421,8 @@ function renderSupport() {
   $("readBox").hidden = !support.read; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("readBox").innerHTML = `<h3>Read it for me</h3><p>When a reading is waiting, the model tells you what the thermometer shows. Press Record with the box empty to record it.</p>`;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>temperature change = end − start (highest − starting)</p><p>Compare the end with the start temperature: above the start → exothermic; below the start → endothermic.</p><p>mean = add them up, then divide by how many there are (leave out any anomaly)</p><p>Give a mean to the same resolution as the readings (1 decimal place).</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("") + `<p>EXO = EXits, so the surroundings get hotter. ENDO = ENters, so the surroundings get colder.</p>`;
+  const hw = mode !== "demo" && task.hideWords && !DONE[qkey(level, task)] ? task.hideWords : [];   // only while the question is open and unanswered   // entries that would state the open question's answer
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.filter(w => !hw.includes(w[0])).map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("") + (hw.includes("EXO") ? "" : `<p>EXO = EXits, so the surroundings get hotter. ENDO = ENters, so the surroundings get colder.</p>`);
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   morphHTML($("rread"), readHTML());
   if (mode !== "demo") requestAnimationFrame(keepInView);
@@ -1401,7 +1441,7 @@ function buildMarks(t, list) {
 const msDetails = t => `<details class="msd"><summary>Mark scheme: levels</summary><ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
 function sixLevel(b) {   // levels of response: points, order, and no wrong steps
   const n = b.got.length, essMiss = b.missing.some(s => s.ess); let L = n >= 6 && b.inOrder && !essMiss ? 3 : n >= 4 ? 2 : n >= 1 ? 1 : 0;
-  if (b.bad.length && L > 1) L--;   // an incorrect step limits the level
+  L = Math.max(0, L - b.bad.length);   // each incorrect step costs another level
   return L === 3 ? (n === b.all.length ? "Level 3 (6 marks)" : "Level 3 (5 marks)") : L === 2 ? (n >= 5 ? "Level 2 (4 marks)" : "Level 2 (3 marks)") : L === 1 ? (n >= 2 ? "Level 1 (2 marks)" : "Level 1 (1 mark)") : "no marks yet"; }
 function evaluate() {
   const t = task;
@@ -1441,7 +1481,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); }
+    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); } renderSupport();
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -1461,7 +1501,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState(); if (task.after) { task.after(M); drawAll(); }
+  setAnswerState(); if (task.after) { task.after(M); drawAll(); } renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
@@ -1657,7 +1697,7 @@ function setMode(m) {
   document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
   $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
   $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
-  loadTask();
+  loadTask(); renderSupport();
 }
 const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
 document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));

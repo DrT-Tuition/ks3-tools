@@ -258,6 +258,11 @@ footer.brand a{color:inherit}
 @media (min-width:901px){.opts.build.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.opts.build.compact .opt{padding:5px 8px;font-size:15.5px}}
 .grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
 .grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+/* answers never wider than the panel: long dropdowns shrink (and wrap under their label) */
+#answer, #answer .opts, #answer .opts > *, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts .grow select{flex:1 1 220px}
 .numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
 .numin.no{border:2px solid var(--bad)}
 .unit{font-weight:700}
@@ -371,6 +376,13 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -550,7 +562,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -906,7 +918,7 @@ function readHTML() {
 }
 function renderCtl() {
   const r = M.run, sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
-  sw("eyeSw", M.eye);
+  sw("eyeSw", M.eye); $("setRow").hidden = locked() && task.id === "safe" && !DONE[qkey(level, task)];   // the switch label would give the control away
   if (!$("actRow").firstChild) $("actRow").innerHTML = actHTML();
   const nx = nextAct(r);
   ACTS.forEach(([id, k, w, ph]) => { const b = $(id); b.hidden = !!ph && !ph.includes(r.phase); b.classList.toggle("primary", k === nx);
@@ -1006,15 +1018,11 @@ const SU = {
 const EXCESS_WHY = "The base must be in excess, not the acid: any acid left over would become dangerously concentrated when the water is evaporated.";
 const DRY_WHY = "Heating until all the water has gone gives a crust of tiny crystals. Heat only until crystals start to form, then leave it to crystallise slowly.";
 const SALT_WHERE = "The black solid in the filter paper is the excess copper oxide. The salt is dissolved in the blue filtrate that passed through.";
+const SAFE = { h: "The hot solution can spit", r: "Hot drops could hit your eyes or skin", c: "Heat gently on a water bath; eye protection" };
+const SWAP = (k, w) => { const role = { [SAFE.h]: "hazard", [SAFE.r]: "risk", [SAFE.c]: "control" }[w], row = { h: "hazard", r: "risk", c: "control" }[k];
+  return role && role !== row ? `That is the ${role}, not the ${row}. ` + { hazard: "The hazard is what can cause harm.", risk: "The risk is how the harm could happen.", control: "The control is what you do to make it less likely." }[row] : ""; };
 const FORMULA = { Mg: 2, NO3: -1 };   // ion charges (notes' ions table)
 TASKS.easy = [
-  { id: "prod", kind: "choice", src: "Neutralisation of acids and salt production", text: "What are the products when an acid reacts with a base (such as a metal oxide)?", setup: SU.fresh, lock: "all",
-    options: [{ t: "A salt and water", ok: () => true },
-      { t: "A salt and hydrogen", why: "Hydrogen is made when an acid reacts with a metal, not with a base. Acid + base gives a salt and water." },
-      { t: "A salt and carbon dioxide only", why: "Carbon dioxide is made only when the base is a carbonate, and water is made too. Acid + base gives a salt and water." },
-      { t: "An alkali and water", why: "The base is used up, not made. Acid + base gives a salt and water." }],
-    explain: "acid + base → salt + water. (A carbonate also gives carbon dioxide.)",
-    hints: ["It is a neutralisation reaction.", "One product is the salt. The other is a very common liquid.", "A salt and water."] },
   { id: "name", kind: "gaps", src: "Predicting the salts", text: "Name the salt made in each reaction.", setup: SU.fresh, lock: "all",
     rows: [["z", "Zinc + hydrochloric acid →", "zinc chloride"], ["c", "Calcium carbonate + nitric acid →", "calcium nitrate"], ["s", "Sodium oxide + sulfuric acid →", "sodium sulfate"]],
     bank: ["zinc chloride", "calcium nitrate", "sodium sulfate", "zinc chlorine", "calcium carbonate nitrate", "sodium sulfide"],
@@ -1022,7 +1030,7 @@ TASKS.easy = [
       if (!w.startsWith(metal)) return `The first part of the salt's name comes from the metal in the reactant: here, ${metal}.`;
       return ({ "zinc chlorine": "Chlorine is the element. Salts of hydrochloric acid are chlorides: zinc chloride.", "calcium carbonate nitrate": "The carbonate part reacts away (as carbon dioxide). The salt is the metal + the acid's part: calcium nitrate.",
         "sodium sulfide": "Sulfuric acid makes sulfates, not sulfides: sodium sulfate." })[w] || "Check the second part: it comes from the acid."; },
-    explain: "Zinc chloride; calcium nitrate; sodium sulfate. First part from the metal, second part from the acid.",
+    explain: "Zinc chloride; calcium nitrate; sodium sulfate (acid + base → salt + water). First part from the metal, second part from the acid.",
     hints: ["The first part of the name comes from the metal.", "Hydrochloric → chloride, nitric → nitrate, sulfuric → sulfate.", "Zinc chloride, calcium nitrate, sodium sulfate."] },
   { id: "xs", kind: "choice", src: "Soluble salts", text: "In the practical, why is the copper oxide added in excess?", setup: SU.fresh, lock: "all",
     options: [{ t: "To make sure all of the acid reacts", ok: () => { const m = freshM(); autoRun(m); return !m.run.acidLeft && m.run.solid > 0; } },
@@ -1058,6 +1066,14 @@ TASKS.easy = [
       { t: "Stuck to the glass rod", why: "The salt is dissolved in the solution. It passes through the filter paper into the evaporating basin." }],
     explain: "The salt is dissolved, so it passes through the filter paper in the filtrate. The black solid left behind is excess copper oxide.",
     hints: ["Does the salt dissolve in water?", "Filtering only stops solids that haven't dissolved.", "In the blue filtrate."] },
+  { id: "safe", kind: "gaps", src: "Required practical: method, step 4 (safety from the AQA practical)", text: "The filtrate is heated to evaporate some of the water. Choose the hazard, the risk and the control.", setup: SU.fresh, lock: "all", after: () => {},
+    frame: "Hazard: what could cause harm. Risk: how the harm could happen. Control: what you do to make it less likely.",
+    rows: [["h", "Hazard:", SAFE.h], ["r", "Risk:", SAFE.r], ["c", "Control:", SAFE.c]],
+    bank: [SAFE.h, SAFE.r, SAFE.c, "Heat it strongly until it is dry", "Read the meniscus at eye level"],
+    why: (k, w) => SWAP(k, w) || (w === "Heat it strongly until it is dry" ? "Strong heating makes spitting more likely, and boiling dry spoils the crystals." : w === "Read the meniscus at eye level" ? "That makes a volume reading accurate. It doesn't protect you." :
+      ({ h: "The hazard is the thing that can cause harm.", r: "The risk is how the harm could actually happen.", c: "The control is what you do to make the harm less likely." })[k]),
+    explain: "Hot solution → could spit into your eyes or skin → heat gently on a water bath, with eye protection.",
+    hints: ["What is dangerous about a hot, boiling solution?", "Strong, direct heating makes the solution spit.", "Hot, spitting solution → eyes and skin → gentle water bath and eye protection."] },
   { id: "rod", kind: "choice", src: "Required practical: method, step 5", text: "How do you check that the solution is ready to crystallise (saturated)?", setup: SU.fresh, lock: "all",
     options: [{ t: "Dip a cold glass rod in: crystals form on the end", ok: () => { const m = freshM(); m.run.phase = "evap"; m.run.f = m.run.fSat - .01; actRod(m); return m.run.rod === "yes"; } },
       { t: "Keep heating until all the water has gone", why: DRY_WHY },
@@ -1105,6 +1121,15 @@ TASKS.hard = [
       { t: "MgNO₃₂", why: "Two nitrate ions are right, but the nitrate ion needs brackets: Mg(NO₃)₂." }],
     explain: "One Mg²⁺ (2+) balances two NO₃⁻ (2 × 1− = 2−). Brackets go round the nitrate ion: Mg(NO₃)₂.",
     hints: ["The charges must add up to zero.", "How many 1− ions balance one 2+ ion?", "Two nitrate ions, in brackets: Mg(NO₃)₂."] },
+  { id: "plan", kind: "gaps", src: "Soluble salts; predicting the salts (making a named salt)", text: "Plan how to make two other salts the same way as copper sulfate. Choose the acid and the insoluble base for each.", setup: SU.fresh, lock: "all",
+    rows: [["za", "Zinc sulfate, the acid:", "sulfuric acid", ["sulfuric acid", "hydrochloric acid", "nitric acid"]], ["zb", "Zinc sulfate, the base:", "zinc oxide", ["zinc oxide", "sodium hydroxide", "copper oxide", "zinc sulfate"]],
+      ["ma", "Magnesium chloride, the acid:", "hydrochloric acid", ["hydrochloric acid", "sulfuric acid", "nitric acid"]], ["mb", "Magnesium chloride, the base:", "magnesium oxide", ["magnesium oxide", "sodium hydroxide", "copper oxide", "magnesium chloride"]]],
+    why: (k, w) => ({ "hydrochloric acid": "Hydrochloric acid makes chlorides. Which acid makes sulfates?", "nitric acid": "Nitric acid makes nitrates.", "sulfuric acid": "Sulfuric acid makes sulfates. Which acid makes chlorides?",
+      "sodium hydroxide": "Sodium hydroxide is an alkali: it dissolves, so you can't see when it is in excess or filter it off, and it would make a sodium salt.",
+      "copper oxide": "The metal in the base gives the first part of the salt's name. Copper oxide would make a copper salt.",
+      "zinc sulfate": "That is the salt you want to make, not the base.", "magnesium chloride": "That is the salt you want to make, not the base." })[w],
+    explain: "Zinc sulfate: sulfuric acid + zinc oxide. Magnesium chloride: hydrochloric acid + magnesium oxide. The acid gives the second part of the name; the insoluble base gives the metal.",
+    hints: ["The salt's second name comes from the acid; its first name comes from the metal in the base.", "The base must be insoluble, so the excess can be seen and filtered off. Sodium hydroxide is soluble.", "Sulfuric acid + zinc oxide; hydrochloric acid + magnesium oxide."] },
   { id: "xs2", kind: "build", ordered: true, src: "Soluble salts (exam tip)", text: "Explain why the copper oxide is added in excess. [2 marks] Build your answer.", frame: "Start with: It makes sure that…", setup: SU.fresh, lock: "all",
     stm: [{ t: "It makes sure that all of the acid reacts.", c: 1 }, { t: "Leftover acid would become dangerously concentrated when the water evaporates.", c: 2 },
       { t: "It leaves some acid to react with the crystals.", why: "The base is in excess so that no acid is left over." }, { t: "The excess copper oxide makes the crystals bigger.", why: "Crystal size depends on how slowly the water evaporates." },
@@ -1112,13 +1137,6 @@ TASKS.hard = [
     miss: { 1: "Say what happens to the acid.", 2: "Say why leftover acid would be a problem." },
     explain: "All of the acid reacts (1). Otherwise leftover acid would become dangerously concentrated during evaporation and crystallisation (1).",
     hints: ["What is used up when the base is in excess?", "What would happen to any acid left over as the water is evaporated?", "All the acid reacts; leftover acid would become dangerously concentrated."] },
-  { id: "boil", kind: "choice", src: "Soluble salts", text: "A student says: “Boil the filtrate until all the water has gone. That gives the best crystals.” Are they right?", setup: SU.fresh, lock: "all",
-    options: [{ t: "No: stop heating when crystals start to form, then leave it to crystallise slowly", ok: () => { const a = freshM(), b = freshM(); autoRun(a); autoRun(b, "crust"); return !a.run.result.small && b.run.result.small; } },
-      { t: "Yes: boiling it dry gives the biggest crystals", why: DRY_WHY },
-      { t: "Yes: the salt is only pure once all the water has gone", why: "The salt is pure once the excess base is filtered off. Boiling it dry only gives tiny crystals." },
-      { t: "No: boiling makes the salt evaporate with the water", why: "The salt doesn't evaporate: it stays in the basin. But boiling it dry gives a crust of tiny crystals." }],
-    explain: "Slow evaporation gives larger crystals; boiling dry gives tiny ones.",
-    hints: ["Compare fast and slow evaporation.", "When does the method say to stop heating?", "No: stop when crystals start to form, then leave it to crystallise slowly."] },
   { id: "vars", kind: "gaps", src: "Soluble salts (larger crystals)", text: "A student investigates how the speed of evaporation affects the size of the copper sulfate crystals. Name the variables.", setup: SU.fresh, lock: "all",
     rows: [["iv", "Independent variable (changed):", "how quickly the water evaporates"], ["dv", "Dependent variable (measured):", "the size of the crystals"], ["cv", "Control variable (kept the same):", "the volume of salt solution in each basin"]],
     bank: ["how quickly the water evaporates", "the size of the crystals", "the volume of salt solution in each basin", "the colour of the filter paper", "the number of spatulas of copper oxide left over"],
@@ -1190,6 +1208,13 @@ function bankCheck() {
     if (/Level [23]/.test(L([...all.map(ix), ...wrs])) || !/Level 2/.test(L([...all.map(ix), wrs[0]]))) F("6-mark: each wrong statement must lower the level by one more"); } }
   { const v = ["5 × 10⁻²", "5x10^-2", "5e-2", "0.050 mol"].map(parseNum); if (v.some(x => Math.abs(x - .05) > 1e-12)) F("standard form should parse as 0.05"); }
   { const m = freshM(); pour(m, "lot"); if (m.run.vol) F("pouring acid needs eye protection"); }
+  { const t = TASKS.easy.find(x => x.id === "safe"), w = TASKS.easy.findIndex(x => x.id === "where"); if (!t || TASKS.easy.indexOf(t) !== w + 1) F("hazard question must follow the filtering question");
+    if (t) t.rows.forEach(r => t.rows.forEach(q => { if (q !== r && !/^That is the (hazard|risk|control), not the/.test(t.why(r[0], q[2]))) F("hazard question: a swapped row needs named feedback"); })); }
+  { const t = TASKS.hard.find(x => x.id === "plan"); if (!t) F("plan-a-salt question missing"); else {
+    const ACID = { sulfuric: "sulfate", hydrochloric: "chloride", nitric: "nitrate" }, want = { za: "sulfate", ma: "chloride" }, metal = { zb: "zinc", mb: "magnesium" };
+    t.rows.forEach(r => r[3].forEach(w => { const a = w.split(" ")[0], good = r[0] in want ? ACID[a] === want[r[0]] : w === metal[r[0]] + " oxide";
+      if (good !== (w === r[2])) F("plan question: " + r[0] + " / " + w + " judged wrongly"); })); } }
+  { const d0 = DONE; try { DONE = {}; const a = scoreNow(); DONE = { "easy:zz-removed": "solved", "hard:zz-removed": "solved" }; if (scoreNow() !== a) F("a stored id that is no longer a question must not change the score"); } finally { DONE = d0; } }
   /* every question */
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
@@ -1245,7 +1270,7 @@ function renderAnswer() {
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
     a.innerHTML = fr + `<div class="opts">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
-    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; s.title = s.value; }));   // title: the full choice, on a narrow screen where the box cuts it off
   } else if (t.kind === "num") {
     a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
     const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
@@ -1338,7 +1363,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); }
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -1356,7 +1381,7 @@ function answerHTML(t) {
 }
 function reveal() {
   const p = prog();
-  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); } if (task.after) { task.after(M); drawAll(); }
   setAnswerState();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }

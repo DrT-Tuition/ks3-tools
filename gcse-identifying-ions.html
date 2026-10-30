@@ -272,6 +272,11 @@ table.res th{color:var(--muted);font-weight:700}
 @media (min-width:901px){.opts.build.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.opts.build.compact .opt{padding:5px 8px;font-size:15.5px}}
 .grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
 .grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+/* answers never wider than the panel: long dropdowns shrink (and wrap under their label) */
+#answer, #answer .opts, #answer .opts > *, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts .grow select{flex:1 1 220px}
 .support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
 .support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
 .support-box p{margin:2px 0}
@@ -386,6 +391,13 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -618,7 +630,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -1176,6 +1188,31 @@ function doNot(m) {   // what to do next in a "Do it" question (never names the 
 }
 const doneMsg = m => { const s = smp(m); return `${s.label} contains ${CAT[s.c].nm} and ${AN[s.a].nm}, so it is ${saltName(s.c, s.a)}, ${formula(s.c, s.a)}.`; };
 const MASK_WHY = "The wire must be cleaned first, or ions from earlier samples mix their colours with the new one, or mask it.";
+const SAFE = { h: "Barium chloride is toxic", r: "It could get from your hands into your mouth", c: "Use a few drops; wash your hands after" };
+const SWAP = (k, w) => { const role = { [SAFE.h]: "hazard", [SAFE.r]: "risk", [SAFE.c]: "control" }[w], row = { h: "hazard", r: "risk", c: "control" }[k];
+  return role && role !== row ? `That is the ${role}, not the ${row}. ` + { hazard: "The hazard is what can cause harm.", risk: "The risk is how the harm could happen.", control: "The control is what you do to make it less likely." }[row] : ""; };
+/* ionic equations: [row key, left side, [right option first, then the slips]] — balance is checked in code (bank check) */
+const EQROWS = [["fe", "Fe²⁺ + …", ["2OH⁻ → Fe(OH)₂", "OH⁻ → FeOH", "2OH⁻ → Fe(OH)₂²⁺", "3OH⁻ → Fe(OH)₃"]],
+  ["cu", "Cu²⁺ + …", ["2OH⁻ → Cu(OH)₂", "OH⁻ → CuOH", "2OH⁻ → Cu(OH)₂²⁺", "OH⁻ → Cu(OH)₂"]],
+  ["ag", "Ag⁺ + Br⁻ → …", ["AgBr", "AgBr₂", "Ag₂Br", "AgBr⁻"]],
+  ["ba", "Ba²⁺ + SO₄²⁻ → …", ["BaSO₄", "Ba(SO₄)₂", "Ba₂SO₄", "BaSO₄²⁻"]]];
+const EQWHY = { "OH⁻ → FeOH": "One OH⁻ only balances one of the two positive charges on Fe²⁺. You need 2OH⁻.", "2OH⁻ → Fe(OH)₂²⁺": "The charges have cancelled out: the precipitate has no charge left on it.",
+  "3OH⁻ → Fe(OH)₃": "Fe(OH)₃ is iron(III) hydroxide, from Fe³⁺. Fe²⁺ needs two OH⁻.",
+  "OH⁻ → CuOH": "One OH⁻ only balances one of the two positive charges on Cu²⁺. You need 2OH⁻.", "2OH⁻ → Cu(OH)₂²⁺": "The charges have cancelled out: the precipitate has no charge left on it.",
+  "OH⁻ → Cu(OH)₂": "Count the OH groups: two on the right, so two OH⁻ on the left.",
+  "AgBr₂": "One Ag⁺ (1+) and one Br⁻ (1−) cancel out: AgBr.", "Ag₂Br": "One Ag⁺ (1+) and one Br⁻ (1−) cancel out: AgBr.", "AgBr⁻": "The charges have cancelled out: the precipitate has no charge left on it.",
+  "Ba(SO₄)₂": "Ba²⁺ (2+) and SO₄²⁻ (2−) cancel out one to one: BaSO₄.", "Ba₂SO₄": "Ba²⁺ (2+) and SO₄²⁻ (2−) cancel out one to one: BaSO₄.", "BaSO₄²⁻": "The charges have cancelled out: the precipitate has no charge left on it." };
+function ionSide(side) {   // "2OH⁻ + Fe²⁺" → { atoms, charge }
+  const SUB = { "₀": 0, "₁": 1, "₂": 2, "₃": 3, "₄": 4, "₅": 5, "₆": 6, "₇": 7, "₈": 8, "₉": 9 }, SUP = { "⁰": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4 }, at = {}; let q = 0;
+  side.split(" + ").forEach(term => { let m = term.trim().match(/^(\d*)(.*?)([⁰¹²³⁴]*)([⁺⁻]?)$/), k = m[1] ? +m[1] : 1, body = m[2];
+    q += k * (m[4] ? (m[4] === "⁺" ? 1 : -1) * (m[3] ? SUP[m[3]] : 1) : 0);
+    const n = s => s ? +[...s].map(c => SUB[c]).join("") : 1;
+    const add = (str, mult) => { const re = /\(([^)]*)\)([₀-₉]*)|([A-Z][a-z]?)([₀-₉]*)/g; let x; while ((x = re.exec(str))) { if (x[1] != null) add(x[1], mult * n(x[2])); else at[x[3]] = (at[x[3]] || 0) + mult * n(x[4]); } };
+    add(body, k); });
+  return { at, q };
+}
+function ionBalanced(eq) { const [l, r] = eq.split(" → ").map(ionSide), ks = new Set([...Object.keys(l.at), ...Object.keys(r.at)]); return l.q === r.q && [...ks].every(k => l.at[k] === r.at[k]); }
+const eqOf = (r, w) => r[1].endsWith("→ …") ? r[1].replace("…", w) : r[1].replace(" …", " " + w);
 TASKS.easy = [
   { id: "flame", kind: "gaps", src: "Flame tests", text: "Match each metal ion to the colour of its flame.", setup: SU.fresh, lock: "all",
     rows: [["li", "Li⁺ (lithium):", "crimson"], ["na", "Na⁺ (sodium):", "yellow"], ["k", "K⁺ (potassium):", "lilac"], ["ca", "Ca²⁺ (calcium):", "orange-red"], ["cu", "Cu²⁺ (copper(II)):", "green"]],
@@ -1183,13 +1220,6 @@ TASKS.easy = [
     why: (k, w) => w === "red" ? "Be exact: “red” isn't one of the flame-test colours. Lithium is crimson and calcium is orange-red." : w === "blue" ? "Blue is the Bunsen's own flame. Each of these ions changes its colour." : "That colour belongs to a different ion in the list.",
     explain: "Li⁺ crimson, Na⁺ yellow, K⁺ lilac, Ca²⁺ orange-red, Cu²⁺ green.",
     hints: ["Two of them are shades of red: crimson and orange-red.", "Sodium is the colour of street lights. Potassium is a pale purple.", "Li⁺ crimson, Na⁺ yellow, K⁺ lilac, Ca²⁺ orange-red, Cu²⁺ green."] },
-  { id: "clean", kind: "choice", src: "Flame tests", text: "Before a flame test, the wire is dipped in dilute acid and held in the flame until there is no colour. Why?", setup: SU.fresh, lock: "all", hideWords: ["mask"],
-    options: [{ t: "To remove ions from earlier tests, so colours don't mix or one doesn't mask another", ok: () => { const m = freshM([makeSample("K", "Cl", "S")]); m.eye = true; m.wire.res = ["Na"]; actLight(m); actAir(m); actDip(m); actHold(m); const a = m.flame.key; m.pend = null; actClean(m); actDip(m); actHold(m); return a === "yellow" && m.flame.key === "lilac"; } },
-      { t: "To make the wire hot enough to glow", why: "The glow of hot wire isn't the test. The acid and flame remove ions left on the wire from earlier tests." },
-      { t: "So that the acid can react with the metal ions to make the colour", why: "The metal ions make the colour on their own. The acid cleans the wire so earlier ions don't mix in." },
-      { t: "To turn the Bunsen flame blue", why: "The air hole makes the flame blue. Cleaning removes ions from earlier tests." }],
-    explain: "Cleaning removes ions left from earlier samples. Otherwise two or more ions are on the wire: their colours mix, or one masks another.",
-    hints: ["Think about what might still be on the wire from the last sample.", "What happens if two different ions are on the wire at once?", "To remove earlier ions, so colours don't mix or mask each other."] },
   { id: "forder", kind: "build", ordered: true, compact: true, src: "Flame tests", text: "Put the steps of a flame test in order. Choose only the steps you need.", setup: SU.fresh, lock: "all",
     orderHint: "All the right steps, but not in order. What has to happen to the wire before it touches the sample?",
     stm: [{ t: "Dip the wire loop in dilute acid.", c: 1 }, { t: "Hold it in the blue flame until there is no colour.", c: 2 }, { t: "Dip the loop into the sample.", c: 3 },
@@ -1240,6 +1270,14 @@ TASKS.easy = [
       { t: "Add dilute acid: the solution fizzes", why: "Fizzing with acid shows carbonate ions, not sulfate ions." }],
     explain: "Acidify with dilute hydrochloric acid, then add barium chloride: a white precipitate of barium sulfate shows sulfate ions.",
     hints: ["The reagent contains barium ions.", "The sample is acidified first, to remove carbonate ions.", "Hydrochloric acid, then barium chloride: a white precipitate."] },
+  { id: "safe", kind: "gaps", src: "Sulfates; required practical safety (from the AQA practical)", text: "Barium chloride solution is used in the sulfate test. Choose the hazard, the risk and the control.", setup: SU.fresh, lock: "all",
+    frame: "Hazard: what could cause harm. Risk: how the harm could happen. Control: what you do to make it less likely.",
+    rows: [["h", "Hazard:", SAFE.h], ["r", "Risk:", SAFE.r], ["c", "Control:", SAFE.c]],
+    bank: [SAFE.h, SAFE.r, SAFE.c, "It is flammable", "Clean the wire before each test"],
+    why: (k, w) => SWAP(k, w) || (w === "It is flammable" ? "Barium chloride solution doesn't burn. Think about what happens if it gets inside your body." : w === "Clean the wire before each test" ? "That stops flame colours mixing. It doesn't protect you." :
+      ({ h: "The hazard is what makes the chemical harmful.", r: "The risk is how the harm could actually happen in the practical.", c: "The control is what you do to make the harm less likely." })[k]),
+    explain: "Toxic → could get from your hands into your mouth → use a few drops and wash your hands afterwards.",
+    hints: ["The hazard is what makes it harmful. The risk is how it could get into you.", "Spilt drops can get onto your fingers.", "Toxic → hands to mouth → a few drops only; wash your hands."] },
   { id: "doE", kind: "goal", src: "Required practical: method", text: "Do it: identify the salt in Sample X. Test for the metal ion and the negative ion, record your results, then complete the conclusion.", setup: SU.doE, stuck: "key",
     test: doneIt, not: doNot, done: doneMsg, reveal: m => autoRun(m),
     hints: ["Eye protection on. Start with a flame test (light the Bunsen, open the air hole, clean the wire, dip, hold) or sodium hydroxide.", "Then test for the negative ion: dilute acid and limewater (carbonate), nitric acid and silver nitrate (halide), or hydrochloric acid and barium chloride (sulfate).", "Choose the two ions your results show, then the formula whose charges add up to zero, and press Check conclusion."] }
@@ -1252,13 +1290,6 @@ TASKS.hard = [
       { t: "Chloride ions give the yellow colour", why: "The flame test shows the metal ion. Chloride ions don't colour the flame." }],
     explain: "Sodium ions on an uncleaned wire give a strong yellow flame that masks calcium's orange-red. Clean the wire and repeat.",
     hints: ["What colour should calcium ions give?", "Which ion gives a yellow flame, and how could it get on the wire?", "The wire wasn't cleaned: sodium ions masked the colour."] },
-  { id: "drops", kind: "choice", src: "Metal hydroxides", text: "Why is sodium hydroxide added a few drops at a time, slowly, at first?", setup: SU.fresh, lock: "all",
-    options: [{ t: "Some precipitates dissolve in excess. Added quickly, the precipitate can dissolve as fast as it forms, so you miss it", ok: () => { const a = freshM([makeSample("Al", "Cl", "S")]); a.eye = true; a.st = "naoh"; actPourS(a); actXs(a); return a.pend.truth === "none"; } },
-      { t: "To stop the solution getting too hot", why: "The reason is to see every precipitate: some dissolve in excess sodium hydroxide." },
-      { t: "So that the precipitate is a darker colour", why: "Adding it slowly doesn't change the colour. It stops you missing a precipitate that dissolves in excess." },
-      { t: "Because a precipitate only forms in excess sodium hydroxide", why: "The precipitate forms with a few drops. Some then dissolve in excess." }],
-    explain: "Aluminium hydroxide dissolves in excess. If a lot is added at once, its precipitate dissolves as fast as it forms and is missed.",
-    hints: ["Think about aluminium hydroxide.", "What happens to it in excess sodium hydroxide?", "So you don't miss a precipitate that dissolves in excess."] },
   { id: "camg", kind: "choice", src: "Metal hydroxides", text: "A solution gives a white precipitate with a few drops of sodium hydroxide. It stays when more is added. What should you do next to identify the metal ion?", setup: SU.fresh, lock: "all",
     options: [{ t: "Do a flame test: an orange-red flame shows calcium ions", ok: () => { const c = catCands([{ type: "ppt", obs: "white", flags: {} }, { type: "xs", obs: "stays", flags: {} }]); return c.size === 2 && c.has("Ca") && c.has("Mg"); } },
       { t: "Nothing: it must be aluminium ions", why: "Aluminium hydroxide dissolves in excess. This one stays, so it is calcium or magnesium ions." },
@@ -1274,6 +1305,12 @@ TASKS.hard = [
     miss: { 1: "Say what the acid removes.", 2: "Say why those ions would be a problem." },
     explain: "Hydrochloric acid removes carbonate ions (1). Carbonate would also give a white precipitate, so the result could be wrong (1).",
     hints: ["Which other ion gives a white precipitate with barium ions?", "What does acid do to carbonate ions?", "It removes carbonate ions, which would also give a white precipitate."] },
+  { id: "eqns", kind: "gaps", src: "Metal hydroxides (spec 4.8.3.2); Halides; Sulfates (ionic equations)", text: "Complete each ionic equation for a precipitate forming. Choose the balanced one.", setup: SU.fresh, lock: "all",
+    frame: "In a balanced ionic equation the atoms balance and the charges add up to the same on both sides. A precipitate has no overall charge.",
+    rows: EQROWS.map(r => [r[0], r[1], r[2][0], r[2]]),
+    why: (k, w) => EQWHY[w] || "Count the atoms and the charges on each side.",
+    explain: "Fe²⁺ + 2OH⁻ → Fe(OH)₂; Cu²⁺ + 2OH⁻ → Cu(OH)₂; Ag⁺ + Br⁻ → AgBr; Ba²⁺ + SO₄²⁻ → BaSO₄.",
+    hints: ["A 2+ ion needs two 1− ions to make a neutral precipitate.", "Count each side's charges: they must be equal, and the solid has none.", "2OH⁻ for Fe²⁺ and Cu²⁺; AgBr; BaSO₄."] },
   { id: "doH", kind: "goal", src: "Required practical: method", noMethod: true, text: "Do it: identify the salt in Sample Y. The wire was last used for a sodium compound. Record your results and complete the conclusion.", setup: SU.doH, stuck: "key",
     test: doneIt, not: doNot, done: doneMsg, reveal: m => autoRun(m),
     hints: ["Before the flame test, think about the wire: what is still on it?", "Clean the wire before the flame test. Add sodium hydroxide a few drops at a time first, then in excess.", "Clean wire → flame test; NaOH few drops → excess; nitric acid before silver nitrate, hydrochloric acid before barium chloride. Then the conclusion."] },
@@ -1380,7 +1417,12 @@ function bankCheck() {
       wr.forEach(w => { if (L([...full.map(ix), w]) !== 2) F("6-mark: a wrong statement should lower the level"); });
       if (L([...full.map(ix), ...wr]) !== Math.max(0, 3 - wr.length)) F("6-mark: each wrong statement should lower it one more level");
       if (L([ix(1)]) !== 1 || L([ix(1), ix(2), ix(3), ix(5)]) !== 2 || L([ix(1), wr[0]]) !== 0 || L([wr[0]]) !== 0) F("6-mark: levels 0–2 must be reachable"); }
-    /* every question */
+    EQROWS.forEach(r => { const ok = r[2].filter(w => ionBalanced(eqOf(r, w)));
+    if (ok.length !== 1 || ok[0] !== r[2][0]) F("ionic equation " + r[0] + ": only the right option may balance (got " + ok.join(" / ") + ")"); if (r[2].some((w, i) => i && !EQWHY[w])) F("ionic equation " + r[0] + ": a slip has no named feedback"); });
+  { const t = TASKS.easy.find(x => x.id === "safe"); if (!t || TASKS.easy.indexOf(t) !== TASKS.easy.findIndex(x => x.id === "so4") + 1) F("hazard question must follow the sulfate test");
+    if (t) t.rows.forEach(r => t.rows.forEach(q => { if (q !== r && !/^That is the (hazard|risk|control), not the/.test(t.why(r[0], q[2]))) F("hazard question: a swapped row needs named feedback"); })); }
+  { const d0 = DONE; try { DONE = {}; const a = scoreNow(); DONE = { "easy:zz-removed": "solved", "hard:zz-removed": "solved" }; if (scoreNow() !== a) F("a stored id that is no longer a question must not change the score"); } finally { DONE = d0; } }
+  /* every question */
     for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
       const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
       if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
@@ -1433,7 +1475,7 @@ function renderAnswer() {
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
     a.innerHTML = fr + `<div class="opts">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
-    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; s.title = s.value; }));   // title: the full choice, on a narrow screen where the box cuts it off
   } else if (t.kind === "build") {
     a.innerHTML = fr + `<div class="opts build${t.six || t.compact ? " compact" : ""}" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
       `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">+</span><span>${esc(t.stm[i].t)}</span></button>`).join("") + `</div>`;
