@@ -95,6 +95,8 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Reflection and Refraction | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-reflection-refraction.html |
 | Infrared Radiation | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-infrared-radiation.html |
 | Water Purification | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-water-purification.html |
+| Resistance Practical | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-resistance.html |
+| Rates of Reaction | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-rates-of-reaction.html |
 
 ## Adding a tool
 
