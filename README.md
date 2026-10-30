@@ -94,6 +94,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Identifying Ions | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-identifying-ions.html |
 | Reflection and Refraction | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-reflection-refraction.html |
 | Infrared Radiation | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-infrared-radiation.html |
+| Water Purification | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-water-purification.html |
 
 ## Adding a tool
 
