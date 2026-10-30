@@ -75,6 +75,7 @@
     motion: the fall is drawn 8 times a second.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
   Placement: KS4 · Biology · "4.5.2 The human nervous system".
+  Coverage fixes (30 Oct 2026): Easy 8 is a resolution question on the ruler (1 mm, read from the zoom; the 1 mm / 0.1 cm wording is hidden while it is open); the old Easy 10 (20 cm v 15 cm, a repeat of Easy 1) was removed. Hard 2 is now a caffeine hazard → risk → control + ethics question (AQA AT 4; not in the deck); the old Hard 2 reflex/ruler-drop sort was removed (reflex v voluntary stays in Easy 4 and Hard 1). Plan tab Safety card: a caffeine ethics line.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -382,6 +383,13 @@ footer.brand a{color:inherit}
 @media (min-width:901px) and (max-height:820px){.qpanel .bstm{gap:2px}.qpanel .bstm .grow select{min-height:34px}.qpanel .feedback .ms{font-size:15px;line-height:1.4}}
 @media (min-width:901px) and (max-height:740px){.qpanel .bstm .grow select{min-height:32px}.qpanel .feedback .ms{font-size:14px}}
 @media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg{padding:5px 9px;line-height:1.35}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -514,7 +522,7 @@ main.layout{min-height:calc(100vh - 70px)}
             <div class="readrow" id="readRow">
               <label class="ctl-lbl" for="readIn">Reading at the thumb</label>
               <span class="inrow"><input class="numin" id="readIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" disabled><span class="unit">cm</span>
-              <button class="btn primary" type="button" id="recBtn" disabled>Record</button><button class="linkbtn" type="button" id="readForMe" hidden>Read it for me</button></span>
+              <button class="btn primary" type="button" id="recBtn" disabled>Record</button><button class="linkbtn" type="button" id="readForMe" hidden>Where do I look?</button></span>
             </div>
             <div class="readout" id="read" aria-live="polite"></div>
             <div class="controls" id="swRow">
@@ -745,8 +753,8 @@ function readSlip(v, d) {
   if (near(v, d, .1001)) return "";
   if (near(v, d * 10, 1.01)) return "That looks like millimetres. Record it in cm: 10 mm = 1 cm.";
   if (near(v, DECK.ruler - d, .1001)) return "You read the scale from the wrong end. The numbers go up from 0 cm at the thumb.";
-  if (near(v, Math.floor(d), .001)) return "That is the last whole centimetre. Add the small marks above it: each one is 1 mm = 0.1 cm.";
-  if (Math.abs(v - d) <= 1.5) return "Find the last number below the dashed line. Count the small marks up to the line: each is 1 mm (0.1 cm).";
+  if (near(v, Math.floor(d), .001)) return resOpen() ? "That is the last whole centimetre. Add the small marks above it." : "That is the last whole centimetre. Add the small marks above it: each one is 1 mm = 0.1 cm.";
+  if (Math.abs(v - d) <= 1.5) return resOpen() ? "Find the last number below the dashed line. Count the small marks up to the line." : "Find the last number below the dashed line. Count the small marks up to the line: each is 1 mm (0.1 cm).";
   return "Read the ruler where the dashed line (the top of the thumb) crosses it. The numbers are in cm.";
 }
 const meanLines = vals => [`Total = ${vals.join(" + ")} = ${fmt(sum(vals))}.`, `Mean = ${fmt(sum(vals))} ÷ ${vals.length} = ${Number.isInteger(avg(vals)) ? avg(vals) : dp1(avg(vals))} cm.`];
@@ -824,6 +832,13 @@ const TASKS = {
       done: M => `Five readings: ${M.data.dom.map(e => cm1(e.r)).join(", ")} cm. Repeating reduces the effect of random errors and shows any anomalies.`,
       reveal: M => { M.who = "model"; M.hand = "dom"; autoDrops(M, "dom", DECK.drops); M.ph = "rec"; M.pos = M.data.dom[DECK.drops - 1].d; },
       hints: ["Press Drop the ruler, then read the zoom at the dashed line.", "Type the distance in cm (to 0.1 cm), then press Record.", "Do this five times with the dominant hand."] },
+    { id: "res", kind: "choice", setup: SU.drop, hideRes: true, src: "slide 19 (resolution)", text: "Press Drop the ruler, then look at the zoom of the ruler. What is the resolution of the ruler?",
+      options: [{ t: "1 mm (0.1 cm): the gap between the smallest marks", ok: () => cm1(14.34) === "14.3" },
+        { t: "1 cm: the gap between the numbered marks", why: "Look between the numbers: there are smaller marks. Resolution is the smallest change the scale can show." },
+        { t: "30 cm: the length of the ruler", why: "That is the range of the ruler, not its resolution. Resolution is the smallest change the scale can show." },
+        { t: "0.01 cm: you can type two decimal places", why: "The scale has no marks that small, so you can’t read to 0.01 cm. Count the small marks between two numbers." }],
+      explain: "The smallest marks are 1 mm apart, so the resolution is 1 mm (0.1 cm). Record each drop to 0.1 cm.",
+      hints: ["Resolution is the smallest change the scale can show.", "How many small marks are there between two numbers on the zoom?", "Ten small marks per cm: each is 1 m…"] },
     { id: "mean4", kind: "num", setup: SU.res, stuck: "mean", src: "slides 22–24", text: "Drops: 15, 14, 36 and 16 cm. 36 is anomalous. Calculate the mean of the others.", frame: "Start with ▸ (15 + 14 + 16) ÷ 3 = …",
       fields: [{ k: "m", label: "Mean", unit: "cm", ans: avg(W.m4.vals), slip: v => meanSlip(W.m4.vals, W.m4.all, v) }], lines: ["Leave out 36 cm.", ...meanLines(W.m4.vals)],
       hints: ["Leave out the anomalous result first.", "Add 15, 14 and 16. How many values are left?", "45 ÷ 3 = …"] },
@@ -833,13 +848,7 @@ const TASKS = {
         { t: "Their reaction time is speeding up", why: "A time can't speed up. The time is shorter, so the reaction is faster." },
         { t: "Caffeine slows their impulses", why: "A shorter reaction time means the response came sooner, so nothing was slowed." }],
       explain: "The person reacts more quickly. A shorter time means a faster reaction. The time itself can't “speed up”.",
-      hints: ["Shorter reaction time: more or less time to react?", "Say the reaction is faster or slower, and the time is shorter or longer.", "Reacts more q…"] },
-    { id: "faster", kind: "choice", setup: SU.drop, src: "slide 30", text: "Which is the faster reaction: a drop of 20 cm or 15 cm?",
-      options: [{ t: "15 cm: the ruler fell a shorter distance", ok: () => tOf(15) < tOf(20) },
-        { t: "20 cm: the ruler was caught lower down", why: "At 20 cm the ruler ended up lower because it fell further before the catch. That means a longer reaction time, so a slower reaction." },
-        { t: "Both the same: the ruler was caught both times", why: "The distances differ. The ruler fell further in the 20 cm drop, so that reaction took longer." }],
-      explain: "15 cm. A shorter drop before the catch means a shorter reaction time, so a faster reaction.",
-      hints: ["The ruler keeps falling until you catch it.", "Which drop gave the catcher less time?", "The shorter drop: 1… cm."] }
+      hints: ["Shorter reaction time: more or less time to react?", "Say the reaction is faster or slower, and the time is shorter or longer.", "Reacts more q…"] }
   ],
   hard: [
     { id: "tf", kind: "gaps", setup: SU.drop, stuck: "words", grid: true, src: "slides 12–14", text: "True or false? Choose for each statement.",
@@ -849,12 +858,15 @@ const TASKS = {
         t3: { False: "It is true: the ruler fell further before the catch, so the reaction took longer." }, t4: { True: "False: it is voluntary. It needs conscious thought: the brain decides to catch." } },
       explain: "1 True. 2 False: a reaction can be faster; the time is shorter. 3 True. 4 False: it is voluntary, so it needs conscious thought.",
       hints: ["Two are true and two are false.", "Can a time speed up? Does catching need conscious thought?", "True, False, True, False."] },
-    { id: "sort", kind: "gaps", setup: SU.drop, stuck: "words", grid: true, src: "slides 15–17", text: "Reflex or ruler drop? Sort each feature.",
-      rows: FEAT.map(f => [f[0], `${f[0]}  ${f[1]}`, zoneOf(f), "", ZONE]),
-      whyRow: Object.fromEntries(FEAT.map(f => [f[0], Object.fromEntries(ZONE.filter(z => z !== zoneOf(f)).map(z => [z,
-        zoneOf(f) === ZONE[1] ? `${f[1]}: both have this. Every response needs a stimulus, receptors and effectors.` : zoneOf(f) === ZONE[0] ? `${f[1]}: only a reflex. The ruler drop is voluntary.` : `${f[1]}: only the ruler drop. A reflex has no conscious thought.`]))])),
-      explain: ZONE.map(z => `${z}: ${FEAT.filter(f => zoneOf(f) === z).map(f => f[0]).join(", ")}`).join(". ") + ".",
-      hints: ["A reflex is automatic, rapid and protects the body. The ruler drop is voluntary.", "Both have a stimulus, receptors and effectors.", "Reflex only: B, G. Both: A, C, F. Ruler drop only: D, E."] },
+    { id: "eth", kind: "gaps", setup: SU.drop, src: "slides 18–19 (safety and ethics)", text: "A class tests the effect of caffeine on reaction time. Caffeine is the hazard. Complete the risk, the control and the ethics.", frame: "Hazard → risk → control → ethics",
+      rows: [["k", "Risk", "it can raise the heart rate or make some people ill", "", ["it can raise the heart rate or make some people ill", "it makes the ruler fall faster", "it makes the test unfair"]],
+        ["c", "Control", "a small, limited dose, and only healthy volunteers", "", ["a small, limited dose, and only healthy volunteers", "as much caffeine as each person likes", "a bigger dose for people with a heart condition"]],
+        ["e", "Ethics", "volunteers agree to take part and can stop at any time", "", ["volunteers agree to take part and can stop at any time", "everyone in the class must take part", "don’t tell people what is in the drink"]]],
+      whyRow: { k: { "it makes the ruler fall faster": "Caffeine acts on the person, not the ruler. A risk is how the hazard could harm someone.", "it makes the test unfair": "That is about the results, not safety. A risk is how the hazard could harm someone." },
+        c: { "as much caffeine as each person likes": "Too much caffeine can make people ill. Limit the dose.", "a bigger dose for people with a heart condition": "People with a heart condition should not take part: caffeine raises the heart rate." },
+        e: { "everyone in the class must take part": "People can’t be made to take part. Volunteers agree first and can stop at any time.", "don’t tell people what is in the drink": "Volunteers must know what they are agreeing to, so they can choose to take part or not." } },
+      explain: "Risk: caffeine can raise the heart rate or make some people ill. Control: a small, limited dose, and only healthy volunteers. Ethics: volunteers agree to take part and can stop at any time.",
+      hints: ["A risk is how the hazard could harm someone.", "A control makes the harm less likely: think about the dose and who takes part.", "Ethics: people choose to take part and can stop."] },
     { id: "method", kind: "build", setup: SU.drop, src: "slides 18–19, 22", text: "Plan a ruler drop test: does the dominant hand react faster? [6 marks]",
       frame: "Number the steps in order. Leave wrong ones as –.",
       items: [
@@ -862,13 +874,14 @@ const TASKS = {
         { id: "b", t: "Hold the ruler with 0 cm at the top of the thumb.", rank: 2, after: [], ess: true, miss: "Say where the ruler starts: 0 cm at the thumb." },
         { id: "c", t: "Drop the ruler without warning.", rank: 3, after: ["b"], ess: true, miss: "Say how the ruler is dropped: without warning." },
         { id: "d", t: "Catch it. Record the distance at the thumb.", rank: 4, after: ["c"], ess: true, miss: "Say what you measure: the distance at the thumb." },
-        { id: "e", t: "Five drops. Find the mean without anomalies.", rank: 5, after: ["d"], miss: "Say how you make the results more reliable: repeat and calculate a mean." },
-        { id: "g", t: "Convert the mean to a time (conversion row).", rank: 6, after: ["e"], miss: "Say how the distance becomes a reaction time: the conversion row." },
+        { id: "e", t: "Five drops. Find the mean without anomalies.", rank: 5, after: ["d"], ess: true, miss: "Repeat, and calculate a mean." },
+        { id: "g", t: "Convert the mean to a time (conversion row).", rank: 6, after: ["e"], ess: true, miss: "Say how the distance becomes a reaction time: the conversion row." },
         { id: "f", t: "Repeat with the other hand. Compare the times.", rank: 7, after: ["d"], ess: true, miss: "Say how you change the independent variable (the hand) and compare." },
         { id: "x", t: "Say “Go!”, then drop the ruler.", why: "A warning lets the catcher get ready, so it no longer measures the reaction to the stimulus. Drop it without warning." },
         { id: "y", t: "Drop the ruler once with each hand.", why: "One drop isn't enough: it could be anomalous. Repeat and calculate a mean." }
         ],
       ms: "Level 3 (5–6): a complete, valid method in a logical order. Level 2 (3–4): most steps; gaps or order slips. Level 1 (1–2): one or two relevant steps. 0: nothing relevant. Indicative content: the seven numbered steps.",
+      msH: "<b>Mark scheme.</b> L3 (5–6): complete and logical, with every essential step. L2 (3–4): most steps; an essential step missing or out of order. L1 (1–2): one or two steps. Each wrong step costs a level. <b>Indicative content</b> and reasons: fair test · reading = distance fallen · react to the stimulus · the result · a mean cuts random error · distance → time · changes the variable.",
       hints: ["Think through the practical in order: set up, drop, read, repeat, then process.", "Leave out anything that warns the catcher or uses only one drop.", "Controls; 0 cm; no warning; record; five drops and a mean; convert; other hand."] },
     { id: "doMean", kind: "goal", setup: SU.anomSet, stuck: "mean", src: "slides 22–24", text: "Do it: on Results, mark the anomalous dominant-hand reading. Type the mean of the others in the Mean row. Then press Check.",
       test: M => { const S = handStats(M, "dom"); return !flagIssue(S) && near(parseNum(M.meanIn.dom), S.mean); },
@@ -968,7 +981,10 @@ function bankCheck() {
       const byId = id => t.items.find(x => x.id === id), seq = ids => ids.map(byId);
       if (t.id === "method") { const full = seq(["a", "b", "c", "d", "e", "g", "f"]); if (buildLevel(t, full) !== 3) E("the full method must give Level 3");
         t.items.filter(x => x.ess).forEach(x => { if (buildLevel(t, full.filter(y => y !== x)) === 3) E("Level 3 without the essential step: " + x.id); });
-        if (buildLevel(t, [byId("b")]) !== 1 || buildLevel(t, seq(["b", "c", "d", "f"])) !== 2) E("levels 1 and 2 must be reachable"); }
+        if (buildLevel(t, [byId("b")]) !== 1 || buildLevel(t, seq(["b", "c", "d", "e", "f"])) !== 2) E("levels 1 and 2 must be reachable");
+        if (buildLevel(t, seq(["a", "b", "c", "d", "e", "g", "f", "x"])) !== 2 || buildLevel(t, seq(["a", "b", "c", "d", "e", "g", "f", "x", "y"])) !== 1 || buildLevel(t, seq(["b", "x", "y"])) !== 0) E("each wrong statement must cost another level");
+        if (buildLevel(t, seq(["b", "c", "d", "e", "g", "f"])) !== 3) E("Level 3 without the controls statement (not essential)");
+        ["e", "g"].forEach(k => { if (!byId(k).ess) E("the mean and the conversion are essential: " + k); }); }
       if (t.id === "method") { if (orderBreak(t, seq(["a", "b", "c", "d", "e", "g", "f"])) || orderBreak(t, seq(["b", "c", "d", "f", "e", "g", "a"])) || !orderBreak(t, seq(["a", "c", "b", "d", "e", "g", "f"])) || !orderBreak(t, seq(["a", "b", "c", "d", "g", "e", "f"]))) E("order rules: s19 then s22 orders must pass; no warning before 0 cm, or convert before the mean, must fail"); } }
     if (t.kind === "goal") { const m = freshM(1); if (t.setup) t.setup(m); if (t.test(m)) E("goal already met at the start"); if (!t.not(m)) E("no feedback at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
   });
@@ -1128,7 +1144,7 @@ function examHTML() {
 function planHTML() {
   const li = a => a.map(s => `<li>${esc(s)}</li>`).join("");
   return `<div class="pcard"><h3>Equipment</h3><ul>${li(DECK.equipment)}</ul></div>` +
-    `<div class="pcard"><h3>Safety</h3><ul>${li(DECK.safety)}</ul></div>` +
+    `<div class="pcard"><h3>Safety</h3><ul>${li(DECK.safety)}</ul><p class="small"><b>Testing caffeine?</b> Volunteers agree and can stop at any time. Use a small dose, and no one with a heart condition.</p></div>` +
     `<div class="pcard wide" id="methodCard"><h3>Method</h3><ol>${DECK.method.map(([s, w], i) => `<li>${esc(s)} <button type="button" class="why" data-why="${i}" aria-expanded="false">Why?</button><span class="whyt" id="why${i}" hidden>${esc(w)}</span></li>`).join("")}</ol></div>` +
     `<div class="pcard"><h3>Variables</h3><p><b>Independent</b> (what we change): ${esc(DECK.iv.toLowerCase())}.</p><p><b>Dependent</b> (what we measure): ${esc(DECK.dv.charAt(0).toLowerCase() + DECK.dv.slice(1))}.</p><p><b>Control</b> (kept the same):</p><ul>${li(DECK.controls)}</ul><p><b>Hypothesis:</b> ${esc(DECK.hyp)}</p></div>` +
     `<div class="pcard"><h3>Evaluating</h3><ul>${li(["Repeating reduces the effect of random errors and shows any anomalies.", "Leave out an anomalous result before you calculate the mean.", "One drop for each hand isn't enough: it could be anomalous (a random error).", "Improve it: repeat with more people or more attempts, and calculate a mean."])}</ul></div>` +
@@ -1147,7 +1163,7 @@ function readout() {
       P(first ? "r2" : "r3", first ? `Is one drop enough? Compare your first drops: ${cm1(M.data.dom[0].r)} cm and ${cm1(M.data.non[0].r)} cm.` : mode === "demo" ? "A shorter drop means a shorter reaction time: a faster reaction." : "Read each drop at the top of the thumb.");
     } else if (M.ph === "wait") { P("r1", M.warn ? "Your partner says “Go!”… (a warning: not a fair test)" : "Get ready… your partner will drop it without warning."); }
     else if (M.ph === "fall") P("r1", "Falling…");
-    else if (M.ph === "caught") { P("r1", "Caught! Read the zoom at the dashed line."); if (!M.rmsg) P("r2", "Type the distance in cm, to 0.1 cm. Press Record.");
+    else if (M.ph === "caught") { P("r1", "Caught! Read the zoom at the dashed line."); if (!M.rmsg) P("r2", resOpen() ? "Type the distance in cm. Press Record." : "Type the distance in cm, to 0.1 cm. Press Record.");
       if (M.rmsg) rows.push(`<p class="rm ${M.rmsg[0]}"><b>${M.rmsg[0] === "bad" ? "✗ Not quite." : "Tip:"}</b> ${esc(M.rmsg[1])}</p>`); }
     else if (M.ph === "warned") { P("r1", `Not recorded. The partner said “Go!”, so the catcher got ready before it fell.`); P("r2", `It fell only ${cm1(M.pos)} cm. That doesn't measure reaction time. Drop it without warning: switch off Partner warns.`); }
   } else {
@@ -1166,8 +1182,10 @@ function readout() {
 const TABW = { drop: "Ruler drop", res: "Results", plan: "Plan", exam: "Exam graph" };
 let built = false;
 function buildStatic() { if (built) return; built = true; rulerScene(); $("bBg").innerHTML = barBg(); $("eBg").innerHTML = examHTML(); $("planBox").innerHTML = planHTML(); $("convRow").innerHTML = CONV_HTML; }
+const resOpen = () => mode !== "demo" && task && task.hideRes && !(DONE[qkey(level, task)]);   // Easy "res" is open: hide the ruler's resolution
 const planLocked = () => mode !== "demo" && task && task.id && !(DONE[qkey(level, task)]);
 function renderCtl() {
+  { const z = $("zsvg"), al = resOpen() ? "Zoom: the ruler at the top of the thumb." : "Zoom: the ruler at the top of the thumb, with 1 mm marks."; if (z.getAttribute("aria-label") !== al) z.setAttribute("aria-label", al); }
   { const pb = document.querySelector('#tabs button[data-tab="plan"]'), lk = planLocked(); pb.disabled = lk; pb.setAttribute("aria-label", lk ? "Plan (opens once this question is answered)" : "Plan"); pb.title = lk ? "The Plan tab opens once this question is answered or shown." : "";
     if (lk && M.tab === "plan") M.tab = "drop"; }
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === M.tab)));
@@ -1242,9 +1260,14 @@ function showEl(el) {   // scroll just enough to bring el fully into view (below
   if (d) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" }); }
 function showScene() { if (innerWidth <= 900) { const sc = $("rscene"), b = $("actRow"); const r = sc.getBoundingClientRect(), rb = b.getBoundingClientRect(), top = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 6;
   const d = r.top < top ? r.top - top : rb.bottom > innerHeight - 6 ? Math.min(rb.bottom - innerHeight + 10, r.top - top) : 0; if (d && tourI < 0) window.scrollBy({ top: d, behavior: "auto" }); } }
-function recordReading(auto) {
+function whereLook() {   // a scaffold after two wrong readings: it points at the scale, but the pupil still reads and types the value
   if (M.ph !== "caught") return;
-  const e = M.pend, v = auto ? e.d : parseNum(M.readIn);
+  M.rmsg = ["tip", `In the zoom, find the last number below the dashed line. That is the whole centimetres. Then count the small marks from that number up to the line${resOpen() ? "" : " (each one is 1 mm = 0.1 cm)"}, and type your reading.`];
+  morphHTML($("read"), readout());
+}
+function recordReading() {
+  if (M.ph !== "caught") return;
+  const e = M.pend, v = parseNum(M.readIn);
   if (isNaN(v)) { M.rmsg = ["tip", "Type the reading in cm first, for example 14.3."]; morphHTML($("read"), readout()); return; }
   const w = readSlip(v, e.d);
   if (w) { M.tries++; M.rmsg = ["bad", w]; renderCtl(); morphHTML($("read"), readout()); return; }
@@ -1384,7 +1407,7 @@ function setAnswerState() {
   else if (t.kind === "multi") { S.multi = new Set(rightOpts(t)); document.querySelectorAll("#answer .opt").forEach(b => { const on = S.multi.has(+b.dataset.i); b.setAttribute("aria-pressed", String(on)); b.querySelector(".k").textContent = on ? "☑" : "☐"; }); }
   else if (t.kind === "gaps") { t.rows.forEach(([k, , ans]) => { S.gap[k] = ans; }); document.querySelectorAll("#answer select").forEach(s => { s.value = t.rows.find(r => r[0] === s.dataset.r)[2]; }); }
   else if (t.kind === "num") { t.fields.forEach(f => { const v = numStr(f.ans); S.typed[f.k] = v; const inp = $("qf_" + f.k); if (inp) inp.value = v; const s = $("qk_" + f.k); if (s) { s.className = "mk ok"; s.textContent = "✓"; } }); }
-  else if (t.kind === "build") { S.step = {}; buildRight(t).forEach((i, j) => { S.step[i] = j + 1; }); document.querySelectorAll("#answer select[data-b]").forEach(x => { x.value = S.step[x.dataset.b] ? String(S.step[x.dataset.b]) : ""; }); }
+  else if (t.kind === "build") { S.step = {}; buildRight(t).forEach((i, j) => { S.step[i] = j + 1; }); document.querySelectorAll("#answer select[data-b]").forEach(x => { if (!t.items[+x.dataset.b].rank) x.closest("label").hidden = true; }); document.querySelectorAll("#answer select[data-b]").forEach(x => { x.value = S.step[x.dataset.b] ? String(S.step[x.dataset.b]) : ""; }); }
   else if (t.kind === "goal" && !t.test(M)) { stopAll(); t.reveal(M); drawAll(); }
 }
 function renderDots() {
@@ -1416,7 +1439,9 @@ function orderBreak(t, its) { const pos = {}; its.forEach((x, j) => { pos[x.id] 
   return null; }
 function buildLevel(t, its) { const req = its.filter(x => x.rank), n = req.length, all = t.items.filter(x => x.rank).length, ordered = !orderBreak(t, req), wrong = its.some(x => !x.rank);
   const essOK = t.items.every(x => !x.ess || req.includes(x));   // Level 3 needs every essential step (0 cm start, no warning, the DV recorded, the IV changed)
-  if (!n) return 0; if (n >= all - 1 && ordered && !wrong && essOK) return 3; if (n >= 4 && (ordered || n >= all - 1)) return 2; return 1; }
+  const nw = its.filter(x => !x.rank).length; void wrong;
+  const base = !n ? 0 : n >= all - 1 && ordered && essOK ? 3 : n >= 4 && (ordered || n >= all - 1) ? 2 : 1;
+  return Math.max(0, base - nw); }   // each wrong statement costs a level
 function evaluate() {
   const t = task;
   if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
@@ -1440,10 +1465,10 @@ function evaluate() {
     const used = Object.keys(S.step).filter(k => S.step[k]).map(Number);
     if (!used.length) return { skip: "Give a step number to each statement you want to use." };
     if (new Set(used.map(k => S.step[k])).size !== used.length) return { skip: "Give each statement a different step number." };
-    const its = used.sort((x, y) => S.step[x] - S.step[y]).map(i => t.items[i]), lv = buildLevel(t, its), so = `(So far: Level ${lv}${lv ? ` (${["", "1–2", "3–4", "5–6"][lv]} marks)` : ", 0 marks"}.)`;
-    const w = its.find(x => !x.rank); if (w) return { ok: false, html: esc(`“${w.t}” – ${w.why} ${so}`) };
+    const its = used.sort((x, y) => S.step[x] - S.step[y]).map(i => t.items[i]), lv = buildLevel(t, its), so = `(So far: Level ${lv}.)`;
+    const w = its.find(x => !x.rank); if (w) return { ok: false, html: esc(`“${w.t}” – ${w.why} Each wrong step costs a level. ${so}`) };
     const miss = t.items.filter(x => x.rank && !its.includes(x)).sort((a, b) => (b.ess ? 1 : 0) - (a.ess ? 1 : 0) || a.rank - b.rank);   // an essential step first
-    if (miss.length && miss[0].ess) return { ok: false, html: esc(`${miss[0].miss} This step is essential: without it the method can't answer the question. ${so}`) };
+    if (miss.length && miss[0].ess) return { ok: false, html: esc(`${miss[0].miss} It is essential for Level 3. ${so}`) };
     if (miss.length) return { ok: false, html: esc(`${miss[0].miss} ${so}`) };
     const br = orderBreak(t, its);
     if (br) return { ok: false, html: esc(`Check the order: “${br[0].t}” should come after “${br[1].t}” ${so}`) };
@@ -1476,14 +1501,14 @@ function answerText(t) {
   if (t.kind === "multi") return "Answer (now ticked)." + (t.explain ? " " + t.explain : "");
   if (t.kind === "goal") return "Answer: the model has done it for you. " + t.done(M);
   if (t.kind === "num") return "Answer: " + t.lines.join(" ");
-  if (t.kind === "build") return "Answer: one valid order is numbered; other logical orders also count.";
+  if (t.kind === "build") return "Answer numbered above (other logical orders count).";
   return "Answer: " + t.explain;
 }
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
   setAnswerState(false); renderCtl();
-  msg("tip", esc(answerText(task)) + (task.ms ? `<span class="ms${task.kind === "build" ? " inl" : ""}"><b>Mark scheme:</b> ${esc(task.ms)}</span>` : "") + (p.solved ? "" : " (No score for this one.)"));
+  msg("tip", esc(answerText(task)) + (task.msH ? `<span class="ms inl">${task.msH}</span>` : task.ms ? `<span class="ms${task.kind === "build" ? " inl" : ""}"><b>Mark scheme:</b> ${esc(task.ms)}</span>` : "") + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
   if (mode === "demo") return loadDemo();
@@ -1621,7 +1646,7 @@ document.addEventListener("keydown", e => {
 $("readIn").addEventListener("input", e => { M.readIn = e.target.value; });
 $("readIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); recordReading(); } });
 $("recBtn").addEventListener("click", () => recordReading());
-$("readForMe").addEventListener("click", () => recordReading(true));
+$("readForMe").addEventListener("click", whereLook);
 $("resTable").addEventListener("click", e => { const b = e.target.closest(".cellb"); if (!b) return; const en = M.data[b.dataset.h][+b.dataset.i]; en.flag = !en.flag; M.resMsgs = []; drawRes(); tourSignal("flag"); });
 $("ownTable").addEventListener("click", e => { const b = e.target.closest(".cellb[data-own]"); if (!b) return; const en = M.own[b.dataset.own][+b.dataset.i]; en.flag = !en.flag; drawRes(); const nb = $("ownTable").querySelector(`.cellb[data-own="${b.dataset.own}"][data-i="${b.dataset.i}"]`); if (nb) nb.focus({ preventScroll: true }); });
 $("resTable").addEventListener("input", e => { const i = e.target.closest("input[data-f]"); if (i) M[i.dataset.f][i.dataset.h] = i.value; });
