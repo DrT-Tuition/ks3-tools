@@ -412,6 +412,12 @@ h1 small.rpnote{margin-top:2px;font-size:15px}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build.many .opt{border-width:2px;padding:1px 9px;min-height:30px}.qpanel .opts.build.many .opt:not([aria-pressed="true"]){border-color:var(--line)}.qpanel .frame{padding:3px 8px;font-size:15px}}
 @media (min-width:901px){.qpanel .opts.build.many{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.qpanel .opts.build.many .opt{align-items:center;border-width:2px;padding:3px 9px;min-height:34px;font-size:16px;line-height:1.25}.qpanel .opts.build.many .opt:not([aria-pressed="true"]){border-color:var(--line)}.qpanel .opts.build.many .opt[aria-pressed="true"]{font-weight:400}.qpanel .opts.build.many .opt[aria-pressed="true"]::after{content:none}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build.many{gap:3px}.qpanel .opts.build.many .opt{padding:1px 9px;min-height:30px;font-size:15.5px;line-height:1.22}}
+/* dropdown answers never wider than the panel (long options: the select shrinks and stays on the card) */
+#answer .opts,#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{flex:1 1 100%;width:auto;min-width:0;max-width:100%;text-overflow:ellipsis;font-size:15px;font-weight:600}
+#answer .selfull{display:none}
+@media (max-width:560px){#answer .selfull:not([hidden]){display:block;flex:1 1 100%;font-size:14px;line-height:1.3;color:var(--muted);margin-top:-2px}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -758,7 +764,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const finished = () => { if (mode === "demo" || !task.id) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; };
 const locked = () => mode !== "demo" && !!lock && !finished();
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is locked for this question. Answer in the panel, or press Show answer."; }
@@ -1064,14 +1070,38 @@ function drawFr() {
 }
 
 /* --- the equipment, shown while a question that doesn't use the model is open (no method, no answers) --- */
+function drawWavefronts() {   // HT question figure: plane wavefronts of light going from air into glass at 40° (n from the glass model); no answer text on it
+  const tall = LK() === "tall", W = tall ? 620 : 960, H = tall ? 640 : 440, fs = tall ? 20 : 18, sv = $("qsvg"); setVB(sv, W, H);
+  sv.setAttribute("aria-label", "Wavefront diagram: straight, evenly spaced wavefronts of light in air meet the flat top of a glass block at an angle. Below the boundary the wavefronts are closer together and point in a different direction. A dashed normal is drawn where the central ray meets the boundary.");
+  const i = 40, n = MAT.glass.n, r = refrAng(i, n), yb = H * .5, cx = W / 2, l1 = tall ? 44 : 46, w = tall ? 150 : 175;
+  const u1 = [sind(i), cosd(i)], p1 = [cosd(i), -sind(i)], u2 = [sind(r), cosd(r)], L = yb / cosd(i) + 40;
+  const B = sv_ => [cx + sv_ / cosd(i), yb], d1 = sv_ => L + sv_ * Math.tan(i * Math.PI / 180);
+  const pt = (sv_, ph) => { const b = B(sv_), d = d1(sv_); return ph <= d ? [b[0] - (d - ph) * u1[0], b[1] - (d - ph) * u1[1]] : [b[0] + (ph - d) / n * u2[0], b[1] + (ph - d) / n * u2[1]]; };
+  let h = `<defs><clipPath id="wfClip"><rect x="8" y="48" width="${W - 16}" height="${H - 56}" rx="6"/></clipPath><marker id="wfArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--beam-c)"/></marker></defs>`;
+  h += `<rect x="0" y="0" width="${W}" height="${H}" rx="8" style="fill:var(--sunk)"/>` + T_(W / 2, 34, "Wavefronts of light meeting a glass block", fs + 2, 'text-anchor="middle" class="bold"');
+  h += `<rect class="blk glass" x="8" y="${f1(yb)}" width="${W - 16}" height="${f1(H - yb - 8)}" style="stroke:none"/><path d="M8 ${f1(yb)}H${W - 8}" style="stroke:var(--ink);stroke-width:2"/>`;
+  let g = "";
+  for (let k = 1; k < 40; k++) { const ph = k * l1; let d = ""; const N = 24;
+    for (let j = 0; j <= N; j++) { const q = pt(-w + 2 * w * j / N, ph); d += (j ? "L" : "M") + f1(q[0]) + " " + f1(q[1]); }
+    g += `<path d="${d}" style="fill:none;stroke:var(--beam-c);stroke-width:2.4;stroke-linejoin:round"/>`; }
+  [-w, w].forEach(sv_ => { const a = pt(sv_, 0), b = B(sv_), c = [b[0] + 400 * u2[0], b[1] + 400 * u2[1]]; g += `<path d="M${f1(a[0])} ${f1(a[1])}L${f1(b[0])} ${f1(b[1])}L${f1(c[0])} ${f1(c[1])}" style="fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 4"/>`; });
+  { const a = pt(0, L - (tall ? 150 : 140)), b = B(0), c = [b[0] + (tall ? 170 : 150) * u2[0], b[1] + (tall ? 170 : 150) * u2[1]];
+    g += `<path d="M${f1(a[0])} ${f1(a[1])}L${f1(b[0])} ${f1(b[1])}L${f1(c[0])} ${f1(c[1])}" style="fill:none;stroke:var(--ink);stroke-width:2.2" marker-end="url(#wfArr)"/>`; }
+  h += `<g clip-path="url(#wfClip)">${g}</g>`;
+  h += `<path d="M${f1(cx)} ${f1(yb - (tall ? 150 : 130))}V${f1(yb + (tall ? 150 : 130))}" style="stroke:var(--ink);stroke-width:1.6;stroke-dasharray:7 6"/>` + `<rect x="${f1(cx + 4)}" y="${f1(yb - (tall ? 156 : 136) - fs + 2)}" width="${fs * 3.6}" height="${fs + 2}" rx="3" style="fill:var(--sunk)"/>` + T_(cx + 8, yb - (tall ? 156 : 136), "normal", fs - 2, 'class="mlbl"');
+  h += T_(24, yb - 14, "air", fs, 'class="bold"') + T_(24, yb + 30, "glass", fs, 'class="bold"') + T_(W - 24, 70, "wavefronts", fs - 2, 'text-anchor="end" class="mlbl"') + (() => { const sq = w * .55, q = pt(sq, Math.round((d1(sq) - 70) / l1) * l1), x0 = W - 24 - (fs - 2) * 5.6, y0 = 66; return `<path d="M${f1(x0)} ${y0}L${f1(q[0])} ${f1(q[1])}" style="fill:none;stroke:var(--muted);stroke-width:1.4"/><circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="3" style="fill:var(--muted)"/>`; })();
+  setLayer($("qG"), h);
+}
 function drawEquip() {
+  if (task && task.fig === "wavefront") return drawWavefronts();
+  $("qsvg").setAttribute("aria-label", "The equipment for this practical: a ray box, a plane mirror, a glass or Perspex block, a protractor, a ruler, a pencil and paper.");
   const tall = LK() === "tall", W = tall ? 620 : 960, H = tall ? 640 : 440, fs = tall ? 20 : 18; setVB($("qsvg"), W, H);
   const lab = (x, y, s) => T_(x, y, s, fs, 'text-anchor="middle" class="bold"');
   /* each item is drawn around its centre (x, y); the label goes 70 px below */
   const items = [
     ["Ray box", (x, y) => `<g transform="translate(${x - 80} ${y - 40})"><rect class="rbx" x="0" y="0" width="140" height="80" rx="10"/><rect class="rbs" x="-6" y="28" width="12" height="24" rx="3"/><circle class="rbl" cx="96" cy="40" r="18"/><path class="lead" d="M140 40h24"/></g>`],
     ["Plane mirror", (x, y) => `<g transform="translate(${x - 90} ${y - 12})"><rect class="mirb" x="0" y="0" width="180" height="16"/><path class="mirf" d="M0 0h180"/></g>`],
-    ["Clear block (glass, Perspex or plastic)", (x, y) => `<rect class="blk glass" x="${x - 80}" y="${y - 45}" width="160" height="90" rx="3"/>`],
+    ["Clear block", (x, y) => `<rect class="blk glass" x="${x - 80}" y="${y - 45}" width="160" height="90" rx="3"/>`],
     ["Protractor", (x, y) => { const F = { C: [0, 0], b: [1, 0], s: [0, -1] }, Gp = { ox: x, oy: y + 45 }; let s = `<path class="prot" d="${protShape(Gp, F)}"/>`;
       for (let a = 0; a <= 180; a += 10) { const p = P_(Gp, protPt(F, a, RP)), q = P_(Gp, protPt(F, a, RP - .45)); s += `<path class="pt1" d="M${f1(p[0])} ${f1(p[1])}L${f1(q[0])} ${f1(q[1])}"/>`; } return s; }],
     ["Ruler", (x, y) => { let s = `<rect class="rule" x="${x - 110}" y="${y - 15}" width="220" height="30" rx="2"/>`; for (let i = 0; i <= 20; i++) s += `<path class="tick" d="M${x - 100 + i * 10} ${y - 15}v${i % 5 ? 7 : 12}"/>`; return s; }],
@@ -1302,13 +1332,16 @@ TASKS.easy = [
       [17.5, "The angle isn’t halved. The law of reflection: angle of reflection = angle of incidence."], [145, "That is 180° − 35°. The law of reflection says the angle of reflection equals the angle of incidence."]],
     generic: "The law of reflection links the two angles: they are equal.", working: () => ["Law of reflection: angle of incidence = angle of reflection", "i = 35°", "So r = 35°"],
     hints: ["There is a law linking the two angles.", "Use the law of reflection. How are the two angles related?", "r = 35°."] },
-  { id: "smooth", kind: "choice", src: SRC.srf + "; " + SRC.e1 + ": aim", text: "The practical uses a smooth plane mirror. Why does it need a smooth surface?", setup: SU.eq(), lock: "all", kw: ["Specular reflection", "Diffuse reflection"],
-    options: [{ t: "A smooth surface reflects the light in a single direction, so there is one clear reflected ray to mark.", ok: () => true },
-      { t: "A rough surface absorbs all of the light.", why: "A rough surface still reflects light, but it scatters it in all directions (diffuse reflection). Then there is no single ray to mark." },
-      { t: "A smooth surface makes the angle of reflection bigger.", why: "The angles are equal on any mirror. A smooth surface matters because it reflects in one direction, giving one clear ray." },
-      { t: "A rough surface reflects light only straight back at 90°.", why: "A rough surface scatters light in all directions (diffuse reflection), not just one. A smooth surface gives one clear reflected ray." }],
-    explain: "A smooth surface gives specular reflection: the light is reflected in one direction, so there is a single reflected ray to mark. A rough surface scatters it (diffuse reflection).",
-    hints: ["Think about what happens to light at a rough surface.", "Rough surfaces scatter light in all directions. What do smooth surfaces do?", "Smooth: reflected in one direction, so one clear ray to mark."] },
+  { id: "surfaces", kind: "gaps", src: SRC.srf + "; Specular & Diffuse Reflection; " + SRC.e1 + ": aim", text: "The ray box beam is aimed at three different surfaces in turn. What happens to the light at each one?", setup: SU.eq(), lock: "all", kw: ["Specular reflection", "Diffuse reflection"],
+    rows: [["mir", "A smooth plane mirror:", "one clear reflected ray (specular reflection)"], ["pap", "Rough white paper:", "scattered in all directions (diffuse reflection)"], ["blk", "Matt black card:", "most light absorbed, so very little reflected"]],
+    bank: ["one clear reflected ray (specular reflection)", "scattered in all directions (diffuse reflection)", "most light absorbed, so very little reflected", "all the light goes straight through", "reflected back at double the angle"],
+    why: (k, w) => ({ "one clear reflected ray (specular reflection)": "Only a smooth surface reflects light in a single direction (specular reflection). Is this surface smooth and shiny?",
+      "scattered in all directions (diffuse reflection)": k === "mir" ? "A mirror is smooth, so it doesn’t scatter the light: it reflects it in one direction." : "Scattering needs a surface that reflects light. Black surfaces absorb most of the light that hits them.",
+      "most light absorbed, so very little reflected": "This surface reflects most of the light. Black surfaces are the ones that absorb most light.",
+      "all the light goes straight through": "These surfaces are not transparent, so the light doesn’t pass through them.",
+      "reflected back at double the angle": "Reflected light never doubles its angle: from a mirror, the angle of reflection equals the angle of incidence." })[w],
+    explain: "Mirror: smooth, so one clear reflected ray (specular reflection): that is why the practical uses a mirror. White paper: rough, so the light is scattered in all directions (diffuse reflection). Matt black card: most light is absorbed.",
+    hints: ["Think about how smooth each surface is, and its colour.", "Smooth and shiny gives one reflected ray; rough scatters light; black absorbs light.", "Mirror → one ray · paper → scattered · black card → absorbed."] },
   { id: "varsF", kind: "gaps", src: SRC.e1 + ": variables", text: "Choose the variables for the reflection experiment.", setup: SU.eq(), lock: "all",
     rows: [["iv", "Independent variable (you change it):", "the angle of incidence"], ["dv", "Dependent variable (you measure it):", "the angle of reflection"], ["cv", "Control variable (keep it the same):", "the width of the light beam"]],
     bank: ["the angle of incidence", "the angle of reflection", "the width of the light beam", "the angle between the ray and the mirror’s surface"],
@@ -1354,13 +1387,13 @@ TASKS.easy = [
       { t: "It reflects straight back and none goes in.", why: "Most of the light goes into the block. Along the normal, it carries straight on without bending." }],
     explain: "Along the normal (i = 0°), the light doesn’t bend: it passes straight through. The model now shows this.",
     hints: ["Refraction is a change of direction at an angle to the boundary.", "Can a ray along the normal bend any closer to the normal?", "It goes straight through without bending."] },
-  { id: "safety", kind: "gaps", src: SRC.sa, text: "Match each hazard to its precaution.", setup: SU.eq(), lock: "all",
-    rows: [["hot", "The ray box lamp gets hot:", "don’t touch it; cool any burn under cold running water"], ["eyes", "The beam is very bright:", "don’t look into it; stand behind the ray box"],
-      ["wet", "Liquids near the electrics:", "keep liquids away from the ray box and its lead"], ["mir", "The mirror can be damaged:", "handle the mirror with care"]],
-    bank: ["don’t touch it; cool any burn under cold running water", "don’t look into it; stand behind the ray box", "keep liquids away from the ray box and its lead", "handle the mirror with care", "look straight into the beam to check it is on"],
-    why: (k, w) => w === "look straight into the beam to check it is on" ? "Never look directly into the light: it may damage your eyes. Stand behind the ray box." : "That precaution is for a different hazard. Which one matches this hazard?",
-    explain: "Hot lamp: don’t touch it. Bright beam: don’t look into it. Liquids: keep them away from the ray box. Mirror: handle with care.",
-    hints: ["Think what each precaution protects.", "Burns, eyes, electrics, and the mirror itself.", "Hot → don’t touch · bright → don’t look in · liquids → keep away · mirror → handle with care."] }
+  { id: "safetyHRC2", kind: "gaps", src: SRC.sa, text: "For each hazard and its risk, choose the control that reduces the risk.", setup: SU.eq(), lock: "all",
+    rows: [["hot", "Hazard: hot ray box lamp. Risk: a burn. Control:", "let the ray box cool before touching it"], ["eyes", "Hazard: very bright beam. Risk: eye damage. Control:", "don’t look into it; stand behind the ray box"],
+      ["wet", "Hazard: liquids near electrics. Risk: a shock. Control:", "keep liquids away from the ray box and its lead"]],
+    bank: ["let the ray box cool before touching it", "don’t look into it; stand behind the ray box", "keep liquids away from the ray box and its lead", "look straight into the beam to check it is on"],
+    why: (k, w) => w === "look straight into the beam to check it is on" ? "Never look directly into the light: it may damage your eyes. Stand behind the ray box." : "That control is for a different hazard. Which one reduces this risk?",
+    explain: "Hazard → risk → control. Hot lamp → burn → let it cool before touching. Bright beam → eye damage → don’t look into it. Liquids near electrics → shock → keep them away. (First aid, not a control: cool a burn under cold water.)",
+    hints: ["For each risk, think what would stop that harm.", "Burns, eyes and electrics.", "Hot → let it cool · bright → don’t look in · liquids → keep away."] }
 ];
 const MS6 = ["Level 3 (5–6): every essential step, in a logical order, giving valid results. 6 marks: a fair test too.",
   "Level 2 (3–4): most of a method; an essential step is missing or out of order.", "Level 1 (1–2): simple relevant statements; the method wouldn’t work.", "Level 0: nothing worthy of credit."];
@@ -1413,13 +1446,13 @@ TASKS.hard = [
       { t: "The water bent the light more, because light speeds up more in water.", why: "Light slows down in water and glass; it doesn’t speed up. The glass gave the smaller angle of refraction, so it bent the light more." }],
     explain: `Same i, smaller r means more bending: glass (${H5.g}°) bent the ray closer to the normal than water (${H5.w}°). How much light slows, and bends, depends on the material.`,
     hints: ["More bending means the ray ends up closer to the normal.", "Closer to the normal means a smaller angle of refraction.", `Glass: ${H5.g}° is smaller than ${H5.w}°, so glass bent it more.`] },
-  { id: "wave", kind: "choice", src: SRC.em, text: "Light passes from air into glass. What happens to its speed, its wavelength and its frequency?", setup: SU.eq(), lock: "all", kw: ["Refraction"],
-    options: [{ t: "Speed decreases, wavelength decreases, frequency stays the same.", ok: () => true },
-      { t: "Speed increases, wavelength increases, frequency stays the same.", why: "Light doesn’t speed up in glass: it slows down. With the same frequency, v = f × λ means the wavelength gets shorter too." },
-      { t: "Speed decreases, wavelength stays the same, frequency decreases.", why: "The frequency doesn’t change when light refracts (its colour stays the same). The speed and the wavelength change." },
-      { t: "All three stay the same: only the direction changes.", why: "The direction changes because the speed changes. Only the frequency stays the same; the wavelength gets shorter." }],
-    explain: "In glass, light slows down. The frequency stays the same (the colour doesn’t change), so by v = f × λ the wavelength gets shorter.",
-    hints: ["Only two of the three change during refraction.", "The colour (frequency) doesn’t change. Does light speed up or slow down in glass?", "Speed down, wavelength down, frequency the same."] },
+  { id: "wavefront", kind: "choice", ht: true, fig: "wavefront", src: SRC.em + "; Wavefront Diagrams (HT)", text: "The diagram shows wavefronts of light going from air into glass. Explain why the light changes direction.", frame: "Explain: When a wavefront meets the glass, …", setup: SU.eq(), lock: "all", kw: ["Refraction"],
+    options: [{ t: "One side of each wavefront reaches the glass first and slows down, so the wave bends towards the normal.", ok: () => refrAng(40, MAT.glass.n) < 40 && MAT.glass.n > 1 },
+      { t: "Each wavefront speeds up in the glass.", why: "Light slows down in glass; it doesn’t speed up. The part of the wavefront that enters first slows first, and that turns the wave." },
+      { t: "The whole wavefront enters at the same moment.", why: "At an angle, the parts of a wavefront reach the boundary at different times. One side slows before the other, and that turns the wave." },
+      { t: "The frequency of the light drops in the glass.", why: "The frequency stays the same. The speed drops, so the wavefronts get closer together; the side that slows first turns the wave." }],
+    explain: "Wavefronts are closer in glass (shorter wavelength); frequency unchanged.",
+    hints: ["Look at where each wavefront meets the boundary. Does all of it get there at the same time?", "Light slows down in glass. What happens to a wavefront if one side slows before the other?", "One side slows first, so the wave changes direction and bends towards the normal."] },
   { id: "sys", kind: "choice", src: SRC.ev, text: "A student’s angle of reflection is always 4–5° smaller than their angle of incidence, at every angle they try. What is the most likely cause?", setup: SU.eq(), lock: "all",
     options: [{ t: "A systematic error: the normal wasn’t drawn at 90° to the mirror line. Use a set square.", ok: () => true },
       { t: "A random error: the crosses were marked in slightly the wrong places.", why: "Random errors make some results too big and some too small. A difference that is always the same way points to a systematic error, such as a normal not at 90°." },
@@ -1427,13 +1460,13 @@ TASKS.hard = [
       { t: "The angle of reflection really is smaller than the angle of incidence.", why: "For a smooth plane mirror, the angle of reflection equals the angle of incidence. A difference that is always the same way is a systematic error." }],
     explain: "An error that is the same way every time is systematic. A tilted normal adds to one angle and takes the same from the other.",
     hints: ["Is the error random (sometimes up, sometimes down) or always the same way?", "Always the same way means systematic. Which line do both angles depend on?", "The normal wasn’t at 90°: use a set square."] },
-  { id: "improve", kind: "gaps", src: SRC.ev, text: "Suggest an improvement for each problem.", frame: "Suggest: To fix this problem, I would …", setup: SU.eq(), lock: "all", kw: ["Resolution"],
+  { id: "improveDim", kind: "gaps", src: SRC.ev, text: "Suggest an improvement for each problem.", frame: "Suggest: To fix this problem, I would …", setup: SU.eq(), lock: "all", kw: ["Resolution"],
     rows: [["mark", "“My crosses weren’t in the middle of the beam.”", "use a sharp pencil and mark the middle of the beam"], ["prot", "“The protractor was hard to read precisely.”", "use a protractor with a higher resolution"],
-      ["ninety", "“My 90° line may not be at right angles.”", "draw the normal with a set square"], ["blem", "“The mirror has marks on it.”", "use a mirror with no blemishes"]],
-    bank: ["use a sharp pencil and mark the middle of the beam", "use a protractor with a higher resolution", "draw the normal with a set square", "use a mirror with no blemishes", "measure the angles from the mirror’s surface instead"],
-    why: (k, w) => w === "measure the angles from the mirror’s surface instead" ? "Angles are always measured from the normal. Measuring from the surface gives the wrong angles." : "That fixes a different problem. Which fix matches this one?",
-    explain: "Crosses: a sharp pencil, in the middle of the beam. Hard to read: a higher-resolution protractor. 90° line: a set square. Marked mirror: one with no blemishes.",
-    hints: ["Match each fix to the problem it solves.", "A set square makes right angles; resolution is about the smallest step an instrument shows.", "Sharp pencil · higher resolution · set square · mirror with no blemishes."] },
+      ["ninety", "“My 90° line may not be at right angles.”", "draw the normal with a set square"], ["blem", "“The mirror has marks on it.”", "use a mirror with no blemishes"], ["faint", "“The rays were too faint to see clearly.”", "dim the room lights"]],
+    bank: ["use a sharp pencil and mark the middle of the beam", "use a protractor with a higher resolution", "draw the normal with a set square", "use a mirror with no blemishes", "dim the room lights", "measure the angles from the mirror’s surface"],
+    why: (k, w) => w === "measure the angles from the mirror’s surface" ? "Angles are always measured from the normal. Measuring from the surface gives the wrong angles." : "That fixes a different problem. Which fix matches this one?",
+    explain: "Crosses: a sharp pencil, in the middle of the beam. Hard to read: a higher-resolution protractor. 90° line: a set square. Marked mirror: one with no blemishes. Faint rays: dim the room.",
+    hints: ["Match each fix to the problem it solves.", "A set square makes right angles; resolution is about the smallest step an instrument shows.", "Sharp pencil · higher resolution · set square · no blemishes · dim the room."] },
   { id: "plan", kind: "build", ms6: true, keySteps: [1, 2, 3, 4, 5, 6, 7], measSteps: [2, 3, 6, 7], orders: [[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 5, 4, 6, 7], [1, 4, 2, 3, 5, 6, 7], [1, 2, 4, 3, 5, 6, 7]], aqaOrder: [1, 4, 2, 3, 5, 6, 7], src: SRC.e2 + ": method; " + SRC.ev,
     text: "Describe a method to find how r depends on i for a glass block. [6 marks]", frame: "Describe it in order, starting with the block.", setup: SU.eq(), lock: "all", mhide: ["p2", "p3"], kw: ["Angle of incidence", "Angle of reflection", "Angle of refraction", "Normal"],
     stm: [{ t: "Draw round the block on paper.", c: 1 }, { t: "Shine a ray at one side, at an angle.", c: 2 },
@@ -1567,7 +1600,7 @@ const SLIPTOL = .5;   // a typed number within 0.5° of a slip's value gets that
 /* ===== Draw everything that is showing ===== */
 const LIMITS_FULL = "<b>Model limits:</b> The method follows the notes: a plane mirror for reflection, and a block for refraction. The AQA required practical differs a little: it measures the reflected ray at the block’s own surface, draws the normal first (you can do either here), and repeats with blocks of different materials. How much each material bends light uses typical values for glass, Perspex, plastic and water; the notes don’t give them. Glass and Perspex bend light by almost the same amount. The beam is 2 mm wide, so where you put each cross inside it, and how you read the protractor, give your own small random errors. The model adds no other errors and no invented anomalies: an odd result comes from your own marking, reading or normal. A normal drawn “by eye” is 3–5° away from 90° (an invented size). The ray box angle has a small hidden offset, so the control can’t tell you the angle. A real beam spreads a little and has fuzzy edges. Real blocks also reflect a little light at each edge; only the reflection at the top edge is shown, faintly. The water is in a sealed box, kept away from the ray box and its lead; its thin walls are treated as having no effect on the ray.";
 const LIMITS_Q = "<b>Model limits:</b> the materials use typical values, and your own marks and readings give small errors. The full note shows in Demo, or when you finish this question.";
-const qView = () => locked() && lock === "all";
+const qView = () => (locked() && lock === "all") || (mode !== "demo" && !!task && !!task.fig && !!S && !S.figOff);   // a question figure stays up after the answer until the pupil picks a tab
 function drawPane() {
   const qv = qView();
   ["fl", "fr", "res"].forEach(t => { $("pane-" + t).hidden = qv || M.tab !== t; }); $("pane-q").hidden = !qv;
@@ -1591,7 +1624,7 @@ function renderCtl() {
   if (!locked()) $("lockNote").hidden = true;
 }
 function drawAll() { drawPane(); renderCtl(); }
-function setTab(t) { if (guard()) return; M.tab = t; drawAll(); tourSignal("tab-" + t); }
+function setTab(t) { if (guard()) return; if (S) S.figOff = true; M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
 /* ===== Task loading ===== */
 function loadDemo() { task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
@@ -1603,7 +1636,7 @@ function loadTask() {
   const lst = LEVELS[level]; task = lst[idx]; S = newS();
   applyTaskModel();
   $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
-  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("qno").innerHTML = `Question ${idx + 1} of ${lst.length}` + (task.ht ? ' <span class="badge" title="Higher tier only">HT</span>' : "");
   $("taskText").textContent = task.text;
   renderAnswer(); renderSupport(); hintLabel(); renderDots();
   $("fb").innerHTML = ""; $("stuckNote").textContent = "";
@@ -1940,6 +1973,25 @@ LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
 M = DEMO_M = freshM();
 bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
 try { if (localStorage.getItem("ks3tools-toured:gcse-reflection-refraction")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Long dropdown answers: the select stays on the card; if the chosen text doesn't fit, it is shown in full underneath ===== */
+const SELCV = document.createElement("canvas").getContext("2d");
+function selFull(s) {
+  if (!s || !s.isConnected) return;
+  let c = s.nextElementSibling; if (!c || !c.classList || !c.classList.contains("selfull")) { c = document.createElement("span"); c.className = "selfull"; c.setAttribute("aria-hidden", "true"); s.after(c); }
+  const cs = getComputedStyle(s), t = s.selectedIndex > 0 ? s.options[s.selectedIndex].text : "";
+  SELCV.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const cut = !!t && SELCV.measureText(t).width > s.clientWidth - 44;
+  c.textContent = cut ? t : ""; c.hidden = !cut;
+}
+document.addEventListener("change", e => { if (e.target.matches && e.target.matches("#answer select")) selFull(e.target); });
+window.addEventListener("resize", () => document.querySelectorAll("#answer select").forEach(selFull));
+
+/* after Show answer or a correct Check the selects are set in code: drop any caption left from an earlier choice */
+{ const sas0 = setAnswerState; setAnswerState = function () { const r = sas0.apply(this, arguments); document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); return r; }; }
+
+/* a correct Check also clears the phone caption (the feedback now says the answer is right) */
+{ const msg0 = msg; msg = function (cls, html) { msg0(cls, html); if (cls === "good") document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); }; }
 /* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
    paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
    (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,

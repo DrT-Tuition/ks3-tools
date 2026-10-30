@@ -395,6 +395,12 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 #csvgM{touch-action:none}
 .scene text.rtx{fill:#1E252E}
 .scene .lead{stroke:var(--muted);stroke-width:1.6;fill:none}
+/* dropdown answers never wider than the panel (long options: the select shrinks and stays on the card) */
+#answer .opts,#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{flex:1 1 100%;width:auto;min-width:0;max-width:100%;text-overflow:ellipsis;font-size:15px;font-weight:600}
+#answer .selfull{display:none}
+@media (max-width:560px){#answer .selfull:not([hidden]){display:block;flex:1 1 100%;font-size:14px;line-height:1.3;color:var(--muted);margin-top:-2px}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -756,7 +762,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const finished = () => { if (mode === "demo" || !task.id) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; };
 const open = () => !finished();
 const hides = k => open() && (task.hide || []).includes(k);   // content hidden while this question is open (answer-leak guard)
@@ -1326,13 +1332,13 @@ const SU = {
 };
 const ORDER = () => FACES.slice().sort((a, b) => rTrue(b, 80, 10) - rTrue(a, 80, 10));
 TASKS.easy = [
-  { id: "absorb", kind: "choice", src: "Transfer of Energy by EM Waves", text: "Infrared radiation from the Sun is absorbed by a patio stone. What happens to the stone?", setup: SU.cube(), lock: "all", kw: ["Absorb"],
-    options: [{ t: "Energy is transferred to the stone’s thermal store, so it warms up.", ok: () => fT(60) > fT(20) },
-      { t: "It gets colder: the infrared carries cold into it.", why: "Radiation doesn’t carry cold. Absorbed infrared transfers energy to the stone, so it warms up." },
-      { t: "Nothing: infrared only lets us see the stone.", why: "Seeing uses visible light. Infrared transfers energy: when it is absorbed, the object warms up." },
-      { t: "It attracts more heat from the air around it.", why: "Objects don’t attract heat. The absorbed infrared transfers energy to the stone’s thermal store." }],
-    explain: "The waves are absorbed, so energy is transferred by radiation to the stone’s thermal store and it warms up.",
-    hints: ["Absorbing infrared transfers energy to the object. What happens to its temperature?", "Infrared transfers energy. Which energy store of the stone does it go to?", "To the stone’s thermal store: it warms up."] },
+  { id: "absorbTiles", kind: "choice", src: "Transfer of Energy by EM Waves; Black Body Radiation (good absorbers are good emitters); Required Practical: aim (absorbed or radiated)", text: "Four identical tiles lie in strong sunshine: matt black, shiny black, matt white and shiny silver. Which tile warms up fastest?", setup: SU.cube(), lock: "all", kw: ["Absorb", "Perfect black body"],
+    options: [{ t: "Matt black: it absorbs infrared best, so energy goes to its thermal store fastest.", ok: () => ORDER()[0] === "mb" },
+      { t: "Shiny silver: shiny surfaces collect the most heat.", why: "Shiny silver surfaces reflect most of the infrared, so they absorb the least and warm up slowest." },
+      { t: "Matt white: white surfaces absorb the most radiation.", why: "White surfaces reflect a lot of the radiation. Dark, matt surfaces absorb infrared best." },
+      { t: "They all warm up at the same rate, because the sunshine is the same.", why: "The same radiation reaches each tile, but different surfaces absorb different amounts of it. Matt black absorbs most." }],
+    explain: "Matt black is the best absorber of infrared, so it gains energy fastest and warms up fastest. Good absorbers are also good emitters: matt black is the best emitter in the practical too.",
+    hints: ["Absorbed infrared transfers energy to the tile’s thermal store. Which surface absorbs most?", "Shiny surfaces reflect infrared; dark, matt surfaces absorb it.", "Matt black: the best absorber."] },
   { id: "vars", kind: "gaps", fixed: true, src: "Required Practical: variables (AQA Leslie cube method)", text: "In the Leslie cube practical, choose the variables.", setup: SU.cube(), lock: "all", hide: ["method", "steps", "hdr", "lim:dist"],
     rows: [["iv", "Independent variable (you change it):", "the type of surface"], ["dv", "Dependent variable (you measure it):", "the detector reading"], ["cv", "Control variable (keep it the same):", "the distance to the detector"]],
     bank: ["the type of surface", "the detector reading", "the distance to the detector", "the colour of the detector", "the heat attracted by the surface"],
@@ -1375,13 +1381,13 @@ TASKS.easy = [
       { t: "The shiny face was cooler, because the water inside it was colder.", why: "One cube of water keeps every face at the same temperature. The difference is the surface." }],
     explain: "Same colour, same temperature, different readings: the texture matters. A matt surface is a better emitter than a shiny one.",
     hints: ["What is the same about the two faces? What is different?", "The colour and the temperature are the same. Only the texture differs.", "Texture matters: matt emits more infrared than shiny."] },
-  { id: "safety", kind: "gaps", fixed: true, src: "Required Practical: safety considerations", text: "Match each hazard to the safety step.", setup: SU.cube(), lock: "all", hide: ["steps", "safety"],
-    rows: [["el", "Hot water near the detector:", "keep water away from electrical equipment"], ["edge", "A flask near the edge of the bench:", "keep everything in the middle of the bench"],
-      ["burn", "Hot water spilt on your hand:", "run the burn under cold water straight away"], ["ket", "Filling the kettle:", "don’t overfill the kettle"]],
-    bank: ["keep water away from electrical equipment", "keep everything in the middle of the bench", "run the burn under cold water straight away", "don’t overfill the kettle", "touch the water to check it is hot"],
-    why: (k, w) => w === "touch the water to check it is hot" ? "Never touch the hot water: it can scald. Use the thermometer." : "That is a safety step for a different hazard. Which one matches this one?",
-    explain: "Keep water away from the electrics; keep everything in the middle of the bench; run a burn under cold water straight away; don’t overfill the kettle.",
-    hints: ["Match each step to the hazard it prevents.", "Water and electricity don’t mix. Things near the edge get knocked over.", "Electrics · middle of the bench · cold water · don’t overfill."] },
+  { id: "safetyHRC", kind: "gaps", fixed: true, src: "Required Practical: safety considerations", text: "For each hazard and its risk, choose the control that reduces the risk.", setup: SU.cube(), lock: "all", hide: ["steps", "safety"],
+    rows: [["el", "Hazard → risk: water near electrics → a shock.", "keep water away from electrical equipment"], ["edge", "Hazard → risk: hot water at the edge → knocked over, scalds.", "keep everything in the middle of the bench"],
+      ["burn", "Hazard → risk: hot water → a scald.", "don’t touch the hot water; pour carefully"], ["ket", "Hazard → risk: full kettle → boiling spills.", "don’t overfill the kettle"]],
+    bank: ["keep water away from electrical equipment", "keep everything in the middle of the bench", "don’t touch the hot water; pour carefully", "don’t overfill the kettle", "touch the water to check it is hot"],
+    why: (k, w) => w === "touch the water to check it is hot" ? "Never touch the hot water: it can scald. Use the thermometer." : "That control is for a different hazard. Which one reduces this risk?",
+    explain: "Shock → keep water away from electrics. Knocked over → work mid-bench. Scald → don’t touch; pour carefully. Spills → don’t overfill. (First aid, not a control: cool a burn under cold water.)",
+    hints: ["For each risk, choose the control that would stop that harm.", "Water and electricity don’t mix. Things near the edge get knocked over.", "Keep water from electrics · middle of the bench · don’t touch the hot water · don’t overfill."] },
   { id: "mean3", kind: "num", src: "Required Practical: evaluating the experiment (repeats)", text: "Matt white face, three sets: 40, 43 and 44 units. Calculate the mean reading.", setup: SU.cube(), lock: "all",
     frame: "Mean = add the values ÷ how many values", lbl: "Mean =", unit: "units", ans: () => (40 + 43 + 44) / 3, minDp: 0,
     wrongs: [[127, "That is the total. Now divide by 3."], [63.5, "Divide by the number of values: 3, not 2."], [40, "That is one of the values. Add all three, then divide by 3."], [43, "That is one of the values. Add all three, then divide by 3."], [44, "That is one of the values. Add all three, then divide by 3."], [381, "You multiplied by 3. Divide the total by 3."]],
@@ -1446,11 +1452,11 @@ TASKS.hard = [
     explain: "The infrared emitted depends on the temperature, the surface area and the colour. Identical flasks have the same surface area, so only the colour changes.",
     hints: ["Three things affect how much infrared an object emits. Colour is one.", "The other two are temperature and the size of the surface.", "A larger surface area emits more infrared."] },
   { id: "improve", kind: "gaps", fixed: true, src: "Evaluating the Experiment", text: "Suggest an improvement for each problem with a student’s flask experiment.", setup: SU.cube(), lock: "all", hide: ["method", "lim:scat"], kw: ["Parallax error"],
-    rows: [["late", "“I started the stopwatch late, after the thermometer went in.”", "work in pairs: one starts the stopwatch as the other puts in the thermometer"],
-      ["hole", "“The hole for the thermometer was too big.”", "make the hole a tight fit, so energy can’t escape through it"],
+    rows: [["late", "“I started the stopwatch late.”", "work in pairs: one times, one adds the thermometer"],
+      ["hole", "“The hole for the thermometer was too big.”", "make the hole a tight fit, so less energy escapes"],
       ["eye", "“I read the thermometer from above.”", "read it at eye level, to avoid parallax error"], ["once", "“I tested each flask only once.”", "repeat the readings for each flask"],
-      ["log", "“It was hard to read four thermometers at exactly the right times.”", "use a data logger with digital thermometers"]],
-    bank: ["work in pairs: one starts the stopwatch as the other puts in the thermometer", "make the hole a tight fit, so energy can’t escape through it", "read it at eye level, to avoid parallax error", "repeat the readings for each flask", "use a data logger with digital thermometers", "use a different volume of water in each flask"],
+      ["log", "“Four thermometers were hard to read on time.”", "use a data logger with digital thermometers"]],
+    bank: ["work in pairs: one times, one adds the thermometer", "make the hole a tight fit, so less energy escapes", "read it at eye level, to avoid parallax error", "repeat the readings for each flask", "use a data logger with digital thermometers", "use a different volume of water in each flask"],
     why: (k, w) => w === "use a different volume of water in each flask" ? "The volume is a control variable: keep it the same in every flask, or the test isn’t fair." : "That fixes a different problem. Which fix matches this one?",
     explain: "Pairs (start the stopwatch as the thermometer goes in); a tight-fitting hole; eye level (no parallax); repeats; a data logger with digital thermometers.",
     hints: ["Match each fix to the problem it solves.", "A big hole lets energy out. Reading from above is a parallax error.", "Pairs · tight hole · eye level · repeat · data logger."] },
@@ -1980,6 +1986,25 @@ bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
   drawFlBg(); drawFlMov(); const seen = {}, dup = []; document.querySelectorAll("[id]").forEach(e => { if (seen[e.id]) dup.push(e.id); seen[e.id] = 1; });
   if (dup.length) { const e = $("bankErr"); e.hidden = false; e.innerHTML = "<b>Page error.</b> Duplicate ids: " + esc(dup.join(", ")); } }
 try { if (localStorage.getItem("ks3tools-toured:gcse-infrared-radiation")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Long dropdown answers: the select stays on the card; if the chosen text doesn't fit, it is shown in full underneath ===== */
+const SELCV = document.createElement("canvas").getContext("2d");
+function selFull(s) {
+  if (!s || !s.isConnected) return;
+  let c = s.nextElementSibling; if (!c || !c.classList || !c.classList.contains("selfull")) { c = document.createElement("span"); c.className = "selfull"; c.setAttribute("aria-hidden", "true"); s.after(c); }
+  const cs = getComputedStyle(s), t = s.selectedIndex > 0 ? s.options[s.selectedIndex].text : "";
+  SELCV.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const cut = !!t && SELCV.measureText(t).width > s.clientWidth - 44;
+  c.textContent = cut ? t : ""; c.hidden = !cut;
+}
+document.addEventListener("change", e => { if (e.target.matches && e.target.matches("#answer select")) selFull(e.target); });
+window.addEventListener("resize", () => document.querySelectorAll("#answer select").forEach(selFull));
+
+/* after Show answer or a correct Check the selects are set in code: drop any caption left from an earlier choice */
+{ const sas0 = setAnswerState; setAnswerState = function () { const r = sas0.apply(this, arguments); document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); return r; }; }
+
+/* a correct Check also clears the phone caption (the feedback now says the answer is right) */
+{ const msg0 = msg; msg = function (cls, html) { msg0(cls, html); if (cls === "good") document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); }; }
 /* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
    paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
    (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
