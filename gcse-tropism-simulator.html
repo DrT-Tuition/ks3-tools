@@ -74,6 +74,27 @@
     correct Check or Show answer and never apply in Demo. Hard plan: points c, d, e are essential; a missing or cancelled
     essential step caps at Level 2 and is named; a wrong statement drops a level; bankCheck tests both. Auxin is made in
     shoot AND root tips (notes): Easy 5 asks where auxin is made in a shoot.
+  Coverage fixes (30 Oct 2026): RP8 dishes tab now has "Measure the shoots" (deck s22 step 6; notes: ruler for straight shoots, string
+    and ruler for curved ones, mean height per dish; AQA handbook: lengths in mm, mean): after Day 3 pupils choose a dish and seedling,
+    lay string along a curved shoot (Dish 1 and Dish 2), drag a ruler (cm numbers, 1 mm marks; arrow keys 0.5 mm, Shift 5 mm) so 0 is
+    at the seed end and read the tip; readings are accepted within ±0.6 mm, with slips named (cm not mm; 0 not at the seed end).
+    Results table (5 seedlings × 3 dishes; press a reading to mark an anomaly; Redo clears a dish), typed mean (rounded half-up to the
+    typed precision; anomaly rule: one reading further than max(6 mm, 30 % of the median) from the median), bar chart of the checked
+    means, and a conclusion (Dish 1 v Dish 3: "about the same / longer / shorter", judged from the pupil's own readings: a difference
+    within 2 standard errors is "about the same"). INVENTED lengths (Model limits): mean about 24 mm in every dish, sd 1.5 mm cut off at
+    ±2.5 mm, about 4 dishes in 10 with one stunted seedling (40–48 % of the mean). Dish 2 can stand on a clinostat (notes): it turns
+    slowly, so the auxin stays even and shoots and roots grow straight out. Safety line (deck s22) under the dish controls.
+    Questions now: Easy tropDef, sort, photoGoal, tipMade, predAux, rootSide, safe (hazard → risk → control, deck s22), res (ruler
+    resolution 1 mm), order, control; Hard stimResp, manGoal, explShoot, explRoot, vars, meanGoal (measure Dish 1 and find the mean),
+    draw (rules for a biological drawing, notes), poe, clino (what a clinostat does, notes), plan. Removed as overlapping: Easy
+    "Name the hormone" and "Name the response" (still in Easy 1–2, Hard 1), Hard "Who is right?" (root, = Hard 4) and the hinge
+    "Why does a shoot bend towards light?" (= Hard 3, same distractors). Veils: "order" and "vars" hide the measuring box and its
+    Model limits line; "safe" hides the safety line. The 6-mark plan's messages are shortened so they fit at 1280 × 720.
+  Re-check fixes (30 Oct 2026): every Hard 9 option says the clinostat turns the dish slowly, so only "gravity's effect cancels
+    out" decides it; Redo is a row of buttons under the results table and the table takes the full width; Hard 10: each wrong
+    statement costs another level (bank-checked); long dropdown options no longer widen the panel on phones; the measuring Model
+    limits line no longer gives the conclusion (says dark-grown shoots grow taller and paler in real plants); the ruler sits on its
+    own layer (a div moved by a CSS transform, at most 10 moves a second), so a drag doesn't redraw the close-up.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -343,6 +364,63 @@ footer.brand a{color:inherit}
 @media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg.long{font-size:14px;line-height:1.35}}
 
 h1 small.rplabel{font-weight:700;font-size:16px;color:var(--accent);margin-top:4px}
+
+/* ---- Measure the shoots (30 Oct 2026) ---- */
+:root{--rulerp:rgba(235,242,250,.92);--ruler-edge:#5A7290;--string:#7A4A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--rulerp:rgba(220,230,242,.92);--ruler-edge:#9DB2CC;--string:#F0B87A}}
+:root[data-theme="dark"]{--rulerp:rgba(220,230,242,.92);--ruler-edge:#9DB2CC;--string:#F0B87A}
+.meas{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.meas .mh{margin:0;font-size:18px}
+#mWrap{display:grid;gap:8px}
+.mbox{position:relative;max-width:520px;width:100%;overflow:hidden;border-radius:8px}
+#msvg{display:block;width:100%}
+.rover{position:absolute;left:70.909%;top:0;width:11.818%;height:100%;pointer-events:none;will-change:transform;background:transparent!important;border:0!important;box-shadow:none!important}
+.rover .drag{pointer-events:auto}
+#rsvg{display:block;width:100%;height:100%;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}
+.scene .mbg{fill:var(--sunk);stroke:var(--line);stroke-width:1}
+.scene .ruler{fill:var(--rulerp);stroke:var(--ruler-edge);stroke-width:1.5}
+.scene .tk{stroke:#14243D;stroke-width:1.3}
+.scene .rk{fill:#14243D!important;font-weight:700}
+.scene .fr{display:none;fill:none;stroke:var(--focus);stroke-width:3;stroke-dasharray:6 4}
+.scene .drag{cursor:grab;touch-action:none}
+.scene .drag:focus-visible .fr{display:block}
+.scene .drag:focus{outline:none}
+.scene .mstr{fill:none;stroke:var(--string);stroke-width:3;stroke-dasharray:7 3;stroke-linecap:round}
+.scene .mstre{stroke:var(--string);stroke-width:2}
+.scene .mseed{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3}
+.scene .gr{stroke:var(--line);stroke-width:1}
+.scene .lax{stroke:var(--ink);stroke-width:2.4;fill:none}
+.scene .lbar{fill:var(--shoot);stroke:var(--shoot-edge);stroke-width:1.5}
+.scene .clarc{fill:none;stroke:#E9EDF3;stroke-width:4}
+.scene .clarh{fill:#E9EDF3}
+.scene .clmot{fill:var(--box);stroke:var(--box-edge);stroke-width:2}
+.labgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+#lbars{max-width:380px}
+.redorow .btn{min-height:40px;padding:6px 12px;font-size:15px}
+.tscroll{overflow-x:auto;max-width:100%}
+.rt{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+.rt caption{text-align:left;font-weight:700;font-size:15px;color:var(--muted);padding-bottom:4px}
+.rt th{font-size:14px;color:var(--muted);text-align:center;padding:2px 3px;line-height:1.25}
+.rt td{padding:2px 3px;text-align:center;border-top:1px solid var(--line)}
+.rt tr.cur td{background:var(--sunk)}
+.rt td.dst{font-weight:700;text-align:left;white-space:nowrap}
+.cnt{font:700 16px var(--f-body);min-width:44px;min-height:40px;padding:2px 4px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.cnt[aria-pressed="true"]{text-decoration:line-through;border:2px dashed var(--bad);color:var(--bad)}
+.meanin{font:700 16px var(--f-body);width:4.4em;min-height:40px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.meanin.ok{border:2px solid var(--good);background:var(--good-bg);color:var(--good)}
+.meanin.no{border:2px solid var(--bad)}
+.numin{font:700 18px var(--f-body);width:6em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.emp{color:var(--muted)}
+.redo{font-size:14px}
+.concl{display:grid;gap:8px}
+.concl:empty{display:none}
+.concl .okc{color:var(--good);font-weight:700;margin:0}.concl .warn{margin:0}
+@media (max-width:560px){.rt{font-size:14px}.cnt{min-width:34px;padding:2px}.meanin{width:3.6em;font-size:14px;padding:4px 2px}.rt td,.rt th{padding-left:1px;padding-right:1px}}
+@media (min-width:901px) and (max-height:740px){.qpanel .feedback .msg{font-size:15px;line-height:1.35}}
+/* re-check 30 Oct: long dropdown options must not widen the panel on phones */
+#answer .opts{grid-template-columns:minmax(0,1fr)}
+#answer .grow,#answer .grow>*{min-width:0}
+#answer .grow select{min-width:0;max-width:100%}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -482,6 +560,26 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="controls"><span class="ctl-lbl" id="dishLbl">Look at:</span>
           <div class="seg" id="dishSeg" role="group" aria-labelledby="dishLbl"><button type="button" data-dish="1" aria-pressed="false">Dish 1</button><button type="button" data-dish="2" aria-pressed="false">Dish 2</button><button type="button" data-dish="3" aria-pressed="true">Dish 3 (control)</button></div>
         </div>
+        <div class="controls"><span class="ctl-lbl" id="clinoLbl">Dish 2:</span>
+          <div class="seg" id="clinoSeg" role="group" aria-labelledby="clinoLbl"><button type="button" data-clino="0" aria-pressed="true">On its edge</button><button type="button" data-clino="1" aria-pressed="false">On a clinostat</button></div>
+        </div>
+        <p class="small" id="safeLine"><b>Safety:</b> wash your hands after handling seedlings. Don’t touch the hot lamp. Keep water away from the plug.</p>
+        <div class="meas" id="measBox">
+          <h3 class="mh">Measure the shoots</h3>
+          <div class="readout" id="mread" aria-live="polite"></div>
+          <div id="mWrap">
+            <div class="controls" id="seedRow"><span class="ctl-lbl" id="sdLbl">Seedling:</span>
+              <div class="seg" id="seedSeg" role="group" aria-labelledby="sdLbl"><button type="button" data-sd="0" aria-pressed="true">1</button><button type="button" data-sd="1" aria-pressed="false">2</button><button type="button" data-sd="2" aria-pressed="false">3</button><button type="button" data-sd="3" aria-pressed="false">4</button><button type="button" data-sd="4" aria-pressed="false">5</button></div>
+              <button class="btn" type="button" id="strBtn" aria-pressed="false">Lay string along the shoot</button></div>
+            <div class="mbox" id="mBox"><svg id="msvg" class="scene" viewBox="0 0 440 310" role="img" aria-label="Close-up of one seedling. A ruler marked in cm and mm lies beside it."><g id="mG"></g></svg>
+            <div class="rover" id="rLay"><svg id="rsvg" class="scene" viewBox="312 0 52 310" role="group" aria-label="The ruler. Drag it up or down, or use the arrow keys."><g id="mRul" class="drag" tabindex="0" role="slider" aria-label="Ruler. Use the up and down arrow keys to move it." aria-valuemin="-8" aria-valuemax="8" aria-valuenow="3"></g></svg></div></div>
+          </div>
+          <div class="controls" id="lenRow"><label class="ctl-lbl" for="lenIn">Shoot length =</label> <input class="numin" id="lenIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">mm</span> <button class="btn primary" type="button" id="lenRec">Record</button></div>
+          <div class="labgrid" id="lGrid"><div class="tscroll" id="ltable"></div><svg id="lbars" class="scene" viewBox="0 0 360 250" role="img" aria-label="Bar chart of the mean shoot length in each dish"><g id="lbG"></g></svg></div>
+          <div class="controls" id="lCtl"><button class="btn" type="button" id="lenCheck">Check my means</button><button class="linkbtn" type="button" id="lenNew">New seedlings</button></div>
+          <div id="lmsg2"></div>
+          <div class="concl" id="lconcl"></div>
+        </div>
       </div>
 
       <div class="slider" id="dayRow"><label class="ctl-lbl" for="day">Time</label><input type="range" id="day" min="0" max="3" step="0.25" value="0"><output id="dayOut" for="day">Day 0</output></div>
@@ -498,7 +596,8 @@ main.layout{min-height:calc(100vh - 70px)}
         <li>Root auxin is shown already in the root: the model doesn't show it being made.</li>
         <li>Roots respond to gravity only here. On its side, the model offers light from above or no light.</li>
         <li>The root is drawn as if on damp paper so you can see it. Each dish shows 5 seedlings (the method uses 10).</li>
-        <li>With "Move auxin yourself", the model ignores light and gravity.</li></ul></div>
+        <li>With "Move auxin yourself", the model ignores light and gravity.</li>
+        <li id="limMeas">The lengths in the measuring close-up are invented example values with random scatter. About 4 dishes in 10 have one stunted seedling (an anomaly). In real plants, shoots grown in the dark grow taller and paler.</li></ul></div>
     </section>
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
       <!-- Demo -->
@@ -649,10 +748,12 @@ const DISHES = [
 const DISH = id => DISHES.find(d => d.id === id);
 const CF = { right: { pose: "up", light: "right", manual: false, nP: 4, nR: 4 }, left: { pose: "up", light: "left", manual: false, nP: 4, nR: 4 },
   above: { pose: "up", light: "above", manual: false, nP: 4, nR: 4 }, dark: { pose: "up", light: "none", manual: false, nP: 4, nR: 4 },
-  side: { pose: "side", light: "none", manual: false, nP: 4, nR: 4 }, sideA: { pose: "side", light: "above", manual: false, nP: 4, nR: 4 } };
+  side: { pose: "side", light: "none", manual: false, nP: 4, nR: 4 }, sideA: { pose: "side", light: "above", manual: false, nP: 4, nR: 4 },
+  clino: { pose: "side", light: "none", manual: true, nP: 4, nR: 4, clino: true } };   // notes: on a clinostat gravity acts on every side in turn, so the auxin stays even and nothing bends
 
 /* ===== Model state ===== */
-function freshM() { return { tab: "seed", light: "above", pose: "up", manual: false, nP: 4, nR: 4, day: 0, hide: false, dish: 3, note: "" }; }
+function freshM() { return { tab: "seed", light: "above", pose: "up", manual: false, nP: 4, nR: 4, day: 0, hide: false, dish: 3, note: "", clino: false,
+  lens: makeLens(newSeed()), msd: 0, str: false, rOff: 3, lrec: blankL(), lmark: { 1: [], 2: [], 3: [] }, lin: {}, lok: {}, lmsg: "", lcMsg: "", cSel: "", cOk: null, cMsg: "", cKey: "", cOrd: [0, 1, 2] }; }
 
 /* ===== Question bank (wording from the deck; answers worked out from the model above) ===== */
 const ABC = "ABCDEF";
@@ -664,7 +765,10 @@ const SU = {
   rightS: M => { M.light = "right"; },
   man: M => { M.manual = true; },
   dish0: M => { M.tab = "dish"; M.dish = 2; },
-  dish3: M => { M.tab = "dish"; M.day = DAYS; M.dish = 3; } };
+  dish3: M => { M.tab = "dish"; M.day = DAYS; M.dish = 3; },
+  meas: M => { M.tab = "dish"; M.day = DAYS; M.dish = 3; M.msd = 0; },
+  meas1: M => { M.tab = "dish"; M.day = DAYS; M.dish = 1; M.msd = 0; },
+  clino0: M => { M.tab = "dish"; M.dish = 2; M.clino = true; M.day = 0; } };
 const opt = (t, ok, why) => ({ t, ok, why });
 const TASKS = {
   easy: [
@@ -702,28 +806,31 @@ const TASKS = {
         opt("In the leaves", () => AUX_MADE === "leaves", "Not in the leaves. In a shoot, auxin is made in the tip, then moves back down.")],
       explain: "In a shoot, auxin is made in the tip. It then moves back down the shoot. (Root tips make auxin too.)",
       hints: ["Press Grow ▶ and watch where the dots start in the shoot.", "In the shoot, the dots start at one end, then move down.", "Auxin is made in the t… of the shoot."] },
-    { id: "hormone", kind: "choice", setup: SU.rightS, lock: "ans", veil: ["read", "aux", "words:auxin"], stuck: "words", text: "Name the hormone that moves to the shaded side of a shoot.",
-      options: [opt("Auxin", () => true), opt("Gibberellin", () => false, "Gibberellin is a different plant hormone. The one that moves to the shaded side is auxin."),
-        opt("Ethene", () => false, "Ethene is a different plant hormone. The one that moves to the shaded side is auxin.")],
-      explain: "Auxin moves to the shaded side of a shoot.",
-      hints: ["It is shown as orange dots in the model.", "Look at the Key words: its name starts with aux-, which means increase.", "A…n."] },
     { id: "predAux", kind: "choice", setup: SU.rightH, lock: "all", after: "grow", stuck: "rules", text: "Predict: light comes from the right. Which side of the shoot will get more auxin?",
       options: [opt("P", () => more("shoot", CF.right, 0) === "P"), opt("Q", () => more("shoot", CF.right, 0) === "Q", "Q faces the light. Light moves auxin away from it, to the shaded side."),
         opt("Both sides the same", () => more("shoot", CF.right, 0) === "even", "Light from one side moves auxin to the shaded side, so the two sides are not the same.")],
       explain: "Light moves auxin to the shaded side, P. Cells on P elongate more, so the shoot bends towards the light.",
       hints: ["Which side of the shoot faces the lamp?", "Light moves auxin to the shaded side: the side facing away from the lamp.", "The lamp is on the right, so the shaded side is on the left: P."] },
-    { id: "respName", kind: "choice", setup: SU.rightH, lock: "all", after: "grow", wait: "Answer first. The seedling grows when you get it right.", veil: ["words:photo"], stuck: "words", text: "Name the type of growth response a shoot shows towards light.",
-      options: [opt("Phototropism", () => true), opt("Gravitropism", () => false, "Gravitropism is the response to gravity. Photo means light."),
-        opt("Tropism", () => false, "Just 'tropism' is not enough. Name the stimulus too: photo means light."),
-        opt("Photosynthesis", () => false, "Photosynthesis makes glucose. It is not a growth response.")],
-      explain: "A shoot growing towards light shows phototropism.",
-      hints: ["Name the stimulus in the word.", "Photo means light. Trop means turn.", "Photo… + …tropism."] },
     { id: "rootSide", kind: "choice", setup: SU.sideH, lock: "all", after: "grow", stuck: "rules", text: "Predict: the seedling lies on its side. Which side of the root will grow more?",
       options: [opt("R", () => grows("root", CF.side, 1) === "R"), opt("S", () => grows("root", CF.side, 1) === "S", "Gravity moves auxin to S, the lower side. In roots, auxin slows growth, so S grows less."),
         opt("Both sides the same", () => grows("root", CF.side, 1) === "even", "Gravity moves auxin to the lower side, so the two sides grow differently.")],
       explain: "Gravity moves auxin to S, the lower side. Auxin slows growth there, so R, the upper side, grows more and the root bends down.",
       hints: ["Which side of the root is lower?", "Gravity moves auxin to the lower side, S. In roots, auxin slows growth.", "S grows less, so the other side grows more: R."] },
-    { id: "order", kind: "gaps", setup: SU.dish0, stuck: "vars", text: "Put the investigation in the right order.",
+    { id: "safe", kind: "gaps", setup: SU.dish3, veil: ["safe"], text: "Hazard → risk → control. Choose the control that reduces each risk.",
+      rows: [["l", "The lamp gets hot and could burn you. Control:", "Don’t touch the lamp until it has cooled"], ["w", "Water near the lamp’s plug could give you an electric shock. Control:", "Keep water away from the plug"],
+        ["h", "Seedlings and damp paper could carry dirt or microbes to your mouth. Control:", "Wash your hands after handling seedlings"]],
+      bank: ["Don’t touch the lamp until it has cooled", "Keep water away from the plug", "Wash your hands after handling seedlings", "Wear goggles", "Move the lamp closer"],
+      whyVal: { "Don’t touch the lamp until it has cooled": "That control is for the hot lamp.", "Keep water away from the plug": "That control is for electric shock.",
+        "Wash your hands after handling seedlings": "That control is for dirt and microbes on your hands.", "Wear goggles": "Goggles protect your eyes. They don’t stop burns, shocks or dirty hands.",
+        "Move the lamp closer": "A closer lamp makes a burn more likely, not less." },
+      explain: "Hot lamp: don’t touch it until it has cooled. Water near the plug: keep water away from it. Seedlings: wash your hands after handling them.",
+      hints: ["A hazard can cause harm; the risk is the harm it might do; the control makes the harm less likely.", "Match each control to the harm it stops: a burn, a shock, or dirt on your hands.", "Cooled lamp · water away from the plug · wash your hands."] },
+    { id: "res", kind: "choice", setup: SU.meas, lock: "ans", text: "Look at the ruler under Measure the shoots (RP8 dishes tab). What is its resolution?",
+      options: [opt("1 mm", () => RDIV === 1), opt("1 cm", () => false, "The numbers are 1 cm apart, but there are smaller marks between them. Resolution is the gap between the smallest marks."),
+        opt("0.1 mm", () => false, "The ruler has no marks that small, so you can’t read tenths of a millimetre."), opt("4 cm", () => false, "That is about how long the ruler is (its range), not its resolution.")],
+      explain: "The smallest marks are 1 mm apart, so the ruler’s resolution is 1 mm: measure each shoot to the nearest mm.",
+      hints: ["Resolution is the smallest change an instrument can show.", "Look at the smallest gap between two marks on the ruler.", "Count the small marks between 0 and 1 cm."] },
+    { id: "order", kind: "gaps", setup: SU.dish0, veil: ["order"], stuck: "vars", text: "Put the investigation in the right order.",
       rows: [["1", "Step 1:", "Put seedlings on damp paper in the dishes"], ["2", "Step 2:", "Set each dish in its condition"], ["3", "Step 3:", "Leave for three days"], ["4", "Step 4:", "Measure the shoots and draw one seedling"]],
       bank: ["Put seedlings on damp paper in the dishes", "Set each dish in its condition", "Leave for three days", "Measure the shoots and draw one seedling"],
       whyVal: { "Put seedlings on damp paper in the dishes": "The seedlings go on damp paper in the dishes first.",
@@ -759,13 +866,6 @@ const TASKS = {
       done: M => `You put ${M.nP} of ${N} auxin dots on P. Cells on P elongate more, so the shoot bends to the right, away from P.`,
       reveal: M => { M.tab = "seed"; M.manual = true; M.pose = "up"; M.nP = 7; M.day = DAYS; },
       hints: ["In a shoot, the side with more auxin grows more.", "A shoot bends away from the side that grows more. To bend right, the left side must grow more.", "Tap P (or press the P button) until most dots are on P, then Grow ▶."] },
-    { id: "hinge", kind: "choice", setup: SU.rightH, lock: "all", after: "grow", veil: ["rules"], stuck: "rules", text: "Why does a shoot bend towards light?",
-      options: [opt("Auxin gathers on the shaded side, which grows more", () => more("shoot", CF.right, 0) === shadedSide(CF.right) && RULE.shoot === "more"),
-        opt("Auxin gathers on the lit side, which grows more", () => more("shoot", CF.right, 0) === "Q", "Auxin moves away from the light, to the shaded side. The shaded side grows more."),
-        opt("Auxin stays in the tip, so the tip bends", () => !AUX_MOVES_DOWN, "Auxin doesn't stay in the tip. It moves back down, so cells all down one side elongate and the whole shoot bends."),
-        opt("Light makes the lit side grow more", () => false, "Light doesn't make the lit side grow. It moves auxin to the shaded side, and the shaded side grows more.")],
-      explain: "Auxin moves to the shaded side. Cells there elongate more, so the shoot bends towards the light.",
-      hints: ["The lamp is on one side. Which side of the shoot is in shade?", "Which side gets the auxin: the lit side or the shaded side?", "Auxin gathers on the shaded side, which grows more."] },
     { id: "explShoot", kind: "build", ordered: true, max: 3, setup: SU.rightH, lock: "all", after: "grow", wait: "Answer first. The seedling grows when you get it right.", veil: ["rules"], stuck: "rules",
       text: "Explain why the shoot bends towards the light. [3 marks] Choose statements in order.",
       starter: "Start with ▸ Auxin moves to… so cells…",
@@ -780,13 +880,6 @@ const TASKS = {
       scheme: "One mark for each step. Reject: auxin stays in the tip; light makes it grow.",
       explain: "Auxin moves to the shaded side → cells on the shaded side elongate more → the shaded side grows faster, so the shoot bends towards the light.",
       hints: ["Three marks: three linked steps. Where does auxin go? What happens to the cells? How does it bend?", "Light moves auxin to the shaded side. Shoot cells with more auxin elongate more.", "Choose: auxin to the shaded side → shaded cells elongate more → shaded side grows faster, so it bends towards light."] },
-    { id: "judge", kind: "choice", setup: SU.sideH, lock: "all", after: "grow", wait: "Answer first. The seedling grows when you get it right.", veil: ["rules"], stuck: "rules", text: "A root grows sideways, then bends downwards. Who is right?",
-      note: "Start with ▸ …is right because auxin…",
-      options: [opt("Ben: “Auxin gathers on the lower side and slows its growth, so the root bends down.”", () => lowerSide("root", CF.side) === more("root", CF.side, 0) && RULE.root === "less" && rootOff(CF.side, DAYS) < 30),
-        opt("Ana: “Auxin speeds up growth on the lower side, so the root bends upwards.”", () => RULE.root === "more", "Ana has roots the wrong way round. In roots, auxin slows growth. The lower side grows less, so the root bends down."),
-        opt("Cy: “Auxin stays in the tip, so only the tip turns.”", () => false, "Auxin doesn't stay in the tip. It gathers on the lower side, so the root grows unevenly and bends down.")],
-      explain: "Ben is right. In roots, extra auxin on the lower side slows growth. The upper side grows more, so the root bends down.",
-      hints: ["The root lies on its side. Which side is lower, and where does gravity move auxin?", "In roots, auxin slows growth. Which student says that?", "Ben."] },
     { id: "explRoot", kind: "build", ordered: true, max: 3, setup: SU.sideH, lock: "all", after: "grow", wait: "Answer first. The seedling grows when you get it right.", veil: ["rules"], stuck: "rules",
       text: "Explain why a root grows downwards. [3 marks] Choose statements in order.",
       starter: "Start with ▸ Gravity moves auxin to…",
@@ -801,6 +894,25 @@ const TASKS = {
       scheme: "One mark for each step. Reject: auxin speeds up growth in roots; auxin stays in the tip.",
       explain: "Gravity moves auxin to the lower side → auxin slows growth there → the upper side grows more, so the root bends down.",
       hints: ["Three linked steps: where the auxin goes, what it does, how the root bends.", "In roots, auxin slows growth (the opposite of shoots).", "Choose: gravity → auxin to lower side → slows growth there → upper side grows more, root bends down."] },
+    { id: "meanGoal", kind: "goal", setup: SU.meas1, text: "Do it: under Measure the shoots, measure all five shoots in Dish 1 with the ruler (lay string along each curved shoot first) and record them. Then type the mean for Dish 1 and press Check my means.",
+      test: M => M.tab === "dish" && !!M.lok[1],
+      not: M => { if (M.tab !== "dish") return "Use the RP8 dishes tab of the model."; if (M.day < DAYS) return "Grow the dishes to Day 3 first.";
+        const n = M.lrec[1].filter(x => x != null).length; if (n < NSEED) return (M.dish !== 1 ? "Choose Dish 1. " : "") + `${n} of ${NSEED} shoots in Dish 1 recorded. Lay string along the shoot, line up 0 with the seed end, read the tip and press Record.`;
+        return M.lok[1] === false ? "Your mean for Dish 1 isn’t right yet: read the message under the table." : "Type the mean for Dish 1 in the table, then press Check my means."; },
+      done: M => { const i = lAnom(M.lrec[1]); return `Dish 1: ${M.lrec[1].join(", ")} mm. Mean = ${M.lin[1]} mm${i >= 0 ? ` (the stunted seedling, ${M.lrec[1][i]} mm, left out)` : ""}.`; },
+      reveal: M => { M.tab = "dish"; M.day = DAYS; M.dish = 1; M.lrec[1] = M.lens.L[1].map(v => Math.round(v)); const i = lAnom(M.lrec[1]); M.lmark[1] = i >= 0 ? [i] : []; M.lin[1] = String(r1(lGood(M.lrec[1]))); M.lok[1] = true; },
+      hints: ["Choose a seedling, press Lay string along the shoot, then drag the ruler so 0 is at the seed end.", "Read the ruler at the end of the string, in mm, and press Record. Do all five.", "Mean = total ÷ number of readings. Leave out a reading that doesn’t fit (a stunted seedling)."] },
+    { id: "draw", kind: "build", ordered: false, max: 3, setup: SU.dish3, text: "You draw one seedling from Dish 1. Choose three rules a biological drawing must follow. [3 marks]",
+      starter: "Start with ▸ My drawing will…",
+      points: [{ id: "a", t: "Use a sharp pencil and clear, unbroken lines", miss: "How do you draw the lines?" }, { id: "b", t: "No shading or colouring in", miss: "Should you shade or colour it?" },
+        { id: "c", t: "Ruled label lines that touch the part (shoot, root, seed)", miss: "How do you draw the label lines?" }, { id: "d", t: "Parts in proportion, with a scale or magnification", miss: "How do you show the size?" }],
+      wrongs: [{ t: "Shade the leaves green so it looks real", cancels: "b", why: "Biological drawings are not shaded or coloured." },
+        { t: "Sketch it with lots of short lines", cancels: "a", why: "Use clear, unbroken lines, not sketchy ones." },
+        { t: "Write the labels on top of the drawing", cancels: "c", why: "Write labels to the side, with ruled lines that touch the part." }],
+      orderWhy: "",
+      scheme: "Any three of: sharp pencil, clear unbroken lines (1); no shading or colour (1); ruled label lines touching the part (1); parts in proportion, with a scale or magnification (1).",
+      explain: "Sharp pencil and clear lines; no shading; ruled label lines that touch the part; in proportion, with a scale. Any three.",
+      hints: ["Three marks: three rules.", "Think about the pencil lines, shading, labels and size.", "Pencil lines · no shading · ruled labels · scale."] },
     { id: "poe", kind: "gaps", setup: SU.dish0, lock: "all", after: "grow", stuck: "rules",
       text: "Dish 2 lies on its edge in the dark, with shoots pointing sideways. Predict how they will grow.",
       note: "Start with ▸ I think the shoots will grow … and the roots will grow … because …",
@@ -819,6 +931,13 @@ const TASKS = {
         "the amount of auxin": "We can't see or measure auxin in RP8. We change light or gravity and measure the growth." },
       explain: "Independent: direction of light or gravity. Dependent: shoot length and direction of growth. Control: type and age of seedlings (also number per dish, water, temperature and time).",
       hints: ["Change one thing, measure one thing, keep the rest the same.", "We change where the light (or gravity) comes from. We measure the shoots.", "IV: direction of light or gravity. DV: shoot length and direction. CV: type and age of seedlings."] },
+    { id: "clino", kind: "choice", setup: SU.clino0, lock: "all", after: "grow", text: "Dish 2 is now on a clinostat, in the dark. What does a clinostat do?",
+      options: [opt("It turns the dish slowly, so gravity pulls on every side in turn and its effect cancels out", () => Math.abs(tilt(CF.clino, DAYS) - 90) < 1 && Math.abs(rootOff(CF.clino, DAYS) - 90) < 1),
+        opt("It turns the dish slowly, so every side of the seedlings gets light", () => false, "Dish 2 is in the dark, so there is no light to share out. Think about what still acts on the seedlings in the dark."),
+        opt("It turns the dish slowly, so the shoots grow faster", () => false, "Turning doesn’t speed up growth. Think about which side of each shoot is lower as the dish turns."),
+        opt("It turns the dish slowly, so the seedlings all stay at the same temperature", () => false, "Temperature is kept the same in every dish anyway. Think about the effect of gravity as the dish turns.")],
+      explain: "A clinostat turns slowly, so gravity acts on every side in turn. Its effect cancels out: the shoots and roots grow straight out, with no gravitropism.",
+      hints: ["All four answers say it turns the dish. What does the turning change?", "As it turns, which side of each shoot is the lower side?", "Every side is lower in turn, so gravity’s effect cancels out."] },
     { id: "plan", kind: "build", ordered: true, max: 6, levels: true, setup: SU.dish0, veil: ["vars"], stuck: "vars",
       text: "Plan an investigation into the effect of gravity on the growth of seedlings. [6 marks]",
       starter: "Build it in order. Frame ▸ I will set up… change… measure… keep… the same.",
@@ -830,21 +949,21 @@ const TASKS = {
         { id: "f", rank: 5, t: "Repeat and calculate a mean", miss: "Say how you make the results more reliable." }],
       wrongs: [{ t: "Make sure it is a fair test", neutral: true, cancels: null, why: "'Fair test' scores nothing on its own: name the variables instead." },
         { t: "Use a different type of seedling in each dish", cancels: "a", why: "The type of seedling is a control variable: keep it the same." },
-        { t: "Leave one dish for 1 day, the other for 3 days", cancels: "d", why: "Time is a control variable: leave both dishes for the same time." },
-        { t: "Put both dishes under a lamp from above", cancels: "c", why: "Then light acts as well as gravity. Keep both dishes in the dark to test gravity." },
-        { t: "Measure the amount of auxin in each seedling", cancels: null, why: "You can't measure auxin in RP8. Measure the growth: length or angle of bend." }],
-      orderWhy: "The right steps, but not in a sensible order: set up the dishes → set the conditions → leave them → measure → repeat and find a mean.",
+        { t: "Leave one dish for 1 day, the other for 3 days", cancels: "d", why: "Time is a control variable: keep it the same." },
+        { t: "Put both dishes under a lamp from above", cancels: "c", why: "Light would act too: keep both dishes in the dark." },
+        { t: "Measure the amount of auxin in each seedling", cancels: null, why: "You can't measure auxin. Measure the growth." }],
+      orderWhy: "Right steps, wrong order: set up → conditions → leave → measure → repeat.",
       scheme: "Deck points (s31): same type and age of seedlings, same number in each dish (1); damp paper, same temperature (1); one dish upright and one on its side, in the dark so light is not a variable (1); leave for the same time (1); measure shoot or root length / angle of bend, and draw (1); repeat and calculate a mean (1). Any six valid points. Reject 'fair test' with no variable named.",
       explain: "Set up the same seedlings on damp paper at the same temperature → one dish upright, one on its side, in the dark → leave for the same time → measure length or angle and draw → repeat and find a mean.",
       hints: ["Six marks: set-up, what you change, how long, what you measure, and how to make it reliable.", "To test gravity, light must not be a variable: keep the dishes in the dark. Keep the seedlings and time the same.", "Seedlings and paper → upright vs on its side, in the dark → leave → measure → repeat."] }
   ]
 };
 /* questions in deck slide order, so a Check it slide can name only questions taught so far */
-const SLIDE_ORDER = { easy: ["tropDef", "respName", "sort", "photoGoal", "tipMade", "hormone", "predAux", "rootSide", "order", "control"],
-  hard: ["stimResp", "manGoal", "explShoot", "explRoot", "judge", "vars", "poe", "hinge", "plan"] };
+const SLIDE_ORDER = { easy: ["tropDef", "sort", "photoGoal", "tipMade", "predAux", "rootSide", "safe", "res", "order", "control"],
+  hard: ["stimResp", "manGoal", "explShoot", "explRoot", "vars", "meanGoal", "draw", "poe", "clino", "plan"] };
 for (const lv in SLIDE_ORDER) TASKS[lv] = SLIDE_ORDER[lv].map(id => TASKS[lv].find(t => t.id === id));
 const optT = o => o.t;
-const VEILS = ["read", "aux", "made", "ctrl", "rules", "vars", "words:tropism", "words:photo", "words:gravi", "words:auxin"];
+const VEILS = ["read", "aux", "made", "ctrl", "rules", "vars", "order", "safe", "words:tropism", "words:photo", "words:gravi", "words:auxin"];
 const LV_NAME = ["Level 0 (no marks)", "Level 1 (1–2 marks)", "Level 2 (3–4 marks)", "Level 3 (5–6 marks)"], LV_TOP = [0, 2, 4, 6];
 const band = m => m >= 5 ? 3 : m >= 3 ? 2 : m >= 1 ? 1 : 0;
 const levelOf = lv => LV_NAME[lv];
@@ -863,7 +982,7 @@ function buildMark(t, keys) {
   const r = { marks, cw: block, neutral, missing, inOrder, essGone: [], ok: marks === t.max && !block.length && inOrder };
   if (t.levels) {   // Level 3 needs every essential step; a wrong statement lowers the level
     r.essGone = t.points.filter(p => p.ess && !cred.some(x => x.p === p));
-    let lv = band(marks); if (r.essGone.length) lv = Math.min(lv, 2); if (block.length) lv = Math.min(lv, Math.max(0, band(marks) - 1));
+    let lv = band(marks); if (r.essGone.length) lv = Math.min(lv, 2); if (block.length) lv = Math.min(lv, Math.max(0, band(marks) - block.length));   // each wrong statement costs another level
     r.level = lv; r.raw = marks; r.marks = Math.min(marks, LV_TOP[lv]); r.ok = r.ok && lv === 3;
   }
   return r;
@@ -881,6 +1000,13 @@ function bankCheck() {
   if (!(tilt(m1, DAYS) > 10 && rootOff(m1, DAYS) < -10 && grows("root", m1, 1) === "R")) E0("manual dots: more on P → bends right; more on S → root bends towards S");
   const cs = cellH("shoot", 6, DAYS), cr = cellH("root", 6, DAYS); if (!(cs[0] > cs[1] && cr[0] < cr[1])) E0("cells: more auxin → longer shoot cells, shorter root cells");
   if (!(Math.abs(tilt(DISH(3).cfg, DAYS)) < .5 && tilt(DISH(1).cfg, DAYS) > 20 && Math.abs(tilt(DISH(2).cfg, DAYS)) < 25 && Math.abs(rootOff(DISH(2).cfg, DAYS)) < 25) || DISHES.filter(d => d.control).length !== 1) E0("dishes: Dish 3 control straight, Dish 1 bends to the slit, Dish 2 shoots up and roots down");
+  if (!(Math.abs(tilt(CF.clino, DAYS) - 90) < 1 && Math.abs(rootOff(CF.clino, DAYS) - 90) < 1)) E0("clinostat: shoots and roots grow straight out (no bend)");
+  for (let s = 1; s <= 60; s++) { const e = makeLens(s * 7919); DIDS.forEach(d => { const tr = e.L[d], want = lAnom(tr);   // invented lengths: readings within ±0.6 mm give the same anomaly
+      if (tr.some(x => x < 5 || x > 40)) E0("lengths: outside the ruler");
+      for (const off of [[0, 0, 0, 0, 0], [.6, -.6, .6, -.6, .6], [-.6, .6, -.6, .6, -.6], [.5, .5, -.5, -.5, .5]]) if (lAnom(tr.map((x, i) => r1(x + off[i]))) !== want) { E0(`lengths: anomaly rule unstable (seed ${s}, dish ${d})`); break; } }); }
+  { const a = [24, 23, 25, 11, 24]; if (lAnom(a) !== 3 || !judgeLMean(a, "24").ok || judgeLMean(a, "21.4").ok || !judgeLMean(a, "24.0").ok) E0("mean check (anomaly left out)");
+    const b = [24, 23, 25, 22, 24]; if (judgeLMean(b, "23.6").ok !== true || judgeLMean(b, "23.65").ok || judgeLMean(b, "23.5").ok) E0("mean rounding (half up, not half a unit away)");
+    if (!judgeLen(20, 0, 20).ok || judgeLen(20, 3, 23).ok || judgeLen(20, 0, 2).ok || !judgeLen(20, 3, 23).why || judgeLen(20, 0, 21).ok) E0("ruler reading check"); }
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
     if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
@@ -911,6 +1037,8 @@ function bankCheck() {
           if (buildMark(t, wo).level > 2) E("levels: leaving out an essential step must cap at Level 2: " + p.id);
           t.wrongs.forEach((w, i) => { if (w.cancels === p.id && buildMark(t, [...all, "w" + i]).level > 2) E("levels: cancelling an essential step must cap at Level 2: " + p.id); }); });
         t.wrongs.forEach((w, i) => { if (!w.neutral && buildMark(t, [...all, "w" + i]).level > 2) E("levels: a wrong statement must lower the level"); });
+        const bw = t.wrongs.map((w, i) => w.neutral ? null : "w" + i).filter(Boolean);
+        for (let n = 2; n <= bw.length; n++) { const a = buildMark(t, [...all, ...bw.slice(0, n - 1)]).level, b = buildMark(t, [...all, ...bw.slice(0, n)]).level; if (a > 0 && b > a - 1) E("levels: each wrong statement must cost another level"); }
         const seen = new Set([buildMark(t, []).level, buildMark(t, all).level]); for (let n = 1; n < all.length; n++) seen.add(buildMark(t, all.slice(0, n)).level);
         if ([0, 1, 2, 3].some(l => !seen.has(l))) E("levels: every level 0–3 must be reachable");
       }
@@ -920,6 +1048,8 @@ function bankCheck() {
   const pa = TASKS.easy.find(t => t.id === "predAux"); if (pa && pa.options.find(o => o.ok()).t !== more("shoot", CF.right, 0)) errs.push("easy predAux: disagrees with the model");
   const rs = TASKS.easy.find(t => t.id === "rootSide"); if (rs && rs.options.find(o => o.ok()).t !== grows("root", CF.side, 1)) errs.push("easy rootSide: disagrees with the model");
   const po = TASKS.hard.find(t => t.id === "poe"); if (po && !(Math.abs(tilt(DISH(2).cfg, DAYS)) < 25 && Math.abs(rootOff(DISH(2).cfg, DAYS)) < 25)) errs.push("hard poe: Dish 2 must turn shoots up and roots down");
+  { const D = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; D[qkey("easy", TASKS.easy[0])] = "solved";
+    if (scoreFrom(D, TASKS) !== 1) errs.push("score: progress saved for a retired question id must not count"); }
   return errs;
 }
 
@@ -940,7 +1070,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreFrom = (D, L) => ["easy", "hard"].reduce((n, lv) => n + (L[lv] || []).filter(t => D[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids from retired questions never count)
+const scoreNow = () => scoreFrom(DONE, LEVELS);
 const locked = () => mode !== "demo" && !!lock;
 const LOCKW = { all: "Predict first. The model grows when you get it right, or press Show answer.",
   ans: "Answer first. The model unlocks when you get it right, or press Show answer." };
@@ -1061,10 +1192,12 @@ function dishBg(M) {
   /* Dish 2: on its edge in a dark cupboard */
   h += `<rect class="darkov" x="206" y="14" width="188" height="252" rx="10"/>` + T_(300, 36, "Dark cupboard", FS(14), 'text-anchor="middle" class="darkt"');
   h += `<circle class="dish" cx="300" cy="160" r="92"/><circle class="paper" cx="300" cy="160" r="85" style="opacity:.55"/>`;
+  if (M.clino) h += `<path class="clarc" d="M232 104A88 88 0 0 1 300 72"/><polygon class="clarh" points="300,64 312,72 300,80"/><path class="clarc" d="M368 216A88 88 0 0 1 300 248"/><polygon class="clarh" points="300,256 288,248 300,240"/>` +
+    `<circle class="clmot" cx="300" cy="160" r="14"/>` + T_(300, 56, "Clinostat: turns slowly", FS(12), 'text-anchor="middle" class="darkt"');
   /* Dish 3: control, lamp above */
   h += `<polygon class="cone" points="490,52 510,52 566,244 434,244"/>` + lampSVG(500, 40).replace(/r="15"/, 'r="11"');
   h += `<rect class="dish" x="438" y="244" width="124" height="12" rx="3"/><rect class="paper" x="441" y="244" width="118" height="4"/>`;
-  DISHES.forEach((d, i) => { const x = 100 + i * 200, sub = veiled("ctrl") && d.control ? "Lamp above, flat" : d.sub;
+  DISHES.forEach((d, i) => { const x = 100 + i * 200, sub = veiled("ctrl") && d.control ? "Lamp above, flat" : d.id === 2 && M.clino ? "On a clinostat, dark" : d.sub;
     h += `<g class="panelbtn" data-dish="${d.id}" tabindex="0" role="button" aria-label="${esc(d.name + ": " + sub)}"><rect class="pfr" x="${4 + i * 200}" y="4" width="192" height="302" rx="10"/>` +
       T_(x, 282, d.name, FS(15), 'text-anchor="middle" class="dlbl"') + T_(x, 300, sub, FS(13), 'text-anchor="middle" class="itm"') + `</g>`; });
   return h; }
@@ -1073,7 +1206,7 @@ function dishDyn(M) {
   /* flat dishes (1 and 3): the roots grow into the damp paper, so only shoots are drawn; Dish 2 stands on its edge, so its roots show */
   const mini = (c, ox, oy, sc, rs) => (rs ? organSVG("root", pathAt("root", c, M.day), ox, oy, rs, 5) : "") + organSVG("shoot", pathAt("shoot", c, M.day), ox, oy, sc, 6) + cotySVG(pathAt("shoot", c, M.day), ox, oy, sc) + seedSVG(ox, oy, c.pose, .45);
   [40, 63, 86, 109, 132].forEach(x => { h += mini(DISH(1).cfg, x, 244, .44, 0); });
-  [118, 160, 202].forEach(y => { h += mini(DISH(2).cfg, 292, y, .34, .34); });
+  [118, 160, 202].forEach(y => { h += mini(d2cfg(M), 292, y, .34, .34); });
   [452, 476, 500, 524, 548].forEach(x => { h += mini(DISH(3).cfg, x, 244, .5, 0); });
   const i = M.dish - 1; h += `<rect class="psel" x="${6 + i * 200}" y="6" width="188" height="298" rx="9" pointer-events="none"/>`;
   return h; }
@@ -1089,6 +1222,7 @@ function readout() {
         : "Dish 2: on its edge in the dark." + (g ? " The shoots turn up and the roots turn down." : " The shoots point sideways at the start.");
       return `<p class="r1">${dayTxt(M.day)} · ${esc(d.name)}</p><p class="r2">${esc(nl)}</p><p class="r3">${g ? "Look at all three dishes." : "Press Grow ▶ to leave the dishes for 3 days."}</p>`;
     }
+    if (d.id === 2 && M.clino) return `<p class="r1">${dayTxt(M.day)} · Dish 2</p><p class="r2">${esc(g ? "Dish 2: on a clinostat in the dark. It turns slowly, so gravity pulls on every side in turn and its effect cancels out. The shoots and roots grow straight out: no gravitropism." : "Dish 2: on a clinostat in the dark. It turns slowly.")}</p><p class="r3">${g ? "Compare it with Dish 2 on its edge (not turning)." : "Press Grow ▶ to leave the dishes for 3 days."}</p>`;
     const line = d.id === 3 ? (g ? "Dish 3 (control): lamp above, dish flat. The shoots grow straight up. This is normal growth to compare with." : "Dish 3 (control): lamp above, dish flat.")
       : d.id === 1 ? (g ? "Dish 1: box with a slit, light from one side. Compared with the control, the shoots bend towards the slit: phototropism." : "Dish 1: box with a slit, light from one side.")
       : (g ? "Dish 2: on its edge in the dark. Compared with the control, the shoots turn up and the roots turn down: gravitropism. There is no light, so it is not phototropism." : "Dish 2: on its edge in the dark. The shoots point sideways at the start.");
@@ -1118,6 +1252,7 @@ function drawPane() {
   $("pane-seed").hidden = M.tab !== "seed"; $("pane-dish").hidden = M.tab !== "dish";
   if (M.tab === "seed") { setLayer($("sBg"), seedBg(M)); drawSeed(M, true); $("ssvg").classList.toggle("manual", M.manual); $("ssvg").classList.toggle("isdark", M.light === "none" && !M.manual); }
   else { setLayer($("dBg"), dishBg(M)); setLayer($("dDyn"), dishDyn(M)); }
+  drawMeas(); { const sh = veiled("safe"); if ($("safeLine").hidden !== sh) $("safeLine").hidden = sh; }
   setAttr($("ssvg"), "aria-label", veiled("aux") ? "A seedling with a shoot and a root. Orange dots are a plant hormone. P and Q are the two sides of the shoot; R and S are the two sides of the root."
     : "A seedling with a shoot and a root. Orange dots are auxin. P and Q are the two sides of the shoot; R and S are the two sides of the root.");
   setAttr($("dsvg"), "aria-label", veiled("ctrl") ? "Required practical 8: three dishes of seedlings. Dish 1 in a box with a slit and light from one side; Dish 2 on its edge in a dark cupboard; Dish 3 flat with a lamp above."
@@ -1129,6 +1264,7 @@ function renderCtl() {   // touches a control only when its state changes
   document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", b.dataset.tab === M.tab));
   document.querySelectorAll("#lightSeg button").forEach(b => { const l = b.dataset.light; setAttr(b, "aria-pressed", l === M.light && !M.manual); const dis = M.manual || (M.pose === "side" && sideLight(l)); if (b.disabled !== dis) b.disabled = dis; });
   document.querySelectorAll("#poseSeg button").forEach(b => setAttr(b, "aria-pressed", b.dataset.pose === M.pose));
+  document.querySelectorAll("#clinoSeg button").forEach(b => setAttr(b, "aria-pressed", (b.dataset.clino === "1") === !!M.clino));
   document.querySelectorAll("#dishSeg button").forEach(b => { setAttr(b, "aria-pressed", +b.dataset.dish === M.dish); const d = DISH(+b.dataset.dish), bt = d.name + (d.control && !veiled("ctrl") ? " (control)" : ""); if (b.textContent !== bt) b.textContent = bt; });
   setAttr($("manSw"), "aria-pressed", M.manual); const s = $("manSw").querySelector(".state"); if (s.textContent !== (M.manual ? "on" : "off")) s.textContent = M.manual ? "on" : "off";
   const ah = !(M.manual && M.tab === "seed"); if ($("auxRow").hidden !== ah) $("auxRow").hidden = ah;
@@ -1188,10 +1324,212 @@ function afterChange() {   // things to try in Demo
 
 /* ===== Demo: things to try ===== */
 const TRY = ["Light from the right: where does auxin go?", "On its side, in the dark: grow it for 3 days.",
-  "Move auxin yourself: bend the shoot left.", "RP8 dishes: grow, then compare with Dish 3."];
+  "Move auxin yourself: bend the shoot left.", "RP8 dishes: grow, then compare with Dish 3.", "Measure the five shoots in one dish and find the mean."];
 const TRIED = TRY.map(() => false);
 function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
 function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== RP8: measure the shoots (coverage fix, 30 Oct 2026) =====
+   Deck s22 step 6 "Measure shoots in mm"; department notes: a ruler for straight seedlings, string and a ruler for curved ones,
+   then the mean for each dish; AQA handbook: heights in mm, mean height. Shoot lengths are INVENTED example data (Model limits). */
+const MPX = 6, MY0 = 282, MXS = 300, MRX = 318, MRW = 40, RULER_MM = 45, RDIV = 1;   // close-up: 6 px per mm; the ruler's smallest marks are 1 mm apart
+const NSEED = 5;   // seedlings measured per dish (5 are drawn; the method uses 10)
+const DIDS = [1, 2, 3];
+function mrng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function newSeed() { return ((Date.now() & 0xffffff) ^ Math.floor(Math.random() * 1e9)) >>> 0; }
+function r1(v) { return Math.round(v * 10) / 10; }   // (function declarations: freshM() uses them before this part of the script runs)
+function makeLens(seed) {   // INVENTED: every dish has about the same mean (24 mm, ±0.5); scatter sd 1.5 mm, cut off at ±2.5 mm; about 4 dishes in 10 have one stunted seedling
+  const R = mrng(seed), g = () => { let u = 0, v = 0; while (!u) u = R(); while (!v) v = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const L = {};
+  [1, 2, 3].forEach(d => { const mu = 24 + (R() - .5); L[d] = [0, 1, 2, 3, 4].map(() => r1(mu + clamp(g() * 1.5, -2.5, 2.5)));
+    if (R() < .4) { const j = Math.floor(R() * 5); L[d][j] = r1(mu * (.40 + .08 * R())); } });
+  return { seed, L };
+}
+function blankL() { return { 1: Array(5).fill(null), 2: Array(5).fill(null), 3: Array(5).fill(null) }; }
+function lAnom(a) {   // the one reading that doesn't fit: further than max(6 mm, 30 % of the median) from the median of five
+  if (a.length < NSEED || a.some(x => x == null)) return -1;
+  const s = [...a].sort((x, y) => x - y), m = s[2], thr = Math.max(6, .3 * m), far = a.map((x, i) => Math.abs(x - m) > thr ? i : -1).filter(i => i >= 0);
+  return far.length === 1 ? far[0] : -1;
+}
+const lMeanOf = a => a.reduce((s, x) => s + x, 0) / a.length;
+const lUsed = a => { const i = lAnom(a); return i < 0 ? a.slice() : a.filter((x, j) => j !== i); };
+const lGood = a => lMeanOf(lUsed(a));
+const halfUp = (x, d) => Math.floor(x * Math.pow(10, d) + .5 + 1e-9) / Math.pow(10, d);
+const decs = s => { const m = String(s).trim().replace(",", ".").match(/\.(\d+)/); return m ? m[1].length : 0; };
+function lParse(s) { s = String(s || "").trim().replace(",", "."); const m = s.match(/^-?\d*\.?\d+/); return m ? parseFloat(m[0]) : NaN; }
+function judgeLMean(a, s) {   // a typed mean: right only if it is the true mean rounded half-up to the typed precision
+  const v = lParse(s), i = lAnom(a), ok = lGood(a), d = decs(s), tot = a.reduce((x, y) => x + y, 0), near = x => Math.abs(v - x) <= .051;
+  if (!isFinite(v)) return { why: "Type a number." };
+  if (d <= 3 && Math.abs(v - halfUp(ok, d)) < 1e-6) return { ok: true };
+  if (i >= 0 && near(lMeanOf(a))) return { why: `You included the anomaly (${a[i]} mm). Leave it out, then divide by ${NSEED - 1}.` };
+  if (i >= 0 && near((tot - a[i]) / NSEED)) return { why: `You left out the anomaly but still divided by ${NSEED}. You used ${NSEED - 1} readings, so divide by ${NSEED - 1}.` };
+  if (near(tot) || (i >= 0 && near(tot - a[i]))) return { why: "That is the total. Now divide by the number of readings you used." };
+  if (Math.abs(v - ok) <= .5 * Math.pow(10, -Math.max(d, 1)) + 1e-9) return { why: "Nearly: check your rounding (5 or more rounds up)." };
+  if (Math.abs(v - ok) <= .6) return { why: "Close. Check your adding and dividing." };
+  return { why: i >= 0 ? "Not quite. One reading doesn't fit the pattern: leave it out, add the others, then divide." : `Not quite. Add the ${NSEED} readings, then divide by ${NSEED}.` };
+}
+function judgeLen(L, off, v) {   // a shoot (or string) length read off the ruler by the pupil, in mm
+  if (Math.abs(v - L) <= .6) return { ok: true };
+  if (Math.abs(v * 10 - L) <= .6) return { why: `The ruler is numbered in cm. ${v} cm = ${r1(v * 10)} mm: type it in mm.` };
+  if (Math.abs(off) > .6 && Math.abs(v - (L + off)) <= .6) return { why: "That is where the tip is on the ruler, but 0 is not at the seed end. Drag the ruler so 0 lines up with the seed end." };
+  return { why: "Look again. Line up 0 with the seed end, then read the ruler at the tip, in mm." };
+}
+const curved = (M, d) => d !== 3;   // Dish 1 bends to the slit, Dish 2 turns up: measure them with string
+const d2cfg = M => M.clino ? CF.clino : DISH(2).cfg;
+const dcfg = (M, d) => d === 2 ? d2cfg(M) : DISH(d).cfg;
+const lensReady = M => M.tab === "dish" && M.day >= DAYS;
+const measHidden = () => veiled("vars") || veiled("order");   // the measuring gives the dependent variable / the last step of the method
+/* the close-up */
+function measSVG(M) {
+  const d = M.dish, i = M.msd, L = M.lens.L[d][i], len = L * MPX, cv = curved(M, d);
+  let o = `<rect class="mbg" x="0" y="0" width="440" height="310" rx="8"/>`;
+  if (cv) {   // the curved shoot, as it grew, with string laid along it
+    const P = pathAt("shoot", dcfg(M, d), DAYS), Lp = (P.length - 1) * DS, sc = len / Lp, [ox, oy] = d === 2 ? [46, MY0 - 6] : [130, MY0];
+    o += organSVG("shoot", P, ox, oy, sc, 7) + cotySVG(P, ox, oy, sc * .85) + seedSVG(ox, oy + (d === 2 ? 0 : 8), d === 2 ? "side" : "up", .8);
+    if (M.str) o += `<polyline class="mstr" points="${poly(P, ox, oy, sc)}"/>`;
+    o += T_(d === 2 ? 120 : 130, 24, M.str ? "String laid along the shoot" : "A curved shoot", 18, 'text-anchor="middle" class="itm"');
+  } else o += T_(130, 120, "A straight shoot:", 18, 'text-anchor="middle" class="itm"') + T_(130, 142, "hold the ruler beside it.", 18, 'text-anchor="middle" class="itm"');
+  if (!cv) { const S = [{ x: 0, y: 0, a: -90 * DEG }, { x: 0, y: -len, a: -90 * DEG }];
+    o += organSVG("shoot", S, MXS - 6, MY0, 1, 7) + cotySVG(S, MXS - 6, MY0, .85) + seedSVG(MXS - 6, MY0 + 8, "up", .8); }
+  else if (M.str) o += `<path class="mstr" d="M${MXS - 6} ${MY0}V${f1(MY0 - len)}"/><path class="mstre" d="M${MXS - 12} ${MY0}h12M${MXS - 12} ${f1(MY0 - len)}h12"/>` +
+    T_(MXS - 16, f1(MY0 - len / 2), "string", 17, `text-anchor="end" class="itm"`);
+  o += `<path class="mseed" d="M${MXS - 22} ${MY0}h${MRX - MXS + 18}"/>` + T_(MXS - 26, MY0 + 22, "seed end", 16, 'text-anchor="end" class="itm"');
+  return o;
+}
+function rulerSVG() {   // drawn once with 0 at y = 0; moved with a transform
+  let o = `<rect class="ruler" x="${MRX}" y="${-(RULER_MM + 1) * MPX}" width="${MRW}" height="${(RULER_MM + 2) * MPX}" rx="3"/>`, tk = "";
+  for (let m = 0; m <= RULER_MM; m++) { const L = m % 10 === 0 ? 16 : m % 5 === 0 ? 10 : 6; tk += `M${MRX} ${-m * MPX}h${L}`; }
+  o += `<path class="tk" d="${tk}"/>`;
+  for (let c = 0; c <= 4; c++) o += T_(MRX + MRW - 6, -c * 10 * MPX + 5, String(c), 19, 'text-anchor="end" class="rk"');
+  o += T_(MRX + MRW - 4, -(RULER_MM - 1) * MPX + 4, "cm", 14, 'text-anchor="end" class="rk"');
+  return o + `<rect class="fr" x="${MRX - 3}" y="${-(RULER_MM + 1) * MPX - 3}" width="${MRW + 6}" height="${(RULER_MM + 2) * MPX + 6}" rx="5"/>`;
+}
+let RSC = 1;   // CSS px per close-up unit (read when the close-up is drawn, not during a drag)
+function moveRuler() { $("rLay").style.transform = `translate3d(0,${(M.rOff * MPX * RSC).toFixed(1)}px,0)`; }   // the ruler has its own layer: a drag only moves it
+function drawRulerT() { const g = $("mRul"); if (!g._b) { g.innerHTML = `<g id="mRulIn" transform="translate(0 ${MY0})">${rulerSVG()}</g>`; g._b = 1; }
+  const h = $("rLay").clientHeight; if (h) RSC = h / 310; moveRuler(); setAttr(g, "aria-valuenow", f1(M.rOff));
+  setAttr(g, "aria-valuetext", `The ruler's 0 mark is ${Math.abs(M.rOff) < .05 ? "level with" : f1(Math.abs(M.rOff)) + " mm " + (M.rOff > 0 ? "below" : "above")} the seed end`); }
+function lTableHTML(M) {
+  let h = `<table class="rt"><caption>Shoot length after 3 days (mm)</caption><thead><tr><th scope="col">Dish</th>${[...Array(NSEED).keys()].map(i => `<th scope="col" class="pc">${i + 1}</th>`).join("")}<th scope="col">Mean (mm)</th></tr></thead><tbody>`;
+  DIDS.forEach(d => { const a = M.lrec[d], mk = M.lmark[d], full = a.every(x => x != null), ok = M.lok[d];
+    h += `<tr${d === M.dish ? ' class="cur"' : ""}><td class="dst">Dish ${d}</td>`;
+    a.forEach((x, i) => { h += `<td>${x == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-d="${d}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="Dish ${d}, seedling ${i + 1}: ${x} mm${mk.includes(i) ? ", marked as an anomaly" : ""}">${x}</button>`}</td>`; });
+    h += `<td>${full ? `<input class="meanin${ok ? " ok" : ok === false ? " no" : ""}" data-d="${d}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(M.lin[d] || "")}" aria-label="Mean shoot length for Dish ${d}"${ok ? " readonly" : ""}>` : '<span class="emp">–</span>'}</td>`;
+    h += `</tr>`; });
+  const rd = DIDS.filter(d => M.lrec[d].some(x => x != null));
+  return h + `</tbody></table>` + (rd.length ? `<div class="controls redorow"><span class="ctl-lbl">Redo:</span>${rd.map(d => `<button type="button" class="btn redo" data-redo="${d}" aria-label="Redo Dish ${d}: clear its readings">Dish ${d}</button>`).join("")}</div>` : "") +
+    `<p class="small">Press a reading to mark it as an anomaly. Redo clears a dish so you can measure it again.</p>`;
+}
+function lBarsSVG(M) {
+  const x0 = 64, y0 = 18, w = 280, h = 190, fs = 17, top = 40, py = v => y0 + h * (1 - v / top), have = DIDS.filter(d => M.lok[d]);
+  let o = "";
+  for (let v = 0; v <= top; v += 10) o += `<path class="gr" d="M${x0} ${f1(py(v))}H${x0 + w}"/>` + T_(x0 - 6, py(v) + 5, String(v), fs, 'text-anchor="end"');
+  o += `<path class="lax" d="M${x0} ${y0 - 4}V${y0 + h}H${x0 + w + 4}"/>`;
+  DIDS.forEach((d, i) => { const bw = 52, bx = x0 + 22 + i * 88;
+    o += T_(bx + bw / 2, y0 + h + fs + 5, `Dish ${d}`, fs, 'text-anchor="middle" class="it"');
+    if (M.lok[d]) { const v = lParse(M.lin[d]); o += `<rect class="lbar" x="${bx}" y="${f1(py(v))}" width="${bw}" height="${f1(y0 + h - py(v))}"/>` + T_(bx + bw / 2, py(v) - 6, String(v), fs, 'text-anchor="middle" class="it"'); } });
+  o += `<text x="${fs - 2}" y="${y0 + h / 2}" font-size="${fs - 1}" text-anchor="middle" class="it" transform="rotate(-90 ${fs - 2} ${y0 + h / 2})">Mean shoot length (mm)</text>`;
+  if (!have.length) o += T_(x0 + w / 2, y0 + h / 2, "Check a mean to plot it", fs, 'text-anchor="middle" class="itm"');
+  return o;
+}
+const CONC_O = ["about the same as", "longer than", "shorter than"];
+function lStats(M, d) { const u = lUsed(M.lrec[d]), m = lMeanOf(u), s2 = u.reduce((s, x) => s + (x - m) * (x - m), 0) / Math.max(1, u.length - 1); return { m, s2, n: u.length }; }
+function concAns(M) {   // judged from the pupil's own readings: a difference within 2 standard errors counts as "about the same"
+  const a = lStats(M, 1), b = lStats(M, 3), diff = a.m - b.m, lim = Math.max(.5, 2 * Math.sqrt(a.s2 / a.n + b.s2 / b.n));
+  return { ans: r1(Math.abs(diff)) <= r1(lim) ? CONC_O[0] : diff > 0 ? CONC_O[1] : CONC_O[2], diff, lim };   // judged on the rounded values the pupil is shown
+}
+function lConclHTML(M) {
+  if (!(M.lok[1] && M.lok[3])) return M.lok[1] || M.lok[3] || M.lok[2] ? `<p class="small">Check the means for Dish 1 and Dish 3 then write a conclusion.</p>` : "";
+  const key = M.lrec[1].join() + "|" + M.lrec[3].join(); if (M.cKey !== key) { M.cKey = key; M.cOrd = shuffled(CONC_O.length); M.cSel = ""; M.cOk = null; M.cMsg = ""; }
+  return `<label class="grow"><span>Conclusion: the mean shoot length in Dish 1 was</span> <select id="cSel" aria-label="Dish 1 compared with Dish 3"><option value="">choose…</option>${M.cOrd.map(j => `<option${M.cSel === CONC_O[j] ? " selected" : ""}>${CONC_O[j]}</option>`).join("")}</select> <span>the mean in Dish 3 (the lamp above).</span></label>` +
+    `<div class="controls"><button class="btn" type="button" id="cCheck">Check my conclusion</button></div>` + (M.cMsg ? `<p class="${M.cOk ? "okc" : "warn"}">${esc(M.cMsg)}</p>` : "");
+}
+function measRead(M) {
+  if (!lensReady(M)) return `<p class="r3">Grow the dishes for 3 days first (Grow ▶ or the Time slider). Then measure each shoot here.</p>`;
+  const d = M.dish, i = M.msd, x = M.lrec[d][i];
+  if (d === 2 && M.clino) return `<p class="r2">Measure Dish 2 on its edge: set Dish 2 back to “On its edge” first.</p>`;
+  let h = `<p class="r1">Dish ${d} · seedling ${i + 1}${x != null ? ` · recorded ${x} mm ✓` : ""}</p>`;
+  if (M.lmsg) return h + `<p class="r2">${esc(M.lmsg)}</p>`;
+  return h + `<p class="r3">${curved(M, d) && !M.str ? "This shoot is curved: a ruler can’t follow the curve. Lay string along it first." : "Drag the ruler (or use the arrow keys) so 0 is at the seed end. Read the ruler at the tip."}</p>`;
+}
+function drawMeas() {
+  const lm = $("limMeas"), lh = measHidden(); if (lm.hidden !== lh) lm.hidden = lh;
+  const box = $("measBox"), hide = M.tab !== "dish" || measHidden(); if (box.hidden !== hide) box.hidden = hide; if (hide) return;
+  const rd = lensReady(M), c2 = M.dish === 2 && M.clino, show = rd && !c2;
+  ["mWrap", "lenRow"].forEach(id => { const e = $(id); if (e.hidden !== !show) e.hidden = !show; });
+  ["lGrid", "lCtl"].forEach(id => { const e = $(id); if (e.hidden !== !rd) e.hidden = !rd; });
+  morphHTML($("mread"), measRead(M));
+  const sb = $("strBtn"), cv = curved(M, M.dish); if (sb.hidden !== !cv) sb.hidden = !cv; const st = M.str ? "String laid ✓" : "Lay string along the shoot"; if (sb.textContent !== st) sb.textContent = st; setAttr(sb, "aria-pressed", String(!!M.str));
+  document.querySelectorAll("#seedSeg button").forEach(b => setAttr(b, "aria-pressed", String(+b.dataset.sd === M.msd)));
+  if (show) { setLayer($("mG"), measSVG(M)); drawRulerT(); }
+  if (rd) { const el = $("ltable"), h = lTableHTML(M), ae = document.activeElement, foc = ae && ae.classList && ae.classList.contains("meanin") && el.contains(ae) ? ae.dataset.d : null;
+    if (el._h !== h) { el.innerHTML = h; el._h = h; if (foc) { const n = el.querySelector(`.meanin[data-d="${foc}"]`); if (n) { n.focus({ preventScroll: true }); const L = n.value.length; try { n.setSelectionRange(L, L); } catch (e) {} } } }
+    setLayer($("lbG"), lBarsSVG(M)); morphHTML($("lconcl"), lConclHTML(M)); morphHTML($("lmsg2"), M.lcMsg ? `<p class="r2">${M.lcMsg}</p>` : ""); }
+}
+/* actions */
+function mGuard() { if (locked()) { lockMsg(); return true; } return false; }
+function nextSeed(d) { const a = M.lrec[d]; for (let k = 1; k <= NSEED; k++) { const j = (M.msd + k) % NSEED; if (a[j] == null) return j; } return -1; }
+function lenRecord() {
+  if (mGuard() || !lensReady(M)) return;
+  const d = M.dish, i = M.msd, v = lParse($("lenIn").value);
+  if (d === 2 && M.clino) return;
+  if (!isFinite(v)) { M.lmsg = "Type the length you read, in mm, then press Record."; drawMeas(); return; }
+  if (M.lok[d]) { M.lmsg = `The mean for Dish ${d} is already checked. Press Redo to measure Dish ${d} again.`; drawMeas(); return; }
+  if (curved(M, d) && !M.str) { M.lmsg = "Lay string along the curved shoot first, then measure the string against the ruler."; drawMeas(); return; }
+  const j = judgeLen(M.lens.L[d][i], M.rOff, v);
+  if (j.ok) { M.lrec[d][i] = r1(v); M.lmark[d] = []; delete M.lin[d]; delete M.lok[d]; $("lenIn").value = ""; M.lcMsg = "";
+    const nx = nextSeed(d); M.lmsg = `✓ Recorded ${r1(v)} mm for Dish ${d}, seedling ${i + 1}.` + (nx >= 0 ? ` Now seedling ${nx + 1}.` : ` All ${NSEED} done: type the mean in the table.`);
+    if (nx >= 0) { M.msd = nx; M.str = false; } tourSignal("lrec"); tried(4); }
+  else M.lmsg = "✗ " + j.why;
+  drawMeas();
+}
+function lCheck() {
+  if (mGuard()) return;
+  const msgs = [], good = [];
+  DIDS.forEach(d => { const a = M.lrec[d]; if (a.some(x => x == null) || M.lok[d]) return; const s = (M.lin[d] || "").trim(); if (!s) return;
+    const ai = lAnom(a), wm = M.lmark[d].find(k => k !== ai), j = judgeLMean(a, s);
+    if (j.ok) { M.lok[d] = true; good.push(`Dish ${d}`); if (wm != null) msgs.push(`Dish ${d}: right mean, but ${a[wm]} mm fits the pattern${ai >= 0 ? `; the anomaly is ${a[ai]} mm` : ""}.`); M.lmark[d] = ai >= 0 ? [ai] : []; }
+    else { M.lok[d] = false; msgs.push(`Dish ${d}: ` + (wm != null ? `${a[wm]} mm fits the pattern, so keep it. ` : "") + j.why); } });
+  M.lcMsg = !good.length && !msgs.length ? "Measure all five shoots in a dish, type its mean, then press Check my means." : (good.length ? `✓ Correct: ${good.join(", ")}. ` : "") + esc(msgs.join(" "));
+  if (good.length) tourSignal("lcheck");
+  drawMeas();
+}
+function lCheckConcl() {
+  if (mGuard()) return;
+  const c = concAns(M), d = Math.abs(c.diff).toFixed(1), lim = c.lim.toFixed(1);
+  if (!M.cSel) { M.cOk = false; M.cMsg = "Choose a word for your conclusion."; }
+  else if (M.cSel === c.ans) { M.cOk = true; M.cMsg = `✓ From your readings: the means differ by ${d} mm, and the scatter in your readings allows about ±${lim} mm. Length alone doesn’t show the bend: also record the direction of growth and draw one seedling.`; }
+  else { M.cOk = false; M.cMsg = c.ans === CONC_O[0] ? `✗ The means differ by only ${d} mm. Your readings scatter, so a difference smaller than about ${lim} mm could just be chance.` : `✗ The difference (${d} mm) is bigger than the scatter in your readings (about ${lim} mm), so look again at which mean is bigger.`; }
+  drawMeas();
+}
+function lRedo(d) { if (mGuard()) return; M.lrec[d] = Array(NSEED).fill(null); M.lmark[d] = []; delete M.lin[d]; delete M.lok[d]; M.lcMsg = ""; if (M.dish === d) { M.msd = 0; M.str = false; } M.lmsg = `Dish ${d} cleared: measure its shoots again.`; drawMeas(); }
+function lNew() { if (mGuard()) return; M.lens = makeLens(newSeed()); M.lrec = blankL(); M.lmark = { 1: [], 2: [], 3: [] }; M.lin = {}; M.lok = {}; M.lcMsg = ""; M.msd = 0; M.str = false; M.lmsg = "A new set of seedlings, grown the same way."; drawMeas(); }
+$("seedSeg").addEventListener("click", e => { const b = e.target.closest("button[data-sd]"); if (!b) return; if (mGuard()) return; M.msd = +b.dataset.sd; M.str = false; M.lmsg = ""; drawMeas(); tourSignal("seedling"); });
+$("strBtn").addEventListener("click", () => { if (mGuard() || !lensReady(M)) return; M.str = true; M.lmsg = "String laid along the shoot and then straightened beside the ruler. Now measure the string."; drawMeas(); tourSignal("string"); });
+$("lenRec").addEventListener("click", lenRecord);
+$("lenIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); lenRecord(); } });
+$("lenCheck").addEventListener("click", lCheck);
+$("lenNew").addEventListener("click", lNew);
+$("ltable").addEventListener("click", e => { const r = e.target.closest("[data-redo]"); if (r) { lRedo(+r.dataset.redo); return; }
+  const b = e.target.closest(".cnt"); if (!b) return; if (mGuard()) return; const d = +b.dataset.d, i = +b.dataset.i;
+  if (M.lok[d]) { M.lcMsg = "This mean is already checked."; drawMeas(); return; }
+  const k = M.lmark[d].indexOf(i); if (k >= 0) M.lmark[d].splice(k, 1); else M.lmark[d].push(i); drawMeas(); });
+$("ltable").addEventListener("input", e => { const n = e.target.closest(".meanin"); if (!n) return; if (locked()) { n.value = M.lin[n.dataset.d] || ""; return lockMsg(); } M.lin[n.dataset.d] = n.value; delete M.lok[n.dataset.d]; });
+$("lconcl").addEventListener("change", e => { if (e.target.id !== "cSel") return; if (locked()) return lockMsg(); M.cSel = e.target.value; M.cOk = null; M.cMsg = ""; });
+$("lconcl").addEventListener("click", e => { if (e.target.closest("#cCheck")) lCheckConcl(); });
+$("clinoSeg").addEventListener("click", e => { const b = e.target.closest("button[data-clino]"); if (!b) return; change(() => { M.clino = b.dataset.clino === "1"; M.dish = 2; M.str = false; M.lmsg = ""; }, "clino"); });
+(function mRulerWire() {   // drag the ruler up and down (or arrow keys: 0.5 mm, Shift: 5 mm); only a transform moves, at most 10 times a second
+  const g = $("mRul"); let dr = null, pend = 0, lastY = 0;
+  const go = () => { pend = 0; if (!dr) return; M.rOff = clamp(r1(dr.o + (lastY - dr.y) / (MPX * dr.k)), -8, 8); moveRuler(); };
+  g.addEventListener("pointerdown", e => { e.preventDefault(); if (mGuard()) return; dr = { o: M.rOff, y: e.clientY, k: RSC || 1 }; lastY = e.clientY; try { g.setPointerCapture(e.pointerId); } catch (x) {} });
+  g.addEventListener("pointermove", e => { if (!dr) return; lastY = e.clientY; if (!pend) pend = paceFrame(go, 10); });
+  const up = () => { if (!dr) return; if (pend) { paceCancel(pend); pend = 0; } go(); drawRulerT(); const moved = Math.abs(M.rOff - dr.o) > .05; dr = null; if (moved) tourSignal("ruler"); };
+  g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+  g.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
+  g.addEventListener("keydown", e => { if (!/^Arrow(Up|Down)$/.test(e.key)) return; e.preventDefault(); if (mGuard()) return;
+    M.rOff = clamp(r1(M.rOff + (e.key === "ArrowDown" ? 1 : -1) * (e.shiftKey ? 5 : .5)), -8, 8); drawRulerT(); tourSignal("ruler"); });
+})();
+window.addEventListener("resize", () => { if (M.tab === "dish" && !$("mWrap").hidden) drawRulerT(); }, { passive: true });
 
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -1307,13 +1645,13 @@ function evaluate() {
     const [k, txt] = wrong, v = S.gap[k];
     return { ok: false, html: esc(`“${txt} ${v}” is not right. ${t.rowWhy && t.rowWhy[k] ? t.rowWhy[k] : t.whyVal[v]}`) }; }
   if (t.kind === "build") { if (!S.build.length) return { skip: t.ordered ? "Tap the statements you would write, in order." : "Tap the statements your plan needs." };
-    const r = buildMark(t, S.build), lv = t.levels ? ` ${levelOf(r.level)}.` : "", mk = `${r.marks} of ${t.max} marks.${lv}`;
+    const r = buildMark(t, S.build), lv = t.levels ? ` ${levelOf(r.level)}.` : "", mk = t.levels ? `${r.marks} of ${t.max} marks, Level ${r.level}.` : `${r.marks} of ${t.max} marks.${lv}`;   // kept short for the 6-mark plan
     const nt = r.neutral.length ? " " + r.neutral[0].w.why : "";   // a no-credit statement: say so, but it doesn't stop full marks
-    if (r.ok) return { ok: true, html: `<span class="markline">${esc("Correct: " + mk)}</span> ${esc(t.explain + nt)}` };
+    if (r.ok) return { ok: true, html: `<span class="markline">${esc("Correct: " + mk)}</span> ${esc(t.levels ? "A complete, valid plan in order." + nt : t.explain + nt)}` };
     let why = r.cw.length ? r.cw[0].w.why : r.missing.length ? r.missing[0].miss : !r.inOrder ? t.orderWhy : r.neutral.length ? r.neutral[0].w.why : t.orderWhy;
     if (t.levels) {   // name what holds the level down: a wrong statement, a missing essential step, the order
       const parts = [];   // kept short: the panel also holds the question and every statement
-      if (r.cw.length) parts.push(r.cw[0].w.why + (band(r.raw) > r.level ? " That lowers the level." : ""));
+      if (r.cw.length) parts.push(r.cw[0].w.why + (band(r.raw) > r.level ? " (Level lowered.)" : ""));
       else if (r.essGone.length && band(r.raw) === 3) parts.push("Level 3 needs every essential step. Missing: " + r.essGone.map(p => p.ess).join("; ") + ".");
       else if (r.essGone.length) parts.push(r.essGone[0].miss);   // names the first missing essential step
       else if (r.missing.length) parts.push(r.missing[0].miss);
@@ -1376,6 +1714,7 @@ const TOUR = [
   { el: "#ssvg", tab: "seed", set: M => { M.manual = true; }, text: "Tap P, Q, R or S (or drag a dot across) to move one auxin dot to that side. Watch the bend change.", do: "move", doText: "Move one auxin dot." },
   { el: "#tabs", text: "Now the RP8 set-up: three dishes of seedlings.", do: "tab-dish", doText: "Press RP8 dishes." },
   { el: "#dishSeg", tab: "dish", text: "Dish 3 is the control. Press Grow ▶, then compare each dish with it." },
+  { el: "#measBox", tab: "dish", set: M => { M.day = DAYS; M.dish = 1; }, text: "After 3 days, measure each shoot: lay string along a curved shoot, line up 0 on the ruler with the seed end and read the tip. Record five shoots, then find the mean." },
   { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
 ];
 let tourI = -1, tourWait = null, tourTimer = 0;

@@ -64,6 +64,13 @@
   Performance: drawn on demand. Animations (the 30-minute clock; water crossing the membrane) run for about 3 s through
     paceFrame (15 fps cap, adaptive slow-down), patch transforms on one small layer and then stop. Reduced motion: they finish at once.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Coverage fixes (30 Oct 2026): new Easy 4 is hazard → risk → control (sharp knife and cork borer → cut on a tile, away from your hands;
+    spills → wipe them up; deck s13 safety line), replacing the second % change sum "You do Q2" (still practised by Easy 7, Hard 5 and
+    Hard 6); it locks the model so the cut step's reason can't be opened. Hard 3 (no blotting) now names the effect as a systematic
+    error, with a "random error" distractor. New Hard 4 on the balance's resolution (0.01 g better than 0.1 g: AQA practical handbook,
+    not in the decks) replaces the Challenge "two cylinders both lose 1 g" (Easy 9, the hinge, teaches the same idea).
+  Re-check fixes (30 Oct 2026): "Record readings for me" removed (house rule: no support reads an instrument or types a value);
+    long dropdown options no longer widen the question panel on phones.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -451,6 +458,9 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+#answer .opts:not(.two):not(.grid2){grid-template-columns:minmax(0,1fr)}
+#answer .grow,#answer .grow>*{min-width:0}
+#answer .grow select{min-width:0;max-width:100%}
 </style>
 </head>
 <body>
@@ -544,7 +554,6 @@ main.layout{min-height:calc(100vh - 70px)}
               <button class="sw" type="button" data-support="eq" aria-pressed="false"><span class="dot"></span>Equation <span class="state">off</span></button>
               <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Maths help <span class="state">off</span></button>
               <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
-              <button class="sw" type="button" data-support="auto" aria-pressed="false"><span class="dot"></span>Record readings for me <span class="state">off</span></button>
             </div>
             <div class="support-box" id="eqBox" hidden></div>
             <div class="support-box" id="mathsBox" hidden></div>
@@ -677,6 +686,7 @@ const ACT = {
 };
 const ACT_ORDER = ["leave", "cut", "w2", "place", "calc", "w1", "pour"];
 const METHOD = ["cut", "w1", "pour", "place", "leave", "w2", "calc"];
+const BAL_RES = .01;   // the balance reads to 2 decimal places (0.01 g): AQA practical handbook
 
 /* ===== Model state ===== */
 let KNIFE0 = r1(2 + rnd() * 3.5);
@@ -686,7 +696,7 @@ function freshM() { return { tab: "rp",
   runs: [null, null, null], other1: false, mark: [[], [], [], [], []], inM: [], okM: [], example: false, plot: [null, null, null, null, null], fit: false,
   crossIn: "", crossOK: null, cur: { i: 0, y: 0, on: false }, cs: ["", "", ""], csOK: null, cX: "", smsg: "",
   cc: 0, cAfter: false, cMoved: null }; }
-const support = { eq: false, maths: false, words: false, auto: false };
+const support = { eq: false, maths: false, words: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
 const st = {};
 let LEVELS = {}, TASKS = {};
@@ -701,7 +711,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreFrom = (D, L) => ["easy", "hard"].reduce((n, lv) => n + (L[lv] || []).filter(t => D[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids from retired questions never count)
+const scoreNow = () => scoreFrom(DONE, LEVELS);
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -959,7 +970,7 @@ function renderStRow() {
 }
 function rpRead() {
   const a = M.act; let h = "";
-  if (a) h += `<p class="r1">${esc(ACT[a].t)}</p><p class="r3">${esc(ACT[a].why)}</p>`;
+  if (a) h += `<p class="r1">${esc(ACT[a].t)}</p><p class="r3">${esc(ACT[a].why)}</p>`;   // (the safety question locks the model, so no step can be chosen while it is open)
   else h += `<p class="r1">The method: cut, weigh, leave in the solutions, weigh again, then calculate.</p><p class="r3">Choose each step in a sensible order. If it is too early, you will be told why.</p>`;
   if (M.rmsg) h += `<p class="r2">${M.rmsg}</p>`;
   return h;
@@ -1177,6 +1188,15 @@ TASKS.easy = [
     done: m => `Five cylinders, all ${num(m.cyl[0].L)} cm long, and every start mass recorded.`,
     reveal: m => { if (!sameLen(m) || m.placed) { const L = m.knife; Object.assign(m, freshM(), { tab: "rp", knife: L }); } fillAll(m, "w1"); },
     hints: ["Choose Cut five cylinders, then press Cut five times without moving the knife.", "Then choose Blot and weigh. Press each cylinder button to put it on the balance.", "Type each balance reading in the Start mass column, then press Check my table."] },
+  { id: "safe", kind: "gaps", fixed: true, lesson: "s13 (safety)", text: "Hazard → risk → control. Choose the control that reduces each risk.", setup: SU.rp, lock: "all",
+    rows: [["k", "The knife and cork borer are sharp and could cut you. Control:", "Cut on a tile, away from your hands"], ["s", "Spilt sugar solution could make you slip. Control:", "Wipe up spills straight away"]],
+    bank: ["Cut on a tile, away from your hands", "Wipe up spills straight away", "Hold the potato in your hand to cut it", "Wear gloves so you can cut faster"],
+    why: (k, w) => ({ "Cut on a tile, away from your hands": "Cutting on a tile is the control for the sharp knife and borer.",
+      "Wipe up spills straight away": "Wiping spills is the control for slipping.",
+      "Hold the potato in your hand to cut it": "Never cut towards your hand: that makes a cut more likely. Cut on a tile, away from your hands.",
+      "Wear gloves so you can cut faster": "Gloves don’t stop a sharp knife, and cutting faster makes a cut more likely." })[w],
+    explain: "Sharp knife and cork borer: cut on a tile, away from your hands. Spills: wipe them up straight away.",
+    hints: ["A hazard can cause harm; the risk is the harm; the control makes the harm less likely.", "Match each control to the harm it prevents: a cut, or a slip.", "Tile, away from your hands · wipe up spills."] },
   { id: "pred", kind: "choice", tabs: ["cell"], lesson: "s14–15", text: "Predict: what will happen to the mass of the cylinder in 0.8 mol/dm³ sugar solution?", lock: "all", setup: SU.cell(0), after: "pred",
     options: [{ t: "It will decrease: water moves out of the cells by osmosis.", ok: () => pctMu(.8) < 0 && flows(.8).net < 0 },
       { t: "It will increase: sugar moves into the cells.", why: "Sugar does not move into the potato. The solution is more concentrated than the cell contents, so water moves out." },
@@ -1192,7 +1212,6 @@ TASKS.easy = [
     explain: "Independent: F. Dependent: A, C. Control: B, D, E.", stuck: "words",
     hints: ["Only one is changed on purpose.", "Two are what you measure. The rest are kept the same.", "Independent F; dependent A and C; control B, D and E."] },
   pctQ("we", "s19 We do", 5, 5.5, { hints: ["Change = end − start = 5.5 − 5.0.", "The change is 0.5 g. Divide it by the start mass (5.0 g).", "0.5 ÷ 5.0 × 100 = +10 %."] }),
-  pctQ("you2", "s20 You do Q2", 5, 4, { hints: ["Change = end − start. Is it positive or negative?", "The change is −1.0 g. Divide by the start mass, then × 100.", "−1.0 ÷ 5.0 × 100 = −20 %."] }),
   { id: "read", kind: "num", tabs: ["res"], lesson: "s21–23", text: "The class results are plotted with a line of best fit. Read where the line crosses 0 %.", lock: "all", setup: SU.example,
     frame: "Find 0 % on the y-axis. Go across to the line, then down to the x-axis.", lbl: "It crosses at", unit: "mol/dm³",
     ans: () => crossOf(DECK_MEANS), accept: v => v >= .35 - 1e-9 && v <= .40 + 1e-9, show: "about 0.37 mol/dm³ (accept 0.35 to 0.40)",
@@ -1219,12 +1238,12 @@ TASKS.easy = [
 ];
 const MS6 = ["Level 3 (5–6): a complete, valid method in a logical order (every essential step).", "Level 2 (3–4): some relevant detail; may not be in a logical order.", "Level 1 (1–2): simple relevant statements; little logical structure."];
 TASKS.hard = [
-  { id: "cv2", kind: "multi", need: 2, lesson: "s12, s27 Q2", text: "Give two control variables. [2 marks] Choose only two.", setup: SU.rp,
+  { id: "cv2", kind: "multi", need: 2, lesson: "s12, s27 Q2", text: "Give two control variables. [2 marks]", setup: SU.rp,
     options: [{ t: "The diameter and length of each cylinder", ok: () => true }, { t: "The volume of solution in each beaker", ok: () => true }, { t: "The time in the solution", ok: () => true }, { t: "The type of potato", ok: () => true },
       { t: "The same size", why: "“Same size” alone does not score. Say what: the same diameter and length." },
       { t: "The concentration of the sugar solution", why: "That is what you change: the independent variable." },
       { t: "The percentage change in mass", why: "That is what you measure: the dependent variable." }],
-    explain: "Any two: diameter and length; volume of solution; time; type of potato.", stuck: "words",
+    explain: "Any two: cylinder size, volume, time, potato type.", stuck: "words",
     hints: ["A control variable is kept the same in every beaker.", "Not the one you change, not the one you measure. And be exact about “size”.", "For example: the volume of solution and the time in the solution."] },
   { id: "meth", kind: "build", ordered: true, orderFn: "method", lesson: "s13", text: "Describe the method. [6 marks]", frame: "Build it in order. Start with: Cut five cylinders…", setup: SU.rp,
     stm: [{ t: "Cut five cylinders: same diameter and length.", c: 1 }, { t: "Cut on a tile, away from your hands.", c: 2, any: true },
@@ -1232,19 +1251,27 @@ TASKS.hard = [
       { t: "One cylinder in each beaker, 30 minutes.", c: 5 }, { t: "Blot each dry again; record its end mass.", c: 6 },
       { t: "Calculate each % change; plot a graph.", c: 7 },
       { t: "Cut pieces of potato of a similar size.", why: "“Similar” is too vague. Cut each one to the same diameter and length." },
-      { t: "Use bigger pieces, to make it fairer.", why: "A bigger piece has a different surface area and volume. Keep the size the same." },
+      { t: "Use bigger pieces, to make it fairer.", why: "Bigger pieces change the surface area. Keep the size the same." },
       { t: "Weigh them straight from the solution.", why: "Blot them dry first, or solution on the outside adds to the mass." },
       { t: "Compare the end masses.", why: "Compare percentage changes: the start masses are different." }],
     miss: { 1: "How do you make the cylinders, so they are all the same?", 2: "Add the safety point from the method.", 3: "What do you do before the cylinders go in?", 4: "What goes in the beakers, and how much?", 5: "Where do the cylinders go, and for how long?", 6: "What do you do after the time is up?", 7: "Which calculation do you do, and how do you show the results?" },
     explain: "cut (tile), weigh, 20 cm³, 30 minutes, reweigh, % change and graph.", ms: MS6,
     hints: ["Think of the method in order: make the cylinders, weigh, solutions, wait, weigh again, calculate.", "Include safety, blotting (twice), the volume, the time and the calculation.", "Cut, tile, weigh, 20 cm³, 30 min, reweigh, % change."] },
-  { id: "blot", kind: "choice", lesson: "s13 steps 2 and 5", text: "A student forgot to blot the cylinders dry before weighing their end masses. What effect does this have?", setup: m => { m.tab = "rp"; for (let i = 0; i < 5; i++) { m.knife = 3; doCut(m); } fillAll(m, "leave"); m.noBlot = true; fillAll(m, "w2"); m.onBal = 4; }, lock: "all",
-    options: [{ t: "Every end mass is too high, so every percentage change is too high.", ok: () => { const m = freshM(); for (let i = 0; i < 5; i++) doCut(m); fillAll(m, "leave"); return CONC.every((c, i) => { m.noBlot = true; const a = recPct(m, i); m.noBlot = false; return a > recPct(m, i); }); } },
+  { id: "blot2", kind: "choice", lesson: "s13 steps 2 and 5", text: "A student forgot to blot the cylinders dry before weighing their end masses. What effect does this have?", setup: m => { m.tab = "rp"; for (let i = 0; i < 5; i++) { m.knife = 3; doCut(m); } fillAll(m, "leave"); m.noBlot = true; fillAll(m, "w2"); m.onBal = 4; }, lock: "all",
+    options: [{ t: "Every end mass and % change is too high: a systematic error.", ok: () => { const m = freshM(); for (let i = 0; i < 5; i++) doCut(m); fillAll(m, "leave"); return CONC.every((c, i) => { m.noBlot = true; const a = recPct(m, i); m.noBlot = false; return a > recPct(m, i); }); } },
       { t: "No effect, because percentage change corrects for it.", why: "Percentage change allows for different start masses, not for extra solution on the outside." },
       { t: "Every percentage change is too low.", why: "The solution on the outside adds mass, so the end masses and % changes are too high, not too low." },
+      { t: "A random error: some % changes too high, some too low.", why: "Forgetting every time shifts every reading the same way (too high): a systematic error. Blotting some more than others would be a random error." },
       { t: "Sugar on the surface moves into the cells and adds mass.", why: "Sugar does not move into the cells. The extra mass is solution stuck to the outside." }],
-    explain: "Solution stuck to the outside is weighed too, so every end mass and % change is too high. Blot every cylinder dry the same way before both weighings.",
+    explain: "Solution on the outside is weighed too, so every reading shifts the same way.",
     hints: ["What is on the outside of a cylinder that hasn’t been blotted?", "Does that extra liquid make the end mass bigger or smaller?", "Every end mass is too high, so every % change is too high."] },
+  { id: "res", kind: "choice", lesson: "s13 + AQA handbook", text: "The balance in this practical reads to 0.01 g. Why is it better than a balance that reads only to 0.1 g?", setup: SU.rp,
+    options: [{ t: "It has a higher resolution, so it can show the small changes in mass.", ok: () => BAL_RES === .01 },
+      { t: "It makes the cylinders change mass faster.", why: "A balance only measures. It doesn’t change how fast osmosis happens." },
+      { t: "It means you don’t need to blot the cylinders.", why: "You still blot them: solution on the outside is weighed by any balance." },
+      { t: "It is no better: 0.1 g is close enough for any cylinder.", why: "Near the concentration of the cell contents, a cylinder changes by less than 0.1 g. A 0.1 g balance could show no change at all." }],
+    explain: "Resolution is the smallest change an instrument can show. Reading to 0.01 g shows the small changes in mass, so each % change is more precise.",
+    hints: ["Resolution is the smallest change an instrument can show.", "Some cylinders change mass by less than 0.1 g.", "0.01 g is a higher resolution than 0.1 g."] },
   { id: "calc5", kind: "goal", lesson: "s13 step 6, s19–20", text: "Do it on the model: calculate the percentage change in mass for all five cylinders. Type each one in the table, then press Check my table.", setup: SU.calc,
     test: m => calcDone(m), not: m => !w2Done(m) ? "Finish the end masses first." : `${CONC.filter((c, i) => m.okp[i]).length} of 5 are right so far. Type each % change to 1 decimal place, then press Check my table.`,
     done: m => "Every percentage change is right: " + CONC.map((c, i) => `${cs(c)} → ${sgn(r1(recPct(m, i)), 1)} %`).join(", ") + ".",
@@ -1257,13 +1284,6 @@ TASKS.hard = [
       { t: "It means sugar moved out of the cylinder.", why: "The cylinder lost water by osmosis. Sugar can’t pass through the membrane." }],
     explain: "Change = end − start. In a concentrated solution water moves out, the end mass is smaller, so the % change is negative.",
     hints: ["Change = end − start. What if the end mass is smaller?", "What happens to the cylinders in the stronger solutions?", "Negative just means it lost mass."] },
-  { id: "chal", kind: "choice", lesson: "s20 Challenge", text: "Two cylinders both lose 1 g. One started at 4 g, the other at 8 g. Which has the larger percentage change?", setup: SU.rp,
-    options: [{ t: "The 4 g cylinder: −25 % compared with −12.5 %", ok: () => pctOf(4, 3) === -25 && pctOf(8, 7) === -12.5 },
-      { t: "The 8 g cylinder, because it is bigger", why: "1 g is a smaller part of 8 g: −1 ÷ 8 × 100 = −12.5 %, but −1 ÷ 4 × 100 = −25 %." },
-      { t: "They are the same, because both lost 1 g", why: "The same change in mass is not the same percentage change. −25 % and −12.5 %." },
-      { t: "You can’t tell without the end masses", why: "You can: the end masses are 3 g and 7 g. Change ÷ start × 100 gives −25 % and −12.5 %." }],
-    explain: "−1 ÷ 4 × 100 = −25 %; −1 ÷ 8 × 100 = −12.5 %. The 4 g cylinder loses the larger percentage.", stuck: "eq",
-    hints: ["Work out each one: change ÷ start mass × 100.", "−1 ÷ 4 × 100 = ?  −1 ÷ 8 × 100 = ?", "−25 % and −12.5 %: the 4 g cylinder."] },
   { id: "means", kind: "goal", lesson: "s22 (means)", text: "Do it on the model: in Results and graph, mark the anomaly, then type the mean for every concentration and press Check my means.", setup: SU.means,
     test: m => !m.example && !!m.runs[1] && all5(m.okM) && CONC.every((c, i) => { const k = anomIdx(rowVals(m, i)); return k < 0 || m.mark[i].includes(k); }),
     not: m => !m.runs[1] ? "Press Add repeats first." : `${CONC.filter((c, i) => m.okM[i]).length} of 5 means are right so far. Leave out the anomaly, add the others, divide, and give 1 decimal place.`,
@@ -1334,6 +1354,8 @@ function bankCheck() {
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
   });
+  { const D = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; D[qkey("easy", TASKS.easy[0])] = "solved";
+    if (scoreFrom(D, TASKS) !== 1) errs.push("score: progress saved for a retired question id must not count"); }
   return errs;
 }
 
@@ -1430,16 +1452,8 @@ function renderSupport() {
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
 document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
-  const k = b.dataset.support; support[k] = !support[k]; if (k === "auto" && support.auto) autoRecord(); renderSupport(); if (support[k]) tourSignal("sup-" + k);
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
 }));
-function autoRecord() {   // Record readings for me: fill in the reading of the cylinder on the balance
-  if (!support.auto || locked() || !M.cyl[M.onBal]) return;
-  const i = M.onBal;
-  if (M.act === "w1" && !M.placed && !M.ok1[i]) { M.in1[i] = M.cyl[i].start.toFixed(2); M.ok1[i] = true; }
-  if (M.act === "w2" && M.left && !M.ok2[i]) { M.in2[i] = endRead(M, i).toFixed(2); M.ok2[i] = true; }
-  if (M.tab === "rp") drawAll();
-}
-
 /* ===== Marking ===== */
 function parseNum(s) {
   s = String(s || "").trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(/^\+/, "").replace(/%$/, "");
@@ -1489,7 +1503,7 @@ function evaluate() {
     return t.test(M) ? { ok: true, html: esc("Correct. " + t.done(M)) } : { ok: false, html: esc(t.not(M)) }; }
   return { skip: "" };
 }
-const STUCKW = { eq: "Equation", maths: "Maths help", words: "Key words", auto: "Record readings for me" };
+const STUCKW = { eq: "Equation", maths: "Maths help", words: "Key words" };
 function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
 function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
 function check() {
@@ -1649,7 +1663,7 @@ $("acts").addEventListener("click", e => { const b = e.target.closest("button[da
   const why = blocker(M, k); if (why) { M.rmsg = `<span class="warn">Not yet.</span> ${esc(why)}`; drawAll(); return; }
   M.act = k; M.rmsg = "";
   if (k === "place") { doPlace(M); M.rmsg = "One cylinder is in each beaker. Next: leave them for 30 minutes."; }
-  if (k === "w1" || k === "w2") { M.onBal = Math.max(0, (k === "w1" ? M.ok1 : M.ok2).findIndex(x => !x)); if (M.onBal < 0) M.onBal = 0; autoRecord(); }
+  if (k === "w1" || k === "w2") { M.onBal = Math.max(0, (k === "w1" ? M.ok1 : M.ok2).findIndex(x => !x)); if (M.onBal < 0) M.onBal = 0; }
   if (k === "calc") M.sel = Math.max(0, M.okp.findIndex(x => !x));
   drawAll(); });
 function moveKnife(d) { if (guard() || M.act !== "cut" || cutDone(M)) return; M.knife = clamp(r1(M.knife + d), KMIN, KMAX); drawRP(); tourSignal("knife"); }
@@ -1661,10 +1675,10 @@ function pourOne() { if (guard()) return; const i = M.vol.findIndex(x => x === 0
   if (M.level !== VOL) { M.rmsg = `<span class="warn">Not poured.</span> The method says 20 cm³. Read the bottom of the meniscus: it is ${M.level < VOL ? "below" : "above"} the 20 cm³ mark.`; morphHTML($("rread"), rpRead()); return; }
   M.vol[i] = VOL; M.rmsg = pourDone(M) ? "Every beaker has 20 cm³ of its solution. Wipe up any spills." : `20 cm³ into the ${cs(CONC[i])} mol/dm³ beaker. The measuring cylinder is refilled to the same level with the next solution.`; drawAll(); }
 $("stRow").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.bal != null) { if (guard()) return; M.onBal = +b.dataset.bal; tourSignal("bal"); autoRecord(); drawAll(); return; }
+  if (b.dataset.bal != null) { if (guard()) return; M.onBal = +b.dataset.bal; tourSignal("bal"); drawAll(); return; }
   const k = b.dataset.k; if (k === "kl") moveKnife(-.1); else if (k === "kr") moveKnife(.1); else if (k === "cut") cutOne(); else if (k === "lm") setLevel(M.level - 1); else if (k === "lp") setLevel(M.level + 1); else if (k === "pour") pourOne(); else if (k === "go") startLeave(); });
 $("stRow").addEventListener("input", e => { if (e.target.id === "lvl") { if (guard(e, () => { e.target.value = M.level; })) return; setLevel(+e.target.value); } });
-$("rsvg").addEventListener("click", e => { const g = e.target.closest("[data-cyl]"); if (!g || guard()) return; M.onBal = +g.dataset.cyl; tourSignal("bal"); autoRecord(); drawAll(); });
+$("rsvg").addEventListener("click", e => { const g = e.target.closest("[data-cyl]"); if (!g || guard()) return; M.onBal = +g.dataset.cyl; tourSignal("bal"); drawAll(); });
 (function knifeWire() {
   const svg = $("rsvg"); let dr = false, pend = 0, last = null;
   const go = () => { pend = 0; if (!dr || !last) return; const G = rpGeo(), L = clamp(Math.round((last.x - G.rx0) / G.px * 10) / 10, KMIN, KMAX); if (L !== M.knife) { M.knife = L; drawRP(); } };

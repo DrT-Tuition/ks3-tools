@@ -89,6 +89,11 @@
     patched in place; the ruler drag moves one transform at most 30 times a second; no backdrop-filter.
   Idea credit: none (designed from scratch; ideas reused from this site's KS3 Microscope tool).
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Coverage fixes (30 Oct 2026): Easy 4 is now a hazard → risk → control question (glass slides: handle carefully; lens hitting the
+    slide: watch from the side; iodine: wear goggles; deck s25 safety line + AQA handbook step 3), replacing "How do you start
+    focusing?" (still taught by Easy 3 and Hard 5). A safety line sits under the stage controls on Set up and focus (hidden while
+    Easy 4 is open). Cheek cells are named as stained with methylene blue (department notes).
+  Re-check fixes (30 Oct 2026): long dropdown options no longer widen the question panel on phones (Easy 3 at 360 px).
 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -330,6 +335,9 @@ footer.brand a{color:inherit}
   .qpanel .feedback{font-size:17px}.qpanel .feedback ol{font-size:16px}
 }
 .prep svg text{fill:var(--muted);font-family:var(--f-body)}
+#answer .opts:not(.two):not(.grid2){grid-template-columns:minmax(0,1fr)}
+#answer .grow,#answer .grow>*{min-width:0}
+#answer .grow select{min-width:0;max-width:100%}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
@@ -481,6 +489,7 @@ main.layout{min-height:calc(100vh - 70px)}
           </div>
         </div>
         <div class="controls" id="stageRow"><button class="mbtn" type="button" id="placeBtn">Place the slide on the stage</button></div>
+        <p class="small" id="safeLine"><b>Safety:</b> wear goggles. Iodine stains skin and clothes. Handle glass slides and coverslips carefully. Watch from the side as you raise the stage, so the lens can’t crack the slide.</p>
       </div>
 
       <!-- 2. Draw and measure -->
@@ -647,7 +656,7 @@ const EQS = ["total magnification = eyepiece lens × objective lens", "magnifica
 const LIMITS = ["Example data: the cell sizes, how much of the slide you can see at each lens and the picture you measure are invented for this model. The Calculate tab uses the lessons' own values.",
   "Focus moves in steps here. On a real microscope, focusing is smooth.",
   "A real × 100 lens needs a special technique. It is left out here.",
-  "The prepared cheek cell slide is already stained. Its colour is an example.",
+  "The prepared cheek cell slide is already stained (cheek cells are stained with methylene blue). Its colour is an example.",
   "The on-screen ruler measures the picture as if it were printed. Its millimetres are not real screen millimetres.",
   "The cells on the Light or electron tab are simple drawings. Their colours are examples.",
   "The blur sizes and the gap between the two points are example values. Both pictures are shown at the same magnification, so only the resolution differs."];
@@ -885,13 +894,18 @@ const TASKS = {
     { id: "useOrder", kind: "order", setup: SU.low, text: "Put the four steps for using the microscope in order.", items: ITEMS_USE,
       explain: "Start low → coarse focus → higher power → fine focus.",
       hints: ["Try it on the Set up and focus tab.", "Begin with the lowest objective. Coarse focus comes before fine focus.", "Start low → coarse focus → higher power → fine focus."] },
-    { id: "startLow", kind: "choice", setup: SU.low, text: "How do you start focusing on a new slide?",
-      options: [{ t: "Use the lowest-power objective lens first", ok: () => FOV(LOWEST) === Math.max(...OBJS.map(FOV)) },
-        { t: "Use the highest-power objective lens first", why: "A high-power lens shows only a tiny area, so the specimen is hard to find, and it can hit the slide. Start with the lowest." },
-        { t: "Use the fine focus only", why: "Fine focus moves the stage only a tiny amount. Start with the lowest lens and the coarse focus." },
-        { t: "Adjust the resolution", why: "You can't 'adjust the resolution'. Start with the lowest lens, then use the focusing wheels." }],
-      explain: "Start with the lowest-power lens. Use the coarse focus, then the fine focus.",
-      hints: ["Which lens shows the widest area of the slide?", "Fine focus moves only a tiny amount, and you can't adjust the resolution.", "Use the l… power objective lens first."] },
+    { id: "safety", kind: "gaps", setup: SU.low, text: "Hazard → risk → control. Choose the control that reduces each risk.",
+      rows: [["h1", "Thin glass slides and coverslips can break and cut you. Control:", "handle them carefully", "."],
+        ["h2", "The objective lens can hit the slide and crack it. Control:", "watch from the side", "as you raise the stage."],
+        ["h3", "Iodine solution can splash into your eyes. Control:", "wear goggles", "."]],
+      bank: ["handle them carefully", "watch from the side", "wear goggles", "start with the highest-power lens", "add extra iodine"],
+      whyVal: { "handle them carefully": "Handling glass carefully stops it breaking and cutting you.",
+        "watch from the side": "Watching from the side as you raise the stage stops the lens hitting the slide.",
+        "wear goggles": "Goggles protect your eyes from splashes, such as iodine.",
+        "start with the highest-power lens": "The highest-power lens is the longest, so it is the most likely to hit and crack the slide. Start with the lowest.",
+        "add extra iodine": "Extra iodine means more to splash and stain, not less risk." },
+      explain: "Glass slides and coverslips: handle them carefully. Lens hitting the slide: watch from the side as you raise the stage. Iodine: wear goggles.",
+      hints: ["A hazard can cause harm; the risk is the harm it might do; the control makes that harm less likely.", "Match each control to the thing it protects: your hands, the slide, your eyes.", "handle them carefully · watch from the side · wear goggles"] },
     { id: "focus4", kind: "goal", setup: SU.low, stuck: "focus", text: "Do it: bring the onion cells into sharp focus with the × 4 objective. Then press Check.",
       test: M => M.spec === "onion" && M.onStage && M.obj === 4 && !M.cracked && seeing(M) === "sharp",
       not: M => M.obj !== 4 ? "Use the × 4 objective for this one." : !M.onStage ? "Place the slide on the stage first." :
@@ -1059,6 +1073,8 @@ function bankCheck() {
       if (t.id === "total" && a !== 400) E("must be × 400 (L3 s28)"); }
     if (t.kind === "goal") { const M = freshM(); if (t.setup) t.setup(M); if (t.test(M)) E("goal already met at the start"); t.reveal(M); if (!t.test(M)) E("goal not reachable"); }
   });
+  { const D = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; D[qkey("easy", TASKS.easy[0])] = "solved";
+    if (scoreFrom(D, TASKS) !== 1) errs.push("score: progress saved for a retired question id must not count"); }
   return errs;
 }
 
@@ -1080,7 +1096,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreFrom = (D, L) => ["easy", "hard"].reduce((n, lv) => n + (L[lv] || []).filter(t => D[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids from retired questions never count)
+const scoreNow = () => scoreFrom(DONE, LEVELS);
 const locked = () => mode !== "demo" && !!lock;
 /* audit Fault A: while one of these questions is open, the view or support that states its answer gives the method instead */
 const openQ = (...ids) => { if (mode === "demo" || !task || !ids.includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
@@ -1451,6 +1468,7 @@ function renderCtl() {
   document.querySelectorAll("#dsubSeg button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.dsub === M.dsub)));
   document.querySelectorAll("#mspecSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.ms === M.mspec)); dis(b, lk); });
   document.querySelectorAll("[data-rm]").forEach(b => dis(b, lk));
+  { const sh = openQ("safety"); if ($("safeLine").hidden !== sh) $("safeLine").hidden = sh; }
   $("fixRow").hidden = openQ("drawWho"); { const hc = openQ("higherRes", "emWhy"); document.querySelectorAll(".emcmp").forEach(e => { if (e.hidden !== hc) e.hidden = hc; }); } document.querySelectorAll("[data-fix]").forEach(b => { const k = b.dataset.fix, on = M.dr[k], t = FIXW[k][on ? 1 : 0]; if (b.textContent !== t) b.textContent = t; setAttr(b, "aria-pressed", String(on)); b.classList.toggle("on", on); dis(b, lk); });
   document.querySelectorAll("#emvSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.emv === M.em.view)); dis(b, lk); });
   document.querySelectorAll("#sizeSeg button").forEach(b => { setAttr(b, "aria-pressed", String(+b.dataset.size === M.em.size)); dis(b, lk); });
@@ -1817,7 +1835,7 @@ window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventL
 function stopAll() {}   // nothing in this model animates by itself
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
 $("specSeg").addEventListener("click", e => { const b = e.target.closest("[data-spec]"); if (!b) return; if (locked()) return lockMsg();
-  if (M.spec !== b.dataset.spec) { M.spec = b.dataset.spec; M.onStage = false; M.cracked = false; M.lowFound = false; say(M.spec === "cheek" ? "A prepared cheek cell slide is ready to use." : ""); } drawAll(); });
+  if (M.spec !== b.dataset.spec) { M.spec = b.dataset.spec; M.onStage = false; M.cracked = false; M.lowFound = false; say(M.spec === "cheek" ? "A prepared cheek cell slide is ready to use. Cheek cells are stained with methylene blue." : ""); } drawAll(); });
 document.querySelectorAll("[data-prep]").forEach(b => b.addEventListener("click", () => prep(b.dataset.prep)));
 $("placeBtn").addEventListener("click", placeSlide);
 $("replaceBtn").addEventListener("click", () => { if (locked()) return lockMsg(); M.cracked = false; M.pos = 0; M.lowFound = false; say("A fresh slide is on the stage, and the stage is lowered. Start with the lowest objective."); afterFocus(); });

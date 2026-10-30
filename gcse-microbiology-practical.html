@@ -57,6 +57,17 @@
     paceFrame (adaptive slow-down) and patch only the loop transform, the clock text and a stepped lawn; the ruler moves by a transform.
     Stops when hidden. Reduced motion: steps finish at once.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Coverage fixes (30 Oct 2026): each clear zone is now slightly squashed (INVENTED: the two diameters at 90° differ by up to 2 mm and
+    average to the zone's diameter). Pupils measure across, press "Turn the plate 90°", measure again; the plate's mean diameter
+    ((d1 + d2) ÷ 2) is worked out and shown, then goes in the table (department notes + AQA handbook step 11). The control disc is
+    soaked in sterile water and the safety line starts "disinfect the bench" (notes). Questions: Easy 7 "Why measure twice at 90°?"
+    and Easy 8 "resolution of the ruler" (1 mm) replace "Why incubate at 25 °C?" (still Hard 2) and "the independent variable"
+    (still Hard 4). Hard 1 "Why sterilise the dish and agar?" (2-mark build, spec 4.1.1.6) replaces "Why flame the loop?" (still
+    Easy 2); Hard 5 hazard → risk → control (deck s10 safety) replaces the "more than 1000 bacteria" challenge (Hard 8–9 keep the
+    growth maths). The safety line is hidden while Hard 5 is open.
+  Re-check fixes (30 Oct 2026): the typed mean is right only if it is the true mean rounded half-up to the typed precision (14.25
+    → 14.3, not 14.2); each disc's row has a Redo button; zones differ by up to 2 mm between the two diameters; Maths help example
+    changed to 52 000; long dropdown options no longer widen the panel on phones.
 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -350,6 +361,11 @@ h1 small.rplabel{font-weight:700;font-size:16px;color:var(--accent);margin-top:4
 .rt th.pc{min-width:48px}
 @media (max-width:560px){.rt th.pc{min-width:36px}.rt .pw{display:none}.rt .cnt{min-width:34px;padding:2px 2px}.rt .meanin{width:3.6em;padding:4px 2px;font-size:14px}.rt td.dst{font-size:14px}.rt td,.rt th{padding-left:2px;padding-right:2px}}
 
+.redorow{margin-top:4px}.redorow .btn{min-height:40px;padding:6px 12px;font-size:15px}
+#answer .opts:not(.two):not(.grid2){grid-template-columns:minmax(0,1fr)}
+#answer .grow,#answer .grow>*{min-width:0}
+#answer .grow select{min-width:0;max-width:100%}
+
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -485,7 +501,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <svg id="psvg" class="scene plate" viewBox="0 0 400 400" role="img" aria-label="Top view of the plate after incubation, seen through the base. Four discs, each in its own quarter. Press a disc to look closely."><defs><pattern id="lawnP" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" class="lawn"/><circle cx="2" cy="3" r="1.1" class="lawnd"/><circle cx="6" cy="6.4" r=".9" class="lawnd"/></pattern></defs><g id="pG"></g></svg>
           <svg id="csvg" class="scene" viewBox="0 0 560 270" role="img" aria-label="Close-up of one disc with a clear plastic ruler across the middle of the clear zone. Drag the ruler or use the arrow keys."><defs><pattern id="lawnC" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" class="lawn"/><circle cx="3" cy="4" r="1.8" class="lawnd"/><circle cx="10" cy="10.5" r="1.5" class="lawnd"/><circle cx="11" cy="3" r="1" class="lawnd"/></pattern><clipPath id="cClip"><rect id="cClipR" x="20" y="16" width="520" height="228" rx="6"/></clipPath></defs><g id="cG"></g><g id="cRul" class="drag" tabindex="0" role="slider" aria-label="Ruler. Use the left and right arrow keys to move it." aria-valuemin="-8" aria-valuemax="22" aria-valuenow="0"></g></svg>
         </div>
-        <div class="controls" id="recRow"><label class="ctl-lbl" for="dIn" id="recLbl">Diameter of the clear zone =</label> <input class="numin" id="dIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">mm</span> <button class="btn primary" type="button" id="recBtn">Record</button></div>
+        <div class="controls" id="recRow"><label class="ctl-lbl" for="dIn" id="recLbl">Diameter of the clear zone =</label> <input class="numin" id="dIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">mm</span> <button class="btn primary" type="button" id="recBtn">Record</button> <button class="btn" type="button" id="turnBtn">Turn the plate 90°</button></div>
         <div class="readout" id="zread" aria-live="polite"></div>
         <div class="labgrid">
           <div id="ztable"></div>
@@ -493,7 +509,7 @@ main.layout{min-height:calc(100vh - 70px)}
         </div>
         <div class="controls" id="checkRow"><button class="btn" type="button" id="checkRes">Check means and areas</button><button class="linkbtn" type="button" id="clearTab">Clear table</button><button class="linkbtn" type="button" id="newExp">New set of plates</button></div>
         <div class="concl" id="conclBox"></div>
-        <p class="small" id="safety"><b>Safety:</b> never open a plate after incubation (measure it through the closed plate). Wash your hands. Dispose of plates safely.</p>
+        <p class="small" id="safety"><b>Safety:</b> disinfect the bench before you start. Never open a plate after incubation (measure it through the closed plate). Wash your hands. Dispose of plates safely.</p>
       </div>
 
       <div class="pane" id="pane-grow" hidden>
@@ -587,6 +603,7 @@ const DEF = {   // s6
   colony: "A visible group of bacteria grown from a single bacterium on agar.",
   zone: "The clear area around an antiseptic or antibiotic where bacteria have not grown.",
   mdt: "The average time it takes for one bacterium to divide into two." };
+const RULER_DIV = 1;      // the ruler’s smallest marks are 1 mm apart (its resolution)
 const PI3 = 3.14;          // the deck uses π = 3.14 (s11, s12, s15)
 const DISC = 6;            // paper disc diameter in mm (INVENTED: the deck gives no size)
 const INC_T = 25, INC_H = 48, PATH_T = 37;   // s8, s9
@@ -630,7 +647,7 @@ const STEPS = [
       { t: "Use it straight from the drawer", bad: "A loop straight from the drawer has microorganisms on it. They would contaminate the culture. Flame it until red hot first." }],
     early: "First make sure the dish and agar are sterile." },
   { id: "spread", t: "Spread the bacteria and add the antiseptic discs", why: "Lifting the lid only slightly, near the flame, stops microbes from the air getting in.",
-    done: "Bacteria spread evenly over the agar; discs of antiseptics A, B and C added, plus a control disc.",
+    done: "Bacteria spread evenly over the agar; discs of antiseptics A, B and C added, plus a control disc soaked in sterile water.",
     how: [{ t: "Lift the lid only slightly, near a Bunsen flame", ok: true },
       { t: "Take the lid fully off on the bench", bad: "With the lid fully off, microbes from the air can land on the agar and contaminate it. Lift the lid only slightly, near a Bunsen flame." }],
     early: "You need a sterile dish and a flamed loop before you spread the bacteria." },
@@ -665,7 +682,9 @@ function makeExp(seed, fixed) {   // true zone diameters (mm, 1 d.p.) on 3 plate
     if (an && an.k === k && an.p === p) v = mu[k] >= 14 && R() < .5 ? mu[k] - 6 : mu[k] + 7;   // the odd anomaly
     return r1(v); }); });
   if (fixed) Object.keys(fixed).forEach(k => { d[k] = fixed[k].slice(); });
-  return { seed, d };
+  /* each zone is a slightly squashed circle (INVENTED): the two diameters at 90° differ by up to 2 mm, and their mean is d */
+  const ax = {}; KS.forEach(k => { ax[k] = d[k].map(v => { const h = v > 0 && !(fixed && fixed[k]) ? r1(R()) : 0; return [r1(v + h), r1(v - h)]; }); });
+  return { seed, d, ax };
 }
 function anomIdx(a) {   // the one reading that doesn't fit: further than max(3 mm, 20 % of the median) from the median
   if (a.length < 3 || a.some(x => x == null)) return -1;
@@ -675,9 +694,12 @@ function anomIdx(a) {   // the one reading that doesn't fit: further than max(3 
 }
 const meanOf = a => a.reduce((s, x) => s + x, 0) / a.length;
 function goodMean(a) { const i = anomIdx(a); return meanOf(i < 0 ? a : a.filter((x, j) => j !== i)); }
-function judgeMean(a, v) {   // a typed mean diameter: right (1 d.p.), or which slip it looks like
-  const i = anomIdx(a), ok = goodMean(a), tol = .051, tot = a.reduce((s, x) => s + x, 0);
-  if (Math.abs(v - ok) <= tol) return { ok: true };
+const halfUp = (x, d) => Math.floor(x * Math.pow(10, d) + .5 + 1e-9) / Math.pow(10, d);
+const decsOf = s => { const m = String(s).trim().replace(",", ".").match(/\.(\d+)/); return m ? m[1].length : 0; };
+function judgeMean(a, v, s) {   // a typed mean diameter: right only if it is the true mean rounded half-up to the typed precision (a value half a unit away is not)
+  const i = anomIdx(a), ok = goodMean(a), tol = .051, tot = a.reduce((x, y) => x + y, 0), d = decsOf(s == null ? String(v) : s);
+  if (d <= 3 && Math.abs(v - halfUp(ok, d)) < 1e-6) return { ok: true };
+  if (Math.abs(v - ok) <= .5 * Math.pow(10, -Math.max(d, 1)) + 1e-9) return { why: "Nearly: check your rounding. Give the mean to 1 decimal place (5 or more rounds up)." };
   if (i >= 0 && Math.abs(v - meanOf(a)) <= tol) return { why: `You included the anomaly (${num(a[i])} mm). Leave it out, then divide by 2.` };
   if (i >= 0 && Math.abs(v - (tot - a[i]) / 3) <= tol) return { why: "You left out the anomaly but still divided by 3. You used two readings, so divide by 2." };
   if (tot > 0 && (Math.abs(v - tot) <= tol || (i >= 0 && Math.abs(v - (tot - a[i])) <= tol))) return { why: "That is the total. Now divide by the number of readings you used." };
@@ -703,9 +725,10 @@ function judgeRead(trueD, r0, v, ctrl) {   // a diameter read off the ruler by t
 
 /* ===== Model state ===== */
 const blankRec = () => ({ A: [null, null, null], B: [null, null, null], C: [null, null, null], K: [null, null, null] });
+const blankTwo = () => ({ A: [[], [], []], B: [[], [], []], C: [[], [], []], K: [[], [], []] });   // the two diameters (across, then at 90°) of each plate
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function freshM() { return { tab: "asep", stage: 0, pend: null, bank: shuffled(STEPS.length), how: [0, 1], amsg: "", abad: false,
-  exp: makeExp(newSeed()), p: 0, k: "A", r0: 2.5, rec: blankRec(), mark: { A: [], B: [], C: [], K: [] }, inM: {}, inA: {}, okM: {}, okA: {}, mV: {},
+  exp: makeExp(newSeed()), p: 0, k: "A", r0: 2.5, rot: 0, two: blankTwo(), rec: blankRec(), mark: { A: [], B: [], C: [], K: [] }, inM: {}, inA: {}, okM: {}, okA: {}, mV: {},
   cK: "", cW: "", cOk: null, cMsg: "", zmsg: "", n0: 1, dt: 20, nd: 6, hideWork: false }; }
 const support = { words: false, maths: false, edges: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
@@ -723,8 +746,10 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreFrom = (D, L) => ["easy", "hard"].reduce((n, lv) => n + (L[lv] || []).filter(t => D[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids from retired questions never count)
+const scoreNow = () => scoreFrom(DONE, LEVELS);
 const locked = () => mode !== "demo" && lock === "all";
+const openQ = id => { if (mode === "demo" || !task || task.id !== id) return false; const p = prog(); return !(p.solved || p.revealed); };   // a question is open and unanswered
 const selLocked = () => mode !== "demo" && (lock === "all" || lock === "sel");
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = lock === "sel" ? "This question uses this plate and disc. You can still move the ruler." : "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -885,14 +910,14 @@ function drawPlate() {
 }
 function cGeo() { const t = LK() === "tall", W = t ? 420 : 560, pm = (W - 40) / FMM, band = 14 * pm; return { W, H: Math.round(16 + band + 38), x0: 20, pm, top: 16, band, cy: 16 + band / 2, fs: t ? 20 : 22 }; }
 function drawClose() {
-  const G = cGeo(), d = M.exp.d[M.k][M.p], pm = G.pm, X = mm => G.x0 + mm * pm, cy = G.cy; setVB($("csvg"), G.W, G.H);
+  const G = cGeo(), d = M.exp.d[M.k][M.p], ax = M.exp.ax[M.k][M.p], dx = ax[M.rot], dy = ax[1 - M.rot], pm = G.pm, X = mm => G.x0 + mm * pm, cy = G.cy; setVB($("csvg"), G.W, G.H);
   const cr = $("cClipR"); if (cr.getAttribute("width") !== String(G.W - 40)) { cr.setAttribute("width", G.W - 40); cr.setAttribute("height", f1(G.band)); }
   let o = `<g clip-path="url(#cClip)"><rect x="${G.x0}" y="${G.top}" width="${G.W - 40}" height="${f1(G.band)}" fill="url(#lawnC)"/>`;
-  if (d > 0) o += `<circle class="agarf" cx="${f1(X(ZC))}" cy="${f1(cy)}" r="${f1(d / 2 * pm)}"/><circle class="zonee" cx="${f1(X(ZC))}" cy="${f1(cy)}" r="${f1(d / 2 * pm)}"/>`;
+  if (d > 0) o += `<ellipse class="agarf" cx="${f1(X(ZC))}" cy="${f1(cy)}" rx="${f1(dx / 2 * pm)}" ry="${f1(dy / 2 * pm)}"/><ellipse class="zonee" cx="${f1(X(ZC))}" cy="${f1(cy)}" rx="${f1(dx / 2 * pm)}" ry="${f1(dy / 2 * pm)}"/>`;
   o += `<circle class="disc" cx="${f1(X(ZC))}" cy="${f1(cy)}" r="${f1(DISC / 2 * pm)}"/>`;
-  if (support.edges && d > 0) [-1, 1].forEach(sg => { const x = X(ZC + sg * d / 2); o += `<path class="edge" d="M${f1(x)} ${G.top}V${f1(cy)}"/>`; });
+  if (support.edges && d > 0) [-1, 1].forEach(sg => { const x = X(ZC + sg * dx / 2); o += `<path class="edge" d="M${f1(x)} ${G.top}V${f1(cy)}"/>`; });
   o += `</g><rect x="${G.x0}" y="${G.top}" width="${G.W - 40}" height="${f1(G.band)}" rx="6" style="fill:none;stroke:var(--line);stroke-width:1.5"/>`;
-  o += T_(G.x0, G.H - 10, `Plate ${M.p + 1} · ${KN[M.k]}`, G.fs, 'class="bold"') + T_(G.W - G.x0, G.H - 10, "Drag the ruler", G.fs - 2, 'text-anchor="end" class="mut"');
+  o += T_(G.x0, G.H - 10, `Plate ${M.p + 1} · ${KSH[M.k]}${M.k === "K" ? "" : M.rot ? " · turned 90°" : " · across"}`, G.fs, 'class="bold"') + T_(G.W - G.x0, G.H - 10, "Drag the ruler", G.fs - 2, 'text-anchor="end" class="mut"');
   setLayer($("cG"), o);
   drawRuler();
 }
@@ -915,14 +940,15 @@ function drawRuler() {
 }
 const READY = () => M.stage >= NSET;
 function tableHTML() {
-  let h = `<table class="rt"><caption>Diameter of the clear zone (mm)</caption><thead><tr><th scope="col">Disc</th><th scope="col" class="pc"><span class="pw">Plate </span>1</th><th scope="col" class="pc"><span class="pw">Plate </span>2</th><th scope="col" class="pc"><span class="pw">Plate </span>3</th><th scope="col">Mean diameter (mm)</th><th scope="col">Area (mm²)</th></tr></thead><tbody>`;
+  let h = `<table class="rt"><caption>Mean diameter of the clear zone on each plate (mm)</caption><thead><tr><th scope="col">Disc</th><th scope="col" class="pc"><span class="pw">Plate </span>1</th><th scope="col" class="pc"><span class="pw">Plate </span>2</th><th scope="col" class="pc"><span class="pw">Plate </span>3</th><th scope="col">Mean diameter (mm)</th><th scope="col">Area (mm²)</th></tr></thead><tbody>`;
   KS.forEach(k => { const a = M.rec[k], mk = M.mark[k], full = a.every(x => x != null);
     h += `<tr${k === M.k ? ' class="cur"' : ""}><td class="dst">${KSH[k]}</td>`;
-    for (let i = 0; i < 3; i++) h += `<td>${a[i] == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-k="${k}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="${KN[k]}, plate ${i + 1}: ${num(a[i])} mm${mk.includes(i) ? ", marked as an anomaly" : ""}">${num(a[i])}</button>`}</td>`;
+    for (let i = 0; i < 3; i++) h += `<td>${a[i] == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-k="${k}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="${KN[k]}, plate ${i + 1}: mean diameter ${num(a[i])} mm${M.two[k][i].length === 2 ? ` (${num(M.two[k][i][0])} and ${num(M.two[k][i][1])})` : ""}${mk.includes(i) ? ", marked as an anomaly" : ""}">${num(a[i])}</button>`}</td>`;
     const om = M.okM[k], oa = M.okA[k];
     h += `<td>${full ? `<input class="meanin${om ? " ok" : om === false ? " no" : ""}" data-f="m" data-k="${k}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(M.inM[k] || "")}" aria-label="Mean diameter for ${KN[k]}"${om ? " readonly" : ""}>` : '<span class="emp">–</span>'}</td>`;
     h += `<td>${om ? `<input class="meanin${oa ? " ok" : oa === false ? " no" : ""}" data-f="a" data-k="${k}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(M.inA[k] || "")}" aria-label="Area for ${KN[k]}"${oa ? " readonly" : ""}>` : '<span class="emp">–</span>'}</td></tr>`; });
-  h += `</tbody></table><p class="small" style="margin-top:4px">Press a reading to mark it as an anomaly. Area: r = mean diameter ÷ 2, then πr² (π = 3.14).</p>`;
+  const rr = KS.filter(k => M.rec[k].some(x => x != null) || M.two[k].some(t => t.length));
+  h += `</tbody></table>` + (rr.length ? `<div class="controls redorow"><span class="gl">Redo:</span>${rr.map(k => `<button type="button" class="btn redo" data-redo="${k}" aria-label="Redo ${KN[k]}: clear its readings">${KSH[k]}</button>`).join("")}</div>` : "") + `<p class="small" style="margin-top:4px">Press a reading to mark it as an anomaly. Redo clears one disc's row. Area: r = mean diameter ÷ 2, then πr² (π = 3.14).</p>`;
   return h;
 }
 function drawTable() {
@@ -965,10 +991,10 @@ function evalPoints() {
   return L;
 }
 function zoneRead() {
-  const d = M.exp.d[M.k][M.p], done = M.rec[M.k][M.p] != null;
-  let h = `<p class="r1">${KN[M.k]} · plate ${M.p + 1}${done ? ` · recorded ${num(M.rec[M.k][M.p])} mm ✓` : ""}</p>`;
+  const d = M.exp.d[M.k][M.p], done = M.rec[M.k][M.p] != null, tw2 = M.two[M.k][M.p];
+  let h = `<p class="r1">${KN[M.k]} · plate ${M.p + 1}${done ? ` · mean diameter ${num(M.rec[M.k][M.p])} mm ✓` : M.k !== "K" ? ` · diameter 1: ${tw2[0] == null ? "–" : num(tw2[0]) + " mm"} · diameter 2 (at 90°): ${tw2[1] == null ? "–" : num(tw2[1]) + " mm"}` : ""}</p>`;
   if (M.zmsg) h += `<p class="r2">${M.zmsg}</p>`;
-  else h += `<p class="r3">${M.k === "K" ? "The control disc has no antiseptic." : "Line up 0 with one edge of the clear zone. Read the other edge."}${d > 0 ? "" : ""}</p>`;
+  else h += `<p class="r3">${M.k === "K" ? "The control disc was soaked in sterile water, not antiseptic." : M.rot ? "Plate turned 90°. Measure the diameter again." : "Line up 0 with one edge of the clear zone. Read the other edge."}</p>`;
   return h;
 }
 
@@ -1011,7 +1037,9 @@ function drawPane() {
   ["asep", "zone", "grow"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
   if (M.tab === "asep") { if ($("aBg")._lk !== LK()) { drawAsepBg(); $("aBg")._lk = LK(); } drawAsepMov(performance.now()); renderSteps(); morphHTML($("aread"), asepRead()); }
   else if (M.tab === "zone") { const r = READY(); $("notReady").hidden = r; ["zgrid", "recRow", "checkRow"].forEach(id => { $(id).hidden = !r; }); $("zread").hidden = !r;
-    if (r) { drawPlate(); drawClose(); morphHTML($("zread"), zoneRead()); } drawTable(); drawBars(); morphHTML($("conclBox"), r ? conclHTML() : ""); }
+    if (r) { drawPlate(); drawClose(); morphHTML($("zread"), zoneRead()); } drawTable(); drawBars(); morphHTML($("conclBox"), r ? conclHTML() : "");
+    const sh = openQ("safety"); if ($("safety").hidden !== sh) $("safety").hidden = sh;   // the safety line gives Hard 5's answers
+    const tb = $("turnBtn"); if (tb) { const t = M.rot ? "Turn the plate back" : "Turn the plate 90°"; if (tb.textContent !== t) tb.textContent = t; setAttr(tb, "aria-pressed", String(!!M.rot)); } }
   else { drawGrow(); morphHTML($("gread"), growRead()); }
 }
 function renderCtl() {
@@ -1070,11 +1098,16 @@ function record() {
   const s = $("dIn").value, v = parseNum(s);
   if (!isFinite(v)) { M.zmsg = "Type the diameter you read, in mm, then press Record."; morphHTML($("zread"), zoneRead()); return; }
   if (M.okM[M.k]) { M.zmsg = `The mean for ${KN[M.k]} is already checked. Clear the table to measure again.`; morphHTML($("zread"), zoneRead()); return; }
-  const j = judgeRead(M.exp.d[M.k][M.p], M.r0, v, M.k === "K");
+  const ctrl = M.k === "K", j = judgeRead(ctrl ? 0 : M.exp.ax[M.k][M.p][M.rot], M.r0, v, ctrl);
   if (j.ok) {
-    const k0 = M.k, p0 = M.p; M.rec[k0][p0] = M.k === "K" ? 0 : r1(v); M.mark[k0] = []; delete M.inM[k0]; delete M.okM[k0];
-    $("dIn").value = ""; const nx = nextEmpty();
-    M.zmsg = `✓ Recorded ${num(M.rec[k0][p0])} mm for ${KN[k0]}, plate ${p0 + 1}.` + (nx ? (nx.k === k0 ? ` Now plate ${nx.p + 1}.` : ` Now ${KN[nx.k]}, plate ${nx.p + 1}.`) : " The table is full: type the means.");
+    const k0 = M.k, p0 = M.p, t2 = M.two[k0][p0]; $("dIn").value = "";
+    if (!ctrl) { t2[M.rot] = r1(v);
+      if (t2[1 - M.rot] == null) { M.zmsg = `✓ Diameter ${M.rot + 1}: ${num(t2[M.rot])} mm. Now ${M.rot ? "turn the plate back" : "press Turn the plate 90°"} and measure the ${M.rot ? "first" : "second"} diameter.`; tourSignal("record"); drawAll(); return; } }
+    else M.two[k0][p0] = [0, 0];
+    M.rec[k0][p0] = ctrl ? 0 : r1((t2[0] + t2[1]) / 2); M.mark[k0] = []; delete M.inM[k0]; delete M.okM[k0]; M.rot = 0;
+    const nx = nextEmpty();
+    M.zmsg = (ctrl ? `✓ Recorded 0 mm for the control, plate ${p0 + 1}: no clear zone either way.` : `✓ Plate ${p0 + 1}, ${KN[k0]}: mean diameter = (${num(t2[0])} + ${num(t2[1])}) ÷ 2 = ${num(M.rec[k0][p0])} mm.`) +
+      (nx ? (nx.k === k0 ? ` Now plate ${nx.p + 1}.` : ` Now ${KN[nx.k]}, plate ${nx.p + 1}.`) : " The table is full: type the means.");
     if (nx) { M.k = nx.k; M.p = nx.p; }
     tourSignal("record"); tried(2);
   } else M.zmsg = "✗ " + j.why;
@@ -1085,7 +1118,7 @@ function checkRes() {
   const msgs = [], good = []; let work = "";
   KS.forEach(k => { const a = M.rec[k]; if (a.some(x => x == null)) return;
     if (!M.okM[k]) { const s = (M.inM[k] || "").trim(); if (!s) return; const v = parseNum(s); if (!isFinite(v)) { msgs.push(`${KSH[k]}: type a number.`); return; }
-      const mk = M.mark[k], ai = anomIdx(a), wm = mk.find(i => i !== ai), j = judgeMean(a, v);
+      const mk = M.mark[k], ai = anomIdx(a), wm = mk.find(i => i !== ai), j = judgeMean(a, v, s);
       if (j.ok) { M.okM[k] = true; M.mV[k] = v; if (wm != null) msgs.push(`${KSH[k]}: right mean, but ${num(a[wm])} fits the pattern${ai >= 0 ? `; the anomaly is ${num(a[ai])}` : ""}.`); M.mark[k] = ai >= 0 ? [ai] : []; good.push(`${KSH[k]} mean`); }
       else { M.okM[k] = false; msgs.push(`${KSH[k]} mean: ` + (wm != null ? `${num(a[wm])} fits the pattern, so keep it. ` : "") + j.why); }
       return; }
@@ -1099,7 +1132,7 @@ function checkRes() {
   if (good.length) tourSignal("check");
   drawAll();
 }
-function clearTable() { M.rec = blankRec(); M.mark = { A: [], B: [], C: [], K: [] }; M.inM = {}; M.inA = {}; M.okM = {}; M.okA = {}; M.mV = {}; M.cK = ""; M.cW = ""; M.cOk = null; M.cMsg = ""; }
+function clearTable() { M.rec = blankRec(); M.two = blankTwo(); M.rot = 0; M.mark = { A: [], B: [], C: [], K: [] }; M.inM = {}; M.inA = {}; M.okM = {}; M.okA = {}; M.mV = {}; M.cK = ""; M.cW = ""; M.cOk = null; M.cMsg = ""; }
 function checkConcl() {
   if (locked()) return lockMsg();
   const b = bestK();
@@ -1155,13 +1188,6 @@ TASKS.easy = [
       { t: "So the condensation can escape", why: "Condensation is dealt with by storing the plate upside down, so it can’t drip onto the agar." }],
     explain: "A few strips of tape stop microbes getting in, but the lid is not sealed all round, so oxygen can get in.",
     hints: ["Think about a gas the bacteria need from the air.", "Sealing it all round would stop this gas getting in.", "So oxygen can get in."] },
-  { id: "inc25", kind: "choice", lesson: "s8, s15 Q3", text: "Why are cultures in school labs incubated at 25 °C?", lock: "all", setup: SU.asep(4),
-    options: [{ t: "It reduces the chance of growing harmful pathogens, which grow best at 37 °C", ok: () => INC_T === 25 && PATH_T === 37 },
-      { t: "To kill the bacteria", why: "The mark scheme rejects this. The bacteria still grow at 25 °C; it is harmful pathogens we want to avoid." },
-      { t: "Bacteria grow fastest at 25 °C", why: "That’s not the reason. Pathogens grow best at 37 °C, body temperature, so a lower temperature is safer." },
-      { t: "37 °C would melt the agar", why: "That’s not the reason. Harmful pathogens grow best at 37 °C, body temperature." }],
-    explain: "25 °C reduces the chance of growing harmful pathogens, which grow best at body temperature, 37 °C.",
-    hints: ["What temperature is the human body?", "Pathogens cause disease. Where do they grow best?", "Pathogens grow best at 37 °C, so 25 °C reduces the risk of growing them."] },
   { id: "setup", kind: "goal", lesson: "s8–s9, s17", text: "Set up a plate on the model: do the aseptic steps in the right order, then incubate it.", setup: SU.asep(0),
     test: m => m.stage >= NSET,
     not: m => `${m.stage} of ${NSET} steps done. ${m.pend != null ? "Choose how to do this step." : "Choose the next step in the model."}`,
@@ -1180,13 +1206,19 @@ TASKS.easy = [
     lbl: "Diameter =", unit: "mm", ans: () => E7.A[0], judge: v => judgeRead(E7.A[0], M.r0, v, false), stuck: "edges",
     working: () => ["Line up 0 on the ruler with one edge of the clear zone.", "Read the other edge: 14 mm (1.4 cm).", "Diameter = 14 mm"],
     hints: ["Drag the ruler so 0 sits exactly at the left edge of the clear zone.", "Now read the right edge. The numbers are cm; each small mark is 1 mm.", "With 0 at the left edge, the right edge is at 1.4 cm = 14 mm."] },
-  { id: "iv", kind: "choice", lesson: "s10", text: "What is the independent variable in this practical?", lock: "all", setup: SU.ready,
-    options: [{ t: "The type of antiseptic", ok: () => true },
-      { t: "The area of the zone of inhibition", why: "That is what you measure: the dependent variable." },
-      { t: "The size of the paper disc", why: "Disc size is kept the same: a control variable. A bigger disc would not make a fair test." },
-      { t: "The temperature of incubation", why: "Temperature is kept the same (25 °C): a control variable." }],
-    explain: "You choose the type of antiseptic (or antibiotic): the independent variable. You measure the area of the zone: the dependent variable.", stuck: "words",
-    hints: ["The independent variable is the one you choose to change.", "What is different about each disc?", "The type of antiseptic."] },
+  { id: "twice", kind: "choice", lesson: "s9 + notes (zone of inhibition)", text: "Why should you measure the diameter of each clear zone twice, at 90° to each other?", lock: "all", setup: SU.ready,
+    options: [{ t: "Clear zones are not always perfect circles, so the mean of two diameters is more accurate", ok: () => true },
+      { t: "To check that the ruler is the right way up", why: "The ruler is the same both times. The zone itself may be wider one way than the other." },
+      { t: "Add the two readings to get the radius", why: "Adding two diameters doesn’t give the radius. You find the mean of the two diameters." },
+      { t: "The zone keeps growing while you measure it", why: "Incubation has finished, so the zone doesn’t change while you measure. The zone may just not be a perfect circle." }],
+    explain: "Clear zones are not always perfect circles. Measuring two diameters at 90° and taking the mean gives a better value for the diameter.",
+    hints: ["Look closely at the shape of a clear zone.", "Is it always exactly the same width in every direction?", "Not a perfect circle: the mean of two diameters is more accurate."] },
+  { id: "res", kind: "choice", lesson: "s9 + notes (nearest whole mm)", text: "What is the resolution of the ruler you use to measure the clear zones?", lock: "sel", setup: m => { SU.ready(m); m.k = "A"; },
+    options: [{ t: "1 mm", ok: () => RULER_DIV === 1 }, { t: "1 cm", why: "The numbers are 1 cm apart, but there are smaller marks between them. Resolution is the gap between the smallest marks." },
+      { t: "0.1 mm", why: "The ruler has no marks that small, so you can’t read tenths of a millimetre." },
+      { t: "The width of the clear zone", why: "That is what you measure, not the ruler’s resolution: the smallest change the ruler can show." }],
+    explain: "The smallest marks on the ruler are 1 mm apart, so its resolution is 1 mm. Record each diameter to the nearest whole mm.",
+    hints: ["Resolution is the smallest change an instrument can show.", "Look at the smallest gap between two marks on the ruler.", "Count the small marks between 0 and 1 cm."] },
   { id: "area12", kind: "num", lesson: "s11, s15 Q4", text: "A zone of inhibition has a diameter of 12 mm. Calculate its area. Use π = 3.14.", lock: "all", setup: SU.ready,
     frame: "radius = diameter ÷ 2, then area = πr²", lbl: "Area =", unit: "mm²", ans: () => areaOf(12), judge: v => judgeArea(12, v), stuck: "maths",
     wrongs: [[PI3 * 144, ""], [PI3 * 6, ""], [36, ""], [PI3 * 12, ""]], working: () => areaWork(12),
@@ -1200,15 +1232,15 @@ TASKS.easy.find(t => t.id === "hinge").options.forEach(o => { if (!o.ok) o.why =
 
 const SIXMS = ["5–6 marks: a complete, valid method in order (spread the bacteria, add the discs, incubate, measure the zones) with the aseptic steps.", "3–4: most main steps, mostly in order.", "1–2: a few relevant steps."];
 TASKS.hard = [
-  { id: "flame2", kind: "build", lesson: "s8, s15 Q2", text: "Explain why an inoculating loop is passed through a flame before use. [2 marks] Choose the statements for your answer.",
-    frame: "The loop is passed through a flame…", lock: "all", setup: SU.asep(1),
-    stm: [{ t: "to kill unwanted microorganisms on the loop,", c: 1 }, { t: "so the culture is not contaminated.", c: 2 },
-      { t: "to clean it.", why: "The mark scheme rejects “to clean it”. Say that it kills microorganisms on the loop." },
-      { t: "to make the bacteria grow faster.", why: "Flaming does not speed up growth. It kills microorganisms on the loop." },
-      { t: "to kill the bacteria on the agar.", why: "The loop is cooled before it touches the agar. The flame kills microorganisms on the loop itself." }],
-    miss: { 1: "Say what the flame does to microorganisms on the loop.", 2: "Say why that matters for the culture." },
-    explain: "To kill (unwanted) microorganisms on the loop (1), so the culture is not contaminated (1).", stuck: "words",
-    hints: ["Two marks: what the flame does, and why that matters.", "What is on a loop before it is flamed? What would they do to the culture?", "To kill microorganisms on the loop, so the culture is not contaminated."] },
+  { id: "sterile", kind: "build", lesson: "s8 + AQA 4.1.1.6", text: "Explain why the Petri dish and agar are sterilised before use. [2 marks] Choose the statements for your answer.",
+    frame: "The dish and agar are sterilised…", lock: "all", setup: SU.asep(0),
+    stm: [{ t: "to kill any microorganisms already in them,", c: 1 }, { t: "so only the bacteria you chose grow: no contamination.", c: 2 },
+      { t: "to clean them.", why: "“To clean them” does not score. Say what sterilising kills, and why that matters." },
+      { t: "to kill the bacteria you add later.", why: "Sterilising is done before the bacteria are added. You want those bacteria to grow." },
+      { t: "to make the agar set faster.", why: "Sterilising doesn’t make agar set. It kills microorganisms already there." }],
+    miss: { 1: "Say what sterilising kills.", 2: "Say why that matters for the culture." },
+    explain: "To kill any microorganisms already in the dish and agar (1), so only the chosen bacteria grow and the culture is not contaminated (1).",
+    hints: ["Two marks: what sterilising does, and why that matters.", "Could there be microbes in the dish or agar before you start? What would they do?", "Kill microorganisms already there, so the culture isn’t contaminated."] },
   { id: "inc2", kind: "build", lesson: "s8, s15 Q3", text: "Explain why cultures in school labs are incubated at 25 °C. [2 marks] Choose the statements for your answer.",
     frame: "School cultures are incubated at 25 °C…", lock: "all", setup: SU.asep(4),
     stm: [{ t: "to reduce the chance of growing harmful pathogens,", c: 1 }, { t: "which grow best at body temperature, 37 °C.", c: 2 },
@@ -1224,9 +1256,9 @@ TASKS.hard = [
       { t: "Lift the lid slightly, near a flame; spread the bacteria.", c: 3, ess: 1 }, { t: "Add same-size antiseptic discs and a control disc.", c: 4, ess: 1 },
       { t: "Tape with a few strips; store upside down.", c: 5 }, { t: "Incubate at 25 °C for about 48 hours.", c: 6, ess: 1 },
       { t: "Measure each clear zone: biggest = most effective.", c: 7, ess: 1 },
-      { t: "Seal the lid all round with tape.", why: "Use only a few strips of tape, so oxygen can get in." },
-      { t: "Incubate at 37 °C so it grows faster.", why: "Not in school: harmful pathogens grow best at 37 °C. Use 25 °C." },
-      { t: "Open the plate to measure the zones.", why: "Never open a plate after incubation. Measure through the closed plate." }],
+      { t: "Seal the lid all round with tape.", why: "Use a few strips, so oxygen gets in." },
+      { t: "Incubate at 37 °C so it grows faster.", why: "Pathogens grow best at 37 °C. Use 25 °C." },
+      { t: "Open the plate to measure the zones.", why: "Never open it: measure through the lid." }],
     miss: { 1: "What do you do first to the dish and agar?", 2: "What do you do to the loop first?", 3: "How do the bacteria get onto the agar?",
       4: "What goes on the agar to test the antiseptics?", 5: "How is the lid held, and which way up?", 6: "How warm, and for how long?", 7: "How do you find out which antiseptic is best?" },
     explain: "Sterilise the dish and agar → flame the loop → lift the lid slightly near the flame and spread the bacteria → add same-size discs and a control → tape with a few strips, upside down → incubate at 25 °C → measure the zones.", ms: SIXMS,
@@ -1242,6 +1274,16 @@ TASKS.hard = [
       tt: "Every plate is incubated for the same time at the same temperature: control variables." })[k],
     explain: "Independent: type of antiseptic. Dependent: area of the zone of inhibition. Control: disc size, concentration, type of bacteria, time and temperature of incubation.", stuck: "words",
     hints: ["Independent = you change it. Dependent = you measure it. Control = kept the same.", "Only one thing is changed, and only one thing is measured.", "Change: type of antiseptic. Measure: area of the zone. The other four are controls."] },
+  { id: "safety", kind: "gaps", fixed: true, stack: true, lesson: "s10 + notes", text: "Hazard → risk → control. Choose the control that reduces each risk.", lock: "all", setup: SU.ready,
+    rows: [["h1", "Bacteria from the culture could get on your hands and make you ill. Control:", "Wash your hands with soap"],
+      ["h2", "Harmful microbes may have grown on the plate. Control:", "Never open the plate after incubation"],
+      ["h3", "Used plates still hold live bacteria. Control:", "Dispose of the plates safely"]],
+    bank: ["Wash your hands with soap", "Never open the plate after incubation", "Dispose of the plates safely", "Incubate at 37 °C", "Seal the lid all round with tape"],
+    why: (k, w) => ({ "Wash your hands with soap": "Washing your hands is the control for bacteria on your skin.", "Never open the plate after incubation": "Keeping the plate closed is the control for microbes growing on it.",
+      "Dispose of the plates safely": "Safe disposal is the control for used plates.", "Incubate at 37 °C": "37 °C would help harmful pathogens grow. Incubate at 25 °C.",
+      "Seal the lid all round with tape": "Sealing it all round keeps oxygen out and can help harmful microbes grow. Use a few strips of tape." })[w],
+    explain: "Bacteria on your hands: wash them with soap. Microbes on the plate: never open it after incubation. Used plates: dispose of them safely.",
+    hints: ["A hazard can cause harm; the risk is the harm; the control makes the harm less likely.", "Match each control to the harm it prevents.", "Wash hands · never open the plate · dispose of plates safely."] },
   { id: "evald", kind: "choice", lesson: "s10", text: "A student used a bigger disc for antiseptic C. C had the biggest zone. Evaluate the conclusion that C is the most effective.",
     frame: "The conclusion is (or is not) valid, because…", lock: "all", setup: SU.ready,
     options: [{ t: "Not valid: disc size is a control variable. Repeat with same-size discs.", ok: () => true },
@@ -1252,11 +1294,11 @@ TASKS.hard = [
     hints: ["Which variables should be kept the same in this practical?", "Disc size is one of them. What happens to a fair test if it changes?", "Not valid: disc size is a control variable; repeat with same-size discs."] },
   { id: "mean", kind: "goal", lesson: "s9–s11", text: "Antiseptic A: measure its clear zone on all three plates, then find the mean diameter and the area.", setup: m => { SU.ready(m); m.k = "A"; m.p = 0; },
     test: m => !!m.okA.A,
-    not: m => { const n = m.rec.A.filter(x => x != null).length; return n < 3 ? `You have ${n} of 3 readings for A. Measure plate ${m.rec.A.findIndex(x => x == null) + 1} next, then press Record.` : !m.okM.A ? "Type the mean diameter for A in the table, then press Check means and areas." : "Now type the area for A (πr², r = mean ÷ 2), then press Check means and areas."; },
+    not: m => { const n = m.rec.A.filter(x => x != null).length; return n < 3 ? `You have ${n} of 3 plates for A. Measure plate ${m.rec.A.findIndex(x => x == null) + 1} next: two diameters, at 90° to each other.` : !m.okM.A ? "Type the mean diameter for A in the table, then press Check means and areas." : "Now type the area for A (πr², r = mean ÷ 2), then press Check means and areas."; },
     done: m => `A: ${m.rec.A.map(num).join(", ")} mm. Mean ${num(m.mV.A)} mm, area ${num(areaOf(m.mV.A))} mm².`,
-    reveal: m => { [0, 1, 2].forEach(p => { if (m.rec.A[p] == null) m.rec.A[p] = Math.round(m.exp.d.A[p]); }); const mu = r1(goodMean(m.rec.A)), ai = anomIdx(m.rec.A);
+    reveal: m => { [0, 1, 2].forEach(p => { if (m.rec.A[p] == null) { m.two.A[p] = m.exp.ax.A[p].map(Math.round); m.rec.A[p] = r1((m.two.A[p][0] + m.two.A[p][1]) / 2); } }); const mu = halfUp(goodMean(m.rec.A), 1), ai = anomIdx(m.rec.A);
       m.inM.A = num(mu); m.okM.A = true; m.mV.A = mu; m.mark.A = ai >= 0 ? [ai] : []; m.inA.A = num(r1(areaOf(mu))); m.okA.A = true; },
-    hints: ["Choose disc A, then line up 0 with one edge of the clear zone on each plate.", "Mean = total ÷ number of readings (leave out an anomaly). Then r = mean ÷ 2.", "Area = 3.14 × r × r, using your mean diameter."] },
+    hints: ["Choose disc A. On each plate, measure the diameter, turn the plate 90° and measure again.", "Mean = total ÷ number of readings (leave out an anomaly). Then r = mean ÷ 2.", "Area = 3.14 × r × r, using your mean diameter."] },
   { id: "grow30", kind: "num", lesson: "s11–s12 Q3", text: "One bacterium divides every 30 minutes. Calculate how many bacteria there will be after 3 hours.", lock: "all", setup: SU.grow, after: "g30",
     frame: "divisions = time ÷ mean division time; bacteria = start × 2ᵈ (d = number of divisions)", lbl: "Bacteria =", unit: "", ans: () => growN(1, 180 / 30),
     wrongs: [[6, "6 is the number of divisions. Now work out 2⁶."], [12, "Don’t double 6. Each division doubles the number: 2 × 2 × 2 × 2 × 2 × 2 = 2⁶."],
@@ -1278,14 +1320,6 @@ TASKS.hard = [
     slips: [[4.096, 3], [1.2, 3], [1.6, 3], [2.048, 5], [4.1, 4], [409.6, 3]], stuck: "maths",
     working: () => ["Time = 4 h = 240 minutes", "Divisions = 240 ÷ 20 = 12", `Bacteria = 100 × 2¹² = 100 × 4 096 = ${grp(growN(100, 12))}`, `In standard form: ${grp(growN(100, 12))} ≈ ${sfStr(growN(100, 12))}`],
     hints: ["Change 4 hours into minutes, then find the number of divisions.", "240 ÷ 20 = 12 divisions. Bacteria = 100 × 2¹².", "100 × 4 096 = 409 600 ≈ 4.1 × 10⁵."] },
-  { id: "over1000", kind: "num", lesson: "s12 Challenge", text: "One bacterium divides every 20 minutes. How long until there are more than 1000 bacteria?", lock: "all", setup: SU.grow, after: "g1000",
-    frame: "Keep doubling: 2, 4, 8 … Count the divisions until the number is more than 1000, then × 20 minutes.", lbl: "Time =", unit: "minutes", ans: () => firstOver(1, 1000) * 20,
-    wrongs: [[180, "After 180 minutes (9 divisions) there are 2⁹ = 512: not yet more than 1000."], [10, "10 is the number of divisions. Now multiply by 20 minutes."],
-      [50, "Don’t divide 1000 by 20. Keep doubling: 2, 4, 8 … until the number is more than 1000."], [10 / 3, "That is in hours. Give the answer in minutes: 10 × 20 = 200 minutes."],
-      [1024, "1024 is the number of bacteria. The question asks for the time."], [220, "After 200 minutes there are already 1024: more than 1000."]],
-    generic: "Find how many doublings take 1 past 1000, then multiply by 20 minutes.", stuck: "maths",
-    working: () => ["2⁹ = 512 (not enough); 2¹⁰ = 1024 (more than 1000)", "So 10 divisions are needed", "Time = 10 × 20 = 200 minutes"],
-    hints: ["Keep doubling from 1: 2, 4, 8, 16 …", "2⁹ = 512 and 2¹⁰ = 1024. How many divisions is that?", "10 divisions × 20 minutes = 200 minutes."] },
   { id: "spot", kind: "gaps", fixed: true, stack: true, lesson: "s13", text: "A student wrote up their method. Match each mistake to its correction.", lock: "all", setup: SU.asep(0),
     rows: [["e1", "1. I took the lid fully off on the bench to spread the bacteria.", "Lift the lid only slightly, near a Bunsen flame."],
       ["e2", "2. I used my loop straight from the drawer.", "Flame the loop until red hot first."],
@@ -1312,12 +1346,15 @@ function bankCheck() {
   [[[14, 13, 21], 2, 13.5], [[9, 9.5, 10], -1, 9.5], [[17, 11, 16.5], 1, 16.75], [[0, 0, 0], -1, 0]].forEach(([a, i, m]) => {
     if (anomIdx(a) !== i) F("anomaly rule on " + a); if (!cl(goodMean(a), m, .01)) F("mean of " + a); });
   if (!judgeMean([14, 13, 21], 13.5).ok || judgeMean([14, 13, 21], 16).ok) F("mean check (anomaly left out)");
+  if (judgeMean([14.5, 14, 30], 14.2, "14.2").ok || !judgeMean([14.5, 14, 30], 14.3, "14.3").ok || judgeMean([14.5, 14, 30], 14.2, "14.20").ok || !judgeMean([14.5, 14, 30], 14.25, "14.25").ok) F("mean rounding: half up to the typed precision, never half a unit away");
   { const R = judgeRead; if (!R(14, 4, 14).ok || R(14, 4, 7).ok || R(14, 4, 6).ok || R(14, 4, 1.4).ok || R(14, 4, 19).ok || !R(0, 4, 0, true).ok || R(0, 4, 6, true).ok) F("ruler reading check"); }
   if (!judgeArea(14, 154).ok || judgeArea(14, 615.44).ok || judgeArea(14, 21.98).ok || !judgeArea(0, 0).ok) F("area check");
   for (let s = 1; s <= 60; s++) {   // the invented data: readings within ±0.6 mm of the truth always give the right anomaly
     const e = makeExp(s * 7919); for (const k of KA) { const tr = e.d[k], want = anomIdx(tr);
       for (const off of [[0, 0, 0], [.6, -.6, .6], [-.6, .6, -.6], [.5, .5, -.5]]) { const a = tr.map((x, i) => r1(x + off[i])); if (anomIdx(a) !== want) { F(`invented data: anomaly rule unstable (seed ${s}, ${k})`); break; } }
-      if (tr.some(x => x < DISC + 1)) F("invented data: a zone smaller than the disc"); } }
+      if (tr.some(x => x < DISC + 1)) F("invented data: a zone smaller than the disc");
+      if (e.ax[k].some((a, p) => Math.abs((a[0] + a[1]) / 2 - tr[p]) > .051 || Math.abs(a[0] - a[1]) > 2.01)) F("invented data: the two diameters must average to the zone and differ by 2 mm or less");
+      for (const o1 of [-.6, .6]) for (const o2 of [-.6, .6]) { const a = e.ax[k].map(x => r1((r1(x[0] + o1) + r1(x[1] + o2)) / 2)); if (anomIdx(a) !== want) { F(`invented data: anomaly rule unstable with two diameters (seed ${s}, ${k})`); break; } } } }
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
     if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
@@ -1339,6 +1376,8 @@ function bankCheck() {
       if (L(R.concat(bad)) !== 2) E("6-mark: a wrong statement must lower the level"); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); if (t.lock) E("a goal can't lock the model"); }
   });
+  { const D = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; D[qkey("easy", TASKS.easy[0])] = "solved";
+    if (scoreFrom(D, TASKS) !== 1) errs.push("score: progress saved for a retired question id must not count"); }
   return errs;
 }
 
@@ -1427,7 +1466,7 @@ function renderDots() {
 const WORDS = [["Binary fission", DEF.fission], ["Culture medium", DEF.medium], ["Aseptic technique", DEF.aseptic], ["Colony", DEF.colony], ["Zone of inhibition", DEF.zone], ["Mean division time", DEF.mdt]];
 function renderSupport() {
   $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
-  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>radius = diameter ÷ 2</p><p>area of a zone = πr² (use π = 3.14)</p><p>number of divisions = time ÷ mean division time</p><p>bacteria = number at the start × 2<sup>number of divisions</sup></p><p><span class="badge">HT</span> standard form: 64 000 = 6.4 × 10⁴</p>`;
+  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>radius = diameter ÷ 2</p><p>area of a zone = πr² (use π = 3.14)</p><p>number of divisions = time ÷ mean division time</p><p>bacteria = number at the start × 2<sup>number of divisions</sup></p><p><span class="badge">HT</span> standard form: 52 000 = 5.2 × 10⁴</p>`;
   $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (M.tab === "zone" && READY()) drawClose();
@@ -1472,7 +1511,7 @@ function evaluate() {
       if (ess) return { ok: false, html: esc(`Not yet: ${n} of ${b.all.length} points ${est}. Essential step missing: ${t.miss[ess.c]}`) };
       if (b.missing.length) return { ok: false, html: esc(`Not yet: ${n} of ${b.all.length} points ${est}. ${t.miss[b.missing[0].c]}`) };
       if (!b.inOrder) return { ok: false, html: esc(`All ${n} points, but not in the order you would do them ${est}. Put them in method order.`) };
-      return { ok: true, html: esc("Correct. Level 3 (6 marks): a full method in a logical order.") + ` <span class="msl">${esc("Levels: " + t.ms.join(" "))}</span>` }; }
+      return { ok: true, html: esc("Correct. Level 3 (6 marks): a full method in a logical order. Show answer gives the levels.") }; }   // short, so it fits under the statements
     if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
     if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };
     if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. Start with the sentence starter.") };
@@ -1530,7 +1569,7 @@ const TOUR = [
   { el: "#tabs", text: "After incubation, the zones are ready to measure. (The tour uses plates that are ready.)", do: "tab-zone", doText: "Press 2 Measure the zones." },
   { el: "#kSeg", tab: "zone", text: "Choose a disc to look at closely. You can also press a disc on the plate.", do: "disc", doText: "Choose a different disc." },
   { el: "#csvg", tab: "zone", text: "Drag the ruler (or use the arrow keys) so 0 is at one edge of the clear zone. Read the other edge.", do: "ruler", doText: "Move the ruler." },
-  { el: "#recRow", tab: "zone", text: "Type the diameter you read, in mm, then press Record." },
+  { el: "#recRow", tab: "zone", text: "Type the diameter you read, in mm, then press Record. Then turn the plate 90° and measure it again: you record two diameters for each plate." },
   { el: "#ztable", tab: "zone", text: "Record all three plates. Type the mean diameter, then the area, and press Check means and areas." },
   { el: "#tabs", text: "Bacterial growth: work out how many bacteria there will be.", do: "tab-grow", doText: "Press 3 Bacterial growth." },
   { el: "#gtRow", tab: "grow", text: "Change the time. The number doubles every mean division time.", do: "grow", doText: "Move the Time slider." },
@@ -1549,7 +1588,10 @@ $("tabs").addEventListener("click", e => { const b = e.target.closest("button[da
 $("stepBank").addEventListener("click", e => { const b = e.target.closest(".stepb"); if (b) chooseStep(+b.dataset.s); });
 $("howBtns").addEventListener("click", e => { const b = e.target.closest(".howb"); if (b) chooseHow(+b.dataset.h); });
 $("restartBtn").addEventListener("click", () => { if (locked()) return lockMsg(); stopAll(); restartPractical(); drawAll(); });
-function setPK(p, k) { if (selLocked()) return lockMsg(); const ch = k != null && k !== M.k; if (p != null) M.p = p; if (k != null) M.k = k; M.zmsg = ""; drawAll(); if (ch) tourSignal("disc"); }
+function setPK(p, k) { if (selLocked()) return lockMsg(); const ch = k != null && k !== M.k; if (p != null) M.p = p; if (k != null) M.k = k; M.zmsg = "";
+  const t2 = M.two[M.k][M.p]; M.rot = t2[0] != null && t2[1] == null ? 1 : 0; drawAll(); if (ch) tourSignal("disc"); }
+$("turnBtn").addEventListener("click", () => { if (locked()) return lockMsg(); if (M.k === "K") { M.zmsg = "The control has no clear zone in any direction: record 0 mm."; morphHTML($("zread"), zoneRead()); return; }
+  M.rot = 1 - M.rot; M.zmsg = ""; drawAll(); tourSignal("turn"); });
 $("pSeg").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (b) setPK(+b.dataset.p, null); });
 $("kSeg").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (b) setPK(null, b.dataset.k); });
 $("psvg").addEventListener("click", e => { const c = e.target.closest(".hit"); if (c) setPK(null, c.dataset.k); });
@@ -1575,6 +1617,9 @@ $("ztable").addEventListener("input", e => { const n = e.target.closest(".meanin
   if (n.dataset.f === "m") { M.inM[k] = n.value; if (M.okM[k] === false) M.okM[k] = undefined; } else { M.inA[k] = n.value; if (M.okA[k] === false) M.okA[k] = undefined; } });
 $("ztable").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".meanin")) { e.preventDefault(); checkRes(); } });
 $("checkRes").addEventListener("click", checkRes);
+function redoRow(k) { if (locked()) return lockMsg(); M.rec[k] = [null, null, null]; M.two[k] = [[], [], []]; M.mark[k] = []; delete M.inM[k]; delete M.inA[k]; delete M.okM[k]; delete M.okA[k]; delete M.mV[k];
+  M.cK = ""; M.cW = ""; M.cOk = null; M.cMsg = ""; if (M.k === k) { M.p = 0; M.rot = 0; } M.zmsg = `${KN[k]} cleared: measure its three plates again.`; drawAll(); }
+$("ztable").addEventListener("click", e => { const r = e.target.closest("[data-redo]"); if (r) redoRow(r.dataset.redo); });
 $("clearTab").addEventListener("click", () => { if (locked()) return lockMsg(); clearTable(); M.zmsg = "Table cleared."; drawAll(); });
 $("newExp").addEventListener("click", () => { if (locked()) return lockMsg(); clearTable(); M.exp = makeExp(newSeed()); M.zmsg = "A new set of three plates, set up the same way."; drawAll(); });
 $("conclBox").addEventListener("change", e => { if (e.target.id === "cK") M.cK = e.target.value; if (e.target.id === "cW") M.cW = e.target.value; });
