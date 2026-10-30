@@ -988,6 +988,7 @@ function bankCheck() {
       if (t.id === "method") { if (orderBreak(t, seq(["a", "b", "c", "d", "e", "g", "f"])) || orderBreak(t, seq(["b", "c", "d", "f", "e", "g", "a"])) || !orderBreak(t, seq(["a", "c", "b", "d", "e", "g", "f"])) || !orderBreak(t, seq(["a", "b", "c", "d", "g", "e", "f"]))) E("order rules: s19 then s22 orders must pass; no warning before 0 cm, or convert before the mean, must fail"); } }
     if (t.kind === "goal") { const m = freshM(1); if (t.setup) t.setup(m); if (t.test(m)) E("goal already met at the start"); if (!t.not(m)) E("no feedback at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
   });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
   return errs;
 }
 
@@ -1008,7 +1009,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
 
 /* ===== Drawing ===== */
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");

@@ -650,7 +650,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
 const locked = () => mode !== "demo" && !!lock;
 const hideSafe = () => quizOpen() && !!task.hideSafety;   // the hazard question is open: no goggles or safety line on screen
 const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open and unanswered: hide anything that explains its answer
@@ -1083,7 +1084,7 @@ TASKS.easy = [
       { t: "At 180 s, the next test.", why: "By 150 s the iodine already stayed orange-brown. Record the first orange-brown test." }],
     explain: "All the starch has gone at the first test where the iodine stays orange-brown: 150 s.",
     hints: ["Blue-black means starch is still there.", "Which is the first well where the iodine stays orange-brown?", "150 s."] },
-  { id: "bath", kind: "gaps", lesson: "s29–30 Q3", text: "The amylase, buffer and starch each go in the 35 °C water bath before they are mixed, and stay there. Explain why. [2 marks]", frame: "Start with: So the reaction is at…", setup: SU.rp, stuck: "vars",
+  { id: "bathWarm", kind: "gaps", lesson: "s29–30 Q3", text: "The amylase, buffer and starch each go in the 35 °C water bath before they are mixed, and stay there. Explain why. [2 marks]", frame: "Start with: So the reaction is at…", setup: SU.rp, stuck: "vars",
     rows: [["a", "So the reaction is at", "35 °C from the start, in every tube", ["35 °C from the start, in every tube", "a different pH in every tube", "room temperature at the start"]], ["b", "The temperature stays the same, so", "only the pH changes and the test is fair", ["only the pH changes and the test is fair", "the mixture heats up", "the reaction is faster"]]],
     why: (k, w) => ({ "a different pH in every tube": "The buffer sets the pH, not the water bath. The water bath is about temperature.", "room temperature at the start": "Cold starch would cool the mixture, so the reaction would start below 35 °C. Warming everything first stops that.",
       "the mixture heats up": "“To heat the mixture” doesn’t score. Say why it matters: so only the pH changes and the test is fair.",
@@ -1158,7 +1159,7 @@ TASKS.hard = [
       "use less iodine in each well": "The iodine doesn’t change when the starch went. A smaller gap between samples does." })[w],
     explain: "The starch went some time between 120 s and 150 s, so 150 s could be up to 30 s too long. Taking samples more often (for example every 10 s) gives a more exact time.",
     hints: ["You only look every 30 s. What happens between two samples?", "The real time is somewhere between the last blue-black and the first orange-brown test.", "Between 120 s and 150 s; sample more often."] },
-  { id: "meth", kind: "build", marks: 4, lesson: "s29–30 Q5", text: "Describe how to find the optimum pH for amylase. [4 marks]", frame: "Start with: Mix amylase, starch and buffer at…", setup: SU.rp, ms: MS10,
+  { id: "methOpt", kind: "build", marks: 4, lesson: "s29–30 Q5", text: "Describe how to find the optimum pH for amylase. [4 marks]", frame: "Start with: Mix amylase, starch and buffer at…", setup: SU.rp, ms: MS10,
     stm: [{ t: "Mix amylase, starch and a buffer at several pH values.", c: 1 }, { t: "Same temperature: a water bath.", c: 2 }, { t: "Every 30 s, test a drop on iodine.", c: 3 }, { t: "Shortest time = optimum pH.", c: 4 },
       { t: "Use one pH buffer for every tube.", why: "Change the pH: use several." },
       { t: "Record the last blue-black time.", why: "Starch is still there. Record the first orange-brown." },
@@ -1198,6 +1199,7 @@ function bankCheck() {
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); if (!t.not(m)) E("goal needs a next-step message"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
   });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
   return errs;
 }
 

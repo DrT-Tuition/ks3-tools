@@ -412,6 +412,13 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -461,7 +468,9 @@ main.layout{min-height:calc(100vh - 70px)}
           <button class="sw" type="button" id="darkSw" aria-pressed="false"><span class="dot"></span>Darken the room <span class="state">off</span></button>
           <button class="sw" type="button" id="syrSw" aria-pressed="false"><span class="dot"></span>Gas syringe <span class="state">off</span></button></div>
         <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 340" role="img" aria-label="The practical: a lamp on a metre rule shines on pondweed in a boiling tube of sodium hydrogencarbonate solution, with a thermometer and a stopwatch."><g id="rBg"></g><g id="rMov"></g></svg></div>
+        <p class="small" id="safeLine" style="margin:4px 0 0"><b>Safety:</b> keep water away from the lamp and its plug, and wipe up spills (electric shock). Goggles on. An old-style lamp gets hot: let it cool before you touch it. Wash your hands after handling pondweed.</p>
         <div class="controls" id="runRow"><button class="btn primary" type="button" id="countBtn">Count for 1 minute</button><span class="status" id="runStat" aria-live="polite"></span></div>
+        <div class="controls" id="syrRow" hidden><svg id="syrZoom" class="scene" viewBox="0 0 400 96" style="width:min(400px,100%);height:auto" role="img" aria-label="Magnified gas syringe scale at the plunger"></svg><label class="grow" for="syrIn">Read the gas syringe: <input class="numin" id="syrIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" style="width:6em"> <span class="unit">cm³</span></label><button class="btn primary" type="button" id="syrRec">Record</button></div>
         <div class="labgrid">
           <div id="rtable"></div>
           <div><svg id="gsvg" class="scene" viewBox="0 0 480 330" role="img" aria-label="Graph of mean rate against lamp distance"><g id="gG"></g></svg>
@@ -481,7 +490,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="iread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> Rates are in arbitrary units from a simple model with the same shapes as the lesson’s graphs; real plants differ. In the Virtual RP, the bubble counts, volumes, the lamp’s warming of the water and the room light are invented example data with random scatter and the odd anomaly, not real results. One minute is sped up to 6 seconds. The lamp is treated as a tiny point of light, so its light intensity follows the inverse square law exactly. The rate of photosynthesis does not change by the same factor as the light intensity (see the Limiting factors tab).</p>
+      <p class="limits"><b>Model limits:</b> Rates are in arbitrary units from a simple model with the same shapes as the lesson’s graphs; real plants differ. In the Virtual RP, the bubble counts, volumes, the lamp’s warming of the water and the room light are invented example data with random scatter and the odd anomaly, not real results. One minute is sped up to 6 seconds. <span id="syrLim">With the gas syringe you read the scale yourself, to the nearest 0.1 cm³ mark (the model never stops the plunger exactly half-way between two marks).</span> The lamp is treated as a tiny point of light, so its light intensity follows the inverse square law exactly. The rate of photosynthesis does not change by the same factor as the light intensity (see the Limiting factors tab).</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -604,7 +613,8 @@ const labMu = (d, env) => { const I = labI(d, env.dark); return LAB.V * I / (I +
 function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function sample(d, env, row) {   // one count (or one syringe volume) at distance d
   const mu = labMu(d, env);
-  if (env.syr) return r2(mu * LAB.bub * (1 + clamp(gauss() * .03, -.075, .075)));
+  if (env.syr) { let v = r2(mu * LAB.bub * (1 + clamp(gauss() * .03, -.075, .075))); const b = Math.floor(v * 10 + 1e-9), f = v * 10 - b;
+    if (f > .35 && f < .65) v = r2((b + (f < .5 ? .3 : .7)) / 10); return v; }
   const far = x => Math.abs(x - mu) > Math.max(3, .25 * mu), hasAn = row.some(far), sd = Math.max(.6, .05 * mu);
   const normal = () => Math.max(0, Math.round(mu + clamp(gauss() * sd, -1.6 * sd, 1.6 * sd)));
   const want = !hasAn && Math.random() < .07;
@@ -626,6 +636,24 @@ function anomIdx(a, vol) {   // the one count that doesn't fit: further than max
 const meanOf = a => a.reduce((s, x) => s + x, 0) / a.length;
 function goodMean(a, vol) { const i = anomIdx(a, vol); return meanOf(i < 0 ? a : a.filter((x, j) => j !== i)); }
 const TOL = vol => vol ? .006 : .051;
+function drawSyrZoom() {   // the magnified gas syringe: the whole 0–1 cm³ scale, 0 at the tube end (right), numbers at 0, 0.5 and 1 only; pupils count the 0.1 cm³ marks
+  const z = $("syrZoom"); if (!M.pend) { if (z._h) { z.innerHTML = ""; z._h = ""; } return; }
+  const v = M.pend.val, X = u => 352 - u * 330, ex = X(v);
+  let o = `<rect x="4" y="10" width="392" height="40" rx="5" class="glass"/><rect x="4" y="12" width="${f1(Math.max(0, ex - 4))}" height="36" class="metal"/>` +
+    `<rect x="${f1(ex - 6)}" y="8" width="6" height="44" class="metal2"/>`;
+  for (let k = 0; k <= 10; k++) { const x = X(k / 10), big = k % 5 === 0; o += `<path class="tick" d="M${f1(x)} 50v${big ? 18 : 10}"/>`; if (big) o += T_(x, 86, num(k / 10), 16, 'text-anchor="middle"'); }
+  o += T_(394, 86, "cm³", 13, 'text-anchor="end" class="mut"');
+  if (z._h !== o) { z.innerHTML = o; z._h = o; }
+}
+function judgeSyr(v, val) {   // a typed syringe reading (cm³): the nearest 0.1 cm³ mark to where the plunger stops
+  const grid = Math.abs(v * 10 - Math.round(v * 10)) < 1e-6;
+  if (grid && Math.abs(v - val) <= .05 + 1e-9) return { ok: true, v: Math.round(v * 10) / 10 };
+  if (Math.abs(v - val * 10) <= .6) return { why: "That is 10 times too big. The numbers on the scale are in cm³: 0, 0.5 and 1." };
+  if (Math.abs(v - (1 - val)) <= .05 + 1e-9 && Math.abs(val - .5) > .1) return { why: "You read from the wrong end. 0 cm³ is the end nearest the tube; the plunger moves away from it." };
+  if (!grid && Math.abs(v - val) <= .1) return { why: "Read it to the nearest mark on the scale, not between marks." };
+  if (grid && Math.abs(v - val) <= .15) return { why: "Nearly. Choose the mark nearest to the edge of the plunger." };
+  return { why: "Read where the edge of the plunger meets the scale. Count the small marks from the nearest number." };
+}
 function judgeMean(a, vol, v) {   // a typed mean: right, or which slip it looks like
   const i = anomIdx(a, vol), ok = goodMean(a, vol), dp = vol ? 2 : 1, tol = TOL(vol), fx = x => vol ? x.toFixed(2) : num(r1(x));
   if (Math.abs(v - ok) <= tol) return { ok: true };
@@ -688,7 +716,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
 const locked = () => mode !== "demo" && !!lock;
 /* a quiz question that is still open: supports give the method, never the answer (audit Fault A) */
 const openQ = () => { if (mode === "demo" || !task || !task.id) return false; const p = prog(); return !(p.solved || p.revealed); };
@@ -832,7 +861,7 @@ function drawLabBg() {
   /* stopwatch + counter boxes (text patched by the animation) */
   o += `<rect class="lcd" x="14" y="14" width="${f1(150 * s + 20)}" height="${f1(46 * s + 14)}" rx="8"/>` + T_(14 + (150 * s + 20) / 2, 14 + 34 * s + 10, "0:00", 30 * s + 4, 'id="swT" class="lcdt" text-anchor="middle"') + T_(18, 14 + 46 * s + 14 + fs + 2, "Stopwatch", fs - 2, 'class="mut"');
   const tall = G.s < 1, cx0 = tall ? 14 : 14 + 150 * s + 34, cy0 = tall ? 14 + 46 * s + 14 + fs * 2 + 14 : 14 + 34 * s + 8;
-  o += tag(cx0, cy0, M.syr ? "Volume: 0.00 cm³" : "Bubbles: 0", fs + 1, "acc", "start").replace("<text ", '<text id="cntT" ');
+  if (!M.syr) o += tag(cx0, cy0, "Bubbles: 0", fs + 1, "acc", "start").replace("<text ", '<text id="cntT" ');
   o += lampSVG(G, d);
   setLayer($("rBg"), o);
   setCounter(lastShown());
@@ -841,13 +870,13 @@ const pondCut = G => G.cut;
 function syrGeo(G) { const x1 = G.tube - 44, per = (G.s < 1 ? 200 : 300); return { x1, x0: x1 - per * 1.1 - 10, y: 22, per }; }
 function lastShown() { const a = M.data[meth(M)][M.d]; return a.length ? a[a.length - 1] : null; }
 function setCounter(v) {
-  const c = document.getElementById("cntT"), sw = document.getElementById("swT"); if (!c) return;
-  const txt = M.syr ? `Volume: ${v == null ? "0.00" : v.toFixed(2)} cm³` : `Bubbles: ${v == null ? 0 : v}`; if (c.textContent !== txt) c.textContent = txt;
+  const c = document.getElementById("cntT"), sw = document.getElementById("swT");
+  if (c) { const txt = `Bubbles: ${v == null ? 0 : v}`; if (c.textContent !== txt) c.textContent = txt; }
   if (!anim && sw && sw.textContent !== (v == null ? "0:00" : "1:00")) sw.textContent = v == null ? "0:00" : "1:00";
 }
 function drawLabMov(now) {   // the moving layer: bubbles rising, or the syringe plunger
   const G = labGeo(); let o = "";
-  if (M.syr) { const sy = syrGeo(G), v = anim && anim.kind === "count" ? anim.vNow : (lastShown() || 0), x = sy.x1 - v * sy.per;
+  if (M.syr) { const sy = syrGeo(G), v = anim && anim.kind === "count" ? anim.vNow : M.pend ? M.pend.val : (M.syrTrue != null ? M.syrTrue : 0), x = sy.x1 - v * sy.per;
     o += `<rect x="${f1(x)}" y="${f1(sy.y - 10)}" width="${f1(sy.x1 - x)}" height="20" style="fill:var(--surface);opacity:.85"/><rect class="metal" x="${f1(x - 8)}" y="${f1(sy.y - 12)}" width="8" height="24"/><path class="metal2" d="M${f1(x - 8)} ${f1(sy.y - 3)}H${f1(sy.x0 - 30)}v6H${f1(x - 8)}Z"/><rect class="metal" x="${f1(sy.x0 - 36)}" y="${f1(sy.y - 14)}" width="8" height="28"/>`;
   } else if (anim && anim.bubs) {   // bubbles: a pool of circles, patched in place (no rebuild each frame)
     const g = $("rMov"); if (g._h !== "pool") { g.innerHTML = ""; g._h = "pool"; g._pool = []; }
@@ -865,7 +894,7 @@ function drawTable() {
   let h = `<table class="rt"><caption>${M.example ? "Example results from the lesson (made-up data)" : vol ? "Volume of oxygen in 1 minute (cm³)" : "Bubbles counted in 1 minute"}</caption><thead><tr><th scope="col">Lamp distance (cm)</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">Mean rate (${vol ? "cm³" : "bubbles"} per minute)</th></tr></thead><tbody>`;
   D.forEach(d => { const a = tab[d], mk = M.mark[k][d] || [];
     h += `<tr${d === M.d ? ' class="cur"' : ""}><td class="dst">${d}</td>`;
-    for (let i = 0; i < 3; i++) h += `<td>${a[i] == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-d="${d}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="${d} cm, count ${i + 1}: ${vol ? a[i].toFixed(2) : a[i]}${mk.includes(i) ? ", marked as an anomaly" : ""}">${vol ? a[i].toFixed(2) : a[i]}</button>`}</td>`;
+    for (let i = 0; i < 3; i++) h += `<td>${a[i] == null ? '<span class="emp">–</span>' : `<button type="button" class="cnt" data-d="${d}" data-i="${i}" aria-pressed="${mk.includes(i)}" aria-label="${d} cm, count ${i + 1}: ${vol ? a[i].toFixed(1) : a[i]}${mk.includes(i) ? ", marked as an anomaly" : ""}">${vol ? a[i].toFixed(1) : a[i]}</button>`}</td>`;
     const ok = M.ok[k][d], v = M.inp[k][d] || "";
     h += `<td>${a.length < 3 ? '<span class="emp">–</span>' : `<input class="meanin${ok ? " ok" : ok === false ? " no" : ""}" data-d="${d}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(v)}" aria-label="Mean at ${d} cm"${ok ? " readonly" : ""}>`}</td></tr>`; });
   h += `</tbody></table><p class="small" style="margin-top:4px">Press a count to mark it as an anomaly. Counted for 1 minute, so the mean is the rate.</p>`;
@@ -944,10 +973,10 @@ function renderCtl() {
   const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
   sw("screenSw", M.screen); sw("darkSw", M.dark); sw("syrSw", M.syr); sw("fitSw", M.fit);
   $("unpinBtn").hidden = !M.pin; $("pinNote").hidden = !!M.pin;
-  $("countBtn").disabled = !!anim; $("countBtn").textContent = anim ? (anim.phase === "wait" ? "Waiting 2 minutes…" : "Counting…") : M.syr ? "Measure for 1 minute" : "Count for 1 minute";
+  $("syrRow").hidden = !M.pend; drawSyrZoom(); $("countBtn").disabled = !!anim || !!M.pend; $("countBtn").textContent = anim ? (anim.phase === "wait" ? "Waiting 2 minutes…" : "Counting…") : M.syr ? "Measure for 1 minute" : "Count for 1 minute";
   if (!locked()) $("lockNote").hidden = true;
 }
-function drawAll() { drawPane(); renderCtl(); }
+function drawAll() { drawPane(); renderCtl(); $("safeLine").hidden = openQ() && !!task.hideSafety; $("syrLim").hidden = openQ() && task.id === "res"; }   // the hazard question is open: no safety line
 function setTab(t) { if (anim && t !== "rp") stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); if (t === "isq") tried(4); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); if (a.finish) a.finish(); }
 
@@ -957,11 +986,13 @@ function startCount() {
   if (locked()) return lockMsg();
   if (anim) return;
   const k = meth(M), row = M.data[k][M.d];
+  if (M.pend) { M.rmsg = "Read the gas syringe and record it first."; morphHTML($("rread"), labRead()); return; }
   if (row.length >= 3) { M.rmsg = `You have three ${M.syr ? "readings" : "counts"} at ${M.d} cm. Clear this row to count again, or move the lamp.`; morphHTML($("rread"), labRead()); return; }
   const val = sample(M.d, env(M), row), waits = M.lastD !== M.d || M.lastSyr !== M.syr, m = M;
   m.rmsg = "";
-  const done = () => { if (M !== m) return; row.push(val); m.lastD = m.d; m.lastSyr = m.syr; m.example = false;
-    m.rmsg = `${M.syr ? "Reading" : "Count"} ${row.length} at ${m.d} cm: ${M.syr ? val.toFixed(2) + " cm³" : val + " bubbles"}.` + (row.length === 3 ? " Now type the mean in the table." : "");
+  const done = () => { if (M !== m) return; m.lastD = m.d; m.lastSyr = m.syr; m.example = false;
+    if (m.syr) { m.pend = { val, d: m.d, tries: 0 }; m.rmsg = "1 minute is up. Read the gas syringe where the plunger stops (to the nearest 0.1 cm³ mark), type it, and press Record."; }
+    else { row.push(val); m.rmsg = `Count ${row.length} at ${m.d} cm: ${val} bubbles.` + (row.length === 3 ? " Now type the mean in the table." : ""); }
     $("runStat").textContent = ""; tourSignal("count"); drawAll(); };
   if (reduced()) { done(); return; }
   const t0 = performance.now(), wait = waits ? WAIT : 0, bubs = [];
@@ -980,7 +1011,7 @@ function startCount() {
     if (tt < wait) { a.phase = "wait"; const s = sw(), w = "wait " + (2 - Math.floor(tt / wait * 2)) + ":00"; if (s && s.textContent !== w) s.textContent = w; stat("Wait 2 minutes at the new distance…"); }
     else { if (a.phase !== "count") { a.phase = "count"; renderCtl(); }
       const f = clamp((tt - wait) / CD, 0, 1), s = sw(); if (s) { const t = Math.floor(f * 60), txt = `0:${String(t).padStart(2, "0")}`.replace("0:60", "1:00"); if (s.textContent !== txt) s.textContent = txt; }
-      if (m.syr) { a.vNow = val * f; setCounter(r2(a.vNow)); }
+      if (m.syr) { a.vNow = val * f; }
       else { const c = bubs.filter(b => b.c && b.t <= now).length, el = document.getElementById("cntT"), w = `Bubbles: ${c}`; if (el && el.textContent !== w) el.textContent = w; }
       stat(m.syr ? "Measuring the oxygen…" : "Counting the bubbles…"); }
     drawLabMov(now);
@@ -990,7 +1021,7 @@ function startCount() {
   };
   a.id = paceFrame(step, 20);
 }
-function clearRow(d) { const k = meth(M); M.data[k][d] = []; delete M.mark[k][d]; delete M.inp[k][d]; delete M.ok[k][d]; M.example = false; }
+function clearRow(d) { const k = meth(M); if (M.pend && M.pend.d === d && k === "v") M.pend = null; M.data[k][d] = []; delete M.mark[k][d]; delete M.inp[k][d]; delete M.ok[k][d]; M.example = false; }
 
 /* ===== Demo: things to try ===== */
 const TRY = ["Raise the light intensity. Where does the curve level off?", "Turn on Show what limits (Support). Which bar is shortest?",
@@ -1019,16 +1050,6 @@ TASKS.easy = [
       chlorophyll: "Chlorophyll is not a reactant or a product. It is a green pigment that absorbs light." })[w],
     explain: `${EQW}. Light energy is taken in, and chlorophyll absorbs it.`, stuck: "eq",
     hints: ["The plant takes in two things: one through its leaves, one through its roots.", "The roots take in water. The plant gives out a gas.", `${EQW}.`] },
-  { id: "sort", kind: "gaps", fixed: true, grid: true, lesson: "L1 s12–13, s27", text: "Sort each one: a reactant, a product, or needed for the reaction.", setup: m => { m.tab = "lim"; },
-    rows: [["co2", "CO₂", "Reactant"], ["light", "Light", "Needed"], ["glu", "C₆H₁₂O₆", "Product"], ["h2o", "H₂O", "Reactant"], ["o2", "O₂", "Product"], ["chl", "Chlorophyll", "Needed"]],
-    bank: ["Reactant", "Product", "Needed"],
-    why: (k, w) => ({ co2: "CO₂ is carbon dioxide. The plant takes it in and uses it, so it is a reactant.",
-      light: w === "Reactant" ? "Light is energy, not a substance. It is needed for the reaction." : "Light is taken in, not made. It is needed for the reaction.",
-      glu: "C₆H₁₂O₆ is glucose. The plant makes it, so it is a product.", h2o: "H₂O is water. The plant takes it in, so it is a reactant.",
-      o2: "O₂ is oxygen. The plant gives it out, so it is a product.",
-      chl: w === "Reactant" ? "Chlorophyll is a green pigment that absorbs light. It is needed, but it is not a reactant (and it is not an enzyme)." : "Chlorophyll is not made by photosynthesis. It absorbs the light, so it is needed." })[k],
-    explain: "Reactants: CO₂ and H₂O. Products: C₆H₁₂O₆ (glucose) and O₂. Needed: light and chlorophyll.", stuck: "eq",
-    hints: ["Reactants go in, products come out.", "Which two are not substances used up or made? They are needed for the reaction.", "Reactant: CO₂, H₂O. Product: C₆H₁₂O₆, O₂. Needed: light, chlorophyll."] },
   { id: "flat", kind: "choice", lesson: "L1 s16–17, s28", text: "The rate rises, then stays flat as light increases. What does the flat part at Q show?", lock: "all", setup: SU.graphPQ(9, [{ lab: "Q", x: 8.5 }]),
     options: [{ t: "Another factor is now limiting the rate.", ok: () => limAtX({ L: 9, C: 5, T: 30 }, "light", 8.5) !== "light" && rateAtX({ L: 9, C: 5, T: 30 }, "light", 8.5) > 1 },
       { t: "Light is still limiting the rate.", why: "If light were limiting, more light would raise the rate. The line is flat, so light is no longer in short supply." },
@@ -1065,6 +1086,18 @@ TASKS.easy = [
       { t: "The light intensity", why: "Light intensity changes as you move the lamp. It goes with the independent variable." }],
     explain: "Keep the water temperature the same, so only light changes the rate. Others: the same solution, the same pondweed, a 1-minute count.", stuck: "words",
     hints: ["A control variable is kept the same.", "Which one would change the rate if it changed, but is not the lamp?", "The temperature of the water."] },
+  { id: "haz", kind: "gaps", lesson: "L2 s16 safety", text: "The lamp runs on mains electricity, next to a tube of water. Complete the hazard, the risk and how to control it.", fixed: true, frame: "Hazard → risk → control", lock: "all", setup: SU.lab, hideSafety: true,
+    rows: [["a", "Hazard", "water near the mains lamp and its plug", ["water near the mains lamp and its plug", "the pondweed, which is poisonous", "the boiling tube, which can explode"]],
+      ["b", "Risk", "an electric shock if water reaches the plug", ["an electric shock if water reaches the plug", "the pondweed stops making bubbles", "the water boils over"]],
+      ["c", "Control", "keep water away from the lamp and plug; wipe up spills", ["keep water away from the lamp and plug; wipe up spills", "stand the lamp in the beaker of water", "use more pondweed"]]],
+    why: (k, w) => ({ "the pondweed, which is poisonous": "Pondweed is not poisonous (you just wash your hands after). The hazard here is water near electricity.",
+      "the boiling tube, which can explode": "The tube is at room temperature and open. The hazard is water near the mains lamp.",
+      "the pondweed stops making bubbles": "That is a problem for the results, not a risk to you. Think about water and electricity.",
+      "the water boils over": "The lamp warms the water a few degrees, nowhere near boiling. Think about water and electricity.",
+      "stand the lamp in the beaker of water": "Never put mains electrics in water: that causes the shock. The beaker of water is a heat screen, kept away from the plug.",
+      "use more pondweed": "That doesn’t protect anyone. A control keeps water away from the electrics." })[w],
+    explain: "Hazard: water near the mains lamp and plug. Risk: an electric shock. Control: keep water away from the lamp and plug, and wipe up spills at once.",
+    hints: ["A hazard is something that could cause harm. What is dangerous about water next to a lamp?", "Water and mains electricity together can give an electric shock.", "Water near the lamp → electric shock → keep water away from the lamp and plug; wipe spills."] },
   { id: "do30", kind: "goal", lesson: "L2 s16", text: "Do the method: move the lamp to 30 cm, then count for 1 minute three times.", setup: SU.lab,
     test: M => M.data.n[30].length >= 3,
     not: M => M.syr ? "Turn off the gas syringe: this method counts bubbles." : M.d !== 30 ? "Move the lamp to 30 cm first (press 30, or drag the lamp)." : `You have ${M.data.n[30].length} of 3 counts at 30 cm. Press Count for 1 minute again.`,
@@ -1109,7 +1142,7 @@ TASKS.hard = [
     stm: [{ t: "Up to about 40 °C, the rate rises,", c: 1, d: 1 }, { t: "because warmer particles collide more.", c: 2, e: 1 },
       { t: "It is fastest at about 40 °C.", c: 3, d: 1 }, { t: "Above 40 °C it falls quickly, to zero,", c: 4, d: 1 },
       { t: "because the enzymes are denatured.", c: 5, e: 1 },
-      { t: "Above 40 °C another factor limits it.", why: "The rate doesn't level off above 40 °C: it falls. That is the enzymes being denatured, not another limiting factor." },
+      { t: "Above 40 °C another factor limits it.", why: "Above 40 °C the rate falls: enzymes are denatured." },
       { t: "The heat creates extra energy.", why: "Energy is never created. Light energy is transferred to the plant." }],
     miss: { 1: "Describe what happens to the rate up to about 40 °C.", 2: "Explain why warming speeds it up (think particles).", 3: "Describe the peak: where is the rate fastest?", 4: "Describe what happens above 40 °C.", 5: "Explain the fall above 40 °C (think enzymes)." },
     explain: "Rate rises to about 40 °C (warmer particles collide more), is fastest at about 40 °C, then falls quickly to zero because the enzymes are denatured.", ms: L3MS,
@@ -1134,12 +1167,6 @@ TASKS.hard = [
     generic: "Change 90 s into minutes, then divide the bubbles by the time.", stuck: "maths",
     working: () => ["Time = 90 s ÷ 60 = 1.5 minutes", "Rate = 45 ÷ 1.5", "Rate = 30 bubbles per minute"],
     hints: ["How many minutes is 90 s?", "90 s = 1.5 minutes. Rate = bubbles ÷ minutes.", "45 ÷ 1.5 = 30."] },
-  { id: "vol", kind: "num", lesson: "L2 s20 Q3", text: "27 cm³ of oxygen is made in 45 minutes. Calculate the rate.", setup: SU.lab,
-    frame: "rate = volume ÷ time", lbl: "Rate =", unit: "cm³ per minute", ans: () => 27 / 45,
-    wrongs: [[45 / 27, "You divided the wrong way (45 ÷ 27). Divide the volume by the time."], [1215, "You multiplied. Rate = volume ÷ time."], [27 / 2700, "That is cm³ per second. The question asks per minute, so don't change the time."], [72, "You added. Rate = volume ÷ time."]],
-    generic: "Divide the volume by the time in minutes.", stuck: "maths",
-    working: () => ["Rate = volume ÷ time", "Rate = 27 cm³ ÷ 45 minutes", "Rate = 0.6 cm³ per minute"],
-    hints: ["Which is the amount, and which is the time?", "Rate = 27 ÷ 45.", "27 ÷ 45 = 0.6."] },
   { id: "isq", kind: "num", ht: true, lesson: "L2 s21–22, s31 Q5", text: "A lamp moves from 10 cm to 40 cm away. By what factor does the light intensity fall?", lock: "all",
     setup: m => { m.tab = "isq"; m.d1 = 10; m.d2 = 20; m.hideWork = true; }, after: "isq",
     frame: "Find how many times the distance changes. Square that number. Then divide 1 by it.", lbl: "It falls to 1 ÷", unit: "", ans: () => isq(10, 40).q / isq(10, 40).p,
@@ -1147,6 +1174,13 @@ TASKS.hard = [
     generic: "Distance × 4. Square it, then the intensity is 1 ÷ that.", stuck: "maths",
     working: () => isqWork(10, 40),
     hints: ["How many times further away is 40 cm than 10 cm?", "The distance is × 4. Now square it.", "4 × 4 = 16, so it falls to 1/16."] },
+  { id: "res", kind: "choice", lesson: "L2 s26–28 (resolution)", text: "A measuring cylinder is marked every 0.5 cm³; a gas syringe every 0.1 cm³. Which is better for small volumes of oxygen?", lock: "all", setup: SU.lab,
+    options: [{ t: "The syringe: its resolution (0.1 cm³) shows smaller changes.", ok: () => 0.1 < 0.5 },
+      { t: "The cylinder: bigger marks are easier to read.", why: "Bigger gaps between marks mean a worse resolution: a change smaller than 0.5 cm³ can’t be seen. The syringe shows changes of 0.1 cm³." },
+      { t: "The syringe: it holds more gas.", why: "Resolution is not about how much it holds. It is the smallest change the scale can show: 0.1 cm³ beats 0.5 cm³." },
+      { t: "Both: they both measure cm³.", why: "Same unit, different resolution. The syringe’s marks are 0.1 cm³ apart, so it can show smaller changes than the cylinder (0.5 cm³)." }],
+    explain: "Resolution is the smallest change a scale can show: 0.1 cm³ beats 0.5 cm³.",
+    hints: ["Resolution means the smallest change the scale can show.", "Which instrument has the smaller gap between its marks?", "The gas syringe: 0.1 cm³ is smaller than 0.5 cm³."] },
   { id: "imp", kind: "gaps", pair: true, lesson: "L2 s26–28, s31 Q4", text: "Suggest one improvement to the method and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab,
     rows: [["i", "One improvement is to", null, ["use a gas syringe", "add a beaker of water as a heat screen", "darken the room"]], ["r", "This helps because", null, ["bubbles vary in size, so it measures the true volume of oxygen", "the lamp heats the water, so it keeps the temperature the same", "room light reaches the plant, so only the lamp changes the light intensity", "it makes the test fair", "it makes the plant photosynthesise more"]]],
     PAIRS: { "use a gas syringe": "bubbles vary in size, so it measures the true volume of oxygen", "add a beaker of water as a heat screen": "the lamp heats the water, so it keeps the temperature the same", "darken the room": "room light reaches the plant, so only the lamp changes the light intensity" },
@@ -1178,13 +1212,16 @@ function bankCheck() {
   [[[30, 31, 12], 2, 30.5], [[16, 40, 15], 1, 15.5], [[8, 9, 8], -1, 8.33], [[5, 5, 11], 2, 5], [[32, 30, 34], -1, 32], [[15, 16, 14], -1, 15]].forEach(([a, i, m]) => {
     if (anomIdx(a, false) !== i) F("anomaly rule on " + a); if (Math.abs(goodMean(a, false) - m) > .01) F("mean of " + a); if (!judgeMean(a, false, m).ok) F("mean check " + a); });
   if (judgeMean([30, 31, 12], false, meanOf([30, 31, 12])).ok) F("mean check must reject the anomaly mean");
+  { const J = judgeSyr; if (J(.7, .64).ok || !J(.7, .66).ok || J(.6, .66).ok || !J(.6, .64).ok || !J(.6, .62).ok || J(.62, .62).ok || J(.5, .62).ok || J(6.2, .62).ok || !J(6.2, .62).why.includes("10 times") || !J(.4, .62).why.includes("wrong end") || !J(.65, .62).why.includes("nearest mark"))
+      F("gas syringe reading check (nearest 0.1 cm³ mark, named slips)");
+    for (let k = 0; k < 200; k++) { const v = sample(10 + 10 * (k % 5), { syr: true }, []), f = v * 10 - Math.floor(v * 10 + 1e-9); if (!(v > .05 && v < 1) || (f > .35 + 1e-9 && f < .65 - 1e-9)) { F("syringe volumes: on the 0–1 cm³ scale and clear of the half-way point: " + v); break; } } }
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
     if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
     if (t.kind === "choice") { if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
       if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
-    if (t.kind === "gaps" && !t.pair) { t.rows.forEach(([k, , a]) => { if (!t.bank.includes(a)) E("answer missing from bank " + k);
-      t.bank.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); }); }
+    if (t.kind === "gaps" && !t.pair) { t.rows.forEach(([k, , a, list]) => { const L = list || t.bank; if (!L.includes(a)) E("answer missing from bank " + k);
+      L.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); }); }
     if (t.kind === "gaps" && t.pair) { const [a, b] = t.answerSet; if (t.PAIRS[a] !== b) E("answer pair"); Object.entries(t.PAIRS).forEach(([x, y]) => { if (!t.rows[0][3].includes(x) || !t.rows[1][3].includes(y)) E("pair option missing"); }); }
     if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
@@ -1192,6 +1229,7 @@ function bankCheck() {
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
   });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
   return errs;
 }
 
@@ -1280,12 +1318,11 @@ function renderSupport() {
   $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   const oq = openQ() ? task.id : "";
   $("eqBox").innerHTML = oq === "eq" ? `<h3>Equation</h3><p>Reactants go before the arrow, products after it.</p><p>Think: what does a plant take in through its roots? What gas does it give out?</p>`
-    : oq === "sort" ? `<h3>Equation</h3><p>Reactants are used up, products are made. Something that is needed but not used up or made is neither.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`
     : oq === "endo" ? `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Think about which way the energy moves, and what form it is in.</p>`
     : `<h3>Equation</h3><p><b>${esc(EQW)}</b></p><p>Light energy is taken in (endothermic). Chlorophyll absorbs the light.</p><p>${SYMS.map(s => `${esc(s[0])} ${s[1]}`).join(" · ")}</p>`;
   $("mathsBox").innerHTML = `<h3>Maths help</h3><p>mean = total ÷ number of counts (leave out any anomaly)</p><p>rate = amount ÷ time (change seconds into minutes first)</p><p><span class="badge">HT</span> light intensity ∝ 1 ÷ distance²</p>`;
   const wd = w => oq === "endo" && w[0] === "Endothermic" ? "Endo- means ‘in’. Think about which way the energy moves."
-    : (oq === "eq" || oq === "sort") && w[0] === "Photosynthesis" ? "The reaction plants use to make their own food, using light." : w[1];
+    : oq === "eq" && w[0] === "Photosynthesis" ? "The reaction plants use to make their own food, using light." : w[1];
   $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(wd(w))}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (M.tab === "lim") { drawBars(); morphHTML($("lread"), limRead()); }
@@ -1350,7 +1387,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    revealModel(); renderSupport();
+    revealModel(); drawAll(); renderSupport();   // bring back every line hidden while the question was open
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1365,7 +1402,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState(); renderSupport();
+  setAnswerState(); drawAll(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
@@ -1497,11 +1534,22 @@ function guard(ev, revert) { if (locked()) { if (revert) revert(); lockMsg(); re
 $("xvSeg").addEventListener("click", e => { const b = e.target.closest("button[data-xv]"); if (!b || guard()) return; if (M.xv !== b.dataset.xv) { M.xv = b.dataset.xv; M.pin = null; M.nowName = ""; } drawAll(); tourSignal("xv-" + M.xv); });
 $("pinBtn").addEventListener("click", () => { if (guard()) return; M.pin = { xv: M.xv, L: M.L, C: M.C, T: M.T }; M.nowName = ""; drawAll(); tourSignal("pin"); });
 $("unpinBtn").addEventListener("click", () => { if (guard()) return; M.pin = null; M.nowName = ""; drawAll(); });
-function setD(d) { if (guard()) return; if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } d = clamp(Math.round(d / 10) * 10, 10, 50); const was = M.d; M.d = d; M.rmsg = ""; drawAll(); if (d !== was) tourSignal("dist"); }
+function setD(d) { if (guard()) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; } if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } d = clamp(Math.round(d / 10) * 10, 10, 50); const was = M.d; M.d = d; M.rmsg = ""; drawAll(); if (d !== was) tourSignal("dist"); }
 $("dSeg").addEventListener("click", e => { const b = e.target.closest("button[data-d]"); if (b) setD(+b.dataset.d); });
-[["screenSw", "screen"], ["darkSw", "dark"], ["syrSw", "syr"]].forEach(([id, k]) => $(id).addEventListener("click", () => { if (guard()) return; if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } M[k] = !M[k]; M.rmsg = ""; drawAll(); tourSignal("imp"); }));
+[["screenSw", "screen"], ["darkSw", "dark"], ["syrSw", "syr"]].forEach(([id, k]) => $(id).addEventListener("click", () => { if (guard()) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; } if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } M[k] = !M[k]; M.rmsg = ""; drawAll(); tourSignal("imp"); }));
 $("fitSw").addEventListener("click", () => { if (guard()) return; M.fit = !M.fit; drawAll(); });
 $("countBtn").addEventListener("click", startCount);
+function recordSyr() {
+  if (guard() || !M.pend) return; const P = M.pend, inp = $("syrIn"), v = parseNum(inp.value);
+  if (!isFinite(v)) { M.rmsg = "Type the reading from the syringe scale, in cm³."; morphHTML($("rread"), labRead()); return; }
+  const j = judgeSyr(v, P.val);
+  if (!j.ok) { P.tries++; M.rmsg = "✗ " + j.why; morphHTML($("rread"), labRead()); return; }
+  const row = M.data.v[P.d]; row.push(j.v); M.syrTrue = P.val; M.pend = null; inp.value = "";
+  M.rmsg = `✓ Reading ${row.length} at ${P.d} cm: ${j.v.toFixed(1)} cm³.` + (row.length === 3 ? " Now type the mean in the table." : "");
+  tourSignal("count"); drawAll();
+}
+$("syrRec").addEventListener("click", recordSyr);
+$("syrIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); recordSyr(); } });
 $("clearRow").addEventListener("click", () => { if (guard() || anim) return; clearRow(M.d); M.rmsg = `Row ${M.d} cm cleared.`; drawAll(); });
 $("clearAll").addEventListener("click", () => { if (guard() || anim) return; LAB.D.forEach(clearRow); M.rmsg = "Table cleared."; drawAll(); });
 $("rtable").addEventListener("click", e => { const b = e.target.closest(".cnt"); if (!b || guard()) return; const k = meth(M), d = +b.dataset.d, i = +b.dataset.i;
@@ -1516,8 +1564,8 @@ $("checkMeans").addEventListener("click", () => {
     const v = parseNum(s); if (!isFinite(v)) { msgs.push(`${d} cm: type a number.`); return; }
     const mk = M.mark[k][d] || [], ai = anomIdx(a, vol), wrongMark = mk.find(i => i !== ai);
     const j = judgeMean(a, vol, v);
-    if (j.ok) { M.ok[k][d] = true; if (wrongMark != null) msgs.push(`${d} cm: right mean, but ${vol ? a[wrongMark].toFixed(2) : a[wrongMark]} fits the pattern${ai >= 0 ? `; the anomaly is ${vol ? a[ai].toFixed(2) : a[ai]}` : ""}.`); M.mark[k][d] = ai >= 0 ? [ai] : []; good.push(d); }
-    else { M.ok[k][d] = false; msgs.push(`${d} cm: ` + (wrongMark != null && wrongMark !== undefined ? `${vol ? a[wrongMark].toFixed(2) : a[wrongMark]} fits the pattern, so keep it. ` : "") + j.why); } });
+    if (j.ok) { M.ok[k][d] = true; if (wrongMark != null) msgs.push(`${d} cm: right mean, but ${vol ? a[wrongMark].toFixed(1) : a[wrongMark]} fits the pattern${ai >= 0 ? `; the anomaly is ${vol ? a[ai].toFixed(1) : a[ai]}` : ""}.`); M.mark[k][d] = ai >= 0 ? [ai] : []; good.push(d); }
+    else { M.ok[k][d] = false; msgs.push(`${d} cm: ` + (wrongMark != null && wrongMark !== undefined ? `${vol ? a[wrongMark].toFixed(1) : a[wrongMark]} fits the pattern, so keep it. ` : "") + j.why); } });
   if (!good.length && !msgs.length) M.rmsg = "Do three counts at a distance, type the mean in the table, then press Check my means.";
   else M.rmsg = (good.length ? `✓ Correct mean at ${good.join(", ")} cm: plotted on the graph. ` : "") + esc(msgs.join(" "));
   if (good.length) { tourSignal("means"); tried(2); }
@@ -1528,7 +1576,7 @@ $("checkMeans").addEventListener("click", () => {
   const svg = $("rsvg"); let dr = null, pend = 0, last = null;
   const toD = p => (labGeo().tube - p.x) / pxcm(labGeo());
   const go = () => { pend = 0; if (!dr || !last) return; const d = clamp(Math.round(toD(last) / 10) * 10, 10, 50); if (d !== M.d) { M.d = d; drawAll(); } };
-  svg.addEventListener("pointerdown", e => { if (!e.target.closest("[data-lamp]")) return; e.preventDefault(); if (guard()) return; if (anim) return;
+  svg.addEventListener("pointerdown", e => { if (!e.target.closest("[data-lamp]")) return; e.preventDefault(); if (guard()) return; if (anim) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; }
     dr = { d0: M.d }; last = svgPt(svg, e); try { svg.setPointerCapture(e.pointerId); } catch (x) {} });
   svg.addEventListener("pointermove", e => { if (!dr) return; last = svgPt(svg, e); if (!pend) pend = paceFrame(go, 20); });
   const up = () => { if (!dr) return; if (pend) { paceCancel(pend); pend = 0; } go(); const was = dr.d0; dr = null; M.rmsg = ""; drawAll(); if (M.d !== was) tourSignal("dist");

@@ -895,7 +895,7 @@ const TASKS = {
         { t: "…increases, so light is the only factor that affects daisies.", why: "The graph shows a pattern with light. It doesn't show light is the only factor: water or soil can matter too." }],
       explain: "As the light intensity increases, the number of daisies increases: fewer in the shade, more in the open.",
       hints: ["Read the daisies line from left (shade) to right (open).", "Compare the daisies line with the light line.", "Where the light is low, the daisies line is low."] },
-    { id: "describeTr", kind: "build", setup: SU.rand0, lock: "all", src: "slides 21, 24–25", text: "Describe how a transect would show the effect of shade on the daisies. [4 marks]",
+    { id: "describeTr2", kind: "build", setup: SU.rand0, lock: "all", src: "slides 21, 24–25", text: "Describe how a transect would show the effect of shade on the daisies. [4 marks]",
       frame: "Number the steps you use: First, … Then, … Finally, …",
       items: [
         { id: "a", t: "Lay a tape from the shade to open ground.", rank: 1, ess: 1, miss: "Say where the tape goes: across the change, from shade to open." },
@@ -1005,6 +1005,7 @@ function bankCheck() {
       bad.forEach(x => { if (buildScore(t, full.concat([x])).mk >= 4) E("a wrong statement must lower the mark: " + x.id); }); }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal already met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
   });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
   return errs;
 }
 
@@ -1024,10 +1025,11 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
 const locked = () => mode !== "demo" && !!lock;
 /* audit Fault A: the IV/DV line is the answer to the variables questions, so it waits until they are answered */
-const hideVars = () => { if (mode === "demo" || !task || !["vars", "describeTr"].includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
+const hideVars = () => { if (mode === "demo" || !task || !["vars", "describeTr2"].includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
 const LOCKW = { run: "Predict first. The model shows the result when you get it right, or press Show answer.", all: "The model is set for this question." };
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = LOCKW[lock] || LOCKW.all; }
 
@@ -1405,7 +1407,7 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) { if (["vars", "describeTr"].includes(t.id)) drawAll(); return; }
+  const t = task; if (!t.after) { if (["vars", "describeTr2"].includes(t.id)) drawAll(); return; }
   lock = ""; if (t.after === "bare") { M.R.hide = false; M.R.truth = true; M.R.cur = 0; }
   drawAll();
 }
@@ -1488,7 +1490,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
-    revealModel();
+    revealModel(); drawAll();   // bring back every line hidden while the question was open
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1504,7 +1506,7 @@ function answerText(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); drawAll(); renderSupport();
   msg("tip", answerText(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {

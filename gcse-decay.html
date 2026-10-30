@@ -724,7 +724,8 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
 const quizOpen = () => mode !== "demo" && task && task.kind !== "demo" && !(prog().solved || prog().revealed);
 const hideRate = () => quizOpen() && (task.hideW || []).includes("rate");
 const qFlag = k => quizOpen() && !!task[k];   // neutral labels / hidden step text / hidden conclusion while a question is open
@@ -1464,6 +1465,7 @@ function bankCheck() {
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
   });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
   return errs;
 }
 
