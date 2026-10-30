@@ -394,6 +394,9 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 #answer .grow{min-width:0;max-width:100%}
 #answer .grow>span{min-width:0;overflow-wrap:anywhere}
 #answer select{max-width:100%;min-width:0;text-overflow:ellipsis}
+.scene .pic{pointer-events:none}
+.scene .onpic .tick{stroke:#2E2418}
+.scene .onpic text,.scene text.onpic{fill:#3A2C1E}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -608,6 +611,20 @@ main.layout{min-height:calc(100vh - 70px)}
   if (mq && mq.addEventListener) mq.addEventListener("change", paint);
   paint();
 })();
+/* ===== Picture layers (approved Gemini images, 30 Oct 2026; built by img30/physA/embed.py) =====
+   WebP data URIs, each drawn once in a hidden sprite svg; pic(name, transform) places it in a scene with <use>.
+   box = x, y, w, h in the image job's crop-box svg coordinates. Every reading, scale and label stays code-drawn on top. */
+const IMG = {
+  res_ruler: { src: "data:image/webp;base64,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", x: 132.0, y: 420.67, w: 769.33, h: 40.0 },
+  res_bench: { src: "data:image/webp;base64,UklGRkoDAABXRUJQVlA4WAoAAAAQAAAAwgIASwAAQUxQSGUAAAABcFvbthLhUoFD7pBb/U5EBe/3MO7TAXYjYgKkIAzCRXcQ6V5PbNlNfenR+7XsflDpsfdz4cX+Xu8lN/wH/8F/8B/8B//Bf/Af/Af/HdqD/9zT6/5YdN9Y4dN76U210UzDsrufcwBWUDggvgIAANAfAJ0BKsMCTAA+nU6jTiWkIykgKAEgE4lpbi3/vf3/+lsYFpQaAwuo3v8fWazrE3/gv/2pbWr/uf87/lOmIQAxdyt0AK+rABlQAk7GCljxDrJtskETeN2yly+K8Jcfdu4qfvPKMVE3MvoZ2bMlFPqbbiuCH1OdQnaBn+hKQcrGM13nQuathKRMybc1WCDDKBk6OibHixz0gmL7SUG7EGMmk8FO8AxDG/fq6N0ZbRQv4xAycOrpNce2yYtEKvXtU7lt17qRrmGA70bbGaMbwuvKMuo0Ss0kHTLvVIAxxuZ7kRSFc/FAV28JTbARYJ8Ik58lAqc+bAR9OTt22/uk8H6nWOLFWycgAP7wEgOJH0yn/r6eIBqX/UoiOGBktgCB8esuqrIuCEolpSfGPsgwwHhGvWuuVRWpbdiP2tAue6HsdeIRKxGmyC7mRT/ksHsMhcOgQx6180VF33/oeZe6neCfJ7lHE83dJDl42EeRvN8mJwIhTvIPOzFpJtw60H6eY+GP0+XkP7RecJBeceVH5ZxxpabndZHfd2tYiXQvo9nbLbGT0BzBhErvxIU3E8/MNWfKP00eT9td8BYwFly9d+ag53ypfua2oY7vAZ/S2HOyBXTMJbgIppfXS05J7gqZimzbaq+N2g3lkkpXybeLVCwURzYPgkH0+TuyzyFzm1aqmIxD6Iugfb9LshZgOQyK5xdq1xMjlcrsINTWMIy6PFInZNmPxtS1YBoMukUMvctBi9DOGJj4RAaUl8pL/5vp57KDUD6Ves569nQl34YXPIG8cFBCOYhitceqMSWtS9bgkRA7pNj3T0tmStKggXhUJHq3CvDjzdpkfXO8wJiEth0uZO7NcBonIEL86hNKbSNsABEWjaoRrpF5p9QTvNlM96FHJM0lUYGKes8/yD4TLh6woRZsyZnqOkVm0WygAA==", x: 209.0, y: 339.0, w: 707.0, h: 76.0 },
+};
+(function picSprite() {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("aria-hidden", "true"); s.setAttribute("focusable", "false");
+  s.setAttribute("width", "0"); s.setAttribute("height", "0"); s.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+  s.innerHTML = "<defs>" + Object.entries(IMG).map(([k, o]) => `<image id="pic-${k}" x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" preserveAspectRatio="none" href="${o.src}"/>`).join("") + "</defs>";
+  document.body.appendChild(s);
+})();
+const pic = (k, tf) => `<use class="pic" href="#pic-${k}" aria-hidden="true"${tf ? ` transform="${tf}"` : ""}/>`;
 /* ---------- TOOL SCRIPT BELOW ---------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -763,14 +780,18 @@ function drawLabBg() {
   const G = labGeo(), fs = G.fs, m = M, xA = cmX(G, m.clipA), xB = cmX(G, m.clipB), [cx, cy, cw, ch] = G.cell, yW = G.yW, T = G.top; setVB($("rsvg"), G.W, G.H);
   drawLabDyn(G, xB);
   const key = [G.W, JSON.stringify(m.slots), m.built, m.on, m.clipA, PICK.k].join("|"), rg = $("rG"); if (rg._key === key && rg._h) { patchTemp(); return; } rg._key = key;
-  let h = `<rect class="bench" x="0" y="${yW + 52}" width="${G.W}" height="${G.H - yW - 52}"/>`;
-  /* ruler with cm marks; the resistance wire taped along it */
-  h += `<rect class="rule" x="${G.x0 - 14}" y="${yW + 6}" width="${G.x1 - G.x0 + 28}" height="${G.W > 700 ? 44 : 40}" rx="3"/>`;
+  /* picture layers (30 Oct): a band of the picture's tabletop stretched to the bench strip, and the picture ruler fitted so its
+     top edge (picture x 155–878, y 421) spans the code ruler box and its front face ends at the box bottom (y 459.5) */
+  const bH = G.H - yW - 52, bsx = G.W / 705, bsy = bH / 75, rw = G.x1 - G.x0 + 28, rh = G.W > 700 ? 44 : 40, rsx = rw / 723, rsy = rh / 38.5;
+  let h = pic("res_bench", `matrix(${+bsx.toFixed(4)} 0 0 ${+bsy.toFixed(4)} ${f1(-210 * bsx)} ${f1(yW + 52 - 340 * bsy)})`);
+  /* ruler with cm marks (code-drawn on the picture); the resistance wire taped along it */
+  h += pic("res_ruler", `matrix(${+rsx.toFixed(4)} 0 0 ${+rsy.toFixed(4)} ${f1(G.x0 - 14 - 155 * rsx)} ${f1(yW + 6 - 421 * rsy)})`);
+  h += `<g class="onpic">`;   // marks and numbers in a fixed dark ink: they sit on the light picture ruler in both themes
   for (let c = 0; c <= 100; c++) { const x = cmX(G, c), big = c % 10 === 0, mid = c % 5 === 0; if (G.W < 700 && !mid) continue;
     h += `<path class="tick" d="M${f1(x)} ${yW + 6}v${big ? 16 : mid ? 11 : 7}"/>`; if (big) h += T_(x, yW + 38, String(c), fs - 4, 'text-anchor="middle"'); }
-  h += T_(G.x1 + 10, yW + (G.W > 700 ? 64 : 62), "cm", fs - 4, 'text-anchor="end" class="mut"');
+  h += `</g>` + T_(G.x1 + 10, yW + (G.W > 700 ? 64 : 62), "cm", fs - 4, 'text-anchor="end" class="mut onpic"');
   h += `<path id="wireP" class="rwire" d="M${G.x0} ${yW}H${G.x1}"/>`;
-  h += T_(G.x0 + (G.W > 700 ? 150 : 90), yW + (G.W > 700 ? 76 : 72), "resistance wire on a metre ruler", fs - 3, 'text-anchor="middle" class="mut"');
+  h += T_(G.x0 + (G.W > 700 ? 150 : 90), yW + (G.W > 700 ? 76 : 72), "resistance wire on a metre ruler", fs - 3, 'text-anchor="middle" class="mut onpic"');
   /* cell */
   h += `<rect class="cellb" x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="8"/><rect class="cellc" x="${cx + cw - 2}" y="${cy + ch * .3}" width="10" height="${ch * .4}" rx="2"/>`;
   h += T_(cx + 14, cy + ch / 2 + 7, "−", 22, 'class="bold" style="fill:#FBFAF8"') + T_(cx + cw - 18, cy + ch / 2 + 7, "+", 22, 'text-anchor="end" class="bold" style="fill:#FBFAF8"');
