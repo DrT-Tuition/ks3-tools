@@ -436,6 +436,19 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* width fix (30 Oct re-check): nothing inside a card may make it wider than the screen */
+.card{grid-template-columns:minmax(0,1fr)}
+.card>*,.qpanel #quizPanel,.qpanel .opts,.qpanel .grow{min-width:0;max-width:100%}
+.qpanel .opts{grid-template-columns:minmax(0,1fr)}
+.qpanel .grow>span{min-width:0;overflow-wrap:anywhere}
+.qpanel .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.seg.tabs{display:flex;flex-wrap:wrap}
+.seg.tabs button{flex:1 1 auto;min-width:0;white-space:normal}
+.seg{flex-wrap:wrap;max-width:100%}
+.pane{grid-template-columns:minmax(0,1fr)}
+.pane>*,.controls>*{min-width:0;max-width:100%}
+.model div:has(> table){max-width:100%;overflow-x:auto;position:relative}   /* a wide results table scrolls inside its box on a phone, never the page */
+@media (max-width:560px){.model table th{font-size:13px;padding:2px}.model table td{padding:2px}}
 </style>
 </head>
 <body>
@@ -680,7 +693,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions */
 const quizOn = () => mode !== "demo";
 const locked = () => quizOn() && lock === "all";
 const noJudge = () => quizOn() && !!task.noJudge;   // Easy 3 / Easy 10: the model records what the pupil types without judging it (the question's Check judges)
@@ -1426,13 +1439,16 @@ TASKS.easy = [
       { t: "Potable water must have no dissolved substances at all.", why: "Potable water usually contains dissolved minerals and salts, in small, regulated amounts. Water with nothing dissolved is pure water." }],
     explain: "So tap water is potable, but it isn't pure.",
     hints: ["Think about what is in each kind of water, not just whether it is safe.", "Which one could contain dissolved minerals and salts?", "Pure: only H₂O. Potable: safe to drink, may contain small amounts of dissolved salts."] },
-  { id: "range", kind: "choice", src: "Potable water", text: "Potable water should have a pH in which range?", lock: "all",
-    options: [{ t: "Between 6.5 and 8.5", ok: () => POT[0] === 6.5 && POT[1] === 8.5 },
-      { t: "Exactly 7", why: "Pure water is neutral (pH 7), but potable water can be a little either side of 7." },
-      { t: "Between 1 and 6", why: "That is acidic. Water that acidic is not safe to drink." },
-      { t: "Any pH, as long as there are no microbes", why: "Being free of microbes matters, but the pH must be in a safe range too." }],
-    explain: "Potable water has a pH between 6.5 and 8.5, only small amounts of dissolved salts, and no harmful microbes.",
-    hints: ["It is close to neutral.", "It is a range that goes a little either side of 7.", "6.5 to 8.5."] },
+  { id: "potable", kind: "gaps", src: "Potable water; water treatment (filtration and sterilisation)", text: "Fresh water from a reservoir is treated to make it potable. Complete each line.", lock: "all",
+    rows: [["ph", "Potable water has a pH between", "6.5 and 8.5", ["6.5 and 8.5", "1 and 6", "9 and 14", "0 and 14"]],
+      ["f", "Filtering through sand and gravel beds removes", "insoluble bits such as soil and grit", ["insoluble bits such as soil and grit", "dissolved salts", "microbes such as bacteria"]],
+      ["s", "Sterilising kills microbes, using", "chlorine, ozone or ultraviolet light", ["chlorine, ozone or ultraviolet light", "sand, gravel or a wire mesh", "distillation or reverse osmosis"]]],
+    why: (k, w) => ({ ph: "Potable water is close to neutral: a little either side of 7. Water that acidic or alkaline is not safe to drink.",
+      "dissolved salts": "Dissolved salts go straight through sand and gravel filter beds. Only desalination removes them.", "0 and 14": "0 to 14 is the whole pH scale. Potable water is close to neutral: a little either side of 7.", "microbes such as bacteria": "Sand and gravel beds take out solid bits. Microbes have to be killed by sterilising.",
+      "sand, gravel or a wire mesh": "Sand, gravel and a wire mesh filter out solid bits. They don’t kill microbes.",
+      "distillation or reverse osmosis": "Those remove dissolved salt from sea water (desalination). Fresh water only needs filtering and sterilising." })[k === "ph" && w !== "0 and 14" ? "ph" : w],
+    explain: "pH 6.5 to 8.5. Filtering removes insoluble bits; chlorine, ozone or UV light kills microbes.",
+    hints: ["Potable water is close to neutral.", "Filters remove solid bits; something else has to kill the microbes.", "6.5 to 8.5; soil and grit; chlorine, ozone or ultraviolet light."] },
   { id: "phC", kind: "gaps", src: "Practical 8(a): method, step 1", text: "Use the model: test sample C with universal indicator paper. What is its pH, and is it in the range for potable water?", tabs: ["ph"], setup: SU.ph, noJudge: true,
     rows: [["ph", "The pH of sample C is", String(paperPH("C")), ["3", "4", "5", "6", "7"]], ["pot", "Is it in the potable range?", "No: it is too acidic", ["No: it is too acidic", "Yes", "No: it is too alkaline"]]],
     why: (k, w) => k === "ph" ? "Dip a piece of indicator paper into sample C, then find the colour on the chart that matches it." : w === "Yes" ? "Potable water has a pH between 6.5 and 8.5. Check your pH for sample C against that range." : "Below 7 is acidic; above 7 is alkaline. Which side of 7 is sample C?",
@@ -1520,10 +1536,10 @@ TASKS.hard = [
       { t: "Heat sample C more strongly so that more solid forms", why: "Heating doesn't make more solid. " + SPIT_WHY }],
     explain: "0.01 g is the balance's resolution; more water leaves more solid.",
     hints: ["What is the smallest mass this balance can show?", "How could you get more solid from the same water?", "Less than 0.01 g; evaporate a larger volume."] },
-  { id: "errs", kind: "gaps", src: "Practical 8(a): evaluation", text: "Each problem below affects the results. Choose the kind of error and its effect.",  lock: "all",
-    rows: [["a", "In one run, some solid spat out of the basin:", "random error: that one result is too low", ["random error: that one result is too low", "systematic error: every result is too low", "random error: that one result is too high"]],
-      ["b", "In every run, the solid was weighed while still a little damp:", "systematic error: every result is too high", ["systematic error: every result is too high", "random error: that one result is too high", "systematic error: every result is too low"]],
-      ["c", "The balance shows 0.02 g with nothing on it, for every weighing:", "systematic error, but it cancels out when you subtract", ["systematic error, but it cancels out when you subtract", "systematic error: every mass of solid is 0.02 g too high", "random error: the results scatter more"]]],
+  { id: "errs2", kind: "gaps", src: "Practical 8(a): evaluation", text: "Each problem below affects the results. Choose its effect and the kind of error.",  lock: "all",
+    rows: [["a", "In one run, some solid spat out of the basin:", "too low, one run: random error", ["too low, one run: random error", "too low, every run: systematic", "too high, one run: random error"]],
+      ["b", "In every run, the solid was weighed while still a little damp:", "too high, every run: systematic", ["too high, every run: systematic", "too high, one run: random error", "too low, every run: systematic"]],
+      ["c", "The balance shows 0.02 g with nothing on it, for every weighing:", "cancels out: systematic error", ["cancels out: systematic error", "each mass 0.02 g high: systematic", "scatters results: random error"]]],
     why: (k, w) => ({ a: "It happened in one run only, by chance, so it is a random error. Losing solid makes that mass too low.", b: "It happened the same way every time, so it is a systematic error. The extra water makes every mass too high.",
       c: "Both weighings are 0.02 g too high, so the difference between them (the mass of solid) is unchanged." })[k],
     explain: "One-off spitting: random, that result too low (an anomaly). Damp every time: systematic, every result too high. A zero error on the balance: systematic, but it cancels when you subtract the two masses.",
@@ -1728,7 +1744,7 @@ function renderDots() {
 /* ===== Support (off on load, never stored) ===== */
 const WORDS = [["Potable water", DEF.potable, ["pure", "src"]], ["Pure water", DEF.pure, ["pure", "bp"]], ["Dissolved solids", DEF.solids, ["explain"]], ["Universal indicator paper", DEF.ui, []],
   ["Distillation", DEF.distil, ["ice", "explain"]], ["Distillate", DEF.distillate, ["bp"]], ["Desalination", DEF.desal, ["src"]], ["Meniscus", DEF.men, []],
-  ["Anomaly", DEF.anomaly, []], ["Resolution", DEF.resol, ["res"]], ["Random error", DEF.rand, ["errs"]], ["Systematic error", DEF.sys, ["errs"]]];
+  ["Anomaly", DEF.anomaly, []], ["Resolution", DEF.resol, ["res"]], ["Random error", DEF.rand, ["errs2"]], ["Systematic error", DEF.sys, ["errs2"]]];
 function renderSupport() {
   $("readBox").hidden = !support.read; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   const tts = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);

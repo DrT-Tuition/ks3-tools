@@ -389,6 +389,20 @@ canvas.scene{aspect-ratio:760/300}
 .opts.build .opt[aria-pressed="true"] .k{font-weight:700}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build.long .opt{font-size:15px;padding:3px 8px;min-height:38px}}
 .opts.build .opt[aria-pressed="true"]::after{content:none}
+/* width fix (30 Oct re-check): nothing inside a card may make it wider than the screen */
+.card{grid-template-columns:minmax(0,1fr)}
+.card>*,.qpanel #quizPanel,.qpanel .opts,.qpanel .grow{min-width:0;max-width:100%}
+.qpanel .opts{grid-template-columns:minmax(0,1fr)}
+.qpanel .grow>span{min-width:0;overflow-wrap:anywhere}
+.qpanel .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.seg.tabs{display:flex;flex-wrap:wrap}
+.seg.tabs button{flex:1 1 auto;min-width:0;white-space:normal}
+.seg{flex-wrap:wrap;max-width:100%}
+.pane{grid-template-columns:minmax(0,1fr)}
+.pane>*,.controls>*{min-width:0;max-width:100%}
+.model div:has(> table){max-width:100%;overflow-x:auto;position:relative}   /* a wide results table scrolls inside its box on a phone, never the page */
+@media (max-width:560px){.model table th{font-size:13px;padding:2px}.model table td{padding:2px}}
+#mrRow[hidden],#gtable[hidden]{display:none}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
@@ -514,7 +528,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <span class="ctlgrp"><span class="gl" id="grLbl">Readings:</span><span class="seg" role="group" aria-labelledby="grLbl" id="grSeg"><button type="button" data-gr="me" aria-pressed="true">I read the scale</button><button type="button" data-gr="auto" aria-pressed="false">Automatic (for repeats)</button></span></span></div>
         <div class="sscene"><svg id="gsvg" class="scene" viewBox="0 0 760 300" role="img" aria-label="Magnesium ribbon reacts with hydrochloric acid in a conical flask. The hydrogen gas made is collected and its volume measured."><g id="gBg"></g></svg><svg id="gsvg2" class="scene ov" viewBox="0 0 760 300" aria-hidden="true"><g id="gMov"></g><g id="gBub"></g></svg></div>
         <div class="controls" id="gRunRow"><button class="btn primary" type="button" id="gStart">Add the magnesium and start</button><button class="linkbtn" type="button" id="gEmpty">Empty the flask</button><span class="status" id="gStat" aria-live="polite"></span></div>
-        <p class="safety"><b>Safety:</b> wear goggles. Stopper the flask straight after adding the magnesium, so no gas escapes. Hydrogen is flammable: keep it away from flames.</p>
+        <p class="safety"><b>Safety:</b> wear goggles.<span id="gSafeStop"> Stopper the flask straight after adding the magnesium, so no gas escapes.</span> Hydrogen is flammable: keep it away from flames.</p>
         <div class="controls" id="gReadRow" hidden><label class="ctl-lbl" for="gReadIn" id="gReadLbl">Volume at 10 s:</label><input class="readin" id="gReadIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">cm³</span><button class="btn primary" type="button" id="gRecord">Record</button></div>
         <div class="labgrid g2">
           <div id="gtable"></div>
@@ -527,7 +541,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="gread" aria-live="polite"></div>
         <details class="plan" id="gPlan"><summary>Plan: hypothesis, variables, safety</summary>
           <p><b>Hypothesis:</b> as the concentration increases, the rate increases, because more particles per volume means more frequent collisions.</p>
-          <p><b>Independent:</b> concentration of the acid. <b>Dependent:</b> volume of gas collected every 10 s.</p>
+          <p><b>Independent:</b> concentration of the acid. <b>Dependent:</b> volume of gas collected<span id="gPlan10"> every 10 s</span>.</p>
           <p><b>Control:</b> temperature, total volume of acid (50 cm³), the same mass of magnesium, the same apparatus.</p>
           <p><b>Safety:</b> wear goggles.</p></details>
       </div>
@@ -563,7 +577,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div id="ctable"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits" id="limits"><b>Model limits:</b> The readings, times and collision counts are invented example data from a simple model, with random scatter and the odd anomaly; they are not real results. Time is sped up. Gas anomalies are invented (a misread, or a plunger that sticks for a moment). The acid is shown as a % of an unnamed stock acid, because no concentration is given. The same mass of magnesium is used in every run. The cross times come from a simple model: time = 1200 ÷ concentration (s). The stock sodium thiosulfate is taken as 40 g/dm³ (the lesson gives no value), so the mixes are 40 to 8 g/dm³. The gas curve has one smooth shape for every run. In the Collisions tab the particles move in 2D, they are not used up when they react, and the speed rise at 40 °C is exaggerated so you can see it.</p>
+      <p class="limits" id="limits"><b>Model limits:</b> The readings, times and collision counts are invented example data from a simple model, with random scatter and the odd anomaly; they are not real results. Time is sped up. Gas anomalies are invented (a misread, or a plunger that sticks for a moment). The acid is shown as a % of an unnamed stock acid, because no concentration is given. <span id="gLimMg">The same mass of magnesium is used in every run.</span> The cross times come from a simple model: time = 1200 ÷ concentration (s). The stock sodium thiosulfate is taken as 40 g/dm³ (the lesson gives no value), so the mixes are 40 to 8 g/dm³. The gas curve has one smooth shape for every run. In the Collisions tab the particles move in 2D, they are not used up when they react, and the speed rise at 40 °C is exaggerated so you can see it.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -670,7 +684,7 @@ const DEF = {
   turb: "How cloudy a liquid is. The cloudier it gets, the sooner the cross is hidden.",
   ppt: "An insoluble solid formed in a reaction. Here it is pale yellow sulfur.",
   inv: "A shorter time gives a bigger value, so a bigger 1 ÷ time means a faster reaction.",
-  cv: "Something kept the same so that only concentration affects the result."
+  cv: "Something kept the same so that only the independent variable affects the result."
 };
 const WORDS = [["Rate of reaction", DEF.rate], ["Mean rate", DEF.mean], ["Plateau", DEF.plateau], ["Tangent (HT)", DEF.tangent], ["Gradient", DEF.gradient],
   ["Collision theory", DEF.collision], ["Frequency of collisions", DEF.freq], ["Activation energy", DEF.ea], ["Concentration", DEF.conc],
@@ -804,7 +818,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions */
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -978,10 +992,12 @@ function drawGasGraph() {
   setLayer($("ggG"), o);
 }
 function showTanWork() { if (mode === "demo") return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; }   // in a question, the working appears only once it is answered
+function hideGasM() { if (mode === "demo" || !task || task.id !== "gasm") return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; }   // Hard 6 (gas method) answer lines stay hidden while it is open
 function showLimit() { if (mode === "demo") return true; const v = DONE["easy:total"]; return v === "solved" || v === "shown"; }   // the limiting-reactant line is Easy 2's answer
 function gasRead() {
   const [a, w] = acidMix(M.gc), r = M.runs[M.gc];
-  let h = `<p class="r1">${M.gc} % acid: ${a} cm³ of stock acid + ${w} cm³ of water</p><p class="r2">The same mass of magnesium every run.${showLimit() ? " The magnesium is the reactant that runs out (the acid is in excess)." : ""}</p><p class="r2">${M.gPhase === "run" || M.gPhase === "wait" ? ` Time ${Math.round(M.gt)} s.` : ""}</p>`;
+  const hg = hideGasM();   // Hard 6 open: no volumes of acid, no "same mass of magnesium"
+  let h = (hg ? `<p class="r1">${M.gc} % acid</p>` : `<p class="r1">${M.gc} % acid: ${a} cm³ of stock acid + ${w} cm³ of water</p><p class="r2">The same mass of magnesium every run.${showLimit() ? " The magnesium is the reactant that runs out (the acid is in excess)." : ""}</p>`) + `<p class="r2">${M.gPhase === "run" || M.gPhase === "wait" ? ` Time ${Math.round(M.gt)} s.` : ""}</p>`;
   if (M.tan) { const ti = r ? tanInfo(r, M.gmark[M.gc], M.tanT) : null;
     h += ti && !showTanWork() ? `<p class="r2"><span class="badge">HT</span> Tangent at ${M.tanT} s: rate = gradient = change in volume ÷ change in time. Read both from the triangle.</p>`
       : ti ? `<p class="r2"><span class="badge">HT</span> Tangent at ${M.tanT} s: rate = gradient = change in volume ÷ change in time = ${num(ti.dy)} cm³ ÷ ${ti.dx} s = <b>${num(ti.rate)} cm³/s</b></p>`
@@ -1219,7 +1235,8 @@ function renderCtl() {
   $("gPlan").hidden = $("xPlan").hidden = mode !== "demo";
   if (!locked()) $("lockNote").hidden = true;
 }
-function drawAll() { drawPane(); renderCtl(); }
+function drawAll() { drawPane(); renderCtl(); gateGas(); }
+function gateGas() { const hg = hideGasM(); ["gSafeStop", "gPlan10", "gLimMg", "gtable", "mrRow"].forEach(id => { $(id).hidden = hg; }); if ($("gread")) morphHTML($("gread"), gasRead()); }   // Hard 6 (gas method): lines, table and mean-rate row that give its steps stay hidden until it is answered
 function setTab(t) {
   if (anim) stopAll();
   if (t !== "coll") collStop();
@@ -1409,6 +1426,7 @@ const SU = {
   cross: mix => m => { m.tab = "cross"; m.mix = mix; },
   coll: (cc, ct) => m => { m.tab = "coll"; m.cc = cc; m.ct = ct; }
 };
+const REPRO_T = (() => { const r = mulberry32(3), row = []; while (row.length < 3) row.push(xAutoTime(2, row, r)); return row; })();   // one student's three times for 30 + 20 (Easy 10)
 const U_RATE = ["cm³/s", "cm³", "s", "g/s"];
 const UNITWHY = { "cm³": "cm³ on its own is a volume, not a rate. A rate is per second: cm³/s.", "s": "s is a time, not a rate. A rate is a quantity per second.", "g/s": "g/s is for a mass. This is a volume of gas, so the unit is cm³/s.", "cm³/s": "This is a volume of gas per second, so the unit is cm³/s." };
 const E_STEEP = m => m.runs[100] && m.runs[40] && gasK(100) > gasK(40) && Math.abs(m.runs[100].V - m.runs[40].V) < 2;
@@ -1467,20 +1485,22 @@ TASKS.easy = [
     generic: "Divide 1 by the time in seconds.", stuck: "maths",
     working: () => ["Rate = 1 ÷ time", "Rate = 1 ÷ 50", "Rate = 0.02 /s"],
     hints: ["Rate = 1 ÷ time.", "Work out 1 ÷ 50 on your calculator.", "1 ÷ 50 = 0.02 /s."] },
-  { id: "fair", kind: "choice", lesson: "RP s14", text: "A group is testing concentration. Which one is a control variable done properly?", setup: SU.cross(1),
-    options: [{ t: "They use 50 cm³ of solution every time.", ok: () => CROSS.MIX.every(m => m[0] + m[1] === 50) },
-      { t: "They warm one of the solutions to 30 °C.", why: "That spoils the test: temperature changes the rate too." },
-      { t: "A different pupil judges when the cross vanishes each time.", why: "That spoils the test: people judge “gone” differently." },
-      { t: "They draw a fresh cross with a thicker pen.", why: "That spoils the test: a thicker cross takes longer to hide." }],
-    explain: "The same total volume every time is a control variable done properly. Temperature, the observer and the cross must stay the same too.", stuck: "words",
-    hints: ["A control variable is kept the same every time.", "Three of these change something that affects the time.", "The same volume of solution every time."] },
   { id: "hinge", kind: "choice", lesson: "RP s15–16", text: "A more concentrated solution hides the cross in a shorter time. What does that show?", setup: SU.cross(0),
     options: [{ t: "The reaction is faster.", ok: () => xTime(xConc(0)) < xTime(xConc(4)) && 1 / xTime(xConc(0)) > 1 / xTime(xConc(4)) },
       { t: "The reaction is slower.", why: "Time is not the rate. A shorter time means a faster reaction: rate = 1 ÷ time, so a shorter time gives a bigger rate." },
       { t: "More sulfur is made in total.", why: "The cross is hidden by the same cloudiness each time. A shorter time means the sulfur formed sooner, so the reaction is faster. The time tells you how fast the sulfur forms, not how much forms in the end." },
       { t: "The activation energy is lower.", why: "Concentration doesn't change the activation energy. Only a catalyst lowers it (and a catalyst is not used up)." }],
     explain: "A shorter time means the sulfur forms sooner, so the reaction is faster. Concentration doesn't lower the activation energy: only a catalyst does.", stuck: "maths",
-    hints: ["Is a shorter time a quicker or slower reaction?", "Rate = 1 ÷ time. What happens to 1 ÷ time when the time gets shorter?", "Shorter time → bigger 1 ÷ time → faster."] }
+    hints: ["Is a shorter time a quicker or slower reaction?", "Rate = 1 ÷ time. What happens to 1 ÷ time when the time gets shorter?", "Shorter time → bigger 1 ÷ time → faster."] },
+  { id: "repro", kind: "gaps", fixed: true, lesson: "RP evaluation (notes: “Were your results repeatable? Is the investigation reproducible?”)", text: "The 30 + 20 row shows one student’s three times: they are close together. Another group, using the same method, gets similar times. Choose the word for each.", lock: "all",
+    setup: m => { m.tab = "cross"; m.mix = 2; m.xdata[2] = REPRO_T.slice(); },
+    rows: [["rp", "The student’s own three times agree:", "repeatable"], ["rd", "Another group gets similar times:", "reproducible"]],
+    bank: ["repeatable", "reproducible", "accurate", "anomalous"],
+    why: (k, w) => ({ reproducible: "Reproducible means someone else (or other equipment) gets similar results. One person’s repeats agreeing means repeatable.",
+      repeatable: "Repeatable is about the same person repeating with the same method and equipment. Another group getting similar times means reproducible.",
+      accurate: "Accurate means close to the true value. Results that agree don’t show that on their own.", anomalous: "An anomaly is a result that doesn’t fit. These times agree." })[w],
+    explain: "Repeatable: the same person, method and equipment give similar results. Reproducible: another person (or other equipment) gets similar results.", stuck: "words",
+    hints: ["One row is about the same person repeating; the other is about someone else.", "Re-PEAT: you repeat it yourself. Re-PRODUCE: someone else produces it again.", "Own repeats agree: repeatable. Another group agrees: reproducible."] }
 ];
 const TAN = (m, t) => m.runs[60] ? tanInfo(m.runs[60], m.gmark[60], t) : null;
 const PLAN_MS = ["Level 3 (5–6): a complete, valid method: every essential step in a logical order, plus a control or safety point.", "Level 2 (3–4): most main steps, mostly in order; may lack a control or safety point.", "Level 1 (1–2): some relevant steps; not a workable method. (Levels written for this tool.)"];
@@ -1526,6 +1546,17 @@ TASKS.hard = [
     miss: { 1: "Compare the surface area of the powder and the chip.", 2: "Say what the bigger surface means for the particles.", 3: "Say what happens to the collisions, and so to the rate." },
     explain: "Larger surface area for the same mass (1), so more particles are exposed to the acid (1); collisions are more frequent, so the rate increases (1).", stuck: "words",
     hints: ["Breaking a solid into small pieces: what increases?", "More surface means more particles where the acid can reach them.", "Larger surface area → more particles exposed → more frequent collisions."] },
+  { id: "gasm", kind: "build", ordered: true, lesson: "RP s8; notes: gas volume method and practical tip", text: "Describe how to measure the rate with a gas syringe at different acid concentrations. [4 marks]", lock: "all",
+    frame: "Describe. Start with: Measure…", setup: m => { m.tab = "gas"; },
+    stm: [{ t: "Measure 50 cm³ of acid into the flask.", c: 1 }, { t: "Add the magnesium; connect the syringe at once.", c: 2 },
+      { t: "Start the stopwatch; read the volume every 10 s.", c: 3 }, { t: "Repeat with another concentration of acid.", c: 4 },
+      { t: "Add the magnesium, then set up the syringe.", why: "Gas escapes before the syringe is on, so every volume is too low." },
+      { t: "Read the volume once, when the fizzing stops.", why: "One reading gives only the total. Read it every 10 s to plot a graph and find the rate." },
+      { t: "Use a longer magnesium ribbon each time.", why: "Magnesium is a control variable: the same length each time." }],
+    miss: { 1: "What goes into the flask first, and how much?", 2: "When must the gas syringe be connected?", 3: "When do you start timing, and how often do you read the syringe?", 4: "How do you test the other concentrations?" },
+    orderWhy: "All the right steps, but not in order. Acid first, then the magnesium with the syringe connected at once, then time and read, then repeat.",
+    explain: "Measure 50 cm³ of acid (1); add the magnesium and connect the syringe at once, so no gas escapes (1); time it, reading the volume every 10 s (1); repeat with another concentration (1).",
+    hints: ["Two of the wrong steps would spoil the readings; one would spoil the fair test.", "The reaction starts as soon as the magnesium touches the acid.", "Acid in → magnesium in + syringe on at once → stopwatch, read every 10 s → repeat."] },
   { id: "order", kind: "build", lesson: "RP s9", text: "Put the disappearing cross method in order. Leave out the wrong steps.", lock: "all", setup: SU.cross(1),
     stm: [{ t: "Put the conical flask on the black cross.", c: 1 }, { t: "Pour the sodium thiosulfate into the flask.", c: 2 }, { t: "Measure 10 cm³ of hydrochloric acid.", c: 3 },
       { t: "Add the acid, swirl and start the timer.", c: 4 }, { t: "Record the time for the cross to disappear.", c: 5 },
@@ -1564,15 +1595,7 @@ TASKS.hard = [
     orderWhy: "Not in a workable order: mixes first, then the acid with the timer, the cross, then repeats and 1 ÷ time.",
     ms: PLAN_MS,
     explain: "the numbers show the order.",
-    hints: ["Start with how you make the different concentrations.", "Then the run, repeats, 1 ÷ time and every concentration. Add a control and a safety point.", "Eight statements are right. Leave out heating the flask and stopping at the first cloudiness."] },
-  { id: "conc", kind: "build", ordered: true, lesson: "RP s17 Q3, s18", text: "Explain, using collision theory, why increasing the concentration increases the rate. [2 marks]", frame: "Start with: When the concentration increases, there are…", setup: SU.coll("high", 20),
-    stm: [{ t: "more particles in the same volume,", c: 1 }, { t: "so collisions are more frequent and the rate increases.", c: 2 },
-      { t: "so collisions have more energy.", why: "Concentration doesn't change the energy of each collision (not credited). Collisions are more frequent." },
-      { t: "so the particles move faster.", why: "Concentration doesn't change the speed of the particles. Only temperature does." },
-      { t: "so more product is made in total.", why: "This doesn't explain why it is faster: rate is about how often particles collide. (The total product depends on the reactant that runs out.)" }],
-    miss: { 1: "Say what there is more of, and in what volume.", 2: "Say what happens to the collisions, and so to the rate." },
-    explain: "There are more particles in the same volume (1), so collisions are more frequent and the rate increases (1).", stuck: "words",
-    hints: ["Raise the concentration in the Collisions tab. What is there more of?", "More particles in the same volume. What happens to how often they collide?", "More particles in the same volume, so collisions are more frequent and the rate increases."] }
+    hints: ["Start with how you make the different concentrations.", "Then the run, repeats, 1 ÷ time and every concentration. Add a control and a safety point.", "Eight statements are right. Leave out heating the flask and stopping at the first cloudiness."] }
 ];
 
 /* ===== Load-time bank check ===== */
@@ -1604,6 +1627,8 @@ function bankCheck() {
   { const sp = {}; ["low", "med", "high"].forEach(cc => { const m0 = M; M = freshM(); M.cc = cc; colInit(mulberry32(8)); sp[cc] = colAvgSpeed(); M = m0; });
     if (Math.abs(sp.low - sp.high) > 1e-6 || Math.abs(sp.low - sp.med) > 1e-6) F("collisions: the speed must not change with concentration"); }
   if (!(colShare(40) > colShare(20) && colShare(20) > .05)) F("collisions: more collisions succeed at 40 °C");
+  if (REPRO_T.length !== 3 || xAnom(REPRO_T) >= 0 || xSpread(REPRO_T)) F("Easy 10: the repeat times must agree (no anomaly)");
+  { const g = TASKS.hard.find(t => t.id === "gasm"); if (g && buildMarks(g, rightBuild(g).filter(j => g.stm[j].c !== 2).concat(g.stm.findIndex(x => x.t.startsWith("Add the magnesium, then")))).bad.length !== 1) F("gas method: setting up the syringe late must be marked wrong"); }
   /* every question */
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const E = m => errs.push(`${lv} task ${i + 1}: ${m}`), m = freshM(); try { if (t.setup) t.setup(m); } catch (e) { E("setup fails: " + e.message); return; }
@@ -1701,6 +1726,7 @@ function renderDots() {
   $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
     return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${t.ht ? " (Higher tier)" : ""}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
   $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+  gateGas();   // answered or shown: restore the lines the open question hid
 }
 
 /* ===== Support (off on load, never stored) ===== */
