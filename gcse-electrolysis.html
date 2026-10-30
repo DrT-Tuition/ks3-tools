@@ -377,6 +377,19 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 .qtext .badge{font-size:14px;margin-right:4px}
+/* width fix (30 Oct re-check): nothing inside a card may make it wider than the screen */
+.card{grid-template-columns:minmax(0,1fr)}
+.card>*,.qpanel #quizPanel,.qpanel .opts,.qpanel .grow{min-width:0;max-width:100%}
+.qpanel .opts{grid-template-columns:minmax(0,1fr)}
+.qpanel .grow>span{min-width:0;overflow-wrap:anywhere}
+.qpanel .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.seg.tabs{display:flex;flex-wrap:wrap}
+.seg.tabs button{flex:1 1 auto;min-width:0;white-space:normal}
+.seg{flex-wrap:wrap;max-width:100%}
+.pane{grid-template-columns:minmax(0,1fr)}
+.pane>*,.controls>*{min-width:0;max-width:100%}
+.model div:has(> table){max-width:100%;overflow-x:auto;position:relative}   /* a wide results table scrolls inside its box on a phone, never the page */
+@media (max-width:560px){.model table th{font-size:13px;padding:2px}.model table td{padding:2px}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -779,7 +792,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions */
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 /* answer-leak guard: while a question is open and unfinished, anything it lists in task.hide stays hidden */
@@ -1421,14 +1434,17 @@ TASKS.easy = [
     orderMsg: "All six steps, but not in order. Solution first, then the tubes, then switch on, watch, test and record, and check the electrodes last.",
     explain: "Solution in the beaker; a tube of solution over each rod; connect and switch on; watch and collect gas; test and record; check and clean the electrodes, then repeat with another solution.",
     hints: ["The tubes go over the rods before you switch on.", "Testing comes after the gas has collected. Checking the electrodes is for the next run.", "Pour → tubes → switch on → watch → test and record → check, repeat."] },
-  { id: "tip", kind: "choice", src: "Required Practical: practical tips", text: "Why must the test tubes not cover the electrodes completely and rest on the bottom of the beaker?", setup: SU.blank(), lock: "all", hide: ["tip"],
-    keys: ["conductivity falls", "very slow", "covers the electrode"],
-    options: [{ t: "The conductivity falls a lot, so electrolysis is very slow.", ok: () => true },
-      { t: "The gas would escape from the tube.", why: "The gas still collects at the top of the tube. The problem is that the conductivity falls, so electrolysis becomes very slow." },
-      { t: "The carbon electrodes would be used up faster.", why: "Carbon electrodes are inert: they are not used up. The problem is that the conductivity falls, so electrolysis is very slow." },
-      { t: "The test tube could crack.", why: "That isn’t the problem the method warns about. A tube covering the electrode makes the conductivity fall, so electrolysis is very slow." }],
-    explain: "If the tubes cover the electrodes and sit on the bottom, the conductivity falls a lot and electrolysis is very slow.",
-    hints: ["Think about the solution around each electrode.", "The current needs the solution to reach the electrode.", "The conductivity falls, so electrolysis is very slow."] }
+  { id: "safety", kind: "gaps", fixed: true, src: "Required Practical: method (safety, from the AQA required practical)", text: "Sodium chloride solution is electrolysed. Choose the hazard, the risk and how to control it.", setup: SU.lab("nacl"), lock: "all", hide: ["rules"],
+    keys: ["toxic", "well-ventilated", "short run"],
+    rows: [["hz", "Hazard (what could cause harm):", "chlorine gas forms at the anode"], ["rk", "Risk (the harm it could do):", "chlorine is toxic if you breathe it in"], ["ct", "Control (how to reduce the risk):", "low voltage, a short run, a well-ventilated room"]],
+    bank: ["chlorine gas forms at the anode", "chlorine is toxic if you breathe it in", "low voltage, a short run, a well-ventilated room", "sodium metal forms at the cathode", "hydrogen is toxic if you breathe it in", "use a higher voltage to finish sooner"],
+    why: (k, w) => { const R = { "chlorine gas forms at the anode": "hz", "chlorine is toxic if you breathe it in": "rk", "low voltage, a short run, a well-ventilated room": "ct" }, N = { hz: "the hazard", rk: "the risk", ct: "the control" };
+      if (R[w]) return `That is ${N[R[w]]}, not ${N[k]}. A hazard is what could cause harm; the risk is the harm it could do; the control reduces the risk.`;
+      return ({ "sodium metal forms at the cathode": "Sodium isn’t made from the solution: hydrogen forms at the cathode. The hazard here is the chlorine made at the anode.",
+        "hydrogen is toxic if you breathe it in": "Hydrogen isn’t the toxic gas here. Chlorine is toxic, so the risk is breathing it in.",
+        "use a higher voltage to finish sooner": "A higher voltage makes chlorine more quickly, so more of the toxic gas builds up." })[w]; },
+    explain: "Chlorine forms at the anode and is toxic if breathed in, so use a low voltage, a short run and a well-ventilated room.",
+    hints: ["Which product of sodium chloride solution is a harmful gas?", "Chlorine is toxic. How can you make less of it, and stop it building up in the room?", "Chlorine at the anode; toxic if breathed in; low voltage, short run, ventilate."] }
 ];
 const MS6 = ["Level 3 (5–6): coherent method, valid outcome; all key steps in logical order.", "Level 2 (3–4): leads to an outcome; most steps, some missing or out of order.",
   "Level 1 (1–2): some relevant steps, no valid outcome. Level 0: nothing creditworthy."];
@@ -1479,7 +1495,7 @@ TASKS.hard = [
     orderMsg: "All four points, but not in order. Judgement, then copper chloride, then sodium chloride, then the reason.",
     explain: "The hypothesis is only partly correct (1). Copper chloride gave copper at the negative electrode (1), but sodium chloride gave hydrogen, not sodium (1), because sodium is more reactive than hydrogen while copper is less reactive (1).", stuck: "series",
     hints: ["Does each result fit the hypothesis?", "Copper fits. Sodium chloride gave hydrogen. Why?", "Partly correct; copper yes; hydrogen not sodium; reactivity."] },
-  { id: "plan", kind: "build", ms6: true, keySteps: [2, 3, 4, 5], src: "Required Practical: materials, method, practical tips, evaluation", text: "Describe a method to find the products of electrolysing three solutions. [6 marks]", frame: "Describe it in order. Start with: Pour…", setup: SU.blank(), lock: "all",
+  { id: "plan", kind: "build", ms6: true, keySteps: [1, 2, 3, 4, 5], src: "Required Practical: materials, method, practical tips, evaluation", text: "Describe a method to find the products of electrolysing three solutions. [6 marks]", frame: "Describe it in order. Start with: Pour…", setup: SU.blank(), lock: "all",
     keys: [],
     stm: [{ t: "Pour a solution into a beaker.", c: 1 }, { t: "Clamp a tube over each carbon rod.", c: 2 },
       { t: "Connect low voltage; switch on.", c: 3 }, { t: "Watch both rods; test any gas.", c: 4 },
@@ -1580,7 +1596,7 @@ function bankCheck() {
         if (!t.indicList || t.indicList.length < 5) E("needs indicative content");
         if (got.slice(0, 6).join() !== "0,0,1,2,3,2") E("levels of response: every level must be reachable " + got.join());
         if (got[6] > 2) E("out of order must not reach Level 3");
-        if (marks6(buildMarks(t, all)).mk !== 6 || marks6(buildMarks(t, main)).L !== 2 || marks6(buildMarks(t, all.slice(1))).mk !== 5) E("6 marks only with every step and the control point");
+        if (marks6(buildMarks(t, all)).mk !== 6 || marks6(buildMarks(t, main)).L !== 2 || marks6(buildMarks(t, all.slice(1))).L !== 2) E("6 marks only with every step and the control point; set-up missing caps at Level 2");
         (t.keySteps || []).forEach(c => { const l = all.filter(j => t.stm[j].c !== c); if (marks6(buildMarks(t, l)).L !== 2) E("missing essential step " + c + " must cap at Level 2"); }); } }
     if (t.kind === "goal") { const m = freshM(); if (t.setup) t.setup(m); if (t.test(m)) E("goal met at the start"); t.reveal(m); if (!t.test(m)) E("goal not reachable"); }
     if (t.lock && t.kind === "goal") E("a goal can't lock the model");
@@ -1753,7 +1769,7 @@ function answerHTML(t) {
   if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
   if (t.kind === "num") return esc(`Answer: ${fmt(t.ans(), 2)} ${t.unit}.`) + workHTML(t);
   if (t.kind === "goal") return esc("Answer: the model has done it for you. " + t.done(M));
-  if (t.kind === "build") return t.ms ? "<b>Indicative content</b> (steps 2–5 are essential for Level 3):" + `<ol class="ms">${t.indicList.map(x => `<li>${esc(x)}</li>`).join("")}</ol><ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : esc("Answer: " + t.explain);
+  if (t.kind === "build") return t.ms ? "<b>Indicative content</b> (steps 1–5 are essential for Level 3):" + `<ol class="ms">${t.indicList.map(x => `<li>${esc(x)}</li>`).join("")}</ol><ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : esc("Answer: " + t.explain);
   return esc("Answer: " + t.explain);
 }
 function reveal() {

@@ -387,6 +387,19 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* width fix (30 Oct re-check): nothing inside a card may make it wider than the screen */
+.card{grid-template-columns:minmax(0,1fr)}
+.card>*,.qpanel #quizPanel,.qpanel .opts,.qpanel .grow{min-width:0;max-width:100%}
+.qpanel .opts{grid-template-columns:minmax(0,1fr)}
+.qpanel .grow>span{min-width:0;overflow-wrap:anywhere}
+.qpanel .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+.seg.tabs{display:flex;flex-wrap:wrap}
+.seg.tabs button{flex:1 1 auto;min-width:0;white-space:normal}
+.seg{flex-wrap:wrap;max-width:100%}
+.pane{grid-template-columns:minmax(0,1fr)}
+.pane>*,.controls>*{min-width:0;max-width:100%}
+.model div:has(> table){max-width:100%;overflow-x:auto;position:relative}   /* a wide results table scrolls inside its box on a phone, never the page */
+@media (max-width:560px){.model table th{font-size:13px;padding:2px}.model table td{padding:2px}}
 </style>
 </head>
 <body>
@@ -556,6 +569,8 @@ const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
 const MATCH = SAMPLES.filter(s => s.id !== "P" && sameSet(s.dyes, SAMPLES[0].dyes)).map(s => s.id);   // computed: ["R"]
 const ONESPOT = SAMPLES.filter(s => s.id !== "P" && s.dyes.length === 1).map(s => s.id);                // computed: ["S"]
 
+/* a method-order question is open and unanswered: model messages must not state the steps */
+function methodQOpen() { if (typeof mode === "undefined" || mode === "demo" || !task || !["order", "six"].includes(task.id)) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; }
 /* ===== The paper and the beaker (cm). Deck: line 2 cm from the bottom, water 1 cm deep, bottom just touches the water. ===== */
 const PH = 12.0;      // paper height (INVENTED)
 const LINE = 2.0;     // pencil start line above the bottom of the paper (s22)
@@ -590,7 +605,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions (e.g. the 4-row Hard 3 "spoil") */
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The paper is set for this question. Measure it in this tab, answer in the panel, or press Show answer."; }
 
@@ -639,7 +654,7 @@ function actHang(m) {
   const r = m.run;
   if (r.hung) { m.msg = "The paper is already hanging in the beaker."; return false; }
   if (!r.line || !r.spots) { m.msg = !r.line ? "Draw the start line and put the spots on it first." : "Put the ink spots on the start line first."; return false; }
-  if (!r.water) { m.msg = "Pour the water into the beaker first, then hang the paper so the bottom just touches it."; return false; }
+  if (!r.water) { m.msg = methodQOpen() ? "You can’t hang the paper yet." : "Pour the water into the beaker first, then hang the paper so the bottom just touches it."; return false; }
   if (needEye(m)) return false;
   r.hung = true; r.phase = "running"; r.t = 0; r.w0 = Math.max(.05, r.water - HANG); r.h = r.w0;
   r.rf = {}; const k = {}; Object.keys(DYES).forEach(d => { k[d] = DYES[d].rf + .006 * gauss(); });   // one Rf per dye on this paper: the same dye matches
@@ -863,7 +878,7 @@ function drawMsMov() {
   const G = mgeo(), c = M.chrom, s = G.s, fs = G.fs;
   if (!c) { setLayer($("mRule"), ""); setLayer($("mMag"), ""); return; }
   const y0 = G.pbot - M.ms.off * s;
-  setLayer($("mRule"), `<g class="rulerg" id="rulerG" tabindex="0" role="slider" aria-label="Ruler. Arrow keys slide it 1 mm." aria-valuemin="0" aria-valuemax="${RMAX}" aria-valuenow="${M.ms.off}" aria-valuetext="Ruler 0 is ${f1(M.ms.off)} cm above the bottom of the paper${Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? ", on line R" : ", on the start line") : ""}">` + rulerSvg(G, y0, s, G.rx0, G.rw) + `</g>`);
+  setLayer($("mRule"), `<g class="rulerg" id="rulerG" tabindex="0" role="slider" aria-label="Ruler. Arrow keys slide it 1 mm." aria-valuemin="0" aria-valuemax="${RMAX}" aria-valuenow="${M.ms.off}" aria-valuetext="Ruler 0 is ${f1(M.ms.off)} cm above the bottom of the paper${!labelOpen() && Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? ", on line R" : ", on the start line") : ""}">` + rulerSvg(G, y0, s, G.rx0, G.rw) + `</g>`);
   /* selection ring on the paper + the magnified view */
   const t = tgtOf(c, M.ms.tgt), [mx0, mx1, my0, my1] = G.mag, Z = G.Z, px = G.px, Y = h => G.pbot - h * s;
   const pw = paperW(c.lanes.length) * s;
@@ -887,7 +902,7 @@ function drawMsTable() {
   const c = M.chrom, ms = M.ms;
   if (!c) { morphHTML($("mtable"), ""); morphHTML($("concl"), ""); $("concl").hidden = true; return; }
   const cell = k => ms.rec[k] != null ? `<b>${f1(ms.rec[k])}</b>` : (String(ms.tgt) === String(k) ? '<span class="wait">?</span>' : '<span class="emp">–</span>');
-  let h = `<table class="rt"><caption>${c.src === "run" ? "Your results" : c.callouts ? "Results" : "Results: the lesson's example"} (distances from ${c.callouts ? "line R" : "the start line"})</caption><thead><tr><th scope="col">Ink</th><th scope="col">Spot</th><th scope="col">Distance moved (cm)</th><th scope="col">Rf</th></tr></thead><tbody>`;
+  let h = `<table class="rt"><caption>${c.src === "run" ? "Your results" : c.callouts ? "Results" : "Results: the lesson's example"} ${labelOpen() ? "" : `(distances from ${c.callouts ? "line R" : "the start line"})`}</caption><thead><tr><th scope="col">Ink</th><th scope="col">Spot</th><th scope="col">Distance moved (cm)</th><th scope="col">Rf</th></tr></thead><tbody>`;
   h += `<tr${ms.tgt === "front" ? ' class="cur"' : ""}><td class="dst">${c.callouts ? "Line P" : "Solvent"}</td><td>${c.callouts ? "top line" : "front"}</td><td>${cell("front")}</td><td><span class="emp">–</span></td></tr>`;
   c.spots.forEach(sp => { const k = sp.i, ok = ms.rfOk[k], can = ms.rec[k] != null && ms.rec.front != null;
     h += `<tr${String(ms.tgt) === String(k) ? ' class="cur"' : ""}><td class="dst">${sp.s ? esc(sp.s === "P" ? "P (note)" : "Pen " + sp.s) : (c.callouts ? "Q" : "Spot")}</td><td><span class="dye" style="background:${DYES[sp.dye].c}"></span>${DYES[sp.dye].w}</td><td>${cell(k)}</td>` +
@@ -914,7 +929,7 @@ function readHTML() {
     const st = { setup: "setting up", running: "running", removed: "out of the beaker, wet", marked: "front marked, wet", dry: r.spoilt ? "dry, spoilt" : "dry", top: "water reached the top" }[r.phase];
     h += `<p class="r1">Paper: ${st}</p>`;
   } else { const c = M.chrom;
-    h += `<p class="r1">${c ? (c.src === "run" ? "Your chromatogram" : c.callouts ? "The chromatogram from the question" : "The lesson's example chromatogram") : "Nothing to measure yet"}${c ? ` · ruler 0 ${Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? "on line R ✓" : "on the start line ✓") : (c.callouts ? "not on line R" : "not on the start line")}` : ""}</p>`; }
+    h += `<p class="r1">${c ? (c.src === "run" ? "Your chromatogram" : c.callouts ? "The chromatogram from the question" : "The lesson's example chromatogram") : "Nothing to measure yet"}${c ? ` · ${labelOpen() ? "ruler in place" : "ruler 0 " + (Math.abs(M.ms.off - LINE) < .05 ? (c.callouts ? "on line R ✓" : "on the start line ✓") : (c.callouts ? "not on line R" : "not on the start line"))}` : ""}</p>`; }
   if (M.msg) h += `<p class="r3">${esc(M.msg)}</p>`;
   return h;
 }
@@ -936,7 +951,7 @@ function renderCtl() {
   $("recHint").textContent = !c ? "Nothing to measure yet." : aw ? "Read to the nearest mm (0.1 cm)." : "Recorded. Choose another spot to measure.";
   if (!aw && rd.value) rd.value = "";
   if (!locked()) $("lockNote").hidden = true;
-  const cl = !!(c && c.callouts), lab = cl ? "Distance from line R:" : "Distance from the start line:"; if ($("dLab").textContent !== lab) $("dLab").textContent = lab;
+  const cl = !!(c && c.callouts), lab = labelOpen() ? "Ruler reading:" : cl ? "Distance from line R:" : "Distance from the start line:"; if ($("dLab").textContent !== lab) $("dLab").textContent = lab;
 }
 function drawPane() {
   ["run", "ms"].forEach(t => { $("pane-" + t).hidden = M.tab !== t; });
@@ -990,7 +1005,7 @@ function doRecord() {
   const j = judgeDist(v, t, M);
   if (!j.ok) { M.msg = "✗ " + j.why; inp.classList.add("no"); morphHTML($("rread"), readHTML()); return; }
   inp.classList.remove("no"); inp.value = ""; M.ms.rec[t.k] = t.d;
-  M.msg = `✓ ${t.w}: ${f1(t.d)} cm from ${c.callouts ? "line R" : "the start line"}.`;
+  M.msg = labelOpen() ? `✓ ${t.w}: recorded.` : `✓ ${t.w}: ${f1(t.d)} cm from ${c.callouts ? "line R" : "the start line"}.`;
   const next = tgtList(c).find(x => M.ms.rec[x.k] == null); if (next) M.ms.tgt = next.k;
   M.msg += next ? ` Next: ${next.w}.` : " Everything is measured. Now type the Rf values in the table.";
   if (M.ms.rec.front != null && Object.keys(M.ms.rec).length >= 2) tried(3);
@@ -998,7 +1013,7 @@ function doRecord() {
 }
 function moveRuler(dv) {
   if (!M.chrom) return; const o = M.ms.off; M.ms.off = clamp(r1(o + dv), 0, RMAX); if (M.ms.off === o) return;
-  const on = Math.abs(M.ms.off - LINE) < .05; M.msg = on ? "✓ The ruler's 0 is on the start line." : "";
+  const on = Math.abs(M.ms.off - LINE) < .05; M.msg = on ? (labelOpen() ? "✓ The ruler's 0 is lined up." : M.chrom && M.chrom.callouts ? "✓ The ruler's 0 is on line R." : "✓ The ruler's 0 is on the start line.") : "";   // the labelled chromatogram (Easy 4) must not name its lines
   drawMsMov(); morphHTML($("rread"), readHTML()); if (on) tourSignal("ruler");
 }
 
@@ -1055,7 +1070,7 @@ TASKS.easy = [
     explain: "P is the solvent front, Q is a spot of dye, R is the pencil start line.",
     hints: ["The spots start on one line and the water stops at another.", "The bottom line is where the spots were put. The top line is how far the water went.", "P: solvent front. Q: spot of dye. R: pencil start line."] },
   { id: "order", kind: "build", ordered: true, compact: true, lesson: "s22", text: "Put the method in order. Choose the steps you need, in order.", setup: SU.run,
-    stm: [{ t: "Pencil line 2 cm from the bottom.", c: 1 }, { t: "A small ink spot on the line.", c: 2 }, { t: "Water 1 cm deep in the beaker.", c: 3 }, { t: "Hang the paper: bottom just in the water.", c: 4 },
+    stm: [{ t: "Pencil line 2 cm from the bottom.", c: 1 }, { t: "A tiny spot on the line (fine capillary).", c: 2 }, { t: "Water 1 cm deep in the beaker.", c: 3 }, { t: "Hang the paper: bottom just in the water.", c: 4 },
       { t: "Remove it when the water is near the top.", c: 5 }, { t: "Mark the solvent front; leave to dry.", c: 6 },
       { t: "Start line in ink pen.", why: WHY_INK }, { t: "Water 3 cm deep, above the line.", why: WHY_UNDER }],
     miss: { 1: "Start by drawing the start line.", 2: "The spots go on the start line.", 3: "You need water in the beaker.", 4: "Put the paper into the water.", 5: "Take the paper out at the right time.", 6: "Finish by marking the solvent front." },
@@ -1118,14 +1133,15 @@ TASKS.hard = [
       { t: "No: only the colour matters, not the height", why: "Colour alone isn't enough: a match needs the same colour at the same height (same Rf)." }],
     explain: "Both red spots are 4.8 cm up (Rf 0.60), so it is the same dye. The size of a spot doesn't tell you which dye it is.",
     hints: ["What do you compare to identify a dye?", "Look at the heights of the two red spots.", "Same height, same Rf: the same dye."] },
-  { id: "spoil", kind: "gaps", lesson: "s22 (evaluation)", text: "Each mistake spoils the chromatogram. Match each mistake to what goes wrong.", setup: SU.run,
+  { id: "spoil5", kind: "gaps", lesson: "s22 (evaluation)", text: "Each mistake spoils the result. Match each mistake to what goes wrong.", setup: SU.run,
     rows: [["i", "Drawing the start line in ink pen:", "the line's dyes run up the paper and mix with the spots"], ["u", "Pouring the water above the start line:", "the spots dissolve into the water in the beaker"],
-      ["t", "Leaving the paper until the water reaches the top:", "you can't tell how far the solvent would have moved"], ["f", "Letting the paper dry before marking the front:", "you can't see where the solvent reached"]],
-    bank: ["the line's dyes run up the paper and mix with the spots", "the spots dissolve into the water in the beaker", "you can't tell how far the solvent would have moved", "you can't see where the solvent reached", "the dyes react with the water and change colour"],
+      ["t", "Leaving the paper until the water reaches the top:", "you can't tell how far the solvent would have moved"], ["f", "Letting the paper dry before marking the front:", "you can't see where the solvent reached"],
+      ["m", "Measuring to the top edge of a spot:", "the spot's distance and Rf come out too big"]],
+    bank: ["the line's dyes run up the paper and mix with the spots", "the spots dissolve into the water in the beaker", "you can't tell how far the solvent would have moved", "you can't see where the solvent reached", "the spot's distance and Rf come out too big", "the dyes react with the water and change colour"],
     why: (k, w) => w === "the dyes react with the water and change colour" ? "The dyes don't react: they dissolve and move. Try each mistake in tab 1 to see what happens." :
-      ({ i: "Ink dissolves in the water and runs. Try Ink pen in tab 1.", u: "If the water is above the line, the spots are under the water. Try 3 cm of water in tab 1.", t: "Once the water hits the top, its real distance is lost.", f: "A dry front can't be seen, so mark it while it is wet." })[k],
-    explain: "Ink line: it runs and mixes with the spots. Water above the line: the spots dissolve into the beaker. Water at the top: the solvent distance is lost. Dry before marking: the front can't be seen.",
-    hints: ["Try each mistake in tab 1 and watch.", "Two are about setting up; two are about measuring the solvent.", "Ink runs; spots dissolve away; distance lost; front invisible."] },
+      ({ i: "Ink dissolves in the water and runs. Try Ink pen in tab 1.", u: "If the water is above the line, the spots are under the water. Try 3 cm of water in tab 1.", t: "Once the water hits the top, its real distance is lost.", f: "A dry front can't be seen, so mark it while it is wet.", m: "Measure to the middle of the spot. The top edge is further up, so the distance is too big." })[k],
+    explain: "All five matched. Measure each distance to the middle of the spot.",
+    hints: ["Try the first four mistakes in tab 1 and watch; measure a spot in tab 2.", "Two are about setting up; three are about measuring.", "Ink runs; spots dissolve away; distance lost; front invisible; Rf too big."] },
   { id: "sf", kind: "num", lesson: "s26 Q2", text: "A spot moved 3.7 cm. The solvent moved 8.0 cm. Calculate the Rf. Give your answer to 2 significant figures.", setup: SU.run,
     frame: RF_FRAME, lbl: "Rf =", unit: "", tol: .0011, ans: () => +sf2(3.7 / 8.0),
     wrongs: [[.4625, "That's the full answer. Round it to 2 significant figures."], [.463, "That's 3 significant figures. Give 2."], [.5, "That's 1 significant figure. Give 2."], [.47, "Check the rounding: 0.4625 to 2 significant figures."], [8 / 3.7, "Rf can't be more than 1: a spot never moves further than the solvent. You divided the wrong way."]],
@@ -1178,7 +1194,7 @@ TASKS.hard = [
       { t: "One matching spot is enough.", why: "Every spot must match." }],
     miss: { 1: "Include the start line, and what you draw it with.", 2: "Say what goes on the line.", 3: "Say how much water goes in the beaker.", 4: "Say how the paper goes into the water.", 5: "Say when you take the paper out, and what you mark.", 6: "Say how you decide which pen wrote the note." },
     explain: "Pencil line 2 cm up → spots of the note and each pen → water 1 cm deep → hang so the bottom touches the water → remove near the top, mark the front → the pen whose spots all match (colour and Rf) wrote it.",
-    ms: ["Level 3 (5–6): a complete, valid method in order, every step above, plus the match. Level 2 (3–4): a step missing. Level 1 (1–2): a few steps. A wrong step lowers the level."],
+    ms: ["Level 3 (5–6): a complete, valid method in order, every step above, plus the match. Level 2 (3–4): a step missing. Level 1 (1–2): a few steps. Each wrong step lowers it by a level."],
     hints: ["Think: set up the paper, run it, then compare.", "Water below the line. When does the paper come out?", "Line, spots, water, hang, remove and mark, then match every spot."] }
 ];
 
@@ -1208,6 +1224,7 @@ function bankCheck() {
     if (!/Level 3/.test(L(all.map(ix)))) F("6-mark: the full method should be Level 3");
     all.forEach(c => { if (/Level 3/.test(L(all.filter(x => x !== c).map(ix)))) F("6-mark: leaving out essential step " + c + " must not give Level 3"); });
     if (/Level 3/.test(L([...all.map(ix), wr])) || /Level 3/.test(L([ix(2), ix(1), ...all.slice(2).map(ix)]))) F("6-mark: a wrong step or the wrong order must not give Level 3");
+    { const wrs = six.stm.map((s, j) => [s, j]).filter(x => !x[0].c).map(x => x[1]); if (wrs.length > 1 && !/Level 1/.test(L([...all.map(ix), wrs[0], wrs[1]]))) F("6-mark: each wrong statement must cost another level"); }
     if (!/Level 1/.test(L([ix(1)])) || L([ix(1), wr]) !== "" || !/Level 2/.test(L(all.slice(0, 3).map(ix)))) F("6-mark: levels 0–2 must be reachable"); } }
   if (sf2(3.7 / 8.0) !== "0.46" || sf2(.75) !== "0.75") F("significant figures");
   { const m = freshM(); SU.ex(0)(m); autoMeasure(m); if (Object.keys(m.ms.rfOk).length !== 7) F("auto measure"); }
@@ -1300,16 +1317,21 @@ function renderDots() {
   $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
     return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
   $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+  if (typeof renderSupport === "function" && task && task.kind !== "demo") renderSupport();   // answered or shown: restore what Easy 4 hid
 }
 
 /* ===== Support (off on load, never stored) ===== */
 const WORDS = [["Chromatography", DEF.chrom], ["Rf value", DEF.rf], ["Stationary phase", DEF.stat], ["Mobile phase", DEF.mob], ["Pure substance", DEF.pure],
   ["Start line", DEF.start], ["Solvent front", DEF.front], ["Control variable", DEF.cv]];
+function labelOpen() { if (mode === "demo" || !task || task.id !== "label") return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; }   // Easy 4: supports must not name P or R
+const WORDS_HIDE = { label: ["Start line", "Solvent front"], stat: ["Stationary phase", "Mobile phase"], pure: ["Pure substance"], cv: ["Control variable"] };   // Key words that state an open question's answer
+function qOpen() { if (mode === "demo" || !task || task.kind === "demo") return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; }
 function renderSupport() {
+  const lo = labelOpen(), wh = qOpen() ? (WORDS_HIDE[task.id] || []) : [];
   $("readBox").hidden = !support.read; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
-  $("readBox").innerHTML = `<h3>Read it for me</h3><p>In tab 2, the magnified view shows what the ruler reads level with the chosen spot. Press Record with the box empty to record it. (Check the ruler's 0 is on the start line.)</p>`;
-  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Rf = distance moved by spot ÷ distance moved by solvent</p><p>Measure both distances from the start line.</p><p>Rf has no unit, and it is never more than 1.</p><p>Rearranged: spot distance = Rf × solvent distance.</p><p>2 significant figures: keep the first two digits that aren't 0 and round (0.3875 → 0.39).</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("readBox").innerHTML = `<h3>Read it for me</h3><p>In tab 2, the magnified view shows what the ruler reads level with the chosen spot. Press Record with the box empty to record it. (Check the ruler's 0 is ${lo ? "lined up" : "on the start line"}.)</p>`;
+  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Rf = distance moved by spot ÷ distance moved by solvent</p><p>Measure both distances from ${lo ? "where the spots started" : "the start line"}.</p><p>Rf has no unit, and it is never more than 1.</p><p>Rearranged: spot distance = Rf × solvent distance.</p><p>2 significant figures: keep the first two digits that aren't 0 and round (0.3875 → 0.39).</p>`;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.filter(w => !wh.includes(w[0])).map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("") + (wh.length ? "<p class=\"small\">(Some entries are hidden until you answer this question.)</p>" : "");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   morphHTML($("rread"), readHTML()); if (M.tab === "ms" && M.chrom) drawMsMov();
   if (mode !== "demo") requestAnimationFrame(keepInView);
@@ -1327,7 +1349,7 @@ function buildMarks(t, list) {
 }
 function sixLevel(b) {   // every step is essential: Level 3 needs all of them, in order, with no wrong step; a missing step caps it at Level 2; a wrong step lowers it by one
   let L = b.got.length === b.all.length && b.inOrder ? 3 : b.got.length >= 3 ? 2 : b.got.length >= 1 ? 1 : 0;
-  if (b.bad.length) L = Math.max(0, L - 1);
+  L = Math.max(0, L - b.bad.length);   // each wrong step costs another level
   return ["", "Level 1 (1–2 marks)", "Level 2 (3–4 marks)", "Level 3 (5–6 marks)"][L]; }
 function evaluate() {
   const t = task;
@@ -1344,7 +1366,7 @@ function evaluate() {
     const b = buildMarks(t, S.list);
     const lv = t.six ? sixLevel(b) : "", est = t.six ? (lv ? ` So far: about ${lv.replace(" marks", "")}.` : " So far: no marks yet.") : "";
     if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}${est}`) };
-    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points${t.six ? ` (about ${lv || "no marks yet"})` : ""}. ${t.six ? "Missing an essential step: " : ""}${t.miss[b.missing[0].c]}`) };
+    if (b.missing.length) return { ok: false, html: esc(t.six ? `About ${lv || "no marks yet"}. Missing an essential step: ${t.miss[b.missing[0].c]}` : `Not yet: ${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };   // short, so it fits at 1280×720
     if (t.ordered && !b.inOrder) return { ok: false, html: esc((t.six ? "Right points, wrong order." + est : "All the right points, but not in order. Start with the sentence starter.")) };
     return { ok: true, html: esc("Correct. " + (t.six ? "Level 3: 6 marks." : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") }; }
   if (t.kind === "goal") {
@@ -1536,7 +1558,7 @@ $("mtable").addEventListener("input", e => { const n = e.target.closest(".cellin
 $("mtable").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".cellin")) { e.preventDefault(); $("checkRf").click(); } });
 $("checkRf").addEventListener("click", () => {
   const c = M.chrom, ms = M.ms; if (!c) return;
-  if (ms.rec.front == null) { M.msg = "Measure the solvent front first: every Rf needs it."; drawAll(); return; }
+  if (ms.rec.front == null) { M.msg = labelOpen() ? "Measure the lines first." : M.chrom && M.chrom.callouts ? "Measure line P first: every Rf needs it." : "Measure the solvent front first: every Rf needs it."; drawAll(); return; }
   const good = [], msgs = [], gens = [];
   c.spots.forEach(sp => { const k = sp.i; if (ms.rfOk[k] || ms.rec[k] == null) return; const s = (ms.rf[k] || "").trim(); if (!s) return;
     const j = judgeRf(parseNum(s), ms.rec[k], ms.rec.front);
