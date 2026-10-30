@@ -75,6 +75,7 @@
     asks about, Iodine colours gives the method for Easy 5, and Model limits no longer lists the class-result times.
     Everything returns once the question is answered or Show answer is pressed.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Coverage fixes (30 Oct 2026): step 2 warms the starch in its own tube in the bath as well as the amylase + buffer (AQA method; the deck warms only the amylase + buffer). Easy 5 is now a hazard → risk → control question on iodine (goggles and safety line hidden while it is open; the old Easy 5 colour question was covered by Easy 3 and Easy 9). Easy 10 now asks why every solution is warmed before mixing (so the reaction is at 35 °C from the start). Evaluate box: an End point line (compare with a well of iodine alone, AQA).
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,6 +316,13 @@ footer.brand a{color:inherit}
 }
 .rt th:nth-child(n+2):nth-child(-n+4){min-width:44px}
 @media (min-width:901px) and (max-height:820px){#demoPanel{gap:8px}#demoPanel .try{gap:2px}#demoPanel .newhere{padding:6px 10px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -442,7 +450,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <button class="sw" type="button" id="gogSw" aria-pressed="false"><span class="dot"></span>Goggles <span class="state">off</span></button></div>
         <div class="steps" id="stepRow" role="group" aria-label="Method steps">
           <button class="stp" type="button" data-step="iod" aria-pressed="false"><span class="n">1</span> Put iodine in the wells</button>
-          <button class="stp" type="button" data-step="warm" aria-pressed="false"><span class="n">2</span> Mix amylase and buffer; warm to 35 °C</button>
+          <button class="stp" type="button" data-step="warm" aria-pressed="false"><span class="n">2</span> Mix amylase and buffer; warm it and the starch to 35 °C</button>
           <button class="stp" type="button" data-step="starch" aria-pressed="false"><span class="n">3</span> Add starch; start the stopwatch</button>
           <span class="controls" id="readRow" hidden><span class="gl">Read the thermometer: the bath is at</span><button class="btn" type="button" data-t="33">33 °C</button><button class="btn" type="button" data-t="35">35 °C</button><button class="btn" type="button" data-t="37">37 °C</button></span>
           <button class="btn" type="button" id="quick" hidden>Do steps 1–3 for me</button>
@@ -644,6 +652,7 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 const locked = () => mode !== "demo" && !!lock;
+const hideSafe = () => quizOpen() && !!task.hideSafety;   // the hazard question is open: no goggles or safety line on screen
 const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open and unanswered: hide anything that explains its answer
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
@@ -685,7 +694,7 @@ function drawRpBg() {
   o += `<rect class="lcd" x="${G.sw.x}" y="${G.sw.y}" width="${G.sw.w}" height="${G.sw.h}" rx="8"/>` + T_(G.sw.x + G.sw.w / 2, G.sw.y + G.sw.h * .72, fmtT(R.t), G.sw.h * .62, 'id="swT" class="lcdt" text-anchor="middle"');
   /* goggles */
   const gx = G.gog.x, gy = G.gog.y;
-  o += M.gog ? `<path d="M${gx} ${gy + 16}h88" style="stroke:#3A3F46;stroke-width:4"/><rect x="${gx + 6}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:#BFE3F5;stroke:#14243D;stroke-width:2.5"/><rect x="${gx + 46}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:#BFE3F5;stroke:#14243D;stroke-width:2.5"/>` + T_(gx + 96, gy + 22, "Goggles on", fs, 'class="bold"')
+  if (!hideSafe()) o += M.gog ? `<path d="M${gx} ${gy + 16}h88" style="stroke:#3A3F46;stroke-width:4"/><rect x="${gx + 6}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:#BFE3F5;stroke:#14243D;stroke-width:2.5"/><rect x="${gx + 46}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:#BFE3F5;stroke:#14243D;stroke-width:2.5"/>` + T_(gx + 96, gy + 22, "Goggles on", fs, 'class="bold"')
     : `<rect x="${gx + 6}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:4 3"/><rect x="${gx + 46}" y="${gy + 4}" width="34" height="24" rx="10" style="fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:4 3"/>` + T_(gx + 96, gy + 22, "Goggles off", fs, 'class="mut"');
   /* water bath: tank, water, the tube in it, thermometer */
   const wTop = b.top + 18;
@@ -693,6 +702,8 @@ function drawRpBg() {
   const tx = tb.x, w = tb.w, liq = tb.top + 48;
   if (R.warm) o += `<path class="${R.starch ? "mixs" : "mix"}" d="M${tx - w + 2} ${liq}H${tx + w - 2}V${tb.bot - w}A${w - 2} ${w - 2} 0 0 1 ${tx - w + 2} ${tb.bot - w}Z"/>`;
   o += `<path class="glassl" d="M${tx - w} ${tb.top}V${tb.bot - w}A${w} ${w} 0 0 0 ${tx + w} ${tb.bot - w}V${tb.top}"/><path d="M${tx - w - 3} ${tb.top}h${2 * w + 6}" style="stroke:var(--glass-edge);stroke-width:3;stroke-linecap:round"/>`;
+  if (R.warm && !R.starch) { const sx = tx + 2.4 * w, sw = w * .75, st0 = wTop + 6, sl = wTop + 34;   // sits low in the bath, below the label   // the starch warms in its own tube beside the mixture (AQA method)
+    o += `<path class="glass" d="M${f1(sx - sw + 2)} ${sl}H${f1(sx + sw - 2)}V${f1(tb.bot - sw)}A${f1(sw - 2)} ${f1(sw - 2)} 0 0 1 ${f1(sx - sw + 2)} ${f1(tb.bot - sw)}Z" style="fill:#F4F1E6"/><path class="glassl" d="M${f1(sx - sw)} ${st0}V${f1(tb.bot - sw)}A${f1(sw)} ${f1(sw)} 0 0 0 ${f1(sx + sw)} ${f1(tb.bot - sw)}V${st0}"/>`; }
   o += `<rect class="water" x="${b.x0 + 8}" y="${wTop}" width="${b.x1 - b.x0 - 16}" height="${G.bench - wTop - 10}" opacity=".35"/><path d="M${b.x0 + 8} ${wTop}H${b.x1 - 8}" style="stroke:var(--glass-edge);stroke-width:1.5"/>`;
   /* thermometer: 20–40 °C, 1 °C ticks; the column reads the bath temperature */
   const ty = T => th.bot - 14 - (T - 20) / 20 * (th.bot - th.top - 28), colTop = ty(BATH);
@@ -701,7 +712,7 @@ function drawRpBg() {
   for (let T = 20; T <= 40; T++) { const y = ty(T), big = T % 5 === 0; o += `<path d="M${th.x + 5} ${f1(y)}h${big ? 9 : 5}" style="stroke:#1E252E;stroke-width:1.2"/>`; if (big) o += T_(th.x + 17, y + 5, String(T), fs - 3, 'class="wl"'); }
   o += T_(th.x + 17, th.top + 2, "°C", fs - 3, 'class="wl"');
   o += T_((tb.x + tb.w + th.x - 5) / 2, b.top + 13, "water bath", 12, 'text-anchor="middle" class="wl bold"');
-  if (R.warm) o += tag(b.x0, G.bench + (LK() === "tall" ? 22 : 32), R.starch ? "amylase + buffer + starch" : "amylase + buffer", 14, "", "start");
+  if (R.warm) o += tag(b.x0, G.bench + (LK() === "tall" ? 22 : 32), R.starch ? "amylase + buffer + starch" : "amylase + buffer · starch", 14, "", "start");
   /* bottles */
   const B = G.bot, labs = [`pH ${M.ph}`, "amylase", "starch", "iodine"];
   labs.forEach((l, i) => { const x = B.x0 + i * B.dx; o += bottle(x, B.w, B.h, G.bench, i === 0 ? `pH ${M.ph}` : "", i === 3, fs - 2);
@@ -737,9 +748,9 @@ function setSW(t) { const e = document.getElementById("swT"), s = fmtT(t); if (e
 function nextHint() {
   const R = M.run;
   if (R.rec) return `Run finished. Press New run (or choose a pH) for the next run.`;
-  if (!M.gog) return "Next: put your goggles on.";
+  if (!M.gog) return hideSafe() ? "The model is set for this question." : "Next: put your goggles on.";
   if (!R.iod) return "Next: step 1, put iodine in the wells.";
-  if (!R.warm) return `Next: step 2, mix amylase and the pH ${M.ph} buffer and warm them.`;
+  if (!R.warm) return `Next: step 2, mix amylase and the pH ${M.ph} buffer; warm them and the starch in the bath.`;
   if (!R.read) return "Next: read the thermometer. What temperature is the water bath?";
   if (!R.starch) return "Next: step 3, add the starch and start the stopwatch.";
   if (!R.n) return "Next: take a sample every 30 s.";
@@ -794,6 +805,7 @@ function evalHTML() {
   let h = `<h3>Evaluate</h3><ul><li><b>Resolution:</b> you sample every 30 s, so each time could be up to 30 s longer than the moment the starch really went. Sampling more often would give a more exact time.</li>`;
   PHS.filter(ph => M.okM[ph]).forEach(ph => { const a = M.data[ph], i = anomIdx(a);
     h += `<li><b>pH ${ph}:</b> ${i >= 0 ? `${a[i]} s doesn’t fit the pattern: it is an anomaly, so it is left out of the mean.` : `${a.join(", ")} s are close together, so the repeats agree.`}</li>`; });
+  h += `<li><b>End point:</b> deciding when the iodine “stays orange-brown” is a judgement of colour. Compare each well with a well of iodine alone.</li>`;
   h += `<li><b>Fair test:</b> every tube is at ${BATH} °C in the water bath, with the same volume and concentration of amylase and starch. Only the pH changes.</li>`;
   const pl = plotted().sort((a, b) => b.y - a.y);
   if (pl.length >= 2 && pl[0].y - pl[1].y <= .05) h += `<li><b>Too close to call:</b> pH ${pl[0].x} and pH ${pl[1].x} gave ${Math.abs(pl[0].y - pl[1].y) < .005 ? "the same rate" : "almost the same rate"}. Sampling every 30 s is too coarse to tell them apart. Sample more often, or test pH values in between.</li>`;
@@ -891,7 +903,7 @@ function renderCtl() {
   const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => { const on = String(b.dataset[attr]) === String(v); if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
   pr("#tabs button", "tab", M.tab); pr("#phSeg button", "ph", M.ph); pr("#sphSeg button", "sph", M.sph);
   const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
-  sw("gogSw", M.gog); sw("fitSw", M.fit);
+  sw("gogSw", M.gog); sw("fitSw", M.fit); $("gogSw").hidden = hideSafe();
   const R = M.run; document.querySelectorAll(".stp").forEach(b => b.setAttribute("aria-pressed", String(!!R[b.dataset.step])));
   $("readRow").hidden = !(R.warm && !R.read);
   const running = anim && (anim.kind === "auto" || anim.kind === "one");
@@ -917,7 +929,7 @@ function doStep(k) {
   if (!M.gog) return say("Goggles on first. Iodine stains skin and clothes.");
   if (k === "warm" && !R.iod) return say("Follow the method: put iodine in the wells first, so the tile is ready for the first sample.");
   if (k === "starch" && !R.iod) return say("Put iodine in the wells first, so you can test the first sample at 30 s.");
-  if (k === "starch" && !R.warm) return say(`Mix the amylase and buffer and warm them to ${BATH} °C first, so the reaction starts at the same temperature every time.`);
+  if (k === "starch" && !R.warm) return say(quizOpen() ? "Follow the method: step 2 comes before step 3." : `Mix the amylase and buffer, and warm them and the starch to ${BATH} °C first, so the reaction starts at the same temperature every time.`);
   if (k === "starch" && !R.read) return say("Read the thermometer first: check the water bath is at the right temperature before you start.");
   if (k === "warm" && rowFull(M.ph)) return say(`You already have three times at pH ${M.ph}. Choose another pH, or clear this row.`);
   if (k !== "iod" && M.example) { M.example = false; }
@@ -1034,14 +1046,21 @@ TASKS.easy = [
       e: "Keep it the same, so only the pH affects the rate.", f: "Keep it the same, so only the pH affects the rate." })[k],
     explain: "Change: pH of the buffer. Measure: time for the starch to go, colour of the iodine. Keep the same: temperature, volume of amylase, volume of starch.",
     hints: ["Only one thing is changed on purpose.", "The water bath and the measuring cylinders keep things the same.", "Change: pH. Measure: time, iodine colour. Keep the same: temperature, both volumes."] },
-  { id: "res", kind: "gaps", fixed: true, lesson: "s16–18 (F s17)", text: "Samples were taken every 30 s (see the tile). Is starch present in each sample?", lock: "all", setup: SU.tile(90, 3), stuck: "iodine", iodineMethod: true,
-    rows: [["a", "30 s, blue-black:", "yes"], ["b", "60 s, blue-black:", "yes"], ["c", "90 s, orange-brown:", "no"]], bank: ["yes", "no"],
-    why: (k, w) => k === "c" ? "Orange-brown means all the starch has gone: it has been digested. Iodine doesn’t make starch; it shows whether starch is there." : "Blue-black means starch is still there, so the answer is yes.",
-    explain: "Blue-black: starch present (30 s yes, 60 s yes). Orange-brown: all the starch has gone (90 s no).",
-    hints: ["Which colour does iodine turn with starch?", "Blue-black means starch is there. Orange-brown means it has gone.", "Yes, yes, no."] },
+  { id: "haz", kind: "gaps", lesson: "s19 safety", text: "One solution in this practical can harm you. Complete the hazard, the risk and how to control it.", frame: "Hazard → risk → control", lock: "all", setup: SU.rp, hideSafety: true,
+    rows: [["a", "Hazard", "iodine solution: it stains skin and can irritate eyes", ["iodine solution: it stains skin and can irritate eyes", "the starch solution, which is toxic", "the 35 °C water bath, which boils"]],
+      ["b", "Risk", "it splashes into your eyes or onto your skin", ["it splashes into your eyes or onto your skin", "it makes the amylase work too fast", "it catches fire"]],
+      ["c", "Control", "wear eye protection and wipe up spills at once", ["wear eye protection and wipe up spills at once", "add more buffer to each tube", "keep a Bunsen flame lit nearby"]]],
+    why: (k, w) => ({ "the starch solution, which is toxic": "Starch is a food substance, not toxic. The hazard here is iodine solution: it stains and can irritate eyes.",
+      "the 35 °C water bath, which boils": "Water boils at 100 °C. At 35 °C the bath is only warm. The hazard here is the iodine.",
+      "it makes the amylase work too fast": "A risk is how the hazard could hurt someone. Think about eyes and skin.",
+      "it catches fire": "Iodine solution is not flammable. Think about eyes and skin.",
+      "add more buffer to each tube": "That doesn’t protect you. A control stops the iodine reaching your eyes or skin.",
+      "keep a Bunsen flame lit nearby": "There is no Bunsen in this practical, and it doesn’t protect you from iodine." })[w],
+    explain: "Hazard: iodine solution stains skin and clothes and can irritate the eyes. Risk: it splashes into your eyes or onto your skin. Control: wear eye protection and wipe up spills at once.",
+    hints: ["A hazard is the thing that could cause harm. Which solution stains skin?", "The risk is how it could harm you: where could a splash go?", "Iodine → splashes in eyes or on skin → eye protection, wipe spills at once."] },
   { id: "run7", kind: "goal", lesson: "s16, s19", text: "Do a run at pH 7. Sample until the starch has gone, then press the first orange-brown well.", setup: m => { m.tab = "rp"; m.ph = 7; m.run = freshRun(7); }, stuck: "iodine",
     test: M => M.data[7].length >= 1,
-    not: M => M.ph !== 7 ? "Choose the pH 7 buffer first." : !M.gog ? "Turn Goggles on first." : !M.run.iod ? "Press step 1: put iodine in the wells." : !M.run.warm ? "Press step 2: mix amylase and buffer; warm to 35 °C." : !M.run.read ? "Read the thermometer and choose the water bath temperature." : !M.run.starch ? "Press step 3: add starch; start the stopwatch." : !M.run.n ? "Press 4 · Sample every 30 s." : "Keep sampling. Then press the first well where the iodine stays orange-brown.",
+    not: M => M.ph !== 7 ? "Choose the pH 7 buffer first." : !M.gog ? "Turn Goggles on first." : !M.run.iod ? "Press step 1: put iodine in the wells." : !M.run.warm ? "Press step 2: mix amylase and buffer; warm them and the starch to 35 °C." : !M.run.read ? "Read the thermometer and choose the water bath temperature." : !M.run.starch ? "Press step 3: add starch; start the stopwatch." : !M.run.n ? "Press 4 · Sample every 30 s." : "Keep sampling. Then press the first well where the iodine stays orange-brown.",
     done: M => `You recorded ${M.data[7][0]} s at pH 7. That is the first test where the iodine stayed orange-brown.`,
     reveal: M => { M.tab = "rp"; M.ph = 7; M.gog = true; const R = M.run = freshRun(7); R.iod = R.warm = R.read = R.starch = true; R.R = sampleTime(7, M.data[7]); R.n = R.R / STEP; R.t = R.R; R.rec = R.R; M.data[7].push(R.R); M.knows = true; },
     hints: ["Goggles on, then steps 1 and 2, read the thermometer, then step 3.", "Press 4 · Sample every 30 s. Watch each new well.", "Press Stop sampling, then the first well that stays orange-brown."] },
@@ -1064,13 +1083,13 @@ TASKS.easy = [
       { t: "At 180 s, the next test.", why: "By 150 s the iodine already stayed orange-brown. Record the first orange-brown test." }],
     explain: "All the starch has gone at the first test where the iodine stays orange-brown: 150 s.",
     hints: ["Blue-black means starch is still there.", "Which is the first well where the iodine stays orange-brown?", "150 s."] },
-  { id: "bath", kind: "gaps", lesson: "s29–30 Q3", text: "Explain why a water bath was used. [2 marks]", frame: "Start with: It keeps the… the same, so…", setup: SU.rp, stuck: "vars",
-    rows: [["a", "It keeps the", "temperature", ["temperature", "pH", "amount of iodine"]], ["b", "the same, so", "only the pH changes and the test is fair", ["only the pH changes and the test is fair", "the mixture heats up", "the reaction is faster"]]],
-    why: (k, w) => ({ pH: "The buffer sets the pH, and you change it on purpose. The water bath keeps the temperature the same.", "amount of iodine": "The water bath doesn’t touch the iodine. It keeps the temperature the same.",
+  { id: "bath", kind: "gaps", lesson: "s29–30 Q3", text: "The amylase, buffer and starch each go in the 35 °C water bath before they are mixed, and stay there. Explain why. [2 marks]", frame: "Start with: So the reaction is at…", setup: SU.rp, stuck: "vars",
+    rows: [["a", "So the reaction is at", "35 °C from the start, in every tube", ["35 °C from the start, in every tube", "a different pH in every tube", "room temperature at the start"]], ["b", "The temperature stays the same, so", "only the pH changes and the test is fair", ["only the pH changes and the test is fair", "the mixture heats up", "the reaction is faster"]]],
+    why: (k, w) => ({ "a different pH in every tube": "The buffer sets the pH, not the water bath. The water bath is about temperature.", "room temperature at the start": "Cold starch would cool the mixture, so the reaction would start below 35 °C. Warming everything first stops that.",
       "the mixture heats up": "“To heat the mixture” doesn’t score. Say why it matters: so only the pH changes and the test is fair.",
       "the reaction is faster": "“To make it faster” doesn’t score. The water bath keeps the temperature the same, so the test is fair." })[w],
-    explain: "It keeps the temperature the same (1), so only the pH changes and the test is fair (1).",
-    hints: ["What does a water bath control?", "Why does that matter for a fair test?", "It keeps the temperature the same, so only the pH changes."] }
+    explain: "So the reaction is at 35 °C from the start, in every tube (1). The temperature stays the same, so only the pH changes and the test is fair (1).",
+    hints: ["What does a water bath control?", "If the starch went in cold, what would happen to the temperature at the start of the reaction?", "So the reaction is at 35 °C from the start, so only the pH changes."] }
 ];
 TASKS.hard = [
   { id: "stom", kind: "build", ordered: true, lesson: "s3 stretch", text: "Explain why amylase stops working in the stomach at pH 2. Build your answer in order.", frame: "Start with: pH 2 is far from…", lock: "all", setup: SU.site(2), stuck: "words", hideWords: ["Denatured"],
@@ -1140,10 +1159,10 @@ TASKS.hard = [
     explain: "The starch went some time between 120 s and 150 s, so 150 s could be up to 30 s too long. Taking samples more often (for example every 10 s) gives a more exact time.",
     hints: ["You only look every 30 s. What happens between two samples?", "The real time is somewhere between the last blue-black and the first orange-brown test.", "Between 120 s and 150 s; sample more often."] },
   { id: "meth", kind: "build", marks: 4, lesson: "s29–30 Q5", text: "Describe how to find the optimum pH for amylase. [4 marks]", frame: "Start with: Mix amylase, starch and buffer at…", setup: SU.rp, ms: MS10,
-    stm: [{ t: "Mix amylase, starch and buffer at several pH values.", c: 1 }, { t: "Keep every tube at the same temperature in a water bath.", c: 2 }, { t: "Every 30 s, drop a sample onto iodine.", c: 3 }, { t: "The pH with the shortest time is the optimum.", c: 4 },
-      { t: "Use the same pH buffer in every tube.", why: "pH is the independent variable: you need several different pH values." },
-      { t: "Record the last blue-black time.", why: "Starch is still there then. Record the first time the iodine stays orange-brown." },
-      { t: "The pH with the longest time is the optimum.", why: "The longest time is the slowest rate. The optimum has the shortest time." }],
+    stm: [{ t: "Mix amylase, starch and a buffer at several pH values.", c: 1 }, { t: "Same temperature: a water bath.", c: 2 }, { t: "Every 30 s, test a drop on iodine.", c: 3 }, { t: "Shortest time = optimum pH.", c: 4 },
+      { t: "Use one pH buffer for every tube.", why: "Change the pH: use several." },
+      { t: "Record the last blue-black time.", why: "Starch is still there. Record the first orange-brown." },
+      { t: "Longest time = optimum pH.", why: "Longest time = slowest rate." }],
     miss: { 1: "Say what you mix, and at how many pH values.", 2: "Say how you keep the temperature the same.", 3: "Say how and how often you test for starch.", 4: "Say how you decide which pH is the optimum." },
     explain: "Mix amylase, starch and buffer at several pH values (1); same temperature in a water bath (1); sample onto iodine every 30 s (1); the pH with the shortest time is the optimum (1).",
     hints: ["Four marks: what you mix, how you keep it fair, how you test, how you decide.", "Use several pH values, a water bath, iodine every 30 s.", "Shortest time = optimum pH."] }
@@ -1351,7 +1370,7 @@ const TOUR = [
   { el: "#phRow", tab: "rp", text: "Choose the pH of the buffer. Each run uses one pH.", do: "ph", doText: "Choose a different pH." },
   { el: "#gogSw", tab: "rp", text: "Safety: goggles on. Iodine stains skin and clothes. Wipe up spills at once.", do: "gog", doText: "Turn Goggles on." },
   { el: "#stepRow", tab: "rp", text: "Do the method in order. Step 1 puts a drop of iodine in every well.", do: "iod", doText: "Press 1 Put iodine in the wells." },
-  { el: "#stepRow", tab: "rp", text: "Step 2: amylase and buffer warm in the water bath. Then read the thermometer yourself.", do: "read", doText: "Press 2, then choose the temperature you read." },
+  { el: "#stepRow", tab: "rp", text: "Step 2: amylase and buffer in one tube, starch in another, both warm in the water bath. Then read the thermometer yourself.", do: "read", doText: "Press 2, then choose the temperature you read." },
   { el: "#stepRow", tab: "rp", text: "Step 3: add the starch and start the stopwatch.", do: "starch", doText: "Press 3." },
   { el: "#sampleRow", tab: "rp", text: "Every 30 s a drop goes onto fresh iodine. Blue-black: starch is still there.", do: "auto", doText: "Press 4 · Sample every 30 s." },
   { el: "#rsvg", tab: "rp", text: "When the iodine stays orange-brown, the starch has gone. Press that first orange-brown well.", do: "record", doText: "Press the first orange-brown well." },

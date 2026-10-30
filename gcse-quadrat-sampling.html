@@ -441,6 +441,13 @@ main.layout{min-height:calc(100vh - 70px)}
   .qpanel .feedback .msg{padding:8px 10px}
   .qpanel .actions{padding:8px 0 10px}
 }
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -475,6 +482,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <svg id="rsvg" class="scene" viewBox="0 0 780 480" role="group" aria-label="A 10 m by 10 m field seen from above, with a close-up of the quadrat. Tap each daisy in the close-up to count it."><g id="rBg"></g><g id="rQ"></g><g id="rHi"></g><g id="rZ"></g></svg>
         <div class="controls" id="randCtl"><button class="btn primary go" type="button" id="rngBtn">Random numbers</button><button class="btn primary go" type="button" id="placeBtn">Place quadrat</button><button class="btn primary go" type="button" id="throwBtn" hidden>Throw the quadrat</button><button class="btn go" type="button" id="countAll">Count all</button><button class="btn go" type="button" id="do10">Do 10 for me</button><button class="btn" type="button" id="newSample">New sample</button><button class="btn" type="button" id="newField">New field</button></div>
         <div class="readout" id="rread" aria-live="polite"></div>
+        <p class="small" id="safeLine" style="margin:4px 0"><b>Safety in the field:</b> tapes and quadrats on the ground are a trip hazard, so walk, don’t run, and pick them up after. Wash your hands, and leave the habitat as you found it.</p>
         <div class="mlow">
           <div class="panel" id="rTableBox"><h2>Results</h2><div class="rtab" id="rTable"></div></div>
           <div class="panel" id="calc"><h2>Work it out</h2>
@@ -504,7 +512,7 @@ main.layout{min-height:calc(100vh - 70px)}
         </div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The field, the daisies and the light readings are made-up example data. Real fields have many species. Here a daisy counts if more than half of it (its centre) is inside the frame. Light is read once at the centre of each quadrat, to the nearest 100 lux. The quadrats are 0.5 m by 0.5 m.</p>
+      <p class="limits"><b>Model limits:</b> The field, the daisies and the light readings are made-up example data. Real fields have many species. Here a daisy counts if more than half of it (its centre) is inside the frame. Light is read once at the centre of each quadrat<span id="luxRes">, to the nearest 100 lux</span>. The quadrats are 0.5 m by 0.5 m.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -783,27 +791,18 @@ const TABW = { rand: "Random sampling", tr: "Transect" };
 
 const TASKS = {
   easy: [
-    { id: "dist", kind: "choice", setup: SU.rand0, stuck: "words", src: "slide 9", text: "Which key word means “where organisms are found in a habitat”?",
-      options: [{ t: "Distribution", ok: () => DEF.distribution === "Where organisms are found in a habitat." },
-        { t: "Quadrat", why: "A quadrat is a square frame used to sample plants or slow-moving animals." },
-        { t: "Transect", why: "A transect is a line across a habitat. It shows how this changes, but it is not the word itself." },
-        { t: "Random", why: "Random means chosen by chance, so every position has an equal chance." }],
-      explain: "Distribution means where organisms are found in a habitat.",
-      hints: ["It is one of the four key words for this lesson.", "A transect shows how this changes across a habitat.", "dis·tri·bu·tion (dis = apart)."] },
-    { id: "nameQ", kind: "choice", setup: SU.labels, lock: "all", src: "slides 12, 30", text: "Look at the diagram. Name the piece of equipment labelled Q.",
-      options: [{ t: "Quadrat", ok: () => true },
-        { t: "Transect", why: "A transect is the line (P). Q is the square frame placed along it." },
-        { t: "Square", why: "Name the equipment, not its shape. The mark scheme rejects “square”." },
-        { t: "Tape measure", why: "The tape measure is laid along the line P. Q is the square frame." }],
-      explain: "Q is a quadrat: a square frame for counting the organisms inside it.",
-      hints: ["Look at the shape of Q.", "Q is a square frame used to count plants.", "quad = four: a frame with four sides."] },
-    { id: "nameP", kind: "choice", setup: SU.labels, lock: "all", src: "slides 12, 30", text: "Look at the diagram. Name the line labelled P.",
-      options: [{ t: "Transect", ok: () => true },
-        { t: "Quadrat", why: "A quadrat is the square frame (Q). P is the line the quadrats are placed along." },
-        { t: "Line", why: "Name it, not just describe it. The mark scheme rejects “line” on its own." },
-        { t: "Grid", why: "A grid marks out the area for random sampling. P is a line across the habitat." }],
-      explain: "P is a transect: a line across a habitat along which samples are taken.",
-      hints: ["P goes across the habitat.", "trans = across, sect = cut.", "It starts with tr…"] },
+    { id: "namePQ", kind: "gaps", setup: SU.labels, lock: "all", src: "slides 12, 30", text: "Look at the diagram. Name the line labelled P and the piece of equipment labelled Q.",
+      bank: ["Transect", "Quadrat", "Line", "Square"],
+      rows: [["P", "P:", "Transect"], ["Q", "Q:", "Quadrat"]],
+      rowWhy: { P: "P is the line across the habitat that the quadrats go along. Name it (trans = across): “line” on its own is rejected.", Q: "Q is the square frame placed along the line. Name the equipment: “square” on its own is rejected." },
+      explain: "P is a transect: a line across a habitat along which samples are taken. Q is a quadrat: a square frame for counting the organisms inside it.",
+      hints: ["One is a line across the habitat; one is a square frame.", "trans = across; quad = four sides.", "P: tr…; Q: qu…"] },
+    { id: "haz", kind: "gaps", setup: SU.rand0, lock: "all", hideSafety: true, src: "field safety (standard practice; not in the deck)", text: "Fieldwork has hazards too. Complete the hazard, the risk and how to control it.",
+      frame: "Hazard → risk → control", bank: ["Tapes and quadrats lying on the ground", "Someone trips over them and falls", "Walk, don’t run, and pick the kit up when you finish", "The daisies in the field", "A quadrat gets lost", "Throw the quadrat to place it"],
+      rows: [["h", "Hazard:", "Tapes and quadrats lying on the ground"], ["r", "Risk:", "Someone trips over them and falls"], ["c", "Control:", "Walk, don’t run, and pick the kit up when you finish"]],
+      rowWhy: { h: "A hazard is something that could cause harm. Daisies can’t hurt you; what is lying on the ground?", r: "A risk is how the hazard could hurt someone. Losing a quadrat doesn’t hurt anyone.", c: "A control makes the harm less likely. Throwing a quadrat is biased, and it could hit someone." },
+      explain: "Hazard: tapes and quadrats lying on the ground. Risk: someone trips over them and falls. Control: walk, don’t run, and pick the kit up when you finish.",
+      hints: ["A hazard is something that could cause harm.", "What could happen if you don’t see a tape on the grass?", "Tapes on the ground → tripping → walk carefully and tidy up."] },
     { id: "unbiased", kind: "choice", setup: SU.rand0, src: "slides 15, 29, 30", text: "Give one way to place a quadrat so the sample is not biased.",
       options: [{ t: "Use random coordinates from a random number generator", ok: () => true },
         { t: "Throw it over your shoulder", why: "Throwing is biased: it only lands near where you stand, and you may aim. Use random coordinates." },
@@ -838,6 +837,12 @@ const TASKS = {
     { id: "mean5", kind: "num", setup: SU.rand0, stuck: "eqn", src: "slides 18, 30", W: EX, fields: ["mean"], text: "Calculate the mean of these counts: 4, 6, 3, 5, 2.",
       frame: "Mean = add the counts, then divide by how many counts there are.",
       hints: ["Add the five counts first.", "4 + 6 + 3 + 5 + 2 = 20.", "20 ÷ 5 = ?"] },
+    { id: "medmode", kind: "gaps", setup: SU.rand0, src: "slides 18, 30 (mean, median and mode)", text: "Daisies in six quadrats: 4, 1, 5, 2, 5, 6. Find the median and the mode.",
+      frame: "Put the counts in order first.", bank: ["4.5", "3.5", "5", "3.8", "6"],
+      rows: [["md", "Median:", "4.5"], ["mo", "Mode:", "5"]],
+      rowWhy: { md: "In order: 1, 2, 4, 5, 5, 6. With six values, the median is halfway between the two middle ones. (3.8 is the mean; 3.5 comes from not putting them in order.)", mo: "The mode is the count that appears most often, not the biggest or the middle one." },
+      explain: "In order: 1, 2, 4, 5, 5, 6. Median = (4 + 5) ÷ 2 = 4.5. Mode = 5 (it appears twice).",
+      hints: ["Write the counts in order, smallest first.", "Median: the middle value (here, halfway between the 3rd and 4th). Mode: the most common value.", "Middle two are 4 and 5. Which count appears twice?"] },
     { id: "area", kind: "choice", setup: SU.rand0, src: "slides 5, 19–20", text: "One quadrat is 0.5 m by 0.5 m. What is its area?",
       options: [{ t: "0.25 m²", ok: () => near(QS * QS, 0.25) },
         { t: "0.25 m", why: "Right number, wrong unit. Area is in square units: 0.5 m × 0.5 m = 0.25 m²." },
@@ -895,7 +900,7 @@ const TASKS = {
       items: [
         { id: "a", t: "Lay a tape from the shade to open ground.", rank: 1, ess: 1, miss: "Say where the tape goes: across the change, from shade to open." },
         { id: "b", t: "Place quadrats at regular intervals along it.", rank: 2, ess: 1, miss: "Say where the quadrats go along the tape." },
-        { id: "c", t: "Count the daisies and measure the light intensity in each quadrat.", rank: 3, ess: 1, miss: "Say what you count, and the abiotic factor you measure." },
+        { id: "c", t: "Count daisies and measure light in each quadrat.", rank: 3, ess: 1, miss: "Say what you count, and the abiotic factor you measure." },
         { id: "e", t: "Repeat, and find the mean at each distance.", rank: 4, miss: "Say how you make the results more reliable." },
         { id: "f", t: "Compare the daisies with the light intensity.", rank: 4, miss: "Say how the results show the effect of shade." },
         { id: "w1", t: "Throw the quadrat along the tape.", why: "Throwing is biased. On a transect, quadrats go at regular intervals." },
@@ -908,6 +913,13 @@ const TASKS = {
       rowWhy: { iv: "The independent variable is the one you change as you move along the tape.", dv: "The dependent variable is what you count in each quadrat.", cv: "A control variable stays the same in every quadrat. Quadrats are never thrown on a transect." },
       explain: "Independent: distance along the transect. Dependent: number of plants in each quadrat. Control: size of the quadrat.",
       hints: ["You change one thing by moving along the tape.", "You count something in each quadrat.", "The control is the same in every quadrat: its size."] },
+    { id: "resL", kind: "choice", setup: SU.trDone, lock: "all", hideRes: true, src: "slide 24 (resolution)", text: "Look at the light meter readings in the transect Results. What is the resolution of the light meter?",
+      options: [{ t: "100 lux: the smallest change it shows", ok: () => TRD.every(r => r.light == null || r.light % 100 === 0) && TRD.some(r => r.light % 1000) },
+        { t: "1 lux: it measures light exactly", why: "Look at the readings: they only ever change in steps of the same size. Resolution is the smallest change the meter shows." },
+        { t: `${lux(Math.min(...TRD.map(r => r.light)))}: the lowest reading`, why: "That is the lowest reading, not the resolution. Resolution is the smallest change the meter can show." },
+        { t: `${lux(Math.max(...TRD.map(r => r.light)))}: the highest reading`, why: "That is the highest reading, not the resolution. Look at the last digits of the readings." }],
+      explain: "Every reading goes up or down in steps of 100 lux, so the smallest change the meter shows (its resolution) is 100 lux.",
+      hints: ["Resolution is the smallest change an instrument can show.", "Look at the last digits of every light reading.", "They all end in 00: steps of 1… lux."] },
     { id: "order", kind: "gaps", setup: SU.rand0, src: "slides 26–27", text: "Put Part A of the method in the right order.",
       bank: ["Mark out the study area", "Choose random coordinates", "Place a quadrat and count the plants", "Calculate the mean and estimate the population"],
       rows: [["s1", "Step 1:", "Mark out the study area"], ["s2", "Step 2:", "Choose random coordinates"], ["s3", "Step 3:", "Place a quadrat and count the plants"], ["s4", "Step 4:", "Calculate the mean and estimate the population"]],
@@ -950,6 +962,7 @@ function bankCheck() {
   if (!near(EX.tot - 2 + 2 / 5, 18.4) || slipMean(EX, 18.4).indexOf("calculator") < 0) errs.push("facts: the calculator slip (slide 5)");
   { const t = TASKS.easy.find(x => x.id === "sortQT"); if (t) { const q = t.rows.filter(r => r[2] === "Quadrat").map(r => r[0]).join(""), tr = t.rows.filter(r => r[2] === "Transect").map(r => r[0]).join("");
     if (q !== DECK.sortQ.join("") || tr !== DECK.sortT.join("")) errs.push("facts: the sort answers (slide 23)"); } }
+  { const t = TASKS.hard.find(x => x.id === "resL"), L = TRD.map(r => r.light); if (t && !(L.includes(Math.min(...L)) && t.options[2].t.startsWith(lux(Math.min(...L))) && t.options[3].t.startsWith(lux(Math.max(...L))))) errs.push("Hard 8: the quoted lowest and highest readings must come from the transect data"); }
   { const t = TASKS.hard.find(x => x.id === "order"); const L = { C: "Mark out the study area", D: "Choose random coordinates", B: "Place a quadrat and count the plants", A: "Calculate the mean and estimate the population" };
     if (t && t.rows.map(r => r[2]).join("|") !== DECK.order.map(k => L[k]).join("|")) errs.push("facts: the method order (slide 27)"); }
   /* model */
@@ -1265,7 +1278,8 @@ function renderCtl() {
   $("trRepeat").disabled = !(T.runs.length === 1 && trFull(T)); $("trClear").disabled = !T.runs[0].q.length;
   if (!locked()) $("lockNote").hidden = true;
 }
-function drawAll(fast) { renderCtl(); if (M.tab === "rand") drawRand(fast); else drawTr(fast); }   // fast: a step of Do 10 / Do the rest (the close-up and Work it out wait for the end)
+const qOpenFlag = k => { if (mode === "demo" || !task || !task[k]) return false; const p = prog(); return !(p.solved || p.revealed); };
+function drawAll(fast) { $("safeLine").hidden = qOpenFlag("hideSafety"); $("luxRes").hidden = qOpenFlag("hideRes"); renderCtl(); if (M.tab === "rand") drawRand(fast); else drawTr(fast); }   // fast: a step of Do 10 / Do the rest (the close-up and Work it out wait for the end)
 function setTab(t) { if (locked()) return lockMsg(); stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
 /* steps of "Do 10 for me" and "Do the rest": about 5 a second, time-based with setTimeout (no animation loop) */
@@ -1403,7 +1417,7 @@ function renderDots() {
 }
 
 /* ===== Support (off on load, never stored) ===== */
-const WORDS = [["Quadrat", DEF.quadrat], ["Transect", DEF.transect], ["Random", DEF.random], ["Distribution", DEF.distribution]];
+const WORDS = [["Quadrat", DEF.quadrat], ["Transect", DEF.transect], ["Random", DEF.random], ["Distribution", DEF.distribution], ["Percentage cover", "The percentage of a quadrat’s area a plant covers. Use it when single plants are hard to count (such as grass)."]];
 function renderSupport() {
   $("wordsBox").hidden = !support.words; $("eqnBox").hidden = !support.eqn;
   $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");

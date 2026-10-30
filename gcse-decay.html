@@ -68,6 +68,7 @@
   Performance: drawn on demand. One animation only: the stopwatch and fading colour while timing (12 fps, 5–25 s), by paceFrame with adaptive slow-down, patching text in an overlaid SVG built once per view; they skip
     drawing while the picture is off-screen and stop when the tab is hidden. Reduced motion: the timing jumps straight to the end point.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
+  Coverage fixes (30 Oct 2026): Easy 6 is a hazard → risk → control question (phenolphthalein made up in ethanol: flammable, irritates eyes; standard lab practice — at the practical's ~0.05 mol/dm³ the sodium carbonate is not an irritant), replacing the fridge question (its point is the fridge row of Easy 2's sort). Hard 5 is a resolution question on the thermometer (1 °C, read from the magnified thermometer; the 1 °C wording in reading feedback is hidden while it is open), replacing the carbon-cycle question. Model limits names the notes' other method (pH read each day with universal indicator or a pH meter).
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -384,6 +385,13 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .qtab th,.qtab td{border:1px solid var(--line);padding:2px 8px;text-align:center}
 .qtab th{font-size:14px;color:var(--muted)}
 @media (min-width:901px){.qpanel .opts.build.tight{gap:3px}.qpanel .opts.build.tight .opt{padding:3px 10px;min-height:32px;font-size:15.5px;line-height:1.2}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -531,7 +539,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="fread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits" id="limits"><b>Model limits:</b> The method follows the AQA required practical, using phenolphthalein (the current AQA sheet uses cresol red, which changes from purple to yellow). The times are invented example values. Each run has random scatter (about ±6 % in its time), and the time you record depends on when you press Stop (a little early or late), so a single run can mislead. About 1 run in 8 is an invented anomaly (for example, lipase not stirred in properly) that takes 60–90 % longer; there is never more than one among the runs at one temperature. Here an anomaly is a time more than 25 % away from the middle value of three. Time is sped up, and slows down near the end point so you can judge it. The milk tube warms in 2-minute steps, and the water bath stays at its temperature. The colours are drawn to show the change, not exact shades. On the Decay factors tab the temperatures are simplified and the rates are invented, relative values.</p>
+      <p class="limits" id="limits"><b>Model limits:</b> The method follows the AQA required practical, using phenolphthalein (the current AQA sheet uses cresol red, which changes from purple to yellow). The times are invented example values. Each run has random scatter (about ±6 % in its time), and the time you record depends on when you press Stop (a little early or late), so a single run can mislead. About 1 run in 8 is an invented anomaly (for example, lipase not stirred in properly) that takes 60–90 % longer; there is never more than one among the runs at one temperature. Here an anomaly is a time more than 25 % away from the middle value of three. Time is sped up, and slows down near the end point so you can judge it. The milk tube warms in 2-minute steps, and the water bath stays at its temperature. Another way to follow decay: leave milk in beakers at each temperature and measure its pH each day with universal indicator or a pH meter. The colours are drawn to show the change, not exact shades. On the Decay factors tab the temperatures are simplified and the rates are invented, relative values.</p>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -663,10 +671,10 @@ const mmss = s => { s = Math.floor(s + 1e-6); return `${Math.floor(s / 60)}:${St
 function judgeRead(v, T) {
   const d = Math.abs(v - T), grid = Math.abs(v * 2 - Math.round(v * 2)) < 1e-6;
   if (d <= .3 && grid) return { ok: true };
-  if (d <= .3) return { why: "Nearly. This thermometer is marked every 1 °C, so read it to the nearest mark or half-way between two (for example 39 or 39.5)." };
+  if (d <= .3) return { why: qFlag("hideRes") ? "Nearly. Read it to the nearest mark or half-way between two." : "Nearly. This thermometer is marked every 1 °C, so read it to the nearest mark or half-way between two (for example 39 or 39.5)." };
   if (Math.abs(d - 10) <= .6) return { why: "Out by 10 °C. Check which numbered mark is just below the top of the red liquid." };
-  if (d <= 1.6) return { why: "Nearly. Count the small marks up from the numbered mark below the top of the red liquid: each one is 1 °C." };
-  return { why: "Read the magnified scale where the red liquid stops. The numbers are every 10 °C and the small marks every 1 °C." };
+  if (d <= 1.6) return { why: qFlag("hideRes") ? "Nearly. Count the small marks up from the numbered mark below the top of the red liquid." : "Nearly. Count the small marks up from the numbered mark below the top of the red liquid: each one is 1 °C." };
+  return { why: qFlag("hideRes") ? "Read the magnified scale where the red liquid stops." : "Read the magnified scale where the red liquid stops. The numbers are every 10 °C and the small marks every 1 °C." };
 }
 /* reading the stopwatch (minutes:seconds) and typing the time in seconds */
 function judgeTime(str, v, s) {
@@ -1232,13 +1240,6 @@ TASKS.easy = [
       { t: "Grass and other producers", why: "Producers make their own food. Decomposers are microorganisms that break down dead material." }],
     explain: "Bacteria and fungi are the main groups of decomposers. They break down waste and dead organisms.",
     hints: ["Decomposers are microorganisms.", "Two groups of microorganisms: one makes milk sour; the other includes moulds.", "Bacteria and fungi."] },
-  { id: "fridge", kind: "choice", src: "Decomposition: factors affecting the rate of decay (temperature)", text: "Why does food decay more slowly in a fridge?", setup: SU.fac("cold", "moist", "air"), hideW: ["fridge"],
-    options: [{ t: "At low temperatures, the decomposers’ enzymes work slowly.", ok: () => FAC.t.cold < FAC.t.warm && FAC.t.cold > 0 },
-      { t: "The cold kills all the decomposers.", why: "The cold doesn’t kill them. Their enzymes just work slowly, so decay still happens, slowly." },
-      { t: "Decay stops completely below 10 °C.", why: "Decay doesn’t stop in a fridge: it slows down, because the enzymes work slowly." },
-      { t: "There is no oxygen in a fridge.", why: "A fridge has air in it. The difference is the low temperature, which slows the decomposers’ enzymes." }],
-    explain: "At low temperatures, the enzymes involved in decomposition work slowly, so the rate of decay is lower. The decomposers are not killed.",
-    hints: ["What changes in a fridge: the temperature, the water or the oxygen?", "Decomposers use enzymes. What does cold do to how fast enzymes work?", "At low temperatures, the decomposers’ enzymes work slowly."] },
   { id: "sort", kind: "gaps", fixed: true, src: "Decomposition: factors affecting the rate of decay", text: "Does each condition give faster or slower decay of dead leaves? (Compare with warm, moist leaves with plenty of oxygen.)", setup: SU.fac(), lock: "all", hideW: ["denat", "fridge"],
     rows: [["warm", "Warm, about 30 °C:", "faster decay"], ["dry", "Very dry:", "slower decay"], ["oxy", "Plenty of oxygen:", "faster decay"], ["fridge", "In a fridge, 5 °C:", "slower decay"], ["hot", "Very hot, 80 °C:", "slower decay"]],
     bank: ["faster decay", "slower decay"],
@@ -1265,6 +1266,12 @@ TASKS.easy = [
       { t: "The sodium carbonate makes the milk more alkaline.", why: "Sodium carbonate is the alkali that makes it pink at the start. The pink goes when fatty acids lower the pH." }],
     explain: "Lipase digests fat into fatty acids and glycerol. The acids lower the pH, so phenolphthalein turns from pink to colourless. In milk left to decay, bacteria lower the pH in the same way, by making lactic acid.",
     hints: ["Phenolphthalein is a pH indicator: pink in alkali, colourless when the pH falls.", "What does lipase make from fat? Is it an acid?", "Lipase makes fatty acids, which lower the pH."] },
+  { id: "haz", kind: "gaps", fixed: true, src: "Required practical: decay — method (safety; standard lab practice)", text: "The practical uses milk, lipase, sodium carbonate solution and phenolphthalein indicator (made up in ethanol). Complete the hazard, the risk and how to control it.", frame: "Hazard → risk → control", setup: SU.lab(40), lock: "all", hideSteps: true,
+    rows: [["h", "Hazard:", "the indicator: ethanol is flammable and irritates eyes"], ["r", "Risk:", "it catches fire near a flame, or splashes into your eyes"], ["c", "Control:", "keep it away from flames and wear eye protection"]],
+    bank: ["the indicator: ethanol is flammable and irritates eyes", "it catches fire near a flame, or splashes into your eyes", "keep it away from flames and wear eye protection", "the milk, because it goes sour", "the milk tastes sour", "taste the milk to check it is fresh"],
+    why: (k, w) => ({ h: "A hazard is something that could cause harm. Which solution is made up in ethanol?", r: "A risk is how the hazard could harm someone: think about flames and eyes.", c: "A control makes the harm less likely. Never taste anything in a lab." })[k],
+    explain: "Hazard: the phenolphthalein indicator is made up in ethanol, which is flammable and irritates eyes. Risk: it catches fire near a flame, or splashes into your eyes. Control: keep it away from flames and wear eye protection. Never taste the milk.",
+    hints: ["A hazard is the thing that could cause harm. What is the indicator dissolved in?", "Ethanol burns, and a splash stings the eyes.", "Ethanol indicator → fire or eye splash → no flames nearby, eye protection."] },
   { id: "order", kind: "build", ordered: true, src: "Required practical: decay — method (AQA method)", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.fac(), lock: "all", hideSteps: true,
     stm: [{ t: "Label two boiling tubes, lipase and milk. Put 5 cm³ of lipase in the lipase tube.", c: 1 }, { t: "Put 5 drops of phenolphthalein, 5 cm³ of milk and 7 cm³ of sodium carbonate in the milk tube.", c: 2 },
       { t: "Put both tubes in the water bath until the milk reaches its temperature.", c: 3 }, { t: "Add 1 cm³ of lipase to the milk tube, start the stopwatch and stir.", c: 4 },
@@ -1298,13 +1305,6 @@ TASKS.easy = [
 const MS6 = ["Level 3 (5–6): coherent; every key step in a logical order; valid results.",
   "Level 2 (3–4): most key steps; some missing or out of order.", "Level 1 (1–2): some relevant steps; results not valid."];
 TASKS.hard = [
-  { id: "carbon", kind: "choice", src: "How materials are cycled: carbon cycle and role of microorganisms", text: "Decomposers break down a pile of dead leaves. What happens to the carbon in the leaves?", setup: SU.fac(), hideW: ["decay"],
-    options: [{ t: "It goes into the air as carbon dioxide when the decomposers respire.", ok: () => true },
-      { t: "It is released into the soil as carbon dioxide.", why: "Carbon isn’t released into the soil. It goes into the atmosphere as carbon dioxide, from the decomposers’ respiration. Mineral ions go back to the soil." },
-      { t: "It is destroyed, so it is gone for good.", why: "Carbon is never destroyed. It is recycled: the decomposers release it as carbon dioxide, which plants can use in photosynthesis." },
-      { t: "It is turned into mineral ions such as nitrates.", why: "Carbon doesn’t become mineral ions. The leaves’ mineral ions return to the soil, but the carbon goes into the air as carbon dioxide." }],
-    explain: "When the decomposers respire, the carbon goes into the atmosphere as carbon dioxide. Producers can then take it in for photosynthesis. Mineral ions are returned to the soil.",
-    hints: ["Decomposers are alive. Which life process gives out carbon dioxide?", "Respiration releases carbon dioxide into the air, not into the soil.", "It goes into the air as carbon dioxide when the decomposers respire."] },
   { id: "temps", kind: "build", ordered: true, orders: [[1, 2, 3, 4], [3, 4, 1, 2]], src: "Decomposition: factors affecting the rate of decay (temperature)", text: "Explain why leaves decay slowly at 5 °C, and also decay slowly at 80 °C. [4 marks]", hideConc: true, frame: "Explain each one: At 5 °C … so … At 80 °C … so …", setup: SU.fac("cold", "moist", "air"), hideW: ["denat", "fridge"],
     stm: [{ t: "At 5 °C the decomposers’ enzymes work slowly,", c: 1 }, { t: "so decay still happens, but at a low rate.", c: 2 },
       { t: "At 80 °C the enzymes are denatured,", c: 3 }, { t: "so the rate of decay decreases.", c: 4 },
@@ -1333,6 +1333,13 @@ TASKS.hard = [
     done: M => `Your rate at 40 °C: ${M.run.rec.rateTxt} s⁻¹, from a time of ${M.run.rec.time} s.`,
     reveal: M => { if (M.run.T !== 40 || running(M)) { M.T = 40; M.run = newRunFor(M); } autoTo(M, "done"); M.tab = "rp"; },
     hints: ["Follow the steps under the picture: label, indicator, milk, sodium carbonate, water bath.", "Wait until the milk is at the water bath temperature. Stop the stopwatch when the pink has gone.", "Time in seconds; rate = 1 ÷ time."] },
+  { id: "res", kind: "choice", src: "Required practical: decay — method step 3 (resolution)", text: "Look at the magnified thermometer in the milk tube. Its longer marks are at 15, 20 and 25 °C. What is the resolution of this thermometer?", setup: m => { SU.lab(40)(m); Object.assign(m.run, { step: "eq", drops: 5 }); }, lock: "all", hideRes: true,
+    options: [{ t: "1 °C: the gap between the smallest marks", ok: () => true },
+      { t: "5 °C: the gap between the longer marks", why: "Look between the longer marks: there are smaller marks too. Resolution is the smallest change the scale can show." },
+      { t: "0.1 °C: it shows the temperature exactly", why: "There are no marks that small, so it can’t show a change of 0.1 °C. Count the small marks between two numbers." },
+      { t: "20 °C: the numbered mark", why: "That is a reading on the scale, not its resolution. Resolution is the smallest change the scale can show." }],
+    explain: "The smallest marks are 1 °C apart, so the resolution is 1 °C. You can estimate half-way between two marks, but the scale itself shows changes of 1 °C.",
+    hints: ["Resolution is the smallest change an instrument can show.", "Count the small gaps between the 20 mark and the longer 25 mark.", "Five gaps share 5 °C, so each is 1 …"] },
   { id: "anom", kind: "num", src: "Required practical: decay — results", text: `At 40 °C, three repeats took ${Q_ANOM[0]} s, ${Q_ANOM[1]} s and ${Q_ANOM[2]} s. Calculate the mean time, leaving out the anomaly.`, setup: SU.lab(40),
     frame: "Calculate: leave out the value that doesn’t fit the pattern, then add ÷ how many.", lbl: "Mean =", unit: "s", ans: () => goodMean(Q_ANOM),
     wrongs: [[(Q_ANOM[0] + Q_ANOM[1] + Q_ANOM[2]) / 3, `You included the anomaly (${Q_ANOM[2]} s). Leave it out, then divide by 2.`], [Q_ANOM[0] + Q_ANOM[1] + Q_ANOM[2], `That is the total of all three. Leave out ${Q_ANOM[2]}, then add and divide.`],
