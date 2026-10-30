@@ -391,6 +391,7 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px}}
 .seg button:disabled{opacity:.5;cursor:default}.tabs button:disabled{opacity:.5;cursor:default}
+@media (min-width:1500px){.qpanel .opts.build.ms6{gap:4px}.qpanel .opts.build.ms6 .opt{min-height:34px;padding:4px 10px;font-size:15.5px;line-height:1.25}.qpanel .ms{font-size:15px;line-height:1.35}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -905,6 +906,7 @@ function drawLabMov() {   // the parts that move during a run: built once per la
 
 /* --- the step-by-step method (notes: Experiment 1 and 2 methods) --- */
 function stepHTML() {
+  if (open() && task.hideStep) return `<p class="stp">The method steps open again once you have answered this question.</p>`;
   const m = M, r = m.run, s = stepOf(m), o = r.o;
   const btn = (t, id, cls) => `<button class="btn ${cls || "primary"}" type="button" id="${id || "stepGo"}">${t}</button>`;
   let h = "";
@@ -1302,13 +1304,6 @@ TASKS.easy = [
       { t: "Its weight, pulling it down.", why: "Weight acts downwards and the bench pushes up just as hard. Constant velocity means all the forces are balanced." }],
     explain: "Constant velocity means no change in speed or direction, so the forces are balanced: the resultant force is zero (Newton’s first law).", stuck: "words",
     hints: ["What does Newton’s first law say about an object moving at a constant velocity?", "Constant velocity: no change in speed or direction. Is there a resultant force?", "Zero: the forces on it are balanced."] }, KN),
-  Object.assign({ id: "dbl", kind: "choice", src: "Newton’s Second Law", text: "The resultant force on a trolley is doubled. Its mass stays the same. What happens to its acceleration?", setup: SU.force(),
-    options: [{ t: "It doubles: acceleration is proportional to the resultant force.", ok: () => near(forceOut({ pull: 2, fric: 0, mass: 1, u: 0 }).a, 2 * forceOut({ pull: 1, fric: 0, mass: 1, u: 0 }).a) },
-      { t: "It halves.", why: "A bigger resultant force gives a bigger acceleration, not a smaller one. The acceleration halves if the mass doubles." },
-      { t: "It stays the same, because the mass hasn’t changed.", why: "Acceleration depends on the force as well as the mass: a = F ÷ m. Double F, and a doubles." },
-      { t: "The trolley moves at a faster, constant speed.", why: "A resultant force makes it accelerate, so its speed keeps changing. A constant speed needs a resultant force of zero." }],
-    explain: "a = F ÷ m. With the same mass, doubling the resultant force doubles the acceleration.", stuck: "maths", hideWords: ["n2"],
-    hints: ["Newton’s second law links force, mass and acceleration.", "a = F ÷ m. What happens to a if F is twice as big and m is the same?", "It doubles: acceleration is proportional to the resultant force."] }, KN),
   Object.assign({ id: "acc27", kind: "num", src: "Newton’s Second Law (worked example)", text: "A car speeds up from 0 to 27 m/s in 3 s. Calculate its acceleration.", setup: SU.force(),
     frame: "Calculate: acceleration = change in velocity ÷ time taken", lbl: "a =", unit: "m/s²", ans: () => (27 - 0) / 3,
     wrongs: [[81, "You multiplied. Acceleration = change in velocity ÷ time."], [1 / 9, "You divided the wrong way: change in velocity ÷ time = 27 ÷ 3."], [27, "That is the change in velocity. Now divide it by the time, 3 s."], [30, "You added. Divide the change in velocity by the time."], [24, "You took away the time. Divide: 27 ÷ 3."]],
@@ -1335,6 +1330,14 @@ TASKS.easy = [
     why: (k, w) => `That is what the ${EQUIP[w]} ${/s$|string$/.test(EQUIP[w]) ? "are" : "is"} for.`,
     explain: "Ruler: measure out the 0.2 m intervals. Stopwatch: time the trolley between the lines. Masses and hanger: provide the force. Pulley and string: connect the masses to the trolley. Blu-tac: hold extra masses on the trolley.",
     hints: ["Think about what you measure, and what makes the trolley move.", "The ruler measures distance, the stopwatch measures time, and the hanging masses pull.", "Ruler → intervals · stopwatch → time · masses → force · pulley and string → connect · Blu-tac → extra masses."] }, KN),
+  { id: "res", kind: "gaps", fixed: true, src: "Required Practical: Resolution of measuring equipment", text: "Look at the magnified ruler and the stopwatch. What is the resolution of each measuring instrument?", setup: SU.lab(), tabs: ["rp"], lock: "all", hideStep: true, hideLim: ["press"],
+    rows: [["rule", "Metre ruler (smallest marks):", "1 mm"], ["sw", "Stopwatch (last digit):", "0.01 s"]],
+    bank: ["1 mm", "0.01 s", "1 cm", "1 m", "1 s", "0.1 s"],
+    why: (k, w) => ({ "1 mm": "That is the resolution of the metre ruler: its smallest marks are 1 mm apart.", "0.01 s": "That is the stopwatch’s resolution: its last digit shows hundredths of a second.",
+      "1 cm": "The numbers are 1 cm apart, but there are smaller marks between them. Resolution is the smallest change it can show.", "1 m": "1 m is how far the ruler measures (its range), not its resolution.",
+      "1 s": "The stopwatch shows much smaller steps than 1 s: look at the last digit.", "0.1 s": "The stopwatch shows two decimal places, so it reads to a smaller step than 0.1 s." })[w],
+    explain: "Resolution is the smallest change an instrument can show. Metre ruler: 1 mm. Stopwatch: 0.01 s.",
+    hints: ["Resolution is the smallest change an instrument can show.", "For the ruler, think about its smallest marks. For the stopwatch, look at its last digit.", "Ruler: 1 mm. Stopwatch: 0.01 s."] },
   Object.assign({ id: "vars", kind: "gaps", fixed: true, src: "Experiments 1 and 2: Variables", text: "Choose the variables for each experiment.", setup: SU.force(), hideLim: ["mass"],
     rows: [["iv1", "Experiment 1, independent variable:", "the force"], ["dv1", "Experiment 1, dependent variable:", "the acceleration"], ["cv1", "Experiment 1, control variable:", "the mass"],
       ["iv2", "Experiment 2, independent variable:", "the mass"], ["cv2", "Experiment 2, control variable:", "the force"]],
@@ -1421,20 +1424,21 @@ TASKS.hard = [
       { t: "Heavier hangers fall faster.", why: "In free fall, heavier objects don’t fall faster. Here a heavier hanger does give a bigger acceleration (bigger pull, same total mass), but that makes the line steeper. It doesn’t shift the line along the force axis." }],
     explain: "Friction acts against the motion. Part of the pull only balances friction, so the resultant force = weight on the hanger − friction. The line crosses the force axis at about the size of the friction.",
     hints: ["Is the weight on the hanger the only horizontal force on the trolley?", "Resultant force = pull − friction. How much pull is needed before the trolley accelerates at all?", "Friction: the resultant force is a little less than the weight on the hanger."] },
-  Object.assign({ id: "half", kind: "choice", src: "Experiment 2: Investigating the Effect of Mass", text: "Experiment 2: the force stays the same, and the total mass being accelerated is doubled. Predict what happens to the acceleration.", setup: SU.force(), hideLim: ["mid"], hideWords: ["n2"],
-    options: [{ t: "It halves: acceleration is inversely proportional to mass.", ok: () => near(2 * forceOut({ pull: 2, fric: 0, mass: 2, u: 0 }).a, forceOut({ pull: 2, fric: 0, mass: 1, u: 0 }).a) },
-      { t: "It doubles: heavier things speed up faster.", why: "Heavier objects don’t speed up faster. With the same force, twice the mass gives half the acceleration." },
-      { t: "It stays the same: the force hasn’t changed.", why: "The force is the same, but a = F ÷ m: a bigger mass gives a smaller acceleration." },
-      { t: "It falls to a quarter.", why: "a = F ÷ m: twice the mass gives half the acceleration, not a quarter." }],
-    explain: "a = F ÷ m. With the same force, doubling the mass halves the acceleration: acceleration is inversely proportional to mass.",
-    hints: ["Use a = F ÷ m, with F the same.", "If m is twice as big, what happens to F ÷ m?", "It halves."] }, KN),
-  Object.assign({ id: "eval", kind: "gaps", fixed: true, src: "Evaluating the Experiments; Safety Considerations", text: "Choose the type of error (or safety point) and the fix for each problem in a student’s practical.", setup: SU.force(), hideLim: ["anom", "mass"],
-    rows: [["bench", "Masses taken off the hanger were put on the bench.", "systematic: move them onto the trolley"], ["push", "The trolley was given a little push to start it.", "random: release it, don’t push it"], ["fast", "The trolley moved too fast to time well.", "random: use smaller masses so it’s slower"],
-      ["stand", "A student stood under the weight hanger.", "safety: stand to one side of the hanger"]],
-    bank: ["systematic: move them onto the trolley", "random: release it, don’t push it", "random: use smaller masses so it’s slower", "safety: stand to one side of the hanger", "systematic: use a heavier hanger"],
+  Object.assign({ id: "inertial", kind: "choice", ht: true, src: "Experiment 2: Investigating the Effect of Mass; Inertia & Mass (HT, worked example)", text: "The same resultant force acts on objects A, B and C. A accelerates at 1.5 m/s², B at 0.7 m/s² and C at 2.0 m/s². Which object has the largest inertial mass?", setup: SU.force(), hideWords: ["n2"],
+    options: [{ t: "B: inertial mass = force ÷ acceleration, so the smallest acceleration gives the largest inertial mass.", ok: () => [1.5, .7, 2].every(a => 1 / a <= 1 / .7) && near(2 * forceOut({ pull: 2, fric: 0, mass: 2, u: 0 }).a, forceOut({ pull: 2, fric: 0, mass: 1, u: 0 }).a) },
+      { t: "C: it has the largest acceleration, so it is the heaviest.", why: "Heavier objects don’t speed up faster. With the same force, a bigger inertial mass is harder to accelerate, so it has the smaller acceleration." },
+      { t: "A: its acceleration is in the middle.", why: "Inertial mass = force ÷ acceleration. With the same force, the object with the smallest acceleration has the largest inertial mass." },
+      { t: "All the same, because the force is the same.", why: "The force is the same, but the accelerations are different, so force ÷ acceleration is different for each object." }],
+    explain: "With the same force, the smallest acceleration means the largest inertial mass (as in experiment 2: double the mass, half the acceleration).",
+    hints: ["Inertial mass is how hard it is to change an object’s velocity.", "Inertial mass = force ÷ acceleration. The force is the same for all three.", "The smallest acceleration gives the largest inertial mass."] }, KN),
+  Object.assign({ id: "eval", kind: "gaps", fixed: true, src: "Evaluating the Experiments; Safety Considerations", text: "Choose the error type and the fix for each problem. For the hazard, choose the control.", setup: SU.force(), hideLim: ["anom", "mass", "press"],
+    rows: [["bench", "Masses taken off the hanger went on the bench.", "systematic: move them onto the trolley"], ["push", "The trolley was given a little push to start it.", "random: release it, don’t push it"], ["fast", "The trolley moved too fast to time well.", "random: use smaller masses so it’s slower"],
+      ["lag", "Reaction time made each lap time a bit wrong.", "random: use light gates and a data logger"],
+      ["stand", "Hazard: masses fall. Risk: they hurt a foot.", "control: don’t stand under the hanger"]],
+    bank: ["systematic: move them onto the trolley", "random: release it, don’t push it", "random: use smaller masses so it’s slower", "random: use light gates and a data logger", "control: don’t stand under the hanger", "systematic: use a heavier hanger"],
     why: (k, w) => w === "systematic: use a heavier hanger" ? "A heavier hanger makes the trolley faster and harder to time. It doesn’t fix this problem." : "That fixes a different problem. Which fix matches this one?",
-    explain: "The bench problem is a systematic error. The push and the fast trolley are random errors. Standing under the hanger is a safety point.", stuck: "words",
-    hints: ["Match each fix to the problem it solves.", "A change in the total mass is systematic. Timing problems are random.", "Systematic: bench. Random: push, too fast. Safety: hanger."] }, KN),
+    explain: "Bench: systematic. Push, too fast, reaction time: random (light gates remove reaction time). Hazard: don’t stand under the hanger.", stuck: "words",
+    hints: ["Match each fix to the problem it solves.", "A change in the total mass is systematic. Timing problems are random; a machine can time without a human. The hazard needs a control.", "Systematic: bench. Random: push, too fast, light gates. Control: don’t stand under the hanger."] }, KN),
   Object.assign({ id: "plan", kind: "build", ms6: true, keySteps: [1, 2, 4, 5, 6], src: "Experiment 1: Method; Examiner Tips and Tricks", text: "Describe a method to investigate how the force on a trolley affects its acceleration. [6 marks]", frame: "Describe it in order. Start with: Mark lines…", setup: SU.force(), hideLim: ["mass", "anom"],
     stm: [{ t: "Mark a line every 0.2 m, up to 1 m.", c: 1 }, { t: "String over the pulley to the hanger, level.", c: 2 },
       { t: "1.0 N on the hanger; trolley at the start.", c: 3 }, { t: "Release it; time each 0.2 m in lap mode.", c: 4 },
@@ -1540,7 +1544,7 @@ function loadTask() {
   const lst = LEVELS[level]; task = lst[idx]; S = newS();
   applyTaskModel();
   $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
-  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("qno").innerHTML = `Question ${idx + 1} of ${lst.length}` + (task.ht ? ' <span class="badge" title="Higher tier only">HT</span>' : "");
   $("taskText").textContent = task.text;
   renderAnswer(); renderSupport(); hintLabel(); renderDots();
   $("fb").innerHTML = ""; $("stuckNote").textContent = "";
