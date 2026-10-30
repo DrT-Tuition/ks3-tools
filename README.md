@@ -91,6 +91,7 @@ Free interactive science tools for lessons from KS3 to A-level. Each tool is a s
 | Waves Practical | KS4 | Physics | https://drt-tuition.github.io/ks3-tools/gcse-waves.html |
 | Decay Practical | KS4 | Biology | https://drt-tuition.github.io/ks3-tools/gcse-decay.html |
 | Titration | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-titration.html |
+| Identifying Ions | KS4 | Chemistry | https://drt-tuition.github.io/ks3-tools/gcse-identifying-ions.html |
 
 ## Adding a tool
 
