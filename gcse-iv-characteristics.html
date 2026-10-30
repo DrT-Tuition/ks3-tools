@@ -14,7 +14,7 @@
        voltmeter (drag, or press a meter then a place; keyboard too) in one of four places: in the loop on either side, across X,
        across the variable resistor. Check my circuit names the slip (ammeter in parallel, voltmeter in series, voltmeter across the
        variable resistor); either loop place is accepted (the current is the same all the way round).
-       Pupils vary the current with the variable resistor (and the supply setting), switch on, read the magnified ammeter and
+       Pupils change the pd across X with the variable resistor (and the supply setting), switch on, read the magnified ammeter and
        voltmeter themselves and type both readings (nothing is filled in). Readings are checked in code against what the meters
        showed in the last 15 s (±0.6 of a small mark); feedback names the slip (swapped V and I, mA, typed the supply setting, misread,
        missing or wrong minus sign). Reverse X swaps its connections: the meters still read forwards, so reversed readings are typed as
@@ -385,11 +385,12 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .scene.mov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none;will-change:transform}
 .scene.mov #clipB{pointer-events:auto}
 @media (min-width:901px) and (max-height:820px){.stepbox{padding:8px 12px;gap:6px}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}.qpanel .opts.build .opt{line-height:1.25}}
+@media (min-width:901px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{line-height:1.25}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 @media (max-width:560px){.rt .cnt.rc{min-width:0}.rt .cnt .rv{font-size:12px}.numin.sm{width:4.4em}}
-@media (min-width:901px) and (max-height:820px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px}}
+@media (min-width:901px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px;line-height:1.25}}
 @media (min-width:901px) and (max-height:740px){.qpanel .ms{font-size:14px;line-height:1.3;padding-left:18px}.qpanel .opts.build.ms6 .opt{min-height:30px;padding:2px 10px}}
 .scene .slot.full{touch-action:none}
 
@@ -425,6 +426,11 @@ ul.needs{margin:0;padding-left:4px;list-style:none;display:grid;gap:2px}
 #compSeg{min-width:0}
 @media (max-width:560px){#compRow .gl{width:100%}#compSeg{width:100%;display:flex}#compSeg button{flex:1 1 0;padding:8px 4px;font-size:15px;min-width:0}.seg.shp{display:grid}.seg.shp button+button{border-left:0;border-top:1px solid var(--line)}}
 @media (max-width:560px){.setrow .vr{flex-wrap:wrap}.setrow .vr .gl{width:100%}.setrow .vr input{min-width:60px}}
+/* long dropdown options must never widen the question panel (30 Oct) */
+.qpanel,#answer,#answer .opts{min-width:0;max-width:100%}
+#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer select{max-width:100%;min-width:0;text-overflow:ellipsis}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -659,7 +665,10 @@ const DEF = {   // P4 s6, s19–s21; P5 s6, s13, s18
   dv: "The variable you measure each time.",
   temp: "Kept the same, so heating does not change the resistance.",
   sys: "Caused by equipment set up or used wrongly. The error is the same each time.",
-  rand: "Caused by things not under our control. They change each time and make results slightly different." };
+  rand: "Unpredictable scatter either side of the true value: it changes each time. Repeats and a mean reduce its effect.",
+  therm: "A resistor whose resistance decreases as its temperature increases. Used as a temperature sensor (thermostats).",
+  ldr: "A light-dependent resistor: its resistance decreases as the light gets brighter. Used as a light sensor.",
+  res: "The smallest change an instrument can show: one scale division (not the range of the scale)." };
 
 /* ===== The three components and the meter ranges used for each ===== */
 const COMP = {
@@ -954,7 +963,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 function guard() { if (locked()) { lockMsg(); return true; } return false; }
@@ -1053,7 +1062,7 @@ function stepHTML() {
   if (!m.built) h = `<p class="stp"><b>Step 1:</b> Set up the circuit. Put the <b>ammeter in series</b> (in the loop) and the <b>voltmeter across X</b>.</p><div class="row"><button class="btn primary" type="button" id="cirGo">Check my circuit</button></div>`;
   else {
     const n = D().rows.length;
-    h = `<p class="stp"><b>Step 2:</b> Use the variable resistor (and the supply) to change the current. Switch on, read both meters, Record, then <b>switch off</b> between readings${m.comp === "lamp" ? ": the lamp gets hot" : m.comp === "res" ? " and wait until it says “resistor: cool”" : ""}. <span class="small">Then reverse X for negative values. ${COMP[m.comp].Name}: ${n} reading${n === 1 ? "" : "s"}.</span></p>`;
+    h = `<p class="stp"><b>Step 2:</b> Use the variable resistor (and the supply) to change the pd across X. Switch on, read both meters, Record, then <b>switch off</b> between readings${m.comp === "lamp" ? ": the lamp gets hot" : m.comp === "res" ? " and wait until it says “resistor: cool”" : ""}. <span class="small">Then reverse X for negative values. ${COMP[m.comp].Name}: ${n} reading${n === 1 ? "" : "s"}.</span></p>`;
     h += `<div class="row ent"><label class="grow" for="inV">pd <input class="numin sm" id="inV" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="${esc(m.entry.V)}"> <span class="unit">V</span></label>` +
       `<label class="grow" for="inI">current <input class="numin sm" id="inI" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="${esc(m.entry.I)}"> <span class="unit">A</span></label>` +
       `<button class="btn primary" type="button" id="recGo">Record</button>${m.rev ? '<span class="small">X is reversed: type −</span>' : ""}</div>`;
@@ -1342,59 +1351,68 @@ const MF = {
 };
 const resRows = m => m.data.res.rows;
 TASKS.easy = [
-  { id: "myres", kind: "choice", lesson: "P4 s18–s19, s24 A", text: "The graph shows the I–V characteristic of a mystery component X. Which component is it?", setup: SU.myst("res"), lock: "all",
+  { id: "myres", kind: "choice", lesson: "P4 s18–s19, s24 A", text: "The graph shows the I–V characteristic of a mystery component X. Which component is it?", setup: SU.myst("res"), lock: "all", hideWords: ["ohmic", "lamp", "diode"],
     options: [{ t: "A resistor at a constant temperature (an ohmic conductor).", ok: () => MF.resOhmic() },
       { t: "A filament lamp.", why: "A filament lamp gives a curve that levels off, because its resistance increases as it heats up. This graph is a straight line." },
       { t: "A diode.", why: "A diode lets current flow one way only, so there would be almost no current for a negative pd. Here the current flows both ways." },
       { t: "A component whose resistance increases as the current increases.", why: "The line is straight through the origin: current is directly proportional to pd, so R = V ÷ I stays the same." }],
-    explain: "A straight line through the origin: the current is directly proportional to the pd, so the resistance is constant. That is an ohmic conductor, such as a resistor at a constant temperature.",
+    explain: "A straight line through the origin: the current is directly proportional to the pd, so the resistance is constant. That is an ohmic conductor, such as a resistor at a constant temperature (Ohm’s law holds only while the temperature stays constant).",
     hints: ["Is the line straight or curved? Does it pass through the origin?", "What does a straight line through the origin tell you about V ÷ I at each point?", "An ohmic conductor: a resistor at a constant temperature."] },
-  { id: "ohm", kind: "choice", lesson: "P4 s19, P5 s18", text: "Ohm’s law: the current through an ohmic conductor is directly proportional to the pd across it, as long as…", setup: SU.lab(),
-    options: [{ t: "…the temperature stays constant.", ok: () => MF.heatUp() },
-      { t: "…the current isn’t used up too quickly.", why: "Current is not used up: it is the same all the way round a series circuit. The condition is a constant temperature." },
-      { t: "…the pd is positive.", why: "Ohm’s law holds for a negative pd too: reverse a resistor and you get the same straight line, upside down. The condition is a constant temperature." },
-      { t: "…the ammeter is in parallel with it.", why: "An ammeter always goes in series. The condition for Ohm’s law is a constant temperature." }],
-    explain: "Ohm’s law holds as long as the temperature stays constant. Heating increases the resistance.",
-    hints: ["What makes a resistance change, even for a plain resistor?", "Which of these, if it changed, would change the resistance itself?", "The temperature must stay constant."] },
-  { id: "lamp", kind: "choice", lesson: "P4 s20, s24 B", text: "As the current through a filament lamp increases, what happens to its resistance?", setup: SU.lab(),
+  { id: "lamp", kind: "choice", lesson: "P4 s20, s24 B", text: "As the current through a filament lamp increases, what happens to its resistance?", setup: SU.lab(), hideWords: ["lamp", "ohmic"],
     options: [{ t: "It increases, because the filament gets hotter.", ok: () => MF.lampRises() },
       { t: "It stays the same: a filament lamp is an ohmic conductor.", why: "A filament lamp is non-ohmic: its resistance is not constant. As the current increases the filament gets hotter and its resistance increases." },
       { t: "It decreases, because the lamp uses up the current.", why: "Current is not used up. As the current increases the filament gets hotter, and its resistance increases." },
       { t: "It decreases, because the filament gets hotter.", why: "Heating a filament increases its resistance, not decreases it." }],
-    explain: "As the current increases, the temperature of the filament increases, so its resistance increases.",
+    explain: "As the current increases, the temperature of the filament increases, so its resistance increases. Its resistance isn’t constant, so a filament lamp is a non-ohmic conductor.",
     hints: ["What happens to the filament as more current flows?", "A hotter filament: more or less resistance?", "It increases, because the filament gets hotter."] },
-  { id: "mydiode", kind: "choice", lesson: "P4 s21, s24 C", text: "Which component gives this I–V graph?", setup: SU.myst("diode"), lock: "all",
+  { id: "mydiode", kind: "choice", lesson: "P4 s21, s24 C", text: "Which component gives this I–V graph?", setup: SU.myst("diode"), lock: "all", hideWords: ["diode", "lamp", "ohmic"],
     options: [{ t: "A diode: current flows in one direction only.", ok: () => MF.diodeOneWay() },
       { t: "A filament lamp.", why: "A lamp’s graph is an S-shaped curve through both halves: current flows both ways. Here there is almost no current for a negative pd." },
       { t: "A resistor at a constant temperature.", why: "A resistor gives a straight line through the origin, with current both ways." },
       { t: "A faulty component: a curve means the readings are wrong.", why: "A curve is not a mistake. A diode really does let current flow one way only, and only above about 0.6 V." }],
     explain: "A diode: it lets current flow in one direction only. In reverse it has a very high resistance, so almost no current flows.",
     hints: ["Look at the left half of the graph (negative pd). Is there any current?", "Compare the right half (positive pd) with the left half. Is it the same shape both ways?", "A diode."] },
+  { id: "therm", kind: "gaps", fixed: true, lesson: "P4 s22–s23", text: "Complete the sentences about two sensors.", setup: SU.lab(), lock: "all", hideWords: ["therm", "ldr"],
+    rows: [["t", "As a thermistor gets hotter, its resistance:", "decreases"], ["l", "As the light on an LDR gets brighter, its resistance:", "decreases"]],
+    bank: ["decreases", "increases", "stays the same"],
+    why: (k, w) => ({ increases: k === "t" ? "That is a filament lamp. A thermistor is the opposite: its resistance falls as it gets hotter." : "An LDR’s resistance falls as the light gets brighter. That is how it switches lights on when it gets dark.",
+      "stays the same": "That would be an ohmic conductor. A thermistor and an LDR are non-ohmic: their resistance changes." })[w],
+    explain: "Both decrease. A thermistor’s resistance falls as it gets hotter (a temperature sensor in thermostats). An LDR’s resistance falls as it gets brighter (a light sensor, e.g. street lights).",
+    hints: ["Both are sensors: their resistance changes with their surroundings.", "A thermistor is not like a filament lamp: it goes the other way.", "Both: decreases."] },
   { id: "build", kind: "goal", lesson: "P5 s17", text: "Set up the circuit on the model: ammeter in series, voltmeter across X. Then press Check my circuit.", setup: SU.lab(),
     test: m => m.built,
     not: m => { const v = circuitVerdict(m.slots); return v.ok ? "The meters are in the right places. Now press Check my circuit." : v.why; },
     done: () => "The ammeter is in series and the voltmeter is across X.",
     reveal: m => { m.tab = "lab"; m.slots = { s1: "A", s2: null, p1: "V", p2: null }; m.built = true; m.cmsg = ["good", circuitVerdict(m.slots).why]; },
     hints: ["Drag each meter into a dashed circle (or press a meter, then a circle).", "The current flows through an ammeter, so it goes in the loop. A voltmeter goes across X.", "Ammeter in a loop circle; voltmeter in the circle across X. Then press Check my circuit."] },
+  { id: "safe", kind: "gaps", fixed: true, lesson: "P5 s17 + notes: safety", text: "Complete the safety plan for this practical: the hazard, the risk and a control.", lock: "all", setup: SU.lab({ comp: "lamp" }),
+    rows: [["h", "Hazard (the thing that could cause harm):", "the filament lamp, which gets hot"], ["r", "Risk (the harm it could do):", "burns to the skin"], ["c", "Control (how to reduce the risk):", "switch off between readings and let it cool before touching"]],
+    bank: ["the filament lamp, which gets hot", "burns to the skin", "switch off between readings and let it cool before touching", "an electric shock from the low-voltage supply", "turn the pd up high so the readings are quick"],
+    why: (k, w) => ({ "the filament lamp, which gets hot": "That is the hazard: the thing that could cause harm.", "burns to the skin": "A burn is the risk: the harm that could happen.",
+      "switch off between readings and let it cool before touching": "That is a control: what you do to reduce the risk.",
+      "an electric shock from the low-voltage supply": "The supply’s pd is low, so a shock isn’t the main risk. The hot lamp (and resistor) is.", "turn the pd up high so the readings are quick": "A higher pd makes the lamp hotter, so it raises the risk. It is not a control." })[w],
+    explain: "Hazard: the filament lamp (and the resistor) gets hot. Risk: burns. Control: switch off between readings and let it cool before you touch it.",
+    hints: ["A hazard is a thing. A risk is what it could do to you. A control is what you do about it.", "Which component glows and gets hot?", "Hazard: the hot lamp. Risk: burns."] },
   { id: "vars", kind: "gaps", fixed: true, lesson: "P5 s19", text: "Choose the variables for finding the I–V characteristic of a resistor.", setup: SU.lab(),
     rows: [["iv", "Independent variable (you change it):", "the pd across the resistor"], ["dv", "Dependent variable (you measure it):", "the current through the resistor"], ["cv", "Control variable (keep it the same):", "the temperature of the resistor"]],
     bank: ["the pd across the resistor", "the current through the resistor", "the temperature of the resistor", "the current used up by the resistor"],
-    why: (k, w) => ({ "the pd across the resistor": "The lesson says “vary the current”: you do it by changing the pd across the resistor with the variable resistor. The pd goes on the x-axis: the independent variable.", "the current through the resistor": "You measure the current for each pd with the ammeter: the dependent variable.",
+    why: (k, w) => ({ "the pd across the resistor": "You change the pd across the resistor with the variable resistor. The pd goes on the x-axis: the independent variable.", "the current through the resistor": "You measure the current for each pd with the ammeter: the dependent variable.",
       "the temperature of the resistor": "Keep the temperature constant, so heating does not change the resistance: a control variable.", "the current used up by the resistor": "Current is not used up: it is the same all the way round the loop." })[w],
     explain: "Independent: the pd across the resistor (x-axis). Dependent: the current through it (y-axis). Control: its temperature.",
     hints: ["Which one goes on the x-axis of an I–V graph?", "The pd is on the x-axis, the current on the y-axis. Heating would change the resistance.", "pd (change), current (measure), temperature (keep the same)."] },
-  { id: "rec", kind: "goal", lesson: "P5 s19", text: "On the model, switch on, read both meters and record one reading for the resistor.", setup: SU.lab({ built: true, comp: "res", E: 6, rv: 4 }),
-    test: m => resRows(m).some(r => !r.rev),
-    not: m => m.comp !== "res" ? "Choose the resistor as component X first." : !m.on ? "Press Switch on, then read the magnified scales." : "Type the pd and the current, then press Record.",
-    done: m => { const r = resRows(m).find(x => !x.rev); return `${fx(r.V)} V and ${fx(r.I)} A: R = V ÷ I = ${fx(rowR(r))} Ω.`; },
-    reveal: m => { m.tab = "lab"; m.comp = "res"; autoRecord(m, 6, 4, false); },
-    hints: ["Press Switch on, then look at the magnified scales.", "Ammeter: each small mark is 0.05 A. Voltmeter: each small mark is 0.1 V.", "Type both readings, then press Record."] },
-  { id: "order", kind: "build", ordered: true, lesson: "P5 s17, s19–s22", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.lab(),
-    stm: [{ t: "Put the component at X: ammeter in series, voltmeter across X.", c: 1 }, { t: "Use the variable resistor to set a current; record V and I.", c: 2 },
-      { t: "Repeat for several currents, switching off between readings.", c: 3 }, { t: "Reverse X and repeat, recording negative values.", c: 4 }, { t: "Plot current (y-axis) against pd (x-axis).", c: 5 }],
-    miss: { 1: "What must you do before any readings?", 2: "How do you change the current, and what do you record?", 3: "One reading isn’t enough. What next?", 4: "How do you get the negative values?", 5: "What do you do with all your results?" },
+  { id: "res", kind: "choice", lesson: "P5 s19 + notes: resolution", text: "Look at the magnified voltmeter scale on the model. What is the resolution of this voltmeter?", lock: "all", hideMarks: true, setup: SU.lab({ built: true, comp: "res", E: 6, rv: 4 }),
+    options: [{ t: "0.1 V", ok: () => COMP.res.V.div === .1 },
+      { t: "0.5 V", why: "0.5 V is where the longer middle marks are. The resolution is the smallest scale division: the gap between the small marks." },
+      { t: "1 V", why: "1 V is the gap between the numbers. The resolution is the smallest scale division." },
+      { t: "6 V", why: "That is the range: how far the scale goes. The resolution is the smallest change the scale can show." }],
+    explain: "The resolution is the smallest change an instrument can show: one scale division. The small marks are 0.1 V apart, so the resolution is 0.1 V.", stuck: "words",
+    hints: ["Resolution means the smallest change the scale can show.", "Look at the small marks between two numbers on the voltmeter scale.", "Count the small marks between 0 and 1 V."] },
+  { id: "order2", kind: "build", ordered: true, lesson: "P5 s17, s19–s22", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.lab(),
+    stm: [{ t: "Put the component at X: ammeter in series, voltmeter across X.", c: 1 }, { t: "Use the variable resistor to change the pd across X; record V and I.", c: 2 },
+      { t: "Repeat for a range of pds, switching off between readings.", c: 3 }, { t: "Reverse X and repeat, recording negative values.", c: 4 }, { t: "Plot current (y-axis) against pd (x-axis).", c: 5 }],
+    miss: { 1: "What must you do before any readings?", 2: "How do you change the pd across X, and what do you record?", 3: "One reading isn’t enough. What next?", 4: "How do you get the negative values?", 5: "What do you do with all your results?" },
     orderMsg: "All five steps, but not in order. Set up first; the graph last.",
-    explain: "Set up → set a current, record V and I → repeat, switching off → reverse X and repeat → plot I against V.",
+    explain: "Set up → change the pd with the variable resistor, record V and I → repeat for a range of pds, switching off → reverse X and repeat → plot I against V.",
     hints: ["Start with the step that comes before any readings.", "Take readings one way round, then reverse X. The graph is last.", "Set up → record → repeat → reverse → plot."] },
   { id: "r4", kind: "num", lesson: "P5 s22, P4 s8", text: "A resistor at a constant temperature has a pd of 6.0 V across it and a current of 1.50 A through it. Calculate its resistance.", setup: SU.lab(),
     frame: "Calculate: rearrange V = I R to make R the subject.", lbl: "R =", unit: "Ω", ans: () => 6 / 1.5,
@@ -1402,25 +1420,19 @@ TASKS.easy = [
     generic: "R = V ÷ I. Substitute 6.0 and 1.50.", stuck: "eq",
     working: () => ["Rearrange: R = V ÷ I", "Substitute: R = 6.0 ÷ 1.50", "Answer: R = 4.0 Ω"],
     hints: ["Rearrange V = I R to make R the subject.", "R = V ÷ I = 6.0 ÷ 1.50.", "6.0 ÷ 1.50 = 4.0 Ω."] },
-  { id: "lampohm", kind: "choice", lesson: "P5 s20", text: "Is a filament lamp an ohmic or a non-ohmic conductor?", setup: SU.lab(),
-    options: [{ t: "Non-ohmic: its I–V graph is a curve, because its resistance changes as it heats up.", ok: () => MF.lampRises() },
-      { t: "Ohmic: current flows through it both ways.", why: "Current flowing both ways doesn’t make it ohmic. Ohmic means a constant resistance (a straight line through the origin). A lamp’s resistance increases as it heats up." },
-      { t: "Non-ohmic, because current only flows through it one way.", why: "That describes a diode. Current flows through a lamp both ways; it is non-ohmic because its resistance changes as it heats up." },
-      { t: "Ohmic: the curve is just a mistake in the readings.", why: "A curve is not a mistake. A filament lamp really does give a curve, because its resistance increases as it gets hotter." }],
-    explain: "Non-ohmic. As the current increases the filament gets hotter and its resistance increases, so the I–V graph curves over.",
-    hints: ["Ohmic means a constant resistance. Does a lamp’s resistance stay the same?", "Think about the shape of a lamp’s I–V graph.", "Non-ohmic: its resistance increases as it heats up."] }
+
 ];
 const MS6 = ["Level 3 (5–6): a complete, valid method in order: all six steps. 6 marks: also switch off (the lamp gets hot).",
   "Level 2 (3–4): an essential step missing or out of order.", "Level 1 (1–2): simple relevant steps. Level 0: nothing creditworthy."];
 TASKS.hard = [
-  { id: "mylamp", kind: "choice", lesson: "P4 s20, s24 B", text: "Identify mystery component X, and explain the shape of its I–V graph.", setup: SU.myst("lamp"), lock: "all",
-    options: [{ t: "A filament lamp: as the current increases it gets hotter, so its resistance increases and the line curves over.", ok: () => MF.lampRises() },
-      { t: "A filament lamp: as it gets hotter its resistance decreases, so the line curves over.", why: "The line curves over because less extra current flows for each extra volt: the resistance increases as the filament heats up." },
-      { t: "A resistor: the curve is a mistake from poor readings.", why: "A curve is not a mistake. A resistor at a constant temperature gives a straight line; this S-shaped curve is a filament lamp." },
-      { t: "A diode: the current flows in both directions.", why: "A diode lets current flow in one direction only. This graph has current both ways: a filament lamp." }],
-    explain: "A filament lamp. As the current increases, the filament gets hotter, so its resistance increases: the current rises less and less for each extra volt.",
-    hints: ["Which component gives an S-shaped curve through both halves?", "Why does the line curve over at high pd? Think about temperature.", "A filament lamp: hotter filament, greater resistance."] },
-  { id: "ohmdesc", kind: "build", ordered: true, orderMsg: "Both points, but in the wrong order. Describe the graph first, then say what it shows.", lesson: "P4 s25 Q2, s26", text: "Describe the shape of the I–V graph for an ohmic conductor, and state what it tells you about its resistance. [2 marks]", frame: "Describe: start with: The graph is…", setup: SU.lab(),
+  { id: "thpick", kind: "choice", lesson: "P4 s22–s23 + notes: choosing a thermistor", text: "Thermistor A: 1200 Ω at 20 °C and 1000 Ω at 40 °C. Thermistor B: 800 Ω at 20 °C and 300 Ω at 40 °C. Which is better for measuring temperatures from 20 °C to 40 °C, and why?", setup: SU.lab(), lock: "all",
+    options: [{ t: "B: its resistance changes the most over that range (500 Ω, not 200 Ω).", ok: () => (800 - 300) > (1200 - 1000) },
+      { t: "B: it has the lowest resistance.", why: "B is the right choice, but not because its resistance is low. It is better because its resistance changes the most over the range." },
+      { t: "A: it has the highest resistance.", why: "A high resistance doesn’t help. The best sensor is the one whose resistance changes the most over the range." },
+      { t: "Either: both resistances fall as they get hotter.", why: "Both fall, but B falls by 500 Ω and A by only 200 Ω. The bigger change makes B more sensitive." }],
+    explain: "B. Its resistance changes by 500 Ω over the range (A changes by only 200 Ω), so its graph is steepest there and it is more sensitive. Don’t choose a thermistor just because its resistance is lowest.", stuck: "words",
+    hints: ["Work out how much each resistance changes from 20 °C to 40 °C.", "A sensor is best where its resistance changes a lot for each °C.", "B changes by 500 Ω; A by 200 Ω."] },
+  { id: "ohmdesc", kind: "build", hideWords: ["ohmic"], ordered: true, orderMsg: "Both points, but in the wrong order. Describe the graph first, then say what it shows.", lesson: "P4 s25 Q2, s26", text: "Describe the shape of the I–V graph for an ohmic conductor, and state what it tells you about its resistance. [2 marks]", frame: "Describe: start with: The graph is…", setup: SU.lab(),
     stm: [{ t: "The graph is a straight line through the origin,", c: 1 }, { t: "so the resistance is constant.", c: 2 },
       { t: "The graph is an S-shaped curve,", why: "That is a filament lamp. An ohmic conductor gives a straight line through the origin." },
       { t: "so the resistance is the gradient of the line.", why: "Find R from V ÷ I at a point. On an I–V graph a steeper line means more current for each volt: a smaller resistance." },
@@ -1428,7 +1440,7 @@ TASKS.hard = [
     miss: { 1: "Describe the shape of the graph.", 2: "Say what the shape tells you about the resistance." },
     explain: "A straight line through the origin (1); the resistance is constant (1).",
     hints: ["What shape is it, and where does it start?", "Two marks: the shape, then what it means for R.", "A straight line through the origin; constant resistance."] },
-  { id: "lampx", kind: "build", ordered: true, orderMsg: "Both points, but in the wrong order. Say what happens to the filament first, then the resistance.", lesson: "P4 s25 Q3, s26", text: "Explain how the resistance of a filament lamp changes as the current through it increases. [2 marks]", frame: "Explain: start with: As the current increases…", setup: SU.lab({ comp: "lamp" }),
+  { id: "lampx", kind: "build", hideWords: ["lamp"], ordered: true, orderMsg: "Both points, but in the wrong order. Say what happens to the filament first, then the resistance.", lesson: "P4 s25 Q3, s26", text: "Explain how the resistance of a filament lamp changes as the current through it increases. [2 marks]", frame: "Explain: start with: As the current increases…", setup: SU.lab({ comp: "lamp" }),
     stm: [{ t: "As the current increases, the filament gets hotter,", c: 1 }, { t: "so its resistance increases.", c: 2 },
       { t: "so its resistance decreases.", why: "Heating increases a filament’s resistance." },
       { t: "because the lamp uses up the current,", why: "Current is not used up. The current heats the filament." },
@@ -1436,7 +1448,7 @@ TASKS.hard = [
     miss: { 1: "Say what happens to the filament’s temperature.", 2: "Say what that does to its resistance." },
     explain: "As the current increases, the filament gets hotter (1), so its resistance increases (1).",
     hints: ["What does more current do to the filament?", "Hotter filament → resistance?", "The filament gets hotter, so its resistance increases."] },
-  { id: "drev", kind: "choice", lesson: "P4 s21, P5 s21", text: "Predict: the diode is reversed and the supply is set to 1.5 V. What will the ammeter read?", setup: SU.lab({ built: true, comp: "diode", rev: true, E: 1.5, rv: 0 }), lock: "all", after: "drev",
+  { id: "drev", kind: "choice", lesson: "P4 s21, P5 s21", text: "Predict: the diode is reversed and the supply is set to 1.5 V. What will the ammeter read?", hideWords: ["diode"], setup: SU.lab({ built: true, comp: "diode", rev: true, E: 1.5, rv: 0 }), lock: "all", after: "drev",
     options: [{ t: "Almost zero: a diode has a very high resistance in reverse.", ok: () => MF.diodeOneWay() },
       { t: "The same current as forward: a diode conducts equally both ways.", why: "A diode does not conduct equally both ways. It lets current flow in one direction only: in reverse, almost no current flows." },
       { t: "A bigger current, because the pd is now negative.", why: "The minus sign only shows the direction. In reverse a diode has a very high resistance, so almost no current flows." }],
@@ -1455,7 +1467,7 @@ TASKS.hard = [
     not: m => { const rs = resRows(m), nr = rs.filter(r => r.rev).length; return m.comp !== "res" ? "Choose the resistor as component X." : rs.length < 5 || nr < 2 ? `You have ${rs.length} reading${rs.length === 1 ? "" : "s"} (${nr} reversed). Take at least 5, with 2 reversed (press Reverse X).` : "Now type the mean R under the table (leave out any anomaly) and press Check my mean."; },
     done: m => `Mean resistance = ${fx(meanOf(meanSets(m.data.res).good))} Ω.`,
     reveal: m => { m.tab = "lab"; m.comp = "res"; autoSet(m); const d = m.data.res; d.meanInp = fx(meanOf(meanSets(d).good)); d.meanOK = true; d.meanMsg = ""; },
-    hints: ["Use the variable resistor to change the current. Switch off between readings.", "Press Reverse X for the negative readings. R = V ÷ I is worked out in the table.", "Mean = (sum of the R values that fit the pattern) ÷ (how many you used)."] },
+    hints: ["Use the variable resistor to change the pd across X. Switch off between readings.", "Press Reverse X for the negative readings. R = V ÷ I is worked out in the table.", "Mean = (sum of the R values that fit the pattern) ÷ (how many you used)."] },
   { id: "lampR", kind: "numu", lesson: "P5 s22, P4 s20", text: "A filament lamp has a pd of 6.0 V across it and a current of 2.1 A through it. Calculate its resistance. Give the unit. [2 marks]", setup: SU.lab(), tol: .045,
     frame: "Calculate: R = V ÷ I. Give your answer to 2 significant figures.", lbl: "R =", units: ["Ω", "V", "A"], unit: "Ω", ans: () => 6 / 2.1,
     wrongs: [[12.6, "You multiplied. R = V ÷ I."], [.35, "You divided the wrong way. R = V ÷ I = 6.0 ÷ 2.1."], [3.9, "You subtracted. Divide: R = V ÷ I."], [8.1, "You added. Divide: R = V ÷ I."], [2, "That is the lamp’s resistance at a low current (1.0 V, 0.5 A). Use 6.0 V and 2.1 A."]],
@@ -1470,34 +1482,34 @@ TASKS.hard = [
       { t: "No: a lamp’s resistance is always the same, so you don’t need the graph.", why: "A lamp’s resistance increases as it heats up. Use R = V ÷ I at each point." }],
     explain: "Resistance is not the gradient. Read the pd and the current at a point, then R = V ÷ I.",
     hints: ["Which equation defines resistance?", "Work out V ÷ I at 3 V, then 1 ÷ gradient at 3 V. Are they the same?", "No: R = V ÷ I at that point."] },
-  { id: "imp", kind: "gaps", pair: true, lesson: "P5 s13, s18–s22", text: "Suggest one improvement to the method, and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab(),
-    rows: [["i", "One improvement is to", null, ["switch off between readings", "repeat each reading and find a mean", "reverse X and take readings"]],
-      ["r", "This helps because", null, ["it keeps a resistor’s temperature (and so its resistance) constant", "it reduces the effect of random errors", "it shows whether current flows equally in both directions", "it stops the current being used up", "it makes every graph a straight line"]]],
+  { id: "imp2", kind: "gaps", pair: true, lesson: "P5 s13, s18–s22", text: "Suggest one improvement to the method, and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab(),
+    rows: [["i", "One improvement is to", null, ["switch off between readings", "repeat each reading and find a mean", "reverse X and take readings", "check both meters read zero before switching on"]],
+      ["r", "This helps because", null, ["it keeps a resistor’s temperature (and so its resistance) constant", "it reduces the effect of random errors", "it shows whether current flows equally in both directions", "it removes a zero error", "it stops the current being used up", "it makes every graph a straight line"]]],
     PAIRS: { "switch off between readings": "it keeps a resistor’s temperature (and so its resistance) constant", "repeat each reading and find a mean": "it reduces the effect of random errors",
-      "reverse X and take readings": "it shows whether current flows equally in both directions" },
+      "reverse X and take readings": "it shows whether current flows equally in both directions", "check both meters read zero before switching on": "it removes a zero error" },
     badR: { "it stops the current being used up": "Current is not used up: it is the same all the way round the loop. Match the improvement to what it fixes.", "it makes every graph a straight line": "Nothing makes every graph straight: a lamp and a diode really do give curves. Match the improvement to what it fixes." },
     answerSet: ["switch off between readings", "it keeps a resistor’s temperature (and so its resistance) constant"],
-    explain: "Any one pair: switch off between readings (keeps a resistor’s temperature constant); repeat and find a mean (reduces the effect of random errors); reverse X (shows whether current flows equally both ways).",
+    explain: "Any one pair: switch off between readings (keeps a resistor’s temperature constant); repeat and find a mean (reduces the effect of random errors); reverse X (shows whether current flows equally both ways); check the meters read zero (removes a zero error).",
     hints: ["Think about heating, random errors and the negative half of the graph.", "Choose an improvement, then the reason that matches it.", "For example: switch off between readings, because it keeps a resistor’s temperature constant."] },
-  { id: "plan", kind: "build", ordered: true, ms6: true, lesson: "P5 s17, s19–s22", text: "Describe a method to find the I–V characteristic of a filament lamp. [6 marks]", frame: "Describe the steps in order. Start with: First, connect…", setup: SU.lab({ comp: "lamp" }),
-    stm: [{ t: "Ammeter in series with X; voltmeter across X.", c: 1 }, { t: "Set a current with the variable resistor.", c: 2 },
-      { t: "Read and record the pd and the current.", c: 3 }, { t: "Repeat for a range of currents.", c: 4 },
+  { id: "plan2", kind: "build", ordered: true, ms6: true, lesson: "P5 s17, s19–s22", text: "Describe a method to find the I–V characteristic of a filament lamp. [6 marks]", frame: "Describe the steps in order. Start with: First, connect…", setup: SU.lab({ comp: "lamp" }),
+    stm: [{ t: "Ammeter in series with X; voltmeter across X.", c: 1 }, { t: "Change the pd with the variable resistor.", c: 2 },
+      { t: "Read and record the pd and the current.", c: 3 }, { t: "Repeat for a range of pds.", c: 4 },
       { t: "Reverse X; repeat, recording negative values.", c: 5 }, { t: "Plot current (y) against pd (x); best-fit curve.", c: 6 },
       { t: "Switch off between readings: the lamp gets hot.", c: 7, free: true },
-      { t: "Put the ammeter in parallel with X.", why: "An ammeter goes in series. In parallel it would not measure the current through X." },
-      { t: "Plot pd on the y-axis and current on the x-axis.", why: "An I–V graph has pd on the x-axis and current on the y-axis." },
+      { t: "Put the ammeter in parallel with X.", why: "An ammeter goes in series with X." },
+      { t: "Plot pd on the y-axis and current on the x-axis.", why: "Current goes on the y-axis, pd on the x-axis." },
       { t: "Leave it switched on so the readings settle.", why: "The lamp gets hot (a burn risk). Switch off between readings." }],
-    miss: { 1: "How do you connect the two meters?", 2: "How do you change the current?", 3: "What do you record each time?", 4: "One reading isn’t enough. What next?",
+    miss: { 1: "How do you connect the two meters?", 2: "How do you change the pd across X?", 3: "What do you record each time?", 4: "One reading isn’t enough. What next?",
       5: "How do you get the negative half of the graph?", 6: "How do you show your results?", free: "Level 3 already. For 6 marks, add the safety step for a hot lamp." },
     orderMsg: "All the right steps, but not in a logical order. Connect the meters first; the graph last.", ms: MS6,
-    explain: "Meters in place; set a current with the variable resistor; record V and I; repeat for a range; reverse X and repeat (negative values); plot I against V with a best-fit curve. Plus switch off between readings.",
+    explain: "Meters in place; change the pd across X with the variable resistor; record V and I; repeat for a range of pds; reverse X and repeat (negative values); plot I against V with a best-fit curve. Plus switch off between readings.",
     hints: ["What do you do to set up, for each reading, to get negative values, and at the end?", "Six steps in order, plus one safety step.", "Meters, set current, record, repeat, reverse, plot; switch off between readings."] }
 ];
 
 /* lesson and slide order: P4 (Ohm's law and characteristics) before P5 (the practical) */
 const inOrder = (list, ids) => ids.map(id => list.find(t => t.id === id));
-TASKS.easy = inOrder(TASKS.easy, ["myres", "ohm", "lamp", "mydiode", "build", "vars", "rec", "order", "lampohm", "r4"]);
-TASKS.hard = inOrder(TASKS.hard, ["mylamp", "grad", "drev", "ohmdesc", "lampx", "ions", "meanR", "lampR", "imp", "plan"]);
+TASKS.easy = inOrder(TASKS.easy, ["myres", "lamp", "mydiode", "therm", "build", "safe", "vars", "res", "order2", "r4"]);
+TASKS.hard = inOrder(TASKS.hard, ["grad", "drev", "thpick", "ohmdesc", "lampx", "ions", "meanR", "lampR", "imp2", "plan2"]);
 /* ===== Load-time bank check ===== */
 function bankCheck() {
   const errs = [], F = m => errs.push(m);
@@ -1648,13 +1660,13 @@ function renderDots() {
 }
 
 /* ===== Support (off on load, never stored) ===== */
-const WORDS = [["Resistance (R)", DEF.R], ["Ohmic conductor", DEF.ohmic], ["Filament lamp", DEF.lamp], ["Diode", DEF.diode], ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv],
-  ["Constant temperature", DEF.temp], ["Systematic error", DEF.sys], ["Random error", DEF.rand]];
+const WORDS = [["Resistance (R)", DEF.R], ["Ohmic conductor", DEF.ohmic, "ohmic"], ["Filament lamp", DEF.lamp, "lamp"], ["Diode", DEF.diode, "diode"], ["Independent variable", DEF.iv], ["Dependent variable", DEF.dv],
+  ["Constant temperature", DEF.temp], ["Systematic error", DEF.sys], ["Random error", DEF.rand], ["Thermistor", DEF.therm, "therm"], ["LDR", DEF.ldr, "ldr"], ["Resolution", DEF.res]];
 function renderSupport() {
   $("eqBox").hidden = !support.eq; $("mathsBox").hidden = !support.maths; $("wordsBox").hidden = !support.words;
   $("eqBox").innerHTML = `<h3>Equations</h3><p><b>V = I R</b>: potential difference (V) = current (A) × resistance (Ω)</p><p>R = V ÷ I · I = V ÷ R</p><p>To find R at a point: read V and I at that point, then R = V ÷ I.</p>`;
-  $("mathsBox").innerHTML = `<h3>Maths help</h3><p>Resistor and lamp: ammeter small marks ${COMP.res.A.div} A, voltmeter small marks ${COMP.res.V.div} V. Diode: ${COMP.diode.A.div} A and ${COMP.diode.V.div} V.</p><p>Count the small marks from the last number before the needle.</p><p>Mean = total ÷ number of values (leave out any anomaly).</p>`;
-  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${esc(w[1])}</p>`).join("");
+  $("mathsBox").innerHTML = `<h3>Maths help</h3>${qOpen() && task.hideMarks ? "" : `<p>Resistor and lamp: ammeter small marks ${COMP.res.A.div} A, voltmeter small marks ${COMP.res.V.div} V. Diode: ${COMP.diode.A.div} A and ${COMP.diode.V.div} V.</p>`}<p>Count the small marks from the last number before the needle.</p><p>Mean = total ÷ number of values (leave out any anomaly).</p>`;
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${wordHidden(w[2]) ? "<i>shown once you finish this question</i>" : esc(w[1])}</p>`).join("");
   document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
   if (mode !== "demo") requestAnimationFrame(keepInView);
 }
@@ -1715,7 +1727,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
-    revealModel();
+    revealModel(); renderSupport();
   } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints" : `Hint (${n + 1}/3)`; }
@@ -1727,10 +1739,12 @@ function answerHTML(t) {
   if (t.kind === "build") return esc("Answer: " + (t.ms ? "the steps above (indicative content, Level 3, 6 marks). " : t.explain)) + (t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
   return esc("Answer: " + t.explain);
 }
+const qOpen = () => { if (mode === "demo" || !task || task.kind === "demo") return false; const p = prog(); return !(p.solved || p.revealed); };
+const wordHidden = k => !!k && qOpen() && (task.hideWords || []).includes(k);
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState();
+  setAnswerState(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
@@ -1765,7 +1779,7 @@ const TOUR = [
   { el: "#compRow", tab: "lab", text: "Choose component X: a resistor, a filament lamp or a diode. Each one has its own results table and graph." },
   { el: "#tray", tab: "lab", text: "Put the ammeter in series and the voltmeter across X. Drag a meter into a dashed circle, or press a meter and then a circle.", do: "place", doText: "Put a meter into the circuit." },
   { el: "#stepRow", tab: "lab", text: "Put both meters in, then check your circuit. The feedback tells you what to change.", do: "built", doText: "Press Check my circuit when both meters are in." },
-  { el: "#setRow", tab: "lab", text: "Change the current with the variable resistor. The supply setting changes it too (turn it down low for the diode).", do: "set", doText: "Move the variable resistor or change the supply." },
+  { el: "#setRow", tab: "lab", text: "Change the pd across X with the variable resistor. The supply setting changes it too (turn it down low for the diode).", do: "set", doText: "Move the variable resistor or change the supply." },
   { el: "#switchBtn", tab: "lab", text: "Switch on to take a reading.", do: "on", doText: "Press Switch on." },
   { el: "#dsvg", tab: "lab", text: "Read these magnified scales yourself: the ammeter in amps and the voltmeter in volts. Count the small marks." },
   { el: "#stepRow", tab: "lab", text: "Type the pd and the current, then press Record. The table works out R = V ÷ I.", do: "rec", doText: "Record a reading." },
