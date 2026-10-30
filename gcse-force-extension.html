@@ -380,12 +380,19 @@ p.fw{margin:4px 0 0;font-size:15px}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build.ms6{gap:3px}.qpanel .opts.build.ms6 .opt{min-height:32px;padding:3px 10px;font-size:15.5px}}
 @media (min-width:901px) and (max-height:740px){.qpanel .ms{font-size:14px;line-height:1.25;padding-left:18px}.qpanel .opts.build.ms6 .opt{min-height:29px;padding:2px 10px}}
+@media (min-width:1500px){.qpanel .opts.build.ms6{gap:4px}.qpanel .opts.build.ms6 .opt{min-height:34px;padding:4px 10px;font-size:15.5px;line-height:1.25}.qpanel .ms{font-size:15px;line-height:1.35}}
 #rtable{overflow-x:auto;max-width:100%}
 @media (max-width:560px){.rt th:nth-child(n+2){min-width:0}.rt .cnt.rc{min-width:38px;font-size:13px;padding:2px 2px}.rt .meanin{width:3.3em;font-size:13px}.rt th{font-size:11.5px;line-height:1.15}.rt td.dst{font-size:13px}}
 @media (max-width:560px){.rt th:nth-child(n+3):nth-child(-n+5){min-width:0}.rt .meanin{width:3.1em;padding:4px 2px}.rt td,.rt th{padding:2px 1px}}
 .rt .cnt .md{display:block;font-size:11px;font-weight:400;color:var(--muted);line-height:1}
 .qpanel .ms.ind{margin:0;font-size:15px;line-height:1.3;padding-left:22px}
 @media (min-width:901px){.model.short{min-height:calc(100vh + 20px);align-content:start}}
+/* dropdown answers never wider than the panel (long options: the select shrinks and stays on the card) */
+#answer .opts,#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{flex:1 1 100%;width:auto;min-width:0;max-width:100%;text-overflow:ellipsis;font-size:15px;font-weight:600}
+#answer .selfull{display:none}
+@media (max-width:560px){#answer .selfull:not([hidden]){display:block;flex:1 1 100%;font-size:14px;line-height:1.3;color:var(--muted);margin-top:-2px}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -802,7 +809,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const locked = () => mode !== "demo" && !!lock;
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 function guard() { if (locked()) { lockMsg(); return true; } return false; }
@@ -1213,15 +1220,8 @@ TASKS.easy = [
       { t: "Elastic, because the spring is very stretchy.", why: "Elastic doesn’t mean stretchy. It means the object returns to its original shape when the force is removed." },
       { t: "Inelastic: it changed shape while the force acted.", why: "Inelastic means it stays stretched when the force is removed. This spring went back, so it is elastic." },
       { t: "No deformation: it ends up the same length.", why: "It did change shape while the force acted: that is a deformation. Because it went back, it is elastic." }],
-    explain: "Elastic deformation: the object returns to its original shape and size when the deforming force is removed.",
+    explain: "Elastic deformation: the object returns to its original shape and size when the deforming force is removed. To stretch, bend or compress an object, more than one force must act on it.",
     hints: ["What happened when the force was removed?", "One type stays stretched; the other goes back.", "Elastic: it goes back when the force is removed."] },
-  { id: "double", kind: "choice", src: "Hooke’s law", text: "Below the limit of proportionality, the force on a spring is doubled. What happens to the extension?", setup: SU.lab({ cmpHide: true }), hideW: ["hooke"], hide: ["conc"],
-    options: [{ t: "It doubles: extension is directly proportional to force.", ok: () => MF.dbl() },
-      { t: "It stays the same, because the spring constant does not change.", why: "k stays the same, but the extension doesn’t: F = k × e, so double the force gives double the extension." },
-      { t: "It halves.", why: "More force stretches a spring more, not less. Double the force, double the extension." },
-      { t: "It goes up by exactly 2 cm.", why: "Hooke’s law is about proportion, not a fixed amount: double the force, double the extension." }],
-    explain: "Up to the limit of proportionality, extension is directly proportional to force (Hooke’s law), so doubling the force doubles the extension.",
-    hints: ["What does directly proportional mean?", "F = k × e, and k stays the same. If F doubles, what must e do?", "It doubles."] },
   { id: "ext", kind: "num", src: "Hooke’s law: calculating extension", text: "A spring is 12.0 cm long. A mass is hung on it and it becomes 15.5 cm long. Calculate the extension.", setup: SU.lab(), hideW: ["ext"],
     frame: "Calculate: extension = final length − original length.", lbl: "Extension =", unit: "cm", ans: () => 15.5 - 12.0,
     wrongs: [[15.5, "That is the new length, not the extension. Extension = final length − original length."], [27.5, "You added. Extension = final length − original length: subtract."],
@@ -1243,13 +1243,20 @@ TASKS.easy = [
     explain: "Beyond the limit of proportionality, force and extension are no longer directly proportional, so the graph curves (it is non-linear).",
     hints: ["What does “limit of proportionality” tell you about what happens after it?", "After the limit, is the graph still a straight line?", "It curves: no longer directly proportional."] },
   { id: "vars", kind: "gaps", fixed: true, src: "Required practical: variables", text: "Choose the variables for the force and extension practical.", setup: SU.lab(),
-    rows: [["iv", "Independent variable (you change it):", "the force on the spring (the weight of the masses)"], ["dv", "Dependent variable (you measure it):", "the extension of the spring"], ["cv", "Control variable (keep it the same):", "the spring used (so the spring constant is the same)"]],
-    bank: ["the force on the spring (the weight of the masses)", "the extension of the spring", "the spring used (so the spring constant is the same)", "the total length of the spring", "the height of the clamp stand"],
+    rows: [["iv", "Independent variable (you change it):", "the force on the spring (the weight of the masses)"], ["dv", "Dependent variable (you measure it):", "the extension of the spring"], ["cv", "Control variable (keep it the same):", "the spring used (so k stays the same)"]],
+    bank: ["the force on the spring (the weight of the masses)", "the extension of the spring", "the spring used (so k stays the same)", "the total length of the spring", "the height of the clamp stand"],
     why: (k, w) => ({ "the force on the spring (the weight of the masses)": "You change the force by adding masses: it is the independent variable.", "the extension of the spring": "You find the extension from your readings: it is the dependent variable.",
-      "the spring used (so the spring constant is the same)": "Use the same spring all the way through: a control variable.", "the total length of the spring": "The total length isn’t the extension. You find the extension: reading − original reading.",
+      "the spring used (so k stays the same)": "Use the same spring all the way through: a control variable.", "the total length of the spring": "The total length isn’t the extension. You find the extension: reading − original reading.",
       "the height of the clamp stand": "The height of the stand doesn’t change the result, so it isn’t one of the variables here." })[w],
     explain: "Independent: the force (the weight of the masses). Dependent: the extension. Control: the same spring.", stuck: "words",
     hints: ["Which one do you change by adding masses?", "You measure how much the spring stretches; you keep the spring the same.", "Force (change), extension (measure), the same spring (keep)."] },
+  { id: "res", kind: "choice", src: "Required practical: equipment (resolution)", text: "Look at the magnified view of the metre rule. What is the resolution of the metre rule?", setup: SU.lab({ safe: true, eye: "level" }), lock: "all", hide: ["panel"],
+    options: [{ t: "1 mm (0.1 cm): the smallest change the ruler can show.", ok: () => true },
+      { t: "1 cm: the gap between the numbers on the scale.", why: "The numbers are 1 cm apart, but there are smaller marks between them. Resolution is the smallest change the ruler can show: count the small marks between two numbers." },
+      { t: "0.01 cm, so record readings such as 13.42 cm.", why: "You can’t read a hundredth of a centimetre on this ruler. Writing 13.42 cm claims more detail than the ruler can show. Look at the smallest marks." },
+      { t: "1 m: the length of the ruler.", why: "1 m is how far the ruler can measure (its range), not its resolution. Resolution is the smallest change it can show." }],
+    explain: "The smallest marks on a metre rule are 1 mm apart, so its resolution is 1 mm (0.1 cm). Record each pointer reading to the nearest 0.1 cm.",
+    hints: ["Resolution is the smallest change an instrument can show.", "Count the small marks between two numbers on the magnified view. How far apart are they?", "There are 10 small marks in each cm."] },
   { id: "order", kind: "build", ordered: true, src: "Required practical: method", text: "Put the method in order. Press the steps in the order you would do them.", setup: SU.lab(), lock: "all", hide: ["panel"],
     stm: [{ t: "Record the pointer reading with no masses on the spring.", c: 1 }, { t: "Hang the 100 g mass hanger on the spring.", c: 2 },
       { t: "Wait until it stops moving, then record the mass and the reading.", c: 3 }, { t: "Add another 100 g and record again, until all the masses are on.", c: 4 },
@@ -1271,14 +1278,14 @@ TASKS.easy = [
     generic: "W = m × g = 0.3 × 9.8.", stuck: "eq",
     working: () => ["Mass in kg: 300 g = 0.3 kg", "W = m g = 0.3 × 9.8", "Answer: W = 2.94 N"],
     hints: ["Weight is a force. Which equation links mass and weight?", "W = m × g, with the mass in kg: 300 g = 0.3 kg.", "0.3 × 9.8 = 2.94 N."] },
-  { id: "safety", kind: "gaps", fixed: true, src: "Required practical: safety", text: "Match each safety step to its reason.", setup: SU.lab({ safe: true }),
-    rows: [["g", "Wear goggles", "in case the spring snaps"], ["m", "Put a soft mat under the masses", "so nothing is damaged if the masses fall"], ["c", "G-clamp the clamp stand to the bench", "so the stand and the masses can’t fall over"]],
-    bank: ["in case the spring snaps", "so nothing is damaged if the masses fall", "so the stand and the masses can’t fall over", "so you can read the ruler at eye level", "to make the spring stretch further"],
-    why: (k, w) => ({ "in case the spring snaps": "Goggles protect your eyes in case the spring snaps.", "so nothing is damaged if the masses fall": "The mat is there in case the masses fall.",
-      "so the stand and the masses can’t fall over": "The G-clamp holds the stand firmly to the bench.", "so you can read the ruler at eye level": "Reading at eye level is about accuracy, not safety. Match each step to the hazard it reduces.",
-      "to make the spring stretch further": "None of these changes how far the spring stretches. Match each step to the hazard it reduces." })[w],
-    explain: "Goggles: in case the spring snaps. Soft mat: so nothing is damaged if the masses fall. G-clamp: so the stand and masses can’t fall over.",
-    hints: ["Think about what could go wrong: the spring, the masses, the stand.", "Goggles protect your eyes; a mat is for things that fall.", "Goggles → spring snaps; mat → masses fall; G-clamp → stand falls over."] }
+  { id: "safetyHRC", kind: "gaps", fixed: true, src: "Required practical: safety", text: "For each hazard and its risk, choose the control that reduces the risk.", setup: SU.lab(), lock: "all", hide: ["panel"],
+    rows: [["g", "Hazard: the spring snaps. Risk: it hits your eye. Control:", "wear goggles"], ["m", "Hazard: masses fall. Risk: they land on your feet. Control:", "stand up, feet clear; soft mat below"], ["c", "Hazard: the loaded stand tips over. Risk: it hits you. Control:", "G-clamp the stand to the bench"]],
+    bank: ["wear goggles", "stand up, feet clear; soft mat below", "G-clamp the stand to the bench", "read the ruler at eye level", "add all the masses at once"],
+    why: (k, w) => ({ "wear goggles": k === "g" ? "" : "Goggles protect your eyes from a snapping spring. Which control stops this harm?", "stand up, feet clear; soft mat below": k === "m" ? "" : "Standing with your feet clear and a mat protect you if masses fall. Which control stops this harm?",
+      "G-clamp the stand to the bench": k === "c" ? "" : "The G-clamp stops the stand tipping over. Which control stops this harm?", "read the ruler at eye level": "Reading at eye level is about accuracy (parallax), not safety. Choose the control that reduces the risk.",
+      "add all the masses at once": "That makes things worse: add each mass carefully, one at a time. Choose the control that reduces the risk." })[w],
+    explain: "Hazard → risk → control. Spring snaps → eye injury → wear goggles. Masses fall → hurt feet → stand up, feet clear, soft mat below. Stand tips over → injury → G-clamp it to the bench.",
+    hints: ["For each hazard, think: what would protect the part of you that could get hurt?", "Goggles protect eyes; a mat and clear feet are for falling masses; a clamp stops tipping.", "Snaps → goggles; masses fall → feet clear, mat; tips over → G-clamp."] }
 ];
 const MS6 = ["Level 3 (5–6 marks): a coherent, logically ordered method that would give a valid outcome: force changed in steps, extension from the original length, force from W = m g. 6 marks: also safety.",
   "Level 2 (3–4 marks): most of the method, with relevant detail; some steps missing or out of order.",
@@ -1339,8 +1346,8 @@ TASKS.hard = [
     hints: ["Which reading is far from the other two?", "Leave out 29.8 cm. Find the mean of 31.2 and 31.4, then subtract the original reading.", "31.3 − 12.0 = 19.3 cm."] },
   { id: "imp", kind: "gaps", pair: true, src: "Required practical: evaluating the experiment", text: "Suggest one improvement to the method, and explain why it helps.", frame: "One improvement is to… This helps because…", setup: SU.lab({ safe: true }), lock: "all", hideW: ["parallax", "sys", "rand"],
     rows: [["i", "One improvement is to", null, ["read the ruler at eye level", "use a pointer fixed to the bottom of the spring", "wait a few seconds after adding each mass", "repeat the whole process 3 times and find the mean"]],
-      ["r", "This helps because", null, ["it avoids parallax error, a systematic error", "you read the same point on the spring each time, so readings are more accurate", "the spring has fully stretched before you read it", "it reduces the effect of random errors", "it makes the spring constant bigger", "it turns the mass into a force"]]],
-    PAIRS: { "read the ruler at eye level": "it avoids parallax error, a systematic error", "use a pointer fixed to the bottom of the spring": "you read the same point on the spring each time, so readings are more accurate",
+      ["r", "This helps because", null, ["it avoids parallax error, a systematic error", "you read the same point each time: more accurate", "the spring has fully stretched before you read it", "it reduces the effect of random errors", "it makes the spring constant bigger", "it turns the mass into a force"]]],
+    PAIRS: { "read the ruler at eye level": "it avoids parallax error, a systematic error", "use a pointer fixed to the bottom of the spring": "you read the same point each time: more accurate",
       "wait a few seconds after adding each mass": "the spring has fully stretched before you read it", "repeat the whole process 3 times and find the mean": "it reduces the effect of random errors" },
     badR: { "it makes the spring constant bigger": "Nothing in the method changes the spring constant: it is a property of the spring. Match the improvement to the error it reduces.",
       "it turns the mass into a force": "Mass and weight are different, and no step turns one into the other: you calculate the weight with W = m g. Match the improvement to the error it reduces." },
@@ -1838,6 +1845,22 @@ RNG = mulberry((Date.now() % 999983) | 1);
 M = DEMO_M = freshM();
 bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
 try { if (localStorage.getItem("ks3tools-toured:gcse-force-extension")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Long dropdown answers: the select stays on the card; if the chosen text doesn't fit, it is shown in full underneath ===== */
+const SELCV = document.createElement("canvas").getContext("2d");
+function selFull(s) {
+  if (!s || !s.isConnected) return;
+  let c = s.nextElementSibling; if (!c || !c.classList || !c.classList.contains("selfull")) { c = document.createElement("span"); c.className = "selfull"; c.setAttribute("aria-hidden", "true"); s.after(c); }
+  const cs = getComputedStyle(s), t = s.selectedIndex > 0 ? s.options[s.selectedIndex].text : "";
+  SELCV.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const cut = !!t && SELCV.measureText(t).width > s.clientWidth - 44;
+  c.textContent = cut ? t : ""; c.hidden = !cut;
+}
+document.addEventListener("change", e => { if (e.target.matches && e.target.matches("#answer select")) selFull(e.target); });
+window.addEventListener("resize", () => document.querySelectorAll("#answer select").forEach(selFull));
+
+/* after Show answer or a correct Check the selects are set in code: drop any caption left from an earlier choice */
+{ const sas0 = setAnswerState; setAnswerState = function () { const r = sas0.apply(this, arguments); document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); return r; }; }
 
 /* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
    paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer

@@ -387,6 +387,12 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt[aria-pressed="true"]::after{content:"✓"}.qpanel .opts.build .opt{line-height:1.25}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build{gap:4px}.qpanel .opts.build .opt{padding:4px 10px;min-height:36px}.qpanel .ms{margin-top:2px;font-size:15px;line-height:1.35}}
 @media (min-width:901px) and (max-height:740px){.qpanel .qtext{font-size:18px;line-height:1.3}.qpanel .frame{font-size:14px;padding:3px 8px}.qpanel .feedback .msg{padding:6px 9px;font-size:16px;line-height:1.45}.qpanel .actions{padding:6px 0 8px}.qpanel .actions .btn{min-height:44px;padding:8px 14px}.qpanel .opts.build .opt{font-size:15.5px}}
+/* dropdown answers never wider than the panel (long options: the select shrinks and stays on the card) */
+#answer .opts,#answer .grow{min-width:0;max-width:100%}
+#answer .grow>span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{flex:1 1 100%;width:auto;min-width:0;max-width:100%;text-overflow:ellipsis;font-size:15px;font-weight:600}
+#answer .selfull{display:none}
+@media (max-width:560px){#answer .selfull:not([hidden]){display:block;flex:1 1 100%;font-size:14px;line-height:1.3;color:var(--muted);margin-top:-2px}}
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
 .topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
@@ -697,7 +703,7 @@ function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } 
 const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const finished = () => { if (mode === "demo" || !task.id) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; };
 const locked = () => mode !== "demo" && !!lock && !finished();
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
@@ -1336,18 +1342,19 @@ TASKS.easy = [
       { t: "Arrow S", why: "S goes from a trough up to a peak. That is twice the amplitude, not a wavelength: wavelength is measured along the wave." }],
     explain: "Arrow R goes from one peak to the next peak: from one point on the wave to the same point on the next wave.",
     hints: ["Wavelength is measured along the wave, not up and down.", "From one point on the wave to the same point on the next wave.", "Arrow R: from a peak to the next peak."] },
-  { id: "freq", kind: "choice", src: SRC.dw, text: "A wave has a frequency of 5 Hz. What does this mean?", setup: SU.rip({ on: true }), lock: "all", kw: ["Frequency", "Time period", "Wave speed"], mhide: ["fN", "f1T"],
-    options: [{ t: "5 waves pass a point every second.", ok: () => Math.abs(1 / 5 - .2) < 1e-12 },
-      { t: "Each wave takes 5 seconds to pass a point.", why: "That would be a time period of 5 s. 5 Hz means 5 waves each second, so each wave takes 1 ÷ 5 = 0.2 s." },
-      { t: "The wave travels 5 metres every second.", why: "That is a wave speed of 5 m/s. Frequency counts the waves passing a point each second." },
-      { t: "Each wave is 5 metres long.", why: "That is a wavelength. Frequency is the number of waves passing a point each second." }],
-    explain: "Frequency is the number of waves passing a point each second. 1 Hz = 1 wave per second, so 5 Hz = 5 waves each second.",
-    hints: ["The unit hertz means “per second”.", "Frequency counts waves. What does it count them against?", "5 waves pass a point every second."] },
   { id: "period", kind: "num", src: SRC.we + " (worked example, part a)", text: "A wave in a pond has a time period of 2 s. Calculate its frequency.", setup: SU.rip({ on: true }), lock: "all",
     frame: "Calculate: frequency = 1 ÷ time period", lbl: "f =", unit: "Hz", ans: () => 1 / 2,
     wrongs: [[2, "That is the time period. Frequency = 1 ÷ time period = 1 ÷ 2."], [1, "Frequency = 1 ÷ time period: divide 1 by 2."], [20, "Frequency = 1 ÷ time period = 1 ÷ 2."]],
     generic: "Frequency = 1 ÷ time period. Put in T = 2 s.", stuck: "maths", working: () => ["f = 1 ÷ T", "f = 1 ÷ 2", "f = 0.5 Hz"],
     hints: ["Frequency and time period are linked: f = 1 ÷ T.", "Put T = 2 s into f = 1 ÷ T.", "1 ÷ 2 = 0.5 Hz."] },
+  { id: "res", kind: "gaps", fixed: true, src: "Required Practical: equipment list (resolution of measuring equipment)", text: "What is the resolution of each measuring instrument in this practical?", setup: SU.res(), lock: "all",
+    rows: [["rule", "Metre ruler:", "1 mm"], ["sw", "Stopwatch (it shows times such as 2.47 s):", "0.01 s"]],
+    bank: ["1 mm", "0.01 s", "1 cm", "1 m", "0.1 s", "1 s"],
+    why: (k, w) => ({ "1 mm": "That is the metre ruler’s resolution: its smallest marks are 1 mm apart.", "0.01 s": "That is the stopwatch’s resolution: 2.47 s has two decimal places, so it shows hundredths of a second.",
+      "1 cm": "A metre ruler has smaller marks between the centimetre numbers. Resolution is the smallest change it can show.", "1 m": "1 m is how far the ruler measures (its range), not its resolution.",
+      "0.1 s": "2.47 s has two decimal places: the stopwatch shows a smaller step than 0.1 s.", "1 s": "The stopwatch shows much smaller steps than 1 s: look at the last digit of 2.47 s." })[w],
+    explain: "Resolution is the smallest change an instrument can show. Metre ruler: 1 mm. Stopwatch: 0.01 s.",
+    hints: ["Resolution is the smallest change an instrument can show.", "Think of the smallest marks on a metre ruler, and the last digit of the stopwatch.", "Ruler: 1 mm. Stopwatch: 0.01 s."] },
   { id: "vars", kind: "gaps", fixed: true, src: SRC.e1 + ": variables", text: "Choose the variables for the ripple tank practical.", setup: SU.res(), lock: "all", kw: ["Independent variable", "Dependent variable"],
     rows: [["iv", "Independent variable (you change it):", "the frequency"], ["dv", "Dependent variable (you measure it):", "the wavelength"], ["cv", "Control variable (keep it the same):", "the depth of the water"]],
     bank: ["the frequency", "the wavelength", "the depth of the water", "the speed of the water flowing", "the brightness of the lamp"],
@@ -1383,12 +1390,13 @@ TASKS.easy = [
       { t: "The amplitude of the wave.", why: "Amplitude is a height: from the rest position to the top of a loop. The length of a loop is half a wavelength." }],
     explain: "One loop is half a wavelength, so a wavelength is two loops. Measure across all the loops, divide by the number of loops, then multiply by 2.",
     hints: ["A wavelength goes from one point to the same point on the next wave: up and back down.", "One loop shows the string moving one way only, then it meets the next loop.", "Half a wavelength: one wavelength is 2 loops."] },
-  { id: "safety", kind: "gaps", fixed: true, src: SRC.sa, text: "Match each hazard to its precaution.", setup: SU.res(), lock: "all",
-    rows: [["snap", "The string could snap:", "wear safety goggles"], ["mass", "The masses could fall:", "put a soft mat underneath and stand clear"], ["strobe", "A strobe light flashes:", "check nobody has photosensitive epilepsy"], ["water", "Water is close to electricity:", "stand up and mop up any spills at once"]],
+  { id: "safetyHRC", kind: "gaps", fixed: true, src: SRC.sa, text: "For each hazard and its risk, choose the control that reduces the risk.", setup: SU.res(), lock: "all",
+    rows: [["snap", "Hazard: string snaps. Risk: eye injury. Control:", "wear safety goggles"], ["mass", "Hazard: masses fall. Risk: hurt feet. Control:", "put a soft mat underneath and stand clear"],
+      ["strobe", "Hazard: strobe light. Risk: a seizure. Control:", "check nobody has photosensitive epilepsy"], ["water", "Hazard: water near mains. Risk: shock. Control:", "stand up and mop up any spills at once"]],
     bank: ["wear safety goggles", "put a soft mat underneath and stand clear", "check nobody has photosensitive epilepsy", "stand up and mop up any spills at once", "use a metal wire, not a rubber cord"],
-    why: (k, w) => w === "use a metal wire, not a rubber cord" ? "It’s the other way round: use a rubber cord instead of a metal wire, in case it snaps under tension." : "That precaution is for a different hazard. Which one matches this hazard?",
-    explain: "String could snap: safety goggles (and a rubber cord, not a metal wire). Masses could fall: a soft mat underneath, and stand clear. Strobe: check nobody has photosensitive epilepsy. Water near electricity: stand up and mop up spills at once.",
-    hints: ["Think what each precaution protects.", "Goggles protect eyes; a mat breaks a fall.", "Snap → goggles · masses → mat · strobe → epilepsy · water → mop up."] }
+    why: (k, w) => w === "use a metal wire, not a rubber cord" ? "It’s the other way round: use a rubber cord instead of a metal wire, in case it snaps under tension." : "That control is for a different hazard. Which one reduces this risk?",
+    explain: "Hazard → risk → control. String snaps → eye injury → goggles (and a rubber cord). Masses fall → hurt feet → soft mat, stand clear. Strobe → seizure → check for epilepsy. Water near mains → shock → stand up, mop up spills.",
+    hints: ["For each risk, think what would stop that harm.", "Goggles protect eyes; a mat breaks a fall.", "Snap → goggles · masses → mat · strobe → epilepsy · water → mop up."] }
 ];
 const MS6 = ["Level 3 (5–6): a detailed, coherent method in a logical order that would give a valid wave speed, with every essential step (1–5 in the indicative content). 6 marks: it also keeps the depth the same and repeats for a mean.",
   "Level 2 (3–4): it would give some valid measurements, but an essential step is missing or the steps are not in a logical order.",
@@ -1430,11 +1438,11 @@ TASKS.hard = [
     generic: "Find λ = 2 × length ÷ number of loops (in metres), then v = f × λ.", stuck: "maths", working: () => ["Each loop = 1.20 ÷ 3 = 0.40 m (half a wavelength)", "λ = 2 × 0.40 = 0.80 m", "v = f × λ = 30 × 0.80 = 24 m/s"],
     hints: ["How much of a wavelength is one loop?", "One loop = 0.40 m = half a wavelength, so λ = 0.80 m.", "v = 30 × 0.80 = 24 m/s."] },
   { id: "improve", kind: "gaps", fixed: true, src: SRC.ev, text: "Suggest an improvement for each problem.", frame: "Suggest: To fix this problem, I would …", setup: SU.res(), lock: "all", kw: ["Stroboscope"],
-    rows: [["move", "“The bright lines move, so they are hard to measure.”", "use a stroboscope, or a video with a ruler in the frame"], ["one", "“I measured just one wavelength with the ruler.”", "measure across several wavelengths and divide"],
-      ["short", "“I counted the waves for only 2 seconds.”", "count for longer, e.g. a minute, and divide"], ["solid", "“The ‘solid’ wave looks clear over a range of frequencies.”", "repeat 3 times, coming down from a higher frequency, and take a mean"]],
-    bank: ["use a stroboscope, or a video with a ruler in the frame", "measure across several wavelengths and divide", "count for longer, e.g. a minute, and divide", "repeat 3 times, coming down from a higher frequency, and take a mean", "use deeper water so the waves are bigger"],
+    rows: [["move", "“The bright lines move, so they are hard to measure.”", "use a strobe, or a video with a ruler in view"], ["one", "“I measured just one wavelength with the ruler.”", "measure several wavelengths and divide"],
+      ["short", "“I counted the waves for only 2 seconds.”", "count for longer (e.g. 1 minute) and divide"], ["solid", "“The ‘solid’ wave looks clear over a range of frequencies.”", "repeat 3 times from a higher frequency; mean"]],
+    bank: ["use a strobe, or a video with a ruler in view", "measure several wavelengths and divide", "count for longer (e.g. 1 minute) and divide", "repeat 3 times from a higher frequency; mean", "use deeper water so the waves are bigger"],
     why: (k, w) => w === "use deeper water so the waves are bigger" ? "The method uses no more than about 1 cm of water, and keeps the depth the same. Deeper water doesn’t make the waves easier to measure." : "That fixes a different problem. Which fix matches this one?",
-    explain: "Moving lines: a stroboscope matched to the waves, or a video with a ruler in the frame. One wavelength: measure across several and divide. Short count: count for longer and divide. ‘Solid’ wave: repeat 3 times from a higher frequency and take a mean.",
+    explain: "Moving lines: a strobe matched to the waves, or a video with a ruler. One wavelength: measure several and divide. Short count: count for longer. ‘Solid’ wave: repeat 3 times from above; mean.",
     hints: ["Match each fix to the problem it solves.", "Freezing the pattern fixes moving lines. Measuring more waves, or for longer, shares the error out.", "Strobe or video · several wavelengths · count for longer · repeat 3 times and mean."] },
   { id: "many", kind: "choice", src: SRC.ev + " (random errors)", text: "Why is it better to measure across 10 wavelengths than across just 1?", setup: SU.res(), lock: "all",
     options: [{ t: "The ruler’s reading error is shared over 10 waves, so one wavelength is more accurate.", ok: () => .1 / 10 < .1 },
@@ -1930,6 +1938,22 @@ LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
 M = DEMO_M = freshM();
 bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
 try { if (localStorage.getItem("ks3tools-toured:gcse-waves")) $("newHere").hidden = true; } catch (e) {}
+
+/* ===== Long dropdown answers: the select stays on the card; if the chosen text doesn't fit, it is shown in full underneath ===== */
+const SELCV = document.createElement("canvas").getContext("2d");
+function selFull(s) {
+  if (!s || !s.isConnected) return;
+  let c = s.nextElementSibling; if (!c || !c.classList || !c.classList.contains("selfull")) { c = document.createElement("span"); c.className = "selfull"; c.setAttribute("aria-hidden", "true"); s.after(c); }
+  const cs = getComputedStyle(s), t = s.selectedIndex > 0 ? s.options[s.selectedIndex].text : "";
+  SELCV.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const cut = !!t && SELCV.measureText(t).width > s.clientWidth - 44;
+  c.textContent = cut ? t : ""; c.hidden = !cut;
+}
+document.addEventListener("change", e => { if (e.target.matches && e.target.matches("#answer select")) selFull(e.target); });
+window.addEventListener("resize", () => document.querySelectorAll("#answer select").forEach(selFull));
+
+/* after Show answer or a correct Check the selects are set in code: drop any caption left from an earlier choice */
+{ const sas0 = setAnswerState; setAnswerState = function () { const r = sas0.apply(this, arguments); document.querySelectorAll("#answer .selfull").forEach(c => { c.textContent = ""; c.hidden = true; }); return r; }; }
 /* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
    paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
    (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
