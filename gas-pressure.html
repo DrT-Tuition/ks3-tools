@@ -181,7 +181,8 @@ footer.brand a{color:inherit}
 @media (max-width:700px){.sim{grid-template-columns:minmax(0,1fr)}}
 .ctrls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:860px){.ctrls{grid-template-columns:minmax(0,1fr)}}
-.simbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.simbox{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0;position:relative}
+.pausenote{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 36px);margin:0;padding:8px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);font-size:15px;line-height:1.35;text-align:center;pointer-events:none}
 .simbox canvas{display:block;width:100%;touch-action:none;cursor:default}
 .simbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-top:8px}
 .simbar .note{font-size:15px;color:var(--muted)}
@@ -195,6 +196,8 @@ footer.brand a{color:inherit}
 .ctrl .lab output{font-variant-numeric:tabular-nums;color:var(--accent)}
 .ctrl .row{display:flex;flex-wrap:wrap;gap:8px}
 .sbtn{font:700 16px var(--f-body);min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:1 1 auto}
+#playBtn{min-width:5.3em}   /* fits Pause; sizePlay() sets the exact width once the font is in */
+@media (max-width:380px){#playWrap .sbtn{padding-left:10px;padding-right:10px}}   /* Play, Step and Start again stay on one line on a small phone */
 .sbtn:hover:not(:disabled){border-color:var(--accent)}
 .sbtn:disabled,input[type=range]:disabled{opacity:.45;cursor:not-allowed}
 input[type=range]{width:100%;height:44px;margin:0;accent-color:var(--accent);background:transparent;cursor:pointer}
@@ -365,6 +368,7 @@ main.layout{min-height:calc(100vh - 70px)}
     <div class="sim">
       <div class="simbox">
         <canvas id="box" role="img" aria-label="A sealed box of gas particles"></canvas>
+        <p class="pausenote" id="pauseNote" role="status" hidden>Paused to save power. Real particles never stop moving. Press Play to keep watching.</p>
         <div class="simbar">
           <span class="note" id="simNote">Drag the piston, or use the controls.</span>
           <span class="row" id="playWrap" style="display:flex;gap:8px">
@@ -1216,7 +1220,7 @@ function check() {
     if (!answer.pred) return neutral("Step 1: pick a prediction first.");
     const st = actionStatus(t);
     if (st.other) return neutral("You changed " + NAMES[st.other] + " too. Press Reset this question and only change " + NAMES[t.vary] + ".");
-    if (!st.ok) return neutral(t.doText);
+    if (!st.ok) return neutral("<b>Prediction saved:</b> " + "the pressure " + esc(PRED.find(x => x.v === answer.pred).t.replace(/ [↑↓=]$/, "").toLowerCase()) + ". " + esc(t.doText));   // confirms it was recorded, without saying if it is right
     const d = dirOf(t.start, sim), sign = Math.sign(sim[t.vary] - t.start[t.vary]);
     const why = t.need.same ? "Same particles, same temperature, same space → the same hits → the same pressure." : reasonFor(t.vary, sign);
     if (t.frame) {
@@ -1447,7 +1451,14 @@ cv.addEventListener("pointermove", e => {
 cv.addEventListener("pointerup", () => { dragging = false; });
 cv.addEventListener("pointercancel", () => { dragging = false; });
 // play / pause / step (reduced motion starts paused)
-function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("stepBtn").hidden = running; }
+function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("stepBtn").hidden = running || idlePaused; }
+function sizePlay() {   // Play and Pause are the same width, so nothing beside the button moves when it changes
+  const b = $("playBtn"), t = b.textContent; let w = 0;
+  b.style.minWidth = "0px";   // measure the labels themselves, not the CSS fallback
+  for (const x of ["Play", "Pause"]) { b.textContent = x; w = Math.max(w, b.getBoundingClientRect().width); }
+  b.textContent = t; if (w) b.style.minWidth = Math.ceil(w) + "px";
+}
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", sizePlay);   // no Step during a power-saving pause, so the buttons never move under a tap
 $("playBtn").addEventListener("click", () => { running = !running; paintPlay(); last = 0; kick(); });
 $("stepBtn").addEventListener("click", () => { for (let i = 0; i < 30; i++) step(1 / 120); shownP = pressure(sim); setGauge(); draw(); });
 // theme changes: re-read the colour tokens
@@ -1488,20 +1499,54 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").cl
 
 /* Speed on slow school PCs (Dan, 12 Oct 2026): the loop runs only while the model is playing and can be seen (it stops
    when paused, when the tab is hidden and when the model is scrolled off the screen). It works and draws at most 30 times
-   a second (fewer if the PC can't keep up). Physics steps stay at 1/120 s or less, so speeds don't change. */
-const FPS = [30, 20, 15, 12];
-let last = 0, dragDirty = false, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0;
+   a second (fewer if the PC can't keep up, and back up one step once frames are cheap again). Physics steps stay at
+   1/120 s or less, so speeds don't change.
+   Idle (14 Nov 2026): like Diffusion, the model pauses itself after 20 s with nobody touching the page ("Paused to save
+   power", shown over the box so nothing moves), but never while the gauge is still settling. Any key, click, touch, scroll or mouse move starts it again.
+   A step back up that fails at once doubles the wait before the next try (up to 16 s). */
+const FPS = [30, 20, 15, 12], IDLE_MS = 20000;
+let last = 0, dragDirty = false, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0, costSum = 0, upHold = 2, upWait = 2, upTry = 0, rChan = null;
+let lastAct = performance.now(), idlePaused = false;
 const wantLoop = () => running && !document.hidden && onScreen;
-function kick() { if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = 0; nextDue = performance.now(); requestAnimationFrame(() => loop()); } }
+function kick() { if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = costSum = 0; nextDue = performance.now(); requestAnimationFrame(() => loop()); } }
+function idlePause() {   // the note sits over the box, so nothing on the page moves when it comes or goes
+  idlePaused = true; running = false; $("pauseNote").hidden = false; paintPlay(); changed();
+}
+function woke(e) {
+  lastAct = performance.now();
+  if (!idlePaused) return;
+  idlePaused = false; $("pauseNote").hidden = true;
+  const onPlay = e && e.target && e.target.closest && e.target.closest("#playBtn");
+  if (onPlay && (e.type === "pointerdown" || e.type === "touchstart" || (e.type === "keydown" && (e.key === "Enter" || e.key === " ")))) {   // Play's own click starts it
+    const back = () => { ["pointerup", "pointercancel", "keyup"].forEach(t => document.removeEventListener(t, back, true)); setTimeout(() => { if (!running) paintPlay(); }, 300); };   // no click came (the finger slid off): show Step again
+    ["pointerup", "pointercancel", "keyup"].forEach(t => document.addEventListener(t, back, true));
+    return;
+  }
+  running = true; paintPlay(); last = 0; kick();
+}
+["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "input"].forEach(ev => document.addEventListener(ev, woke, { capture: true, passive: true }));
+window.addEventListener("scroll", woke, { passive: true });
 function loop() {
   const ts = performance.now();   // timer-driven (no empty animation frames between ticks)
   if (!wantLoop()) { loopOn = false; last = 0; if (dragDirty) { dragDirty = false; changed(); } return; }
+  if (ts - lastAct > IDLE_MS && !dragging && Math.abs(shownP - pressure(sim)) < 0.5) { loopOn = false; last = 0; idlePause(); return; }   // nobody has touched it for 20 s
   const gap = 1000 / FPS[fpsI];
   nextDue = nextDue + gap < ts + 2 ? ts + gap : nextDue + gap;   // frame cap: the next tick on a steady 30 fps grid
   setTimeout(loop, nextDue - ts);
   if (lastWork) {   // quiet safety net: if frames average too long over about a second, use a lower frame rate
     if (ts > ivWarm) { ivSum += ts - lastWork; ivN++; }   // (not in the first second after starting)
-    if (ts - ivT0 >= 1000) { const lim = fpsI ? 1250 / FPS[fpsI] : 40; if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) fpsI++; ivSum = ivN = 0; ivT0 = ts; }
+    if (ts - ivT0 >= 1000) {
+      const lim = fpsI ? 1250 / FPS[fpsI] : 40;
+      if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) {   // too slow: one step down
+        fpsI++; if (upTry) upWait = Math.min(16, upWait * 2);   // a step up that failed straight away: wait twice as long next time
+        upHold = upWait; upTry = 0;
+      } else if (ivN && fpsI > 0) {
+        if (upHold > 0) upHold--;
+        else if (costSum / ivN * FPS[fpsI - 1] < 350) { fpsI--; upTry = 3; upHold = 1; }   // frames cheap again (script + drawing would fill under 35 % of the time at the higher rate): one step up
+      }
+      if (upTry && !--upTry) upWait = 2;   // the step up held for 3 s: back to the short wait
+      ivSum = ivN = costSum = 0; ivT0 = ts;
+    }
   } else ivT0 = ivWarm = ts + 1000;
   lastWork = ts;
   const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
@@ -1509,6 +1554,11 @@ function loop() {
   const P = pressure(sim); shownP += (P - shownP) * Math.min(1, dt * 5);
   if (dragDirty) { dragDirty = false; changed(); }
   setGauge(); draw();
+  if (ts > ivWarm) {   // this frame's work, for stepping back up: the script now, then style, layout and paint
+    costSum += performance.now() - ts;
+    if (!rChan && window.MessageChannel) { rChan = new MessageChannel(); rChan.port1.onmessage = e => { costSum += performance.now() - e.data; }; }
+    if (rChan) requestAnimationFrame(() => rChan.port2.postMessage(performance.now()));   // handled once that frame is drawn
+  }
 }
 document.addEventListener("visibilitychange", () => { last = 0; kick(); });
 if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(document.querySelector(".sim"));   // the top 64 px sit under the sticky top bar
@@ -1521,7 +1571,7 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[
   LEVELS = { easy: [...BANK.warm, ...BANK.core],   // 5–10 questions per level (Dan, 11 Oct 2026)
              hard: BANK.challenge };
   cur = DEMO;
-  buildGauge(); paintScore(); setMode("demo"); paintPlay(); resize(); fitPanel();
+  buildGauge(); paintScore(); setMode("demo"); paintPlay(); sizePlay(); resize(); fitPanel();
   try { if (localStorage.getItem("ks3tools-toured:gas-pressure")) $("newHere").hidden = true; } catch (e) {}
   kick();
 })();
