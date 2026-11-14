@@ -54,7 +54,7 @@
       material hatched (not colour alone); dispersive strands are a mosaic.
     3 Meselson and Stahl (slides 12–15): grown 14 generations in ¹⁵N, then 0–6 divisions in ¹⁴N (stepper). Centrifuge
       tube with reference lines at light (high), intermediate and heavy (low); band thickness from the fraction of the
-      molecules at each density, computed from the chosen model's copy rule. Predict first: choose bands for the chosen
+      molecules at each density, computed from the chosen model's copy rule. Predict first (on when the Demo opens; a teacher can turn it off): choose bands for the chosen
       model, then reveal the real (semi-conservative) result, with whether it supports or refutes the model. The
       molecules (2ⁿ, drawn up to 16, then a count) show heavy ¹⁵N strands solid and light ¹⁴N strands hatched, ringed
       when they contain ¹⁵N. Readout: molecules with a ¹⁵N strand = 2/2ⁿ (1/8 at n = 4), computed.
@@ -509,7 +509,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="ctlrow"><span class="clbl" id="msmL">Model:</span>
           <div class="seg" role="group" aria-labelledby="msmL" id="msmSeg"><button type="button" data-m="cons" aria-pressed="false">Conservative</button><button type="button" data-m="semi" aria-pressed="true">Semi-conservative</button><button type="button" data-m="disp" aria-pressed="false">Dispersive</button></div></div>
         <div class="ctlrow" id="genRow"><span class="clbl" id="genL">Divisions in ¹⁴N:</span><button type="button" class="segb" id="genDn" aria-label="One division fewer">−</button><span class="genout" id="genOut" aria-live="polite">0</span><button type="button" class="segb" id="genUp" aria-label="One more division">+</button>
-          <button type="button" class="segb tog" id="predBtn" aria-pressed="false">Predict first <span class="state">off</span></button></div>
+          <button type="button" class="segb tog" id="predBtn" aria-pressed="true">Predict first <span class="state">on</span></button></div>
         <div class="ctlrow" id="pickRow" hidden><span class="clbl" id="pickL">Your bands:</span>
           <div class="seg bandpick" role="group" aria-labelledby="pickL" id="pickSeg"></div>
           <button type="button" class="btn" id="realBtn">Reveal the real result</button></div>
@@ -730,7 +730,7 @@ const GEO = (() => {
 /* the three-models and Meselson–Stahl pictures: wide and narrow layouts */
 const GEO_M = { wide: { W: 820, H: 400 }, narrow: { W: 370, H: 640 } };
 const GEO_S = { wide: { W: 820, H: 430 }, narrow: { W: 370, H: 690 } };
-const wideNow = () => boxW($("sceneWrap")) >= 600;
+const wideNow = () => { const el = $("sceneWrap"); let w = boxW(el); if (!(w > 0)) { const p = el.parentElement, cs = getComputedStyle(p); w = p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); } return w >= 600; };   // width 0 (scene hidden, or just shown): measure the parent's content width instead
 let VERT = false;                                         // the fork is drawn turned on its side (narrow screens)
 
 const f1 = v => (Math.round(v * 10) / 10).toString();
@@ -1353,7 +1353,8 @@ function stateFor(t) {
   if (s.ms) Object.assign(m.ms, typeof s.ms === "function" ? s.ms(t) : s.ms);
   return m;
 }
-let DEMO_B = freshB(), B = DEMO_B;
+const freshDemo = () => freshB({ ms: { model: "semi", gen: 0, predict: true, pick: [], shown: false } });   // Demo: Predict first starts ON, so the tube's result stays hidden until the pupil predicts (14 Nov 2026)
+let DEMO_B = freshDemo(), B = DEMO_B;
 D_detail = () => B.detail;
 let ANIM = null, animId = 0, onScreen = true, AUTO = null;
 
@@ -1718,7 +1719,7 @@ function stepGen(dlt) {
   if (B.lock.all || B.lock.gen) return;
   finishAnim();
   const M = B.ms, g = Math.max(0, Math.min(GEN_MAX, M.gen + dlt)); if (g === M.gen) return;
-  M.gen = g; M.shown = false; note("msNote", "", "");
+  M.gen = g; M.shown = false; M.pick = []; note("msNote", "", "");   // a new generation needs a new prediction
   if (mode === "demo" && g === 4 && M.model === REAL && !M.predict) tried(4);
   syncCtl(); renderReadouts(); tourSignal("gen");
   if (still()) { renderScene(); return; }
@@ -1738,6 +1739,7 @@ function revealReal() {
   const b = modelSays === real ? (M.model === REAL ? " The real result matches it: the evidence supports semi-conservative replication." : ` At this generation the real result is the same, so this result alone can’t rule the model out.`) : ` The real result is ${bandWords(REAL, M.gen)}, so the ${MODELS[M.model].toLowerCase()} model is refuted.`;
   note("msNote", modelSays === real ? "good" : "bad", a + b);
   if (mode === "demo" && M.gen === 2) tried(3);
+  if (mode === "demo" && M.gen === 4) tried(4);   // the revealed tube and molecules are the real (semi-conservative) ones
   renderAll();
 }
 
@@ -2003,7 +2005,7 @@ const TOUR = [
   { el: "#sceneTabs", text: "Three models all fit the structure of DNA. Compare them.", do: "scene-mdl", doText: "Press Three models." },
   { el: "#copyBtn", scene: "mdl", text: "Choose a model, then copy the DNA. Original material is solid; new material is hatched.", do: "copy", doText: "Press Copy the DNA." },
   { el: "#sceneTabs", text: "Meselson and Stahl’s experiment showed which model is right.", do: "scene-ms", doText: "Press Meselson and Stahl." },
-  { el: "#genRow", scene: "ms", text: "Step through the divisions in ¹⁴N. The tube shows the bands; beside it are the molecules. Predict first lets you test each model.", do: "gen", doText: "Press + to let the bacteria divide." },
+  { el: "#genRow", scene: "ms", text: "Step through the divisions in ¹⁴N. Predict first is on: choose your bands, then reveal the real result.", do: "gen", doText: "Press + to let the bacteria divide." },
   { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
 ];
 
@@ -2011,7 +2013,7 @@ let tourI = -1, tourWait = null, tourTimer = 0;
 function tourStart() {
   document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
   try { localStorage.setItem("ks3tools-toured:dna-replication", "1"); } catch (e) {}
-  DEMO_B = freshB(); loadDemo();
+  DEMO_B = freshDemo(); loadDemo();
   $("newHere").hidden = true; tourGo(0);
 }
 
