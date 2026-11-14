@@ -708,6 +708,10 @@ function freshM() { return { tab: "lim", L: 3, C: 5, T: 30, xv: "light", pin: nu
   d: 10, screen: false, dark: false, syr: false, lastD: null, data: { n: blankTab(), v: blankTab() }, mark: { n: {}, v: {} }, inp: { n: {}, v: {} }, ok: { n: {}, v: {} },
   rmsg: "", fit: false, example: false, d1: 10, d2: 20, hideWork: false }; }
 const meth = m => m.syr ? "v" : "n";
+/* switching method never loses data: each method keeps its own table; say so, so the pupil knows the other results are safe */
+const hasData = (m, k) => LAB.D.some(d => m.data[k][d].length);
+const methMsg = m => m.syr ? "Gas syringe on: this table is for volumes." + (hasData(m, "n") ? " Your bubble counts are kept. Turn the gas syringe off to see them again." : "")
+  : "Gas syringe off: back to counting bubbles." + (hasData(m, "v") ? " Your syringe volumes are kept. Turn the gas syringe on to see them again." : "");
 const env = m => ({ screen: m.screen, dark: m.dark, syr: m.syr });
 const support = { eq: false, limits: false, maths: false, words: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
@@ -905,6 +909,7 @@ function drawTable() {
     const ok = M.ok[k][d], v = M.inp[k][d] || "";
     h += `<td>${a.length < 3 ? '<span class="emp">–</span>' : `<input class="meanin${ok ? " ok" : ok === false ? " no" : ""}" data-d="${d}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(v)}" aria-label="Mean at ${d} cm"${ok ? " readonly" : ""}>`}</td></tr>`; });
   h += `</tbody></table><p class="small" style="margin-top:4px">Press a count to mark it as an anomaly. Counted for 1 minute, so the mean is the rate.</p>`;
+  if (!M.example && hasData(M, vol ? "n" : "v")) h += `<p class="small" style="margin-top:2px"><b>${vol ? "Your bubble counts are kept. Turn the gas syringe off to see them." : "Your syringe volumes are kept. Turn the gas syringe on to see them."}</b></p>`;
   const el = $("rtable"), foc = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("meanin") ? document.activeElement.dataset.d : null;
   if (el._h !== h) { el.innerHTML = h; el._h = h; if (foc) { const n = el.querySelector(`.meanin[data-d="${foc}"]`); if (n) { n.focus({ preventScroll: true }); const L = n.value.length; try { n.setSelectionRange(L, L); } catch (e) {} } } }
 }
@@ -1543,7 +1548,7 @@ $("pinBtn").addEventListener("click", () => { if (guard()) return; M.pin = { xv:
 $("unpinBtn").addEventListener("click", () => { if (guard()) return; M.pin = null; M.nowName = ""; drawAll(); });
 function setD(d) { if (guard()) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; } if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } d = clamp(Math.round(d / 10) * 10, 10, 50); const was = M.d; M.d = d; M.rmsg = ""; drawAll(); if (d !== was) tourSignal("dist"); }
 $("dSeg").addEventListener("click", e => { const b = e.target.closest("button[data-d]"); if (b) setD(+b.dataset.d); });
-[["screenSw", "screen"], ["darkSw", "dark"], ["syrSw", "syr"]].forEach(([id, k]) => $(id).addEventListener("click", () => { if (guard()) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; } if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } M[k] = !M[k]; M.rmsg = ""; drawAll(); tourSignal("imp"); }));
+[["screenSw", "screen"], ["darkSw", "dark"], ["syrSw", "syr"]].forEach(([id, k]) => $(id).addEventListener("click", () => { if (guard()) return; if (M.pend) { M.rmsg = "Record the syringe reading first."; morphHTML($("rread"), labRead()); return; } if (anim) { M.rmsg = "Wait for the count to finish first."; morphHTML($("rread"), labRead()); return; } M[k] = !M[k]; M.rmsg = k === "syr" ? methMsg(M) : ""; drawAll(); tourSignal("imp"); }));
 $("fitSw").addEventListener("click", () => { if (guard()) return; M.fit = !M.fit; drawAll(); });
 $("countBtn").addEventListener("click", startCount);
 function recordSyr() {
