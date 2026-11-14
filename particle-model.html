@@ -124,7 +124,8 @@ h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-
 .meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
 .ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
 .qno{font-size:15px;color:var(--muted)}
-.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative}
+.pausenote{position:absolute;top:48px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 36px);margin:0;padding:8px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);font-size:15px;line-height:1.35;text-align:center;pointer-events:none}
 .particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .limits{font-size:15px;color:var(--muted);margin:8px 0 0}
 /* tally + feedback */
@@ -348,6 +349,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="particles">
           <h2><span>Sealed box</span><span class="badge" id="badge" hidden></span></h2>
           <canvas id="stage" role="img" aria-label="A sealed box of particles on a heater, with a thermometer"></canvas>
+          <p class="pausenote" id="pauseNote" role="status" hidden>Paused to save power. Real particles never stop moving. Click or press any key to keep watching.</p>
         </div>
         <div class="ctrl panel">
           <p class="readout" id="readoutBox">Temperature<b id="tRead" aria-live="off">20 °C</b></p>
@@ -811,20 +813,49 @@ function updateReadouts(){
 /* ===== Main loop ===== */
 /* Speed on slow school PCs (Dan, 12 Oct 2026): the particles always move, so the loop runs whenever the model
    can be seen, but it works and draws at most 30 times a second (fewer if the PC can't keep up), and it stops
-   while the tab is hidden or the model is scrolled off the screen. Physics is time-based, so speeds don't change. */
-const FPS = [30, 20, 15, 12];
-let last = 0, drawAcc = 1e9, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0;
-const wantLoop = () => !document.hidden && onScreen;
-function kick(){ if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = 0; nextDue = performance.now(); requestAnimationFrame(() => frame()); } }
+   while the tab is hidden or the model is scrolled off the screen. Physics is time-based, so speeds don't change.
+   The frame rate steps back up one level once frames are cheap again.
+   Idle (14 Nov 2026): like Diffusion, the model pauses itself after 20 s with nobody touching the page ("Paused to save
+   power", shown over the box so nothing moves), never while the heater is heating or cooling (the graph and the
+   questions depend on that run) or while a question says Watch, and only 20 s after a run ends. Any key, click, touch,
+   scroll or mouse move starts it again. A step back up that fails at once doubles the wait before the next try. */
+const FPS = [30, 20, 15, 12], IDLE_MS = 20000;
+let last = 0, drawAcc = 1e9, loopOn = false, onScreen = true, fpsI = 0, lastWork = 0, ivSum = 0, ivN = 0, ivT0 = 0, ivWarm = 0, nextDue = 0, costSum = 0, upHold = 2, upWait = 2, upTry = 0, rChan = null;
+let lastAct = performance.now(), idlePaused = false;
+const wantLoop = () => !document.hidden && onScreen && !idlePaused;
+function kick(){ if (!loopOn && wantLoop()) { loopOn = true; last = 0; lastWork = 0; ivN = ivSum = costSum = 0; nextDue = performance.now(); requestAnimationFrame(() => frame()); } }
+function woke(){
+  lastAct = performance.now();
+  if (!idlePaused) return;
+  idlePaused = false; $("pauseNote").hidden = true; kick();
+}
+["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "input"].forEach(ev => document.addEventListener(ev, woke, { capture: true, passive: true }));
+window.addEventListener("scroll", woke, { passive: true });
 function frame(){
   const now = performance.now();   // timer-driven (no empty animation frames between ticks)
   if (!wantLoop()) { loopOn = false; last = 0; return; }
+  if (heaterDir() || (mode !== "demo" && task && /\bwatch\b/i.test(task.text))) lastAct = now;   // a heating or cooling run, or a question that says Watch, counts as use
+  else if (now - lastAct > IDLE_MS) {   // nobody has touched it for 20 s and the heater is not running
+    idlePaused = true; loopOn = false; last = 0; $("pauseNote").hidden = false;   // the note sits over the box, so nothing on the page moves
+    return;
+  }
   const gap = 1000 / FPS[fpsI];
   nextDue = nextDue + gap < now + 2 ? now + gap : nextDue + gap;   // frame cap: the next tick on a steady 30 fps grid
   setTimeout(frame, nextDue - now);
   if (lastWork) {   // quiet safety net: if frames average too long over about a second, use a lower frame rate
     if (now > ivWarm) { ivSum += now - lastWork; ivN++; }   // (not in the first second after starting)
-    if (now - ivT0 >= 1000) { const lim = fpsI ? 1250 / FPS[fpsI] : 40; if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) fpsI++; ivSum = ivN = 0; ivT0 = now; }
+    if (now - ivT0 >= 1000) {
+      const lim = fpsI ? 1250 / FPS[fpsI] : 40;
+      if (ivN && ivSum / ivN > lim && fpsI < FPS.length - 1) {   // too slow: one step down
+        fpsI++; if (upTry) upWait = Math.min(16, upWait * 2);   // a step up that failed straight away: wait twice as long next time
+        upHold = upWait; upTry = 0;
+      } else if (ivN && fpsI > 0) {
+        if (upHold > 0) upHold--;
+        else if (costSum / ivN * FPS[fpsI - 1] < 350) { fpsI--; upTry = 3; upHold = 1; }   // frames cheap again (script + drawing would fill under 35 % of the time at the higher rate): one step up
+      }
+      if (upTry && !--upTry) upWait = 2;   // the step up held for 3 s: back to the short wait
+      ivSum = ivN = costSum = 0; ivT0 = now;
+    }
   } else ivT0 = ivWarm = now + 1000;
   lastWork = now;
   const dt = Math.min(0.1, last ? (now - last) / 1000 : 0); last = now;
@@ -842,6 +873,11 @@ function frame(){
   drawAcc += dt;
   if (!stepped || drawAcc >= 0.8) { drawAcc = 0; drawStage(); }
   updateReadouts();
+  if (now > ivWarm) {   // this frame's work, for stepping back up: the script now, then style, layout and paint
+    costSum += performance.now() - now;
+    if (!rChan && window.MessageChannel) { rChan = new MessageChannel(); rChan.port1.onmessage = e => { costSum += performance.now() - e.data; }; }
+    if (rChan) requestAnimationFrame(() => rChan.port2.postMessage(performance.now()));   // handled once that frame is drawn
+  }
 }
 document.addEventListener("visibilitychange", () => { last = 0; kick(); });
 if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(stage);   // the top 64 px sit under the sticky top bar

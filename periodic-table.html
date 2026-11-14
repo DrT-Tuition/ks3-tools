@@ -293,6 +293,12 @@ footer.brand a{color:inherit}
 .ptwrap{overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);border-radius:10px;background:var(--sunk);-webkit-overflow-scrolling:touch}
 #pt{display:block;width:100%;min-width:640px;height:auto}
 .ptwrap.compact #pt{max-width:560px;min-width:520px;margin:0 auto}
+/* on a phone the table scrolls sideways in its own box: a fade at the right edge and a line under it say so (14 Nov 2026) */
+.ptbox{position:relative;min-width:0}
+.ptfade{position:absolute;top:1px;right:1px;width:44px;height:0;border-radius:0 9px 9px 0;background:linear-gradient(to right,rgba(0,0,0,0),var(--sunk));pointer-events:none;opacity:0;transition:opacity .2s}
+.ptbox.more .ptfade{opacity:1}
+.ptcue{margin:6px 2px 0;font-size:15px;font-weight:700;color:var(--muted)}
+.ptcue span{white-space:nowrap}
 #pt:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
 #pt text{font-family:var(--f-body)}
 #pt .cell{cursor:pointer}
@@ -561,7 +567,7 @@ main.layout{min-height:calc(100vh - 70px)}
         </div>
       </div>
 
-      <div class="ptwrap" id="ptWrap"><svg id="pt" viewBox="0 0 748 418" role="application" tabindex="0" aria-label="Periodic table. Click an element, or use the arrow keys to move between elements." aria-describedby="ecard"></svg></div>
+      <div class="ptbox" id="ptBox"><div class="ptwrap" id="ptWrap"><svg id="pt" viewBox="0 0 748 418" role="application" tabindex="0" aria-label="Periodic table. Click an element, or use the arrow keys to move between elements." aria-describedby="ecard"></svg></div><span class="ptfade" aria-hidden="true"></span><p class="ptcue" id="ptCue" hidden>Swipe sideways to see <span>the rest of the table →</span></p></div>
       <div class="ecard" id="ecard" aria-live="polite"></div>
 
       <!-- Properties: test bench and burning in oxygen -->
@@ -1329,12 +1335,22 @@ function finishPhases() {   // an animation cut short: show its end state
   if (TR.phase === "run") { TR.phase = "done"; TR.seen[TR.el] = true; }
   if (DS.phase === "run") { DS.phase = "done"; DS.res[DS.hal + DS.salt] = true; }
 }
+function ptCue() {   // the sideways-scroll cue shows only while part of the table is out of view
+  const w = $("ptWrap"), over = !w.hidden && w.scrollWidth > w.clientWidth + 2, more = over && w.scrollLeft + w.clientWidth < w.scrollWidth - 2;
+  if ($("ptCue").hidden !== !over) $("ptCue").hidden = !over;
+  $("ptCue").style.visibility = more ? "" : "hidden";   // at the right-hand end the line goes, but keeps its space so nothing below moves
+  $("ptBox").classList.toggle("more", more);
+  document.querySelector(".ptfade").style.height = w.offsetHeight - 2 + "px";
+}
+$("ptWrap").addEventListener("scroll", ptCue, { passive: true }); window.addEventListener("resize", ptCue);
+if (window.ResizeObserver) new ResizeObserver(ptCue).observe($("ptWrap"));
 function renderView() {
   const v = V.view;
   document.querySelectorAll("#viewTabs button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.view === v)); b.disabled = !!allowedViews && !allowedViews.includes(b.dataset.view); });
   $("exploreCtl").hidden = v !== "explore"; $("optBtns").hidden = mode !== "demo";
   $("ptWrap").hidden = !(v === "explore" || v === "trends"); $("ptWrap").classList.toggle("compact", v === "trends");
   $("ecard").hidden = v !== "explore";
+  $("ptBox").hidden = $("ptWrap").hidden; ptCue();
   $("propsArea").hidden = v !== "props"; $("trendTop").hidden = $("trendsArea").hidden = v !== "trends"; $("histArea").hidden = v !== "history";
   V.lit = v === "trends" ? new Set(TSETS[CH.set].syms.map(s => BY[s].z)) : new Set();
   renderOpts(); renderTable(); renderCard();
