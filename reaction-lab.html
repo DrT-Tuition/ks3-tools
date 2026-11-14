@@ -85,7 +85,7 @@
     equation builds and checks; '=' and a missing oxygen fail), and every question (3 hints; one right option and feedback for each wrong
     one; goals not met at the start and reached by Show answer; "do it" parts done by Show answer). Any failure shows a visible error box
     and switches that question off.
-  Performance: drawn on demand (no animation loop while idle); runs animate with paceFrame (adaptive slow-down; capped at 8 fps) and stop
+  Performance: drawn on demand (no animation loop while idle); runs animate with paceFrame (adaptive: steps down on a slow PC and back up; capped at 24 fps) and stop
     when the run ends; each scene has a static and a moving layer, patched with morph() only when it changes; paused when the tab is
     hidden or the model is off-screen; no CSS filters; no backdrop-filter. Reduced motion: runs play as a few still steps.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
@@ -254,6 +254,7 @@ footer.brand a{color:inherit}
 .ctl-lbl{font-weight:700;font-size:16px}
 .btn.go{min-height:48px}
 .btn:disabled{opacity:.45;cursor:default}
+.needpred{font-size:16px;font-weight:700;color:var(--muted)}
 .sw:disabled{opacity:.45;cursor:default}
 .readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px;min-height:58px}
 .readout p{margin:0}
@@ -452,7 +453,7 @@ main.layout{min-height:calc(100vh - 70px)}
         </div>
         <div class="controls" id="sPick"><label class="ctl-lbl" for="sDemo">Demo</label><select class="pick" id="sDemo"></select></div>
         <svg id="ssvg" class="scene" viewBox="0 0 640 400" role="img" aria-label="The demo"><g id="ssvgS"></g><g id="ssvgD"></g><g id="ssvgF"></g></svg>
-        <div class="controls" id="sPred"><span class="ctl-lbl">Predict:</span><span class="seg" role="group" aria-label="Prediction" id="sPredSeg"><button type="button" data-v="chem" aria-pressed="false">Chemical reaction</button><button type="button" data-v="phys" aria-pressed="false">Physical change</button></span><button class="btn primary go" type="button" id="sRun">Run ▶</button></div>
+        <div class="controls" id="sPred"><span class="ctl-lbl">Predict:</span><span class="seg" role="group" aria-label="Prediction" id="sPredSeg"><button type="button" data-v="chem" aria-pressed="false">Chemical reaction</button><button type="button" data-v="phys" aria-pressed="false">Physical change</button></span><button class="btn primary go" type="button" id="sRun">Run ▶</button><span class="needpred" id="sNeedPred">Choose your prediction first.</span></div>
         <div class="readout" id="sread" aria-live="polite"></div>
         <div class="controls" id="sDecide" hidden><span class="ctl-lbl">Now decide:</span><span class="seg" role="group" aria-label="Decide" id="sDecSeg"><button type="button" data-v="chem" aria-pressed="false">Chemical reaction</button><button type="button" data-v="phys" aria-pressed="false">Physical change</button></span></div>
         <div class="tally" id="sTally"></div>
@@ -1235,7 +1236,7 @@ function renderCtl() {   // touches a control only when its state really changes
   ["signs", "burn", "fuels", "carb", "exo", "words"].forEach(k => hideEl("pane-" + k, k !== t));
   setTxt("lessonTag", LESSON[t]);
   if (mode === "demo" || !lock) hideEl("lockNote", true);
-  if (t === "signs") { const S = M.S; const sd = $("sDemo"); if (sd.value !== S.demo) sd.value = S.demo; paintSeg("sPredSeg", S.pred, run); setDis("sRun", run); setDis("sDemo", run);
+  if (t === "signs") { const S = M.S; const sd = $("sDemo"); if (sd.value !== S.demo) sd.value = S.demo; paintSeg("sPredSeg", S.pred, run); setDis("sRun", run || !S.pred); hideEl("sNeedPred", run || !!S.pred); setDis("sDemo", run);
     hideEl("sDecide", S.phase !== "done"); paintSeg("sDecSeg", S.dec[S.demo]); morphHTML($("sread"), readSigns()); morphHTML($("sTally"), tallyHTML()); }
   if (t === "burn") { const B = M.B; paintSeg("bView", B.view, run); hideEl("fireBox", B.view !== "fire"); hideEl("prodBox", B.view !== "prod");
     setTxt("bFuel", B.fuel ? "Take away the fuel" : "Give back the fuel"); setTxt("bJar", B.jar ? "Jar off" : "Jar on"); setDis("bLight", B.lit || run); setDis("bFuel", run); setDis("bCool", run || !B.lit); setDis("bJar", run);
@@ -1268,13 +1269,14 @@ function resume() { if (anim && paused && onScreen && !document.hidden) { paused
 document.addEventListener("visibilitychange", resume);
 function finishAnim() { if (!anim) return; paceCancel(rafId); const a = anim; anim = null; paused = false; a.end(); if (!anim) drawAll(); }
 function stopAll() { while (anim) finishAnim(); }
-const runAnim = (dur, frame, end, fps) => startAnim({ dur, fps: Math.min(fps || 10, 10), frame(el) { const u = Math.min(1, el / dur); frame(u, el); drawScene(); return u >= 1; }, end });
+const ANIM_FPS = 24;   // runs are capped at 24 frames a second; paceFrame steps down on a slow PC and back up when frames are cheap again
+const runAnim = (dur, frame, end, fps) => startAnim({ dur, fps: Math.min(fps || ANIM_FPS, ANIM_FPS), frame(el) { const u = Math.min(1, el / dur); frame(u, el); drawScene(); return u >= 1; }, end });
 
 function runDemo() {
   if (locked()) return lockMsg(); const S = M.S, d = demoById(S.demo);
   if (!S.pred) { S.phase = "ready"; morphHTML($("sread"), readSigns() + P(`<span class="warn">Predict first: chemical reaction or physical change?</span>`)); return; }
   stopAll(); S.phase = "running"; S.p = 0; delete S.dec[d.id];
-  runAnim(d.draw === "heat" || d.draw === "wax" ? 5200 : 4000, u => { S.p = u; }, () => { demoDone(M, d.id); tourSignal("s-run"); }, 8);
+  runAnim(d.draw === "heat" || d.draw === "wax" ? 5200 : 4000, u => { S.p = u; }, () => { demoDone(M, d.id); tourSignal("s-run"); });
 }
 function decide(v) {
   if (locked()) return lockMsg(); const S = M.S, d = demoById(S.demo); if (S.phase !== "done") return;
@@ -1294,35 +1296,35 @@ function fireCool() { if (locked()) return lockMsg(); stopAll(); const B = M.B; 
 function fireJar() {
   if (locked()) return lockMsg(); stopAll(); const B = M.B; B.msg = null;
   if (!B.jar) { B.jar = true; const o0 = B.o2;
-    runAnim(3800, (u, el) => { B.jarP = sm(el / 700); B.o2 = o0 - (o0 - .08) * sm((el - 700) / 3000); if (B.o2 < .3) fireOut("oxygen"); }, () => { B.jarP = 1; B.o2 = .08; fireOut("oxygen"); }, 8); }
-  else { B.jar = false; runAnim(700, u => { B.jarP = 1 - sm(u); B.o2 = lerp(B.o2, 1, sm(u)); }, () => { B.jarP = 0; B.o2 = 1; B.msg = { h: "Jar off.", b: B.lit ? "Fresh air gets in again." : "Fresh air gets in again. Press Light it to relight the candle." }; }, 8); }
+    runAnim(3800, (u, el) => { B.jarP = sm(el / 700); B.o2 = o0 - (o0 - .08) * sm((el - 700) / 3000); if (B.o2 < .3) fireOut("oxygen"); }, () => { B.jarP = 1; B.o2 = .08; fireOut("oxygen"); }); }
+  else { B.jar = false; runAnim(700, u => { B.jarP = 1 - sm(u); B.o2 = lerp(B.o2, 1, sm(u)); }, () => { B.jarP = 0; B.o2 = 1; B.msg = { h: "Jar off.", b: B.lit ? "Fresh air gets in again." : "Fresh air gets in again. Press Light it to relight the candle." }; }); }
 }
 function prodRun() {
   if (locked()) return lockMsg(); const B = M.B; stopAll(); B.phase = "running"; B.p = 0; B.tested = false;
-  runAnim(5000, u => { B.p = u; }, () => { prodDone(M, B.pf); tourSignal("p-run"); if (B.pf === "hydrogen") tried(2); }, 8);
+  runAnim(5000, u => { B.p = u; }, () => { prodDone(M, B.pf); tourSignal("p-run"); if (B.pf === "hydrogen") tried(2); });
 }
 function fuelGo() {
   if (locked()) return lockMsg(); const F = M.F; stopAll(); const r = fuelRun(M); F.cur = r; F.phase = "running"; F.p = 0;
-  runAnim(4000, u => { F.p = u; }, () => { fuelCommit(M, r); tourSignal("f-run"); if (fairCheck(F).ok) tried(3); }, 8);
+  runAnim(4000, u => { F.p = u; }, () => { fuelCommit(M, r); tourSignal("f-run"); if (fairCheck(F).ok) tried(3); });
 }
 function carbHeat() {
   if (locked()) return lockMsg(); const C = M.C; if (C.phase !== "ready") return; stopAll(); C.msg = null; C.phase = "heating"; C.t = 0;
   const stopT = CARBS[C.carb].tMilky ?? CMAX; tourSignal("c-heat");
-  runAnim(stopT / CSPEED * 1000, u => { C.t = u * stopT; }, () => { C.t = stopT; C.phase = "timed"; }, 8);
+  runAnim(stopT / CSPEED * 1000, u => { C.t = u * stopT; }, () => { C.t = stopT; C.phase = "timed"; });
 }
 function carbLift() { if (locked()) return lockMsg(); const C = M.C; if (C.phase !== "timed") return; C.lifted = true; C.phase = "lifted"; C.msg = null; drawAll(); }
 function carbStop() {
   if (locked()) return lockMsg(); const C = M.C;
   if (C.phase === "timed") { C.msg = { h: "Lift out the delivery tube first!", b: "The method says: first lift out the delivery tube, then stop heating." }; drawAll(); return; }
   if (C.phase !== "lifted") return; C.msg = null; C.phase = "cooling";
-  runAnim(1400, u => { C.cool = u; }, () => { carbDone(M); if (Object.keys(C.runs).length === 3) tried(4); }, 8);
+  runAnim(1400, u => { C.cool = u; }, () => { carbDone(M); if (Object.keys(C.runs).length === 3) tried(4); });
 }
 function carbNew() { if (locked()) return lockMsg(); stopAll(); const C = M.C; Object.assign(C, { t: 0, phase: "ready", lifted: false, cool: 0, msg: null }); drawAll(); }
 function exoRun() {
   if (locked()) return lockMsg(); const E = M.E;
   if (!E.pred) { morphHTML($("eread"), readExo() + P(`<span class="warn">Predict first: will the temperature rise or fall?</span>`)); return; }
   stopAll(); E.phase = "running"; E.p = 0; delete E.dec[E.test];
-  runAnim(3600, u => { E.p = u; }, () => { exoDone(M, E.test); tourSignal("e-run"); }, 8);
+  runAnim(3600, u => { E.p = u; }, () => { exoDone(M, E.test); tourSignal("e-run"); });
 }
 function exoDecide(v) { if (locked()) return lockMsg(); const E = M.E; if (E.phase !== "done") return; E.dec[E.test] = v; renderCtl(); }
 
