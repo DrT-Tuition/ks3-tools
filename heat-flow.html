@@ -726,11 +726,11 @@ $("reveal").addEventListener("click", doReveal);
 $("reset").addEventListener("click", resetTask);
 
 /* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
-let tourI = -1, tourWait = null, tourTimer = 0;
+let tourI = -1, tourWait = null, tourTimer = 0, tourShown = 0;
 function tourStart() {
   document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
   try { localStorage.setItem("ks3tools-toured:" + TOOLID, "1"); } catch (e) {}
-  $("newHere").hidden = true; tourGo(0);
+  $("newHere").hidden = true; tourShown = 0; tourGo(0);
 }
 function tourEnd() {
   if (tourI < 0) return;
@@ -745,11 +745,21 @@ function tourGo(i) {
   if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }
   document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
   el.classList.add("tour-target");
-  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  // Number only the steps actually shown. A later step whose target is hidden now still counts if a "do" step
+  // before it that will itself be shown (this one, or one visible now) could reveal it (e.g. picking a scene shows its controls).
+  tourShown++;
+  const vis = j => { const e = document.querySelector(TOUR[j].el); return !!(e && e.getClientRects().length); };
+  let later = 0;
+  for (let j = i + 1; j < TOUR.length; j++) {
+    let ok = vis(j);
+    for (let k = i; !ok && k < j; k++) ok = !!TOUR[k].do && (k === i || vis(k));
+    if (ok) later++;
+  }
+  $("tourStep").textContent = `Step ${tourShown} of ${tourShown + later}`;
   $("tourText").textContent = s.text;
   tourWait = s.do || null;
   $("tourDo").className = "tour-do"; $("tourDo").textContent = s.do ? "▶ " + s.doText : "";
-  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : s.do ? "Skip this step" : "Next →";
+  $("tourNext").textContent = !later ? "Finish" : s.do ? "Skip this step" : "Next →";
   $("tour").hidden = false;
   el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
   tourPlace(); setTimeout(tourPlace, 350);
