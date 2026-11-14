@@ -36,7 +36,8 @@
        conclusion frame (best and worst emitter judged from the pupil's own means, allowing ties within 2 units; texture line; improvement
        line; all options shuffled).
     3. Cooling flasks (the notes' method). Four identical flasks painted black, dull grey, white and silver, bungs and thermometers,
-       a stopwatch; four magnified thermometer scales. Fill → read four starting temperatures → stopwatch → read all four every 2 minutes
+       a stopwatch; four magnified thermometer scales (aligned: one shared centre, snapped to 5 °C, so a temperature sits at the
+       same height in every column; only whole labels drawn; "Dull grey" header wraps on desktop). Fill → read four starting temperatures → stopwatch → read all four every 2 minutes
        for 10 minutes → work out each drop (slips named). Readings plot as cooling curves; "Curves of best fit" draws a least-squares
        quadratic per flask through the pupil's own points (never dot-to-dot). Conclusion frame judged from the pupil's own drops
        (ties within 0.6 °C accepted, with a "repeat to be sure" note), shuffled options.
@@ -933,28 +934,39 @@ function drawFlBg() {
   setLayer($("fBg"), h);
 }
 function drawFlMov() {
-  const G = flGeo(), r = M.frun, fs = G.fs, inP = fPoured(r), g = $("fMov"), key = G.W + (inP ? "p" : "e");
-  const [sx, sy, sw, sh] = G.sw, [zx, zy, zw, zh] = G.zoom, cw = zw / 4, mid = zy + zh / 2 + 14;
+  const G = flGeo(), r = M.frun, fs = G.fs, inP = fPoured(r), g = $("fMov");
+  const [sx, sy, sw, sh] = G.sw, [zx, zy, zw, zh] = G.zoom, cw = zw / 4;
+  /* magnified scales (fixed 14 Nov 2026): the four scales share one centre temperature, so the same temperature is at the
+     same height in every column; only whole labels inside the window are drawn; the centre snaps to a multiple of 5 °C */
+  const two = G.W > 700, hh = two ? 44 : 26, A0 = zy + hh + 4, A1 = zy + zh - 4, mid = (A0 + A1) / 2, half = (A1 - A0) / 2 / G.zs;
+  const Ts = inP ? COLS.map(c => Tf(r, c, r.t)) : [80], lo = Math.min(...Ts), hi = Math.max(...Ts), m0 = (lo + hi) / 2;
+  let Tc = Math.round(m0 / 5) * 5; if (hi - Tc > half - .6 || Tc - lo > half - .6) Tc = Math.round(m0);
+  const zY = T => mid - (T - Tc) * G.zs, gw = 58, key = G.W + (inP ? "p" + Tc : "e");
   setVB($("fsvgM"), G.W, G.H);
   if (g._key !== key) {
     let h = `<text id="fswT" x="${sx + sw / 2}" y="${sy + sh / 2 + 11}" font-size="${G.W > 700 ? 32 : 28}" text-anchor="middle" class="lcdt"></text>`;
     if (inP) {
       h += `<clipPath id="fzClip"><rect x="${zx + 2}" y="${zy + 2}" width="${zw - 4}" height="${zh - 4}" rx="8"/></clipPath>`;
       COLS.forEach((c, i) => { const cx = G.cx[i]; h += `<rect id="fcol-${c}" class="therm" x="${f1(cx - 2.5)}" width="5"/>`; });
-      let strip = ""; for (let v = 0; v <= 100; v++) { const yy = -v * G.zs, big = v % 5 === 0; strip += `<path class="zt" d="M14 ${f1(yy)}h${big ? 22 : 12}"/>`; if (big) strip += T_(40, yy + fs * .38, String(v), fs + 1, 'class="bold"'); }
       h += `<g clip-path="url(#fzClip)">`;
-      COLS.forEach((c, i) => { const x = zx + i * cw + 10;
-        h += `<rect class="tglass" x="${f1(x - 8)}" y="${zy + 30}" width="16" height="${zh - 32}"/><rect class="therm" x="${f1(x - 4)}" y="${f1(mid)}" width="8" height="${f1(zy + zh - mid)}"/>` +
-          `<g id="fz-${c}" data-x="${f1(x - 10)}">${strip}</g><rect class="zhead" x="${f1(zx + i * cw + 2)}" y="${zy + 2}" width="${f1(cw - 4)}" height="26"/>` + T_(zx + i * cw + cw / 2, zy + 21, COL[c].sym + " " + (G.W > 700 ? COL[c].n.replace("Dull ", "") : COL[c].n), fs - 2, 'text-anchor="middle" class="bold"');
-        if (i) h += `<path class="zsep" d="M${f1(zx + i * cw)} ${zy + 2}V${zy + zh - 2}"/>`; });
-      h += `</g><path class="zline" d="M${zx + 2} ${f1(mid)}H${zx + zw - 2}"/>`;
+      COLS.forEach((c, i) => { const x0 = zx + i * cw, x = x0 + (cw - gw) / 2 + 8;
+        let sc = ""; for (let v = Math.ceil(Tc - half); v <= Math.floor(Tc + half); v++) { const yy = zY(v), big = v % 5 === 0;
+          if (yy < A0 + 1 || yy > A1 - 1) continue; sc += `<path class="zt" d="M${f1(x + 4)} ${f1(yy)}h${big ? 22 : 12}"/>`;
+          if (big && yy - fs * .55 >= A0 && yy + fs * .55 <= A1) sc += T_(x + 30, yy + fs * .38, String(v), fs + 1, 'class="bold"'); }
+        h += `<rect class="tglass" x="${f1(x - 8)}" y="${A0}" width="16" height="${A1 - A0}"/><rect id="fzl-${c}" class="therm" x="${f1(x - 4)}" width="8"/>` + sc +
+          `<rect class="zhead" x="${f1(x0 + 2)}" y="${zy + 2}" width="${f1(cw - 4)}" height="${hh}"/>`;
+        const nm = COL[c].sym + " " + COL[c].n, w2 = two && COL[c].n.includes(" ");
+        h += w2 ? T_(x0 + cw / 2, zy + 20, COL[c].sym + " " + COL[c].n.split(" ")[0], fs - 2, 'text-anchor="middle" class="bold"') + T_(x0 + cw / 2, zy + 38, COL[c].n.split(" ").slice(1).join(" "), fs - 2, 'text-anchor="middle" class="bold"')
+          : T_(x0 + cw / 2, zy + (two ? 29 : 21), nm, fs - 2, 'text-anchor="middle" class="bold"');
+        if (i) h += `<path class="zsep" d="M${f1(x0)} ${zy + 2}V${zy + zh - 2}"/>`; });
+      h += `</g>`;
     }
     g.innerHTML = h; g._key = key;
   }
   const te = $("fswT"), tt = mmss(r.t); if (te.textContent !== tt) te.textContent = tt;
-  if (inP) COLS.forEach(c => { const T = Tf(r, c, r.t), top = tYf(G, T), col = $("fcol-" + c), zg = $("fz-" + c);
+  if (inP) COLS.forEach((c, i) => { const T = Ts[i], top = tYf(G, T), col = $("fcol-" + c), zl = $("fzl-" + c), y = clamp(zY(T), A0, A1);
     setAttr(col, "y", f1(top)); setAttr(col, "height", f1(Math.max(0, G.top - 14 - top)));
-    setAttr(zg, "transform", `translate(${zg.dataset.x} ${f1(mid + T * G.zs)})`); });
+    setAttr(zl, "y", f1(y)); setAttr(zl, "height", f1(A1 - y)); });
 }
 function drawFlTable() {
   const r = M.frun, rec = r.rec, cell = v => v == null ? '<span class="emp">–</span>' : esc(fmt(v, 1));

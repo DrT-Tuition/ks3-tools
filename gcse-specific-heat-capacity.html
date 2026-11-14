@@ -16,7 +16,9 @@
          3 switch on the heater and joulemeter together and start timing   4 read the thermometer every 2 minutes
            (the joulemeter reading is recorded with it); after 10 minutes switch off; the block keeps warming
            (L7 s12), so record the highest temperature   5 work out Δθ = highest − start and c = ΔE ÷ (m × Δθ).
-       Pupils read the thermometer themselves from a magnified scale (1 °C divisions; accepted ±0.5 °C). Readings fill a
+       Pupils read the thermometer themselves from a magnified scale (1 °C divisions; accepted ±0.5 °C). After 3 wrong tries at any reading (balance,
+       thermometer, V, I, joulemeter, E = V I t) the message shows the value, but the pupil still types it; that value is
+       marked (given) in the table. Wrong tries never record a value for the pupil. Readings fill a
        table and plot temperature against energy supplied (optional straight line of best fit).
        INVENTED MODEL (said on screen): heater 38–42 W (random per run; about 24 000 J in 10 min); pupils read the joulemeter at switch-off. Three linked parts, stepped every 0.25 s:
          heater   C_h dθ_h/dt = P − 0.6(θ_h − θ_b) − 0.005(θ_h − θ_room),  C_h = 12 J/°C
@@ -688,7 +690,7 @@ function makeRun(o, opt) {
   opt = opt || {}; const seed = opt.seed != null ? opt.seed : nextSeed(), R = mulberry(seed);
   const g = Math.round(o.mass * 1000 + R() * 7 - 3), room = Math.round((19 + R() * 3) * 10) / 10, u = R(), z = gaussR(R), pw = Math.round((38 + R() * 4) * 10) / 10;
   const run = { o: Object.assign({}, o), seed, g, room, P: pw, anom: opt.anom != null ? opt.anom : u < RP.pAnom, lf: 1 + clamp(z * .05, -.1, .1),
-    step: "weigh0", t: 0, rec: { mass: null, start: null, read: [], Eoff: null, high: null, V: null, I: null }, tries: 0, smsg: null,
+    step: "weigh0", t: 0, rec: { mass: null, start: null, read: [], Eoff: null, high: null, V: null, I: null, gv: {} }, tries: 0, smsg: null,
     calc: { dT: "", dE: "", c: "", ok: {}, msg: [] }, cOK: false, cVal: null, pushed: false };
   const V = Math.round((11.5 + R() * 1) * 10) / 10, I = Math.round(pw / V * 100) / 100; run.V = V; run.I = I; run.P = V * I;   // steady supply: P = V × I
   physics(run); return run;
@@ -860,15 +862,15 @@ function drawLabMov() {   // the parts that change while heating: built once per
     setAttr(st, "transform", `translate(0 ${f1(mid + T * ps)})`); setAttr(ld, "d", `M${tx + 14} ${f1(colTop)}L${zx} ${f1(mid)}`); }
 }
 function drawTable() {
-  const r = M.run, rec = r.rec, rows = [];
-  rows.push([0, rec.start == null ? null : 0, rec.start]);
-  for (let k = 1; k <= 5; k++) { const x = rec.read[k - 1]; rows.push([k * 2, x ? x.E : null, x ? x.T : null]); }
-  const cell = v => v == null ? '<span class="emp">–</span>' : esc(fmt(v));
-  let h = `<table class="rt"><caption>Readings: ${esc(MAT[r.o.block].n)} block${rec.mass != null ? `, mass ${esc(fmt(rec.mass, 3))} kg` : ""}</caption><thead><tr><th scope="col">Time (min)</th><th scope="col">${isVI(r) ? "Energy V × I × t (J)" : "Energy supplied (J)"}</th><th scope="col">Temperature (°C)</th></tr></thead><tbody>`;
-  rows.forEach(([t, E, T]) => { h += `<tr${r.step === "read" && t === readK(r) * 2 ? ' class="cur"' : ""}><td>${t}</td><td>${cell(E)}</td><td>${cell(T)}</td></tr>`; });
-  h += `<tr${r.step === "after" || r.step === "stopped" ? ' class="cur"' : ""}><td class="lbl">Highest</td><td>${cell(rec.Eoff)}</td><td>${cell(rec.high)}</td></tr>`;
+  const r = M.run, rec = r.rec, rows = [], gv = rec.gv || {};
+  rows.push([0, rec.start == null ? null : 0, rec.start, false, gv.start]);
+  for (let k = 1; k <= 5; k++) { const x = rec.read[k - 1]; rows.push([k * 2, x ? x.E : null, x ? x.T : null, k === 5 && gv.Eoff, x && x.gv]); }
+  const GV = ' <span class="small">(given)</span>', cell = (v, g) => v == null ? '<span class="emp">–</span>' : esc(fmt(v)) + (g ? GV : "");
+  let h = `<table class="rt"><caption>Readings: ${esc(MAT[r.o.block].n)} block${rec.mass != null ? `, mass ${esc(fmt(rec.mass, 3))} kg${gv.mass ? " (given)" : ""}` : ""}</caption><thead><tr><th scope="col">Time (min)</th><th scope="col">${isVI(r) ? "Energy V × I × t (J)" : "Energy supplied (J)"}</th><th scope="col">Temperature (°C)</th></tr></thead><tbody>`;
+  rows.forEach(([t, E, T, gE, gT]) => { h += `<tr${r.step === "read" && t === readK(r) * 2 ? ' class="cur"' : ""}><td>${t}</td><td>${cell(E, gE)}</td><td>${cell(T, gT)}</td></tr>`; });
+  h += `<tr${r.step === "after" || r.step === "stopped" ? ' class="cur"' : ""}><td class="lbl">Highest</td><td>${cell(rec.Eoff, gv.Eoff)}</td><td>${cell(rec.high, gv.high)}</td></tr>`;
   h += `</tbody></table>`;
-  if (isVI(r) && rec.V != null && rec.I != null) h += `<p class="small">Your meter readings: V = ${esc(rec.V.toFixed(1))} V, I = ${esc(rec.I.toFixed(2))} A.</p>`;
+  if (isVI(r) && rec.V != null && rec.I != null) h += `<p class="small">Your meter readings: V = ${esc(rec.V.toFixed(1))} V${gv.V ? " (given)" : ""}, I = ${esc(rec.I.toFixed(2))} A${gv.I ? " (given)" : ""}.</p>`;
   morphHTML($("rtable"), h);
 }
 const readK = r => Math.round(r.t / RP.every);
@@ -934,63 +936,58 @@ function stepGo(auto) {
   const r = M.run, s = r.step, rec = r.rec, i = $("stepIn"), raw = i ? i.value : "", v = parseNum(raw);
   const needNum = ["weigh", "start", "volt", "amp", "read", "joule", "after", "stopped"].includes(s);
   if (needNum && !isFinite(v)) { smsg("tip", "Type a number first."); renderStep(true); return; }
-  const giveUp = () => r.tries >= 3;
+  const giveUp = () => r.tries >= 3;   // after 3 wrong tries the value is shown, but the pupil still types it
+  const given = k => { if (!rec.gv) rec.gv = {}; if (r.tries >= 3) rec.gv[k] = true; return !!rec.gv[k]; };
+  const bad = (why, tell) => { smsg("bad", "✗ " + why + (giveUp() ? ` ${tell}: type that.` : "")); renderStep(true); };
   if (s === "weigh0") { r.step = "weigh"; r.smsg = null; tourSignal("weigh"); drawAll(); return; }
   if (s === "weigh") {
     const kg = r.g / 1000;
-    if (Math.abs(v - kg) <= .0015) { rec.mass = v; r.tries = 0; r.step = "start"; smsg("good", `✓ Mass ${esc(fmt(v, 3))} kg recorded. The block goes on the base with the heater and thermometer.`); tourSignal("mass"); tried(0); drawAll(true); return; }
+    if (Math.abs(v - kg) <= .0015) { given("mass"); rec.mass = v; r.tries = 0; r.step = "start"; smsg("good", `✓ Mass ${esc(fmt(v, 3))} kg recorded. The block goes on the base with the heater and thermometer.`); tourSignal("mass"); tried(0); drawAll(true); return; }
     r.tries++; let why = Math.abs(v - r.g) <= 1.5 ? `That is the reading in grams. Divide by 1000 to get kilograms.` : Math.abs(v - kg) <= .01 ? "Nearly: use every digit on the balance, then divide by 1000." : "Read the balance display (in grams), then divide by 1000 to get kilograms.";
-    if (giveUp()) { rec.mass = kg; r.tries = 0; r.step = "start"; smsg("tip", `${why} The balance reads ${r.g} g = ${fmt(kg, 3)} kg, recorded for you.`); drawAll(true); return; }
-    smsg("bad", "✗ " + why); renderStep(true); return; }
+    return bad(why, `The balance reads ${r.g} g = ${fmt(kg, 3)} kg`); }
   const Tnow = Tm(r, r.t);
   const readWhy = x => Math.abs(x - Tnow) <= 3 ? "Not quite. Look at the magnified scale: where does the red liquid stop? Each small mark is 1 °C." : Ej(r, r.t) > 0 && Math.abs(x - Ej(r, r.t)) < 1 ? "That is the joulemeter. Read the thermometer instead." : "Read the magnified scale: the numbers are every 5 °C, the small marks every 1 °C.";
   if (s === "start") {
-    if (Math.abs(v - Tnow) <= .5) { rec.start = v; r.tries = 0; r.step = "ready"; smsg("good", `✓ Start temperature ${esc(fmt(v))} °C recorded.`); tourSignal("start"); drawAll(true); return; }
-    r.tries++; if (giveUp()) { rec.start = half(Tnow); r.tries = 0; r.step = "ready"; smsg("tip", `${readWhy(v)} It reads ${fmt(half(Tnow))} °C, recorded for you.`); drawAll(true); return; }
-    smsg("bad", "✗ " + readWhy(v)); renderStep(true); return; }
+    if (Math.abs(v - Tnow) <= .5) { given("start"); rec.start = v; r.tries = 0; r.step = "ready"; smsg("good", `✓ Start temperature ${esc(fmt(v))} °C recorded.`); tourSignal("start"); drawAll(true); return; }
+    r.tries++; return bad(readWhy(v), `It reads ${fmt(half(Tnow))} °C`); }
   if (s === "ready") { r.smsg = null; tourSignal("on"); tried(1); if (isVI(r)) { r.step = "volt"; drawAll(true); return; } r.step = "heat"; drawAll(); runTo(RP.every, atReading); return; }
   if (s === "volt") {
-    if (Math.abs(v - r.V) < .026) { rec.V = r.V; r.tries = 0; r.step = "amp"; smsg("good", `✓ V = ${esc(r.V.toFixed(1))} V recorded.`); drawAll(true); return; }
+    if (Math.abs(v - r.V) < .026) { given("V"); rec.V = r.V; r.tries = 0; r.step = "amp"; smsg("good", `✓ V = ${esc(r.V.toFixed(1))} V recorded.`); drawAll(true); return; }
     const why = Math.abs(v - r.I) < .006 ? "That is the ammeter (current, in A). Read the voltmeter." : Math.abs(v - r.V) < .2 ? "Nearly: read every digit on the voltmeter, to 0.1 V." : "Read the voltmeter display, in volts (V).";
-    r.tries++; if (giveUp()) { rec.V = r.V; r.tries = 0; r.step = "amp"; smsg("tip", `${why} It reads ${r.V.toFixed(1)} V, recorded for you.`); drawAll(true); return; }
-    smsg("bad", "✗ " + why); renderStep(true); return; }
+    r.tries++; return bad(why, `It reads ${r.V.toFixed(1)} V`); }
   if (s === "amp") {
     const go = () => { rec.I = r.I; r.tries = 0; r.step = "heat"; drawAll(); runTo(RP.every, atReading); };
-    if (Math.abs(v - r.I) < .0026) { smsg("good", `✓ I = ${esc(r.I.toFixed(2))} A recorded. Timing starts now.`); go(); return; }
+    if (Math.abs(v - r.I) < .0026) { given("I"); smsg("good", `✓ I = ${esc(r.I.toFixed(2))} A recorded. Timing starts now.`); go(); return; }
     const why = Math.abs(v - r.V) < .026 ? "That is the voltmeter (potential difference, in V). Read the ammeter." : Math.abs(v - r.I * 1000) < 6 ? "The ammeter reads in amps (A), not milliamps." : Math.abs(v - r.I) < .02 ? "Nearly: read every digit on the ammeter, to 0.01 A." : "Read the ammeter display, in amps (A).";
-    r.tries++; if (giveUp()) { smsg("tip", `${why} It reads ${r.I.toFixed(2)} A, recorded for you.`); go(); return; }
-    smsg("bad", "✗ " + why); renderStep(true); return; }
+    r.tries++; return bad(why, `It reads ${r.I.toFixed(2)} A`); }
   if (s === "read") {
-    const k = readK(r), rec1 = T => { rec.read.push({ t: r.t, E: k < 5 ? (isVI(r) ? Math.round(eVI(rec, r.t)) : Ej(r, r.t)) : null, T }); r.tries = 0; tourSignal("read");
+    const k = readK(r), rec1 = T => { rec.read.push(Object.assign({ t: r.t, E: k < 5 ? (isVI(r) ? Math.round(eVI(rec, r.t)) : Ej(r, r.t)) : null, T }, r.tries >= 3 ? { gv: true } : {})); r.tries = 0; tourSignal("read");
       if (k < 5) { r.step = "heat"; drawAll(); runTo((k + 1) * RP.every, atReading); } else { r.step = "off"; drawAll(true); } };
     if (Math.abs(v - Tnow) <= .5) { smsg("good", `✓ ${esc(fmt(v))} °C at ${k * 2} minutes.`); rec1(v); return; }
-    r.tries++; if (giveUp()) { smsg("tip", `${readWhy(v)} It reads ${fmt(half(Tnow))} °C, recorded for you.`); rec1(half(Tnow)); return; }
-    smsg("bad", "✗ " + readWhy(v)); renderStep(true); return; }
+    r.tries++; return bad(readWhy(v), `It reads ${fmt(half(Tnow))} °C`); }
   if (s === "off") { r.step = "joule"; r.smsg = null; drawAll(true); return; }
   if (s === "joule" && isVI(r)) {
     const ex = eVI(rec, RP.tOn), E = Math.round(ex), go = v2 => { rec.Eoff = v2; if (rec.read[4]) rec.read[4].E = v2; r.tries = 0; r.step = "after"; drawAll(); runTo(r.peakAt, () => { if (M.run === r && r.step === "after") { r.step = "stopped"; drawAll(); } }); };
-    if (accRound(raw, v, ex)) { smsg("good", `✓ E = ${esc(rec.V.toFixed(1))} × ${esc(rec.I.toFixed(2))} × 600 = ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
+    if (accRound(raw, v, ex)) { given("Eoff"); smsg("good", `✓ E = ${esc(rec.V.toFixed(1))} × ${esc(rec.I.toFixed(2))} × 600 = ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
     const VI = rec.V * rec.I, nr = x => Math.abs(v - x) <= Math.max(.005 * Math.abs(x), .01), e8 = rec.read[3] && rec.read[3].E;
     const why = nr(VI * 10) ? "You used the time in minutes. Change 10 minutes to 600 seconds." : nr(VI) ? "That is V × I (the power, in watts). Multiply by the time in seconds too." : nr(ex / 1000) ? "That is in kilojoules. Give the energy in joules."
       : nr((rec.V + rec.I) * 600) ? "You added V and I. Multiply them: E = V × I × t." : nr(rec.V * 600) || nr(rec.I * 600) ? "Use both meters: E = V × I × t." : e8 && nr(e8) ? "That is the 8-minute value. The heater was on for 10 minutes: t = 600 s." : Math.abs(v - ex) < 2 ? "Nearly: round to the nearest joule." : "E = V × I × t, with V and I from your meters and t = 600 s.";
-    r.tries++; if (giveUp()) { smsg("tip", `${why} E = ${rec.V.toFixed(1)} × ${rec.I.toFixed(2)} × 600 = ${grp(String(E))} J, recorded for you.`); go(E); return; }
-    smsg("bad", "✗ " + why); renderStep(true); return; }
+    r.tries++; return bad(why, `E = ${rec.V.toFixed(1)} × ${rec.I.toFixed(2)} × 600 = ${grp(String(E))} J`); }
   if (s === "joule") {
     const E = Ej(r, RP.tOn), go = v2 => { rec.Eoff = v2; if (rec.read[4]) rec.read[4].E = v2; r.tries = 0; r.step = "after"; drawAll(); runTo(r.peakAt, () => { if (M.run === r && r.step === "after") { r.step = "stopped"; drawAll(); } }); };
-    if (Math.abs(v - E) <= 1) { smsg("good", `✓ Energy supplied: ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
+    if (Math.abs(v - E) <= 1) { given("Eoff"); smsg("good", `✓ Energy supplied: ${esc(grp(String(Math.round(v))))} J. Now watch the thermometer.`); go(Math.round(v)); return; }
     const e8 = rec.read[3] && rec.read[3].E;
     const why = Math.abs(v - E / 1000) < .06 || Math.abs(v * 1000 - E) <= 60 ? "The display is in joules, not kilojoules. Type every digit." : (v === 600 || v === 10) ? "That is the time. Read the energy on the joulemeter, in joules." : e8 && Math.abs(v - e8) <= 1 ? "That is the 8-minute reading. Read the joulemeter now, at switch-off." : "Read every digit on the joulemeter display.";
-    r.tries++; if (giveUp()) { smsg("tip", `${why} It reads ${grp(String(E))} J, recorded for you.`); go(E); return; }
-    smsg("bad", "✗ " + why); renderStep(true); return; }
+    r.tries++; return bad(why, `It reads ${grp(String(E))} J`); }
   if (s === "after" || s === "stopped") {
     const pk = r.peak, Toff = r.tm[RP.tOn];
-    if (Math.abs(v - pk) <= .5) { stopAll(); r.t = Math.max(r.t, r.peakAt); rec.high = v; r.tries = 0; r.step = "done"; smsg("good", `✓ Highest temperature ${esc(fmt(v))} °C. It rose ${esc(fmt(pk - Toff, 1))} °C after you switched off.`); tourSignal("high"); drawAll(true); return; }
+    if (Math.abs(v - pk) <= .5) { stopAll(); r.t = Math.max(r.t, r.peakAt); given("high"); rec.high = v; r.tries = 0; r.step = "done"; smsg("good", `✓ Highest temperature ${esc(fmt(v))} °C. It rose ${esc(fmt(pk - Toff, 1))} °C after you switched off.`); tourSignal("high"); drawAll(true); return; }
     let why;
     if (s === "after" && Math.abs(v - Tnow) <= .6) why = "It is still rising. Wait until the thermometer stops rising, then record the highest temperature.";
     else if (Math.abs(v - Toff) <= .5 && pk - Toff > .6) why = "That is the temperature when you switched off. The block keeps warming after switch-off: record the highest temperature.";
     else why = s === "after" ? "Watch the magnified scale until it stops rising, then read it." : "Read the magnified scale: where does the red liquid stop?";
     if (s === "stopped") r.tries++;
-    if (s === "stopped" && giveUp()) { rec.high = half(pk); r.tries = 0; r.step = "done"; smsg("tip", `${why} It reads ${fmt(half(pk))} °C, recorded for you.`); drawAll(true); return; }
+    if (s === "stopped") return bad(why, `It reads ${fmt(half(pk))} °C`);
     smsg("bad", "✗ " + why); renderStep(true); return; }
   if (s === "done") { setTab("res"); return; }
 }
