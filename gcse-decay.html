@@ -644,6 +644,14 @@ function judgeDP(str, v, a) {   // means: correctly rounded to the decimal place
   if (!isFinite(v)) return false; if (Math.abs(v - a) < 1e-9) return true; const d = Math.min(3, dpOf(str)), k = Math.pow(10, d);
   return Math.abs(rhu(a, k) - v) < 1e-9;
 }
+/* number questions: "ok", "sf" (right working, wrong significant figures) or "no".
+   Rounding to the decimal places typed (judgeDP) is only for questions that ask for a mean (t.mean); every other answer must match exactly. */
+function judgeNum(t, str, v, a) {
+  if (!isFinite(v)) return "no"; str = String(str == null ? v : str).trim();
+  if (t.sf) return judgeSF(str.replace(/\s*(per hour|\/h)$/i, ""), v, a);
+  if (t.mean) return judgeDP(str.replace(/\s*s$/i, ""), v, a) ? "ok" : "no";
+  return Math.abs(v - a) < 1e-9 ? "ok" : "no";
+}
 
 /* ===== The practical (AQA RP10: lipase, milk, sodium carbonate and phenolphthalein) =====
    Mean time for the pink colour to disappear at each water bath temperature: INVENTED example values (Model limits),
@@ -1212,7 +1220,8 @@ function facRead() {
   const T = { cold: "Cold: the decomposers’ enzymes work slowly, so decay is slow. This is why we keep food in a fridge.", warm: "Warm: the enzymes work faster, so decay is faster.", hot: "Too hot: the enzymes are denatured, so decay slows down." }[f.t];
   const Wt = f.w === "dry" ? "Dry: decomposers need water to survive, and their enzymes need water to digest the dead material." : "Moist: the decomposers have the water they need.";
   const O = f.o === "air" ? "Plenty of oxygen: many decomposers use it for aerobic respiration." : "No oxygen: many decomposers can’t survive. Some respire anaerobically (anaerobic decay). In a biogas generator this makes methane.";
-  return `<p class="r1">${esc(facBest(f) ? "These are the best conditions for fast decay: warm, moist, with oxygen." : "Decay is slower than it could be.")}</p><p class="r2">${esc(T)}</p><p class="r2">${esc(Wt)}</p><p class="r2">${esc(O)}</p>`;
+  if (!M.facWeeks) return `<p class="r1">${esc("Press “Leave for 4 weeks” to see how fast these leaves decay.")}</p>`;
+  return `<p class="r1">${esc(!M.facWeeks ? "Press “Leave for 4 weeks” to see how fast these leaves decay." : facBest(f) ? "These are the best conditions for fast decay: warm, moist, with oxygen." : "Decay is slower than it could be.")}</p><p class="r2">${esc(T)}</p><p class="r2">${esc(Wt)}</p><p class="r2">${esc(O)}</p>`;
 }
 
 /* ===== Draw everything that is showing ===== */
@@ -1285,7 +1294,8 @@ TASKS.easy = [
     hints: ["Gardeners make compost decay fast. What conditions do they give it?", "Decomposers need warmth (but not too hot), water and oxygen.", "Faster: warm, oxygen. Slower: dry, fridge, very hot."] },
   { id: "change", kind: "num", src: "Decomposition: investigating decay (worked example)", text: "Milk left to decay at 20 °C was pH 6.5 at the start and pH 6.0 after 24 hours. Calculate the change in pH.", setup: SU.lab(20),
     frame: "Calculate: change in pH = starting pH − pH at 24 hours", lbl: "Change =", unit: "", ans: () => NOTES_PH[20][0] - NOTES_PH[20][1],
-    wrongs: [[12.5, "You added. Subtract: 6.5 − 6.0."], [-.5, "Subtract the other way (6.5 − 6.0), so the change is positive."], [6, "That is the pH at 24 hours. Take it away from the starting pH: 6.5 − 6.0."], [6.5, "That is the starting pH. Take away the pH at 24 hours: 6.5 − 6.0."], [.5 / 24, "That is the rate (÷ 24). Here you only need the change in pH: 6.5 − 6.0."]],
+    wrongs: [[12.5, "You added. Subtract: 6.5 − 6.0."], [-.5, "Subtract the other way (6.5 − 6.0), so the change is positive."], [6, "That is the pH at 24 hours. Take it away from the starting pH: 6.5 − 6.0."], [6.5, "That is the starting pH. Take away the pH at 24 hours: 6.5 − 6.0."], [.5 / 24, "That is the rate (÷ 24). Here you only need the change in pH: 6.5 − 6.0."],
+      [1, "Don’t round to a whole number. Work out 6.5 − 6.0 exactly."], [0, "Don’t round to a whole number. Work out 6.5 − 6.0 exactly."]],
     generic: "Take the pH at 24 hours away from the starting pH: 6.5 − 6.0.", stuck: "maths",
     working: () => ["Change in pH = starting pH − pH at 24 hours", "= 6.5 − 6.0", "Change in pH = 0.5"],
     hints: ["Change = the start value − the later value.", "6.5 − 6.0 = ?", "6.5 − 6.0 = 0.5."] },
@@ -1376,7 +1386,7 @@ TASKS.hard = [
       { t: "20 °C: the numbered mark", why: "That is a reading on the scale, not its resolution. Resolution is the smallest change the scale can show." }],
     explain: "The smallest marks are 1 °C apart, so the resolution is 1 °C. You can estimate half-way between two marks, but the scale itself shows changes of 1 °C.",
     hints: ["Resolution is the smallest change an instrument can show.", "Count the small gaps between the 20 mark and the longer 25 mark.", "Five gaps share 5 °C, so each is 1 …"] },
-  { id: "anom", kind: "num", src: "Required practical: decay — results", text: `At 40 °C, three repeats took ${Q_ANOM[0]} s, ${Q_ANOM[1]} s and ${Q_ANOM[2]} s. Calculate the mean time, leaving out the anomaly.`, setup: SU.lab(40),
+  { id: "anom", kind: "num", mean: true, src: "Required practical: decay — results", text: `At 40 °C, three repeats took ${Q_ANOM[0]} s, ${Q_ANOM[1]} s and ${Q_ANOM[2]} s. Calculate the mean time, leaving out the anomaly.`, setup: SU.lab(40),
     frame: "Calculate: leave out the value that doesn’t fit the pattern, then add ÷ how many.", lbl: "Mean =", unit: "s", ans: () => goodMean(Q_ANOM),
     wrongs: [[(Q_ANOM[0] + Q_ANOM[1] + Q_ANOM[2]) / 3, `You included the anomaly (${Q_ANOM[2]} s). Leave it out, then divide by 2.`], [Q_ANOM[0] + Q_ANOM[1] + Q_ANOM[2], `That is the total of all three. Leave out ${Q_ANOM[2]}, then add and divide.`],
       [Q_ANOM[0] + Q_ANOM[1], `That is ${Q_ANOM[0]} + ${Q_ANOM[1]}. Now divide by 2.`], [(Q_ANOM[0] + Q_ANOM[1]) / 3, `You left out ${Q_ANOM[2]} but still divided by 3. You used 2 values.`],
@@ -1445,6 +1455,9 @@ function bankCheck() {
   /* rounding rules: correctly rounded values only, never half a unit the wrong way */
   if (judgeSF("0.0087", .0087, 1 / 115) !== "ok" || judgeSF("0.00870", .0087, 1 / 115) !== "ok" || judgeSF("0.009", .009, 1 / 115) !== "sf" || judgeSF("0.0086", .0086, 1 / 115) === "ok" ||
       judgeSF("0.0083", .0083, .2 / 24) !== "ok" || judgeSF("0.0084", .0084, .2 / 24) === "ok" || judgeSF("0.0063", .0063, 1 / 160) !== "ok" || judgeSF("0.0062", .0062, 1 / 160) === "ok") F("rate rounding rule (2 significant figures, half up)");
+  { const ch = TASKS.easy.find(t => t.id === "change"), an = TASKS.hard.find(t => t.id === "anom"), J = (t, s) => judgeNum(t, s, parseNum(s), t.ans()) === "ok";
+    if (!ch || !an || !["0.5", "0.50", ".5"].every(s => J(ch, s)) || ["1", "0", "0.4", "0.6", "0.45", "0.55", "0.499", "0.501", "0.502", "0.4995", "0.5005", "0.49", "0.51"].some(s => J(ch, s))) F("change in pH: only 0.5 is accepted (1 or 0 is over-rounded)");
+    if (!["119.5", "120"].every(s => J(an, s)) || ["119", "121", "119.4", "119.6", "119.0"].some(s => J(an, s))) F("mean (anomaly left out): 119.5 or 120 only"); }
   if (!judgeDP("119.5", 119.5, 119.5) || !judgeDP("120", 120, 119.5) || judgeDP("119", 119, 119.5) || !judgeDP("116.3", 116.3, 349 / 3) || judgeDP("116.4", 116.4, 349 / 3) || judgeDP("117", 117, 116.5 - 1e-6)) F("mean rounding rule (half up)");
   [[[118, 121, 205], 2, 119.5], [[300, 291, 310], -1, 300.33333333333331], [[115, 112, 196], 2, 113.5], [[480, 470, 495], -1, 481.6666666666667]].forEach(([a, i, m]) => {
     if (anomIdx(a) !== i) F("anomaly rule on " + a); if (Math.abs(goodMean(a) - m) > 1e-9) F("mean of " + a); if (!judgeMean(a, m, String(m)).ok) F("mean check " + a); });
@@ -1488,7 +1501,11 @@ function bankCheck() {
         nums(w).forEach(x => { if (!known.has(+x.toFixed(6))) E(`slip message names a value not in the question or working: ${x}`); }); });
       if (!t.generic || !t.working) E("needs feedback and working");
       if (t.sf) { const s = sfTxt(a, 2); if (judgeSF(s, +s, a) !== "ok") E("the 2 s.f. answer must be accepted"); }
-      else if (!judgeDP(fmt(a, 2), +fmt(a, 2), a)) E("the rounded answer must be accepted"); }
+      else if (judgeNum(t, fmt(a, 2), +fmt(a, 2), a) !== "ok") E("the rounded answer must be accepted");
+      /* over-rounding: only a mean may be rounded to the places typed; nothing half a unit out passes */
+      if (!t.sf && !t.mean && Math.abs(a - Math.round(a)) > 1e-9) { const r0 = Math.round(a); if (judgeNum(t, String(r0), r0, a) === "ok") E("an answer rounded to a whole number must not be accepted: " + r0); }
+      if (!t.sf) { const st = t.mean ? .5 : Math.pow(10, -Math.max(1, dpOf(fmt(a, 3)))), hv = [a + st / 2, a - st / 2].map(x => +x.toFixed(6));
+        hv.forEach(x => { if (judgeNum(t, String(x), x, a) === "ok") E("half a unit out must be rejected: " + x); }); } }
     if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
       c.forEach(s => { if (!t.miss[s.free || s.c]) E("no hint for a missing point"); }); if (t.ordered && !t.orderMsg) E("needs an order message");
       if (t.ms6) { const ix = f => t.stm.map((s, j) => [s, j]).filter(x => f(x[0])).map(x => x[1]), main = ix(s => s.c && !s.free), all = ix(s => s.c), bad = ix(s => !s.c);
@@ -1639,8 +1656,8 @@ function evaluate() {
     return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]} ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
   if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
     const a = t.ans();
-    if (t.sf) { const j = judgeSF(String(S.val).trim().replace(/\s*(per hour|\/h)$/i, ""), v, a); if (j === "ok") return { ok: true, html: esc("Correct.") + workHTML(t) }; if (j === "sf") return { ok: false, html: esc("Right working. Now give it to 2 significant figures.") }; }
-    else if (judgeDP(String(S.val).trim().replace(/\s*s$/i, ""), v, a)) return { ok: true, html: esc("Correct.") + workHTML(t) };
+    const j = judgeNum(t, S.val, v, a); if (j === "ok") return { ok: true, html: esc("Correct.") + workHTML(t) };
+    if (j === "sf") return { ok: false, html: esc("Right working. Now give it to 2 significant figures.") };
     const hit = t.wrongs.find(([x]) => Math.abs(v - x) <= Math.max(.006 * Math.abs(x), .0051)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
   if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want, in order." };
     const b = buildMarks(t, S.list);
