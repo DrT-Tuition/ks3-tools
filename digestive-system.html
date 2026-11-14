@@ -295,6 +295,11 @@ select{font:700 17px var(--f-body);min-height:44px;padding:6px 10px;border-radiu
 .etab{border-collapse:collapse;width:100%;font-size:15px;line-height:1.3}
 .etab th,.etab td{text-align:left;padding:4px 5px;border-bottom:1px solid var(--line);vertical-align:top}
 .etab th{color:var(--muted);font-size:14px}
+.etab td.hid{color:var(--muted);text-align:center}
+.etab th[scope="row"]{white-space:nowrap}
+/* phones: the table's cells wrap so it fits the panel (was 54 px too wide at 390) */
+.qpanel > div,.support-box,#answer,.selrow{min-width:0}
+@media (max-width:480px){.etab{table-layout:fixed;font-size:14px}.etab th,.etab td{padding:3px 3px;overflow-wrap:break-word;hyphens:auto}.etab th{font-size:13px}.etab th[scope="row"]{white-space:normal}.etab tr > :first-child{width:33%}}
 .small{font-size:16px;color:var(--muted);margin:6px 0 0}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:560px){.seg button{padding:8px 11px}.gridq{font-size:16px}.gridq .seg button{min-width:52px;padding:6px 8px}}
@@ -503,6 +508,7 @@ main.layout{min-height:calc(100vh - 70px)}
           <button class="sw" type="button" data-support="frame" aria-pressed="false"><span class="dot"></span>Enzyme table <span class="state">off</span></button>
         </div>
         <div class="support-box" id="frameBox" hidden><h3>Enzyme table</h3><table class="etab" id="etab"></table></div>
+        <p class="hidden-note" id="hideNote" hidden></p>
         <p class="hidden-note" id="stuckNote"></p>
         <div class="resetrow">
           <button class="linkbtn" type="button" id="reset">Reset this question</button>
@@ -636,7 +642,7 @@ const WORDDEF = { saliva: "Saliva is the digestive juice the salivary glands mak
   faeces: "Faeces are the solid waste left at the end.", oesophagus: "The oesophagus is the tube from the mouth to the stomach.", rectum: "The rectum stores faeces.", anus: "The anus is the muscular ring at the very end." };
 const TASKS = {
   easy: [
-    { kind: "tap", scene: "journey", ans: ["stomach"], src: "stomach",
+    { kind: "tap", scene: "journey", ans: ["stomach"], src: "stomach", hide: ["labels"],   // a "stomach" label would give the answer
       text: "Tap the stomach on the picture, then press Check.",
       explain: "The stomach is the bag where food is mixed with acid and digestive juices.",
       hints: ["The stomach is a bag. Food is churned in it.", "Follow the long tube down from the mouth. Where does it end?", "It is the pink bag on the right of the picture, partly under the liver."] },
@@ -700,11 +706,11 @@ const TASKS = {
       hints: ["Read each line and think about the order of the organs.", "Use scientific names. Which organ comes straight after the stomach?", "Stomach; small intestine; small intestine."] }
   ],
   hard: [
-    { kind: "goal", scene: "enzymes", scenes: ["enzymes"], food: "carb", test: r => !!r && r.ok && r.food === "protein", answer: { food: "protein", enz: "protease" }, frame: true,
+    { kind: "goal", scene: "enzymes", scenes: ["enzymes"], food: "carb", test: r => !!r && r.ok && r.food === "protein", answer: { food: "protein", enz: "protease" }, frame: true, hide: ["food", "into"],
       text: "Break down a protein molecule into amino acids. Use the model, then press Check.",
       explain: "Protease breaks down proteins into amino acids. They are small enough to pass into the blood.",
       hints: ["Choose Protein as the food molecule first.", "Each enzyme breaks down one type of food molecule. Which one works on proteins?", "Choose Protein, then add protease."] },
-    { kind: "choice", scene: "enzymes", food: "carb", lock: true, predict: { enz: "protease" }, src: "nothing",   // predict, then reveal (specific enzymes)
+    { kind: "choice", scene: "enzymes", food: "carb", lock: true, predict: { enz: "protease" }, src: "nothing", hide: ["food", "into"],   // predict, then reveal (specific enzymes)
       text: "Starch is in the small intestine. Protease is added. Predict: what happens, and why?",
       options: [
         { t: "Nothing: the shape of protease doesn't fit starch", ok: true },
@@ -713,7 +719,7 @@ const TASKS = {
         { t: "The protease is used up and disappears", why: "Enzymes are not used up. The shape of protease just doesn't fit starch." }],
       explain: "Nothing happens. Each enzyme has a shape that fits one kind of food molecule. Protease fits proteins, not starch. Starch needs carbohydrase.",
       hints: ["Starch is a carbohydrate.", "Each enzyme has a shape that fits one kind of food molecule. Which kind does protease fit?", "The shape of protease fits proteins, not starch, so the starch doesn't change."] },
-    { kind: "sel", scene: "enzymes", food: "carb", frame: true,                                           // L58 slide 20 summary question 1
+    { kind: "sel", scene: "enzymes", food: "carb", frame: true, hide: ["food", "into"],                     // L58 slide 20 summary question 1
       text: "Choose the right word or words for each gap.",
       rows: [
         { line: "Carbohydrates are broken down into sugar by…", opts: ENZ_NAMES, ans: () => enzFor("carb"), src: "carbohydrase", ctx: "carb" },
@@ -731,7 +737,7 @@ const TASKS = {
         { t: "An acid that is only found in the stomach", why: "Enzymes are not acids. They work in the mouth and small intestine too, not just the stomach." }],
       explain: "Enzymes are special proteins. They are biological catalysts: they speed up digestion without being used up.",
       hints: ["Add an enzyme in the model. Is it still there at the end?", "A catalyst speeds up a reaction. Is it used up?", "A biological catalyst that is not used up."] },
-    { kind: "grid", id: "hard5b", scene: "enzymes", food: "carb", frame: true, rows: ENZ_NAMES, cols: ["mouth", "stomach", "small"], src: WHERE_SRC,   // L58 slide 17 locations
+    { kind: "grid", id: "hard5b", scene: "enzymes", food: "carb", frame: true, hide: ["where"], rows: ENZ_NAMES, cols: ["mouth", "stomach", "small"], src: WHERE_SRC,   // L58 slide 17 locations
       text: "Where does each enzyme work? Choose ✓ (works here) or ✗ (doesn't) for each box.",
       hints: ["Carbohydrase is in saliva, so it works in the mouth. It works in the small intestine too.", "Proteins are digested in the stomach and small intestine. Fats only in the small intestine.", "Carbohydrase ✓ ✗ ✓; protease ✗ ✓ ✓; lipase ✗ ✗ ✓."] },
     { kind: "tap", scene: "journey", test: o => !ORG[o].path && !!ORG[o].juice, src: "pancreas",          // info sheet: food does not pass through the pancreas
@@ -848,7 +854,9 @@ function prog() {
 }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.keys(LEVELS).reduce((n, lv) => n + LEVELS[lv].filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // current ids only
-const showLabels = () => mode === "demo" || support.labels;
+/* supports that would give the answer stay hidden ("–") while that question is open; back after a correct Check or Show answer */
+const hiddenNow = () => { if (mode === "demo" || !task || !task.hide) return []; const p = prog(); return p.solved || p.revealed ? [] : task.hide; };
+const showLabels = () => mode === "demo" || (support.labels && !hiddenNow().includes("labels"));
 
 /* ===== Journey drawing (picture coordinates; the picture itself is a static layer, only #jDyn is patched) ===== */
 const VBX = -180, VBW = 1810;
@@ -1389,8 +1397,13 @@ function renderDots() {
 /* ===== Support (all off on load, never stored) ===== */
 function renderSupport() {
   $("frameBox").hidden = !support.frame;
+  const hid = hiddenNow(), cell = (k, v) => hid.includes(k) ? `<td class="hid" aria-label="hidden for now">–</td>` : `<td>${v}</td>`;
   $("etab").innerHTML = `<thead><tr><th scope="col">Enzyme</th><th scope="col">Breaks down</th><th scope="col">Into</th><th scope="col">Where it works</th></tr></thead><tbody>` +
-    ENZ_NAMES.map(e => `<tr><th scope="row">${cap(e)}</th><td>${FOOD[ENZ[e].food].plural}</td><td>${ENZ[e].into}</td><td>${ENZ[e].where.map(nm).join(", ")}</td></tr>`).join("") + `</tbody>`;
+    ENZ_NAMES.map(e => `<tr><th scope="row">${cap(e).replace("Carbo", "Carbo&shy;")}</th>${cell("food", FOOD[ENZ[e].food].plural)}${cell("into", ENZ[e].into)}${cell("where", ENZ[e].where.map(nm).join(", "))}</tr>`).join("") + `</tbody>`;
+  const tabHid = support.frame && hid.some(k => k !== "labels"), labHid = support.labels && hid.includes("labels");
+  $("hideNote").hidden = !(tabHid || labHid);
+  $("hideNote").textContent = labHid ? "The labels would give this answer away. They come back once you have answered."
+    : "The parts marked – would give this answer away. They come back once you have answered.";
   drawJ();
 }
 document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
@@ -1469,7 +1482,10 @@ function selExplain(t) {
 }
 function msgStuck() {
   const t = task;
+  const hid = t.hide || [];
+  if (t.kind === "tap" && hid.includes("labels")) return "Stuck? Press <b>Hint</b> for a clue.";
   if (t.kind === "tap" && !support.labels) return "Stuck? Turn on <b>Labels</b> under Support.";
+  if (t.frame && hid.some(k => k !== "labels")) return "Stuck? Press <b>Hint</b> for a clue.";
   if (t.frame && !support.frame) return "Stuck? Turn on <b>Enzyme table</b> under Support.";
   return "";
 }
@@ -1485,7 +1501,7 @@ function check() {
     bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
-    revealModel(false);
+    renderSupport(); revealModel(false);
   } else {
     p.wrong++; streak = 0; bump();
     msg("bad", "<b>✗ Not quite.</b> " + r.html);
@@ -1510,7 +1526,7 @@ function answerText(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
-  setAnswerState(false);
+  renderSupport(); setAnswerState(false);
   msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)"));
 }
 function resetTask() {
