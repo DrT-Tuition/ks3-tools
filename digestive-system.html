@@ -47,7 +47,7 @@
     - The organs are simplified and not to scale. Real food takes hours; the bite moves in seconds.
     - Each particle stands for one small molecule, far too small to see. Real starch, protein and fat
       molecules are much bigger (8 units in a chain here). The gut wall and villi are drawn as a simple band.
-    - The Enzymes scene happens inside the small intestine. Carbohydrase also works in the mouth and stomach,
+    - The Enzymes scene happens inside the small intestine. Carbohydrase also works in the mouth,
       and protease in the stomach (Enzyme table support, Hard question 5).
     - Enzymes and molecules are flat 2D shapes; real ones are 3D and far smaller. The notch shapes are simplified, and
       each enzyme here works from the free end of the molecule, one small molecule at a time.
@@ -78,8 +78,8 @@
       Pancreas: a gland that releases enzymes; food does not pass through it. Liver makes bile (green-yellow,
       alkaline), stored in the gall bladder, squirted onto food entering the small intestine; it neutralises
       the acid and breaks fats into small droplets.
-    - Enzymes (slide 17): carbohydrase: carbohydrates → sugar molecules, mouth (saliva), stomach, small
-      intestine; protease: proteins → amino acids, stomach and small intestine; lipase: fats (lipids) →
+    - Enzymes (slide 17): carbohydrase: carbohydrates → sugar molecules, mouth (saliva) and small
+      intestine (standard KS3 table; not the stomach — corrected 14 Nov 2026); protease: proteins → amino acids, stomach and small intestine; lipase: fats (lipids) →
       fatty acids and glycerol, small intestine. Enzymes are special proteins and biological catalysts that
       speed up digestion without being used up. Different enzymes break down different nutrients.
     - "Food does not pass through the liver" is not stated in the sources in those words; it follows from
@@ -310,6 +310,10 @@ select{font:700 17px var(--f-body);min-height:44px;padding:6px 10px;border-radiu
 .gridq .seg button{min-width:44px;padding:6px 8px}
 .gridq th{font-size:14px;color:var(--muted);text-align:center;font-weight:700;padding:0 2px;line-height:1.2}
 .gridq th:first-child{text-align:left}
+/* narrow phones: the ✓/✗ grid would be wider than the panel, so each enzyme's name goes on its own line above its three boxes */
+@media (max-width:480px){.gridq,.gridq thead,.gridq tbody{display:block}.gridq tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:6px}
+  .gridq th:first-child{display:none}.gridq td{padding:0;display:flex;justify-content:center}.gridq td.lbl{grid-column:1/-1;justify-content:flex-start;font-weight:700}
+  .gridq .seg button{min-width:42px;padding:6px 6px}}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
@@ -569,7 +573,7 @@ const ORG = {
 const ORDER_SRC = ["mouth", "oes", "stomach", "small", "large", "rectum", "anus"];   // L57 slide 13 (stages 1–6) and slide 25
 /* ENZ (L58 slide 17): which food each enzyme breaks down, what into, and where it works */
 const ENZ = {
-  carbohydrase: { food: "carb", into: "sugar molecules", where: ["mouth", "stomach", "small"] },
+  carbohydrase: { food: "carb", into: "sugar molecules", where: ["mouth", "small"] },
   protease:     { food: "protein", into: "amino acids", where: ["stomach", "small"] },
   lipase:       { food: "fat", into: "fatty acids and glycerol", where: ["small"] }
 };
@@ -579,7 +583,7 @@ const FOOD = {
   fat:     { chip: "Fat", name: "fat", kind: "fat (lipid)", plural: "lipids (fats)" }
 };
 const ENZ_SRC = { carb: ["carbohydrase", "sugar molecules"], protein: ["protease", "amino acids"], fat: ["lipase", "fatty acids and glycerol"] };   // slide 17 answers, checked on load
-const WHERE_SRC = { carbohydrase: [1, 1, 1], protease: [0, 1, 1], lipase: [0, 0, 1] };   // slide 17 locations: mouth, stomach, small intestine
+const WHERE_SRC = { carbohydrase: [1, 0, 1], protease: [0, 1, 1], lipase: [0, 0, 1] };   // locations: mouth, stomach, small intestine (carbohydrase not in the stomach: standard KS3 table)
 const UNIT = { S: { name: "sugar molecule", fill: "var(--particle)", ink: "var(--particle-ink)" }, A: { name: "amino acid", fill: "var(--particle-2)", ink: "var(--particle-2-ink)" },
                G: { name: "glycerol", fill: "var(--particle)", ink: "var(--particle-ink)" }, F: { name: "fatty acid", fill: "var(--particle-2)", ink: "var(--particle-2-ink)" } };
 
@@ -727,9 +731,9 @@ const TASKS = {
         { t: "An acid that is only found in the stomach", why: "Enzymes are not acids. They work in the mouth and small intestine too, not just the stomach." }],
       explain: "Enzymes are special proteins. They are biological catalysts: they speed up digestion without being used up.",
       hints: ["Add an enzyme in the model. Is it still there at the end?", "A catalyst speeds up a reaction. Is it used up?", "A biological catalyst that is not used up."] },
-    { kind: "grid", scene: "enzymes", food: "carb", frame: true, rows: ENZ_NAMES, cols: ["mouth", "stomach", "small"], src: WHERE_SRC,   // L58 slide 17 locations
+    { kind: "grid", id: "hard5b", scene: "enzymes", food: "carb", frame: true, rows: ENZ_NAMES, cols: ["mouth", "stomach", "small"], src: WHERE_SRC,   // L58 slide 17 locations
       text: "Where does each enzyme work? Choose ✓ (works here) or ✗ (doesn't) for each box.",
-      hints: ["Carbohydrase is in saliva, so it works in the mouth.", "Proteins are digested in the stomach and small intestine. Fats only in the small intestine.", "Carbohydrase ✓ ✓ ✓; protease ✗ ✓ ✓; lipase ✗ ✗ ✓."] },
+      hints: ["Carbohydrase is in saliva, so it works in the mouth. It works in the small intestine too.", "Proteins are digested in the stomach and small intestine. Fats only in the small intestine.", "Carbohydrase ✓ ✗ ✓; protease ✗ ✓ ✓; lipase ✗ ✗ ✓."] },
     { kind: "tap", scene: "journey", test: o => !ORG[o].path && !!ORG[o].juice, src: "pancreas",          // info sheet: food does not pass through the pancreas
       text: "Tap an organ that adds a juice to the food, but that the food does not pass through.",
       explain: "The food doesn't pass through the salivary glands, liver, gall bladder or pancreas. They add saliva, bile or enzymes to it.",
@@ -765,7 +769,7 @@ const TASKS = {
   ]
 };
 for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
-  t.id = lv + (i + 1);
+  t.id = t.id || lv + (i + 1);   // a question whose answer changed keeps a new, explicit id
   if (t.match) t.rows.forEach(r => { r.opts = t.opts.map(nm); r.ans = () => { const m = Object.keys(ORG).filter(o => ORG[o].role === r.line); return m.length === 1 ? nm(m[0]) : ""; }; r.src = nm(r.src); });
   if (t.bank) t.rows.forEach(r => { r.opts = t.bank; });
 });
@@ -843,7 +847,7 @@ function prog() {
   p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
 }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
-const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+const scoreNow = () => Object.keys(LEVELS).reduce((n, lv) => n + LEVELS[lv].filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // current ids only
 const showLabels = () => mode === "demo" || support.labels;
 
 /* ===== Journey drawing (picture coordinates; the picture itself is a static layer, only #jDyn is patched) ===== */
@@ -1444,10 +1448,10 @@ function evaluate() {
     const keys = []; t.rows.forEach((r, k) => t.cols.forEach((c, j) => keys.push([k, j])));
     if (keys.some(([k, j]) => S.grid[k + ":" + j] == null)) return { skip: "Choose for every box first." };
     const wrong = keys.filter(([k, j]) => S.grid[k + ":" + j] !== gridAns(t, k, j));
-    if (!wrong.length) return { ok: true, html: esc("Correct. Carbohydrase works in the mouth, stomach and small intestine. Protease works in the stomach and small intestine. Lipase works only in the small intestine.") };
+    if (!wrong.length) return { ok: true, html: esc("Correct. Carbohydrase works in the mouth and small intestine. Protease works in the stomach and small intestine. Lipase works only in the small intestine.") };
     const nr = keys.length - wrong.length, [k, j] = wrong[0], e = t.rows[k], c = t.cols[j], yes = gridAns(t, k, j);
     if (keys.every(([kk, jj]) => S.grid[kk + ":" + jj] === (t.cols[jj] === "stomach"))) return { ok: false, html: `${nr} of ${keys.length} are right. Enzymes don't only work in the stomach. They work in the mouth and small intestine too.` };
-    const why = yes ? `${cap(e)} does work in the ${nm(c)}.` + (c === "mouth" ? " Carbohydrase is in saliva." : "") : `${cap(e)} doesn't work in the ${nm(c)}.` + (e === "lipase" ? " Fats are digested only in the small intestine." : e === "protease" ? " Proteins are digested in the stomach and small intestine." : "");
+    const why = yes ? `${cap(e)} does work in the ${nm(c)}.` + (c === "mouth" ? " Carbohydrase is in saliva." : "") : `${cap(e)} doesn't work in the ${nm(c)}.` + (e === "lipase" ? " Fats are digested only in the small intestine." : e === "protease" ? " Proteins are digested in the stomach and small intestine." : " It works in the mouth and small intestine.");
     return { ok: false, html: `${nr} of ${keys.length} are right. ` + esc(why) };
   }
   if (t.kind === "goal") {
@@ -1499,7 +1503,7 @@ function answerText(t) {
   if (t.kind === "tap") return `Answer: ${theNm(tapAnswer(t))} (ringed). ${t.explain}`;
   if (t.kind === "sel") return "Answer: " + selExplain(t);
   if (t.kind === "order") return "Answer: " + orderAns(t).map(o => cap(nm(o))).join(" → ") + ".";
-  if (t.kind === "grid") return "Answer: carbohydrase ✓ ✓ ✓; protease ✗ ✓ ✓; lipase ✗ ✗ ✓. Only carbohydrase works in the mouth. Lipase works only in the small intestine.";
+  if (t.kind === "grid") return "Answer: carbohydrase ✓ ✗ ✓; protease ✗ ✓ ✓; lipase ✗ ✗ ✓. Only carbohydrase works in the mouth. Only protease works in the stomach. Lipase works only in the small intestine.";
   if (t.kind === "goal") return "Answer: choose Protein, then add protease. " + t.explain;
   return "";
 }
