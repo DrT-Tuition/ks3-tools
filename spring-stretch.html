@@ -527,10 +527,11 @@ main.layout{min-height:calc(100vh - 70px)}
 }
 @media (min-width:1500px){.layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}}
 /* == end tool: spring-stretch layout == */
-/* == shared: compact-header v2 == (Pilot 14 Nov 2026; v2 14 Nov 2026) On screens up to 820 px tall the big title folds away
+/* == shared: compact-header v3 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
    and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
    Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
-   The question panel's sticky top follows the bar's real height (--nq-bar, set by nqBar() in the shared JS). */
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
 .cb-name{display:none}
 @media (min-width:901px) and (max-height:820px){
   .wrap{padding-top:6px;gap:8px}
@@ -542,7 +543,6 @@ main.layout{min-height:calc(100vh - 70px)}
   .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .kc-lbl,.theme-btn .wd{display:none}
   .theme-btn{min-height:44px;min-width:44px;justify-content:center}
-  .qpanel{top:calc(var(--nq-bar,60px) + 6px)}
   .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
   main.layout{min-height:0}
 }
@@ -555,18 +555,22 @@ main.layout{min-height:calc(100vh - 70px)}
   header .brandmark{display:none}
   header .rplabel{margin-top:2px;font-size:14px}
 }
-/* == end shared: compact-header v2 == */
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v3 == */
 
-/* == shared: about-model v2 == "Model limits" folded into a closed <details> "About this model" */
+/* == shared: about-model v3 == "Model limits" folded into a closed <details> "About this model" */
 details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
 details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
 details.about > summary::-webkit-details-marker{display:none}
 details.about > summary::before{content:"▸";font-size:13px}
 details.about[open] > summary::before{content:"▾"}
 details.about .limits{margin:0 0 4px}
-/* == end shared: about-model v2 == */
+/* == end shared: about-model v3 == */
 
-/* == shared: phone-order v2 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+/* == shared: phone-order v3 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
 details.trybox > summary{list-style:none;cursor:pointer}
 details.trybox > summary::-webkit-details-marker{display:none}
 details.trybox > summary::before{content:"▸ ";font-size:13px}
@@ -581,23 +585,37 @@ details.trybox > .try{margin-top:6px}
   .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
   .topbar .chip.c-score .cl{display:none}
   .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
   .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
   .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
 }
-@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 9px}.topbar .chip{padding:1px 5px}}
-@media (max-width:370px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}}
-/* == end shared: phone-order v2 == */
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v3 == */
 
-/* == shared: projector v2 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+/* == shared: projector v3 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
    stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
-   pilot's model-heavy split (1.9 : 1) above 1500 px. */
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
 @media (min-width:1500px){
   .wrap{max-width:min(1840px,96vw)}
   .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
 }
-/* == end shared: projector v2 == */
+/* == end shared: projector v3 == */
 
-/* == shared: touch v2 == Tap targets at least 44 px on phones and tablets. */
+/* == shared: touch v3 == Tap targets at least 44 px on phones and tablets. */
 @media (max-width:900px){
   .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
   .theme-btn{min-width:44px;justify-content:center}
@@ -606,18 +624,18 @@ details.trybox > .try{margin-top:6px}
   .topbar .tourbtn{min-width:44px;justify-content:center}
   .nq-btns .btn{min-height:44px}
 }
-/* == end shared: touch v2 == */
+/* == end shared: touch v3 == */
 
-/* == shared: polish v2 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+/* == shared: polish v3 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
 @media (prefers-reduced-motion:no-preference){
   .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
   .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
   .feedback .msg{animation:nqIn .18s ease-out both}
   @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 }
-/* == end shared: polish v2 == */
+/* == end shared: polish v3 == */
 
-/* == shared: next-question v2 == Next question button, end-of-level card, score out of N */
+/* == shared: next-question v3 == Next question button, end-of-level card, score out of N */
 .nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .nq-next{min-height:46px}
 #quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
@@ -647,7 +665,7 @@ details.trybox > .try{margin-top:6px}
   .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
   .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
 }
-/* == end shared: next-question v2 == */
+/* == end shared: next-question v3 == */
 </style>
 </head>
 <body>
@@ -2008,7 +2026,7 @@ function boxW(el) {   // an element's width, read once and kept until it changes
   if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
   return e.w;
 }
-/* == shared: next-question v2 == (Pilot 14 Nov 2026; v2 after review, 14 Nov 2026)
+/* == shared: next-question v3 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026)
    Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
    Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
    or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
@@ -2017,7 +2035,10 @@ function boxW(el) {   // an element's width, read once and kept until it changes
    the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
    Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
    1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
-   solved before this was tracked have no record: they are reported as "not tracked", never as wrong. */
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress. */
 var NQ_S = null;
 function nqStore() {
   if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
@@ -2074,19 +2095,62 @@ function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show a
   b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
   b.addEventListener("click", nqGo);
   row.appendChild(b); box.appendChild(row);
-  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); }
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions");
+      if (act && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING) && /sticky|fixed/.test(getComputedStyle(act).position)) lim -= act.getBoundingClientRect().height;
+      d = r.bottom + 10 - lim;
+      const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
 }
 function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
 function nqGo() {
   const nx = nqNext(level, idx);
   if (nx < 0) { nqShowEnd(); return; }
-  idx = nx; nqDoLoad(); nqFocusQ();
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
 }
 function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
 function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
   const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
   if (!s.tracked && s.solved) return "";
   if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
   return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
 }
 function nqShowEnd() {
@@ -2110,7 +2174,7 @@ function nqShowEnd() {
   $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
   const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
   if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
-  el.focus({ preventScroll: true });
+  el.focus({ preventScroll: true }); nqStickSoon();
 }
 function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
   const s = nqStore();
@@ -2132,21 +2196,63 @@ function nqTryFold() {
   const set = () => { if (!chosen) d.open = !mq.matches; };
   set(); if (mq.addEventListener) mq.addEventListener("change", set);
 }
-/* The compact bar's real height, for the sticky question panel (CSS var --nq-bar); measured again only when the bar resizes */
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
 var NQ_BAR = false;
 function nqBar() {
   const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
-  const set = () => { const h = Math.ceil(b.getBoundingClientRect().height); if (h > 0) document.documentElement.style.setProperty("--nq-bar", h + "px"); };
-  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); else window.addEventListener("resize", set);
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 }
-nqTryFold(); nqBar();
-/* == end shared: next-question v2 == */
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+nqTryFold(); nqBar(); nqStickOn();
+/* == end shared: next-question v3 == */
 
-/* == shared: bank-check-later v2 == The question-bank self-check runs after the first paint, when the browser is idle
+/* == shared: bank-check-later v3 == The question-bank self-check runs after the first paint, when the browser is idle
    (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
-   a tool without it never throws here. */
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
 var BANK_DONE = false;
-function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") bankRun(); }
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
 function bankLater() {   // wait for the first contentful paint, then for an idle moment
   let go = false;
   const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
@@ -2161,7 +2267,7 @@ function nqBankReload() {   // after bankRun() switched questions off: rebuild w
   if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
   nqDoBump();
 }
-/* == end shared: bank-check-later v2 == */
+/* == end shared: bank-check-later v3 == */
 /* == tool: what you found out (end-of-level card): two short lines per level == */
 function nqFoundOut(lv) {
   const F = {
