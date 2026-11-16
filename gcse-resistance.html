@@ -62,7 +62,9 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
 <script>
 /* Apply a saved theme choice before the page paints (no flash). */
@@ -75,7 +77,7 @@ try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t ===
   --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
   --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
   --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
-  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
   --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
   color-scheme:light;
 }
@@ -487,25 +489,201 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* == tool: gcse-resistance layout (rollout 14 Nov 2026) ==
+1100 px and wider: a slimmer question panel; in the practical the circuit sits on the left with clip B and the switch under
+it, the meters to place and the step box (readings) on the right, and the magnified scales full width under them (bigger
+than before), so the circuit, the switch, the scales and Record share one screen. */
+@media (min-width:1100px){
+.layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+#pane-lab{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"tray step" "cir step" "clip step" "read read" "tbl tbl" "mean mean";column-gap:12px;align-items:start}
+#pane-lab > #tray{grid-area:tray}
+#pane-lab > #rwrap{grid-area:cir}
+#pane-lab > #clipRow{grid-area:clip}
+#pane-lab > .sscene:not(#rwrap){grid-area:read}
+#pane-lab > #stepRow{grid-area:step}
+#pane-lab > #rtable{grid-area:tbl}
+#pane-lab > #meanRow{grid-area:mean}
+}
+@media (min-width:1100px) and (max-height:820px){
+.model.card{padding:10px 16px 16px;gap:10px}
+#pane-lab{row-gap:8px}
+.model .seg button,.tabs button{min-height:38px;padding-top:6px;padding-bottom:6px}
+.stepbox{padding:8px 12px;gap:6px}
+.stepbox .smsg{padding:4px 10px;font-size:15px;line-height:1.35}
+#stepRow .stp{font-size:16px;line-height:1.4}
+#tray{row-gap:4px}
+#tray .small,#tray p{font-size:15px;line-height:1.35}
+#clipRow{row-gap:2px}
+#pane-lab > .sscene:not(#rwrap){max-width:810px;justify-self:center;width:100%}
+#clipRow #clipNote{order:9;flex-basis:100%;font-size:15px;line-height:1.3}
+}
+@media (min-width:1500px){#pane-lab > .sscene:not(#rwrap){max-width:1000px;justify-self:center;width:100%}}
+/* 1100-1339 px wide and short (e.g. 1280x720): smaller step text and scales, so the magnified ruler (clip B) ends above the fold */
+@media (min-width:1100px) and (max-width:1339px) and (max-height:820px){
+#pane-lab > .sscene:not(#rwrap){max-width:700px}
+#stepRow .stp{font-size:15px;line-height:1.35}
+#stepRow .smsg{font-size:14.5px}
+}
+/* == end tool: gcse-resistance layout == */
+/* == shared: compact-header v3 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v3 == */
+
+/* == shared: about-model v3 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v3 == */
+
+/* == shared: phone-order v3 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v3 == */
+
+/* == shared: projector v3 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v3 == */
+
+/* == shared: touch v3 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+}
+/* == end shared: touch v3 == */
+
+/* == shared: polish v3 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v3 == */
+
+/* == shared: next-question v3 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* == end shared: next-question v3 == */
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Resistance Practical<small>Build the circuit, read the meters yourself and find how the length of a wire affects its resistance. Then join resistors in series and in parallel.</small><small class="rplabel"><b>Required practical</b> · Combined Science RP15 · Physics RP3 · Foundation and Higher tier</small></h1>
+    <h1>Resistance Practical<small><span class="cb-desc">Build the circuit, read the meters yourself and find how the length of a wire affects its resistance. Then join resistors in series and in parallel.</span></small><small class="rplabel"><b>Required practical</b> · Combined Science RP15 · Physics RP3 · Foundation and Higher tier</small></h1>
     <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
   </header>
 
   <div class="topbar" id="topbar">
     <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Resistance Practical</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Resistance Practical</b><small>Required practical · Combined Science RP15 · Physics RP3 · Foundation and Higher tier</small></span>
     <nav class="modes" aria-label="Mode">
       <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
       <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
       <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
     </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
-      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
@@ -536,7 +714,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="readout" id="sread" aria-live="polite"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits"><b>Model limits:</b> The readings are invented example data, not real results. The model uses a 1.5 V cell with 1.2 Ω for the cell, leads and ammeter together, and a wire of 0.10 Ω per cm. Each switch-on is a fresh contact at the clips, so readings scatter a little (clip position ±0.3 cm, contact ±0.02 Ω). Each test has a 1 in 10 chance of an invented poor contact (an anomaly, 22–35 % too high), but never more than one in the same row. While the current flows the wire warms (fastest at short lengths, when the current is biggest), and its resistance changes with temperature (0.5 % per °C in this model); it cools when switched off (about 15 s to “cool”). Clip A starts on the 5 cm mark. Clip B moves in 0.5 cm steps. The meters are shown as magnified straight scales (half the range at a time on a phone). Series and parallel uses an ideal 6 V supply.</p>
+      <details class="about"><summary>About this model</summary><p class="limits">The readings are invented example data, not real results. The model uses a 1.5 V cell with 1.2 Ω for the cell, leads and ammeter together, and a wire of 0.10 Ω per cm. Each switch-on is a fresh contact at the clips, so readings scatter a little (clip position ±0.3 cm, contact ±0.02 Ω). Each test has a 1 in 10 chance of an invented poor contact (an anomaly, 22–35 % too high), but never more than one in the same row. While the current flows the wire warms (fastest at short lengths, when the current is biggest), and its resistance changes with temperature (0.5 % per °C in this model); it cools when switched off (about 15 s to “cool”). Clip A starts on the 5 cm mark. Clip B moves in 0.5 cm steps. The meters are shown as magnified straight scales (half the range at a time on a phone). Series and parallel uses an ideal 6 V supply.</p></details>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -544,8 +722,8 @@ main.layout{min-height:calc(100vh - 70px)}
         <p class="pmode">Demo</p>
         <h2 class="qtext">Do the practical, then plot your results.</h2>
         <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
-        <h3 class="try-h">Things to try</h3>
-        <ul class="try" id="tryList"></ul>
+        <details class="trybox" open><summary class="try-h">Things to try</summary>
+        <ul class="try" id="tryList"></ul></details>
         <div id="demoSupport"></div>
         <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
       </div>
@@ -746,9 +924,12 @@ const narrow = () => { const w = boxW($("model")); return !!(w && w < 600); };
 const LK = () => narrow() ? "tall" : "wide";
 function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
 function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
-const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+/* label floor (rollout 14 Nov 2026): each drawing sets FMIN so no pupil-read label is under ~13 px on a laptop or ~11 px on a phone */
+let FMIN = 0;
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${Math.max(fs, FMIN)}"${o ? " " + o : ""}>${esc(s)}</text>`;
 const tw = (s, fs) => s.length * fs * .54 + 4;
 function tag(x, y, s, fs, cls, anchor, id) {
+  fs = Math.max(fs, FMIN);
   const w = tw(s, fs) + 12, h = fs + 10, x0 = anchor === "end" ? x - w : anchor === "start" ? x : x - w / 2;
   return `<rect class="tag" x="${f1(x0)}" y="${f1(y - fs - 2)}" width="${f1(w)}" height="${f1(h)}" rx="7"${id ? ` id="${id}R"` : ""}/>` + T_(x0 + w / 2, y, s, fs, `text-anchor="middle"${cls ? ` class="${cls}"` : ""}${id ? ` id="${id}"` : ""}`);
 }
@@ -770,16 +951,16 @@ function slotSVG(G, s) {
   const [x, y] = G[s], k = M.slots[s], r = G.mr, sel = PICK.k && !k, lbl = { s1: "loop", s2: "loop", p1: "across the wire", p2: "across the cell" }[s];
   const nm = { s1: "In the loop, before the wire", s2: "In the loop, after the wire", p1: "Across the wire", p2: "Across the cell" }[s];
   let h = `<g class="slot${k ? " full" : ""}${sel ? " ready" : ""}" data-slot="${s}" tabindex="0" role="button" aria-label="${nm}: ${k ? (k === "A" ? "ammeter here. Press to pick it up" : "voltmeter here. Press to pick it up") : "empty" + (PICK.k ? ". Press to put the " + (PICK.k === "A" ? "ammeter" : "voltmeter") + " here" : "")}">`;
-  h += `<circle class="hit" cx="${x}" cy="${y}" r="${r + 14}"/>`;
+  h += `<circle class="hit" cx="${x}" cy="${y}" r="${r + (G.W > 700 ? 24 : 14)}"/>`;   // wide drawing is shown smaller: a bigger tap area (rollout review)
   h += k ? meterSym(x, y, r, k, k === "A" ? "am" : "vm") : `<circle class="empty" cx="${x}" cy="${y}" r="${r}"/>` + T_(x, y + 6, "?", 18, 'text-anchor="middle" class="mut"');
-  if (!k && (G.W > 700 || s[0] === "p")) h += s === "p1" ? T_(x - r - 8, y + 5, lbl, G.fs - 4, 'text-anchor="end" class="mut"') : s === "s1" ? T_(x + r + 6, y + 5, lbl, G.fs - 4, 'class="mut"') : s === "s2" ? T_(x - r - 6, y + 5, lbl, G.fs - 4, 'text-anchor="end" class="mut"') : T_(x, y + r + 18, lbl, G.fs - 4, 'text-anchor="middle" class="mut"');
+  if (!k && (G.W > 700 || s[0] === "p")) h += s === "p1" ? T_(x - r - 8, y + 5, lbl, G.fs - 4, 'text-anchor="end" class="mut"') : s[0] === "s" && G.W > 700 ? T_(s === "s1" ? x + r + 4 : x - r - 4, y + r + 24, lbl, G.fs - 4, `text-anchor="${s === "s1" ? "start" : "end"}" class="mut"`) : s === "s1" ? T_(x + r + 6, y + 5, lbl, G.fs - 4, 'class="mut"') : s === "s2" ? T_(x - r - 6, y + 5, lbl, G.fs - 4, 'text-anchor="end" class="mut"') : T_(x, y + r + 18, lbl, G.fs - 4, 'text-anchor="middle" class="mut"');
   h += `<rect class="fr" x="${x - r - 8}" y="${y - r - 8}" width="${2 * r + 16}" height="${2 * r + 16}" rx="10"/></g>`;
   return h;
 }
 function drawLabBg() {
   const G = labGeo(), fs = G.fs, m = M, xA = cmX(G, m.clipA), xB = cmX(G, m.clipB), [cx, cy, cw, ch] = G.cell, yW = G.yW, T = G.top; setVB($("rsvg"), G.W, G.H);
   drawLabDyn(G, xB);
-  const key = [G.W, JSON.stringify(m.slots), m.built, m.on, m.clipA, PICK.k].join("|"), rg = $("rG"); if (rg._key === key && rg._h) { patchTemp(); return; } rg._key = key;
+  const key = [G.W, JSON.stringify(m.slots), m.built, m.on, m.clipA, PICK.k].join("|"), rg = $("rG"); if (rg._key === key && rg._h) { patchTemp(); return; } rg._key = key; FMIN = G.W > 700 ? 27 : 21;
   /* picture layers (30 Oct): a band of the picture's tabletop stretched to the bench strip, and the picture ruler fitted so its
      top edge (picture x 155–878, y 421) spans the code ruler box and its front face ends at the box bottom (y 459.5) */
   const bH = G.H - yW - 52, bsx = G.W / 705, bsy = bH / 75, rw = G.x1 - G.x0 + 28, rh = G.W > 700 ? 44 : 40, rsx = rw / 723, rsy = rh / 38.5;
@@ -791,11 +972,11 @@ function drawLabBg() {
     h += `<path class="tick" d="M${f1(x)} ${yW + 6}v${big ? 16 : mid ? 11 : 7}"/>`; if (big) h += T_(x, yW + 38, String(c), fs - 4, 'text-anchor="middle"'); }
   h += `</g>` + T_(G.x1 + 10, yW + (G.W > 700 ? 64 : 62), "cm", fs - 4, 'text-anchor="end" class="mut onpic"');
   h += `<path id="wireP" class="rwire" d="M${G.x0} ${yW}H${G.x1}"/>`;
-  h += T_(G.x0 + (G.W > 700 ? 150 : 90), yW + (G.W > 700 ? 76 : 72), "resistance wire on a metre ruler", fs - 3, 'text-anchor="middle" class="mut onpic"');
+  h += T_(G.W > 700 ? G.x0 + 230 : G.W / 2, yW + (G.W > 700 ? 76 : 72), "resistance wire on a metre ruler", fs - 3, 'text-anchor="middle" class="mut onpic"');
   /* cell */
   h += `<rect class="cellb" x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="8"/><rect class="cellc" x="${cx + cw - 2}" y="${cy + ch * .3}" width="10" height="${ch * .4}" rx="2"/>`;
   h += T_(cx + 14, cy + ch / 2 + 7, "−", 22, 'class="bold" style="fill:#FBFAF8"') + T_(cx + cw - 18, cy + ch / 2 + 7, "+", 22, 'text-anchor="end" class="bold" style="fill:#FBFAF8"');
-  h += T_(cx + cw / 2, cy + ch + fs + 2, "1.5 V cell", fs - 2, 'text-anchor="middle"');
+  h += T_(cx + cw / 2, G.W > 700 ? cy - 8 : cy + ch + fs + 2, "1.5 V cell", fs - 2, 'text-anchor="middle"');   // wide: above the cell, clear of the dashed leads
   const pos = [cx + cw + 8, cy + ch / 2], neg = [cx, cy + ch / 2];
   /* leads: − terminal → left side → (ammeter place s1) → clip A ;  + terminal → switch → right side → (s2) → clip B */
   const s1 = G.s1, s2 = G.s2, sw = G.sw, gap = k => M.slots[k] ? G.mr : 0;
@@ -815,18 +996,18 @@ function drawLabBg() {
   /* clips */
   h += clipSVG(xA, yW, "ca", G.W > 700 ? "clip A" : "A", fs);
   /* wire temperature (word, patched while the switch is on) */
-  h += `<text id="tempT" x="${f1(G.W > 700 ? G.x1 - 4 : G.x1)}" y="${yW - 12}" font-size="${fs - 3}" text-anchor="end" class="bold"></text>`;
-  setLayer(rg, h);
+  h += `<text id="tempT" x="${f1(G.W > 700 ? G.x1 - 4 : G.x1)}" y="${yW - 12}" font-size="${Math.max(fs - 3, FMIN)}" text-anchor="end" class="bold"></text>`;
+  setLayer(rg, h); FMIN = 0;
   patchTemp();
 }
 function drawLabDyn(G, xB) {   // the parts that move with clip B (its lead, the voltmeter's lead to it, the clip), in their own overlay layer
-  setVB($("rsvgM"), G.W, G.H); const yW = G.yW, fs = G.fs, [p1x, p1y] = G.p1, k7 = G.mr * .7;
+  setVB($("rsvgM"), G.W, G.H); const yW = G.yW, fs = G.fs, [p1x, p1y] = G.p1, k7 = G.mr * .7; FMIN = G.W > 700 ? 27 : 21;
   let h = `<path class="wr" d="M${G.rx} ${G.rb}C${G.rx} ${yW - 60} ${f1(xB)} ${yW - 110} ${f1(xB)} ${yW - 40}"/>`;
   h += `<path class="${M.slots.p1 ? "lead" : "ghost"}" d="M${f1(p1x + k7)} ${f1(p1y + k7)}C${f1(p1x + G.mr + 20)} ${p1y + 50} ${f1(xB - 24)} ${yW - 74} ${f1(xB - 3)} ${yW - 26}"/>`;
   h += `<g id="clipB" class="drag" tabindex="0" role="slider" aria-label="Clip B: drag along the wire, or use the arrow keys" aria-valuemin="${minB()}" aria-valuemax="${LAB.maxB}" aria-valuenow="${M.clipB}" aria-valuetext="Clip B on the ${M.clipB} cm mark">` +
     `<rect class="hit" x="${f1(xB - 30)}" y="${yW - 90}" width="60" height="110"/>` + clipSVG(xB, yW, "cb", G.W > 700 ? "clip B" : "B", fs) +
     `<rect class="fr" x="${f1(xB - 26)}" y="${yW - 72}" width="52" height="86" rx="8"/></g>`;
-  setLayer($("rD"), h);
+  setLayer($("rD"), h); FMIN = 0;
 }
 function patchTemp() {
   const t = $("tempT"); if (!t) return; const dT = heatAt(M, nowMs()), w = warmWord(dT), s = `wire: ${w}`;
@@ -835,7 +1016,7 @@ function patchTemp() {
 }
 
 /* --- 2. magnified meter scales and the ruler, read by the pupil --- */
-function readGeo() { return LK() === "tall" ? { W: 600, H: 274, a0: 92, a1: 576, fs: 16, rowH: 90, tall: true } : { W: 960, H: 256, a0: 124, a1: 930, fs: 16, rowH: 84 }; }
+function readGeo() { return LK() === "tall" ? { W: 600, H: 274, a0: 92, a1: 576, fs: 21, rowH: 90, tall: true } : { W: 960, H: 256, a0: 124, a1: 930, fs: 18, rowH: 84 }; }
 function rowLbl(G, y, sym, word) {
   const cy = y + 28;
   return `<circle class="msym" cx="40" cy="${cy}" r="18"/>` + T_(40, cy + 7, sym, 20, 'text-anchor="middle" class="bold"') + T_(40, y + 70, word, G.fs - 3, 'text-anchor="middle" class="mut"');
@@ -859,7 +1040,7 @@ function setWin() {
 }
 function offRow(G, y, txt) { return `<rect class="mface off" x="8" y="${y}" width="${G.W - 16}" height="${G.rowH - 8}" rx="8"/>` + T_(G.W / 2, y + G.rowH / 2, txt, G.fs, 'text-anchor="middle" class="mut"'); }
 function drawReadBg() {
-  const G = readGeo(), fs = G.fs, R = G.rowH, has = k => Object.values(M.slots).includes(k); setVB($("dsvg"), G.W, G.H);
+  const G = readGeo(), fs = G.fs, R = G.rowH, has = k => Object.values(M.slots).includes(k); setVB($("dsvg"), G.W, G.H); FMIN = G.W > 700 ? 16 : 21;
   const wA = winOf("A"), wV = winOf("V"), key = [G.W, has("A"), has("V"), wA, wV].join("|"), dg = $("dG");
   if (dg._key !== key) { dg._key = key;
     let h = "";
@@ -872,7 +1053,7 @@ function drawReadBg() {
     for (let mm = -n * 10; mm <= n * 10; mm++) { const x = xc + mm / 10 * ppc, cmk = mm % 10 === 0, half = mm % 5 === 0;
       h += `<path class="tick" d="M${f1(x)} ${y + 22}v${cmk ? 24 : half ? 15 : 9}"/>`; }
     h += `</g><path class="rwire" d="M${G.a0 - 22} ${y + 20}H${G.a1 + 22}"/><path class="clipj zoomj" d="M${f1(xc - 14)} ${y - 2}L${f1(xc)} ${y + 21}L${f1(xc + 14)} ${y - 2}"/></g>`;
-    dg.innerHTML = h; dg._n = n; dg._span = { xc, ppc, y, R, fs, a: G.a0 - 22 }; $("dMov")._key = null;
+    dg.innerHTML = h; dg._n = n; dg._span = { xc, ppc, y, R, fs, a: G.a0 - 22 }; $("dMov")._key = null; FMIN = 0;
   }
   patchNeedles(true);
   const tgt = rulerTarget(), n = dg._n, z = dg._span, base = Math.floor(tgt.cm + 1e-9), fr = tgt.cm - base;
@@ -885,7 +1066,7 @@ function drawReadBg() {
 function rulerTarget() { return M.built && !M.zeroDone ? { cm: M.clipA, name: "clip A" } : { cm: M.clipB, name: "clip B" }; }
 let needleShown = { I: 0, V: 0 };
 function patchNeedles(force) {
-  const G = readGeo(), R = G.rowH, t = nowMs(), mt = meters(M, t), sw = M.swing;
+  const G = readGeo(), R = G.rowH, t = nowMs(), mt = meters(M, t), sw = M.swing; FMIN = G.W > 700 ? 16 : 21;
   let I = mt.I, V = mt.V;
   if (sw) { const k = clamp((t - sw.t0) / sw.dur, 0, 1), e = 1 - Math.pow(1 - k, 3); I = sw.I0 + (I - sw.I0) * e; V = sw.V0 + (V - sw.V0) * e; if (k >= 1) M.swing = null; }
   needleShown = { I, V };
@@ -895,11 +1076,12 @@ function patchNeedles(force) {
   if (!g._key || g._key !== nk) {
     const nd = id => `<g id="${id}"><path class="needle" d="M0 -38V0"/><path class="needleh" d="M-7 -44h14l-7 10z"/></g>`;
     const z = $("dG")._span; let lab = "";   /* the ruler zoom's numbers, its 0 cm end and the clip name live in this overlay too, so moving the clip repaints only this layer */
-    if (z) { lab = `<rect id="rzEnd" class="mface" x="${f1(z.a)}" y="${z.y + 1}" width="0" height="${z.R - 10}"/><text id="rzName" x="40" y="${z.y + 52}" font-size="${z.fs - 3}" text-anchor="middle" class="mut"></text>`;
+    if (z) { lab = `<rect id="rzEnd" class="mface" x="${f1(z.a)}" y="${z.y + 1}" width="0" height="${z.R - 10}"/><text id="rzName" x="40" y="${z.y + 52}" font-size="${Math.max(z.fs - 3, FMIN)}" text-anchor="middle" class="mut"></text>`;
       for (let i = 0; i <= 2 * $("dG")._n; i++) lab += `<text id="rzL${i}" x="${f1(z.xc + (i - $("dG")._n) * z.ppc)}" y="${z.y + 66}" font-size="${z.fs + 1}" text-anchor="middle" class="bold"></text>`; }
     g.innerHTML = lab + (Object.values(M.slots).includes("A") ? nd("nA") : "") + (Object.values(M.slots).includes("V") ? nd("nV") : ""); g._key = nk; setVB($("dsvgM"), G.W, G.H);
   }
   n("nA", I, winOf("A"), 4 + 48); n("nV", V, winOf("V"), 4 + R + 48);
+  FMIN = 0;
 }
 
 /* ===== Model state ===== */
@@ -1136,7 +1318,7 @@ function gAxes(m) {
   const pts = graphPts(m), xm = Math.max(50, Math.ceil((Math.max(0, ...pts.map(p => p.x)) + 5) / 10) * 10), ym = Math.max(3, Math.ceil(Math.max(0, ...pts.map(p => p.y)) + .6));
   return { xm, ym };
 }
-function gGeo() { return LK() === "tall" ? { W: 600, H: 430, x0: 74, y0: 18, w: 496, h: 340, fs: 17 } : { W: 960, H: 400, x0: 86, y0: 18, w: 840, h: 310, fs: 16 }; }
+function gGeo() { return LK() === "tall" ? { W: 600, H: 436, x0: 98, y0: 18, w: 476, h: 336, fs: 25 } : { W: 960, H: 400, x0: 86, y0: 18, w: 840, h: 310, fs: 16 }; }
 const hX = ax => [ax.xm * .1, ax.xm * .9];   // the two handles sit at 10 % and 90 % of the length axis; the line runs across the whole graph
 const lineAB = (m, ax) => { const [xa, xb] = hX(ax), b = (m.line.y1 - m.line.y0) / (xb - xa); return { a: m.line.y0 - b * xa, b }; };
 function lineInit(m) { const ax = gAxes(m), f = lsq(graphPts(m)); if (m.line.y0 == null) { m.line.y0 = ax.ym * .5; m.line.y1 = ax.ym * .3; } return { ax, f }; }
@@ -1152,7 +1334,8 @@ function drawGraph() {
   o += T_(G.x0 + G.w / 2, G.H - 6, "Length of wire (cm)", fs, 'text-anchor="middle" class="bold"');
   o += `<text x="${fs + 4}" y="${G.y0 + G.h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 4} ${G.y0 + G.h / 2})">Mean resistance (Ω)</text>`;
   pts.forEach(p => { const x = px(p.x), y = py(p.y); o += `<path class="xs" d="M${f1(x - 6)} ${f1(y - 6)}L${f1(x + 6)} ${f1(y + 6)}M${f1(x - 6)} ${f1(y + 6)}L${f1(x + 6)} ${f1(y - 6)}"/>`; });
-  if (!pts.length) o += T_(G.x0 + G.w / 2, G.y0 + G.h / 2, "Check your means on the practical tab: they are plotted here", fs + 1, 'text-anchor="middle" class="mut"');
+  if (!pts.length) o += G.W > 700 ? T_(G.x0 + G.w / 2, G.y0 + G.h / 2, "Check your means on the practical tab: they are plotted here", fs + 1, 'text-anchor="middle" class="mut"')
+    : ["Check your means", "on the practical tab:", "they are plotted here"].map((l, i) => T_(G.x0 + G.w / 2, G.y0 + G.h / 2 + (i - 1) * (fs + 4), l, fs, 'text-anchor="middle" class="mut"')).join("");
   setLayer($("gG"), o); drawLine();
 }
 function drawLine() {   /* the pupil's line and its two handles, in their own overlay layer (patched alone while dragging) */
@@ -1252,7 +1435,7 @@ function vmSym(x, y, r, fs, hide, below) {   // voltmeter across the whole combi
     tag(x, below ? y + r + fs + 10 : y - r - 10, hide ? "? V" : fx(SP.V, 1) + " V", fs - 1, "acc");
 }
 function drawSP() {
-  const G = spGeo(), s = M.sp, fs = G.fs, R = s.R.slice(0, s.n), c = spCalc(s.arr, R), hide = s.hide, tall = G.W < 700; setVB($("ssvg"), G.W, G.H);
+  const G = spGeo(), s = M.sp, fs = G.fs, R = s.R.slice(0, s.n), c = spCalc(s.arr, R), hide = s.hide, tall = G.W < 700; setVB($("ssvg"), G.W, G.H); FMIN = tall ? 21 : 15;
   let o = "";
   const L = tall ? 50 : 70, Rr = tall ? 560 : 890, T = tall ? 70 : 64, B = tall ? 420 : 320;
   /* cell symbol on the left side */
@@ -1268,7 +1451,8 @@ function drawSP() {
       o += `<path class="cw" d="M${f1(nL)} ${T}V${vy}H${f1(vx - 22)}M${f1(vx + 22)} ${vy}H${f1(nR)}V${T}"/><circle class="jn" cx="${f1(nL)}" cy="${T}" r="5"/><circle class="jn" cx="${f1(nR)}" cy="${T}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, true); }
     o += `<path class="cwb" d="M${L + 40} ${B}H${L + 96}"/>` + amSym(L + 68, B, 22, c.I, fs, hide, false);
     o += `<path class="cwb" d="M${Rr - 96} ${B}H${Rr - 40}"/>` + amSym(Rr - 68, B, 22, c.I, fs, hide, false);
-    o += T_((L + Rr) / 2, B - 18, "Same current all the way round: both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"');
+    o += tall ? T_((L + Rr) / 2, B - 84, "Same current all the way round:", fs - 3, 'text-anchor="middle" class="mut"') + T_((L + Rr) / 2, B - 84 + Math.max(fs - 3, FMIN) + 4, "both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"')
+      : T_((L + Rr) / 2, B - 18, "Same current all the way round: both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"');
   } else {
     const xl = L + (tall ? 140 : 250), xr = Rr - (tall ? 60 : 160), n = R.length, top = T + (tall ? 70 : 54), bot = B - (tall ? 40 : 30), rowY = i => n === 1 ? (top + bot) / 2 : top + (bot - top) * i / (n - 1);
     o += `<path class="cw" d="M${L} ${T}H${xl}V${f1(rowY(n - 1))}M${xr} ${f1(rowY(0))}V${B}H${L}"/>`;
@@ -1280,7 +1464,7 @@ function drawSP() {
       o += `<path class="cwb" d="M${f1(xm - w / 2 - (tall ? 40 : 60))} ${f1(y)}H${f1(xm + w / 2)}"/>` + resSym(xm + (tall ? 18 : 30), y, w, 28, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1);
       o += amSym(xm - w / 2 - (tall ? 14 : 30), y, 18, c.br[i], fs - 2, hide, true); });
   }
-  setLayer($("sG"), o);
+  setLayer($("sG"), o); FMIN = 0;
 }
 const spKey = s => s.arr + "|" + s.R.slice(0, s.n).join(",");
 function spCalcBox(s) {   // R total from the pupil's own meter readings, checked in code
@@ -1568,7 +1752,7 @@ function loadDemo() { task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; re
 function newS() { const t = task;
   return { choice: null, gap: {}, val: "", unit: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0), uorder: t.units ? shuffled(t.units.length) : [],
     rowOrder: t.rows ? t.rows.map(r => shuffled(r[3] ? r[3].length : t.bank.length)) : [] }; }
-function loadTask() {
+function loadTask() { nqHideEnd();
   if (mode === "demo") return loadDemo();
   const lst = LEVELS[level]; task = lst[idx]; S = newS();
   applyTaskModel();
@@ -1618,8 +1802,8 @@ function hideWrongStm() {
 function paintBuild() { document.querySelectorAll("#answer .opt").forEach(b => { const j = S.list.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? String(j + 1) : "+"; }); }
 function showFinished(p) {
   setAnswerState(true);
-  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
-    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+    : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
 }
 function rightBuild(t) { return t.stm.map((s, i) => [s, i]).filter(x => x[0].c).sort((a, b) => a[0].c - b[0].c).map(x => x[1]); }
 function setAnswerState() {
@@ -1696,23 +1880,23 @@ function evaluate() {
 }
 const STUCKW = { eq: "Equations", maths: "Maths help", words: "Key words" };
 function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
-function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function bump() { nqScore(); $("sStreak").textContent = streak; }
 function check() {
   const p = prog();
-  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
     mark(qkey(level, task), "solved"); p.solved = true;
     if (!p.wrong && !p.hints) streak++;
-    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
     revealModel(); renderSupport();
-  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+  } else { p.wrong++; nqMiss(); streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints" : `Hint (${n + 1}/3)`; }
-function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; nqMiss(); msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
 function answerHTML(t) {
   if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
   if (t.kind === "num" || t.kind === "numu") return esc(`Answer: ${fmt(t.ans(), 3)} ${t.unit}.`) + workHTML(t);
@@ -1726,11 +1910,11 @@ function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
   setAnswerState(); renderSupport();
-  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
 function resetTask() {
   if (mode === "demo") return loadDemo();
-  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
   S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
   applyTaskModel(); renderAnswer(); renderSupport();
   $("fb").innerHTML = ""; $("stuckNote").textContent = "";
@@ -1916,14 +2100,14 @@ $("toQuiz").addEventListener("click", () => setMode("easy"));
 $("resetProg").addEventListener("click", function confirmStep() {
   $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
   const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
-  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
   $("rpNo").addEventListener("click", back);
 });
 $("check").addEventListener("click", check);
 $("hint").addEventListener("click", hint);
 $("reset").addEventListener("click", resetTask);
 $("reveal").addEventListener("click", reveal);
-function setMode(m) {
+function setMode(m) { if (m !== "demo") bankNow();
   if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
   tourEnd();
   if (mode === "demo" && m !== "demo") DEMO_M = M;
@@ -1934,6 +2118,7 @@ function setMode(m) {
   $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
   if (mode === "demo") { PICK.k = null; $("rG")._h = null; }
   loadTask();
+  nqMode();
 }
 const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
 document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
@@ -1943,13 +2128,20 @@ if (window.IntersectionObserver) {
 }
 let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; $("rG")._h = null; $("dG")._key = null; $("dMov")._key = null; drawAll(); } }, 80); });
 
-const errs = bankCheck();
-if (errs.length) {
-  const e = $("bankErr"); e.hidden = false;
-  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
-  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
-}
 LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+function bankRun() {   // the load-time question-bank check, now run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (mode === "demo" && typeof drawAll === "function") drawAll();   // the check can change the model: redraw so Demo shows the current state (rollout review)
+  if (errs.length) {
+    const e = $("bankErr"); e.hidden = false;
+    e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+    for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  }
+  if (!errs.length) return;
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  nqBankReload();
+}
+bankLater();
 RNG = mulberry((Date.now() % 999983) | 1);
 M = DEMO_M = freshM();
 bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
@@ -2015,6 +2207,262 @@ function boxW(el) {   // an element's width, read once and kept until it changes
   if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
   if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
   return e.w;
+}
+/* == shared: next-question v3 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions");
+      if (act && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING) && /sticky|fixed/.test(getComputedStyle(act).position)) lim -= act.getBoundingClientRect().height;
+      d = r.bottom + 10 - lim;
+      const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+nqTryFold(); nqBar(); nqStickOn();
+/* == end shared: next-question v3 == */
+
+/* == shared: bank-check-later v3 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v3 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Potential difference = current × resistance (V = I R). Ammeter in series, voltmeter across the wire.",
+      "The resistance of a wire is directly proportional to its length: the graph is a straight line through the origin."
+    ],
+    "hard": [
+      "Resistors in series add up. Two resistors in parallel have a total resistance smaller than either one.",
+      "Switch off between readings, so the wire doesn’t heat up and change its resistance. Leave out anomalies."
+    ]
+  };
+  return F[lv] || F.easy;
 }
 </script>
 <script src="nav.js"></script>
