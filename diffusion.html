@@ -1885,7 +1885,16 @@ const TASKS = {
         { k: "want", t: "Yes. Stirring makes the particles want to spread.", fb: "Misconception: particles can't want anything. Stirring moves the liquid, and that is not diffusion." }],
       answer: () => "no",
       hints: ["In the box, does anything stir the liquid?", "Diffusion is spreading by random movement on its own. What does stirring add?", "Stirring moves the liquid around, so it is not diffusion."],
-      reason: "Diffusion is spreading by the particles' own random movement. Stirring moves the whole liquid, so it is not diffusion. That's why you don't stir in a diffusion test." }
+      reason: "Diffusion is spreading by the particles' own random movement. Stirring moves the whole liquid, so it is not diffusion. That's why you don't stir in a diffusion test." },
+    { id: "e10", scene: { setup: "plate" }, kind: "choice", text: "Why does the colour spread out from each sweet into the water?",
+      options: [
+        { k: "rand", t: "The dye particles move randomly, from high to low concentration." },
+        { k: "want", t: "The dye particles want to spread out and fill the plate.", fb: "Particles don't want anything. They move randomly, and spreading out is the result." },
+        { k: "push", t: "The water moves and pushes the dye towards the middle.", fb: "The water is still. Nothing pushes the colour; the particles' own random movement spreads it." },
+        { k: "melt", t: "The sugar coating melts, and the runny colour flows outwards.", fb: "The coating dissolves in the water; it doesn't melt. Then the dye particles spread by their own random movement, from high to low concentration." }],
+      answer: () => { for (let i = 1; i < 20; i++) if (!(plI(i / 20) < plI((i - 1) / 20))) return "none"; return "rand"; },   // the plate's colour is strongest at the sweet and fades towards the middle
+      hints: ["Look near a sweet in the Zoom in view.", "Where are there most dye particles, and where are there fewest?", "Diffusion: particles spread from high to low concentration by random movement."],
+      reason: "The coloured coating dissolves. Its dye particles move about randomly, so they spread from high concentration at the sweet to low concentration in the clear water. This is diffusion." }
   ],
   hard: [
     { id: "h1", scene: { setup: "race", vary: "temp", v: ["cold", "hot"] }, kind: "choice", text: "Race! Box 1 is cold. Box 2 is hot. Predict which will be evenly mixed first, and why. Then press Start race, and press Check when it ends.",
@@ -1991,6 +2000,8 @@ function bankCheck() {
   const g = FACTS.gas.temps; if (!(g.cold.f < g.room.f && g.room.f < g.hot.f)) e.push("Model: gas speeds must rise with temperature.");
   const L = PT.map(k => LT[k]); for (let i = 1; i < L.length; i++) if (!(L[i].c > L[i - 1].c && L[i].f > L[i - 1].f)) e.push("Model: liquid rates must rise with temperature.");
   const N = KIND.n2, A = KIND.ar; if (!(A.mass > N.mass && A.f < N.f && A.r > N.r)) e.push("Model: heavier particles must move slower and be drawn a little larger.");
+  if (!(PLF.T.warm < PLF.T.cold)) e.push("Model: on the plate, warm water must spread the colour sooner than cold.");
+  for (let i = 1; i < 20; i++) if (!(plI(i / 20) < plI((i - 1) / 20))) { e.push("Model: on the plate the colour must be strongest at the sweet and fade towards the middle."); break; }
   for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
     const id = `${lv} task ${i + 1}:`;
     if (!t.hints || t.hints.length !== 3) e.push(`${id} needs three hints.`);
@@ -2033,6 +2044,7 @@ function applyScene(sc) {
   M.setup = sc.setup;
   if (sc.setup === "explore") { M.ex.state = sc.state; M.ex.temp = sc.temp; if (sc.kind) M.ex.kind = sc.kind; }
   if (sc.setup === "race") { M.vary = sc.vary; M.rv[sc.vary] = sc.v.slice(); M.pred = null; }
+  if (sc.setup === "plate" && PL.on) plShow(false);   // a plate question starts on a fresh, dry plate
   if (sc.setup === "practical") { M.pt = sc.pt; if (sc.res === "clear") { RES = {}; plotted = false; } if (sc.res === "full") { fillRes(2); plotted = true; } }
   buildScene(true);
 }
@@ -2099,7 +2111,8 @@ function applySupport() {
   document.querySelectorAll("[data-support]").forEach(b => { paintSw(b, supQuiz[b.dataset.support]); b.hidden = b.dataset.support === "vars" && M.setup !== "practical"; });
   document.querySelectorAll("[data-show]").forEach(b => { paintSw(b, supShow[b.dataset.show]); b.hidden = b.dataset.show === "vars" && M.setup !== "practical"; });
   $("demoShow").hidden = mode !== "demo" || M.setup === "plate";
-  document.querySelector('#setupSeg [data-setup="plate"]').hidden = mode !== "demo";   // Demo only: its captions would answer Knowledge check questions
+  document.querySelector('#setupSeg [data-setup="plate"]').hidden = mode !== "demo" && !plTask();   // Demo, and the questions set on the plate (their captions stay hidden until answered)
+  plQSync();
   $("varsBox").hidden = !support.vars;
   views.forEach(v => v.words()); markDirty();
 }
@@ -2142,7 +2155,7 @@ function check() {
     msg("good", `<b>Correct.</b> ${r.html}`);
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
-    nqAfter("right");
+    plQSync(); nqAfter("right");
   } else { p.wrong++; nqMiss(); streak = 0; msg("bad", `<b>Not yet.</b> ${r.html}`); }
   bump();
 }
@@ -2159,6 +2172,7 @@ function reveal() {
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
   if (task.reveal) task.reveal();
   if (task.kind !== "goal") setAnswerState();
+  plQSync();
   msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
 function resetTask() {
@@ -2473,7 +2487,8 @@ function plWords() {
   const ts = Math.floor(PL.t) + " s"; if (PL.tKey !== ts) { PL.tKey = ts; $("plTime").textContent = ts; }
   const w = PL.water === "warm" ? "warm" : "cold", f = PL.poured ? plFront(PL.t) : 0;
   let why;
-  if (!PL.poured && !PL.pouring) why = `<p>Sugar-coated sweets sit in a ring on a dry plate. Choose warm or cold water, then press <b>Pour water</b>.</p>`;
+  if (plQ()) why = `<p>The words that explain the plate are hidden for this question. Watch the plate, then answer.</p>`;
+  else if (!PL.poured && !PL.pouring) why = `<p>Sugar-coated sweets sit in a ring on a dry plate. Choose warm or cold water, then press <b>Pour water</b>.</p>`;
   else {
     why = `<p>The coloured coating <b>dissolves</b>. Its dye <b>particles</b> spread by <b>random movement</b>, from <b>high</b> to <b>low concentration</b>: <b>diffusion</b>.</p>`;
     if (f > PLF.sr + 3) why += `<p><b>Why stripes?</b> Each colour keeps spreading where its concentration is higher than the water around it. Where two colours meet, neither colour spreads into the other much, so the stripes stay for a long time.</p>`;
@@ -2482,6 +2497,11 @@ function plWords() {
   if (why !== PL.capKey) { PL.capKey = why; $("plWhy").innerHTML = why; }
 }
 function plStatus(s) { $("plStatus").textContent = s; }
+/* Knowledge check questions on the plate: the plate's explaining words (#plWhy, the zoom caption) would give the answer
+   away, so they are hidden while such a question is open and unanswered, and come back after a right Check or Show answer. */
+const plTask = () => mode !== "demo" && !!task && !!task.scene && task.scene.setup === "plate";
+const plQ = () => plTask() && M.setup === "plate" && !DONE[qkey(level, task)];
+function plQSync() { if (!PL.on) return; PL.capKey = PL.zKey = ""; PL.zAt = PL.zDrawn = 0; plWords(); if (PL.zoom) zPaint(); }
 function plButtons() {
   if (!PL.on) return;
   const rm = reduced();
@@ -2606,7 +2626,8 @@ function zPaint() {
     else if (cL - cR > .04) cap = `More red dye particles on the sweet side (<b>high concentration</b>) than on the middle side (<b>low concentration</b>). Net movement: <b>towards the middle →</b>. ${fast}`;
     else cap = `Red dye particles: about the same on each side, so no overall change here. They are still moving. ${fast}`;
   }
-  if (cap !== PL.zKey) { PL.zKey = cap; $("plZcap").innerHTML = cap; }
+  if (plQ()) cap = "";   // a plate question: the caption comes back after a right answer or Show answer
+  if (cap !== PL.zKey) { PL.zKey = cap; $("plZcap").innerHTML = cap; $("plZcap").hidden = !cap; }
 }
 /* ----- showing and hiding the plate set-up ----- */
 function plShow(on) {
