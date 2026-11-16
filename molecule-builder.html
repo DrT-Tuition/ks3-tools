@@ -343,6 +343,35 @@ body.quiz .demo-only{display:none!important}
 @media (min-width:901px) and (max-height:820px){
   .cgrid,.sgrid{gap:4px 10px}.cgrid input{min-height:40px}.gsel{min-height:40px}
 }
+/* formula: "Work it out myself" (16 Nov 2026). Demo only: pupils type the atom counts, the total and the number of elements, then Check. */
+.wosw{font:700 15px var(--f-body);min-height:44px;padding:6px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center;margin-left:auto}
+.wosw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);flex:none}
+.wosw:hover{border-color:var(--accent)}
+.wosw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.wosw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.wosw .state{font-weight:400;color:var(--muted)}
+.fgrid.wo{grid-template-areas:"act cnt" "pic cnt";grid-template-rows:auto 1fr}
+.fgrid.wo>#fPicBox{grid-area:pic}.fgrid.wo>#fCountBox{grid-area:cnt}.fgrid.wo>#woAct{grid-area:act}
+@media (max-width:640px){.fgrid.wo{grid-template-areas:"cnt" "act" "pic";grid-template-rows:auto}}
+#woAct{display:grid;gap:8px;align-content:start}
+#woAct[hidden]{display:none}
+.wobtns{display:flex;flex-wrap:wrap;gap:8px}
+.wobtns .btn{padding:9px 14px}
+.ct td.woc{padding:3px 6px;white-space:nowrap;text-align:left}
+.woin{width:3.2em;font:700 19px var(--f-body);min-height:40px;padding:2px 6px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);text-align:center;vertical-align:middle}
+.woin.ok{border-color:var(--good);background:var(--good-bg)}
+.woin.no{border-color:var(--bad);background:var(--bad-bg)}
+.woin:disabled{opacity:1;color:var(--ink)}
+.womk{display:inline-block;min-width:1.1em;margin-left:4px;font-weight:700;vertical-align:middle}
+.womk.ok{color:var(--good)}.womk.no{color:var(--bad)}
+.wogiv{font-size:14px;font-weight:400;color:var(--muted);margin-left:2px;vertical-align:middle}
+.worv{font:700 14px var(--f-body);min-height:36px;padding:2px 10px;margin-left:4px;border-radius:8px;border:1px solid var(--accent);background:var(--surface);color:var(--accent);cursor:pointer;vertical-align:middle}
+.wot tfoot th{font-size:16px}
+#woFb.wofb{font-size:15px;line-height:1.35;padding:6px 10px}
+#woFb ul{margin:2px 0 0;padding-left:2px;list-style:none;display:grid;gap:1px}#woFb li{margin:0;line-height:1.35}
+#woSent{margin:0}
+@media (max-width:900px){.woin,.worv,.wobtns .btn{min-height:44px}}
+@media (max-width:420px){.ct td.woc{padding:3px 4px;white-space:normal}.wot th,.wot td{padding:3px 5px}.woin{width:2.9em}.worv{display:block;margin:4px 0 0}}
 
 /* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
 .wrap{max-width:1320px}
@@ -678,12 +707,17 @@ details.trybox > .try{margin-top:6px}
           <label class="clbl" for="fIn">Your own formula:</label>
           <input id="fIn" class="fin" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. CaCO3">
           <button class="btn" type="button" id="fGo">Show it</button>
+          <button class="wosw demo-only" type="button" id="woSw" aria-pressed="false"><span class="dot"></span>Work it out myself <span class="state">off</span></button>
         </div>
         <p class="mnote" id="fNote" aria-live="polite"></p>
         <div class="fbig" id="fBig" aria-live="polite"></div>
         <div class="fgrid">
           <div class="rbox" id="fPicBox"><h2>The atoms in the formula</h2><svg id="fPic" class="fpic" viewBox="0 0 300 170" role="img" aria-label=""></svg><p class="hidenote" id="fPicHidden" hidden>Count the atoms yourself for this question.</p></div>
           <div class="rbox" id="fCountBox"><h2>Count</h2><div id="fCount"></div><p class="hidenote" id="fCountHidden" hidden>The count is hidden for this question.</p></div>
+          <div class="rbox" id="woAct" hidden>
+            <div class="wobtns"><button class="btn primary" type="button" id="woCheck">Check</button><button class="btn" type="button" id="woPic" aria-pressed="false">Show me the atoms</button><button class="btn" type="button" id="woAgain">Start again</button></div>
+            <div class="mnote wofb" id="woFb" aria-live="polite"></div>
+          </div>
         </div>
         <div class="rbox" id="fTypeBox"><h2>Molecules or a giant structure?</h2><div id="fType"></div><p class="hidenote" id="fTypeHidden" hidden>Hidden for this question.</p></div>
         <div class="rbox" id="fNameBox"><h2>Naming it</h2><div id="fName"></div><p class="hidenote" id="fNameHidden" hidden>The name is hidden for this question.</p></div>
@@ -1577,14 +1611,21 @@ function renderFormula() {
   const m = M, l = fmList(), k = keyOf(l), nm = nameOf(l), lk = !!m.lock.fm;
   document.querySelectorAll("#fChips .fchip").forEach(b => { setAttr(b, "aria-pressed", String(!m.fm.own && b.dataset.f === m.fm.key)); b.disabled = lk; });
   $("fIn").disabled = lk; $("fGo").disabled = lk;
-  const hideName = m.hide.name, hideCount = m.hide.count, hideType = m.hide.type;
+  const hideName = m.hide.name, hideCount = m.hide.count, wo = woOn();
+  if (wo && WO.sig !== woSigOf(l)) woReset(l);   // a new formula, or Start again: blank boxes
+  const woHide = wo && !WO.done, hideType = m.hide.type || woHide;
+  $("woAct").hidden = !wo; $("pForm").querySelector(".fgrid").classList.toggle("wo", wo);
   setRO("fBig", fHTML(l) + `<span class="fnm">${hideName ? "Name hidden for this question" : nm.name ? cap(nm.name) : "No naming rule in this lesson for this one"}</span>`);
   /* picture and count */
-  const showPic = !hideCount || support.pic, pic = picSVG(l), svg = $("fPic");
+  const showPic = wo ? WO.pic || WO.done || support.pic : !hideCount || support.pic, pic = picSVG(l), svg = $("fPic");
   svg.style.display = showPic ? "" : "none"; $("fPicHidden").hidden = showPic;
+  $("fPicHidden").textContent = wo ? "Hidden while you work it out. Press Show me the atoms if you need help." : "Count the atoms yourself for this question.";
+  $("fTypeHidden").textContent = woHide ? "Shown when your count is all right." : "Hidden for this question.";
+  $("fNameHidden").textContent = woHide ? "Shown when your count is all right." : "The name is hidden for this question.";
   if (showPic) { setAttr(svg, "viewBox", `0 0 300 ${pic.H}`); morph(svg, pic.s); setAttr(svg, "aria-label", l.map(x => `${x.n} ${elName(x.el)} atom${x.n > 1 ? "s" : ""}`).join(", ")); }
-  $("fCount").style.display = hideCount ? "none" : ""; $("fCountHidden").hidden = !hideCount;
-  if (!hideCount) setRO("fCount", `<table class="ct"><thead><tr><th>Element</th><th>Symbol</th><th>Atoms</th></tr></thead><tbody>` + l.map(x => `<tr><td>${cap(elName(x.el))}</td><td>${x.el}</td><td class="n">${x.n}</td></tr>`).join("") +
+  $("fCount").style.display = hideCount && !wo ? "none" : ""; $("fCountHidden").hidden = !hideCount || wo;
+  if (wo) woTable(l);
+  else if (!hideCount) setRO("fCount", `<table class="ct"><thead><tr><th>Element</th><th>Symbol</th><th>Atoms</th></tr></thead><tbody>` + l.map(x => `<tr><td>${cap(elName(x.el))}</td><td>${x.el}</td><td class="n">${x.n}</td></tr>`).join("") +
     `</tbody><tfoot><tr><th colspan="2">Total atoms</th><td class="n">${totalOf(l)}</td></tr></tfoot></table><p>${l.length === 1 ? "1 element" : l.length + " different elements"}: ${listNames(l)}.</p>`);
   /* molecules or giant structure */
   $("fType").style.display = hideType ? "none" : ""; $("fTypeHidden").hidden = !hideType;
@@ -1597,7 +1638,7 @@ function renderFormula() {
     setRO("fType", t);
   }
   /* naming */
-  const showRules = !hideName || support.rules;
+  const showRules = (!hideName || support.rules) && !woHide;
   $("fName").style.display = showRules ? "" : "none"; $("fNameHidden").hidden = showRules;
   if (showRules) setRO("fName", nm.how.length ? `<ol class="steps">${nm.how.map((x, i) => `<li>${hideName && i === nm.how.length - 1 ? ruleOnly(nm.rule) : x}</li>`).join("")}</ol>` + (hideName ? "" : `<p>Name: <span class="fans">${nm.name}</span></p>`)
     : `<p>The naming rules in this lesson cover a metal with one non-metal (-ide), a metal with another non-metal and oxygen (-ate), and hydroxides.</p>`);
@@ -1606,15 +1647,130 @@ function ruleOnly(rule) {
   return rule === "ide" ? "Write the name of the non-metal, changing its ending to -ide." : rule === "ate" ? "Two more elements, and one is oxygen: change the ending of the other non-metal to -ate."
     : rule === "hydroxide" ? "Hydrogen and oxygen together make hydroxide." : "Use mono = 1, di = 2, tri = 3.";
 }
-function setFormula(k, own) {
+function setFormula(k, own, raw) {
   if (M.lock.fm) { note("fNote", "", "The formula is fixed for this question."); return; }
-  M.fm.key = k; M.fm.own = own || null; note("fNote", "", ""); renderFormula(); tourSignal("formula"); checkTried();
+  M.fm.key = k; M.fm.own = own || null; M.fm.raw = raw || ""; if (M === DEMO_M) WO.sig = null; note("fNote", "", ""); renderFormula(); tourSignal("formula"); checkTried();
 }
 function ownFormula() {
-  try { const l = parseF($("fIn").value); setFormula(keyOf(l), l); note("fNote", "", `Showing ${fHTML(l)}.` + (keyOf(l) === "Co" ? " Co is cobalt, a metal. For carbon and oxygen, write CO: two capital letters." : keyOf(l) === "CO" ? " CO is carbon and oxygen. Co, with a small o, is cobalt." : "") +
+  try { const l = parseF($("fIn").value); setFormula(keyOf(l), l, $("fIn").value); note("fNote", "", `Showing ${fHTML(l)}.` + (keyOf(l) === "Co" ? " Co is cobalt, a metal. For carbon and oxygen, write CO: two capital letters." : keyOf(l) === "CO" ? " CO is carbon and oxygen. Co, with a small o, is cobalt." : "") +
     (DECKF.some(([f]) => f === keyOf(l)) || MOLS[keyOf(l)] || l.length === 1 ? "" : " The tool counts the atoms in any formula you type. It can't tell you if the substance is real.")); }
   catch (e) { note("fNote", "bad", esc(e.message).replace(/([A-Z][a-z]?)([0-9]+)/g, (m0, a, d) => a + `<sub>${d}</sub>`)); }
 }
+
+/* ===== Formula: "Work it out myself" (Demo only; 16 Nov 2026) =====
+   The switch turns the Atoms column, Total atoms and "How many different elements?" into boxes for the pupil to fill in.
+   The atom picture, the "N different elements" sentence and the boxes below (which give the total away) stay hidden until
+   every box is right. Knowledge-check questions never use this: woOn() is false outside Demo, so they render as before. */
+const WOKEY = "ks3tools-workout:molecule-builder";
+const WO = { on: false, sig: null, built: null, vals: {}, st: {}, tries: {}, given: {}, pic: false, helped: false, done: false };
+try { WO.on = localStorage.getItem(WOKEY) === "1"; } catch (e) { WO.on = false; }
+const woOn = () => WO.on && mode === "demo" && M === DEMO_M;
+const woSigOf = l => keyOf(l) + "|" + (M.fm.own ? M.fm.raw || "" : "");
+function woAns(l) { const a = {}; l.forEach((x, i) => { a["wo" + i] = x.n; }); a.woT = totalOf(l); a.woE = l.length; return a; }
+function woLab(id, l) { return id === "woT" ? "Total atoms" : id === "woE" ? "Different elements" : `${l[+id.slice(2)].el} atoms`; }
+function woToks(l) {   // the symbols as written (a typed formula can repeat one, like CH3COOH)
+  const raw = String(M.fm.own ? M.fm.raw || keyOf(l) : keyOf(l)).replace(/\s+/g, "").replace(/[₀-₉]/g, d => SUBD.indexOf(d)), out = [];
+  raw.replace(/([A-Z][a-z]?)([0-9]*)/g, (m0, el, d) => { out.push({ el, d }); return m0; });
+  return out;
+}
+function woReset(l) {
+  WO.sig = woSigOf(l); WO.built = null; WO.vals = {}; WO.st = {}; WO.tries = {}; WO.given = {}; WO.pic = false; WO.helped = false; WO.done = false;
+  note("woFb", "", "Work out each number from the formula. Then press <b>Check</b>.");
+}
+function woCell(id, lab) {
+  return `<input class="woin" id="${id}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="${esc(lab)}">` +
+    `<span class="womk" id="${id}m" aria-hidden="true"></span><span class="wogiv" id="${id}g" hidden>(given)</span><button type="button" class="worv" id="${id}r" hidden aria-label="Reveal: ${esc(lab)}">Reveal</button>`;
+}
+function woTable(l) {
+  if (WO.sig !== woSigOf(l)) woReset(l);
+  if (WO.built !== WO.sig || !$("woT")) {
+    $("fCount").innerHTML = `<table class="ct wot"><thead><tr><th>Element</th><th>Symbol</th><th>Atoms</th></tr></thead><tbody>` +
+      l.map((x, i) => `<tr><td>${cap(elName(x.el))}</td><td>${x.el}</td><td class="n woc">${woCell("wo" + i, `Atoms of ${elName(x.el)}, ${x.el}`)}</td></tr>`).join("") +
+      `</tbody><tfoot><tr><th colspan="2"><label for="woT">Total atoms</label></th><td class="n woc">${woCell("woT", "Total atoms")}</td></tr>` +
+      `<tr><th colspan="2"><label for="woE">How many different elements?</label></th><td class="n woc">${woCell("woE", "How many different elements?")}</td></tr></tfoot></table>` +
+      `<p id="woSent" hidden>${l.length === 1 ? "1 element" : l.length + " different elements"}: ${listNames(l)}.</p>`;
+    WO.built = WO.sig;
+  }
+  woPaint(l);
+}
+function woPaint(l) {
+  const A = woAns(l);
+  Object.keys(A).forEach(id => {
+    const i = $(id); if (!i) return;
+    const v = WO.vals[id] || "", s = WO.st[id] || "", g = !!WO.given[id];
+    if (i.value !== v) i.value = v;
+    i.className = "woin" + (s ? " " + s : ""); i.disabled = g; i.readOnly = s === "ok";
+    setAttr(i, "aria-invalid", String(s === "no"));
+    $(id + "m").className = "womk" + (s ? " " + s : ""); $(id + "m").textContent = s === "ok" ? "✓" : s === "no" ? "✗" : "";
+    $(id + "g").hidden = !g; $(id + "r").hidden = !(s !== "ok" && (WO.tries[id] || 0) >= 3);
+  });
+  $("woSent").hidden = !WO.done;
+  const pb = $("woPic"); pb.hidden = WO.done; pb.textContent = WO.pic ? "Hide the atoms" : "Show me the atoms"; setAttr(pb, "aria-pressed", String(WO.pic));
+}
+function woHint(id, v, l) {
+  const toks = woToks(l);
+  if (id === "woE") {
+    if (v === totalOf(l) && totalOf(l) !== l.length) return "That's the total atoms. Count the different symbols.";
+    if (toks.length !== l.length && v === toks.length) return "A symbol that comes up twice is still one element.";
+    return "Each different symbol is one element. Count them.";
+  }
+  if (id === "woT") {
+    let mine = 0; l.forEach((x, i) => { const n = intOf(WO.vals["wo" + i] || ""); mine = n === null || mine === null ? null : mine + n; });
+    if (v === l.length && l.length !== totalOf(l)) return "That's the number of elements. Add up the Atoms column.";
+    if (mine !== null && v === mine && l.some((x, i) => WO.st["wo" + i] !== "ok")) return "That adds up your column, but a number in it is wrong.";
+    return "Add up all the numbers in the Atoms column.";
+  }
+  const x = l[+id.slice(2)], at = toks.map((t, j) => t.el === x.el ? j : -1).filter(j => j >= 0);
+  if (at.length > 1) return `${x.el} comes up ${at.length} times. Add up all the ${x.el} atoms.`;
+  const t = toks[at[0]], nx = toks[at[0] + 1];
+  if (t && !t.d) return (nx && nx.d && v === +nx.d ? `The ${nx.d} counts ${nx.el} atoms. ` : "") + `No small number after ${x.el} means 1.`;
+  return `The small number after ${x.el} tells you how many ${x.el} atoms.`;
+}
+function woFinish(l) {
+  WO.done = true; WO.pic = false; if (support.pic) WO.helped = true;
+  const g = Object.keys(WO.given).length, extra = [g ? `${g} ${g === 1 ? "box was" : "boxes were"} given` : "", WO.helped ? "you used the atom picture" : ""].filter(Boolean);
+  note("woFb", "good", `<b>✓ Well done!</b> ${extra.length ? "All correct (" + extra.join("; ") + ")." : "You worked out every number yourself."} The atoms are shown so you can check.`);
+  renderFormula();
+}
+function woCheck() {
+  if (!woOn() || WO.done) return;
+  const l = fmList(), A = woAns(l), wrong = []; let empty = 0, right = 0;
+  if (support.pic) WO.helped = true;
+  Object.keys(A).forEach(id => {
+    if (WO.st[id] === "ok") { right++; return; }
+    const raw = String(WO.vals[id] || "").trim(), v = intOf(raw);
+    if (!raw) { WO.st[id] = ""; empty++; return; }
+    if (v === A[id]) { WO.st[id] = "ok"; right++; return; }
+    WO.st[id] = "no"; WO.tries[id] = (WO.tries[id] || 0) + 1;
+    wrong.push(`<li><b>✗ ${woLab(id, l)}:</b> ${v === null ? "Type a whole number, like 2." : woHint(id, v, l)}${WO.tries[id] >= 3 ? " Stuck? Press <b>Reveal</b>." : ""}</li>`);
+  });
+  const n = Object.keys(A).length;
+  if (right === n) return woFinish(l);
+  woPaint(l);
+  note("woFb", "bad", `<b>${right} of ${n} right.</b>` + (wrong.length ? `<ul>${wrong.join("")}</ul>` : "") + (empty ? ` Fill in the empty ${empty === 1 ? "box" : "boxes"} too.` : ""));
+}
+function woReveal(id) {
+  const l = fmList(), A = woAns(l); if (!(id in A) || WO.done) return;
+  WO.vals[id] = String(A[id]); WO.st[id] = "ok"; WO.given[id] = true;
+  if (Object.keys(A).every(k => WO.st[k] === "ok")) return woFinish(l);
+  woPaint(l); note("woFb", "", `${woLab(id, l)}: the answer is ${A[id]}. It is marked (given). Carry on with the other boxes.`);
+}
+$("woSw").addEventListener("click", () => {
+  WO.on = !WO.on; try { localStorage.setItem(WOKEY, WO.on ? "1" : "0"); } catch (e) {}
+  const b = $("woSw"); b.setAttribute("aria-pressed", String(WO.on)); b.querySelector(".state").textContent = WO.on ? "on" : "off";
+  if (!WO.on) WO.built = null;
+  renderFormula();
+});
+$("woSw").setAttribute("aria-pressed", String(WO.on)); $("woSw").querySelector(".state").textContent = WO.on ? "on" : "off";
+$("fCount").addEventListener("input", e => {
+  const i = e.target.closest(".woin"); if (!i || !woOn()) return;
+  WO.vals[i.id] = i.value; if (WO.st[i.id] === "no") { WO.st[i.id] = ""; woPaint(fmList()); }
+});
+$("fCount").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".woin")) { e.preventDefault(); woCheck(); } });
+$("fCount").addEventListener("click", e => { const b = e.target.closest(".worv"); if (b) woReveal(b.id.slice(0, -1)); });
+$("woCheck").addEventListener("click", woCheck);
+$("woPic").addEventListener("click", () => { if (!woOn()) return; WO.pic = !WO.pic; if (WO.pic) WO.helped = true; renderFormula(); });
+$("woAgain").addEventListener("click", () => { if (!woOn()) return; WO.sig = null; renderFormula(); const f = $("wo0"); if (f) f.focus(); });
 
 /* ===== Tabs ===== */
 function setTab(t) {
