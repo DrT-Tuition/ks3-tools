@@ -58,7 +58,9 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
 <script>
 /* Apply a saved theme choice before the page paints (no flash). */
@@ -71,7 +73,7 @@ try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t ===
   --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
   --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
   --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
-  --f-body:"Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
   --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
   color-scheme:light;
 }
@@ -481,25 +483,196 @@ main.layout{min-height:calc(100vh - 70px)}
 .qpanel .opt{line-height:1.3}
 @media (max-width:400px){h1{font-size:23px}header{gap:10px}}
 @media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* == tool: gcse-electrolysis layout (rollout 14 Nov 2026) ==
+   1100 px and wider: a slimmer question panel (the cell grows). On short screens the rows sit closer, so the solution
+   buttons, the cell and the step box with its action button fit on one 1366 x 768 screen. Big screens: the cell is capped
+   so the step box stays on screen. */
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+  .qpanel .dots{column-gap:3px}   /* ten question dots stay on one line in the slimmer panel */
+}
+@media (min-width:901px) and (max-height:820px){
+  .model.card{gap:6px;padding:12px 18px 16px}
+  .model .pane{gap:6px}
+  .stepbox{padding:8px 12px;gap:6px}
+  .sscene{width:100%;max-width:calc((100vh - 380px) * 2.4);margin:0 auto}   /* the cell and its moving layer scale together */
+}
+@media (min-width:901px) and (max-height:820px), (min-width:1100px) and (min-height:821px){
+  #solSeg button{padding-left:8px;padding-right:8px}   /* the six solutions stay on one line */
+}
+@media (min-width:901px) and (max-width:1299px) and (max-height:820px){
+  #solSeg button{padding-left:6px;padding-right:6px;font-size:15px}
+}
+/* taller laptops (1440 x 900): the full header is back, so the rows sit closer and the step box with its button stays on screen */
+@media (min-width:1100px) and (min-height:821px){
+  .model.card{gap:6px;padding:12px 18px 16px}
+  .model .pane{gap:6px}
+  .stepbox{padding:8px 12px;gap:6px}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .sscene{width:100%;max-width:max(912px,calc((100vh - 600px) * 2.4));margin:0 auto}
+}
+/* == end tool: gcse-electrolysis layout == */
+/* == shared: compact-header v3 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v3 == */
+
+/* == shared: about-model v3 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v3 == */
+
+/* == shared: phone-order v3 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v3 == */
+
+/* == shared: projector v3 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v3 == */
+
+/* == shared: touch v3 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+}
+/* == end shared: touch v3 == */
+
+/* == shared: polish v3 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v3 == */
+
+/* == shared: next-question v3 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* == end shared: next-question v3 == */
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Electrolysis<small>Electrolyse solutions with carbon electrodes. Predict, see and test what forms at each electrode, then explain it. Parts marked <span class="badge">HT</span> are Higher tier only.</small><small class="rplabel"><b>Required practical</b> · Combined Science RP9 · Chemistry RP3</small></h1>
+    <h1>Electrolysis<small><span class="cb-desc">Electrolyse solutions with carbon electrodes. Predict, see and test what forms at each electrode, then explain it.</span> Parts marked <span class="badge">HT</span> are Higher tier only.</small><small class="rplabel"><b>Required practical</b> · Combined Science RP9 · Chemistry RP3</small></h1>
     <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
   </header>
 
   <div class="topbar" id="topbar">
     <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Electrolysis</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Electrolysis</b><small>Required practical · Combined Science RP9 · Chemistry RP3</small></span>
     <nav class="modes" aria-label="Mode">
       <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
       <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
       <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
     </nav>
     <div class="tools">
-      <div class="chip" aria-live="polite" title="Questions you have got right">Score <b id="sScore">0</b></div>
-      <div class="chip" title="Right first time, in a row">Streak <b id="sStreak">0</b></div>
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
       <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
     </div>
   </div>
@@ -537,7 +710,7 @@ main.layout{min-height:calc(100vh - 70px)}
         <div class="controls"><button class="btn" type="button" id="newGas">Start a new run</button><span class="small" id="gasNote"></span></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
-      <p class="limits" id="limits"></p>
+      <details class="about"><summary>About this model</summary><p class="limits" id="limits"></p></details>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -545,8 +718,8 @@ main.layout{min-height:calc(100vh - 70px)}
         <p class="pmode">Demo</p>
         <h2 class="qtext">Electrolyse a solution. What forms at each electrode?</h2>
         <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
-        <h3 class="try-h">Things to try</h3>
-        <ul class="try" id="tryList"></ul>
+        <details class="trybox" open><summary class="try-h">Things to try</summary>
+        <ul class="try" id="tryList"></ul></details>
         <div id="demoSupport"></div>
         <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
       </div>
@@ -826,27 +999,27 @@ function tag(x, y, s, fs, cls, anchor) {
 function setVB(svg, w, h) { const v = `0 0 ${w} ${h}`; if (svg.getAttribute("viewBox") !== v) svg.setAttribute("viewBox", v); }
 const mmss = tm => { const s = Math.floor(tm * 60 + 1e-6); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 /* house particle look (guide §4c): solid circle, dark outline ≈0.145r, highlight up and to the left; the ion's symbol inside */
-function ionSVG(x, y, r, fill, label, ink) {
-  const n = label.replace(/[⁺⁻²³₂₃₄]/g, "").length + .55 * (label.length - label.replace(/[⁺⁻²³₂₃₄]/g, "").length), fs = Math.min(r * 1.05, 1.7 * r / Math.max(1, n * .58));
+function ionSVG(x, y, r, fill, label, ink, k) {   // k: optional letter scale (the small H atoms of water)
+  const n = label.replace(/[⁺⁻²³₂₃₄]/g, "").length + .55 * (label.length - label.replace(/[⁺⁻²³₂₃₄]/g, "").length), fs = (k || 1) * Math.min(r * (label.length === n ? 1.2 : 1.05), 1.8 * r / Math.max(1, n * .58));
   return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${r}" style="fill:${fill};stroke:var(--particle-edge);stroke-width:${Math.max(1, r * .145).toFixed(2)}"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${(r * .28).toFixed(2)}" style="fill:rgba(255,255,255,.38)"/>` +
     (label ? `<text x="${f1(x)}" y="${f1(y + fs * .36)}" text-anchor="middle" style="font:700 ${fs.toFixed(1)}px var(--f-body);fill:${ink}">${esc(label)}</text>` : "");
 }
 const CATF = ["var(--particle)", "var(--particle-ink)"], ANF = ["var(--particle-2)", "var(--particle-2-ink)"], ATF = ["var(--atom)", "var(--atom-ink)"];
 /* a molecule: touching atoms (H₂, Cl₂, Br₂, O₂ two in a row; H₂O an O with two H) */
 function molSVG(kind, r) {
-  const a = (x, y, rr, lab, f) => ionSVG(x, y, rr, (f || ATF)[0], lab, (f || ATF)[1]);
-  if (kind === "H2O") return a(0, 0, r * .75, "O") + a(-r * .8, r * .55, r * .5, "H") + a(r * .8, r * .55, r * .5, "H");
+  const a = (x, y, rr, lab, f, k) => ionSVG(x, y, rr, (f || ATF)[0], lab, (f || ATF)[1], k);
+  if (kind === "H2O") return a(0, 0, r * .75, "O") + a(-r * .85, r * .6, r * .55, "H", null, 1.35) + a(r * .85, r * .6, r * .55, "H", null, 1.35);   // H letters big enough to read
   if (kind === "Cu") return ionSVG(0, 0, r * .85, "var(--copper)", "Cu", "#FFFFFF");
   const el = kind.replace("2", ""), fill = kind === "Br2" ? ["var(--br2)", "#FFFFFF"] : kind === "Cl2" ? ["var(--cl2)", "#14243D"] : ATF;
-  return a(-r * .62, 0, r * .66, el, fill) + a(r * .62, 0, r * .66, el, fill);
+  return a(-r * .7, 0, r * .74, el, fill) + a(r * .7, 0, r * .74, el, fill);
 }
 
 /* ===== The cell (Required Practical: Electrolytic cell) ===== */
 function cellGeo() {
   const base = { bench: 372, psu: [20, 22, 190, 86], bx: 240, bw: 280, btop: 128, bbot: 318, solTop: 150, rods: { a: 330, c: 430 }, rodTop: 232, tubeTop: 40, mouth: 290, pole: 560, arm: 70,
     cuBot: 306 };   // the copper coating stops at the top of the pictured bung (y 305)
-  return LK() === "tall" ? Object.assign(base, { W: 580, H: 760, fs: 21, short: true, ion: [16, 434, 548, 270], lgY: 744 })
-    : Object.assign(base, { W: 960, H: 400, fs: 16, short: false, ion: [600, 36, 345, 288], lgY: 356 });
+  return LK() === "tall" ? Object.assign(base, { W: 580, H: 760, fs: 24, short: true, ion: [16, 434, 548, 270], lgY: 744 })
+    : Object.assign(base, { W: 960, H: 400, fs: 19, short: false, ion: [600, 36, 345, 288], lgY: 356 });
 }
 const tubePath = (x, top, mouth, w) => `M${f1(x - w / 2)} ${f1(mouth)}V${f1(top + w / 2)}A${w / 2} ${w / 2} 0 0 1 ${f1(x + w / 2)} ${f1(top + w / 2)}V${f1(mouth)}`;
 const beakerPath = (x, y, w, h) => `<path class="glassl" d="M${f1(x - 6)} ${f1(y - 4)}L${f1(x)} ${f1(y + 3)}V${f1(y + h)}H${f1(x + w)}V${f1(y + 3)}L${f1(x + w + 6)} ${f1(y - 4)}"/>`;
@@ -859,9 +1032,9 @@ function cellBg(G, o) {
   const fs = G.fs; let h = "";
   /* power supply: picture; ON/OFF in dark LCD digits on its blank display; the name sits just right of it, above the beaker rim, clear of both leads */
   const [px, py, pw, ph] = G.psu;
-  h += imgTag(IMG.el_psu) + T_(111, 56, o.on ? "ON" : "OFF", 17, 'text-anchor="middle" class="lcdk"');
-  h += G.short ? T_(px + pw + 6, 92, "power", fs - 4, "") + T_(px + pw + 6, 111, "supply", fs - 4, "")
-    : T_(px + pw + 6, 92, "low-voltage", fs - 3, "") + T_(px + pw + 6, 109, "power supply", fs - 3, "");
+  h += imgTag(IMG.el_psu) + T_(111, 56, o.on ? "ON" : "OFF", G.short ? 21 : 17, 'text-anchor="middle" class="lcdk"');
+  h += G.short ? T_(px + pw + 6, 90, "power", fs - 4, "") + T_(px + pw + 6, 112, "supply", fs - 4, "")
+    : T_(px + pw + 6, 84, "low-voltage", fs - 4, "") + T_(px + pw + 6, 101, "power", fs - 4, "") + T_(px + pw + 6, 118, "supply", fs - 4, "");
   const tA = px + 40, tC = px + 140, ty = py + ph - 18;
   /* stand (picture), the cell's legs and the rod ends below the base (code) */
   h += imgTag(IMG.el_stand);
@@ -869,7 +1042,7 @@ function cellBg(G, o) {
   ["a", "c"].forEach(e => { h += `<rect class="rod" x="${G.rods[e] - 4}" y="${G.bbot}" width="8" height="12" rx="1.5"/>`; });
   /* wires (after connecting): + to the left rod (anode), − to the right rod (cathode) */
   if (o.conn) h += `<path class="w1" d="M${G.rods.a} ${G.bbot + 10}V${G.bench - 16}H${tA}V${ty}"/><path class="w2" d="M${G.rods.c} ${G.bbot + 10}V${G.bench - 8}H${tC}V${ty}"/>`;
-  h += T_(tA, ty + 6, "+", 18, 'text-anchor="middle" class="tt"') + T_(tC, ty + 6, "−", 18, 'text-anchor="middle" class="tt"');
+  h += T_(tA, ty + 6, "+", G.short ? 21 : 18, 'text-anchor="middle" class="tt"') + T_(tC, ty + 6, "−", G.short ? 21 : 18, 'text-anchor="middle" class="tt"');
   /* beaker (picture), then the solution on top, clipped to the inside of the glass */
   h += imgTag(IMG.el_beaker);
   if (o.poured) h += `<clipPath id="bInC${o.grad ? "g" : "r"}"><path d="M${G.bx + 4.5} ${G.btop}V308Q${G.bx + 4.5} 318.5 ${G.bx + 22} 318.5H${G.bx + G.bw - 23}Q${G.bx + G.bw - 5.5} 318.5 ${G.bx + G.bw - 5.5} 308V${G.btop}Z"/></clipPath>` +
@@ -946,7 +1119,7 @@ function ionPlan(G, r) {   // home and target of every ion, and the molecules or
 const ease = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
 function ionBuild(G, r) {
   const pl = ionPlan(G, r), [ix, iy, iw, ih] = G.ion; let h = `<clipPath id="ionClip"><rect x="${ix + 2}" y="${iy + 2}" width="${iw - 4}" height="${ih - 4}" rx="8"/></clipPath><g clip-path="url(#ionClip)">`;
-  pl.prods.forEach((q, i) => { h += `<g id="pq${i}" visibility="hidden">${molSVG(q.kind, pl.rr)}</g>`; });
+  pl.prods.forEach((q, i) => { h += `<g id="pq${i}" visibility="hidden">${molSVG(q.kind, pl.rr * (q.kind === "Cu" ? 1 : 1.15))}</g>`; });
   pl.list.forEach((p, i) => { const f = p.pos ? CATF : ANF; h += `<g id="pi${i}">${ionSVG(0, 0, pl.rr, f[0], ION[p.k].lab, f[1])}</g>`; });
   return { h: h + "</g>", pl };
 }
@@ -1629,7 +1802,7 @@ function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M =
 function newS() { const t = task;
   return { choice: null, gap: {}, val: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
     rowOrder: t.rows ? t.rows.map(() => shuffled(t.bank.length)) : [] }; }
-function loadTask() {
+function loadTask() { nqHideEnd();
   if (mode === "demo") return loadDemo();
   const lst = LEVELS[level]; task = lst[idx]; S = newS();
   applyTaskModel();
@@ -1677,8 +1850,8 @@ function hideWrongStm() {
 function paintBuild() { const ord = task.ordered || task.ms6; document.querySelectorAll("#answer .opt").forEach(b => { const j = S.list.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? (ord ? String(j + 1) : "✓") : "+"; }); }
 function showFinished(p) {
   setAnswerState(true);
-  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Choose another question number above, or Reset this question to try it again."
-    : "The answer was shown for this one. Choose another question number above, or Reset this question to try it again.");
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+    : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
 }
 function rightBuild(t) { return t.stm.map((s, i) => [s, i]).filter(x => x[0].c).sort((a, b) => a[0].c - b[0].c).map(x => x[1]); }
 function setAnswerState() {
@@ -1767,23 +1940,23 @@ function evaluate() {
 }
 const STUCKW = { series: "Reactivity series", words: "Key words", maths: "Maths help" };
 function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
-function bump() { $("sScore").textContent = scoreNow(); $("sStreak").textContent = streak; }
+function bump() { nqScore(); $("sStreak").textContent = streak; }
 function check() {
   const p = prog();
-  if (p.solved || p.revealed) { msg("tip", "This question is finished. Choose another question number above, or Reset this question to try it again."); return; }
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
     mark(qkey(level, task), "solved"); p.solved = true;
     if (!p.wrong && !p.hints) streak++;
-    bump(); msg("good", "<b>✓</b> " + r.html + " Choose another question number above."); $("stuckNote").textContent = "";
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
     document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
     drawAll(); renderSupport();
-  } else { p.wrong++; streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+  } else { p.wrong++; nqMiss(); streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
 }
 function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
-function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; nqMiss(); msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
 function answerHTML(t) {
   if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
   if (t.kind === "num") return esc(`Answer: ${fmt(t.ans(), 2)} ${t.unit}.`) + workHTML(t);
@@ -1795,11 +1968,11 @@ function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
   setAnswerState(); drawAll(); renderSupport();
-  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)"));
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
 function resetTask() {
   if (mode === "demo") return loadDemo();
-  delete DONE[qkey(level, task)]; saveDone(); delete st[qkey(level, task)]; bump();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
   S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
   applyTaskModel(); renderAnswer(); renderSupport();
   $("fb").innerHTML = ""; $("stuckNote").textContent = "";
@@ -1939,14 +2112,14 @@ $("toQuiz").addEventListener("click", () => setMode("easy"));
 $("resetProg").addEventListener("click", function confirmStep() {
   $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
   const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
-  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
   $("rpNo").addEventListener("click", back);
 });
 $("check").addEventListener("click", check);
 $("hint").addEventListener("click", hint);
 $("reset").addEventListener("click", resetTask);
 $("reveal").addEventListener("click", reveal);
-function setMode(m) {
+function setMode(m) { if (m !== "demo") bankNow();
   if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
   tourEnd();
   if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
@@ -1956,6 +2129,7 @@ function setMode(m) {
   $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
   $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
   loadTask(); renderSupport();
+  nqMode();
 }
 const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
 document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
@@ -1967,13 +2141,19 @@ if (window.IntersectionObserver) {
 let rsT, lastLay = ""; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const k = LK(); if (k !== lastLay) { lastLay = k; ["rBg", "gBg"].forEach(id => { $(id)._h = null; }); ["rMov", "gMov"].forEach(id => { $(id)._key = null; }); drawAll(); } }, 80); });
 document.addEventListener("visibilitychange", () => { if (document.hidden && anim) stopAll(); });
 
-const errs = bankCheck();
-if (errs.length) {
-  const e = $("bankErr"); e.hidden = false;
-  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
-  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
-}
 LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+function bankRun() {   // the load-time question-bank check, now run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (errs.length) {
+    const e = $("bankErr"); e.hidden = false;
+    e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+    for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  }
+  if (!errs.length) return;
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  nqBankReload();
+}
+bankLater();
 M = DEMO_M = freshM();
 bump(); setMode("demo"); renderSupport(); fitPanel(); lastLay = LK();
 try { if (localStorage.getItem("ks3tools-toured:gcse-electrolysis")) $("newHere").hidden = true; } catch (e) {}
@@ -2037,6 +2217,262 @@ function boxW(el) {   // an element's width, read once and kept until it changes
   if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
   if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
   return e.w;
+}
+/* == shared: next-question v3 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions");
+      if (act && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING) && /sticky|fixed/.test(getComputedStyle(act).position)) lim -= act.getBoundingClientRect().height;
+      d = r.bottom + 10 - lim;
+      const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+nqTryFold(); nqBar(); nqStickOn();
+/* == end shared: next-question v3 == */
+
+/* == shared: bank-check-later v3 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v3 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Positive ions move to the cathode (−) and negative ions to the anode (+). The ions must be free to move, so the compound is melted or dissolved.",
+      "In copper chloride solution, copper forms at the cathode and chlorine at the anode. Chlorine bleaches damp litmus paper."
+    ],
+    "hard": [
+      "At the cathode, hydrogen forms if the metal is more reactive than hydrogen. At the anode, a halide gives its halogen; if not, oxygen forms.",
+      "Positive ions gain electrons at the cathode (reduction). Negative ions lose electrons at the anode (oxidation)."
+    ]
+  };
+  return F[lv] || F.easy;
 }
 </script>
 <script src="nav.js"></script>
