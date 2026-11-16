@@ -331,6 +331,16 @@ main.layout{min-height:calc(100vh - 70px)}
   .model:has(> #mysteryPanel[hidden]){grid-template-areas:"parts ctrl" "graph ctrl" "show show" "about about"}   /* no empty row (and gap) above the box */
 }
 @media (min-width:1100px) and (max-height:820px){#graph{height:190px}}
+/* == tool: states on the graph (16 Nov 2026) == "Show states" shades the heating/cooling graph by state and labels the
+   flat parts (Melting / Freezing / Boiling / Condensing). Tints for each state; the words carry the meaning, not the colour. */
+:root{--st-solid:rgba(31,95,168,.13); --st-liquid:rgba(29,107,63,.13); --st-gas:rgba(181,54,31,.11)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--st-solid:rgba(140,196,255,.16); --st-liquid:rgba(127,212,160,.15); --st-gas:rgba(255,154,144,.14)}}
+:root[data-theme="dark"]{--st-solid:rgba(140,196,255,.16); --st-liquid:rgba(127,212,160,.15); --st-gas:rgba(255,154,144,.14)}
+#graphPanel h2{flex-wrap:wrap;row-gap:6px}
+#graphPanel .gtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+#graphPanel .gtools .sw{min-height:44px;padding:6px 12px}
+#graphPanel .gtools .btn.slim{padding:6px 10px}
+@media (min-width:1100px),(max-width:640px){#graphPanel .gsub{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}   /* the axes say it; keeps the header on one line beside the box */
 /* == shared: compact-header v3 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
    and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
    Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
@@ -538,7 +548,7 @@ details.trybox > .try{margin-top:6px}
       </div>
 
       <div class="panel" id="graphPanel" hidden>
-        <h2><span>Heating graph: temperature against time</span><button class="btn slim" type="button" id="clearGraph">Clear graph</button></h2>
+        <h2><span>Heating graph<span class="gsub">: temperature against time</span></span><span class="gtools"><button class="sw" type="button" id="gStates" aria-pressed="false" title="Shade and label the graph by state"><span class="dot"></span>Show states <span class="state">off</span></button><button class="btn slim" type="button" id="clearGraph">Clear graph</button></span></h2>
         <canvas id="graph" role="img" aria-label="Temperature against time graph"></canvas>
       </div>
 
@@ -838,7 +848,9 @@ let TK = {};
 function readTokens(){
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
   TK = { surface: g("--surface"), sunk: g("--sunk"), ink: g("--ink"), muted: g("--muted"), line: g("--line"), accent: g("--accent"),
-    particle: g("--particle"), edge: g("--particle-edge"), hot: g("--hot"), cold: g("--cold"), box: g("--box"), bad: g("--bad") };
+    particle: g("--particle"), edge: g("--particle-edge"), hot: g("--hot"), cold: g("--cold"), box: g("--box"), bad: g("--bad"),
+    st_solid: g("--st-solid"), st_liquid: g("--st-liquid"), st_gas: g("--st-gas") };
+  gPat = {};   // graph stripes use the theme's tints
   TK.font = getComputedStyle(document.body).fontFamily;   // read once (and again on theme change), not every frame
   bgKey = "";   // colours changed: rebuild the cached box/thermometer layer and particle picture
 }
@@ -918,7 +930,7 @@ function niceStep(range, n){
   const raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
   return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
 }
-function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt){
+function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt, ov){   // ov: the substance, to shade and label the states (Show states)
   if (!cv.clientWidth) return;
   sizeCanvas(cv, hgt || 220);
   const c = cv.getContext("2d"), W = cv.width / dpr, Hh = cv.height / dpr;
@@ -930,9 +942,12 @@ function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt){
   const ys = yStep || niceStep(ymax - ymin, 5);
   const X = t => L + t / xmax * pw, Y = v => T + (1 - (v - ymin) / (ymax - ymin)) * ph;
   c.fillStyle = TK.surface; c.fillRect(L, T, pw, ph);
+  const runs = ov ? gRuns(pts) : null;
+  if (runs) gShade(c, runs, X, T, ph, L, pw, ov, Y, ymin, ymax);
   c.font = "14px " + fam; c.fillStyle = TK.ink; c.strokeStyle = TK.line; c.lineWidth = 1;
   c.textAlign = "right"; c.textBaseline = "middle";
-  for (let v = Math.ceil(ymin / ys) * ys; v <= ymax + 1e-9; v += ys) { const y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.fillText(fmt(v), L - 6, y); }
+  const near = v => ov && [ov.mp, ov.bp].some(m => m > ymin && m < ymax && Math.abs(Y(m) - Y(v)) < 15);   // Show states writes these two itself
+  for (let v = Math.ceil(ymin / ys) * ys; v <= ymax + 1e-9; v += ys) { const y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); if (!near(v)) c.fillText(fmt(v), L - 6, y); }
   const ys2 = ys / 5; c.strokeStyle = TK.muted;
   for (let v = Math.ceil(ymin / ys2) * ys2; v <= ymax + 1e-9; v += ys2) { const y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(L + 5, y); c.stroke(); }
   c.textAlign = "center"; c.textBaseline = "top"; c.strokeStyle = TK.line;
@@ -944,6 +959,121 @@ function drawGraph(cv, pts, ymin, ymax, xmaxMin, yStep, hgt){
     c.strokeStyle = TK.accent; c.lineWidth = 3; c.lineJoin = "round"; c.beginPath();
     pts.forEach((p, i) => { const x = X(p.t), y = Y(p.T); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke();
   }
+  if (runs) gLabels(c, runs, pts, X, Y, L, T, pw, ph, ov, ymin, ymax, fam);
+}
+/* ----- Show states: shade the graph by state and label the flat parts (16 Nov 2026) -----
+   Each graph point carries the state (st) and the heater direction (d: 1 heating, -1 cooling) when it was taken.
+   Runs of the same state become shaded bands; a flat part (melting/boiling state) is named by the direction of the run:
+   Melting or Freezing at the melting point, Boiling or Condensing at the boiling point. Labels dodge each other and the line. */
+const G_FLAT = { melting: 1, boiling: 1 };
+const G_NAME = { solid: "Solid", liquid: "Liquid", gas: "Gas", melting: "solid + liquid", boiling: "liquid + gas" };
+const G_CHANGE = { melting: ["Melting", "Freezing"], boiling: ["Boiling", "Condensing"] };
+let gPat = {};
+function gRuns(pts){
+  const runs = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]; if (!p.st) continue;
+    const r = runs[runs.length - 1], flat = !!G_FLAT[p.st];
+    if (r && r.st === p.st && (!flat || !p.d || !r.d || r.d === p.d)) { r.j = i; if (!r.d && p.d) r.d = p.d; }
+    else runs.push({ st: p.st, i, j: i, d: p.d || 0 });
+  }
+  for (let k = 0; k < runs.length; k++) {   // band edges: a flat part starts at its first point and ends at its last
+    const a = runs[k], b = runs[k + 1];
+    if (k === 0) a.t0 = pts[a.i].t;
+    if (!b) { a.t1 = pts[a.j].t; break; }
+    const edge = G_FLAT[b.st] ? pts[b.i].t : G_FLAT[a.st] ? pts[a.j].t : (pts[a.j].t + pts[b.i].t) / 2;
+    a.t1 = edge; b.t0 = edge;
+  }
+  return runs;
+}
+function gFill(c, st){
+  if (!G_FLAT[st]) return TK["st_" + st];
+  if (gPat[st]) return gPat[st];
+  const a = TK[st === "melting" ? "st_solid" : "st_liquid"], b = TK[st === "melting" ? "st_liquid" : "st_gas"];
+  const n = 14, pc = document.createElement("canvas"); pc.width = pc.height = n;   // diagonal stripes of the two states' tints
+  const g = pc.getContext("2d"); g.fillStyle = a; g.fillRect(0, 0, n, n);
+  g.globalCompositeOperation = "copy"; g.fillStyle = b; g.beginPath();
+  g.moveTo(0, n / 2); g.lineTo(n / 2, 0); g.lineTo(n, 0); g.lineTo(0, n); g.closePath();
+  g.moveTo(n / 2, n); g.lineTo(n, n / 2); g.lineTo(n, n); g.closePath(); g.fill();
+  return (gPat[st] = c.createPattern(pc, "repeat"));
+}
+function gShade(c, runs, X, T, ph, L, pw, S, Y, ymin, ymax){
+  for (const r of runs) {
+    const x0 = Math.max(L, X(r.t0)), x1 = Math.min(L + pw, X(r.t1));
+    if (x1 - x0 < 0.5) continue;
+    c.fillStyle = gFill(c, r.st); c.fillRect(x0, T, x1 - x0, ph);
+  }
+  c.save(); c.setLineDash([6, 4]); c.strokeStyle = TK.muted; c.lineWidth = 1.5;
+  [S.mp, S.bp].forEach(v => { if (v > ymin && v < ymax) { const y = Math.round(Y(v)) + 0.5; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); } });
+  c.restore();
+}
+function gLabels(c, runs, pts, X, Y, L, T, pw, ph, S, ymin, ymax, fam){
+  const scr = pts.map(p => [X(p.t), Y(p.T)]), placed = [];
+  const hits = b => {   // how much of the line runs under a label box
+    let n = 0;
+    for (let i = 1; i < scr.length; i++) {
+      const x0 = scr[i - 1][0], y0 = scr[i - 1][1], x1 = scr[i][0], y1 = scr[i][1];
+      if (Math.max(x0, x1) < b.x - 3 || Math.min(x0, x1) > b.x + b.w + 3 || Math.max(y0, y1) < b.y - 3 || Math.min(y0, y1) > b.y + b.h + 3) continue;
+      const k = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 3));
+      for (let s = 0; s <= k; s++) { const x = x0 + (x1 - x0) * s / k, y = y0 + (y1 - y0) * s / k; if (x > b.x - 3 && x < b.x + b.w + 3 && y > b.y - 3 && y < b.y + b.h + 3) n++; }
+    }
+    return n;
+  };
+  const clash = b => placed.some(q => b.x < q.x + q.w + 4 && b.x + b.w + 4 > q.x && b.y < q.y + q.h + 2 && b.y + b.h + 2 > q.y);
+  const LH1 = 18, LH2 = 16;
+  function put(lines, cands){   // lines: [{t, f, col}]; cands: [x, y] top-left corners in order of preference
+    const w = Math.ceil(Math.max(...lines.map(l => { c.font = l.f; return c.measureText(l.t).width; }))) + 8;
+    const h = lines.reduce((a, l) => a + l.h, 0) + 4;
+    let best = null, bs = 1e9;
+    cands.forEach(([x, y], i) => {
+      x = Math.min(Math.max(L + 2, x), L + pw - w - 2);
+      if (y < T + 2 || y + h > T + ph - 2) return;
+      const b = { x, y, w, h }; if (clash(b)) return;
+      const sc = hits(b) * 20 + i; if (sc < bs) { bs = sc; best = b; }
+    });
+    if (!best) return false;
+    placed.push(best);
+    c.save(); c.globalAlpha = .9; c.fillStyle = TK.surface;
+    c.beginPath(); if (c.roundRect) c.roundRect(best.x, best.y, best.w, best.h, 5); else c.rect(best.x, best.y, best.w, best.h); c.fill(); c.restore();
+    c.textAlign = "center"; c.textBaseline = "top";
+    let y = best.y + 2;
+    lines.forEach(l => { c.font = l.f; c.fillStyle = l.col; c.fillText(l.t, best.x + best.w / 2, y + 1); y += l.h; });
+    return true;
+  }
+  const B14 = "700 14px " + fam, N13 = "13px " + fam, B13 = "700 13px " + fam;
+  const width = lines => Math.ceil(Math.max(...lines.map(l => { c.font = l.f; return c.measureText(l.t).width; }))) + 8;
+  const rows = []; for (let y = T + 3; y < T + ph - 16; y += 15) rows.push(y);
+  // 1. the flat parts: the change (by direction) and the two states present
+  for (const r of runs) {
+    if (!G_FLAT[r.st] || !r.d) continue;
+    const x0 = X(r.t0), x1 = X(r.t1); if (x1 - x0 < 2) continue;
+    const lines = [{ t: G_CHANGE[r.st][r.d > 0 ? 0 : 1], f: B14, col: TK.accent, h: LH1 }, { t: G_NAME[r.st], f: N13, col: TK.ink, h: LH2 }];
+    const w = width(lines), h = LH1 + LH2 + 4, cx = (x0 + x1) / 2 - w / 2, y = Y(r.st === "melting" ? S.mp : S.bp);
+    const cands = [];
+    [cx, cx - w / 3, cx + w / 3].forEach(x => { cands.push([x, y - 6 - h], [x, y + 6]); });
+    [cx].forEach(x => { cands.push([x, y - 20 - h], [x, y + 20]); });
+    put(lines, cands);
+  }
+  // 2. the single-state parts
+  for (const r of runs) {
+    if (G_FLAT[r.st]) continue;
+    const x0 = X(r.t0), x1 = X(r.t1); if (x1 - x0 < 2) continue;
+    const lines = [{ t: G_NAME[r.st], f: B14, col: TK.ink, h: LH1 }];
+    const w = width(lines), cx = (x0 + x1) / 2 - w / 2;
+    const cands = [];
+    rows.forEach(y => cands.push([cx, y]));
+    put(lines, cands);
+  }
+  // 3. the melting and boiling points: the number on the axis, and the name on the dashed line where there is room (after the state names)
+  [[S.mp, "melting point "], [S.bp, "boiling point "]].forEach(([v, nm]) => {
+    if (!(v > ymin && v < ymax)) return;
+    const y = Y(v);
+    c.font = B14; c.fillStyle = TK.accent; c.textAlign = "right"; c.textBaseline = "middle"; c.fillText(fmt(v), L - 6, y);
+    c.strokeStyle = TK.accent; c.lineWidth = 2; c.beginPath(); c.moveTo(L - 4, y); c.lineTo(L + 6, y); c.stroke();
+    const lines = [{ t: nm + degC(v), f: N13, col: TK.ink, h: LH2 }], w = width(lines), cands = [];
+    [L + pw - w - 4, L + 4, L + pw / 2 - w / 2, L + pw / 4 - w / 2, L + 3 * pw / 4 - w / 2].forEach(x => cands.push([x, y - LH2 - 6], [x, y + 4]));
+    put(lines, cands);
+  });
 }
 
 /* ===== Readouts ===== */
@@ -1023,8 +1153,8 @@ function frame(){
     const nh = H + dir * POWER * dt;
     H = dir > 0 ? Math.min(nh, Ht) : Math.max(nh, Ht);
     graphAcc += dt; graphT += dt;
-    if (graphAcc >= 0.2) { graphAcc = 0; graphPts.push({ t: graphT, T: M.T(H) }); if (support.graph) drawLiveGraph(); }
-    if (!heaterDir()) { slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); graphPts.push({ t: graphT, T: M.T(H) }); if (support.graph) drawLiveGraph(); }
+    if (graphAcc >= 0.2) { graphAcc = 0; graphPts.push({ t: graphT, T: M.T(H), st: M.state(H), d: dir }); if (support.graph) drawLiveGraph(); }
+    if (!heaterDir()) { slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); graphPts.push({ t: graphT, T: M.T(H), st: M.state(H), d: dir }); if (support.graph) drawLiveGraph(); }
   }
   adjustPhases();
   const sub = Math.max(1, Math.ceil(dt * 120 - 1e-6)); for (let i = 0; i < sub; i++) { simTime += dt / sub; physics(dt / sub); }   // physics steps of 1/120 s or less, whatever the frame rate
@@ -1040,8 +1170,8 @@ function frame(){
 document.addEventListener("visibilitychange", () => { last = 0; kick(); });
 if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe(stage);   // the top 64 px sit under the sticky top bar
 
-function drawLiveGraph(){ drawGraph(graphCv, graphPts, M.S.min, M.S.max, 20); }
-function clearGraph(){ graphPts = [{ t: 0, T: M.T(H) }]; graphT = 0; graphAcc = 0; if (support.graph) drawLiveGraph(); }
+function drawLiveGraph(){ drawGraph(graphCv, graphPts, M.S.min, M.S.max, 20, null, null, gStatesOn() ? M.S : null); }
+function clearGraph(){ graphPts = [{ t: 0, T: M.T(H), st: M.state(H), d: 0 }]; graphT = 0; graphAcc = 0; if (support.graph) drawLiveGraph(); }
 
 /* ===== Controls ===== */
 function setSubstance(key){
@@ -1049,6 +1179,9 @@ function setSubstance(key){
   slider.min = M.S.min; slider.max = M.S.max;
   $("facts").textContent = M.S.name + ": melts at " + degC(M.S.mp) + ", boils at " + degC(M.S.bp) + ".";
 }
+/* Demo starts with a solid (Dan, 16 Nov 2026): halfway between the bottom of the scale and the melting point, to the nearest
+   10 °C (water −20 °C). Questions keep their own start temperatures. */
+function demoStartH(){ const S = M.S, T = Math.round((S.min + S.mp) / 20) * 10; return M.Hlow(Math.max(S.min, Math.min(S.mp - 1, T))); }
 function jumpTo(Hval){ H = Ht = Math.max(0, Math.min(M.Htot, Hval)); placeAll(); slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); clearGraph(); }
 function setTargetT(T){
   T = Math.max(M.S.min, Math.min(M.S.max, T));
@@ -1060,7 +1193,7 @@ slider.addEventListener("input", () => { setTargetT(+slider.value); tourSignal("
 $("heatBtn").addEventListener("click", () => { Ht = M.Htot; slider.value = M.S.max; $("tTarget").textContent = degC(M.S.max); tourSignal("heat"); });
 $("coolBtn").addEventListener("click", () => { Ht = 0; slider.value = M.S.min; $("tTarget").textContent = degC(M.S.min); tourSignal("cool"); });
 $("stopBtn").addEventListener("click", () => { Ht = H; slider.value = Math.round(M.T(H)); $("tTarget").textContent = degC(+slider.value); tourSignal("stop"); });
-subSel.addEventListener("change", () => { setSubstance(subSel.value); jumpTo(M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC)))); if (mode === "demo") { demoSub = subSel.value; renderTry(); } tourSignal("sub"); });
+subSel.addEventListener("change", () => { setSubstance(subSel.value); jumpTo(mode === "demo" ? demoStartH() : M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC)))); if (mode === "demo") { demoSub = subSel.value; renderTry(); } tourSignal("sub"); });
 $("clearGraph").addEventListener("click", clearGraph);
 function paintMotion(){ const b = $("motionBtn"); b.textContent = stepped ? "Motion: stepped" : "Motion: smooth"; b.setAttribute("aria-pressed", stepped ? "true" : "false"); b.title = stepped ? "Show smooth movement" : "Show still pictures every second (less movement)"; }
 $("motionBtn").addEventListener("click", () => { stepped = !stepped; paintMotion(); drawStage(); });
@@ -1068,16 +1201,23 @@ Object.keys(FACTS.substances).forEach(k => { const S = FACTS.substances[k]; if (
 
 /* Support (Knowledge check) and Show (Demo) switches: all off on load, never stored.
    The model reads `support`, which follows whichever set belongs to the current mode. */
-const supQuiz = { labels: false, graph: false }, supShow = { labels: false, graph: false };
+const supQuiz = { labels: false, graph: false, states: false }, supShow = { labels: false, graph: false, states: false };
+/* Show states on the graph: off on load, never stored. Hidden while a question is open that it would answer (which state,
+   what happens at a flat part, the melting or boiling point); back once that question is right or its answer is shown. */
+function gStatesOK(){ if (mode === "demo" || !task || !task.stateLeak) return true; const p = prog(); return !!(p.solved || p.revealed); }
+function gStatesOn(){ return !!(mode === "demo" ? supShow : supQuiz).states && gStatesOK(); }
+function paintGStates(){ const b = $("gStates"), ok = gStatesOK(); paintSw(b, !!(mode === "demo" ? supShow : supQuiz).states); if (b.hidden === ok) b.hidden = !ok; }
 function paintSw(b, on){ b.setAttribute("aria-pressed", on ? "true" : "false"); b.querySelector(".state").textContent = on ? "on" : "off"; }
 function applySupport(){
   const src = mode === "demo" ? supShow : supQuiz; support.labels = src.labels; support.graph = src.graph;
   document.querySelectorAll("[data-support]").forEach(b => paintSw(b, supQuiz[b.dataset.support]));
   document.querySelectorAll("[data-show]").forEach(b => paintSw(b, supShow[b.dataset.show]));
+  paintGStates();
   $("graphPanel").hidden = !support.graph; if (support.graph) drawLiveGraph();
   updateReadouts(); if (mode !== "demo") updateStuck();
 }
 document.querySelectorAll("[data-support]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.support; supQuiz[k] = !supQuiz[k]; applySupport(); }));
+$("gStates").addEventListener("click", () => { const src = mode === "demo" ? supShow : supQuiz; src.states = !src.states; applySupport(); });
 document.querySelectorAll("[data-show]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.show; supShow[k] = !supShow[k]; applySupport(); if (supShow[k]) tourSignal("show"); }));
 
 /* ===== Answer helpers ===== */
@@ -1280,6 +1420,9 @@ function bankCheck(){
 
 /* ===== Task engine ===== */
 for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => { t.id = lv + (i + 1); t.lv = lv; });   // stable ids for saved ticks
+/* questions the Show states shading would answer: which state, naming a change, a prediction, the flat parts, mp/bp */
+const LEAK_KEYS = { st: 1, name: 1, pred: 1, why: 1, temp: 1, what: 1 };
+for (const lv of Object.keys(TASKS)) TASKS[lv].forEach(t => { t.stateLeak = !!(t.mystery || t.randomState || t.predict || (t.groups || []).some(g => LEAK_KEYS[g.key])); });
 let mode = "demo", level = "", idx = 0, streak = 0;   // level is set when Easy or Hard is first opened
 let LEVELS = {};   // easy = Warm-up + Core questions, hard = Challenge questions (built at start)
 let task = null, demoSub = "water";
@@ -1309,16 +1452,17 @@ function setLock(all, sub){
   $("subWrap").hidden = mode !== "demo" && task.lv === "warm";
 }
 const TRY = [
-  "Press ▼ Cool. Watch the particles lock into a pattern.",
-  "Press ▲ Heat. Does the temperature stop rising while it boils?",
-  "Turn on the Heating graph. Heat from solid to gas and find the flat parts.",
+  "Press ▲ Heat. Watch the particles break out of their pattern as it melts.",
+  "Keep heating. Does the temperature stop rising while it boils?",
+  "Press ▼ Cool. Watch the particles lock into a pattern again.",
+  "Turn on the Heating graph. Heat from solid to gas and find the flat parts. Then press Show states.",
   "Set the heater just below the boiling point. Do any particles escape?",
   "Try another substance. Does it melt and boil at the same temperatures?"
 ];
 function renderTry(){ $("tryList").innerHTML = TRY.map(x => "<li>" + esc(x) + "</li>").join(""); }
 function loadDemo(){
   task = null; picks = {}; hideTemp = false;
-  setSubstance(demoSub); jumpTo(M.Hlow(Math.max(M.S.min, Math.min(M.S.max, FACTS.roomTempC))));
+  setSubstance(demoSub); jumpTo(demoStartH());
   setLock(false, false); $("demoShow").hidden = false; $("mysteryPanel").hidden = true;
   renderTry(); applySupport(); updateReadouts(); drawStage();
 }
@@ -1418,7 +1562,7 @@ function scoreRight(){
     mark(qkey(level, task), "solved"); p.solved = true;
     if (p.checks === 1 && p.wrong === 0 && p.hints === 0) streak++;
     paintScore(); bump("sScore");
-    $("doneBadge").hidden = false; renderDots();
+    $("doneBadge").hidden = false; renderDots(); applySupport();   // supports hidden for this question come back
   }
 }
 function scoreWrong(){ prog().wrong++; nqMiss(); streak = 0; paintScore(); }
@@ -1481,7 +1625,7 @@ function doHint(){
 function doReveal(){
   if (bankErrors.length) return;
   const t = cur(), r = prog();
-  if (!r.solved) { r.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  if (!r.solved) { r.revealed = true; mark(qkey(level, task), "shown"); renderDots(); applySupport(); }
   const tail = r.solved ? "" : " (No score for this one.)";
   if (t.mystery) {
     $("nMp").value = MYS_FLAT[0]; $("nBp").value = MYS_FLAT[1];
