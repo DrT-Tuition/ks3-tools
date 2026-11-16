@@ -260,6 +260,9 @@ footer.brand a{color:inherit}
 .log{font-size:17px;min-height:1.6em;border-left:4px solid var(--line);padding:2px 0 2px 10px}
 .log.warn{border-left-color:var(--bad)}
 .log.good{border-left-color:var(--good)}
+/* crystal size (16 Nov 2026): the close-up's caption, under the status line */
+.xcap{font-size:16px;line-height:1.4;margin:0;border-left:4px solid var(--accent);padding:2px 0 2px 10px}
+.xcap[hidden]{display:none}
 .key{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:15px;color:var(--muted);align-items:center}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key svg{width:22px;height:22px;flex:none}
@@ -586,6 +589,7 @@ details.trybox > .try{margin-top:6px}
             <clipPath id="cpBasin"><path id="cpBasinP" d=""/></clipPath>
             <clipPath id="cpRound"><circle id="cpRoundC" cx="0" cy="0" r="1"/></clipPath>
             <clipPath id="cpZoom"><circle id="cpZoomC" cx="0" cy="0" r="1"/></clipPath>
+            <clipPath id="cpXtal"><circle id="cpXtalC" cx="0" cy="0" r="54"/></clipPath>
             <clipPath id="cpBeaker"><path id="cpBeakerP" d=""/></clipPath>
             <clipPath id="cpMortarIn"><path id="cpMortarInP" d=""/></clipPath>
             <clipPath id="cpMortarFront"><path id="cpMortarFrontP" d=""/></clipPath>
@@ -609,6 +613,9 @@ details.trybox > .try{margin-top:6px}
           <button class="btn" type="button" id="filtReset">Empty</button>
         </div>
         <div class="ctl" id="ctl-evap" hidden>
+          <div class="grp"><span class="glbl">Flame:</span><div class="seg" role="group" aria-label="How strongly to heat" id="flameWrap">
+            <button type="button" data-flame="gentle" aria-pressed="true">Heat gently</button>
+            <button type="button" data-flame="strong" aria-pressed="false">Heat strongly</button></div></div>
           <button class="tg" type="button" id="heatE" aria-pressed="false">Heat <span class="state">off</span></button>
           <button class="btn" type="button" id="leaveBtn">Leave somewhere warm</button>
           <button class="btn" type="button" id="evapReset">Start again</button>
@@ -642,6 +649,7 @@ details.trybox > .try{margin-top:6px}
         </div>
         <div class="meters" id="meters" aria-live="off"></div>
         <div class="log" id="log" aria-live="polite"></div>
+        <p class="xcap" id="xcap" hidden></p>
         <div class="key" id="key"></div>
       </div>
       <details class="about"><summary>About this model</summary><p class="limits" id="limits"></p></details>
@@ -732,7 +740,7 @@ const FACTS = {
   distStop: 70,      // cm³ collected, then the model turns the heat off (model value)
   goalVol: 10        // cm³ of pure water for the Easy goal
 };
-const RATE = { pour: 4, evapHeat: 1.5, evapWarm: 1.0, heatUp: 20, coolDown: 6, boil: 3, chrom: 5 };   // sped-up model rates
+const RATE = { pour: 4, evapHeat: 1.5, evapStrong: 3.2, evapWarm: 0.6, heatUp: 20, coolDown: 6, boil: 3, chrom: 5 };   // sped-up model rates
 const MIX = {
   sand:  { name: "Sand and water",    inLbl: "Sand in water",       solid: "sand",       insol: true,  liquid: "water",          kind: "sand",  solute: null },
   chalk: { name: "Chalk and water",   inLbl: "Chalk in water",      solid: "chalk",      insol: true,  liquid: "water",          kind: "chalk", solute: null },
@@ -797,7 +805,7 @@ const SCENE_WORDS = { filt: ["filtration", "filtrate", "residue"], evap: ["evapo
   rock: ["rocksalt", "filtrate", "residue", "crystallise"], chrom: ["chromatography", "chromatogram", "solvent"] };
 const LIMITS = {
   filt: "Real filter-paper holes are far too small to see. Particles are drawn much bigger than real, and only a few are shown.",
-  evap: "Time is sped up. Particles are drawn much bigger than real. Real salt solution takes much longer to evaporate.",
+  evap: "Time is sped up. Particles are drawn much bigger than real. Real salt solution takes much longer to evaporate. Crystal sizes show the pattern (slower evaporation, bigger crystals); they are not to scale.",
   dist: "Time is sped up. Clamps, tubing and anti-bumping granules are left out. The model stops after 70 cm³ so the flask never boils dry.",
   rock: "Time is sped up. Each step is shown on its own apparatus. Real rock salt needs a few minutes of stirring.",
   chrom: "Time is sped up. The dye colours are made up for the model. Real spots spread out more."
@@ -838,7 +846,16 @@ const support = { labels: false, words: false };
 let scene = "filt";
 let F, E, D, R, C;
 function resetFilt(mix) { F = { mix: mix || (F ? F.mix : "sand"), phase: "empty", t: 0, zoom: F ? F.zoom : false, parts: [], seeded: false }; }
-function resetEvap() { E = { vol: FACTS.evapVol, heat: false, heated: false, leave: false, spit: false, stopVol: null, vap: [], acc: 0, t: 0 }; }
+function resetEvap(keep) { E = { vol: FACTS.evapVol, heat: false, heated: false, leave: false, spit: false, stopVol: null, vap: [], acc: 0, t: 0,
+  flame: keep === true && E ? E.flame : "gentle", gw: 0, gv: 0 }; }   // flame: "gentle" | "strong"; gw / gv: how fast the water left once crystals had started
+/* crystal size (16 Nov 2026): how fast the water evaporates once crystals have started decides their size.
+   Slow (left somewhere warm): few, large crystals. Fast (strong heating): lots of tiny crystals, a crust. */
+const FAST = { warm: 0, gentle: 0.5, strong: 1 };
+const evapHow = () => E.heat ? E.flame : E.leave && E.vol > 0 ? "warm" : null;
+function xtalSlow() {   // 0 = fast (crust) … 1 = slow (large crystals)
+  if (E.gv > 0.05) return 1 - E.gw / E.gv;
+  return 1 - FAST[evapHow() || (E.leave ? "warm" : "gentle")];
+}
 function resetDist() { D = { T: FACTS.roomT, heat: false, cool: false, flask: FACTS.distVol, beaker: 0, parts: [], acc: 0, escaped: false, stopped: false, t: 0, flow: 0 }; }
 function resetRock() { R = { done: [], anim: null, msg: "", mistakes: 0, last: "" }; }
 function resetChrom(set) { C = { set: set || (C ? C.set : "dyes"), line: "pencil", solv: "below", front: 0, running: false, ran: false }; }
@@ -854,17 +871,20 @@ function updEvap(dt) {
   const before = E.vol;
   if (E.heat) {
     E.heated = true;
-    if (E.vol > 0) E.vol = Math.max(0, E.vol - RATE.evapHeat * dt);
+    if (E.vol > 0) E.vol = Math.max(0, E.vol - (E.flame === "strong" ? RATE.evapStrong : RATE.evapHeat) * dt);
     else E.spit = true;
   } else if (E.leave && E.vol > 0) E.vol = Math.max(0, E.vol - RATE.evapWarm * dt);
   E.t += dt;
+  const how = E.heat ? E.flame : E.leave ? "warm" : null, grew = Math.min(before, FACTS.crystalVol) - Math.min(E.vol, FACTS.crystalVol);
+  if (how && grew > 0) { E.gw += grew * FAST[how]; E.gv += grew; }   // water lost after the crystals started
   if (!reduced()) {
-    const rate = E.heat && E.vol > 0 ? 7 : E.leave && E.vol > 0 ? 2.5 : 0;
+    const rate = E.heat && E.vol > 0 ? (E.flame === "strong" ? 13 : 7) : E.leave && E.vol > 0 ? 2.5 : 0;
     E.acc += rate * dt;
     while (E.acc >= 1) { E.acc -= 1; E.vap.push({ x: 364 + (Math.random() - .5) * 100, y: surfE(E.vol) - 4, a: 0, dx: (Math.random() - .5) * 14 }); }
     E.vap.forEach(p => { p.a += dt; p.y -= 46 * dt; p.x += p.dx * dt; });
     E.vap = E.vap.filter(p => p.a < 2.8 && p.y > -10);
   } else E.vap = [];
+  const capNow = E.vol <= FACTS.crystalVol ? Math.round(xtalSlow() * 3) : -1; if (capNow !== E.capK) { E.capK = capNow; xtalCap(); }
   if ((before > FACTS.crystalVol) !== (E.vol > FACTS.crystalVol) || (before > 0 && E.vol === 0) || (E.spit && before === 0 && E.heat && !E.spitSaid)) { if (E.spit) E.spitSaid = true; status(); }
 }
 const surfE = vol => 134 - 12 * Math.sqrt(clamp(vol, 0, FACTS.evapVol) / FACTS.evapVol);   // centre of the solution surface in the basin picture
@@ -970,6 +990,11 @@ const svg = $("scene"), gMain = $("gMain");
 if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }).observe(svg);
 const GL = "fill:var(--glass);stroke:none", GE = "fill:none;stroke:var(--glass-edge);stroke-width:3;stroke-linejoin:round;stroke-linecap:round";
 const bench = y => `<path d="M0 ${y} L720 ${y}" style="stroke:var(--bench);stroke-width:4"/>`;
+function flameStrong(x, base, t) {   // heating strongly: a bigger, roaring flame
+  const f = reduced() ? 0 : Math.sin(t * 13) * 3, top = base - 62;
+  return `<path d="M${x - 17} ${base} Q${x - 22} ${top + 26} ${x} ${top + f} Q${x + 22} ${top + 26} ${x + 17} ${base} Z" style="fill:var(--flame-o);opacity:.85"/>` +
+         `<path d="M${x - 9} ${base} Q${x - 10} ${top + 34} ${x} ${top + 16 + f / 2} Q${x + 10} ${top + 34} ${x + 9} ${base} Z" style="fill:var(--flame-i)"/>`;
+}
 function flame(x, top, base, t) {   // gentle blue Bunsen flame; still if reduced motion
   const f = reduced() ? 0 : Math.sin(t * 9) * 2.5;
   return `<path d="M${x - 11} ${base} Q${x - 15} ${top + 22} ${x} ${top + f} Q${x + 15} ${top + 22} ${x + 11} ${base} Z" style="fill:var(--flame-o);opacity:.8"/>` +
@@ -993,6 +1018,64 @@ function gauze(x1, x2, y) {
 const mat = (x1, x2, y) => `<rect x="${x1}" y="${y}" width="${x2 - x1}" height="13" rx="3" style="fill:var(--mat);stroke:var(--metal-dark);stroke-width:1.5"/>`;
 function crystal(x, y, s, rot) { return `<rect x="${P(x - s / 2)}" y="${P(y - s / 2)}" width="${s}" height="${s}" transform="rotate(${rot} ${P(x)} ${P(y)})" style="fill:var(--crystal);stroke:var(--crystal-edge);stroke-width:1.4"/>`; }
 const GR = (() => { const r = rng(11), a = []; for (let i = 0; i < 70; i++) { const hh = 38 * Math.pow(r(), 0.85); a.push({ h: hh, u: r() * 2 - 1, s: 2.6 + r() * 1.8, rot: r() * 90, big: r() < .22 }); } return a; })();
+/* a salt crystal with flat faces and straight edges: a small cube (front, top and side faces); tiny ones are plain squares */
+function cube(x, y, s, rot) {
+  if (s < 5) return crystal(x, y, s, rot);
+  const a = s / 2, k = s * 0.36, w = Math.max(0.8, Math.min(1.6, s * 0.06)).toFixed(2), st = `stroke:var(--crystal-edge);stroke-width:${w};stroke-linejoin:round`;
+  const pt = (u, v) => P(x + u) + " " + P(y + v);
+  return `<g transform="rotate(${P(rot)} ${P(x)} ${P(y)})"><path d="M${pt(-a, -a)} L${pt(a, -a)} L${pt(a + k, -a - k)} L${pt(-a + k, -a - k)} Z" style="fill:var(--crystal);${st}"/>` +
+    `<path d="M${pt(a, -a)} L${pt(a + k, -a - k)} L${pt(a + k, a - k)} L${pt(a, a)} Z" style="fill:var(--crystal-edge);fill-opacity:.38;${st}"/>` +
+    `<rect x="${P(x - a)}" y="${P(y - a)}" width="${P(s)}" height="${P(s)}" style="fill:var(--crystal);${st}"/></g>`;
+}
+const XC = new Map();   // drawn crystals, cached by (size, growth, place): nothing is rebuilt while it doesn't change
+function cached(key, make) { let v = XC.get(key); if (v == null) { if (XC.size > 80) XC.clear(); v = make(); XC.set(key, v); } return v; }
+const qz = (x, n) => Math.round(clamp(x, 0, 1) * n) / n;
+const GA = 2.39996;   // golden angle: spreads the crystals evenly
+function basinCrystals(vol, slow) {   // in the basin: fast = lots of tiny crystals, slow = a few large ones
+  const cv = FACTS.crystalVol, g = qz(1 - vol / cv, 16), sl = qz(slow, 8), dry = vol <= 0.01, vq = dry ? 0 : cv * (1 - g);
+  return cached(`b${sl}|${g}|${dry}`, () => {
+    const s = evapSurf(vq), N = Math.round(34 - 27 * sl), n = Math.max(2, Math.round(N * Math.min(1, 0.35 + g))), S = (3.2 + 9 * sl) * (0.45 + 0.55 * g);
+    const r = rng(23), rot = [], rr = [];
+    for (let i = 0; i < 34; i++) { rot.push(r() * 40 - 20); rr.push(r()); }
+    let h = "";
+    for (let i = 0; i < n; i++) {
+      const a = 0.35 + i * GA, q = dry ? Math.sqrt((i + 0.5) / n) * 0.92 : 1 - 0.3 * rr[i];
+      h += cube(EB.cx + (s.rx - 3) * q * Math.cos(a), s.y + (s.ry - 2) * q * Math.sin(a), +S.toFixed(1), rot[i]);
+    }
+    return h;
+  });
+}
+function closeUpCells(sl, R) {   // where the crystals sit in the close-up (fixed for each size)
+  const S = 6 + 20 * sl, cell = S * 1.4, r = rng(31), out = [];
+  for (let y = -R; y <= R; y += cell) for (let x = -R; x <= R; x += cell) {
+    const px = x + (r() - 0.5) * cell * 0.35, py = y + (r() - 0.5) * cell * 0.35;
+    if (Math.hypot(px, py) + S * 0.55 < R + S * 0.25) out.push({ x: px, y: py, o: r(), rot: r() * 50 - 25, f: 0.8 + 0.4 * r() });
+  }
+  out.sort((a, b) => a.o - b.o);
+  return { S, cells: out };
+}
+function closeUp(slow, grow, title) {   // magnified view of the crystals, top left of the picture
+  const R = FS > 1 && !support.labels ? 88 : 66, cx = R + 12, cy = R + 8, sl = qz(slow, 8), g = qz(grow, 8);   // bigger on a phone when the labels are off
+  $("cpXtalC").setAttribute("r", R - 2);
+  const inner = cached(`z${R}|${sl}|${g}`, () => {
+    const { S, cells } = closeUpCells(sl, R), n = Math.min(cells.length, Math.max(2, Math.round(cells.length * Math.min(1, 0.35 + g))));
+    let h = `<circle cx="0" cy="0" r="${R}" style="fill:var(--porcelain)"/><circle cx="0" cy="0" r="${R}" style="fill:var(--porc-edge);opacity:.3"/><g clip-path="url(#cpXtal)">`;
+    for (let i = 0; i < n; i++) { const c = cells[i]; h += cube(c.x, c.y, +(S * c.f * (0.45 + 0.55 * g)).toFixed(1), c.rot); }
+    return h + `</g><circle cx="0" cy="0" r="${R}" style="fill:none;stroke:var(--accent);stroke-width:3"/>`;
+  });
+  return `<path d="M${P(cx + R * 0.8)} ${P(cy + R * 0.55)} L310 120" style="stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 5"/>` +
+    `<g transform="translate(${cx} ${cy})">${inner}</g>` + label(cx + R + 14, 26, title, "start");
+}
+let xtalShown = false;   // the close-up is in the picture (set by drawEvap / drawRock)
+function xtalOK() {   // no answer leaks: the close-up and its caption stay hidden while a question is open
+  try { if (mode === "demo" || !task) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; } catch (e) { return true; }
+}
+function xtalCaption(slow, rock) {
+  if (rock) return "<b>Close-up:</b> large salt crystals with flat faces. The water evaporated slowly, so particles had time to join crystals that were already growing.";
+  if (slow > 0.66) return "<b>Close-up:</b> a few large crystals with flat faces. Slow evaporation gives particles time to join crystals that are already growing, so they get bigger.";
+  if (slow < 0.34) return "<b>Close-up:</b> lots of tiny crystals stuck together (a crust). Fast evaporation starts lots of small crystals at once.";
+  return "<b>Close-up:</b> medium crystals. Slower evaporation gives fewer, bigger crystals. Faster evaporation gives lots of small ones.";
+}
 const GE2 = (() => { const r = rng(5), a = []; for (let i = 0; i < 40; i++) a.push({ u: r(), v: r(), rot: r() * 90, s: 5 + r() * 4 }); return a; })();
 
 /* filter funnel + folded paper in a conical flask: the glassware and paper are a picture (sFilt); the filtrate, the liquid
@@ -1088,31 +1171,28 @@ const EB = { cx: 364, cy: 121.6, rx: 74, ry: 17 };   // inner rim of the basin i
 function evapSurf(vol) { const f = Math.sqrt(clamp(vol, 0, FACTS.evapVol) / FACTS.evapVol); return { y: surfE(vol), rx: 26 + 42 * f, ry: 6 + 9 * f }; }
 function evapRig(o) {
   $("cpBasinP").setAttribute("d", `M${EB.cx - EB.rx} ${EB.cy} A${EB.rx} ${EB.ry} 0 1 0 ${EB.cx + EB.rx} ${EB.cy} A${EB.rx} ${EB.ry} 0 1 0 ${EB.cx - EB.rx} ${EB.cy} Z`);
-  let h = bench(398) + (o.heat ? flame(360, 200, 238, o.t) : "") + `<use href="#sEvap" class="pic" x="225" y="100" width="270.9" height="296.9"/>`;
+  let h = bench(398) + (o.heat ? (o.strong ? flameStrong(360, 238, o.t) : flame(360, 200, 238, o.t)) : "") + `<use href="#sEvap" class="pic" x="225" y="100" width="270.9" height="296.9"/>`;
   const s = evapSurf(o.vol);
   if (o.vol > 0.01) h += `<ellipse cx="${EB.cx}" cy="${P(s.y)}" rx="${P(s.rx)}" ry="${P(s.ry)}" clip-path="url(#cpBasin)" style="fill:var(--water);stroke:var(--water-edge);stroke-width:2"/>`;
   // salt crystals: round the edge once only a little water is left, then over the whole bottom when dry
   const cv = FACTS.crystalVol;
-  if (o.vol <= cv) {
-    const f = 1 - o.vol / cv, n = Math.round(4 + 8 * f);
-    h += `<g clip-path="url(#cpBasin)">`;
-    for (let i = 0; i < n; i++) { const a = 0.35 + i * 6.283 / n; h += crystal(EB.cx + (s.rx - 3) * Math.cos(a), s.y + (s.ry - 2) * Math.sin(a), 6, 20 + i * 17); }
-    if (o.vol <= 0.01) GE2.forEach(c => h += crystal(EB.cx + (c.u - 0.5) * 56, 134 + (c.v - 0.5) * 10, c.s * 0.8, c.rot));
-    h += `</g>`;
-  }
+  if (o.vol <= cv) h += `<g clip-path="url(#cpBasin)">${basinCrystals(o.vol, o.slow == null ? 0.5 : o.slow)}</g>`;   // size and number follow the evaporation speed
   if (o.spit && o.heat) for (let i = 0; i < 6; i++) { const a = -0.4 - i * 0.47 + (reduced() ? 0 : Math.sin(o.t * 7 + i) * 0.12), r1 = 58, r2 = 76; h += `<path d="M${P(EB.cx + r1 * 1.3 * Math.cos(a))} ${P(124 + r1 * Math.sin(a))} L${P(EB.cx + r2 * 1.3 * Math.cos(a))} ${P(124 + r2 * Math.sin(a))}" style="stroke:var(--hot);stroke-width:3;stroke-linecap:round"/>`; }
   return h;
 }
 function evapLabels(vol, steam) {
   const s = evapSurf(vol);
-  let h = tag(232, 140, "evaporating basin", "end", 289, 140);
+  let h = xtalShown ? tag(232, 174, "evaporating basin", "end", 289, 150) : tag(232, 140, "evaporating basin", "end", 289, 140);   // moved down while the close-up is on
   if (vol > 0.01) h += tag(470, 178, "salt solution", "start", P(EB.cx + s.rx * 0.3), P(s.y + s.ry * 0.4));
   if (vol <= FACTS.crystalVol) h += tag(470, 100, "salt crystals", "start", P(EB.cx + (s.rx - 3) * 0.8), P(s.y - (s.ry - 2) * 0.6));
   if (steam) h += tag(470, 58, "water vapour", "start", 392, 80);
   return h;
 }
 function drawEvap() {
-  let h = evapRig({ vol: E.vol, heat: E.heat, spit: E.spit, t: E.t });
+  const sl = xtalSlow();
+  let h = evapRig({ vol: E.vol, heat: E.heat, spit: E.spit, t: E.t, strong: E.flame === "strong", slow: sl });
+  xtalShown = E.vol <= FACTS.crystalVol && xtalOK();
+  if (xtalShown) h += closeUp(sl, 1 - E.vol / FACTS.crystalVol, "Close-up of the crystals");
   if (reduced()) { if ((E.heat || E.leave) && E.vol > 0) { [[330, 92], [364, 70], [398, 88]].forEach(q => h += particle(q[0], q[1], 9, "W")); h += `<path d="M440 98 L440 40" style="stroke:var(--ink);stroke-width:2.5" marker-end="url(#ah)"/>`; } }
   else E.vap.forEach(p => h += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
   if (support.labels) {
@@ -1236,7 +1316,9 @@ function drawRock() {
     h = bench(396) + filterRig(360, o) + filterLabels(360, o);
   } else {
     const q = a ? p : 1, heat = !!a && q < 0.6, vol = q < 0.6 ? FACTS.evapVol - (FACTS.evapVol - FACTS.crystalVol) * q / 0.6 : FACTS.crystalVol * (1 - (q - 0.6) / 0.4);
-    h = evapRig({ vol: Math.max(0, vol), heat, spit: false, t: a ? a.t : 0 });
+    h = evapRig({ vol: Math.max(0, vol), heat, spit: false, t: a ? a.t : 0, slow: 1 });   // heated gently, then left: slow, large crystals
+    xtalShown = vol <= FACTS.crystalVol && xtalOK();
+    if (xtalShown) h += closeUp(1, 1 - Math.max(0, vol) / FACTS.crystalVol, "Close-up of the crystals");
     if (heat && !reduced()) for (let i = 0; i < 4; i++) { const ph = ((a.t * .8 + i / 4) % 1); h += particle(324 + i * 27, surfE(vol) - 8 - ph * 110, 9, "W", 1 - ph); }
     if (support.labels) h += evapLabels(Math.max(0, vol), false);
   }
@@ -1321,7 +1403,7 @@ function statusText() {
     if (E.spit && E.heat) return ["warn", "Too far! It is dry, and the hot salt spits. Stop heating."];
     if (E.vol <= 0.01) return ["good", "Dry salt crystals are left in the basin. The water escaped into the air as a gas."];
     if (E.heat && E.vol <= FACTS.crystalVol) return ["warn", "Crystals at the edge: stop heating now."];
-    if (E.heat) return ["", "The water evaporates and leaves as a gas. The dissolved salt stays in the basin."];
+    if (E.heat) return ["", (E.flame === "strong" ? "Heating strongly: the water evaporates fast. " : "") + "The water evaporates and leaves as a gas. The dissolved salt stays in the basin."];
     if (E.leave) return ["", "Left somewhere warm: the rest of the water slowly evaporates."];
     if (E.heated && E.vol <= FACTS.crystalVol) return ["good", "Heat off. Leave it somewhere warm to finish drying."];
     return ["", "Turn on the <b>Heat</b> to evaporate the water from the salt solution."];
@@ -1353,7 +1435,16 @@ function statusText() {
                                     : "Done. Compare each pen with the cheque: same colours at the same heights?"];
 }
 let lastStatus = "";
+function xtalCap() {   // caption under the status line, only while the close-up shows
+  let h = "";
+  if (xtalOK()) {
+    if (scene === "evap" && E.vol <= FACTS.crystalVol) h = xtalCaption(xtalSlow(), false);
+    else if (scene === "rock" && R.done.includes("evap") && !R.anim) h = xtalCaption(1, true);
+  }
+  const el = $("xcap"); if (el._h !== h) { el._h = h; el.innerHTML = h; el.hidden = !h; }
+}
 function status() {
+  xtalCap();
   const [cls, html] = statusText(), key = cls + html;
   if (key !== lastStatus) { lastStatus = key; $("log").className = "log" + (cls ? " " + cls : ""); $("log").innerHTML = html; }
   meters(); renderKey();
@@ -1383,7 +1474,7 @@ function syncToggles() {
   t("heatE", E.heat); t("heatD", D.heat); t("coolBtn", D.cool); t("zoomBtn", F.zoom);
   const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => b.setAttribute("aria-pressed", String(b.dataset[attr] === v)));
   pr("#mixWrap button", "mix", F.mix); pr("#setWrap button", "set", C.set); pr("#lineWrap button", "line", C.line); pr("#solvWrap button", "solv", C.solv);
-  pr("#sceneWrap button", "scene", scene);
+  pr("#sceneWrap button", "scene", scene); pr("#flameWrap button", "flame", E.flame);
   $("pourBtn").disabled = F.phase === "pouring";
   $("runBtn").disabled = C.running;
   $("leaveBtn").disabled = E.heat || E.vol <= 0.01;
@@ -1411,7 +1502,8 @@ $("heatE").addEventListener("click", () => {
   refresh();
 });
 $("leaveBtn").addEventListener("click", () => { E.heat = false; if (E.stopVol == null && E.heated) E.stopVol = E.vol; E.leave = true; refresh(); });
-$("evapReset").addEventListener("click", () => { resetEvap(); refresh(); });
+$("evapReset").addEventListener("click", () => { resetEvap(true); refresh(); });   // keeps the flame setting
+$("flameWrap").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { E.flame = b.dataset.flame; refresh(); }));
 $("coolBtn").addEventListener("click", () => { D.cool = !D.cool; refresh(); if (D.cool) tourSignal("cool"); });
 $("heatD").addEventListener("click", () => { if (D.stopped) return; D.heat = !D.heat; refresh(); if (D.heat) tourSignal("heat"); });
 $("distReset").addEventListener("click", () => { resetDist(); refresh(); });
@@ -1713,7 +1805,8 @@ function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0
 
 const TRY = {
   filt: ["Pour sand and water. Where does the sand end up?", "Try salt water. Is anything left in the paper?", "Turn on Zoom. Which particles fit through the holes?", "Try tea leaves in tea. Is the liquid in the flask pure water?"],
-  evap: ["Turn on the heat. What leaves the basin?", "Stop heating when crystals appear at the edge.", "Leave it somewhere warm to finish drying.", "Start again, and keep heating until it is dry. What happens?"],
+  evap: ["Turn on the heat. What leaves the basin?", "Stop heating when crystals appear at the edge.", "Leave it somewhere warm to finish drying.", "Start again, and keep heating until it is dry. What happens?",
+    "Heat strongly until it is dry. Then start again: heat gently until crystals appear, and leave it somewhere warm. Compare the close-ups."],
   dist: ["Turn on the cooling water, then the heat.", "Watch the thermometer. What temperature does the water boil at?", "Turn off the cooling water. Where does the steam go?", "Is the water in the beaker salty? Read the line under the picture."],
   rock: ["Try a step in the wrong order. What goes wrong?", "Get pure salt: do all four steps in the right order.", "After filtering, where is the salt?"],
   chrom: ["Press Run and watch the dyes travel up the paper.", "Which dyes are in mixture M?", "Draw the base line in pen. What happens?", "Put the solvent above the base line. What happens?", "Switch to the cheque. Whose pen matches?"]
@@ -1827,7 +1920,7 @@ function check() {
     mark(qkey(level, task), "solved"); p.solved = true;
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓ Correct.</b> " + esc(task.explain)); $("stuckNote").textContent = "";
-    $("doneBadge").hidden = false; renderDots(); setAnswerUI(true); nqAfter("right");
+    $("doneBadge").hidden = false; renderDots(); setAnswerUI(true); if (task.scene === "evap" || task.scene === "rock") { status(); draw(); } nqAfter("right");
   } else {
     p.wrong++; nqMiss(); streak = 0; bump();
     if (r.marks) document.querySelectorAll("#answer .row").forEach((el, i) => { el.classList.toggle("ok-row", r.marks[i]); el.classList.toggle("bad-row", !r.marks[i]); });

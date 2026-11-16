@@ -208,6 +208,7 @@ footer.brand a{color:inherit}
 .scene .paperw{fill:var(--paperw);stroke:var(--glass-edge);stroke-width:1.2}
 .scene .crys{fill:var(--crys);stroke:var(--crys-e);stroke-width:1.4;stroke-linejoin:round}
 .scene .crysf{fill:none;stroke:var(--crys-f);stroke-width:1.2;opacity:.85}
+.scene .spit{stroke:var(--bad);stroke-width:3;fill:none;stroke-linecap:round}
 .scene .steam{fill:none;stroke:var(--muted);stroke-width:2;opacity:.6;stroke-linecap:round}
 .scene .tk0{stroke:#2A2418;stroke-width:1}
 .scene .tk1{stroke:#2A2418;stroke-width:1.8}
@@ -228,6 +229,16 @@ footer.brand a{color:inherit}
 .readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
 .readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
 .readout .r3{font-size:16px;color:var(--muted)}
+/* crystal size (16 Nov 2026): how the rest of the water evaporates, and the close-up's caption */
+.readout .r4{font-size:16px;line-height:1.4;border-left:4px solid var(--accent);padding:1px 0 1px 9px;margin-top:3px}
+.xhow{display:inline-flex;flex-wrap:nowrap;align-items:center;gap:6px 8px}
+.xhow[hidden]{display:none}
+.xhow .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.xhow .seg button{font:700 15px var(--f-body);padding:8px 12px;min-height:40px;border:0;border-right:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.xhow .seg button:last-child{border-right:0}
+.xhow .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.xhow .seg button:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+@media (max-width:560px){.xhow{flex-wrap:wrap;width:100%}.xhow .seg{flex:1 1 auto}.xhow .seg button{flex:1 1 auto;font-size:14px;padding:8px 8px}}
 .locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
 .small{font-size:16px;color:var(--muted);margin:0}
 .frame{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-left:4px solid var(--accent);border-radius:6px}
@@ -739,7 +750,7 @@ function freshRun() {
     day: 0, days: 0, grow: 0, result: null, spoilt: "", fx: null };
 }
 function freshEval() { return { shape: "", colour: "", match: "", why: "", ok: null }; }
-function freshM() { return { eye: false, msg: "", run: freshRun(), ev: freshEval() }; }
+function freshM() { return { eye: false, msg: "", run: freshRun(), ev: freshEval(), how: "warm" }; }   // how: how the rest of the water evaporates (crystal size, 16 Nov 2026)
 const support = { read: false, maths: false, words: false };
 let mode = "demo", level = "", idx = 0, streak = 0;
 const st = {};
@@ -870,20 +881,30 @@ function actRod(m) {
   m.msg = r.rod === "yes" ? "You dipped a cold glass rod in. Crystals formed on the end of the rod." : "You dipped a cold glass rod in. No crystals formed on the rod.";
   return true;
 }
+/* How the rest of the water evaporates decides the crystal size (16 Nov 2026). The method: leave it in a warm place (slow:
+   days; a few large crystals). Keeping it on the hot water bath (faster: about an hour) gives more, smaller crystals. Heating
+   it strongly over a Bunsen flame (fastest: minutes) spits and gives a crust of tiny crystals. Times are INVENTED. */
+const HOW = { warm: "Warm place", gentle: "Water bath", strong: "Strong flame" };   // button words (the slow, gentle and strong ways)
 function actLeave(m) {
   const r = m.run;
   if (r.phase !== "evap") { m.msg = r.phase === "filtered" ? "Heat the solution gently first." : r.phase === "cryst" ? "It is already crystallising." : "Make the salt solution first."; return false; }
   if (r.heat) { r.heat = false; }
-  r.fStop = r.f; r.phase = "cryst"; r.rod = null;
+  const how = m.how || "warm";
+  r.fStop = r.f; r.phase = "cryst"; r.rod = null; r.how = how;
   const sat = r.f <= r.fSat;
-  r.days = sat ? 2 + Math.round(rnd()) : Math.min(14, 3 + Math.round((r.f - r.fSat) * 14 + rnd()));   // INVENTED day counts
+  if (how === "warm") r.days = sat ? 2 + Math.round(rnd()) : Math.min(14, 3 + Math.round((r.f - r.fSat) * 14 + rnd()));   // INVENTED day counts
+  else { r.days = 0; r.mins = how === "gentle" ? (sat ? 50 : 80) + Math.round(20 * rnd()) : (sat ? 6 : 10) + Math.round(4 * rnd()); }   // INVENTED minutes
   r.day = 0; r.grow = 0; r.fx = { k: "grow", t: 0 };
-  m.msg = sat ? "Left in a warm place. The water evaporates slowly…" : "Left in a warm place. The solution wasn't saturated yet, so it will take longer…";
+  m.msg = how === "gentle" ? "Kept on the hot water bath. The water evaporates quickly…"
+    : how === "strong" ? "Heated strongly over a Bunsen flame. The water evaporates very fast, and the hot solution spits!"
+    : sat ? "Left in a warm place. The water evaporates slowly…" : "Left in a warm place. The solution wasn't saturated yet, so it will take longer…";
   return true;
 }
 function growTick(m, dt) { const r = m.run; if (r.phase !== "cryst" || r.grow >= 1) return false;
-  r.grow = Math.min(1, r.grow + dt / 2.4); r.day = Math.max(1, Math.round(r.grow * r.days));
-  if (r.grow >= 1) { m.msg = `Day ${r.days}: crystals have formed in the basin. Pour off the solution that is left, and let the crystals dry.`; return false; }
+  r.grow = Math.min(1, r.grow + dt / 2.4); if (r.days) r.day = Math.max(1, Math.round(r.grow * r.days));
+  if (r.grow >= 1) { m.msg = r.how === "gentle" ? `After about ${r.mins} minutes on the water bath, small crystals have formed. Pour off the solution that is left, and let the crystals dry.`
+      : r.how === "strong" ? `After about ${r.mins} minutes, a crust of tiny crystals has formed. Pour off the solution that is left, and let the crystals dry.`
+      : `Day ${r.days}: crystals have formed in the basin. Pour off the solution that is left, and let the crystals dry.`; return false; }
   return true; }
 function actDecant(m) {
   const r = m.run;
@@ -893,13 +914,15 @@ function actDecant(m) {
 }
 function finish(m) {   // the crystals you get depend on what you did
   const r = m.run; r.phase = "dry";
-  r.result = { small: r.fStop != null && r.fStop < CRUST, specks: r.noFilter && r.solid > 1e-6, slow: r.fStop != null && r.fStop > r.fSat, days: r.days };
+  const crust = r.fStop != null && r.fStop < CRUST, how = r.how || "warm";
+  r.result = { small: crust || how === "strong", specks: r.noFilter && r.solid > 1e-6, slow: r.fStop != null && r.fStop > r.fSat, days: r.days,
+    crust, how, size: crust || how === "strong" ? "tiny" : how === "gentle" ? "medium" : "large" };
   m.ev = freshEval();
 }
-const goodRun = m => !!(m.run.phase === "dry" && m.run.result && !m.run.result.small && !m.run.result.specks && !m.run.result.slow && m.eye);
+const goodRun = m => !!(m.run.phase === "dry" && m.run.result && !m.run.result.small && !m.run.result.specks && !m.run.result.slow && m.run.result.how === "warm" && m.eye);
 function newRun(m) { m.run = freshRun(); m.ev = freshEval(); m.msg = "Ready. Pour dilute sulfuric acid into the measuring cylinder."; }
 function autoRun(m, how) {   // Show answer: the method done right (or with one mistake, for the evaluation)
-  m.eye = true; m.run = freshRun(); m.ev = freshEval(); const r = m.run;
+  m.eye = true; m.run = freshRun(); m.ev = freshEval(); m.how = "warm"; const r = m.run;
   r.vol = VOL; r.rec = VOL; actPour(m); actWarm(m);
   for (let k = 0; k < 14 && r.solid <= 1e-6; k++) { if (how === "acid" && r.reacted + SPAT * 1.3 > r.acidMol) break; actAdd(m); }
   r.fx = null;
@@ -923,7 +946,7 @@ function judgeEval(m) {
   if (e.shape !== w.shape) out.push(w.shape === "big" ? "Look again at the close-up: your crystals are large, with flat faces and straight edges." : "Look again at the close-up: your crystals are tiny, stuck together in a crust.");
   if (e.colour !== w.colour) out.push(w.colour === "blue" ? "Look again: there are no black specks in your crystals." : "Look again: there are black specks among your crystals.");
   if (e.match !== w.match) out.push(w.match === "yes" ? "Bright blue and regularly shaped: yours fit the description." : "The description says bright blue and regularly shaped. Do yours fit both parts?");
-  if (e.why !== w.why) out.push(w.why === "fine" ? "Your crystals match, so no mistake explains them." : w.why === "dry" ? "Think about when you stopped heating: was there still about half the water left?" : w.why === "filt" ? "Think about the black solid: did you filter it off?" : "Two things went wrong: when you stopped heating, and the filtering.");
+  if (e.why !== w.why) out.push(w.why === "fine" ? "Your crystals match, so no mistake explains them." : w.why === "dry" ? (res.how === "strong" && !res.crust ? "Think about how you let the water evaporate: heating strongly drove almost all of it off in minutes." : "Think about when you stopped heating: was there still about half the water left?") : w.why === "filt" ? "Think about the black solid: did you filter it off?" : "Two things went wrong: when you stopped heating, and the filtering.");
   return out.length ? { why: out.join(" ") } : { ok: true };
 }
 function autoEval(m) { const w = evalWant(m.run.result); Object.assign(m.ev, w, { ok: true }); }
@@ -1055,20 +1078,39 @@ function drawMov() {
     if (r.phase === "spoilt") o += tag(G.W / 2, 120, n ? "Stop: acid left!" : "Stop! Concentrated acid", fs, "bad", "middle");
     o += info([n ? "Water bath" : "On a water bath", r.heat ? (n ? "Heating: on" : "Heating: on") : (n ? "Heating: off" : "Heating: off")]);
   } else if (r.phase === "cryst" || r.phase === "dry") {
-    const dry = r.phase === "dry", res = r.result, small = (r.fStop != null && r.fStop < CRUST), g = dry ? 1 : r.grow;
-    o += `<rect class="mat" x="60" y="424" width="230" height="10" rx="3"/>`;
-    o += `<path class="glassl" style="fill:var(--glass);fill-opacity:.6" d="${BOWL(170, 372, 76, 46)}Z"/><clipPath id="bowlc"><path d="${BOWL(170, 372, 76, 46)}Z"/></clipPath>`;
+    const dry = r.phase === "dry", res = r.result, how = r.how || "warm", small = (r.fStop != null && r.fStop < CRUST) || how === "strong", g = dry ? 1 : r.grow;
+    const hot = !dry && how !== "warm", dy = hot ? (how === "gentle" ? -207 : -132) : 0;   // heated: the basin sits on the water bath (gentle) or the gauze (strong)
+    if (hot && how === "gentle") {   // the water-bath picture (its basin is drawn in it); the crystals and solution are moved up into its basin
+      o += `<use href="#imMsBath" aria-hidden="true" pointer-events="none" transform="translate(54.4 150.03)"/>`;
+      if (g < 1) o += `<path class="flame" d="M170 296Q183 314 178 328H162Q157 314 170 296Z"/><path class="flame2" d="M170 309Q176 318 174 328H166Q164 318 170 309Z"/>`;
+      o += `<clipPath id="wbc"><path clip-rule="evenodd" d="M130 202H210V281H130Z${BOWL(169, 161, 60, 50)}Z"/></clipPath><rect class="water" clip-path="url(#wbc)" x="130" y="202" width="80" height="79" rx="4"/>`;
+    } else if (hot) {   // strongly: the basin straight on the gauze over a big flame
+      const big = g < 1 ? `<path class="flame" d="M170 266Q194 300 185 328H155Q146 300 170 266Z"/><path class="flame2" d="M170 287Q182 310 178 328H162Q158 310 170 287Z"/>` : "";
+      o += burner(170, false).replace('<path class="leg"', big + '<path class="leg"');   // the big flame goes under the gauze
+      o += `<path class="glassl" style="fill:var(--glass);fill-opacity:.6" d="${BOWL(170, 372 + dy, 76, 46)}Z"/>`;
+    } else {
+      o += `<rect class="mat" x="60" y="424" width="230" height="10" rx="3"/>`;
+      o += `<path class="glassl" style="fill:var(--glass);fill-opacity:.6" d="${BOWL(170, 372, 76, 46)}Z"/>`;
+    }
+    o += `<clipPath id="bowlc"><path d="${how === "gentle" && hot ? BOWL(169, 161, 60, 50) : BOWL(170, 372 + dy, 76, 46)}Z"/></clipPath>`;
     const f = dry ? 0 : (r.fStop || 0) * (1 - .55 * g), surf = 376 + (1 - f) * 40;
-    if (f > .01) o += `<rect class="soln" clip-path="url(#bowlc)" style="fill-opacity:.7" x="90" y="${f1(surf)}" width="160" height="${f1(430 - surf)}"/>`;
+    if (f > .01) o += `<rect class="soln" clip-path="url(#bowlc)" style="fill-opacity:.7" x="90" y="${f1(surf + dy)}" width="160" height="${f1(430 - surf)}"/>`;
     let c = "";
-    if (small) c += tinyCrust(46, 104, 236, 388, 416, 5, 5);
+    if (small) c += tinyCrust(46, 104, 236, 388, 416, 5, how === "strong" ? 3.6 : 5);
+    else if (how === "gentle") for (let i = 0; i < 16; i++) c += crystal(114 + i * 7.4 + 4 * hash(i), 410 - 12 * hash(i + 9), 2 + 3.4 * g * (.75 + .5 * hash(i + 4)), hash(i + 2) * 1.2 - .6);
     else for (let i = 0; i < 7; i++) c += crystal(120 + i * 16 + 6 * hash(i), 408 - 10 * hash(i + 9), 3 + 7 * g * (.75 + .5 * hash(i + 4)), hash(i + 2) * 1.2 - .6);
     if (r.noFilter && r.solid > 1e-6) c += bits(12, 116, 226, 398, 418, 17, "cuo", 2.6);
-    o += `<g clip-path="url(#bowlc)">${c}</g>`;
-    if (!dry) o += info([n ? "Warm place" : "In a warm place", `Day ${r.day}`]);
+    o += `<g clip-path="url(#bowlc)"><g transform="translate(0 ${dy})">${c}</g></g>`;
+    if (hot && how === "gentle") o += `<g clip-path="url(#msRim)" pointer-events="none"><use href="#imMsBath" aria-hidden="true" transform="translate(54.4 150.03)"/></g>`;   // the front of the beaker's rim stays in front of the basin
+    if (hot && g < 1) o += `<path class="steam" d="M148 ${144 - (how === "strong" ? -60 : 0)}q-8 -12 0 -24t0 -24M170 ${140 - (how === "strong" ? -60 : 0)}q-8 -12 0 -24t0 -24M192 ${144 - (how === "strong" ? -60 : 0)}q-8 -12 0 -24t0 -24"/>`;
+    if (hot && how === "strong" && g < 1) { for (let i = 0; i < 6; i++) { const a = -2.6 + i * .42, x0 = 170 + 70 * Math.cos(a), y0 = 236 + 30 * Math.sin(a);
+        o += `<path class="spit" d="M${f1(x0)} ${f1(y0)}l${f1(16 * Math.cos(a))} ${f1(16 * Math.sin(a) - 6)}"/>`; }
+      o += tag(G.W / 2 + 40, 120, n ? "Spitting!" : "Spitting! Hot solution", fs - 2, "bad", "middle"); }
+    if (!dry) o += info(how === "gentle" ? [n ? "Water bath" : "On a water bath", `About ${r.mins} min`] : how === "strong" ? [n ? "Strong flame" : "Bunsen: strong flame", `About ${r.mins} min`] : [n ? "Warm place" : "In a warm place", `Day ${r.day}`]);
     if (dry && res) {   // close-up of the pupil's own crystals
       const cx = 440, cy = 262, R = 128; let z = `<circle cx="${cx}" cy="${cy}" r="${R}" style="fill:var(--mag);stroke:var(--accent);stroke-width:2.5"/><clipPath id="zc"><circle cx="${cx}" cy="${cy}" r="${R - 3}"/></clipPath><g clip-path="url(#zc)">`;
       if (res.small) z += tinyCrust(70, cx - R, cx + R, cy - R * .7, cy + R * .8, 11, 13);
+      else if (res.size === "medium") { for (let i = 0; i < 18; i++) { const a = i * 2.39996, q = Math.sqrt((i + .5) / 18) * R * .82; z += crystal(cx + q * Math.cos(a), cy + q * Math.sin(a), 15 + 5 * hash(i + 3), hash(i + 7) * 1.4 - .7); } }
       else { [[-60, -40, 34, .3], [20, -60, 30, -.4], [70, 10, 36, .6], [-20, 30, 40, -.2], [-75, 50, 26, .9], [40, 75, 28, .1]].forEach(([dx, dy, s, t]) => { z += crystal(cx + dx, cy + dy, s, t); }); }
       if (res.specks) z += bits(16, cx - R * .8, cx + R * .8, cy - R * .7, cy + R * .7, 23, "cuo", 5);
       z += `</g>`; o += z + tag(cx, cy - R - 12, "Close-up of your crystals", fs - 2, "acc", "middle");
@@ -1085,20 +1127,22 @@ const MSTEPS = [
     m => { const r = m.run; if (r.phase === "beaker") return r.solid > 1e-6 ? true : r.extra && r.spat ? "bad" : false; return r.phase === "measure" ? false : r.acidLeft ? "bad" : true; }],
   ["Filter into an evaporating basin.", "This removes the excess copper oxide: only salt and water are left.", m => { const r = m.run; return r.noFilter ? "bad" : ["filtered", "evap", "cryst", "dry"].includes(r.phase) && !r.noFilter ? true : false; }],
   ["Heat on a water bath until crystals start to form.", "The solution is then saturated (about half the water is left). Test with a cold glass rod.",
-    m => { const r = m.run; if (r.phase === "dry" && r.result && r.result.small) return "bad"; if (r.phase === "evap") return r.f <= r.fSat && !r.heat ? true : false; return ["cryst", "dry"].includes(r.phase) ? (r.fStop != null && r.fStop > r.fSat ? "bad" : true) : false; }],
-  ["Leave in a warm place to crystallise.", "Slow evaporation gives larger crystals.", m => ["cryst", "dry"].includes(m.run.phase) && !(m.run.result && m.run.result.small && m.run.days === 0) ? true : false],
+    m => { const r = m.run; if (r.phase === "dry" && r.result && r.result.crust) return "bad"; if (r.phase === "evap") return r.f <= r.fSat && !r.heat ? true : false; return ["cryst", "dry"].includes(r.phase) ? (r.fStop != null && r.fStop > r.fSat ? "bad" : true) : false; }],
+  ["Leave in a warm place to crystallise.", "Slow evaporation gives larger crystals.", m => { const r = m.run; if (["cryst", "dry"].includes(r.phase) && r.how && r.how !== "warm") return "bad";
+    return ["cryst", "dry"].includes(r.phase) && !(r.result && r.result.small && r.days === 0) ? true : false; }],
   ["Pour off the solution; let the crystals dry.", "This gives a pure, dry sample of the salt.", m => m.run.phase === "dry" && m.run.days > 0]];
 const BADW = ["", "", "", "", "not filtered", "", "", ""];
 function drawMethod() {
   if (mode !== "demo" && task.id !== "doit") { morphHTML($("method"), '<li class="now">The method list is hidden during this question.<span class="why">It comes back in Demo and in the “Do it” question.</span></li>'); return; }   // it would give method answers away
   const v = MSTEPS.map(x => x[2](M)), now = v.findIndex(x => !x);
-  const badW = i => i === 3 ? (M.run.extra ? "acid added" : "acid left over") : i === 4 ? "not filtered" : i === 5 ? (M.run.result && M.run.result.small ? "heated until dry" : "stopped too early") : "";
+  const badW = i => i === 3 ? (M.run.extra ? "acid added" : "acid left over") : i === 4 ? "not filtered" : i === 5 ? (M.run.result && M.run.result.crust ? "heated until dry" : "stopped too early") : i === 6 ? (M.run.how === "strong" ? "heated strongly" : "kept on the water bath") : "";
   morphHTML($("method"), MSTEPS.map((x, i) => `<li class="${v[i] === "bad" ? "bad" : v[i] ? "done" : i === now ? "now" : ""}">${esc(x[0])}${v[i] === "bad" ? ` <b>✗ ${badW(i)}</b>` : ""}${v[i] === "bad" || i === now ? `<span class="why">${esc(x[1])}</span>` : ""}${v[i] === true ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""));
 }
 const ACTS = [["aPour", "pour", "Pour acid into beaker", ["measure"]], ["aWarm", "warm", "Warm gently", ["beaker"]], ["aAdd", "add", "Add a spatula of copper oxide", ["beaker"]],
   ["aAcid", "acid", "Add 10 cm³ more acid", ["beaker"]], ["aFilt", "filt", "Filter", ["beaker"]], ["aHeat", "heat", "Heat on a water bath", ["beaker", "filtered", "evap"]],
   ["aRod", "rod", "Cold glass rod test", ["evap"]], ["aLeave", "leave", "Leave to crystallise", ["evap"]], ["aDec", "dec", "Pour off and dry", ["cryst"]], ["aNew", "new", "Start again", null]];
-function actHTML() { return ACTS.map(([id, k, w]) => `<button class="btn" type="button" id="${id}" data-act="${k}">${esc(w)}</button>`).join(""); }
+function actHTML() { return ACTS.map(([id, k, w]) => (k === "leave" ? `<span class="xhow" id="howRow" role="group" aria-label="How the rest of the water evaporates"><span class="gl">Then:</span><span class="seg" title="How the rest of the water evaporates: slowly in a warm place, faster on the hot water bath, or fastest over a strong Bunsen flame">${Object.entries(HOW).map(([h, t]) => `<button type="button" data-how="${h}" aria-pressed="false">${esc(t)}</button>`).join("")}</span></span>` : "") +
+  `<button class="btn" type="button" id="${id}" data-act="${k}">${esc(w)}</button>`).join(""); }
 function nextAct(r) {
   if (r.phase === "measure") return volOk(r) ? "pour" : "";
   if (r.phase === "beaker") return !r.warm ? "warm" : r.solid > 1e-6 ? "filt" : "add";
@@ -1107,11 +1151,22 @@ function nextAct(r) {
   if (r.phase === "cryst") return r.grow >= 1 ? "dec" : "";
   return "new";
 }
+function xtalOK() {   // no answer leaks: the caption stays hidden while a question that uses the model is open
+  if (mode === "demo" || !task || !task.id) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown";
+}
+const XTAL_RULE = "Crystal size: slow evaporation gives particles time to join crystals that are already growing, so they get bigger. Fast evaporation starts lots of small crystals at once.";
+function xtalCaption(res) {
+  if (res.size === "tiny") return res.how === "strong" && !res.crust ? "Close-up: lots of tiny crystals (a crust). Heating strongly made the water evaporate fast, which starts lots of small crystals at once."
+    : "Close-up: lots of tiny crystals (a crust). Heating until almost dry made the water evaporate fast, which starts lots of small crystals at once.";
+  if (res.size === "medium") return "Close-up: smaller crystals, still regular in shape. On the hot water bath the water evaporated faster, so more crystals started and each grew less.";
+  return "Close-up: large crystals with flat faces. Slow evaporation gives particles time to join crystals that are already growing, so they get bigger.";
+}
 function readHTML() {
   const r = M.run, stg = { measure: "measuring the acid", beaker: "making the salt solution", filtered: "filtered", evap: r.heat ? "evaporating (heating)" : "evaporating (not heating)", cryst: "crystallising", dry: "dry crystals", spoilt: "stopped: not safe" }[r.phase];
   let h = `<p class="r1">Stage: ${stg}</p>`;
   if (r.phase === "measure") h += `<p class="r2">Volume of acid recorded: ${r.rec != null ? "<b>" + vstr(r.rec) + " cm³</b>" : "–"}</p>`;
   if (M.msg) h += `<p class="r3">${esc(M.msg)}</p>`;
+  if (r.phase === "dry" && r.result && xtalOK()) h += `<p class="r4">${(M.ev && M.ev.ok) || !(mode === "demo" || task.id === "evalgo") ? xtalCaption(r.result) : XTAL_RULE}</p>`;   // with the evaluation on screen, it names your crystals only once the evaluation is done
   return h;
 }
 function renderCtl() {
@@ -1122,6 +1177,8 @@ function renderCtl() {
   ACTS.forEach(([id, k, w, ph]) => { const b = $(id); b.hidden = !!ph && !ph.includes(r.phase); b.classList.toggle("primary", k === nx);
     const lab = k === "heat" ? (r.phase === "evap" && r.heat ? "Stop heating" : r.phase === "beaker" ? "Pour into basin and heat" : r.phase === "evap" ? "Heat again" : "Heat on a water bath") : w;
     if (b.textContent !== lab) b.textContent = lab; });
+  $("howRow").hidden = r.phase !== "evap"; $("howRow").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.how === (M.how || "warm"))));
+  { const lb = $("aLeave"), t = { warm: "Leave to crystallise", gentle: "Crystallise (water bath)", strong: "Crystallise (strong flame)" }[M.how || "warm"]; if (lb.textContent !== t) lb.textContent = t; }
   const meas = r.phase === "measure", lk = locked(); $("cylRow").hidden = !meas || lk; $("recRow").hidden = !meas || lk; $("actRow").hidden = lk;
   $("recRow").dataset.off = meas && r.vol > 0 && r.rec == null ? "0" : "1";
   if (!locked()) $("lockNote").hidden = true;
@@ -1179,7 +1236,8 @@ function doAct(k) {
     if (k === "acid") tried(1);
     if (k === "rod" && M.run.rod === "yes") tried(2);
     if (k === "dec" && goodRun(M)) tried(0);
-    if (M.run.phase === "dry" && M.run.result && M.run.result.small) tried(3);
+    if (M.run.phase === "dry" && M.run.result && M.run.result.crust) tried(3);
+    if (k === "dec" && M.run.result && M.run.result.how !== "warm") tried(5);
     tourSignal("act-" + k);
   }
   drawAll();
@@ -1202,7 +1260,8 @@ const TRY = ["Make copper sulfate crystals the method's way: 50 cm³ of acid, co
   "After the copper oxide is in excess, add 10 cm³ more acid. What happens to the black solid?",
   "While heating, test the solution with a cold glass rod. When do crystals form on it?",
   "Keep heating until all the water has gone. Compare those crystals with the description.",
-  "Complete the evaluation for your crystals."];
+  "Complete the evaluation for your crystals.",
+  "Stop when crystals start to form, then try each way to let the rest evaporate: warm place, water bath, strong Bunsen flame. Compare the close-ups."];
 const TRIED = TRY.map(() => false);
 function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
 function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
@@ -1283,7 +1342,7 @@ TASKS.easy = [
     test: m => goodRun(m),
     not: m => { const r = m.run;
       if (r.phase === "spoilt") return "There was unreacted acid, so it became dangerously concentrated. Press Start again and add copper oxide until no more dissolves.";
-      if (r.phase === "dry") { const x = r.result; return x.specks ? "There are black specks of copper oxide in your crystals. Press Start again and filter before heating." : x.small ? "You heated until the water had almost all gone, so you got tiny crystals. Press Start again and stop heating when crystals start to form." : x.slow ? "You stopped heating before the solution was saturated. Press Start again: heat until crystals start to form (test with a cold glass rod)." : !m.eye ? "Turn on Eye protection and do it again." : "Finish the method."; }
+      if (r.phase === "dry") { const x = r.result; return x.specks ? "There are black specks of copper oxide in your crystals. Press Start again and filter before heating." : x.how === "strong" && !x.crust ? "You heated it strongly to crystallise it: the solution spat, and you got a crust of tiny crystals. Press Start again and leave it in a warm place to crystallise." : x.how === "gentle" && !x.crust ? "You kept it on the hot water bath, so the water evaporated fast and the crystals are small. Press Start again and leave it in a warm place to crystallise slowly." : x.small ? "You heated until the water had almost all gone, so you got tiny crystals. Press Start again and stop heating when crystals start to form." : x.slow ? "You stopped heating before the solution was saturated. Press Start again: heat until crystals start to form (test with a cold glass rod)." : !m.eye ? "Turn on Eye protection and do it again." : "Finish the method."; }
       if (!m.eye) return "Turn on Eye protection first.";
       return { measure: "Measure 50 cm³ of acid and record the reading.", beaker: !r.warm ? "Warm the acid gently." : "Add copper oxide until no more dissolves, then filter.", filtered: "Heat the filtrate on the water bath.", evap: "Heat until crystals start to form, then leave it to crystallise.", cryst: "When the crystals have formed, pour off the solution and let them dry." }[r.phase] || "Finish the method."; },
     done: m => `Your crystals are large, bright blue and regularly shaped. It took about ${m.run.days} days.`,
@@ -1561,7 +1620,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); }
+    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); } else morphHTML($("rread"), readHTML());
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -1580,7 +1639,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); } if (task.after) { task.after(M); drawAll(); }
-  setAnswerState();
+  setAnswerState(); morphHTML($("rread"), readHTML());
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
 function resetTask() {
@@ -1703,7 +1762,8 @@ window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventL
 function guard(ev, revert) { if (locked()) { if (revert) revert(); lockMsg(); return true; } return false; }
 $("eyeSw").addEventListener("click", () => { if (guard()) return; M.eye = !M.eye; M.msg = M.eye ? "Eye protection on." : "Eye protection off."; drawAll(); if (M.eye) tourSignal("eye"); });
 $("cylRow").addEventListener("click", e => { const b = e.target.closest("button[data-pour]"); if (b) doPour(b.dataset.pour); });
-$("actRow").addEventListener("click", e => { const b = e.target.closest("button[data-act]"); if (b) doAct(b.dataset.act); });
+$("actRow").addEventListener("click", e => { const b = e.target.closest("button[data-act]"); if (b) doAct(b.dataset.act);
+  const h = e.target.closest("button[data-how]"); if (h && !guard()) { M.how = h.dataset.how; drawAll(); } });
 $("dBtn").addEventListener("click", doRecord);
 $("dIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); doRecord(); } });
 $("dIn").addEventListener("input", e => e.target.classList.remove("no"));
