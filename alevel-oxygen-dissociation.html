@@ -1,0 +1,2172 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oxygen Dissociation</title>
+<!--
+  SCIENCE SPEC: Oxygen Dissociation (alevel-oxygen-dissociation.html)
+  A-level tool; site placement: A-level Biology, "OCR A 3.1.2 Transport in animals" (17 Nov 2026). Board: OCR A (H420).
+  OCR A 3.1.2 (i) the role of haemoglobin in transporting oxygen and carbon dioxide (reversible binding of oxygen molecules,
+    carbonic anhydrase, haemoglobinic acid, HCO₃⁻ and the chloride shift); (j) the oxygen dissociation curve for fetal and
+    adult human haemoglobin (the different affinities for oxygen; changes to the curve at different carbon dioxide
+    concentrations: the Bohr effect). Also fits AQA 7402 3.3.4.1. Year 12 reading level, OCR command words.
+  What it models (three views, tabs):
+    1 Haemoglobin: one molecule, four polypeptide chains (two α, two β), each with a haem group and its Fe²⁺ ion. Add an O₂ /
+      Remove an O₂ (one at a time); the molecule changes from the tense to the relaxed shape (schematic rotation); a meter
+      shows the affinity for the next O₂ rising as each O₂ binds (cooperative binding); 0–4 O₂ = 0–100 % saturation.
+      "CO₂ on the chains" draws CO₂ on the amino-group ends of the chains (carbaminohaemoglobin), away from the haem.
+    2 Dissociation curves: Hill equation S = 100 pⁿ ÷ (P₅₀ⁿ + pⁿ). Adult P₅₀ 3.5 kPa, n 2.7 (97 % at 13 kPa); high CO₂
+      P₅₀ 4.5 kPa (Bohr shift 1.0 kPa); fetal 2.5 kPa; myoglobin 0.3 kPa, n 1 (hyperbolic); llama 2.6 kPa; lugworm 0.7 kPa,
+      n 2. pO₂ 0–14 kPa; lungs (12–14 kPa) and respiring tissue (2–5 kPa) shaded. A reading line (drag it, or the slider,
+      0.5 kPa steps) with a dashed guide from each curve to the saturation axis: no saturation value is printed; the pupil
+      reads it and can check a reading (± 3 %) in Demo.
+    3 CO₂ and the Bohr effect: a red blood cell between respiring tissue (or an alveolus) and the plasma, in 6 steps:
+      CO₂ in; carbonic anhydrase CO₂ + H₂O → H₂CO₃; H₂CO₃ → H⁺ + HCO₃⁻; HCO₃⁻ out and Cl⁻ in (chloride shift);
+      HbO₈ + H⁺ → HHb (haemoglobinic acid) + 4O₂; O₂ out. Lungs: the same steps in reverse. CO₂ carriage: about 85 % as
+      HCO₃⁻ in plasma, about 10 % bound to haemoglobin, about 5 % dissolved.
+  Misconceptions designed out (feedback names them): the Bohr shift raises affinity; fetal haemoglobin has a lower affinity;
+    myoglobin transports O₂ in the blood; CO₂ binds to the haem / Fe²⁺ at the same site as O₂; the first O₂ binds most
+    easily; Cl⁻ moves out in the chloride shift; most CO₂ is carried on haemoglobin; % unloaded calculated the wrong way.
+  Leak control: while a question is open (not yet right or shown) every view's explanation is replaced by a neutral line,
+    the demo shift arrows on the graph and the reading checker are hidden, and the key words / graph-help lines named by the
+    question are hidden. No saturation value is ever printed for the reading line. All of it comes back after a right Check
+    or Show answer.
+  Checks in code: bankCheck() (after the first paint) checks the model (each P₅₀, curves rise, curve order, Bohr shift 1.0,
+    97 % in the lungs) and every question (one right option and a reason for each wrong one, 3 hints, gap answers and
+    feedback, planned wrong numbers outside the tolerance, no 69).
+  Drawing: all in code (SVG, CSS pixels), sized from the screen height. Performance: no loop at rest; an O₂ moving in or out
+    uses paceFrame() and stops when nothing moves. Reduced motion: O₂ binds and leaves at once.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--sa:#E3B7B7;--sa-edge:#7A1F1F;--sb:#B9D3EC;--sb-edge:#14243D;--haem:#8C2D19;--fe:#F2C14E;--o2:#D2332E;--co2c:#2F3640;--co2o:#D2332E;
+  --c0:#14243D;--c1:#C2410C;--c2:#6B3FA0;--c3:#1D6B3F;--c4:#8A5A12;--c5:#B0306B;--grid:rgba(20,36,61,.10);--grid2:rgba(20,36,61,.24);
+  --tis:#F4E3D3;--plas:#FBF2C9;--rbc:#F6D3D3;--rbc-edge:#A32020;--band:rgba(20,36,61,.06)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sa:#6B2E34;--sa-edge:#F2A7A7;--sb:#2B4466;--sb-edge:#A9C4E4;--haem:#E07A5F;--fe:#F2C14E;--o2:#FF8A80;--co2c:#C9D2DD;--co2o:#FF8A80;
+  --c0:#E9EDF3;--c1:#FF9F66;--c2:#C9A7F0;--c3:#7FD4A0;--c4:#E4C46A;--c5:#F28CB1;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.26);
+  --tis:#3A2C22;--plas:#3A3620;--rbc:#4A2228;--rbc-edge:#FF9A90;--band:rgba(233,237,243,.07)}}
+:root[data-theme="dark"]{--sa:#6B2E34;--sa-edge:#F2A7A7;--sb:#2B4466;--sb-edge:#A9C4E4;--haem:#E07A5F;--fe:#F2C14E;--o2:#FF8A80;--co2c:#C9D2DD;--co2o:#FF8A80;
+  --c0:#E9EDF3;--c1:#FF9F66;--c2:#C9A7F0;--c3:#7FD4A0;--c4:#E4C46A;--c5:#F28CB1;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.26);
+  --tis:#3A2C22;--plas:#3A3620;--rbc:#4A2228;--rbc-edge:#FF9A90;--band:rgba(233,237,243,.07)}
+
+h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-bottom:2px}
+.view{display:grid;gap:10px}
+#sceneBox{display:grid;gap:10px}
+.scenewrap{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.scenewrap svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.scenewrap svg text{font-family:var(--f-body);pointer-events:none}
+/* haemoglobin */
+.su{stroke-width:2.2;stroke-linejoin:round}
+.su.a{fill:var(--sa);stroke:var(--sa-edge)}
+.su.b{fill:var(--sb);stroke:var(--sb-edge)}
+.haem{fill:var(--haem);stroke:var(--ink);stroke-width:1}
+.fe{fill:var(--fe);stroke:var(--ink);stroke-width:1}
+.o2{fill:var(--o2);stroke:var(--ink);stroke-width:1.2}
+.co2c{fill:var(--co2c);stroke:var(--ink);stroke-width:1}
+.co2o{fill:var(--co2o);stroke:var(--ink);stroke-width:1}
+.sul{fill:var(--ink);font-weight:700}
+.shine{fill:rgba(255,255,255,.4)}
+.key{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px;line-height:1.4}
+.key li{display:inline-flex;align-items:center;gap:6px}
+.key svg{width:28px;height:18px;flex:none}
+.meter{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meter .bars{display:inline-flex;gap:3px}
+.meter .bars i{display:inline-block;width:18px;height:16px;border-radius:3px;border:1px solid var(--line);background:var(--surface)}
+.meter .bars i.on{background:var(--accent);border-color:var(--accent)}
+.meter .mw{font-size:17px}
+/* graph */
+.gr{stroke:var(--grid);stroke-width:1}
+.gr2{stroke:var(--grid2);stroke-width:1}
+.ax{stroke:var(--ink);stroke-width:1.6;fill:none}
+.tk{fill:var(--ink);font-weight:700}
+.ttl{fill:var(--muted);font-weight:700}
+.cv{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.c0{stroke:var(--c0)}.c1{stroke:var(--c1)}.c2{stroke:var(--c2)}.c3{stroke:var(--c3)}.c4{stroke:var(--c4)}.c5{stroke:var(--c5)}
+.gdot{stroke:var(--sunk);stroke-width:2.5}
+.gdot.c0{fill:var(--c0)}.gdot.c1{fill:var(--c1)}.gdot.c2{fill:var(--c2)}.gdot.c3{fill:var(--c3)}.gdot.c4{fill:var(--c4)}.gdot.c5{fill:var(--c5)}
+.guide{stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+.rline{stroke:var(--accent);stroke-width:2.2}
+.rhan{fill:var(--accent);stroke:var(--sunk);stroke-width:2}
+.rhit{fill:transparent;cursor:ew-resize;touch-action:none}
+.rhit:focus{outline:none}
+#gSvg{touch-action:pan-y}
+.band{fill:var(--band)}
+.bl{fill:var(--muted);font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.dl{fill:var(--accent);font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.dash{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:6 5;fill:none}
+.sarr{stroke:var(--accent);stroke-width:2.2;fill:none}
+.sarrh{fill:var(--accent)}
+.cvseg button{display:inline-flex;align-items:center;gap:6px}
+.cvseg button svg{width:24px;height:10px;flex:none}
+#cvSeg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);border:2px solid var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+#cvSeg button[aria-pressed="false"] svg{opacity:.45}
+.xs{display:none}
+@media (max-width:480px){.xs{display:inline}#cvSeg button{padding:4px 8px;font-size:14.5px;gap:4px}#cvSeg button svg{width:18px}#cvSeg{gap:5px}}
+.cvseg button .tick{font-size:14px;color:var(--accent);width:1em}
+#pxIn{flex:1 1 160px;min-width:120px;min-height:44px;accent-color:var(--accent)}
+#pxOut{font-size:20px;font-weight:700;color:var(--accent);min-width:5em;font-variant-numeric:tabular-nums}
+.vw{font-size:17px}
+.rdmsg{min-height:3.1em}
+.rdmsg:empty{display:block;visibility:hidden}
+/* red blood cell */
+.tis{fill:var(--tis);stroke:var(--line);stroke-width:1.5}
+.plas{fill:var(--plas)}
+.rbc{fill:var(--rbc);stroke:var(--rbc-edge);stroke-width:2.4}
+.cpt{fill:var(--muted);font-weight:700}
+.chem{fill:var(--ink);font-weight:700}
+.chem.hot{fill:var(--accent)}
+.enzl{fill:var(--good);font-weight:700;font-style:italic}
+.namel{fill:var(--muted);font-weight:700;font-style:italic}
+.arw{stroke:var(--ink);stroke-width:2;fill:none}
+.arwh{fill:var(--ink)}
+.arw.hot{stroke:var(--accent);stroke-width:2.8}
+.arwh.hot{fill:var(--accent)}
+#roCo2{min-height:4.4em}
+.carry{font-size:15px!important;min-height:0!important}
+/* controls */
+.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.opt2{display:inline-flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.segb.tog{border-style:dashed}
+.segb.tog[aria-pressed="true"]{border-style:solid;border-color:var(--accent)}
+.segb .state{font-weight:400;color:var(--muted)}
+.scenetabs button{font-size:17px}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+.ctlrow .btn{min-height:46px}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;gap:0;min-width:0;align-content:start;contain:layout paint}
+.ro.wide2{grid-column:span 2}.ro.wide4{grid-column:1/-1}
+.ro .k{font-size:14px;font-weight:700;color:var(--muted);line-height:1.3}
+.ro .v{font-size:20px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere}
+.ro .v.sm{font-size:16px;font-weight:400;color:var(--ink);line-height:1.45;min-height:4.35em}
+.legend{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;display:grid;gap:2px}
+.legend p{margin:0;font-size:16px;line-height:1.45}
+.kwh{color:var(--muted);font-style:italic}
+.readbox{display:grid;gap:6px;background:var(--sunk);border:2px solid var(--accent);border-radius:10px;padding:8px 12px}
+.readbox .rq{margin:0;font-weight:700;font-size:16px;line-height:1.4}
+.numrow .btn{min-height:48px}
+@container (min-width:640px){
+}
+@container (max-width:639px){
+}
+@media (max-width:640px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.ro .v{font-size:18px}}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .btn{padding:10px 14px}
+  .pagt,.xl{display:none}
+  .scenetabs button{font-size:15px;padding:6px 10px}
+}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:150px;font:700 20px var(--f-body);min-height:48px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.fixl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.fixl li{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:17px;line-height:2}
+@media (min-width:901px) and (max-height:820px){
+  .fixl li{padding:4px 10px;line-height:1.8}
+  .fixl .gsel{min-height:40px;padding:2px 6px}
+}
+@media (max-width:480px){.fixl .gsel{display:block;width:100%;margin:2px 0}.fixl li{line-height:1.5;padding:8px 10px}}
+.mrows{display:grid;gap:6px}.mrows .numrow{font-size:17px}.mrows label{flex:1 1 11em}.mrows input{width:96px}.mrows .mfin{border-top:1px solid var(--line);padding-top:6px}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:12px 16px 16px;gap:10px}
+  #sceneBox,.view{gap:8px}
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+/* == tool: alevel-oxygen-dissociation layout (17 Nov 2026) ==
+   1100 px and wider: a slimmer question panel gives the model more room. Picture and graph heights are set in JS from the
+   screen height (layout()), so each view's controls, picture and readouts fit on one screen. */
+#vHb,#vCurve,#vCo2{container-type:inline-size}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.vmain,.vside{display:grid;gap:8px;align-content:start;min-width:0}
+.vside.readouts{grid-template-columns:repeat(4,minmax(0,1fr))}
+@container (min-width:700px){
+  .vgrid{grid-template-columns:minmax(0,1fr) minmax(230px,280px)}
+  .vside .readouts,.vside.readouts{grid-template-columns:minmax(0,1fr)}
+  .vside .ro.wide2{grid-column:auto}
+}
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+}
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:10px 16px 14px}
+  .readouts{gap:6px}
+  .ro{padding:3px 10px}
+  .ro .v{font-size:18px;line-height:1.3}
+  .ro .v.sm{font-size:15.5px;line-height:1.35;min-height:2.7em}
+  #roCo2{min-height:4.05em}
+  .mnote{padding:6px 10px;font-size:15.5px}
+  .readbox{padding:6px 10px;gap:4px}
+  .readbox .numrow input{min-height:42px}
+  .readbox .numrow .btn{min-height:44px}
+  .key{font-size:14.5px}
+}
+@media (min-width:1500px){.layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}}
+.readbox .numrow input{width:90px}
+/* == end tool: alevel-oxygen-dissociation layout == */
+/* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v4 == */
+
+/* == shared: about-model v4 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v4 == */
+
+/* == shared: phone-order v4 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v4 == */
+
+/* == shared: projector v4 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v4 == */
+
+/* == shared: touch v4 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+  .feedback details:not(.nq-fold)>summary{min-height:44px;box-sizing:border-box;padding-top:10px;padding-bottom:6px}   /* a tool's own fold in the feedback (e.g. "msd") */
+}
+/* == end shared: touch v4 == */
+
+/* == shared: polish v4 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v4 == */
+
+/* == shared: next-question v4 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* v4: mark-scheme fold (phones, <= 600 px wide; the JS only folds at that width). A 44 px+ tap target, keyboard focus ring. */
+.feedback details.nq-fold{margin:8px 0 2px;border:1px solid var(--line);border-radius:10px;background:transparent}
+.feedback details.nq-fold>summary{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 12px;cursor:pointer;font-weight:700;list-style:none;border-radius:9px;color:inherit;-webkit-tap-highlight-color:transparent}
+.feedback details.nq-fold>summary::-webkit-details-marker{display:none}
+.feedback details.nq-fold>summary::before{content:"";flex:none;width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.feedback details.nq-fold[open]>summary::before{transform:rotate(90deg)}
+.feedback details.nq-fold>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.feedback details.nq-fold .nq-fh2,.feedback details.nq-fold[open] .nq-fs{display:none}
+.feedback details.nq-fold[open] .nq-fh2{display:inline}
+.feedback .nq-fold-in{padding:0 12px 8px}
+.feedback .nq-fold-in>:first-child{margin-top:0}
+@media (prefers-reduced-motion:no-preference){.feedback details.nq-fold>summary::before{transition:transform .16s ease}}
+/* == end shared: next-question v4 == */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Oxygen Dissociation<small><b class="lvl">A-level Biology · OCR A 3.1.2</b><span class="cb-desc">Load haemoglobin with oxygen, read dissociation curves yourself, and follow CO₂ through a red blood cell to see the Bohr effect.</span></small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Oxygen Dissociation</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Oxygen Dissociation</b><small>A-level Biology · OCR A 3.1.2</small></span>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout pj-cols">
+    <section class="card model" aria-label="Haemoglobin and oxygen transport model" id="model">
+      <div class="seg scenetabs" id="sceneTabs" role="group" aria-label="View">
+        <button type="button" data-scene="hb" aria-pressed="true">Haemoglobin</button>
+        <button type="button" data-scene="curve" aria-pressed="false"><span class="xl">Dissociation curves</span><span class="xs">Curves</span></button>
+        <button type="button" data-scene="co2" aria-pressed="false">CO₂<span class="xl"> and the Bohr effect</span></button>
+      </div>
+      <div id="sceneBox">
+
+      <!-- View 1: one haemoglobin molecule -->
+      <div class="view" id="vHb">
+        <div class="ctlrow" id="hbRow"><button type="button" class="btn primary" id="hAdd">Add an O₂ ▸</button><button type="button" class="btn" id="hRem">Remove an O₂</button><button type="button" class="segb tog" id="hCo2" aria-pressed="false">CO₂ on the chains <span class="state">off</span></button></div>
+        <div class="vgrid" id="hbGrid">
+          <div class="vmain"><div class="scenewrap" id="hbWrap"><svg id="hbSvg" role="img" aria-label="Drawing of one haemoglobin molecule"><g id="hbD"></g></svg></div>
+            <ul class="key" id="hbKey" aria-label="Key"></ul></div>
+          <div class="vside readouts" id="hbRead">
+            <div class="ro wide2"><span class="k">O₂ molecules bound</span><span class="v" id="roN"></span></div>
+            <div class="ro wide2"><span class="k">Percentage saturation</span><span class="v" id="roSat"></span></div>
+            <div class="ro wide4"><span class="k" id="easeK">Affinity for the next O₂</span><span class="v meter" id="roEase"></span></div>
+            <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roHb"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 2: oxygen dissociation curves -->
+      <div class="view" id="vCurve" hidden>
+        <div class="ctlrow" id="cvRow"><span class="clbl" id="cvL">Curves:</span><div class="seg cvseg" role="group" aria-labelledby="cvL" id="cvSeg"></div></div>
+        <div class="vgrid" id="cvGrid">
+          <div class="vmain">
+            <div class="scenewrap" id="gWrap"><svg id="gSvg" role="img" aria-label="Graph of percentage saturation against partial pressure of oxygen"><g id="gD"></g><g id="gH"></g></svg></div>
+            <div class="ctlrow" id="pxRow"><label class="clbl" for="pxIn" id="pxL">Reading line:</label><input type="range" id="pxIn" min="0" max="14" step="0.5" value="5"><output id="pxOut" for="pxIn"></output></div>
+          </div>
+          <div class="vside">
+            <div class="readbox" id="readBox">
+              <p class="rq">Check your own reading</p>
+              <div class="numrow"><label for="rdSel" class="vh">Curve</label><select class="gsel" id="rdSel"></select></div>
+              <div class="numrow"><label for="rdIn">Saturation:</label><input id="rdIn" type="text" inputmode="decimal" autocomplete="off"><span>%</span><button type="button" class="btn primary" id="rdOk">Check</button></div>
+              <p class="mnote rdmsg" id="rdMsg" aria-live="polite"></p>
+            </div>
+            <div class="readouts" id="cvRead">
+              <div class="ro wide4"><span class="k">Where in the body</span><span class="v vw" id="roWhere"></span></div>
+              <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roCurve"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: CO₂ transport and the Bohr effect, in a red blood cell -->
+      <div class="view" id="vCo2" hidden>
+        <div class="ctlrow" id="coRow"><span class="clbl" id="whL">Where:</span><div class="seg" role="group" aria-labelledby="whL" id="whSeg"><button type="button" data-wh="tissue" aria-pressed="true">Respiring tissue</button><button type="button" data-wh="lungs" aria-pressed="false">Lungs</button></div></div>
+        <div class="scenewrap" id="coWrap"><svg id="coSvg" role="img" aria-label="A red blood cell next to the cells it exchanges gases with"><g id="coD"></g></svg></div>
+        <div class="ctlrow" id="coPlay"><button type="button" class="btn primary" id="cNext">Next step ▸</button><button type="button" class="btn" id="cBack">◂ Back</button><button type="button" class="btn" id="cAll">Show all steps</button></div>
+        <div class="readouts" id="coRead">
+          <div class="ro wide2"><span class="k">Step</span><span class="v" id="roStep"></span></div>
+          <div class="ro wide2"><span class="k">How CO₂ is carried in the blood</span><span class="v sm carry" id="roCarry">about 85 % as hydrogencarbonate ions (HCO₃⁻) in the plasma · about 10 % bound to haemoglobin · about 5 % dissolved in the plasma</span></div>
+          <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roCo2"></span></div>
+        </div>
+      </div>
+      </div>
+      <p class="mnote" id="lockNote"></p>
+
+      <div class="legend" id="supKw" hidden></div>
+      <div class="legend" id="supMaths" hidden></div>
+      <div class="legend" id="supGraph" hidden></div>
+      <details class="about" id="limits"><summary>About this model</summary><p class="limits">The haemoglobin drawing is schematic: the real change of shape when O₂ binds is a small rotation of the chains, and the meter only shows the trend. The curves come from the Hill equation (saturation = 100 × pO₂ⁿ ÷ (P₅₀ⁿ + pO₂ⁿ)), with positions and shapes close to real blood; real curves also change with temperature and pH. Myoglobin, llama and lugworm curves go beyond the OCR specification; they are approximate, for practice with data questions. The red blood cell shows the main reactions only. The percentages for CO₂ carriage are typical values.</p></details>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <details class="trybox" open><summary class="try-h">Things to try</summary><ul class="try" id="tryList"></ul></details>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="kw" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Maths help <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Graph help <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+
+/* ===== Small helpers ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = p => p < .5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+/* no pupil-visible 69: a rounded value that would show "69" is nudged one step up */
+function fx(v, dp) { const st = Math.pow(10, -dp); let s = (+v).toFixed(dp), n = 0; while (/69/.test(s) && n++ < 200) { v = +v + st; s = (+v).toFixed(dp); } return s; }
+const f0 = v => fx(v, 0), f1 = v => fx(v, 1);
+const nf = v => String(+(+v).toPrecision(6));
+const kpa = v => (+v).toFixed(1);   // pO₂ values are on a 0.5 kPa grid, so they can never read 69
+
+/* ===== The curves: Hill equation, saturation = 100 × pO₂ⁿ ÷ (P₅₀ⁿ + pO₂ⁿ) =====
+   Adult P₅₀ 3.5 kPa (about 26 mmHg), Bohr shift +1.0 kPa with high CO₂, fetal 2.5 kPa, myoglobin 0.3 kPa (n = 1). */
+const CURVES = {
+  adult: { n: "Adult", long: "adult haemoglobin (normal CO₂)", p50: 3.5, h: 2.7, cls: "c0", dash: "" },
+  high: { n: "High CO₂", long: "adult haemoglobin (high CO₂)", p50: 4.5, h: 2.7, cls: "c1", dash: "10 6" },
+  fetal: { n: "Fetal", long: "fetal haemoglobin", p50: 2.5, h: 2.7, cls: "c2", dash: "3 5" },
+  myo: { n: "Myoglobin", long: "myoglobin", p50: 0.3, h: 1, cls: "c3", dash: "14 5 3 5" },
+  llama: { n: "Llama", long: "llama haemoglobin", p50: 2.6, h: 2.7, cls: "c4", dash: "6 4" },
+  lug: { n: "Lugworm", long: "lugworm haemoglobin", p50: 0.7, h: 2, cls: "c5", dash: "2 4" }
+};
+const CV_ORDER = ["adult", "high", "fetal", "myo", "llama", "lug"];
+const sat = (c, p) => { const C0 = CURVES[c]; if (p <= 0) return 0; const a = Math.pow(p, C0.h); return 100 * a / (Math.pow(C0.p50, C0.h) + a); };
+const PX = { MAX: 14, STEP: 0.5, LUNG: 13, TIS0: 2, TIS1: 5 };
+const RD_TOL = 3;   // a pupil's own reading is accepted within ± 3 percentage points
+
+/* ===== One haemoglobin molecule ===== */
+const ORDER = [0, 3, 1, 2];            // which subunit's haem fills 1st, 2nd, 3rd, 4th (α1, α2, β1, β2)
+const TILT = [0, .62, .86, 1, 1];      // tense (0) → relaxed (1) shape after n O₂ bound
+const EASE_LV = [1, 2, 3, 4, 0];       // the meter: affinity for the next O₂ after n bound
+const EASE_W = ["", "low", "higher", "higher still", "very high"];
+
+/* ===== Key words, Maths help and Graph help (Support). A question can hide the ones that would answer it. ===== */
+const KW = [
+  ["hb", "Haemoglobin", "A globular protein with quaternary structure: four polypeptide chains (two α and two β), each with a haem group containing an Fe²⁺ ion."],
+  ["oxy", "Oxyhaemoglobin", "Haemoglobin with oxygen bound: Hb + 4O₂ ⇌ HbO₈. The binding is reversible."],
+  ["pp", "Partial pressure of oxygen (pO₂)", "A measure of how much oxygen there is, in kPa. About 13 kPa in the alveoli; much lower in respiring tissue."],
+  ["sat", "Percentage saturation", "The percentage of haemoglobin’s oxygen-binding sites (haem groups) that hold O₂."],
+  ["aff", "Affinity", "How readily haemoglobin binds oxygen."],
+  ["coop", "Cooperative binding", "Once one O₂ binds, haemoglobin changes shape so the next O₂ molecules bind more easily. This gives the S-shaped (sigmoid) curve."],
+  ["load", "Loading and unloading", "Haemoglobin loads O₂ where pO₂ is high (the lungs) and unloads it where pO₂ is low (respiring tissue)."],
+  ["bohr", "Bohr effect", "More CO₂ lowers haemoglobin’s affinity for O₂, so the curve shifts to the right and more O₂ is unloaded."],
+  ["fetal", "Fetal haemoglobin", "Has a higher affinity for O₂ than adult haemoglobin, so its curve is to the left."],
+  ["myo", "Myoglobin", "A muscle protein with one haem group. It has a very high affinity for O₂, so it stores O₂ and releases it only at very low pO₂."],
+  ["ca", "Carbonic anhydrase", "The enzyme in red blood cells that catalyses CO₂ + H₂O → H₂CO₃ (carbonic acid)."],
+  ["hhb", "Haemoglobinic acid (HHb)", "Forms when H⁺ ions bind to haemoglobin. This makes oxyhaemoglobin release O₂ and buffers the blood’s pH."],
+  ["cl", "Chloride shift", "HCO₃⁻ ions diffuse out of the red blood cell and Cl⁻ ions diffuse in, so the charge stays balanced."],
+  ["carb", "Carbaminohaemoglobin", "Forms when CO₂ binds to the amino groups of haemoglobin’s polypeptide chains (not to the haem groups)."]
+];
+const MATHS = [
+  ["fall", "Fall in percentage saturation", "saturation where O₂ is loaded − saturation where it is unloaded (in percentage points)."],
+  ["pc", "Percentage of the O₂ carried that is unloaded", "(fall in saturation ÷ saturation where it was loaded) × 100."],
+  ["shift", "Shift of a curve", "the difference between the two P₅₀ values, in kPa."]
+];
+const GHELP = [
+  ["read", "Reading a value", "drag the reading line to the pO₂. Go up to the curve, then follow its dashed line across to the saturation axis. Each small square is 5 %."],
+  ["p50", "P₅₀", "the pO₂ at which haemoglobin is 50 % saturated. Move the reading line until the curve crosses the 50 % line."],
+  ["aff", "Left or right", "a curve further to the left is more saturated at the same pO₂, so it has a higher affinity for O₂. Further to the right: a lower affinity."]
+];
+
+/* ===== Question bank. Every number is computed from the model. ===== */
+const S_ = (c, p) => sat(c, p);
+const UNLOAD = () => S_("adult", 13) - S_("adult", 3);
+const BOHR4 = () => S_("adult", 4) - S_("high", 4);
+const ALT = () => (S_("adult", 7) - S_("adult", 3)) / S_("adult", 7) * 100;
+const FPL = () => S_("fetal", 4) - S_("adult", 4);
+const SHIFT = () => CURVES.high.p50 - CURVES.adult.p50;
+const TASKS = {
+  easy: [
+    { id: "struct", kind: "choice", text: "Look at the haemoglobin molecule and its key. Describe the structure of haemoglobin.", setup: { scene: "hb" }, hideKw: ["hb"],
+      options: [{ t: "Four polypeptide chains (two α and two β), each with a haem group that contains an Fe²⁺ ion.", ok: true },
+        { t: "Two polypeptide chains, each holding two haem groups with Fe³⁺ ions.", why: "Count the chains in the model: there are four, each with one haem group. The iron ion is Fe²⁺." },
+        { t: "One long polypeptide chain folded round four iron ions, so it has only tertiary structure.", why: "Haemoglobin is made of four separate chains, so it has quaternary structure." },
+        { t: "Four haem groups joined by peptide bonds, with no protein chains.", why: "The haem groups sit inside four polypeptide chains. Peptide bonds join amino acids, not haem groups." }],
+      explain: "Haemoglobin is a globular protein with quaternary structure: four polypeptide chains (two α and two β), each with a haem group. Each haem group contains an Fe²⁺ ion that can bind one O₂ molecule.",
+      hints: ["Count the polypeptide chains in the drawing.", "Use the key: what does each chain hold?", "Each chain has one haem group, and each haem group contains an Fe²⁺ ion."] },
+    { id: "oxyhb", kind: "fill", text: "Press Add an O₂ until no more will bind. Complete the sentences about oxyhaemoglobin.", setup: { scene: "hb" }, hideKw: ["oxy", "hb", "sat"],
+      items: [{ pre: "One haemoglobin molecule can carry ", opts: ["four", "one", "eight"], ans: "four", post: " oxygen molecules.", why: { one: "Keep pressing Add an O₂: each of the four haem groups binds one O₂ molecule.", eight: "Eight is the number of oxygen atoms (4 × O₂), not oxygen molecules." } },
+        { pre: "Each O₂ molecule binds to ", opts: ["the Fe²⁺ ion in a haem group", "an amino acid in a chain", "the Fe³⁺ ion in a haem group"], ans: "the Fe²⁺ ion in a haem group", post: ".", why: { "an amino acid in a chain": "Watch where each O₂ goes in the model: onto a haem group.", "the Fe³⁺ ion in a haem group": "Look at the key: the iron in haem is Fe²⁺. Haemoglobin with Fe³⁺ can’t carry O₂." } },
+        { pre: "The binding is ", opts: ["reversible", "permanent"], ans: "reversible", post: ", so O₂ can be released in respiring tissue.", why: { permanent: "Press Remove an O₂: the O₂ comes off again. If binding were permanent, haemoglobin could never unload O₂ in the tissues." } }],
+      explain: "Hb + 4O₂ ⇌ HbO₈ (oxyhaemoglobin). Each haemoglobin molecule carries four O₂ molecules, one on the Fe²⁺ ion of each haem group, and the binding is reversible.",
+      hints: ["Press Add an O₂ until the button stops working. Count the O₂ molecules.", "Use the key: where does each O₂ sit?", "Press Remove an O₂. Can the O₂ come off again?"] },
+    { id: "coop", kind: "choice", text: "Add O₂ one molecule at a time and watch the Affinity meter. Explain why haemoglobin’s oxygen dissociation curve is S-shaped (sigmoid).", setup: { scene: "hb" }, hideKw: ["coop"],
+      options: [{ t: "When the first O₂ binds, haemoglobin changes shape, so the next O₂ molecules bind more easily (cooperative binding).", ok: true },
+        { t: "The first O₂ binds most easily, and each one after that is harder to bind.", why: "Watch the meter: it is the other way round. The first O₂ is the hardest to bind; each one bound makes the next easier." },
+        { t: "Each haem group binds O₂ on its own, without affecting the others.", why: "That would give a hyperbolic curve, like myoglobin’s. In haemoglobin, binding one O₂ changes the shape of the whole molecule." },
+        { t: "O₂ can only bind once the pO₂ passes a threshold, and then all four bind at once.", why: "O₂ binds one molecule at a time, and there is no threshold: the meter shows each O₂ bound makes the next one easier." }],
+      explain: "The first O₂ binds with difficulty. Once it binds, the quaternary structure changes shape, uncovering the other haem groups, so the next O₂ molecules bind more easily: cooperative binding. So the curve starts shallow, rises steeply, then levels off as the last haem groups fill.",
+      hints: ["Press Add an O₂ once. What happens to the shape of the molecule and to the meter?", "Is the first O₂ easier or harder to bind than the later ones?", "One O₂ binding changes the shape, so the others bind more easily."] },
+    { id: "read", kind: "num", text: "Use the adult haemoglobin curve. Move the reading line to 5 kPa and read off the percentage saturation.", setup: { scene: "curve", curves: ["adult"], px: 10 }, hideKw: [], hideGraph: [],
+      unit: "%", ans: () => S_("adult", 5), tol: RD_TOL,
+      wrongs: () => [[S_("adult", 4), "That is the reading at 4 kPa. Move the line to 5 kPa."], [S_("adult", 6), "That is the reading at 6 kPa. Move the line to 5 kPa."], [S_("adult", 10), "That is the reading where the line starts (10 kPa). Move it to 5 kPa first."]],
+      right: () => `Correct. At 5 kPa the adult curve is at about ${f0(S_("adult", 5))} % saturation.`,
+      hints: ["Drag the reading line (or use the slider under the graph) to 5 kPa.", "Go up the line to the curve, then follow the dashed line across to the saturation axis.", "Count the small squares: each one is 5 %."] },
+    { id: "load", kind: "choice", text: "In the lungs the pO₂ is about 13 kPa. Use the curve to explain how haemoglobin loads oxygen in the lungs.", setup: { scene: "curve", curves: ["adult"], px: 13 }, hideKw: ["load"],
+      options: [{ t: "At high pO₂ haemoglobin has a high affinity for O₂, so it becomes nearly fully saturated (about 97 %).", ok: true },
+        { t: "At high pO₂ haemoglobin has a low affinity, so it releases O₂ into the alveoli.", why: "Read the curve at 13 kPa: haemoglobin is nearly saturated, so it is holding O₂, not releasing it." },
+        { t: "Haemoglobin becomes 100 % saturated because every Fe²⁺ ion changes to Fe³⁺.", why: "The iron stays as Fe²⁺: O₂ binds to it reversibly. And the curve gets close to 100 %, not quite to it." },
+        { t: "O₂ is actively transported into the red blood cells in the lungs.", why: "O₂ diffuses into the red blood cells down its partial pressure gradient; no active transport is needed. Then haemoglobin binds it." }],
+      explain: "In the lungs the pO₂ is high, so haemoglobin has a high affinity for O₂ and loads it, becoming nearly saturated (about 97 % at 13 kPa). Binding the O₂ keeps the diffusion gradient from the alveoli steep.",
+      hints: ["Read the curve at 13 kPa.", "Is haemoglobin taking up O₂ or giving it out there?", "Nearly saturated means nearly every haem group holds O₂."] },
+    { id: "unload", kind: "num", text: "Blood leaves the lungs at a pO₂ of 13 kPa and reaches a respiring muscle where the pO₂ is 3 kPa. Use the adult curve to calculate the fall in percentage saturation.", setup: { scene: "curve", curves: ["adult"], px: 8 }, hideKw: [], hideGraph: [],
+      unit: "%", ans: UNLOAD, tol: 5,
+      wrongs: () => [[S_("adult", 13), "That is the saturation in the lungs only. Subtract the saturation at 3 kPa."], [S_("adult", 3), "That is the saturation at 3 kPa. The fall is the reading at 13 kPa minus this one."], [S_("adult", 13) + S_("adult", 3), "Subtract the two readings; don’t add them."]],
+      right: () => `Correct. About ${f0(S_("adult", 13))} % at 13 kPa and about ${f0(S_("adult", 3))} % at 3 kPa, so the saturation falls by about ${f0(UNLOAD())} percentage points. That O₂ has been unloaded to the muscle.`,
+      hints: ["Read the curve at 13 kPa, then at 3 kPa.", "Fall = saturation at 13 kPa − saturation at 3 kPa.", () => `About ${f0(S_("adult", 13))} − ${f0(S_("adult", 3))}.`] },
+    { id: "bohr", kind: "choice", text: "Compare the High CO₂ curve with the adult curve. Describe the effect of more CO₂ and explain what it means for respiring tissue.", setup: { scene: "curve", curves: ["adult", "high"], px: 5 }, hideKw: ["bohr", "fetal", "myo"], hideGraph: ["aff"],
+      options: [{ t: "The curve shifts to the right: haemoglobin has a lower affinity for O₂, so more O₂ is unloaded at the same pO₂.", ok: true },
+        { t: "The curve shifts to the right: haemoglobin has a higher affinity for O₂, so it holds on to more O₂.", why: "Read both curves at 5 kPa: with high CO₂ the saturation is lower. Lower saturation at the same pO₂ means a lower affinity, so more O₂ is released." },
+        { t: "The curve shifts to the left, so more O₂ is released to the tissues.", why: "Look again: the High CO₂ curve is to the right of the adult curve." },
+        { t: "CO₂ takes the place of O₂ on the Fe²⁺ ions, so less O₂ can be carried.", why: "CO₂ doesn’t bind to the haem groups. It lowers the affinity through H⁺ ions (and by binding to the amino groups of the chains)." }],
+      explain: "More CO₂ shifts the curve to the right: the Bohr effect. At the same pO₂ haemoglobin is less saturated, so its affinity for O₂ is lower and more O₂ is unloaded in actively respiring tissue, where there is most CO₂.",
+      hints: ["Read both curves at 5 kPa. Which is more saturated?", "Less saturated at the same pO₂ means the affinity is lower or higher?", "Lower affinity means haemoglobin gives up more O₂."] },
+    { id: "fetal", kind: "choice", text: "Compare the fetal haemoglobin curve with the adult curve. Which statement is correct?", setup: { scene: "curve", curves: ["adult", "fetal"], px: 4 }, hideKw: ["fetal", "bohr", "myo"], hideGraph: ["aff"],
+      options: [{ t: "Fetal haemoglobin has a higher affinity for O₂, so at the low pO₂ in the placenta it takes O₂ from the mother’s haemoglobin.", ok: true },
+        { t: "Fetal haemoglobin has a lower affinity for O₂, so it releases O₂ more easily to the fetus’s tissues.", why: "Read both curves at 4 kPa: fetal haemoglobin is more saturated. More saturated at the same pO₂ means a higher affinity." },
+        { t: "The fetal curve is to the right, so fetal haemoglobin loads more O₂ in the placenta.", why: "Look again: the fetal curve is to the left of the adult curve." },
+        { t: "Fetal and maternal blood mix in the placenta, so the two affinities don’t matter.", why: "The two bloods don’t mix. O₂ diffuses across the placenta, and it moves to the fetus because fetal haemoglobin has the higher affinity." }],
+      explain: "The fetal curve is to the left: at any pO₂ fetal haemoglobin is more saturated, so it has a higher affinity for O₂. In the placenta, where the pO₂ is low, the mother’s haemoglobin unloads O₂ and fetal haemoglobin loads it.",
+      hints: ["Read both curves at 4 kPa, about the pO₂ in the placenta.", "Which haemoglobin is more saturated there?", "More saturated at the same pO₂ means a higher affinity."] },
+    { id: "myo", kind: "choice", text: "Data question: myoglobin is found inside muscle cells. Compare its curve with haemoglobin’s and suggest its role.", setup: { scene: "curve", curves: ["adult", "myo"], px: 3 }, hideKw: ["myo", "fetal", "bohr"], hideGraph: ["aff"],
+      options: [{ t: "It stores O₂ in muscle and releases it only when the pO₂ is very low, such as during hard exercise.", ok: true },
+        { t: "It transports O₂ in the blood from the lungs to the muscles.", why: "Myoglobin stays inside muscle cells. Its curve is so far to the left that it would hardly release any O₂ in the tissues, so it can’t be a transport protein." },
+        { t: "It releases O₂ easily at the pO₂ of resting muscle.", why: "Read its curve at 3 kPa: myoglobin is still nearly saturated, so it keeps its O₂ until the pO₂ is very low." },
+        { t: "It has a lower affinity for O₂ than haemoglobin, so muscles get O₂ faster.", why: "Its curve is to the left of haemoglobin’s, so it has a higher affinity, not a lower one." }],
+      explain: "Myoglobin’s curve is far to the left (and not S-shaped: it has one haem group), so it has a much higher affinity for O₂ than haemoglobin. It takes O₂ from haemoglobin and keeps it, releasing it only when the pO₂ in the muscle is very low: an O₂ store.",
+      hints: ["Read both curves at 3 kPa.", "Which one still holds most of its O₂ at low pO₂?", "A protein that keeps its O₂ until the pO₂ is very low is a store, not a carrier."] },
+    { id: "ca", kind: "fill", text: "Step through the CO₂ and the Bohr effect view. Complete the description of how CO₂ is carried in the blood.", setup: { scene: "co2", step: 7 }, hideKw: ["ca", "cl"], hideCo: ["enz", "carry", "cl"],
+      items: [{ pre: "In red blood cells, the enzyme ", opts: ["carbonic anhydrase", "haemoglobin", "amylase"], ans: "carbonic anhydrase", post: " catalyses the reaction of CO₂ with water to form carbonic acid (H₂CO₃).", why: { haemoglobin: "Haemoglobin carries O₂ and takes up H⁺, but it doesn’t catalyse this reaction. Look at the label on the first arrow.", amylase: "Amylase digests starch. Look at the label on the first arrow in the red blood cell." } },
+        { pre: "Carbonic acid dissociates into H⁺ ions and ", opts: ["hydrogencarbonate ions (HCO₃⁻)", "chloride ions (Cl⁻)", "oxygen"], ans: "hydrogencarbonate ions (HCO₃⁻)", post: ".", why: { "chloride ions (Cl⁻)": "Cl⁻ comes in from the plasma. H₂CO₃ dissociates into H⁺ and HCO₃⁻.", oxygen: "No O₂ comes from carbonic acid: H₂CO₃ → H⁺ + HCO₃⁻." } },
+        { pre: "Most CO₂ is carried as hydrogencarbonate ions in ", opts: ["the plasma", "the haem groups"], ans: "the plasma", post: ".", why: { "the haem groups": "Look at How CO₂ is carried: about 85 % travels as HCO₃⁻ in the plasma. Haem groups bind O₂." } }],
+      explain: "Carbonic anhydrase in red blood cells catalyses CO₂ + H₂O → H₂CO₃. Carbonic acid dissociates into H⁺ and HCO₃⁻. The HCO₃⁻ ions diffuse out into the plasma, which carries most of the CO₂ (about 85 %).",
+      hints: ["Press Next step ▸ to go through the steps one at a time.", "Look at the label on the arrow from CO₂ + H₂O to H₂CO₃.", "Read How CO₂ is carried under the picture."] }
+  ],
+  hard: [
+    { id: "bohrcalc", kind: "multi", text: "Move the reading line to 4 kPa. Read the adult (normal CO₂) curve and the High CO₂ curve, then calculate how many percentage points lower the saturation is when CO₂ is high.", setup: { scene: "curve", curves: ["adult", "high"], px: 8 }, hideKw: [], hideGraph: [],
+      items: [{ lab: "Normal CO₂ curve at 4 kPa", unit: "%", curve: "adult", p: 4, ans: () => S_("adult", 4), tol: RD_TOL },
+        { lab: "High CO₂ curve at 4 kPa", unit: "%", curve: "high", p: 4, ans: () => S_("high", 4), tol: RD_TOL },
+        { lab: "Difference", unit: "percentage points", final: true, calc: v => v[0] - v[1], tol: 1.01, how: "difference = normal-CO₂ reading − High CO₂ reading.",
+          slips: v => [[v[0] + v[1], "Subtract the two readings; don’t add them."], [v[1] - v[0], "Subtract the High CO₂ reading from the normal-CO₂ reading, so the answer is positive."]] }],
+      ans: BOHR4,
+      right: () => `Correct. About ${f0(S_("adult", 4))} % with normal CO₂ and about ${f0(S_("high", 4))} % with high CO₂: ${f0(BOHR4())} percentage points lower. That extra O₂ is unloaded in active tissue (the Bohr effect).`,
+      hints: ["Move the reading line to exactly 4 kPa. Read both curves.", "Follow each curve’s dashed line across to the saturation axis. Each small square is 5 %.", "Difference = normal-CO₂ reading − High CO₂ reading."] },
+    { id: "alt", kind: "multi", text: "At high altitude the pO₂ in the alveoli is about 7 kPa. In a respiring muscle it is 3 kPa. Read the adult curve at both, then calculate the percentage of the oxygen carried that is unloaded in the muscle.", setup: { scene: "curve", curves: ["adult"], px: 10 }, hideKw: [], hideGraph: [],
+      items: [{ lab: "Adult curve at 7 kPa", unit: "%", curve: "adult", p: 7, ans: () => S_("adult", 7), tol: RD_TOL },
+        { lab: "Adult curve at 3 kPa", unit: "%", curve: "adult", p: 3, ans: () => S_("adult", 3), tol: RD_TOL },
+        { lab: "Percentage unloaded", unit: "%", final: true, calc: v => (v[0] - v[1]) / v[0] * 100, tol: 1.5, how: "percentage unloaded = (reading at 7 kPa − reading at 3 kPa) ÷ reading at 7 kPa × 100.",
+          slips: v => [[v[0] - v[1], "That is the fall in saturation (percentage points). Divide it by the saturation at 7 kPa, then × 100."], [v[1] / v[0] * 100, "That is the percentage still bound in the muscle. Find the percentage that was unloaded."], [(v[0] - v[1]) / v[1] * 100, "Divide the fall by the saturation where the O₂ was loaded (7 kPa), not by the reading at 3 kPa."]] }],
+      ans: ALT,
+      right: () => `Correct. About ${f0(S_("adult", 7))} % at 7 kPa and about ${f0(S_("adult", 3))} % at 3 kPa. Unloaded = (${f0(S_("adult", 7))} − ${f0(S_("adult", 3))}) ÷ ${f0(S_("adult", 7))} × 100 ≈ ${f0(ALT())} %.`,
+      hints: ["Read the adult curve at 7 kPa and at 3 kPa.", "Fall in saturation = reading at 7 kPa − reading at 3 kPa.", "Percentage unloaded = fall ÷ reading at 7 kPa × 100."] },
+    { id: "fpl", kind: "multi", text: "In the placenta the pO₂ is about 4 kPa. Read the fetal and the adult (mother’s) curves at 4 kPa, then calculate how many percentage points more saturated fetal haemoglobin is.", setup: { scene: "curve", curves: ["adult", "fetal"], px: 10 }, hideKw: [], hideGraph: [],
+      items: [{ lab: "Fetal curve at 4 kPa", unit: "%", curve: "fetal", p: 4, ans: () => S_("fetal", 4), tol: RD_TOL },
+        { lab: "Adult curve at 4 kPa", unit: "%", curve: "adult", p: 4, ans: () => S_("adult", 4), tol: RD_TOL },
+        { lab: "Difference", unit: "percentage points", final: true, calc: v => v[0] - v[1], tol: 1.01, how: "difference = fetal reading − adult reading.",
+          slips: v => [[v[0] + v[1], "Subtract the two readings; don’t add them."], [v[1] - v[0], "Subtract the adult reading from the fetal reading, so the answer is positive."]] }],
+      ans: FPL,
+      right: () => `Correct. About ${f0(S_("fetal", 4))} % for fetal and about ${f0(S_("adult", 4))} % for adult haemoglobin: ${f0(FPL())} percentage points more. So O₂ moves from the mother’s haemoglobin to the fetus’s.`,
+      hints: ["Move the reading line to exactly 4 kPa and read both curves.", "Follow each dashed line across to the saturation axis. Each small square is 5 %.", "Difference = fetal reading − adult reading."] },
+    { id: "mech", kind: "fill", text: "Step through the CO₂ and the Bohr effect view (Respiring tissue). Complete the explanation of the Bohr effect.", setup: { scene: "co2", step: 7 }, hideKw: ["ca", "hhb", "bohr"], hideCo: ["enz", "hhb", "cl"],
+      items: [{ pre: "The H⁺ ions that bind to haemoglobin come from ", opts: ["carbonic acid dissociating", "the plasma", "oxyhaemoglobin"], ans: "carbonic acid dissociating", post: ".", why: { "the plasma": "Follow the arrow to HbO₈ + H⁺: it starts at the H⁺ made when H₂CO₃ dissociates, inside the red blood cell.", oxyhaemoglobin: "Oxyhaemoglobin takes up H⁺; it doesn’t release it. Follow the arrow back to H₂CO₃." } },
+        { pre: "When H⁺ binds, haemoglobin’s ", opts: ["affinity for O₂ falls", "affinity for O₂ rises"], ans: "affinity for O₂ falls", post: ".", why: { "affinity for O₂ rises": "Look at the last reaction: HbO₈ + H⁺ → HHb + 4O₂. Haemoglobin lets go of its O₂, so its affinity has fallen." } },
+        { pre: "So oxyhaemoglobin ", opts: ["releases more O₂", "takes up more O₂"], ans: "releases more O₂", post: " to the respiring cells.", why: { "takes up more O₂": "Look at the last reaction in the red blood cell: the O₂ is released." } },
+        { pre: "Taking up H⁺ ions also ", opts: ["helps keep the blood’s pH steady", "makes the blood more acidic"], ans: "helps keep the blood’s pH steady", post: ".", why: { "makes the blood more acidic": "Haemoglobin removes H⁺ ions from solution, so it stops the pH falling: it acts as a buffer." } },
+        { pre: "So a tissue that makes more CO₂ receives ", opts: ["more O₂", "less O₂"], ans: "more O₂", post: ".", why: { "less O₂": "More CO₂ → more H₂CO₃ → more H⁺ → more O₂ released. Busy tissue gets more O₂." } }],
+      explain: "H₂CO₃ dissociates into H⁺ and HCO₃⁻. H⁺ binds to haemoglobin (forming haemoglobinic acid), which lowers its affinity, so more O₂ is released: the Bohr effect. This also buffers the pH. More CO₂ means more O₂ for that tissue.",
+      hints: ["Press Back to step 1, then go through the steps with Next step ▸.", "Follow the arrow that ends at HbO₈ + H⁺. Where does it start?", "Look at the last reaction: HbO₈ + H⁺ → HHb + 4O₂. Is the O₂ taken up or released?"] },
+    { id: "chlor", kind: "choice", text: "Look at step 4 in the CO₂ and the Bohr effect view. Explain the chloride shift.", setup: { scene: "co2", step: 4 }, hideKw: ["cl"],
+      options: [{ t: "HCO₃⁻ ions diffuse out of the red blood cell into the plasma, and Cl⁻ ions diffuse in so the charge stays balanced.", ok: true },
+        { t: "Cl⁻ ions diffuse out of the red blood cell to balance the H⁺ ions building up inside.", why: "Look at the arrows: Cl⁻ moves into the red blood cell as HCO₃⁻ moves out." },
+        { t: "Cl⁻ ions bind to haemoglobin in place of O₂, so O₂ is released.", why: "Cl⁻ doesn’t bind to the haem groups. It replaces the negative charge lost as HCO₃⁻ leaves." },
+        { t: "Cl⁻ ions enter the cell to react with H⁺ and make hydrochloric acid.", why: "No hydrochloric acid forms. The H⁺ ions are taken up by haemoglobin (haemoglobinic acid)." }],
+      explain: "As HCO₃⁻ ions diffuse out of the red blood cell into the plasma, Cl⁻ ions diffuse in through a transport protein, so the charge stays balanced: the chloride shift. This lets HCO₃⁻ keep leaving, so the plasma can carry more CO₂.",
+      hints: ["Look at the two arrows between the red blood cell and the plasma.", "Which ion goes out, and which comes in?", "Both ions are negative. Why might one have to come in as the other leaves?"] },
+    { id: "co2site", kind: "choice", text: "Turn on CO₂ on the chains in the Haemoglobin view. Which statement about CO₂ and haemoglobin is correct?", setup: { scene: "hb", co2: true }, hideKw: ["carb", "bohr"],
+      options: [{ t: "Some CO₂ binds to the amino groups of the polypeptide chains (carbaminohaemoglobin), not to the haem groups.", ok: true },
+        { t: "CO₂ binds to the Fe²⁺ ion in each haem group, at the same site as O₂.", why: "Look at the model: the CO₂ sits at the ends of the chains, away from the haem groups. CO₂ and O₂ don’t compete for the same site." },
+        { t: "Most of the CO₂ in the blood is carried bound to haemoglobin.", why: "Look at How CO₂ is carried (in the CO₂ view): about 85 % travels as hydrogencarbonate ions in the plasma; only about 10 % is bound to haemoglobin." },
+        { t: "CO₂ binds to haemoglobin permanently, like carbon monoxide.", why: "CO₂ binds reversibly and is released again in the lungs. Carbon monoxide is the gas that binds to haem almost permanently." }],
+      explain: "About 10 % of CO₂ binds to the amino groups at the ends of haemoglobin’s polypeptide chains, forming carbaminohaemoglobin. It doesn’t bind to the haem groups, so it doesn’t compete with O₂, but it does lower haemoglobin’s affinity for O₂.",
+      hints: ["Turn on CO₂ on the chains. Where is each CO₂ drawn?", "Is the CO₂ on a haem group, or somewhere else on the chain?", "Check How CO₂ is carried in the CO₂ and the Bohr effect view."] },
+    { id: "affin", kind: "choice", text: "Explain the advantage of the Bohr effect to a muscle during exercise.", setup: { scene: "curve", curves: ["adult", "high"], px: 3 }, hideKw: ["bohr", "fetal", "myo"], hideGraph: ["aff"],
+      options: [{ t: "The muscle respires faster and makes more CO₂, so haemoglobin’s affinity falls and more O₂ is unloaded where it is needed most.", ok: true },
+        { t: "More CO₂ raises haemoglobin’s affinity, so it holds O₂ until it reaches the muscle.", why: "Read the two curves at 3 kPa: with high CO₂ the saturation is lower, so the affinity is lower, not higher. That makes haemoglobin give up more O₂." },
+        { t: "More CO₂ makes haemoglobin load more O₂ in the muscle.", why: "The muscle needs O₂ delivered to it, not taken away. A lower affinity means more O₂ is unloaded there." },
+        { t: "CO₂ pushes O₂ off the haem groups because they compete for the Fe²⁺ ions.", why: "CO₂ doesn’t compete with O₂ for the haem. It lowers the affinity through the H⁺ ions from carbonic acid." }],
+      explain: "Exercising muscle respires faster, so there is more CO₂. The curve shifts to the right: haemoglobin’s affinity for O₂ is lower, so more O₂ is unloaded exactly where respiration is fastest. In the lungs CO₂ is low, so the curve is back to the left and haemoglobin loads O₂ readily.",
+      hints: ["Read both curves at 3 kPa, the pO₂ in an exercising muscle.", "Which curve gives up more O₂ at 3 kPa?", "More respiration → more CO₂ → lower affinity → more O₂ unloaded."] },
+    { id: "llama", kind: "choice", text: "Data question: llamas live high in the Andes, where the pO₂ of the air is low. Compare the llama curve with the adult human curve. Suggest an advantage of the llama’s haemoglobin.", setup: { scene: "curve", curves: ["adult", "llama"], px: 6 }, hideKw: ["fetal", "myo", "bohr"], hideGraph: ["aff"],
+      options: [{ t: "Its curve is to the left: it has a higher affinity, so its haemoglobin still becomes highly saturated at the low pO₂ in its lungs.", ok: true },
+        { t: "Its curve is to the right: it has a lower affinity, so it loads O₂ more easily in the lungs.", why: "The llama curve is to the left of the human curve. A lower affinity would make loading harder, not easier." },
+        { t: "Its curve is to the left, so it unloads O₂ more easily to its tissues.", why: "To the left means a higher affinity, so it unloads O₂ less readily. The advantage is in loading O₂ at low pO₂." },
+        { t: "Llama haemoglobin carries more than four O₂ molecules, so its curve rises higher.", why: "Each haemoglobin still has four haem groups, so it carries at most four O₂. Both curves level off near 100 %." }],
+      explain: "The llama curve is to the left of the human curve, so llama haemoglobin has a higher affinity for O₂. At the low pO₂ of high altitude it still loads O₂ and becomes highly saturated in the lungs; its respiring tissues have a lower pO₂ still, so it can unload there.",
+      hints: ["Read both curves at a low pO₂, such as 4 kPa.", "Which is more saturated there, and what does that say about affinity?", "At high altitude the hard part is loading O₂ in the lungs."] },
+    { id: "lug", kind: "choice", text: "Data question: when the tide is out, the water in a lugworm’s burrow has very little oxygen. Suggest why the lugworm’s haemoglobin curve is so far to the left.", setup: { scene: "curve", curves: ["adult", "lug"], px: 2 }, hideKw: ["fetal", "myo", "bohr"], hideGraph: ["aff"],
+      options: [{ t: "Its haemoglobin has a very high affinity, so it can load O₂ even at the very low pO₂ in the burrow.", ok: true },
+        { t: "Its haemoglobin has a very low affinity, so it releases O₂ quickly to its tissues.", why: "Its curve is far to the left: it is highly saturated even at 1–2 kPa, so its affinity is very high." },
+        { t: "Lugworms aren’t active, so their haemoglobin doesn’t need to load O₂.", why: "Lugworms still respire aerobically and need O₂. Their haemoglobin lets them get it from water with very little O₂." },
+        { t: "It lets the lugworm load more O₂ than a human can at 13 kPa.", why: "At 13 kPa both curves are close to 100 %. The difference is at low pO₂." }],
+      explain: "A curve far to the left means a very high affinity for O₂. In the burrow the pO₂ is very low, but the lugworm’s haemoglobin can still load O₂ there. Its tissues have an even lower pO₂, so it unloads the O₂ to them.",
+      hints: ["Read both curves at 2 kPa.", "Which haemoglobin is more saturated at very low pO₂?", "Very high affinity lets haemoglobin load O₂ where there is very little."] },
+    { id: "p50", kind: "num", text: "P₅₀ is the pO₂ at which haemoglobin is 50 % saturated. Read P₅₀ for the adult curve and for the High CO₂ curve, then calculate how far the curve shifts.", setup: { scene: "curve", curves: ["adult", "high"], px: 10 }, hideKw: [], hideGraph: [],
+      unit: "kPa", ans: SHIFT, tol: 0.26,
+      wrongs: () => [[CURVES.adult.p50, "That is P₅₀ for the adult curve. Subtract it from P₅₀ for the High CO₂ curve."], [CURVES.high.p50, "That is P₅₀ for the High CO₂ curve. Subtract P₅₀ for the adult curve from it."], [CURVES.adult.p50 + CURVES.high.p50, "Subtract the two P₅₀ values; don’t add them."]],
+      right: () => `Correct. P₅₀ is about ${kpa(CURVES.adult.p50)} kPa for the adult curve and ${kpa(CURVES.high.p50)} kPa with high CO₂, so the curve shifts about ${kpa(SHIFT())} kPa to the right (the Bohr shift).`,
+      hints: ["Find 50 % on the saturation axis. Move the reading line until a curve crosses the 50 % line.", "Read the pO₂ there for each curve.", "Shift = P₅₀ (High CO₂) − P₅₀ (adult)."] }
+  ]
+};
+
+/* ===== Load-time bank check (run after the first paint) ===== */
+function bankCheck() {
+  const errs = [], near = (a, b, e) => Math.abs(a - b) <= (e || 1e-6);
+  /* the model */
+  for (const c of CV_ORDER) {
+    if (!near(sat(c, CURVES[c].p50), 50, 1e-6)) errs.push("model: " + c + " P50");
+    for (let p = 0; p < PX.MAX; p += 0.25) if (!(sat(c, p + 0.25) > sat(c, p))) { errs.push("model: " + c + " must rise"); break; }
+  }
+  if (!(sat("adult", 13) > 95 && sat("adult", 13) < 99)) errs.push("model: adult saturation in the lungs should be 95–99 %");
+  if (!near(SHIFT(), 1, 1e-9)) errs.push("model: Bohr shift should be 1.0 kPa");
+  for (let p = 1; p <= 13; p++) if (!(sat("high", p) < sat("adult", p) && sat("fetal", p) > sat("adult", p) && (p > 5 || sat("myo", p) > sat("fetal", p)))) { errs.push("model: curve order at " + p + " kPa"); break; }
+  if (!(sat("adult", 2) < 25 && sat("myo", 2) > 80)) errs.push("model: myoglobin must be far left of haemoglobin");
+  /* the questions */
+  const ids = {};
+  for (const lv of ["easy", "hard"]) TASKS[lv].forEach((t, i) => {
+    const e = m => errs.push(`${lv} task ${i + 1}: ${t.id}: ${m}`);
+    if (ids[t.id]) e("duplicate id"); ids[t.id] = 1;
+    if (!t.hints || t.hints.length !== 3) e("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok).length !== 1) e("needs exactly one right option");
+      t.options.forEach(o => { if (!o.ok && !o.why) e("a wrong option has no reason"); });
+      if (!t.explain) e("no explanation");
+    } else if (t.kind === "fill") {
+      t.items.forEach(it => { if (!it.opts.includes(it.ans)) e("gap answer not an option"); it.opts.forEach(o => { if (o !== it.ans && !(it.why && it.why[o])) e("gap option without feedback: " + o); }); });
+    } else if (t.kind === "multi") {
+      const rd = t.items.filter(it => !it.final), fi = t.items.find(it => it.final), v = rd.map(it => Math.round(it.ans())).concat([0]);
+      if (!fi || rd.length !== t.items.length - 1) e("multi needs readings then one final box");
+      if (Math.abs(fi.calc(v) - t.ans()) > fi.tol + 0.5) e("final answer from rounded readings is far from the model answer");
+      fi.slips(v).forEach(w => { if (Math.abs(w[0] - fi.calc(v)) <= fi.tol) e("a planned slip is inside the tolerance: " + w[0]); });
+      if (/69/.test(t.right())) e("69 in the worked answer");
+    } else if (t.kind === "num") {
+      const a = t.ans(); if (!isFinite(a)) e("answer not a number");
+      if (/69/.test(t.right(a))) e("69 in the worked answer");
+      t.wrongs().forEach(w => { if (Math.abs(w[0] - a) <= t.tol) e("a planned wrong answer is inside the tolerance: " + w[0]); });
+    }
+    const txt = t.text + " " + (t.explain || "") + " " + (t.options ? t.options.map(o => o.t + " " + (o.why || "")).join(" ") : "");
+    if (/69/.test(txt)) e("69 in the question");
+  });
+  if (TASKS.easy.length > 10 || TASKS.hard.length > 10) errs.push("bank: more than 10 questions in a level");
+  return errs;
+}
+const numTol = t => typeof t.tol === "function" ? t.tol() : t.tol;
+
+/* ===== Colour tokens (read once, and again when the theme changes) ===== */
+let C = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  C = { font: getComputedStyle(document.body).fontFamily };
+  ["ink", "muted", "accent", "good", "bad", "sunk", "surface", "line"].forEach(k => C[k] = g("--" + k));
+}
+const narrowW = () => window.innerWidth <= 900;
+const phoneW = () => window.innerWidth < 560;
+const barBottom = () => { const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nq-bar")); return v > 0 ? v : 100; };
+const P = v => (Math.round(v * 10) / 10).toString();
+function T(x, y, s, cls, a, extra) { return `<text x="${P(x)}" y="${P(y)}"${cls ? ` class="${cls}"` : ""}${a ? ` text-anchor="${a}"` : ""}${extra || ""}>${esc(s)}</text>`; }
+function setVB(svg, W, H) { const v = `0 0 ${P(W)} ${P(H)}`; if (svg.getAttribute("viewBox") !== v) svg.setAttribute("viewBox", v); svg.style.height = P(H) + "px"; }
+function ball(x, y, r, cls) { return `<circle cx="${P(x)}" cy="${P(y)}" r="${P(r)}" class="${cls}"/><circle cx="${P(x - .35 * r)}" cy="${P(y - .35 * r)}" r="${P(.28 * r)}" class="shine"/>`; }
+const tw = (s, fs) => s.length * fs * 0.56;   // rough text width (for layout only; the edge test checks the real boxes)
+
+/* ===== View 1: one haemoglobin molecule (SVG in CSS pixels) ===== */
+const HB = { h: 300 };
+const SUB = [{ sx: -1, sy: -1, a: 1, n: "α" }, { sx: 1, sy: -1, a: 0, n: "β" }, { sx: -1, sy: 1, a: 0, n: "β" }, { sx: 1, sy: 1, a: 1, n: "α" }];
+function hbGeo(W, H, r) {
+  const s = Math.min(W - 24, H - 20), cx = W / 2, cy = H / 2, d = s * (.19 + .02 * r);
+  return SUB.map((u, i) => {
+    const rot = (u.sy < 0 ? -1 : 1) * 7 * r, x = cx + u.sx * d, y = cy + u.sy * d * .92, rad = rot * Math.PI / 180;
+    /* rotate the top pair and the bottom pair about the centre (tense → relaxed) */
+    const rx = cx + (x - cx) * Math.cos(rad) - (y - cy) * Math.sin(rad), ry = cy + (x - cx) * Math.sin(rad) + (y - cy) * Math.cos(rad);
+    const hx = rx + u.sx * s * .085, hy = ry + u.sy * s * .06;
+    return { u, i, x: rx, y: ry, rot, s, hx, hy, ox: hx + u.sx * s * .05, oy: hy + u.sy * s * .05, cxN: rx - u.sx * s * .09, cyN: ry + u.sy * s * .175 };
+  });
+}
+function o2At(x, y, s, ang) { const r = s * .03, dx = Math.cos(ang) * r * .85, dy = Math.sin(ang) * r * .85; return ball(x - dx, y - dy, r, "o2") + ball(x + dx, y + dy, r, "o2"); }
+function co2At(x, y, s) { const r = s * .022; return `<circle cx="${P(x - 2 * r)}" cy="${P(y)}" r="${P(r)}" class="co2o"/><circle cx="${P(x + 2 * r)}" cy="${P(y)}" r="${P(r)}" class="co2o"/><circle cx="${P(x)}" cy="${P(y)}" r="${P(r * 1.15)}" class="co2c"/>`; }
+function hbDraw() {
+  const m = B, svg = $("hbSvg"), W = Math.max(240, boxW($("hbWrap")) - 2), H = HB.h;
+  setVB(svg, W, H);
+  const G = hbGeo(W, H, m.r);
+  let o = "";
+  G.forEach(g => {
+    const w = g.s * .4, h = g.s * .34, cr = (.05 + .1 * m.r) * g.s;
+    o += `<rect class="su ${g.u.a ? "a" : "b"}" x="${P(g.x - w / 2)}" y="${P(g.y - h / 2)}" width="${P(w)}" height="${P(h)}" rx="${P(cr)}" transform="rotate(${P(g.rot)} ${P(g.x)} ${P(g.y)})"/>`;
+    o += T(g.x - g.u.sx * g.s * .04, g.y + g.s * .03 + g.u.sy * g.s * .05, g.u.n, "sul", "middle", ` font-size="${P(Math.max(14, g.s * .075))}"`);
+    o += `<rect class="haem" x="${P(g.hx - g.s * .055)}" y="${P(g.hy - g.s * .022)}" width="${P(g.s * .11)}" height="${P(g.s * .044)}" rx="2" transform="rotate(${P(g.rot - 12 * g.u.sx * g.u.sy)} ${P(g.hx)} ${P(g.hy)})"/><circle class="fe" cx="${P(g.hx)}" cy="${P(g.hy)}" r="${P(g.s * .016)}"/>`;
+    if (m.co2) o += co2At(g.cxN, g.cyN, g.s);
+  });
+  for (let k = 0; k < m.n; k++) { const g = G[ORDER[k]]; o += o2At(g.ox, g.oy, g.s, Math.atan2(g.u.sy, g.u.sx) + Math.PI / 2); }
+  const A = m.anim;
+  if (A) {   // an O₂ on its way in (or out)
+    const g = G[A.site], p = ease(clamp(A.p, 0, 1)), q = A.add ? p : 1 - p;
+    const fx0 = g.ox + g.u.sx * g.s * .32, fy0 = g.oy + g.u.sy * g.s * .2;
+    const x = fx0 + (g.ox - fx0) * q, y = fy0 + (g.oy - fy0) * q;
+    o += o2At(clamp(x, 14, W - 14), clamp(y, 14, H - 14), g.s, Math.atan2(g.u.sy, g.u.sx) + Math.PI / 2);
+  }
+  morph($("hbD"), o);
+}
+function keyHTML() {
+  const sw = (inner) => `<svg viewBox="0 0 28 18" aria-hidden="true">${inner}</svg>`;
+  const items = [[sw('<rect class="su a" x="2" y="2" width="24" height="14" rx="4"/>'), "α polypeptide chain"], [sw('<rect class="su b" x="2" y="2" width="24" height="14" rx="4"/>'), "β polypeptide chain"],
+    [sw('<rect class="haem" x="4" y="5" width="20" height="8" rx="2"/><circle class="fe" cx="14" cy="9" r="3"/>'), "haem group, with an Fe²⁺ ion (yellow)"], [sw('<circle class="o2" cx="10" cy="9" r="5"/><circle class="o2" cx="18" cy="9" r="5"/>'), "O₂ molecule"]];
+  items.push([sw('<circle class="co2o" cx="7" cy="9" r="3.5"/><circle class="co2o" cx="21" cy="9" r="3.5"/><circle class="co2c" cx="14" cy="9" r="4"/>'), "CO₂ molecule"]);
+  return items.map(([s, t]) => `<li>${s}<span>${esc(t)}</span></li>`).join("");
+}
+
+/* ===== View 2: dissociation curves (SVG in CSS pixels) ===== */
+const GR = { h: 320 };
+const GA = { A: null };
+function cvToggles() {
+  return CV_ORDER.map(k => { const c = CURVES[k];
+    return `<button type="button" data-cv="${k}" aria-pressed="false"><svg viewBox="0 0 24 10" aria-hidden="true"><path class="cv ${c.cls}" d="M2 5H22"${c.dash ? ` stroke-dasharray="${c.dash}"` : ""} style="stroke-width:3"/></svg>${esc(c.n)}</button>`; }).join("");
+}
+function gDraw() {
+  const m = B, svg = $("gSvg"), Wd = Math.max(240, boxW($("gWrap")) - 2), Hd = GR.h, qo = quizOpen();
+  setVB(svg, Wd, Hd);
+  const fs = phoneW() ? 12 : 13, ml = fs * 3.2 + 8, mb = fs * 2.9 + 6, mt = 10, mr = 12;
+  const pw = Wd - ml - mr, ph = Hd - mt - mb, X = v => ml + v / PX.MAX * pw, Y = v => mt + ph - v / 100 * ph;
+  GA.A = { ml, mt, pw, ph, X, Y };
+  let o = "", labs = "";
+  /* the body's pO₂ ranges (positions only) */
+  o += `<rect class="band" x="${P(X(PX.TIS0))}" y="${P(mt)}" width="${P(X(PX.TIS1) - X(PX.TIS0))}" height="${P(ph)}"/><rect class="band" x="${P(X(12))}" y="${P(mt)}" width="${P(X(14) - X(12))}" height="${P(ph)}"/>`;
+  const tl = X(PX.TIS1) - X(PX.TIS0) > tw("respiring tissue", fs) + 6 ? "respiring tissue" : "tissue";
+  labs += T((X(PX.TIS0) + X(PX.TIS1)) / 2, mt + ph - 6, tl, "bl", "middle", ` font-size="${fs}"`) + T((X(12) + X(14)) / 2, mt + ph - 6, "lungs", "bl", "middle", ` font-size="${fs}"`);
+  const ylab = ph < 150 ? 20 : 10;
+  for (let v = 0; v <= PX.MAX + 1e-9; v += 0.5) { const maj = Math.abs(v - Math.round(v)) < 1e-9; o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(X(v))} ${P(mt)}V${P(mt + ph)}"/>`; if (maj && v % 2 === 0) o += T(X(v), mt + ph + fs + 4, String(v), "tk", "middle", ` font-size="${fs}"`); }
+  for (let v = 0; v <= 100; v += 5) { const maj = v % 10 === 0; o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(ml)} ${P(Y(v))}H${P(ml + pw)}"/>`; if (v % ylab === 0) o += T(ml - 5, Y(v) + fs * .35, String(v), "tk", "end", ` font-size="${fs}"`); }
+  o += `<path class="ax" d="M${P(ml)} ${P(mt)}V${P(mt + ph)}H${P(ml + pw)}"/>`;
+  const xt = Wd < 420 ? "pO₂ / kPa" : "Partial pressure of oxygen (pO₂) / kPa", yt = ph < 200 ? "Saturation / %" : "Percentage saturation / %";
+  o += T(ml + pw / 2, Hd - 5, xt, "ttl", "middle", ` font-size="${fs}"`);
+  o += T(fs * .95, mt + ph / 2, yt, "ttl", "middle", ` font-size="${fs}" transform="rotate(-90 ${P(fs * .95)} ${P(mt + ph / 2)})"`);
+  const shown = CV_ORDER.filter(k => m.curves[k]);
+  shown.forEach(k => { const c = CURVES[k]; let d = ""; for (let i = 0; i <= 140; i++) { const p = PX.MAX * i / 140; d += (i ? "L" : "M") + P(X(p)) + " " + P(Y(sat(k, p))); }
+    o += `<path class="cv ${c.cls}" d="${d}"${c.dash ? ` stroke-dasharray="${c.dash}"` : ""}/>`; });
+  /* Demo only: the shifts at 50 % saturation */
+  if (!qo && m.curves.adult) {
+    const y50 = Y(50), ar = (a, b, lab, below) => { const x1 = X(CURVES[a].p50), x2 = X(CURVES[b].p50), dir = x2 > x1 ? 1 : -1, fits = dir > 0 || x2 - 8 - tw(lab, fs) >= ml + 4;
+      return `<path class="sarr" d="M${P(x1)} ${P(y50)}H${P(x2 - dir * 6)}"/><path class="sarrh" d="M${P(x2)} ${P(y50)}l${P(-dir * 8)} -5v10z"/>` + (!fits ? "" : T(dir > 0 ? Math.min(x2 + 10, ml + pw - tw(lab, fs) - 4) : Math.max(x2 - 8, ml + tw(lab, fs) + 4), below ? Y(66) : Y(36), lab, "dl", dir > 0 ? "start" : "end", ` font-size="${fs}"`)); };
+    if (m.curves.high) labs += ar("adult", "high", "Bohr shift", false);
+    if (m.curves.fetal) labs += ar("adult", "fetal", "higher affinity", true);
+  }
+  morph($("gD"), o + labs);
+  gReadDraw();
+}
+function gReadDraw() {   // the reading line, its handle and a dashed guide from each curve to the saturation axis
+  const m = B, A = GA.A; if (!A) return;
+  const x = A.X(m.px); let o = "";
+  CV_ORDER.filter(k => m.curves[k]).forEach(k => { const y = A.Y(sat(k, m.px)), c = CURVES[k].cls; o += `<path class="guide ${c}" d="M${P(x)} ${P(y)}H${P(A.ml)}"/>`; });
+  o += `<path class="rline" d="M${P(x)} ${P(A.mt)}V${P(A.mt + A.ph)}"/>`;
+  CV_ORDER.filter(k => m.curves[k]).forEach(k => { o += `<circle class="gdot ${CURVES[k].cls}" cx="${P(x)}" cy="${P(A.Y(sat(k, m.px)))}" r="5.5"/>`; });
+  o += `<path class="rhan" d="M${P(x - 9)} ${P(A.mt)}h18v8l-9 8l-9 -8z"/>`;
+  o += `<rect class="rhit" id="rHit" x="${P(x - 22)}" y="${P(A.mt)}" width="44" height="${P(A.ph)}"/>`;
+  morph($("gH"), o);
+}
+
+/* ===== View 3: CO₂ transport in a red blood cell (SVG in CSS pixels) ===== */
+const CO = { h: 300 };
+const STEP_N = 7;
+/* which step shows each part, in respiring tissue and in the lungs (the lungs run the steps the other way) */
+const CO_STEP = { tissue: { gasA: 1, r1: 2, r2: 3, cl: 4, r3: 5, gasB: 6 }, lungs: { gasB: 1, r3: 2, cl: 3, r2: 4, r1: 5, gasA: 6 } };
+function arrow(x1, y1, x2, y2, hot) {
+  const a = Math.atan2(y2 - y1, x2 - x1), h = 9, c = hot ? " hot" : "";
+  const bx = x2 - Math.cos(a) * h, by = y2 - Math.sin(a) * h, px = -Math.sin(a) * h * .55, py = Math.cos(a) * h * .55;
+  return `<path class="arw${c}" d="M${P(x1)} ${P(y1)}L${P(bx)} ${P(by)}"/><path class="arwh${c}" d="M${P(x2)} ${P(y2)}L${P(bx + px)} ${P(by + py)}L${P(bx - px)} ${P(by - py)}z"/>`;
+}
+function arrowPath(pts, hot) {   // a bent arrow through pts; the head is on the last point
+  const n = pts.length, [x1, y1] = pts[n - 2], [x2, y2] = pts[n - 1], a = Math.atan2(y2 - y1, x2 - x1), h = 9, c = hot ? " hot" : "";
+  const bx = x2 - Math.cos(a) * h, by = y2 - Math.sin(a) * h, px = -Math.sin(a) * h * .55, py = Math.cos(a) * h * .55;
+  const d = pts.slice(0, -1).map((q, i) => (i ? "L" : "M") + P(q[0]) + " " + P(q[1])).join("") + "L" + P(bx) + " " + P(by);
+  return `<path class="arw${c}" d="${d}"/><path class="arwh${c}" d="M${P(x2)} ${P(y2)}L${P(bx + px)} ${P(by + py)}L${P(bx - px)} ${P(by - py)}z"/>`;
+}
+function coDraw() {
+  const m = B, svg = $("coSvg"), W = Math.max(240, boxW($("coWrap")) - 2), H = CO.h, nar = W < 560, fs = nar ? 12 : 14, lungs = m.wh === "lungs";
+  setVB(svg, W, H);
+  const hc = quizOpen() && task.hideCo ? task.hideCo : [];
+  const st = CO_STEP[m.wh], k = m.step, on = p => k >= STEP_N || st[p] <= k, hot = p => k < STEP_N && st[p] === k;
+  let o = "", L;
+  /* compartments */
+  if (!nar) {
+    const t1 = Math.round(W * .17), p1 = Math.round(W * .32), top = 8;
+    L = { rx: p1, rw: W - 8 - p1, ry: top, rh: H - 16, tisX: (8 + t1) / 2, plX: (t1 + p1) / 2 };
+    o += `<rect class="tis" x="8" y="${top}" width="${t1 - 8}" height="${H - 16}" rx="8"/><rect class="plas" x="${t1}" y="${top}" width="${p1 - t1}" height="${H - 16}"/>`;
+    o += lungs ? T(L.tisX, top + fs + 8, "Alveolus", "cpt", "middle", ` font-size="${fs}"`) : T(L.tisX, top + fs + 8, "Respiring", "cpt", "middle", ` font-size="${fs}"`) + T(L.tisX, top + 2 * fs + 12, "tissue", "cpt", "middle", ` font-size="${fs}"`);
+    o += T(L.plX, top + fs + 8, "Plasma", "cpt", "middle", ` font-size="${fs}"`);
+  } else {
+    const tb = 50, pb = 32, ps = 72, top = 8 + tb + pb;
+    L = { rx: 8 + ps, rw: W - 16 - ps, ry: top, rh: H - top - 8, tisY: 8 + tb / 2, plX: 8 + ps / 2 };
+    o += `<rect class="tis" x="8" y="8" width="${W - 16}" height="${tb}" rx="8"/><path class="plas" d="M8 ${8 + tb}H${W - 8}V${top}H${8 + ps}V${H - 8}H8z"/>`;
+    o += T(W / 2, 8 + tb / 2 + fs * .35, lungs ? "Alveolus" : "Respiring tissue", "cpt", "middle", ` font-size="${fs}"`);
+    o += T(8 + 6, 8 + tb + pb / 2 + fs * .35, "Plasma", "cpt", "start", ` font-size="${fs}"`);
+  }
+  o += `<rect class="rbc" x="${P(L.rx)}" y="${P(L.ry)}" width="${P(L.rw)}" height="${P(L.rh)}" rx="${P(Math.min(40, L.rh * .2))}"/>`;
+  o += T(L.rx + 16, L.ry + fs + 8, "Red blood cell", "cpt", "start", ` font-size="${fs}"`);
+  const y1 = L.ry + L.rh * (nar ? .3 : .3), y2 = L.ry + L.rh * (nar ? .56 : .52), y3 = L.ry + L.rh * (nar ? .82 : .72), yb = L.ry + L.rh * .92;
+  const xl = L.rx + 14, xr = L.rx + L.rw * (nar ? .66 : .7);
+  const node = (x, y, s, h, a) => T(x, y, s, "chem" + (h ? " hot" : ""), a || "middle", ` font-size="${fs + 1}"`);
+  const l1 = "CO₂ + H₂O", wl1 = tw(l1, fs + 1);
+  /* reaction 1: CO₂ + H₂O ⇌ H₂CO₃, carbonic anhydrase */
+  if (on("r1")) {
+    const a = xl + wl1 + 8, b = xr - tw("H₂CO₃", fs + 1) / 2 - 8, h = hot("r1");
+    o += node(xl, y1 + fs * .35, l1, h, "start") + node(xr, y1 + fs * .35, "H₂CO₃", h) + (lungs ? arrow(b, y1, a, y1, h) : arrow(a, y1, b, y1, h));
+    const ef = fs - 1, one = tw("carbonic anhydrase", ef) < b - a + 30;
+    o += hc.includes("enz") ? T((a + b) / 2, y1 - 9, "enzyme", "enzl", "middle", ` font-size="${ef}"`) : one ? T((a + b) / 2, y1 - 9, "carbonic anhydrase", "enzl", "middle", ` font-size="${ef}"`)
+      : T((a + b) / 2, y1 - ef - 12, "carbonic", "enzl", "middle", ` font-size="${ef}"`) + T((a + b) / 2, y1 - 9, "anhydrase", "enzl", "middle", ` font-size="${ef}"`);
+  } else if (on("gasA")) o += node(xl, y1 + fs * .35, "CO₂", hot("gasA"), "start");
+  /* reaction 2: H₂CO₃ ⇌ H⁺ + HCO₃⁻ */
+  if (on("r2")) { const h = hot("r2"); if (!on("r1")) o += node(xr, y1 + fs * .35, "H₂CO₃", h); o += node(xr, y2 + fs * .35, "HCO₃⁻ + H⁺", h) + (lungs ? arrow(xr, y2 - fs - 2, xr, y1 + 8, h) : arrow(xr, y1 + 8, xr, y2 - fs - 2, h)); }
+  /* chloride shift */
+  if (on("cl")) {
+    const h = hot("cl"), out = lungs ? -1 : 1;
+    const xn = xr - tw("HCO₃⁻ + H⁺", fs + 1) / 2 - 6, xb = nar ? 8 + 10 : L.plX + 2, yo = y2 - fs * .1, yi = y2 + 20, xi = L.rx + 40;
+    o += out > 0 ? arrow(xn, yo, xb, yo, h) : arrow(xb, yo, xn, yo, h);   // HCO₃⁻ leaves from (or returns to) the HCO₃⁻ just formed
+    o += out > 0 ? arrow(xb, yi, xi, yi, h) : arrow(xi, yi, xb, yi, h);   // Cl⁻ the other way
+    o += T(L.plX, yo - 8, "HCO₃⁻", "chem" + (h ? " hot" : ""), "middle", ` font-size="${fs}"`) + T(L.plX, yi + fs + 6, "Cl⁻", "chem" + (h ? " hot" : ""), "middle", ` font-size="${fs}"`);
+    if (!hc.includes("cl")) o += T(L.plX, yi + 2 * fs + 14, "chloride", "namel", "middle", ` font-size="${fs - 1}"`) + T(L.plX, yi + 3 * fs + 16, "shift", "namel", "middle", ` font-size="${fs - 1}"`);
+  }
+  /* reaction 3: HbO₈ + H⁺ ⇌ HHb + 4O₂ (haemoglobinic acid) */
+  if (on("r3")) {
+    const h = hot("r3"), l = "HbO₈ + H⁺", a = xl + tw(l, fs + 1) + 8, b = xr - tw("HHb + 4O₂", fs + 1) / 2 - 8;
+    o += node(xl, y3 + fs * .35, l, h, "start") + node(xr, y3 + fs * .35, "HHb + 4O₂", h) + (lungs ? arrow(b, y3, a, y3, h) : arrow(a, y3, b, y3, h));
+    if (!hc.includes("hhb")) o += T(xr + tw("HHb + 4O₂", fs + 1) / 2, y3 + fs + 12, "haemoglobinic acid", "namel", "end", ` font-size="${fs - 1}"`);
+    if (on("r2")) { const hx = xr + tw("HCO₃⁻ + H⁺", fs + 1) / 2 - 8, tx = xl + tw("HbO₈ + H", fs + 1);   // the H⁺ from carbonic acid is the H⁺ that binds
+      o += lungs ? arrow(tx, y3 - fs - 2, hx - 2, y2 + 6, h) : arrow(hx - 2, y2 + 6, tx, y3 - fs - 2, h); }
+  }
+  /* the gases: CO₂ (gasA) and O₂ (gasB) crossing the plasma */
+  const gas = (key, y, label, toTis) => {
+    if (!on(key)) return "";
+    const h = hot(key);
+    if (!nar) { const xt = L.tisX + tw(label, fs) / 2 + 6, xc = L.rx + 10;
+      if (key === "gasB") { const xe = xr + tw("HHb + 4O₂", fs + 1) / 2 + 4, xv = xe + 14, pts = [[xe, y3 - fs * .1], [xv, y3 - fs * .1], [xv, yb], [xt, yb]];   // from the 4O₂ on the right
+        return T(L.tisX, yb + fs * .35, label, "chem" + (h ? " hot" : ""), "middle", ` font-size="${fs}"`) + arrowPath(toTis ? pts : pts.slice().reverse(), h); }
+      return T(L.tisX, y + fs * .35, label, "chem" + (h ? " hot" : ""), "middle", ` font-size="${fs}"`) + (toTis ? arrow(xc, y, xt, y, h) : arrow(xt, y, xc, y, h)); }
+    const x = key === "gasA" ? xl + 12 : L.rx + L.rw - 22, yt = 8 + 50 - 4, yc = (key === "gasA" ? y1 - fs - 4 : y3 - fs - 6);
+    const ga = key === "gasA";
+    return T(x + (ga ? 8 : -8), 8 + 50 + 16 + fs * .35, label, "chem" + (h ? " hot" : ""), ga ? "start" : "end", ` font-size="${fs}"`) + (toTis ? arrow(x, yc, x, yt, h) : arrow(x, yt, x, yc, h));
+  };
+  o += gas("gasA", y1, "CO₂", lungs) + gas("gasB", y3, "O₂", !lungs);
+  if (k === 0) o += T(L.rx + L.rw / 2, L.ry + L.rh / 2, "Press Next step ▸", "cpt", "middle", ` font-size="${fs}"`);
+  morph($("coD"), o);
+}
+
+/* ===== State ===== */
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { kw: false, maths: false, graph: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+function freshB(o) {
+  return Object.assign({ scene: "hb", lock: {}, n: 0, r: 0, co2: false, anim: null,
+    curves: { adult: true }, px: 5, rdCurve: "adult", rdMsg: null, wh: "tissue", step: 0, seen: {} }, o || {});
+}
+function stateFor(t) {
+  const s = t.setup || {}, m = freshB({ scene: s.scene || "hb" });
+  if (s.curves) { m.curves = {}; s.curves.forEach(k => m.curves[k] = true); m.rdCurve = s.curves[0]; }
+  if (s.px != null) m.px = s.px;
+  if (s.step != null) m.step = s.step;
+  if (s.co2) m.co2 = true;
+  return m;
+}
+let DEMO_B = freshB(), B = DEMO_B;
+let onScreen = true;
+
+const PKEY = "ks3tools-progress:alevel-oxygen-dissociation";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+/* a question is "open" until it has been answered right or its answer shown: anything that would give the answer away
+   (explanations on every view, the reading checker, the demo arrows on the graph, key words) stays hidden until then */
+const qDone = () => { const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; };
+const quizOpen = () => mode !== "demo" && !!task && task.kind !== "demo" && !qDone();
+
+/* ===== Readouts and controls ===== */
+function note(id, cls, html) { const e = $(id); const c = "mnote" + (cls ? " " + cls : "") + (id === "rdMsg" ? " rdmsg" : ""); if (e.className !== c) e.className = c; html = html || ""; if (e.innerHTML !== html) e.innerHTML = html; }
+function setHid(id, v) { const e = typeof id === "string" ? $(id) : id; v = !!v; if (e.hidden !== v) e.hidden = v; }
+function setPr(e, v) { v = String(!!v); if (e.getAttribute("aria-pressed") !== v) e.setAttribute("aria-pressed", v); }
+function setSt(b, on) { const e = b.querySelector(".state"), v = on ? "on" : "off"; if (e.textContent !== v) e.textContent = v; }
+function setDis(e, v) { v = !!v; if (e.disabled !== v) e.disabled = v; }
+function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }
+function setHTML(id, v) { const e = $(id); if (e.innerHTML !== v) e.innerHTML = v; }
+const NEUTRAL = "The explanation appears here once you have answered (or pressed Show answer).";
+
+const HB_TXT = [
+  "Deoxyhaemoglobin: four polypeptide chains (two α and two β), each holding a haem group with an Fe²⁺ ion. In this tense shape the first O₂ binds with difficulty, so at low pO₂ little O₂ is picked up.",
+  "One O₂ has bound to the Fe²⁺ ion in a haem group. The whole molecule changes shape (its quaternary structure), uncovering the other haem groups, so the next O₂ binds more easily: cooperative binding.",
+  "Two O₂ bound. Each O₂ that binds makes the next one bind more easily still, so the curve rises steeply in the middle.",
+  "Three O₂ bound. The fourth binds very easily, but with only one haem group left free it takes a high pO₂ to fill every molecule, so the curve levels off near the top.",
+  "Oxyhaemoglobin: Hb + 4O₂ ⇌ HbO₈. Each haemoglobin carries four O₂ molecules (eight oxygen atoms). The binding is reversible, so O₂ is released where the pO₂ is low."
+];
+const HB_CO2 = " CO₂ can bind to the amino groups at the ends of the polypeptide chains (carbaminohaemoglobin), not to the haem groups. This lowers haemoglobin’s affinity for O₂.";
+function hbReadouts() {
+  const m = B, qo = quizOpen(), n = m.n;
+  setText("roN", `${n} of 4`); setText("roSat", `${n * 25} %`);
+  const lv = EASE_LV[n];
+  setHTML("roEase", n >= 4 ? '<span class="mw">none: no free haem group left</span>' : `<span class="bars" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i${i <= lv ? ' class="on"' : ""}></i>`).join("")}</span><span class="mw">${EASE_W[lv]}</span>`);
+  setHTML("roHb", esc(qo ? NEUTRAL : HB_TXT[n] + (m.co2 ? HB_CO2 : "")));
+  setHTML("hbKey", keyHTML());
+}
+const WHERE = p => p >= 11 ? "like the lungs (alveoli): about 13 kPa" : p > 6 ? "between the lungs and the tissues" : p >= 2 ? "like respiring tissue (about 2–5 kPa)" : "lower than in most tissues: like a very active muscle";
+const CV_TXT = {
+  high: "The High CO₂ curve is to the right of the adult curve: the Bohr effect. At the same pO₂ haemoglobin is less saturated (a lower affinity), so more O₂ is unloaded in active tissue, where CO₂ is high.",
+  fetal: "The fetal curve is to the left: fetal haemoglobin has a higher affinity for O₂, so at the low pO₂ in the placenta it takes O₂ from the mother’s haemoglobin.",
+  myo: "Myoglobin’s curve is far to the left and not S-shaped (one haem group, so no cooperative binding). It holds its O₂ until the pO₂ is very low: an O₂ store in muscle.",
+  llama: "The llama curve is to the left of the human curve: a higher affinity, so llama haemoglobin still loads O₂ at the low pO₂ of high altitude.",
+  lug: "The lugworm curve is far to the left: a very high affinity, so it loads O₂ even at the very low pO₂ in its burrow when the tide is out."
+};
+function curveText(m) {
+  const p = m.px;
+  let s = p >= 10 ? "At high pO₂, as in the lungs, haemoglobin has a high affinity for O₂: it loads O₂ and becomes nearly saturated. The curve is flat here, so a small fall in pO₂ hardly changes the saturation."
+    : p >= 7 ? "Saturation is still high and the curve is starting to level off."
+    : p >= 2 ? "At the low pO₂ of respiring tissue haemoglobin unloads O₂. The curve is steep here, so a small fall in pO₂ releases a lot of O₂."
+    : "At very low pO₂ little O₂ is bound: the first O₂ is hard to load.";
+  const last = m.lastCv && m.curves[m.lastCv] && CV_TXT[m.lastCv] ? m.lastCv : CV_ORDER.slice(1).find(k => m.curves[k]);
+  return last ? CV_TXT[last] : s;   // one short explanation at a time, so the side column fits the screen
+}
+function curveReadouts() {
+  const m = B, qo = quizOpen();
+  setText("pxOut", kpa(m.px) + " kPa");
+  const pi = $("pxIn"); if (+pi.value !== m.px) pi.value = m.px; pi.setAttribute("aria-valuetext", kpa(m.px) + " kilopascals");
+  setText("roWhere", WHERE(m.px));
+  setHTML("roCurve", esc(qo ? NEUTRAL : curveText(m)));
+  setHid("readBox", qo);
+  const opts = CV_ORDER.filter(k => m.curves[k]);
+  if (!opts.includes(m.rdCurve)) m.rdCurve = opts[0] || "adult";
+  const h = opts.map(k => `<option value="${k}">${esc(CURVES[k].n)} curve</option>`).join("");
+  if ($("rdSel").dataset.h !== h) { $("rdSel").innerHTML = h; $("rdSel").dataset.h = h; }
+  if ($("rdSel").value !== m.rdCurve) $("rdSel").value = m.rdCurve;
+  const rm = m.rdMsg; note("rdMsg", rm ? rm[0] : "", rm ? esc(rm[1]) : "");
+}
+const CO_TXT = {
+  tissue: ["Press Next step ▸ to follow CO₂ from a respiring cell into a red blood cell.",
+    "CO₂ made in respiration diffuses out of the tissue cells, through the plasma and into the red blood cell.",
+    "Inside the red blood cell the enzyme carbonic anhydrase catalyses CO₂ + H₂O → H₂CO₃ (carbonic acid).",
+    "Carbonic acid dissociates: H₂CO₃ → H⁺ + HCO₃⁻ (hydrogencarbonate ions).",
+    "HCO₃⁻ ions diffuse out into the plasma, which carries most of the CO₂. Cl⁻ ions diffuse in so the charge stays balanced: the chloride shift.",
+    "H⁺ ions bind to oxyhaemoglobin, forming haemoglobinic acid (HHb) and making it release its O₂: HbO₈ + H⁺ → HHb + 4O₂. Taking up H⁺ also buffers the blood, so its pH stays steady.",
+    "The O₂ released diffuses out of the red blood cell, through the plasma, to the respiring cells.",
+    "The Bohr effect: more CO₂ → more H⁺ → haemoglobin’s affinity for O₂ falls, so more O₂ is unloaded where respiration is fastest. Some CO₂ also binds to the chains’ amino groups, which lowers the affinity too."],
+  lungs: ["Press Next step ▸ to follow the reactions in a capillary next to an alveolus.",
+    "In the lungs the pO₂ is high. O₂ diffuses from the alveolus, through the plasma and into the red blood cell.",
+    "Haemoglobin loads O₂ and lets go of its H⁺ ions: HHb + 4O₂ → HbO₈ + H⁺.",
+    "HCO₃⁻ ions diffuse back into the red blood cell from the plasma, and Cl⁻ ions diffuse out: the chloride shift in reverse.",
+    "H⁺ and HCO₃⁻ ions combine: H⁺ + HCO₃⁻ → H₂CO₃.",
+    "Carbonic anhydrase catalyses H₂CO₃ → CO₂ + H₂O.",
+    "CO₂ diffuses out of the red blood cell, through the plasma, into the alveolus, and is breathed out.",
+    "In the lungs CO₂ is low, so there are few H⁺ ions and haemoglobin’s affinity for O₂ is high: it loads O₂ readily."]
+};
+const CO_TITLE = { tissue: ["", "CO₂ diffuses in", "Carbonic anhydrase", "Carbonic acid dissociates", "The chloride shift", "Haemoglobinic acid forms", "O₂ diffuses out", "All steps"],
+  lungs: ["", "O₂ diffuses in", "Haemoglobin loads O₂", "Chloride shift reversed", "Carbonic acid forms", "Carbonic anhydrase", "CO₂ diffuses out", "All steps"] };
+const CARRY = "about 85 % as hydrogencarbonate ions (HCO₃⁻) in the plasma · about 10 % bound to haemoglobin · about 5 % dissolved in the plasma";
+function co2Readouts() {
+  const m = B, qo = quizOpen(), k = m.step;
+  setText("roStep", k === 0 ? "Not started" : k >= STEP_N ? "All steps" : qo ? `${k} of 6` : `${k} of 6: ${CO_TITLE[m.wh][k]}`);
+  const hc = qo && task.hideCo ? task.hideCo : [];
+  setHTML("roCarry", hc.includes("carry") ? '<span class="kwh">hidden for this question</span>' : CARRY);
+  setHTML("roCo2", esc(qo && k > 0 ? NEUTRAL : CO_TXT[m.wh][k]));
+}
+function syncCtl() {
+  const m = B;
+  document.querySelectorAll("#sceneTabs button").forEach(b => setPr(b, b.dataset.scene === m.scene));
+  setHid("vHb", m.scene !== "hb"); setHid("vCurve", m.scene !== "curve"); setHid("vCo2", m.scene !== "co2");
+  setDis($("hAdd"), m.n >= 4 || !!m.anim); setDis($("hRem"), m.n <= 0 || !!m.anim);
+  setPr($("hCo2"), m.co2); setSt($("hCo2"), m.co2);
+  document.querySelectorAll("#cvSeg button").forEach(b => setPr(b, !!m.curves[b.dataset.cv]));
+  document.querySelectorAll("#whSeg button").forEach(b => setPr(b, b.dataset.wh === m.wh));
+  setDis($("cBack"), m.step <= 0); setDis($("cNext"), m.step >= STEP_N); setDis($("cAll"), m.step >= STEP_N);
+}
+function renderSupport() {
+  const qo = quizOpen(), hid = qo && task.hideKw ? task.hideKw : [], hg = qo && task.hideGraph ? task.hideGraph : [];
+  setHTML("supKw", "<p><b>Key words</b></p>" + KW.map(([k, w, d]) => `<p><b>${esc(w)}:</b> ${hid.includes(k) ? '<span class="kwh">hidden for this question</span>' : esc(d)}</p>`).join(""));
+  setHTML("supMaths", "<p><b>Maths help</b></p>" + MATHS.map(([k, w, d]) => `<p><b>${esc(w)}</b> = ${esc(d)}</p>`).join(""));
+  setHTML("supGraph", "<p><b>Graph help</b></p>" + GHELP.map(([k, w, d]) => `<p><b>${esc(w)}:</b> ${hg.includes(k) ? '<span class="kwh">hidden for this question</span>' : esc(d)}</p>`).join(""));
+  setHid("supKw", !support.kw); setHid("supMaths", !support.maths); setHid("supGraph", !support.graph);
+}
+function renderScene() {
+  if (B.scene === "hb") { hbDraw(); hbReadouts(); }
+  else if (B.scene === "curve") { gDraw(); curveReadouts(); }
+  else { coDraw(); co2Readouts(); }
+}
+function renderAll() { syncCtl(); layout(); renderScene(); renderSupport(); if (LAY.fit) { LAY.fit = false; if (fitView()) renderScene(); } if (tourI >= 0) tourPlace(); }
+/* laptops and boards: after a change of layout, shrink (or grow) the picture so the whole view ends on the screen */
+function fitView() {
+  if (narrowW()) return false;
+  const v = $({ hb: "vHb", curve: "vCurve", co2: "vCo2" }[B.scene]), room = window.innerHeight - barBottom() - 18, top = $("model").getBoundingClientRect().top;
+  const excess = (v.getBoundingClientRect().bottom - top) - room;
+  if (Math.abs(excess) < 4) return false;
+  if (B.scene === "curve") {   // two columns: only the graph column decides; the side column must fit too
+    const side = v.querySelector(".vside"), main = v.querySelector(".vmain"), two = getComputedStyle(v.querySelector(".vgrid")).gridTemplateColumns.split(" ").length > 1;
+    const eMain = (main.getBoundingClientRect().bottom - top) - room + (two ? 0 : side.getBoundingClientRect().height + 10);
+    GR.h = Math.round(clamp(GR.h - eMain, 220, 720)); return true;
+  }
+  if (B.scene === "hb") { const main = v.querySelector(".vmain"), e = (main.getBoundingClientRect().bottom - top) - room; HB.h = Math.round(clamp(HB.h - e, 200, 680)); return true; }
+  CO.h = Math.round(clamp(CO.h - excess, 250, 560)); return true;
+}
+function setScene(sc) { B.scene = sc; LAY.key = ""; renderAll(); tourSignal("scene-" + sc); }
+function lockMsg(t) { note("lockNote", "", esc(t || "The model is set for this question. Answer in the panel, or press Show answer.")); clearTimeout(lockMsg.t); lockMsg.t = setTimeout(() => note("lockNote", "", ""), 3200); }
+
+/* ===== Layout: picture sizes from the screen (measured on resize and on a change of view, not every frame) ===== */
+const LAY = { key: "" };
+function layout() {
+  const key = [window.innerWidth, window.innerHeight, B.scene].join("|");
+  if (key === LAY.key) return; LAY.key = key; LAY.fit = true;
+  if (narrowW()) { const w = window.innerWidth; HB.h = phoneW() ? Math.min(300, w - 40) : 320; GR.h = phoneW() ? 290 : 340; CO.h = w < 560 + 60 ? 420 : 320; LAY.fit = false; }
+}
+
+/* ===== Haemoglobin: one O₂ in or out (time-based, paced; stopped when nothing moves) ===== */
+let loopOn = false, lastNow = 0;
+const moving = () => !!B.anim || Math.abs(B.r - TILT[B.n]) > 1e-3;
+function kick() { if (loopOn || !moving() || !onScreen || document.hidden) return; loopOn = true; lastNow = 0; paceFrame(tick); }
+function tick(now) {
+  if (!moving() || !onScreen || document.hidden) { loopOn = false; return; }
+  const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0; lastNow = now;
+  const A = B.anim;
+  if (A) { A.p += dt / 0.6; if (A.p >= 1) { if (A.add) B.n++; B.anim = null; hbReadouts(); syncCtl(); } }
+  else { const tg = TILT[B.n], d = tg - B.r, sp = dt * 2.4; B.r = Math.abs(d) <= sp ? tg : B.r + Math.sign(d) * sp; }
+  if (!moving()) { loopOn = false; renderAll(); return; }
+  if (B.scene === "hb") hbDraw();
+  paceFrame(tick);
+}
+function hbStep(add) {
+  if (B.anim) return;
+  if (add ? B.n >= 4 : B.n <= 0) return;
+  const site = ORDER[add ? B.n : B.n - 1];
+  if (!add) B.n--;
+  if (reduced()) { if (add) B.n++; B.r = TILT[B.n]; renderAll(); }
+  else { B.anim = { site, p: 0, add }; renderAll(); kick(); }
+  if (mode === "demo" && B.n + (add && B.anim ? 1 : 0) >= 4) tried(0);
+  tourSignal("hadd");
+}
+
+/* ===== Curves: the reading line (drag on the graph, or the slider) and the reading check ===== */
+function setPx(v) {
+  v = clamp(Math.round(v / PX.STEP) * PX.STEP, 0, PX.MAX); if (v === B.px) return;
+  B.px = v; if (B.rdMsg) B.rdMsg = null; gReadDraw(); curveReadouts(); tourSignal("px");
+  if (mode === "demo" && B.curves.adult) { B.seen["p" + v] = 1; if (B.seen.p13 && B.seen.p3) tried(2); }
+}
+(function readLine() {
+  const svg = $("gSvg"); let drag = false, pend = null, raf = 0;
+  const toX = e => { const A = GA.A, mt = svg.getScreenCTM(); if (!mt || !A) return null; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(mt.inverse()); return (p.x - A.ml) / A.pw * PX.MAX; };
+  svg.addEventListener("pointerdown", e => {
+    const onH = e.target && e.target.id === "rHit";
+    if (!onH && e.pointerType !== "mouse") return;   // a finger drags only the line, so the page can still scroll
+    const x = toX(e); if (x == null) return;
+    drag = true; try { svg.setPointerCapture(e.pointerId); } catch (err) {} setPx(x); e.preventDefault();
+  });
+  const flush = () => { raf = 0; if (pend && drag) { const x = toX(pend); if (x != null) setPx(x); } pend = null; };
+  svg.addEventListener("pointermove", e => { if (!drag) return; pend = { clientX: e.clientX, clientY: e.clientY }; if (!raf) raf = requestAnimationFrame(flush); });
+  const up = () => { if (raf) { cancelAnimationFrame(raf); flush(); } drag = false; };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("touchstart", e => { if (e.target && e.target.id === "rHit") e.preventDefault(); }, { passive: false });
+})();
+function rdOk() {
+  if (quizOpen()) return;
+  const v = num($("rdIn").value), c = B.rdCurve, s = sat(c, B.px);
+  if (v == null) { B.rdMsg = ["", "Type the saturation you read, in %."]; renderAll(); return; }
+  if (Math.abs(v - s) <= RD_TOL) { B.rdMsg = ["good", `Good reading. The ${CURVES[c].n.toLowerCase()} curve is at about ${f0(s)} % at ${kpa(B.px)} kPa.`]; if (mode === "demo") tried(3); }
+  else B.rdMsg = ["bad", Math.abs(v - s) <= 10 ? "Close, but not quite. Follow the dashed line across carefully: each small square is 5 %."
+    : `Not quite. Go up the reading line to the ${CURVES[c].n.toLowerCase()} curve, then follow its dashed line across to the saturation axis.`];
+  renderAll();
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Haemoglobin: add O₂ one molecule at a time. Watch the shape and the Affinity meter.",
+  "Turn on CO₂ on the chains. Where does CO₂ bind?",
+  "Curves: drag the reading line to 13 kPa (lungs), then to 3 kPa (muscle). How much does the saturation fall?",
+  "Read a value from a curve yourself, then press Check.",
+  "Show High CO₂ and Fetal. Which way does each curve move, and how does that help?",
+  "CO₂ and the Bohr effect: step through all the steps, then switch to Lungs."];
+const TRIED = [];
+function tried(i) { if (TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function stopAll() { if (B.anim) { if (B.anim.add) B.n++; B.anim = null; } B.r = TILT[B.n]; }
+function loadDemo() {
+  stopAll(); task = { kind: "demo" }; S = {}; B = DEMO_B;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = ""; note("lockNote", "", "");
+  LAY.key = ""; moveSupport(); renderAll(); renderTry();
+}
+function freshS() { return { choice: null, order: shuffled(task.options ? task.options.length : 0), shown: false }; }
+const txt = t => typeof t.text === "function" ? t.text(t) : t.text;
+function loadTask() {
+  nqHideEnd();
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  stopAll();
+  const list = LEVELS[level]; task = list[idx];
+  S = freshS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = txt(task);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { B = stateFor(task); B.r = TILT[B.n]; note("lockNote", "", ""); LAY.key = ""; renderAll(); }
+const selHTML = (id, opts, lab) => `<select class="gsel" id="${id}" aria-label="${esc(lab)}"><option value="">Choose…</option>${shuffled(opts.length).map(i => `<option value="${esc(opts[i])}">${esc(opts[i])}</option>`).join("")}</select>`;
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "fill") {
+    a.innerHTML = `<ul class="fixl">` + t.items.map((it, i) => `<li>${esc(it.pre)}${selHTML("s" + i, it.opts, "Gap " + (i + 1))}${esc(it.post)}</li>`).join("") + `</ul>`;
+  } else if (t.kind === "multi") {
+    a.innerHTML = `<div class="mrows">` + t.items.map((it, i) => `<div class="numrow${it.final ? " mfin" : ""}"><label for="m${i}">${esc(it.lab)}:</label><input id="m${i}" type="text" inputmode="decimal" autocomplete="off"><span>${esc(it.unit)}</span></div>`).join("") + `</div>`;
+    a.querySelectorAll("input").forEach(x => x.addEventListener("keydown", e => { if (e.key === "Enter") check(); }));
+  } else if (t.kind === "num") {
+    a.innerHTML = `<div class="numrow"><label for="numIn">Answer:</label><input id="numIn" type="text" inputmode="decimal" autocomplete="off">${t.unit ? `<span>${esc(t.unit)}</span>` : ""}</div>`;
+    $("numIn").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+                                          : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = t.options.findIndex(o => o.ok); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "fill") t.items.forEach((it, i) => { $("s" + i).value = it.ans; });
+  else if (t.kind === "num") $("numIn").value = numShow(t);
+  else if (t.kind === "multi") multiShow(t).forEach((v, i) => { $("m" + i).value = v; });
+  revealModel(instant);
+}
+function multiShow(t) {   // whole-% readings, and the final value worked from those readings (as a pupil would)
+  const v = t.items.filter(it => !it.final).map(it => Math.round(it.ans())), fi = t.items.find(it => it.final);
+  return v.map(x => fx(x, 0)).concat([fx(fi.calc(v), 0)]);
+}
+function readSlip(t, it, v) {
+  const nm = c => CURVES[c].n === "Adult" ? "adult" : CURVES[c].n === "High CO₂" ? "High CO₂" : CURVES[c].n.toLowerCase();
+  const other = t.items.find(o => !o.final && o !== it && o.curve !== it.curve && Math.abs(v - o.ans()) <= o.tol && Math.abs(it.ans() - o.ans()) > it.tol);
+  if (other) return `Your “${it.lab}” reading looks like the ${nm(other.curve)} curve. Read the ${nm(it.curve)} curve at ${kpa(it.p)} kPa.`;
+  for (const dp of [-1, -0.5, 0.5, 1]) { const q = it.p + dp, sq = sat(it.curve, q);
+    if (q >= 0 && Math.abs(v - sq) <= 1.5 && Math.abs(sq - it.ans()) > it.tol) return `Your “${it.lab}” reading looks like a reading at ${kpa(q)} kPa. Move the line to exactly ${kpa(it.p)} kPa.`; }
+  return `Your “${it.lab}” reading is not quite right. Move the line to ${kpa(it.p)} kPa, go up to the ${nm(it.curve)} curve, then follow its dashed line across. Each small square is 5 %.`;
+}
+const numShow = t => t.unit === "kPa" ? kpa(t.ans()) : f0(t.ans());
+function revealModel() { S.shown = true; renderAll(); }
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  renderSupport(); tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const num = s => { s = String(s).trim().replace(/\s/g, "").replace(/[−–]/g, "-").replace(/^\+/, "").replace(/,/g, ".").replace(/(%|kPa|percentagepoints)$/i, ""); return s === "" || isNaN(+s) ? null : +s; };
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice];
+    return o.ok ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) };
+  }
+  if (t.kind === "fill") {
+    const vals = t.items.map((_, i) => $("s" + i).value);
+    if (vals.some(v => !v)) return { skip: "Choose an answer for every gap first." };
+    const wrong = t.items.map((it, i) => vals[i] !== it.ans ? i : -1).filter(i => i >= 0);
+    if (!wrong.length) return { ok: true, html: esc("Correct. " + t.explain) };
+    return { ok: false, html: `${t.items.length - wrong.length} of ${t.items.length} right. ` + esc(t.items[wrong[0]].why[vals[wrong[0]]]) };
+  }
+  if (t.kind === "multi") {
+    const vals = t.items.map((_, i) => num($("m" + i).value));
+    if (vals.some(v => v == null)) return { skip: "Fill in every box first." };
+    for (let i = 0; i < t.items.length; i++) { const it = t.items[i]; if (!it.final && Math.abs(vals[i] - it.ans()) > it.tol) return { ok: false, html: esc(readSlip(t, it, vals[i])) }; }
+    const k = t.items.length - 1, fi = t.items[k], e = fi.calc(vals), v = vals[k];
+    if (Math.abs(v - e) <= fi.tol) return { ok: true, html: esc(t.right()) };
+    const w = fi.slips(vals).find(x => Math.abs(x[0] - v) <= Math.max(1, Math.abs(x[0]) * 0.03));
+    return { ok: false, html: esc("Your readings are fine. " + (w ? w[1] : "Check the last step: " + fi.how)) };
+  }
+  if (t.kind === "num") {
+    const v = num($("numIn").value), a = t.ans(), tol = numTol(t);
+    if (v == null) return { skip: "Type a number first." };
+    if (Math.abs(v - a) <= tol) return { ok: true, html: esc(t.right(a)) };
+    const w = t.wrongs().find(x => Math.abs(x[0] - v) <= Math.max(t.unit === "kPa" ? 0.2 : 2, Math.abs(x[0]) * 0.03));
+    return { ok: false, html: esc(w ? w[1] : t.unit === "kPa" ? "Read each P₅₀ carefully: go across from 50 %, then down to the pO₂ axis." : "Check your readings: go up the reading line to the curve, then across to the saturation axis. Each small square is 5 %.") };
+  }
+  return { skip: "" };
+}
+function msgStuck() {
+  const t = task;
+  if (t.kind === "num" || t.kind === "multi") return support.graph ? (support.maths ? "" : "Stuck? Turn on <b>Maths help</b> under Support.") : "Stuck? Turn on <b>Graph help</b> under Support.";
+  return support.kw ? "" : "Stuck? Turn on <b>Key words</b> under Support.";
+}
+function bump() { nqScore(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; nqMiss(); streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => typeof h === "function" ? h(t) : h);
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++; nqMiss();
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + t.options.find(o => o.ok).t.replace(/\.$/, "") + ". " + t.explain;
+  if (t.kind === "fill") return "Answer: " + t.items.map(it => it.pre + it.ans + it.post).join(" ");
+  if (t.kind === "num" || t.kind === "multi") return "Answer: " + t.right(t.ans()).replace(/^Correct\. /, "");
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
+  S = freshS();
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Controls ===== */
+$("sceneTabs").addEventListener("click", e => { const b = e.target.closest("button[data-scene]"); if (b) setScene(b.dataset.scene); });
+$("hAdd").addEventListener("click", () => hbStep(true));
+$("hRem").addEventListener("click", () => hbStep(false));
+$("hCo2").addEventListener("click", () => { B.co2 = !B.co2; if (mode === "demo" && B.co2) tried(1); renderAll(); });
+$("cvSeg").innerHTML = cvToggles();
+$("cvSeg").addEventListener("click", e => { const b = e.target.closest("button[data-cv]"); if (!b) return; const k = b.dataset.cv; B.curves[k] = !B.curves[k]; if (B.curves[k]) B.lastCv = k;
+  if (mode === "demo") { if (B.curves.high) B.seen.high = 1; if (B.curves.fetal) B.seen.fetal = 1; if (B.seen.high && B.seen.fetal) tried(4); }
+  renderAll(); tourSignal("curve"); });
+$("pxIn").addEventListener("input", () => setPx(+$("pxIn").value));
+$("rdSel").addEventListener("change", () => { B.rdCurve = $("rdSel").value; B.rdMsg = null; curveReadouts(); });
+$("rdOk").addEventListener("click", rdOk);
+$("rdIn").addEventListener("keydown", e => { if (e.key === "Enter") rdOk(); });
+$("whSeg").addEventListener("click", e => { const b = e.target.closest("button[data-wh]"); if (!b) return; if (B.wh !== b.dataset.wh) { B.wh = b.dataset.wh; B.step = 0; } if (mode === "demo" && B.wh === "lungs") tried(5); renderAll(); tourSignal("wh"); });
+$("cNext").addEventListener("click", () => { if (B.step < STEP_N) B.step++; renderAll(); tourSignal("cnext"); });
+$("cBack").addEventListener("click", () => { if (B.step > 0) B.step--; renderAll(); });
+$("cAll").addEventListener("click", () => { B.step = STEP_N; renderAll(); });
+
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#sceneTabs", text: "Three views: one haemoglobin molecule, the oxygen dissociation curves, and how CO₂ is carried (the Bohr effect)." },
+  { el: "#hbWrap", scene: "hb", text: "Haemoglobin: four polypeptide chains, each with a haem group. The key under the picture says what each part is." },
+  { el: "#hAdd", scene: "hb", text: "Add O₂ molecules one at a time and watch the shape change.", do: "hadd", doText: "Press Add an O₂ ▸." },
+  { el: "#hbRead", scene: "hb", text: "The readouts show how many O₂ are bound and how readily the next one binds." },
+  { el: "#sceneTabs", text: "Now the curves.", do: "scene-curve", doText: "Press Dissociation curves." },
+  { el: "#cvRow", scene: "curve", text: "Choose which curves to show: adult, high CO₂, fetal, myoglobin and two animals.", do: "curve", doText: "Turn on another curve." },
+  { el: "#gWrap", scene: "curve", text: "Drag the reading line (or use the slider under the graph). Go up to each curve, then follow its dashed line across to read the saturation yourself.", do: "px", doText: "Move the reading line." },
+  { el: "#readBox", scene: "curve", text: "Type your own reading and check it." },
+  { el: "#sceneTabs", text: "Last view: CO₂ transport and the Bohr effect.", do: "scene-co2", doText: "Press CO₂ and the Bohr effect." },
+  { el: "#coPlay", scene: "co2", text: "Step through what happens in a red blood cell next to respiring tissue.", do: "cnext", doText: "Press Next step ▸." },
+  { el: "#whSeg", scene: "co2", text: "Switch to Lungs to see the reactions run the other way." },
+  { el: ".kc", text: "Support switches (Key words, Maths help, Graph help) start off. When you are ready, test yourself: start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:alevel-oxygen-dissociation", "1"); } catch (e) {}
+  DEMO_B = freshB(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    const fbTop = fbx.innerHTML ? fbx.getBoundingClientRect().top - qr.top - q.clientTop + s0 : 0;
+    /* the message comes first: show its bottom, but never scroll past its top; with room to spare, keep the question in view */
+    q.scrollTop = Math.max(0, fbx.innerHTML ? Math.min(Math.max(fbBot - q.clientHeight + 8, Math.min(ttTop - 8, fbTop - 8)), fbTop - 8) : ttTop - 8);
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = Math.max(tt.getBoundingClientRect().top, fbx.getBoundingClientRect().top - (window.innerHeight - actH - barH) / 2) - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.scene && mode === "demo" && B.scene !== st.scene) { B.scene = st.scene; LAY.key = ""; renderAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "easy" || m === "hard") bankNow();
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask(); nqMode();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; kick(); }, { rootMargin: "-64px 0px 0px 0px" }).observe($("sceneBox"));   // pause while the model is off-screen
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); });
+/* re-read the colour tokens when the theme changes, then redraw */
+const reTheme = () => { readTokens(); renderScene(); };
+new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", reTheme); }
+let rsT;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { LAY.key = ""; renderAll(); }, 80); });
+
+readTokens();
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // at most 10 questions per level
+function bankRun() {   // the question-bank check, run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (!errs.length) return;
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  if (mode !== "demo") { idx = Math.min(idx, LEVELS[level].length - 1); loadTask(); }
+  bump();
+}
+bankLater(); nqTryFold();
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:alevel-oxygen-dissociation")) $("newHere").hidden = true; } catch (e) {}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { readTokens(); LAY.key = ""; renderAll(); });
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const cap = paceFrame.cap ? paceFrame.cap() : 30, bud = paceFrame.budget || .4;   // optional per-tool frame cap and busy budget
+  while (P.i < P.fps.length - 1 && P.fps[P.i] > cap) P.i++;
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > bud || P.busy / Math.max(1, P.n) > 40) {   // over budget (40 % of the time by default), or frames over 40 ms: aim a little under it
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * bud * .875 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < bud * .375 && P.i > 0 && P.fps[P.i - 1] <= cap) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+/* == shared: next-question v4 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026; v4 16 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress.
+   v4: any later write to the feedback box of a finished question (Hint, Check, a tool message) keeps the Next button
+   (nqFbWatch); on phones (<= 600 px wide) level descriptors in the feedback fold into a closed "Show mark scheme" (nqMsFold);
+   on phones nqReveal also brings the top of the feedback back into view when it and Next fit but the top was pushed up. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions"), ast = act && /sticky|fixed/.test(getComputedStyle(act).position);
+      let bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (ast && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)) lim -= act.getBoundingClientRect().height;
+      else if (ast) { const ar = act.getBoundingClientRect(); if (ar.top < innerHeight / 2) bar = Math.max(bar, ar.bottom); }   // v4: one stuck at the top covers the top
+      d = r.bottom + 10 - lim;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+      else {   // v4: Next is on screen but the top of the feedback is hidden (the browser's scroll anchoring can push it up when
+        // the box grows): if the whole message and Next fit, bring its top back into view
+        const m = (row.closest(".msg") || nqFbEl() || row).getBoundingClientRect();
+        if (m.top < bar && r.bottom - m.top + 18 <= lim - bar) window.scrollTo({ top: Math.max(0, scrollY - (bar + 8 - m.top)), behavior: how });
+      }
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+/* v4: the feedback box of a finished question always ends with Next. A tool's Hint or Check (or any other message) can
+   rewrite the box after the question is done, which used to drop the button; this puts it back (no focus move, no scroll).
+   It also folds the mark scheme on phones. A MutationObserver on the box only (no loop): our own changes find nothing to do. */
+var NQ_FBW = false;
+function nqFbWatch() {
+  const fb = nqFbEl(); if (NQ_FBW || !fb || !window.MutationObserver) return; NQ_FBW = true;
+  new MutationObserver(() => {
+    nqMsFold(fb);
+    if (mode === "demo" || fb.querySelector(".nq-row") || !(fb.children.length || fb.textContent.trim())) return;
+    const t = nqT(); if (t && nqIsDone(level, t) && !(document.getElementById("quizPanel") || fb).classList.contains("nq-ended")) nqAfter("finished");
+  }).observe(fb, { childList: true, subtree: true, characterData: true });
+  const mq = nqMsMQ(); if (mq) { const re = () => nqMsFold(fb); if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
+  nqMsFold(fb);
+}
+/* Mark-scheme fold (phones only, <= 600 px wide): level descriptors sit in a closed <details> "Show mark scheme" so the
+   verdict / model answer and Next fit on the screen. A block is folded if the tool marks it with class "nq-ms", or if it is
+   a list whose first item, or a paragraph / span whose text, starts "Level 0-3 (" (the levels of response of the 6-mark
+   questions). A short heading just
+   before it ("Mark scheme", "Levels:") goes in with it. Nothing new is shown: it only wraps what is already in the box.
+   Wider than 600 px the fold is taken out again, so laptops and boards are unchanged. */
+var NQ_MSQ = null;
+function nqMsMQ() { if (!NQ_MSQ && window.matchMedia) NQ_MSQ = matchMedia("(max-width:600px)"); return NQ_MSQ; }
+function nqMsIs(el) {   // tool-marked, or a list / paragraph / span that starts with a level descriptor, "Level 3 (5–6): …"
+  if (el.classList.contains("nq-ms")) return true;
+  const LV = /^\s*Level\s*[0-3]\s*\(/;
+  if (/^(UL|OL)$/.test(el.tagName)) { const li = el.firstElementChild; return !!li && LV.test(li.textContent || ""); }
+  return /^(P|SPAN)$/.test(el.tagName) && !el.querySelector("button,.nq-row") && LV.test(el.textContent || "");
+}
+function nqMsHead(el) {   // a short heading right before the block (only white space between), e.g. <b>Mark scheme</b> or <p><b>Levels:</b></p>
+  let n = el.previousSibling; while (n && n.nodeType === 3 && !n.textContent.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1 || !/^(B|STRONG|P|H3|H4|H5|SPAN)$/.test(n.tagName) || n.classList.contains("nq-ms")) return null;
+  const t = (n.textContent || "").trim();
+  return t && t.length <= 48 && (/mark scheme|levels?\b|marking/i.test(t)) ? n : null;
+}
+function nqMsFold(fb) {
+  const mq = nqMsMQ(), on = !!(mq && mq.matches);
+  if (!on) { fb.querySelectorAll("details.nq-fold").forEach(d => { const inn = d.querySelector(".nq-fold-in");
+      if (inn) while (inn.firstChild) d.parentNode.insertBefore(inn.firstChild, d); d.remove(); }); return; }
+  const all = [...fb.querySelectorAll(".nq-ms, ul, ol, p, span")].filter(el => !el.closest("details") && nqMsIs(el));   // a tool's own <details> fold (e.g. "msd") is left as it is
+  const tops = all.filter(el => !all.some(o => o !== el && o.contains(el)));
+  if (!tops.length) return;
+  const groups = [];   // neighbouring blocks (with their headings) share one fold
+  tops.forEach(el => { const h = nqMsHead(el), first = h || el, g = groups[groups.length - 1];
+    let prev = first.previousSibling; while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+    if (g && prev === g[g.length - 1]) { if (h) g.push(h); g.push(el); } else groups.push(h ? [h, el] : [el]); });
+  groups.forEach(g => {
+    const d = document.createElement("details"), sm = document.createElement("summary"), inn = document.createElement("div");
+    d.className = "nq-fold"; inn.className = "nq-fold-in";
+    sm.innerHTML = '<span class="nq-fs">Show mark scheme</span><span class="nq-fh2">Hide mark scheme</span>';
+    d.append(sm, inn); g[0].parentNode.insertBefore(d, g[0]);
+    let n = g[0];   // move the group, and the white space between its parts, into the fold
+    const last = g[g.length - 1];
+    while (n) { const nx = n.nextSibling; inn.appendChild(n); if (n === last) break; n = nx; }
+  });
+}
+nqTryFold(); nqBar(); nqStickOn(); nqFbWatch();
+/* == end shared: next-question v4 == */
+
+/* == shared: bank-check-later v4 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v4 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Haemoglobin has four polypeptide chains, each with a haem group whose Fe²⁺ ion binds one O₂ reversibly. Cooperative binding makes the dissociation curve S-shaped.",
+      "Haemoglobin loads O₂ at the high pO₂ of the lungs and unloads it at the low pO₂ of respiring tissue. High CO₂ shifts the curve right; fetal haemoglobin’s curve is to the left."
+    ],
+    "hard": [
+      "In red blood cells carbonic anhydrase makes H₂CO₃, which gives H⁺ and HCO₃⁻. H⁺ forms haemoglobinic acid, so more O₂ is released (the Bohr effect); HCO₃⁻ leaves in the chloride shift.",
+      "A curve to the left means a higher affinity: it suits fetuses, llamas at altitude and lugworms in burrows. Higher CO₂ raises P₅₀ (the Bohr shift), so extra O₂ is unloaded in active muscle."
+    ]
+  };
+  return F[lv] || F.easy;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
