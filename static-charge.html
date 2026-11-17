@@ -323,7 +323,40 @@ input[type=range]{width:min(320px,100%);height:32px;accent-color:var(--accent)}
    readout stay on the same 1366 x 768 screen as the balloons. (The force arrows now start at the balloons: drawForce.) */
 @media (min-width:1100px){
   #scene{width:100%;max-width:calc((100vh - 480px) * 2.1111);margin-inline:auto}
+  #scene.rubv{max-width:calc((100vh - 442px) * 2)}   /* 1 Rubbing is 760 x 380 */
 }
+@media (min-width:1100px) and (min-height:821px){   /* the full header is showing: allow for it so the count table stays on screen */
+  #scene.rubv{max-width:calc((100vh - 560px) * 2)}
+}
+/* 1 Rubbing (17 Nov 2026): grab the balloon and rub it on the jumper */
+#scene .bal{cursor:grab;touch-action:none;outline:none}
+#scene.dragging,#scene.dragging .bal{cursor:grabbing}
+#scene .bal.locked{cursor:default}
+#scene .bal-focus{display:none;stroke:var(--focus)}
+#scene .bal:focus-visible .bal-focus{display:inline}
+#scene .bal .bal-art{transition:opacity .15s}
+#scene .bal.touching .bal-art{opacity:.82}   /* see the jumper's charges through the balloon while they touch */
+#scene .hop{pointer-events:none}
+#scene .bal-lbl,#scene .jum-lbl{paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+#scene .bal-hand{display:none;pointer-events:none}
+#scene.dragging .bal-hand{display:inline}
+.netbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 10px;font-size:16px}
+.netbar .nlbl{font-weight:700;color:var(--muted);margin-right:2px}
+.netbar .nc{padding:3px 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;white-space:nowrap}
+.netbar .nc b{font-size:18px}
+.netbar .nc.neg{border-color:#5B8DDB}
+.netbar .nc.pos{border-color:#EB755C}
+.kbtip{flex:1 1 220px}
+@media (hover:none),(max-width:640px){.kbtip{display:none}}
+@media (prefers-reduced-motion:reduce){#scene .bal .bal-art{transition:none}}
+@media (max-width:900px){#dist{height:44px}}
+@media (min-width:1100px){   /* the count table sits beside the net charge and buttons, so it stays on a 1366 x 768 screen */
+  #rubCtl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:16px;align-items:start}
+  #rubCtl > .netbar,#rubCtl > .mrow{grid-column:1}
+  #rubCtl > #tallyBox,#rubCtl > #tallyOff{grid-column:2;grid-row:1 / span 2;margin-top:0!important}
+  #rubCtl #tally th,#rubCtl #tally td{font-size:16px;padding:4px}
+  #rubCtl .kbtip{flex-basis:100%}
+}   /* the distance slider is a 44 px tap target on phones */
 @media (max-width:400px){   /* 360 px phones: the count table fits the card (it pushed the page 3 px wide) */
   section.model > *{min-width:0}
   #tally{font-size:15px}#tally th,#tally td{padding-left:3px;padding-right:3px}
@@ -526,9 +559,11 @@ details.trybox > .try{margin-top:6px}
       <p class="small key" id="key"></p>
 
       <div id="rubCtl">
+        <div class="netbar" id="netBar"></div>
         <div class="mrow">
-          <button class="mbtn primary" type="button" id="rubBtn">Rub the balloon on the jumper</button>
+          <button class="mbtn primary" type="button" id="rubBtn">Rub for me</button>
           <button class="mbtn" type="button" id="rubReset">Start again</button>
+          <span class="small kbtip" id="kbTip">Keys: arrows move, Space rubs.</span>
         </div>
         <div class="panel" id="tallyBox" style="margin-top:12px">
           <h2>Count the charges</h2>
@@ -658,58 +693,348 @@ const MAXMOVE = 6;
 
 const S = { tab: "rub", moved: 0, a: "-", b: "-", d: 2, reveal: true, locked: false, ghost: 0 };
 
-/* ----- rubbing scene ----- */
-let rubNodes = null;
-const jx = i => 434 + 36 * i, jyP = 120, jyE = 190;
-const bxP = i => 200 + (i - 1.5) * 40, byP = 105;
-const bxE = k => 200 + ((k % 5) - 2) * 40, byE = k => 170 + Math.floor(k / 5) * 45;
-function epos(i, moved) {   // electron i: 0..7 start in the jumper, 8..11 in the balloon
-  if (i >= 8) return [bxE(i - 8), byE(i - 8)];
-  const n = 7 - i;          // J7 moves first
-  if (n < moved) return [bxE(4 + n), byE(4 + n)];
-  return [jx(i), jyE];
+/* ----- rubbing scene (redesign 17 Nov 2026): pupils grab the balloon and rub it on the jumper -----
+   Only electrons move. A rub stroke while the balloon touches the jumper moves ONE electron (the jumper electron under
+   the balloon nearest its middle) onto the balloon at the place where they touched; it stays there (rubber is an
+   insulator), and the proton it left behind stays on the jumper. MAXMOVE caps the total. Totals are checked in code
+   (chargeCheck, TOOL.verify): 12 protons and 12 electrons always; balloon and jumper nets are equal and opposite.
+   ART: transparent images can be dropped in later (runner jobs TOOLS-STATIC/balloon_3q and jumper_flat, cut out and
+   embedded as data URIs). Each image fills its art box exactly (local units, before the layout scale):
+     balloon x -100..100, y -116..184 (2:3): body centred on 0,0 (80 each side, 94 up, 93 down), knot to y 108, string to y 184.
+     jumper  x -160..160, y -128..128 (5:4): body x -96..96, neckline bottom 0,-88, hem bottom y 124, cuffs at x +-160, y 44..60.
+     hand    x -60..60,   y -60..60 (1:1): the string comes down from 0,-60 into a fist round 0,0, placed on the string at y 160 (shown only while dragging).
+   Leave them "" to use the code-drawn art (no hand is drawn without an image). Charges, arrows and labels always stay vector on top. */
+const ART = { balloon: "", jumper: "", hand: "" };   // hand (optional, runner job hand_string, box x -60..60, y -60..60): holds the string while the balloon is dragged
+const RX = 80, RY = 94;
+const JP = [[14,24],[-63,20],[29,-45],[65,68],[3,88],[-72,-64],[-45,91],[58,30]];     // jumper protons (local units)
+const JE = [[14,-13],[-33,-2],[65,-49],[29,56],[-19,59],[-44,-42],[-64,62],[71,-2]];   // jumper electrons, each beside its proton
+const BP = [[-10,18],[-37,-52],[37,-58],[10,61]];                                       // balloon protons
+const BE = [[22,1],[-45,-19],[3,-53],[-24,64]];                                         // balloon's own electrons
+const GEO = {
+  wide:  { name: "wide",  W: 760, H: 380, s: 1,    r: 11.5, fs: 17, lab: 20, tip: 17, jc: [548, 190], home: [168, 160] },
+  phone: { name: "phone", W: 520, H: 400, s: 0.9,  r: 12.5, fs: 18, lab: 20, tip: 17, jc: [368, 226], home: [86, 148] }
+};
+let geoForce = null;   // the bank check tries both layouts
+const geo = () => geoForce || (phoneMQ && phoneMQ.matches ? GEO.phone : GEO.wide);
+const BAL_PATH = "M0,-94 C46,-94 80,-60 80,-10 C80,40 46,80 6,93 L-6,93 C-46,80 -80,40 -80,-10 C-80,-60 -46,-94 0,-94Z";
+const ARROW_COL = "#C2571A";
+
+function artDefs(defs) {   // gradients and knit patterns used by the code-drawn balloon and jumper
+  const rg = mk("radialGradient", { id: "balG", cx: 0.4, cy: 0.34, r: 0.72, fx: 0.32, fy: 0.24 }, defs);
+  [[0, "#FFF6CF"], [0.22, "#FFE066"], [0.7, "#F4B522"], [1, "#C88608"]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, rg));
+  const lg = mk("linearGradient", { id: "jumG", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  [[0, "#9FCB8E"], [1, "#6E9F60"]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, lg));
+  const kn = mk("pattern", { id: "knit", width: 10, height: 8, patternUnits: "userSpaceOnUse" }, defs);   // stocking stitch: columns of Vs
+  mk("path", { d: "M0.8,0.5 L5,7 M9.2,0.5 L5,7", stroke: "#2F5A2C", "stroke-opacity": 0.32, "stroke-width": 1.5, fill: "none", "stroke-linecap": "round" }, kn);
+  mk("path", { d: "M1.6,1 L5,5.6", stroke: "#FFFFFF", "stroke-opacity": 0.16, "stroke-width": 1, fill: "none" }, kn);
+  const rb = mk("pattern", { id: "rib", width: 6, height: 6, patternUnits: "userSpaceOnUse" }, defs);       // ribbing: raised columns
+  mk("rect", { x: 0, y: 0, width: 6, height: 6, fill: "#5E9152" }, rb);
+  mk("rect", { x: 0.6, y: 0, width: 2.6, height: 6, fill: "#7DAF6E" }, rb);
 }
-function buildRub() {
-  const svg = $("scene"); svg.innerHTML = "";
-  const defs = mk("defs", {}, svg);
-  mk("ellipse", { cx: 200, cy: 165, rx: 150, ry: 135, fill: "#F4C9D3", stroke: "#14243D", "stroke-width": 3, style: "stroke:#14243D" }, svg);
-  mk("polygon", { points: "190,298 210,298 200,314", fill: "#F4C9D3", stroke: "#14243D", "stroke-width": 3, style: "stroke:#14243D" }, svg);
-  mk("rect", { x: 400, y: 50, width: 320, height: 240, rx: 18, fill: "#9DB8D9", stroke: "#14243D", "stroke-width": 3, style: "stroke:#14243D" }, svg);
-  const lb = (x, y, s) => { const t = mk("text", { x, y, "text-anchor": "middle", "font-size": 22, "font-weight": 700 }, svg); t.textContent = s; };
-  lb(200, 345, "Balloon"); lb(560, 345, "Jumper");
-  // empty-slot rings for electrons that can leave the jumper, and room in the balloon
-  for (let i = 0; i < 8; i++) mk("circle", { cx: jx(i), cy: jyE, r: 14, fill: "none", stroke: "#14243D", "stroke-dasharray": "3 4", "stroke-width": 1.2, opacity: 0.45, style: "stroke:#14243D" }, svg);
-  for (let k = 0; k < 10; k++) mk("circle", { cx: bxE(k), cy: byE(k), r: 14, fill: "none", stroke: "#14243D", "stroke-dasharray": "3 4", "stroke-width": 1.2, opacity: 0.45, style: "stroke:#14243D" }, svg);
-  for (let i = 0; i < 8; i++) particle(svg, jx(i), jyP, 14, "+");
-  for (let i = 0; i < 4; i++) particle(svg, bxP(i), byP, 14, "+");
-  rubNodes = [];
-  for (let i = 0; i < 12; i++) {
-    const g = mk("g", { class: "mv" }, svg);
-    particle(g, 0, 0, 14, "-");
-    rubNodes.push(g);
+function drawBalloonArt(parent, s) {   // local units, centred on the middle of the body
+  const g = mk("g", { class: "bal-art", transform: `scale(${s})` }, parent);
+  if (ART.balloon) { mk("image", { href: ART.balloon, x: -100, y: -116, width: 200, height: 300, preserveAspectRatio: "none" }, g); return g; }
+  mk("path", { d: "M0,107 C12,126 -12,146 3,164 C9,172 3,180 0,184", fill: "none", stroke: "#8A8F96", "stroke-width": 2.2, style: "stroke:#8A8F96" }, g);
+  mk("path", { d: BAL_PATH, fill: "url(#balG)", stroke: "#14243D", "stroke-width": 2.5, style: "stroke:#14243D" }, g);
+  mk("path", { d: "M-8,92 L8,92 L10,104 Q0,110 -10,104 Z", fill: "#DFA012", stroke: "#14243D", "stroke-width": 2, "stroke-linejoin": "round", style: "stroke:#14243D" }, g);   // knot
+  mk("path", { d: "M-46,-40 C-46,-62 -32,-76 -16,-80", fill: "none", stroke: "#FFFFFF", "stroke-opacity": 0.75, "stroke-width": 9, "stroke-linecap": "round" }, g);   // shine
+  mk("circle", { cx: -50, cy: -18, r: 4.5, fill: "#FFFFFF", "fill-opacity": 0.7 }, g);
+  mk("path", { d: "M56,22 C50,48 34,66 16,78", fill: "none", stroke: "#B27605", "stroke-opacity": 0.35, "stroke-width": 6, "stroke-linecap": "round" }, g);   // shadow side
+  return g;
+}
+const JUM_BODY = "M-40,-112 C-26,-80 26,-80 40,-112 L92,-100 C112,-92 122,-72 128,-52 L160,44 L126,60 L96,-6 L96,124 L-96,124 L-96,-6 L-126,60 L-160,44 L-128,-52 C-122,-72 -112,-92 -92,-100 Z";
+function drawJumperArt(parent, cx, cy, s) {
+  const g = mk("g", { class: "jum-art", transform: `translate(${cx},${cy}) scale(${s})` }, parent);
+  if (ART.jumper) { mk("image", { href: ART.jumper, x: -160, y: -128, width: 320, height: 256, preserveAspectRatio: "none" }, g); return g; }
+  mk("path", { d: "M-40,-112 C-26,-80 26,-80 40,-112 C20,-120 -20,-120 -40,-112 Z", fill: "#4E7E45" }, g);   // inside of the back, seen through the neck
+  mk("path", { d: JUM_BODY, fill: "url(#jumG)" }, g);
+  mk("path", { d: JUM_BODY, fill: "url(#knit)" }, g);
+  for (const sx of [-1, 1]) {   // sleeves a shade darker, with a fold line where they join the body
+    mk("path", { d: `M${92 * sx},-100 C${112 * sx},-92 ${122 * sx},-72 ${128 * sx},-52 L${160 * sx},44 L${126 * sx},60 L${96 * sx},-6 Z`, fill: "#1F3D1C", "fill-opacity": 0.12 }, g);
+    mk("path", { d: `M${96 * sx},-6 L${96 * sx},-74`, stroke: "#2F5A2C", "stroke-opacity": 0.45, "stroke-width": 2, fill: "none" }, g);
+    const A = [160 * sx, 44], B = [126 * sx, 60], d = [-0.25 * sx, -0.97], w = 18;   // ribbed cuff
+    mk("path", { d: `M${A} L${B} L${B[0] + d[0] * w},${B[1] + d[1] * w} L${A[0] + d[0] * w},${A[1] + d[1] * w} Z`, fill: "url(#rib)", stroke: "#14243D", "stroke-width": 1.5, style: "stroke:#14243D" }, g);
   }
-  placeRub();
+  mk("rect", { x: -96, y: 102, width: 192, height: 22, fill: "url(#rib)" }, g);   // ribbed hem
+  mk("line", { x1: -96, y1: 102, x2: 96, y2: 102, stroke: "#2F5A2C", "stroke-opacity": 0.6, "stroke-width": 1.5 }, g);
+  mk("path", { d: "M-40,-112 C-26,-80 26,-80 40,-112 L52,-108 C36,-66 -36,-66 -52,-108 Z", fill: "url(#rib)", stroke: "#14243D", "stroke-width": 1.5, style: "stroke:#14243D" }, g);   // ribbed collar
+  mk("path", { d: "M-96,-6 L-96,102 M96,-6 L96,102", stroke: "#1F3D1C", "stroke-opacity": 0.18, "stroke-width": 10, fill: "none" }, g);   // side shading
+  mk("path", { d: JUM_BODY, fill: "none", stroke: "#14243D", "stroke-width": 2.5, "stroke-linejoin": "round", style: "stroke:#14243D" }, g);
+  return g;
 }
-function placeRub() {
-  rubNodes.forEach((g, i) => { const [x, y] = epos(i, S.moved); g.style.transform = `translate(${x}px,${y}px)`; });
+function chargeDot(parent, x, y, sign) {   // a small + or − on a surface: house particle look, sign readable at 13 px (1366) / 11 px (390)
+  const g = geo(), d = mk("g", { transform: `translate(${x},${y})` }, parent), r = g.r;
+  mk("circle", { r, fill: sign === "+" ? PROTON : ELECTRON, "stroke-width": 1.6, class: "pt" }, d);
+  mk("circle", { cx: -0.36 * r, cy: -0.36 * r, r: 0.27 * r, fill: "rgba(255,255,255,.4)" }, d);
+  const t = mk("text", { y: g.fs * 0.36, "text-anchor": "middle", "font-size": g.fs, "font-weight": 700, style: "fill:#14243D" }, d);
+  t.textContent = sign === "+" ? "+" : "−";
+  return d;
+}
+
+/* rubbing state: where the balloon is, which jumper electrons have left, where they sit on the balloon */
+let RB = null;
+function rubFresh() { const g = geo(); return { g: g.name, c: g.home.slice(), on: JE.map(() => true), extra: [] }; }
+const jWorld = i => { const g = geo(); return [g.jc[0] + JE[i][0] * g.s, g.jc[1] + JE[i][1] * g.s]; };
+function inBal(x, y, k) { const s = geo().s, dx = (x - RB.c[0]) / (RX * s), dy = (y - RB.c[1]) / (RY * s); return dx * dx + dy * dy <= k; }
+function touching() {   // the balloon is pressed on the front of the jumper's body
+  const g = geo(), s = g.s, [x, y] = RB.c, [jx, jy] = g.jc;
+  return x > jx - (96 + RX * 0.45) * s && x < jx + (96 + RX * 0.45) * s && y > jy - (100 + RY * 0.4) * s && y < jy + (124 + RY * 0.4) * s;
+}
+function underBalloon() {   // the jumper electron under the balloon nearest its middle, or -1
+  let best = -1, bd = 1e9;
+  JE.forEach((_, i) => { if (!RB.on[i]) return; const [x, y] = jWorld(i); if (!inBal(x, y, 0.85)) return; const d = Math.hypot(x - RB.c[0], y - RB.c[1]); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function freeSpot(x, y) {   // balloon-local spot nearest (x, y) that is on the balloon and clear of the charges already there
+  const g = geo(), rr = g.r / g.s, need = (2 * g.r + 3) / g.s, ix = RX - rr - 4, iy = RY - rr - 4;
+  const taken = BP.concat(BE, RB.extra.map(e => [e.x, e.y]));
+  const inside = (px, py) => (px / ix) ** 2 + (py / iy) ** 2 <= 1;
+  const clear = (px, py) => taken.every(t => Math.hypot(t[0] - px, t[1] - py) >= need);
+  const k = Math.hypot(x / ix, y / iy); if (k > 1) { x /= k; y /= k; }
+  let best = [x, y], bd = -1;
+  for (let n = 0; n < 400; n++) {
+    const a = n * 2.39996, d = 2.6 * Math.sqrt(n), px = x + d * Math.cos(a), py = y + d * Math.sin(a);
+    if (!inside(px, py)) continue;
+    if (clear(px, py)) return [px, py];
+    const m = Math.min(...taken.map(t => Math.hypot(t[0] - px, t[1] - py))); if (m > bd) { bd = m; best = [px, py]; }
+  }
+  return best;
+}
+function landNow(i) { const s = geo().s, [wx, wy] = jWorld(i); RB.on[i] = false; const p = freeSpot((wx - RB.c[0]) / s, (wy - RB.c[1]) / s); const e = { i, x: p[0], y: p[1], fly: false }; RB.extra.push(e); return e; }
+const landed = () => RB.extra.filter(e => !e.fly).length;
+function clampC(x, y) { const g = geo(), s = g.s; return [Math.min(Math.max(x, RX * s + 6), g.W - RX * s - 6), Math.min(Math.max(y, RY * s + 30), g.H - RY * s - 8)]; }
+function rubSpot() {   // where "Rub for me" presses the balloon: the middle-left of the jumper, or over an electron still there
+  const g = geo(), keep = RB.c, def = clampC(g.jc[0] - 20 * g.s, g.jc[1] - 4 * g.s);
+  RB.c = def; const ok = underBalloon() >= 0; RB.c = keep;
+  if (ok) return def;
+  const i = RB.on.findIndex(Boolean); if (i < 0) return def;
+  const [x, y] = jWorld(i); return clampC(x - 10 * g.s, y);
+}
+function rubSim(n) {   // the state after n rubs at the usual spot, balloon then taken back home (questions, Start again, checks)
+  RB = rubFresh();
+  for (let k = 0; k < n; k++) { RB.c = rubSpot(); const i = underBalloon(); if (i < 0) break; landNow(i); }
+  RB.c = geo().home.slice(); S.moved = landed();
+}
+function chargeCheck() {   // conservation, checked after every move and in the bank check
+  const c = counts(), nb = c.balloon.p - c.balloon.e, nj = c.jumper.p - c.jumper.e;
+  if (c.balloon.p !== CH.balloon.p || c.jumper.p !== CH.jumper.p) return "protons moved";
+  if (c.balloon.e + c.jumper.e !== CH.balloon.e + CH.jumper.e) return "electrons were made or lost";
+  if (nb + nj !== 0) return "net charges are not equal and opposite";
+  if (RB && !RB.extra.some(e => e.fly)) {
+    const onJ = RB.on.filter(Boolean).length, onB = BE.length + landed();
+    if (onJ !== c.jumper.e || onB !== c.balloon.e || onJ + onB !== 12) return "picture and count disagree";
+  }
+  return null;
+}
+
+/* tiny animation helper: runs a requestAnimationFrame loop only while something moves (idle cost 0) */
+const anims = new Set(); let animRaf = 0;
+function tween(ms, step, done) {
+  if (ms <= 0 || reduced()) { step(1); if (done) done(); return; }
+  anims.add({ t0: performance.now(), ms, step, done });
+  if (!animRaf) animRaf = requestAnimationFrame(animTick);
+}
+function animTick(now) {
+  animRaf = 0;
+  for (const a of [...anims]) { const k = Math.min(1, (now - a.t0) / a.ms); a.step(k); if (k >= 1) { anims.delete(a); if (a.done) a.done(); } }
+  if (anims.size && !animRaf) animRaf = requestAnimationFrame(animTick);
+}
+function finishAnims() {   // jump every running animation to its end (a chained one finishes too)
+  for (let n = 0; n < 12 && anims.size; n++) for (const a of [...anims]) { anims.delete(a); a.step(1); if (a.done) a.done(); }
+  if (animRaf) { cancelAnimationFrame(animRaf); animRaf = 0; }
+}
+
+/* drawing */
+let balNode = null, dragged = false;
+function buildRub() {
+  finishAnims();
+  const g = geo(), svg = $("scene");
+  if (!RB || RB.extra.length !== S.moved) rubSim(S.moved);
+  if (RB.g !== g.name) { RB.g = g.name; RB.c = g.home.slice(); }
+  svg.innerHTML = ""; svg.setAttribute("viewBox", `0 0 ${g.W} ${g.H}`); svg.classList.add("rubv");
+  artDefs(mk("defs", {}, svg));
+  drawJumperArt(svg, g.jc[0], g.jc[1], g.s);
+  mk("g", { id: "jq" }, svg);
+  const tip = mk("text", { id: "rubTip", x: g.W - 12, y: 26, "text-anchor": "end", "font-size": g.tip, style: "fill:var(--muted)" }, svg);
+  tip.textContent = "Drag the balloon. Rub it on the jumper.";
+  balNode = mk("g", { class: "bal", id: "balloon", role: "button", "aria-roledescription": "draggable balloon" }, svg);
+  mk("ellipse", { rx: RX * g.s + 12, ry: RY * g.s + 12, fill: "transparent", class: "bal-hit" }, balNode);   // a generous grab area
+  drawBalloonArt(balNode, g.s);
+  if (ART.hand) mk("image", { class: "bal-hand", href: ART.hand, x: -60 * g.s, y: (160 - 60) * g.s, width: 120 * g.s, height: 120 * g.s }, balNode);
+  mk("g", { class: "bal-q" }, balNode);
+  const bl = mk("text", { class: "bal-lbl", y: -RY * g.s - 12, "text-anchor": "middle", "font-size": g.lab, "font-weight": 700 }, balNode); bl.textContent = "Balloon";
+  mk("ellipse", { rx: RX * g.s + 7, ry: RY * g.s + 7, class: "bal-focus", fill: "none", "stroke-width": 3, "stroke-dasharray": "8 6" }, balNode);
+  /* drawn after the balloon: the "Jumper" name (with a halo) stays readable over the string, and both force arrows and
+     their heads are always on top, even close up when they pass each other */
+  const jl = mk("text", { class: "jum-lbl", x: g.jc[0], y: g.jc[1] + 128 * g.s + 28, "text-anchor": "middle", "font-size": g.lab, "font-weight": 700 }, svg); jl.textContent = "Jumper";
+  mk("g", { id: "arr" }, svg);
+  mk("g", { id: "fx" }, svg);
+  balNode.addEventListener("pointerdown", balDown);
+  /* phones: Chrome ignores touch-action on shapes inside an SVG, so a drag on the balloon would scroll the page and cancel
+     the pointer. Cancelling the touch start on the balloon only keeps the page scrollable everywhere else. */
+  balNode.addEventListener("touchstart", e => { if (!S.locked && S.tab === "rub") e.preventDefault(); }, { passive: false });
+  balNode.addEventListener("keydown", balKey);
+  renderJq(); renderBq(); syncBal();
+}
+function renderJq() {
+  const g = geo(), L = $("jq"); if (!L) return; L.innerHTML = "";
+  JP.forEach(([x, y]) => chargeDot(L, g.jc[0] + x * g.s, g.jc[1] + y * g.s, "+"));
+  JE.forEach(([x, y], i) => { if (RB.on[i]) chargeDot(L, g.jc[0] + x * g.s, g.jc[1] + y * g.s, "-"); });
+}
+function renderBq() {
+  if (!balNode) return;
+  const s = geo().s, L = balNode.querySelector(".bal-q"); L.innerHTML = "";
+  BP.forEach(([x, y]) => chargeDot(L, x * s, y * s, "+"));
+  BE.forEach(([x, y]) => chargeDot(L, x * s, y * s, "-"));
+  RB.extra.forEach(e => { if (!e.fly) chargeDot(L, e.x * s, e.y * s, "-"); });
+}
+function syncBal() {   // position, touching look, keyboard access and the force arrows
+  if (!balNode || !RB) return;   // a question has just cleared the state; buildRub() redraws it
+  balNode.setAttribute("transform", `translate(${RB.c[0].toFixed(1)},${RB.c[1].toFixed(1)})`);
+  const tch = touching(); balNode.classList.toggle("touching", tch);
+  const g = geo(), lbl = balNode.querySelector(".bal-lbl");   // while touching, the name sits above the jumper's collar
+  if (lbl) lbl.setAttribute("y", (tch ? Math.max(22, Math.min(RB.c[1] - RY * g.s - 12, g.jc[1] - 128 * g.s - 10)) - RB.c[1] : -RY * g.s - 12).toFixed(1));
+  balNode.classList.toggle("locked", S.locked);
+  balNode.setAttribute("tabindex", S.locked ? "-1" : "0");
+  balNode.setAttribute("aria-disabled", S.locked ? "true" : "false");
+  balNode.setAttribute("aria-label", S.locked ? "Balloon" : "Balloon. Drag it, or use the arrow keys to move it. Press Space to rub it on the jumper.");
+  const tip = $("rubTip"); if (tip) tip.style.display = S.locked || dragged || S.moved > 0 ? "none" : "";
+  renderArrows();
+}
+function renderArrows() {   // after rubbing: the balloon (−) and the jumper (+) pull on each other without touching (Demo only)
+  const L = $("arr"); if (!L) return; L.innerHTML = "";
+  if (S.locked || mode !== "demo" || landed() === 0 || touching()) return;
+  const g = geo(), s = g.s, [cx, cy] = RB.c, [jx, jy] = g.jc;
+  const px = Math.min(Math.max(cx, jx - 96 * s), jx + 96 * s), py = Math.min(Math.max(cy, jy - 96 * s), jy + 120 * s);
+  const dist = Math.hypot(px - cx, py - cy); if (dist < 1) return;
+  const ux = (px - cx) / dist, uy = (py - cy) / dist, rb = s / Math.hypot(ux / RX, uy / RY), gap = dist - rb;
+  if (gap < 30) return;
+  /* length = size x distance factor: strictly shorter as the gap grows (weaker with distance), never zero, longer with more
+     electrons moved. No room cap: the two arrows sit 14 units either side of the line, so they can pass each other. */
+  const Ln = (26 + 8 * landed()) * (0.4 + 0.6 * Math.exp(-gap / 200));
+  const nx = -uy * 14, ny = ux * 14;
+  const arrow = (x0, y0, dx, dy) => {
+    const x2 = x0 + dx * Ln, y2 = y0 + dy * Ln, hx = dx * 13, hy = dy * 13;
+    mk("line", { x1: x0, y1: y0, x2: x2 - dx * 3, y2: y2 - dy * 3, stroke: ARROW_COL, "stroke-width": 7, "stroke-linecap": "round", style: `stroke:${ARROW_COL}` }, L);
+    mk("polygon", { points: `${x2},${y2} ${x2 - hx - dy * 12},${y2 - hy + dx * 12} ${x2 - hx + dy * 12},${y2 - hy - dx * 12}`, fill: ARROW_COL, style: `fill:${ARROW_COL}` }, L);
+  };
+  arrow(cx + ux * (rb + 4) + nx, cy + uy * (rb + 4) + ny, ux, uy);     // force on the balloon, towards the jumper
+  arrow(px - ux * 4 - nx, py - uy * 4 - ny, -ux, -uy);                 // force on the jumper, towards the balloon
+}
+
+/* rubbing */
+let rt = null;   // the current rub: direction and travel along each axis since the last stroke
+const rtFresh = () => ({ x: { dir: 0, run: 0 }, y: { dir: 0, run: 0 }, path: 0 });
+function rubStep(dx, dy) {
+  if (!touching()) { rt = rtFresh(); return; }
+  if (!rt) rt = rtFresh();
+  rt.path += Math.hypot(dx, dy);
+  let stroke = false;
+  for (const [k, d] of [["x", dx], ["y", dy]]) {
+    if (!d) continue;
+    const a = rt[k], sg = Math.sign(d);
+    if (sg === a.dir) a.run += Math.abs(d);
+    else { if (a.dir && a.run >= 16) stroke = true; a.dir = sg; a.run = Math.abs(d); }
+  }
+  if (rt.path >= 220) stroke = true;          // one long slide counts as a rub too
+  if (stroke && rt.path >= 28) { rt.path = 0; transferOne(); }
+}
+let capSaid = false;
+function transferOne() {
+  if (S.locked || S.tab !== "rub") return false;
+  if (RB.extra.length >= MAXMOVE) {
+    if (!capSaid) $("demoMsg").innerHTML = '<div class="msg tip">The jumper has no more spare electrons in this model. Press Start again.</div>';
+    capSaid = true; return false;
+  }
+  const i = underBalloon();
+  if (i < 0) { $("demoMsg").innerHTML = '<div class="msg tip">No jumper electrons are under the balloon here. Move the balloon further onto the jumper, where there are blue − electrons.</div>'; return false; }
+  const g = geo(), s = g.s, [wx, wy] = jWorld(i);
+  RB.on[i] = false;
+  const p = freeSpot((wx - RB.c[0]) / s, (wy - RB.c[1]) / s), e = { i, x: p[0], y: p[1], fly: true };
+  RB.extra.push(e); renderJq();
+  const fx = $("fx"), node = mk("g", { class: "hop" }, fx);
+  const ring = mk("circle", { r: g.r + 7, fill: "none", stroke: ELECTRON, "stroke-width": 3, style: `stroke:${ELECTRON}` }, node);
+  chargeDot(node, 0, 0, "-");
+  tween(460, k => {
+    const tx = RB.c[0] + e.x * s, ty = RB.c[1] + e.y * s, x = wx + (tx - wx) * k, y = wy + (ty - wy) * k - Math.sin(Math.PI * k) * 30;
+    node.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${(1 + 0.4 * Math.sin(Math.PI * k)).toFixed(3)})`);
+    ring.setAttribute("opacity", (0.9 * (1 - k)).toFixed(2));
+  }, () => {
+    node.remove(); e.fly = false; S.moved = landed(); renderBq(); syncBal();
+    const bad = chargeCheck(); if (bad) { const el = $("bankErr"); el.hidden = false; el.textContent = "Model error: " + bad; }
+    renderTally(); signal("rub"); if (S.moved >= 3) signal("rub3");
+    $("demoMsg").innerHTML = '<div class="msg">An electron moved from the jumper to the balloon where they touched. Protons did not move.</div>';
+  });
+  return true;
+}
+function moveBalloon(x, y) {
+  const [nx, ny] = clampC(x, y), dx = nx - RB.c[0], dy = ny - RB.c[1];
+  RB.c = [nx, ny]; syncBal(); rubStep(dx, dy);
+}
+let pullSaid = -1;
+function afterLetGo() {   // the balloon has been let go: if it is charged and away from the jumper, say what the arrows show
+  if (mode !== "demo" || landed() === 0 || touching() || pullSaid === landed()) return;
+  pullSaid = landed(); signal("pull");
+  $("demoMsg").innerHTML = '<div class="msg">The balloon is now negative (−) and the jumper is positive (+). Unlike charges attract, so they pull on each other without touching: see the orange arrows. <button class="linkbtn" type="button" id="toForce">More in 2 Pushes and pulls</button></div>';
+  $("toForce").onclick = () => { setTab("force"); signal("forceTab"); };
+}
+let drag = null;
+function svgPt(e) { const m = $("scene").getScreenCTM(); if (!m) return [0, 0]; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return [p.x, p.y]; }
+function balDown(e) {
+  if (S.locked || S.tab !== "rub" || (e.button !== undefined && e.button > 0)) return;
+  e.preventDefault(); finishAnims();
+  const [x, y] = svgPt(e); drag = { id: e.pointerId, dx: x - RB.c[0], dy: y - RB.c[1] }; rt = rtFresh(); capSaid = false;
+  try { $("scene").setPointerCapture(e.pointerId); } catch (err) {}
+  $("scene").classList.add("dragging"); dragged = true; syncBal();
+}
+$("scene").addEventListener("pointermove", e => { if (!drag || e.pointerId !== drag.id) return; e.preventDefault(); const [x, y] = svgPt(e); moveBalloon(x - drag.dx, y - drag.dy); });
+function balUp(e) { if (!drag || e.pointerId !== drag.id) return; drag = null; rt = null; $("scene").classList.remove("dragging"); afterLetGo(); }
+$("scene").addEventListener("pointerup", balUp); $("scene").addEventListener("pointercancel", balUp);
+$("scene").addEventListener("lostpointercapture", balUp);
+function wiggle(then) {   // one rub stroke: a quick back-and-forth on the spot (none with reduced motion)
+  const [bx, by] = RB.c;
+  tween(340, k => { RB.c = [bx + Math.sin(k * Math.PI * 2) * 16 * geo().s, by]; syncBal(); }, () => { RB.c = [bx, by]; syncBal(); then(); });
+}
+function balKey(e) {
+  if (S.locked || S.tab !== "rub") return;
+  const st = (e.shiftKey ? 42 : 14) * geo().s, mv = { ArrowLeft: [-st, 0], ArrowRight: [st, 0], ArrowUp: [0, -st], ArrowDown: [0, st] }[e.key];
+  if (mv) { e.preventDefault(); finishAnims(); dragged = true; capSaid = false; moveBalloon(RB.c[0] + mv[0], RB.c[1] + mv[1]); afterLetGo(); return; }
+  if (e.key === " " || e.key === "Enter") {
+    e.preventDefault(); dragged = true;
+    if (!touching() || (underBalloon() < 0 && RB.extra.length < MAXMOVE)) { rubForMe(); return; }   // slides onto electrons still on the jumper first
+    finishAnims(); capSaid = false; wiggle(() => transferOne());
+  }
+}
+function rubForMe() {
+  if (S.locked) return;
+  finishAnims(); dragged = true; capSaid = false;
+  if (RB.extra.length >= MAXMOVE) { transferOne(); return; }
+  const target = touching() && underBalloon() >= 0 ? RB.c.slice() : rubSpot(), from = RB.c.slice();
+  tween(380, k => { const q = k * k * (3 - 2 * k); RB.c = [from[0] + (target[0] - from[0]) * q, from[1] + (target[1] - from[1]) * q]; syncBal(); },
+    () => { RB.c = target; syncBal(); wiggle(() => transferOne()); });
 }
 function counts() {
   const m = S.moved;
   return { jumper: { p: CH.jumper.p, e: CH.jumper.e - m }, balloon: { p: CH.balloon.p, e: CH.balloon.e + m } };
 }
+const signed = n => n > 0 ? "+" + n : n < 0 ? "−" + (-n) : "0";
 function renderTally() {
   const c = counts(), show = mode === "demo" || hasSupport("count");
-  $("tallyBox").hidden = !show; $("tallyOff").hidden = show;
+  $("tallyBox").hidden = !show; $("tallyOff").hidden = show; $("netBar").hidden = !show || S.tab !== "rub";
   const row = (n, o) => `<tr><td>${n}</td><td>${o.p}</td><td>${o.e}</td><td><b>${word(o.p, o.e)}</b></td></tr>`;
   $("tally").innerHTML = `<tr><th>Object</th><th>Protons (+)</th><th>Electrons (−)</th><th>Overall charge</th></tr>` + row("Balloon", c.balloon) + row("Jumper", c.jumper);
+  const nb = c.balloon.p - c.balloon.e, nj = c.jumper.p - c.jumper.e, cls = n => n > 0 ? "pos" : n < 0 ? "neg" : "neu";
+  $("netBar").innerHTML = `<span class="nlbl">Net charge</span><span class="nc ${cls(nb)}">Balloon <b>${signed(nb)}</b></span><span class="nc ${cls(nj)}">Jumper <b>${signed(nj)}</b></span>` +
+    (mode === "demo" ? `<span class="nc neu">Total <b>${signed(nb + nj)}</b></span>` : "");
 }
 
 /* ----- forces scene ----- */
 const ARROW = [78, 60, 46, 36, 28];
 const DISTNAME = ["very close", "close", "medium", "far", "very far"];
 function drawForce() {
-  const svg = $("scene"); svg.innerHTML = "";
+  const svg = $("scene"); svg.innerHTML = ""; svg.setAttribute("viewBox", "0 0 760 360"); svg.classList.remove("rubv");
   const defs = mk("defs", {}, svg);
+  artDefs(defs);
   for (const [id, col] of [["gp", PROTON], ["gn", ELECTRON]]) {
     const g = mk("radialGradient", { id }, defs);
     mk("stop", { offset: "0%", "stop-color": col, "stop-opacity": 0.45 }, g);
@@ -719,11 +1044,10 @@ function drawForce() {
   const sides = [[ax, S.a, "A"], [bx, S.b, "B"]];
   for (const [x, c] of sides) mk("circle", { cx: x, cy, r: 125, fill: c === "+" ? "url(#gp)" : "url(#gn)" }, svg);
   for (const [x, c, name] of sides) {
-    mk("line", { x1: x, y1: cy + 76, x2: x, y2: 250, stroke: "#14243D", "stroke-width": 2, style: "stroke:#14243D" }, svg);
-    mk("ellipse", { cx: x, cy, rx: 62, ry: 78, fill: c === "+" ? "#F6B8A8" : "#A9C3EE", stroke: "#14243D", "stroke-width": 3, style: "stroke:#14243D" }, svg);
+    drawBalloonArt(mk("g", { transform: `translate(${x},${cy})` }, svg), 0.78);   /* the same balloon as 1 Rubbing (17 Nov 2026) */
     const other = c === "+" ? "-" : "+";   // 4 of the balloon's sign and 3 of the other: the charge is the imbalance
     [[0, -46, c], [-28, -26, other], [28, -26, c], [-34, 4, c], [34, 4, other], [-16, 34, other], [16, 34, c]].forEach(([dx, dy, sg]) => particle(svg, x + dx, cy + dy, 13, sg));
-    const t = mk("text", { x, y: 276, "text-anchor": "middle", "font-size": 22, "font-weight": 700 }, svg); t.textContent = "Balloon " + name + (c === "+" ? " (+)" : " (−)");
+    const t = mk("text", { x, y: cy - 73 - 16, "text-anchor": "middle", "font-size": 22, "font-weight": 700 }, svg); t.textContent = "Balloon " + name + (c === "+" ? " (+)" : " (−)");
   }
   const attract = S.a !== S.b, L = ARROW[S.d - 1];
   const show = S.reveal;
@@ -756,7 +1080,8 @@ function setTab(t) {
   $("key").innerHTML = t === "rub"
     ? `<span><i style="background:${PROTON}">+</i>proton (stays put)</span><span><i style="background:${ELECTRON}">−</i>electron (can move)</span>`
     : `<span><i style="background:${PROTON}">+</i>positive charge</span><span><i style="background:${ELECTRON}">−</i>negative charge</span><span>Orange arrow: force on the balloon</span>`;
-  $("mctx").textContent = t === "rub" ? "Rub a balloon on a jumper. Count the charges." : "Two charged balloons. Do they push or pull?";
+  $("mctx").textContent = t === "rub" ? (mode === "demo" ? "Drag the balloon onto the jumper and rub. Count the charges." : "A balloon and a jumper. Count the charges.") : "Two charged balloons. Do they push or pull?";
+  $("scene").setAttribute("role", t === "rub" ? "group" : "img"); $("scene").setAttribute("aria-label", t === "rub" ? "Balloon and jumper" : "Charge model");
   if (t === "rub") { buildRub(); renderTally(); } else { drawForce(); renderReadout(); syncForceBtns(); }
 }
 function syncForceBtns() {
@@ -767,15 +1092,12 @@ function lockControls(lock) {
   S.locked = lock;
   document.querySelectorAll("#tabs button, #rubBtn, #rubReset, #chA button, #chB button").forEach(b => b.disabled = lock);
   $("dist").disabled = lock && !S.reveal;
+  if (S.tab === "rub") syncBal();
+  $("kbTip").hidden = lock;   // the balloon cannot be moved while a question is open
 }
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { if (S.locked) return; setTab(b.dataset.tab); if (b.dataset.tab === "force") signal("forceTab"); });
-$("rubBtn").onclick = () => {
-  if (S.locked) return;
-  if (S.moved >= MAXMOVE) { $("demoMsg").innerHTML = '<div class="msg tip">The jumper has no more spare electrons in this model. Press Start again.</div>'; return; }
-  S.moved++; placeRub(); renderTally(); signal("rub"); if (S.moved >= 3) signal("rub3");
-  $("demoMsg").innerHTML = `<div class="msg">An electron moved from the jumper to the balloon. Protons did not move.</div>`;
-};
-$("rubReset").onclick = () => { if (S.locked) return; S.moved = 0; placeRub(); renderTally(); $("demoMsg").innerHTML = ""; };
+$("rubBtn").onclick = rubForMe;
+$("rubReset").onclick = () => { if (S.locked) return; finishAnims(); S.moved = 0; RB = null; dragged = false; pullSaid = -1; capSaid = false; buildRub(); renderTally(); $("demoMsg").innerHTML = ""; };
 for (const [id, key] of [["chA", "a"], ["chB", "b"]]) $(id).querySelectorAll("button").forEach(b => b.onclick = () => {
   if (S.locked) return; S[key] = b.dataset.c; syncForceBtns(); drawForce(); renderReadout(); signal(id === "chA" ? "chargeA" : "chargeB");
   if (S.a === S.b) signal("like"); else signal("unlike");
@@ -790,14 +1112,15 @@ const TOOL = {
   supports: [{ k: "count", label: "Charge count" }, { k: "rule", label: "Rule card" }],
   tries: [
     { id: "rub3", text: "Rub the balloon 3 times. Which particles move?" },
+    { id: "pull", text: "Then pull the balloon away from the jumper. What do the orange arrows show?" },
     { id: "like", text: "Pushes and pulls: make both balloons negative. What do they do?" },
     { id: "unlike", text: "Now make the balloons different. What changes?" },
     { id: "far", text: "Slide the balloons far apart. Does the force stop?" }
   ],
   tour: [
     { el: "#tabs", text: "Two models. Rubbing shows how objects get charged. Pushes and pulls shows what charged objects do.", pre: () => setTab("rub") },
-    { el: "#rubBtn", text: "Press Rub. One electron moves from the jumper to the balloon each time.", do: "rub", doText: "Press Rub once." },
-    { el: "#scene", text: "Blue − electrons move. Orange + protons stay where they are. Dashed rings show spaces that electrons left or can fill." },
+    { el: "#scene", text: "Drag the balloon onto the jumper and rub it back and forth. Each rub moves one electron from the jumper to the balloon.", do: "rub", doText: "Rub once (or press Rub for me)." },
+    { el: "#scene", text: "Blue − electrons move where the balloon and jumper touch. Orange + protons stay where they are." },
     { el: "#tallyBox", text: "This table counts the charges. More electrons than protons makes an object negative. Fewer makes it positive." },
     { el: "#tabF", text: "Now look at what charged objects do.", do: "forceTab", doText: "Press 2 Pushes and pulls." },
     { el: "#chA", text: "Choose the charge on Balloon A. Then do the same for Balloon B.", pre: () => { if (S.tab !== "force") setTab("force"); }, do: "chargeA", doText: "Change Balloon A." },
@@ -810,7 +1133,7 @@ const TOOL = {
   onSupport(k, on) { if (k === "count") renderTally(); if (k === "rule") $("ruleCard").hidden = !on || mode === "demo"; },
   onQuestion(q, f) {
     const sc = q.scene;
-    Object.assign(S, { a: "-", b: "-", d: 2 }, sc.force || {}, { moved: sc.moved || 0 });
+    Object.assign(S, { a: "-", b: "-", d: 2 }, sc.force || {}, { moved: sc.moved || 0 }); RB = null;
     S.reveal = !!f.finished || sc.tab === "rub";
     document.documentElement.classList.add("nomv");
     lockControls(true);
@@ -903,6 +1226,12 @@ const LEVELS_HARD = [
     "Only a charged object has an electric field. A neutral one has none.")
 ];
 TOOL.levels.easy = LEVELS_EASY; TOOL.levels.hard = LEVELS_HARD;
+TOOL.verify = () => {   // charge is conserved for every number of rubs; the picture matches the count (17 Nov 2026)
+  const bad = [], keepRB = RB, keepM = S.moved;
+  try { for (const gk of ["wide", "phone"]) { geoForce = GEO[gk]; for (let n = 0; n <= MAXMOVE; n++) { rubSim(n); if (S.moved !== n) bad.push(`${gk}: rubbing ${n} times moved ${S.moved} electrons`); const e = chargeCheck(); if (e) bad.push(`${gk}, after ${n} rubs: ${e}`); } } }
+  finally { geoForce = null; RB = keepRB; S.moved = keepM; }
+  return bad;
+};
 TOOL.check = (q) => {   // independent check: recompute each answer from the rule
   const sc = q.scene, ok = q.opts.find(o => o.ok).t;
   if (sc.tab === "force" && /What will they do/.test(q.text)) { const exp = likeUnlike(sc.force.a, sc.force.b); if (!ok.toLowerCase().includes(exp)) return "force answer disagrees with the rule"; }
