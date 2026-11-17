@@ -1066,7 +1066,7 @@ function drawCubeBg() {
   let tk = ""; for (let c = 0; c <= 30; c++) { const x = xr + c * G.px; tk += `M${f1(x)} ${ry}v${c % 5 ? 6 : 11}`; }
   h += `<path class="tick" d="${tk}"/>`;
   for (let c = 0; c <= 30; c += 5) h += T_(xr + c * G.px, ry + 25, String(c), 15, 'text-anchor="middle" class="rtx"');
-  h += T_(xr + rw + 10, ry + 25, "cm", 15, '');
+  h += G.W > 700 ? T_(xr + rw + 10, ry + 25, "cm", 15, '') : T_(xr + rw + 6, G.bench + 52, "cm", 15, 'text-anchor="end"');   // phone: under the ruler's end, clear of the detector cable
   /* the meter box (small dial) and the magnified window */
   const [mx, my, mw, mh] = G.meter, [zx, zy, zw, zh] = G.zoom;
   h += `<rect class="meterb" x="${mx}" y="${my}" width="${mw}" height="${mh}" rx="10"/>` + T_(mx + 12, my + fs + 6, "Infrared detector", fs - 1, 'class="bold"') + T_(mx + mw - 12, G.W > 700 ? my + fs + 6 : my + 2 * fs + 12, "units", fs - 2, 'text-anchor="end" class="mut"');
@@ -1114,7 +1114,8 @@ function drawCubeMov() {   // detector + cable, dial needle, magnified strip: bu
   const dx = detX(G, m.d), y = cubeYM(G), v = meterNow(m), dg = $("detG");
   setAttr(dg, "transform", `translate(${f1(dx)} ${f1(y)})`); setAttr(dg, "aria-valuenow", m.d); setAttr(dg, "aria-valuetext", `${m.d} cm`);
   setAttr(dg, "aria-label", hides("method") ? "Infrared detector: drag it, or use the arrow keys, to move it" : "Infrared detector: drag it, or use the arrow keys, to change its distance from the cube");
-  const [mx, my] = G.meter; setAttr($("cable"), "d", `M${f1(dx + (G.W > 700 ? 54 : 66))} ${f1(y)}C${f1(dx + 110)} ${f1(y - 10)} ${f1(mx - 40)} ${f1(my + 120)} ${mx} ${f1(my + G.meter[3] - 26)}`);
+  const [mx, my, mw, mh] = G.meter; setAttr($("cable"), "d", G.W > 700 ? `M${f1(dx + 54)} ${f1(y)}C${f1(dx + 110)} ${f1(y - 10)} ${f1(mx - 40)} ${f1(my + 120)} ${mx} ${f1(my + mh - 26)}`
+    : `M${f1(dx + 66)} ${f1(y)}C${f1(dx + 110)} ${f1(y - 6)} ${G.W - 12} ${f1(y - 4)} ${G.W - 12} ${f1(y + 50)}V${G.H - 26}Q${G.W - 12} ${G.H - 14} ${G.W - 24} ${G.H - 14}H${f1(mx + mw / 2 + 12)}Q${f1(mx + mw / 2)} ${G.H - 14} ${f1(mx + mw / 2)} ${my + mh}`);   // circuit fix 17 Nov: phone cable round the edge, crossing no text
   const dc = dialGeo(G), shown = Math.min(v, LC.MAX + 2.5), a = dialAng(shown) * 180 / Math.PI;
   setAttr($("needle"), "transform", `rotate(${f1(a)} ${f1(dc.cx)} ${f1(dc.cy)})`);
   if (md === "meter" && g._pc) setAttr($("zArc"), "transform", `rotate(${(-shown * ZOOM.deg).toFixed(2)} ${f1(g._pc[0])} ${f1(g._pc[1])})`);

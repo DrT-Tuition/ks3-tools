@@ -682,6 +682,7 @@ function meterCircle(kind, x, y, id, s, lp) {
   text(x, y + 7, kind, "mid");
   if (lp === "below") label(id, x, y + 46, "middle", s);
   else if (lp === "right") label(id, x + 32, y - 2, "start", s);
+  else if (lp === "left") label(id, x - 46, y - 2, "end", s);   // clear of the meter's left lead (circuit fix 17 Nov)
   else label(id, x, y - 44, "middle", s);
 }
 function ammeter(id, lp, s) { return { half: 22, draw: (x, y) => meterCircle("A", x, y, id, s, lp) }; }
@@ -707,18 +708,28 @@ function switchItem(s) {
 }
 function batteryItem(n) {
   return { half: 12 * n, draw: (x, y) => {
+    /* circuit fix 17 Nov: each cell is a long thin plate (+) and a short thick plate (−). A short wire joins each cell to the
+       next, and the last cell to the wire below, so the battery has no gaps (before, the last plate stopped short of the wire). */
     for (let i = 0; i < n; i++) {
       const t = y - 12 * n + 24 * i;
-      mk("line", { x1: x - 22, y1: t + 4, x2: x + 22, y2: t + 4 }, svg, "wire");
-      mk("line", { x1: x - 12, y1: t + 16, x2: x + 12, y2: t + 16, "stroke-width": 8 }, svg, "wire");
+      mk("line", { x1: x - 22, y1: t + 2, x2: x + 22, y2: t + 2 }, svg, "wire");
+      mk("line", { x1: x - 11, y1: t + 13, x2: x + 11, y2: t + 13, style: "stroke-width:8" }, svg, "wire");
+      mk("line", { x1: x, y1: t + 13, x2: x, y2: i < n - 1 ? t + 26 : y + 12 * n }, svg, "wire");
     }
-    text(x + 30, y - 12 * n + 2, "+", "mid", "start"); text(x + 30, y + 12 * n + 16, "−", "mid", "start");
+    text(x + 30, y - 12 * n - 4, "+", "mid", "start"); text(x + 30, y + 12 * n + 20, "−", "mid", "start");   // clear of the "1 cell" label
     text(x + 30, y + 5, n + (n === 1 ? " cell" : " cells"), "mlab", "start");
   } };
 }
 function voltAcross(id, cx, cy, p1, p2, s, lp) {   // voltmeter circle with two leads to wire points p1, p2
-  mk("path", { d: `M${cx} ${cy - 22} V${p1[1]} H${p1[0]}` }, svg, "thin");
-  mk("path", { d: `M${cx} ${cy + 22} V${p2[1]} H${p2[0]}` }, svg, "thin");
+  /* circuit fix 17 Nov: across a part on a horizontal wire (p1, p2 level) the meter sits above or below it and its leads leave
+     from its sides; before, both leads ran from its top and bottom straight down through the bulb, so the meter looked in series */
+  if (p1[1] === p2[1]) {
+    mk("path", { d: `M${cx - 22} ${cy} H${p1[0]} V${p1[1]}` }, svg, "thin");
+    mk("path", { d: `M${cx + 22} ${cy} H${p2[0]} V${p2[1]}` }, svg, "thin");
+  } else {
+    mk("path", { d: `M${cx} ${cy - 22} V${p1[1]} H${p1[0]}` }, svg, "thin");
+    mk("path", { d: `M${cx} ${cy + 22} V${p2[1]} H${p2[0]}` }, svg, "thin");
+  }
   mk("circle", { cx: p1[0], cy: p1[1], r: 4, fill: "var(--ink)" }, svg); mk("circle", { cx: p2[0], cy: p2[1], r: 4, fill: "var(--ink)" }, svg);
   meterCircle("V", cx, cy, id, s, lp);
 }
@@ -752,11 +763,11 @@ function drawPortrait(s, m, n, bat) {
     run(XR, Y1, X0, Y1, [Object.assign({ at: (XR - 310) / (XR - X0) }, switchItem(s))]);
     for (let j = 0; j < n; j++) {
       const y = ys[j], bx = 360, it = [Object.assign({ at: (bx - XA) / (XR - XA) }, bulbItem(j, false, s, m))];
-      if (s.am) it.push(Object.assign({ at: (275 - XA) / (XR - XA) }, ammeter("A" + (j + 2), "above", s)));
+      if (s.am) it.push(Object.assign({ at: (275 - XA) / (XR - XA) }, ammeter("A" + (j + 2), "below", s)));   // label below: the voltmeter's label is above-left
       run(XA, y, XR, y, it);
       if (j < n - 1) mk("circle", { cx: XA, cy: y, r: 6, fill: "var(--ink)" }, svg);
       if (j > 0) mk("circle", { cx: XR, cy: y, r: 6, fill: "var(--ink)" }, svg);
-      if (s.vm && !s.rem[j]) voltAcross("V" + (j + 1), bx, y - 62, [bx - 40, y], [bx + 40, y], s, "right");
+      if (s.vm && !s.rem[j]) voltAcross("V" + (j + 1), bx, y - 58, [bx - 40, y], [bx + 40, y], s, "left");
     }
     if (s.vm) voltAcross("V0", 26, 390, [X0, 336], [X0, 444], s, "right");
   }
@@ -770,7 +781,7 @@ function draw() {
   if (s.type === "series") {
     const X0 = 90, X1 = 670, Y0 = 130, Y1 = 340;
     // left wire: bottom to top, so "before the bulbs" is up the left side
-    const left = [{ at: (Y1 - 240) / (Y1 - Y0), half: bat.half, draw: bat.draw }];
+    const left = [{ at: (Y1 - 260) / (Y1 - Y0), half: bat.half, draw: bat.draw }];   // circuit fix 17 Nov: lower, so V0's top lead joins clear of A1
     if (s.am) left.push(Object.assign({ at: (Y1 - 160) / (Y1 - Y0) }, ammeter("A1", "right", s)));
     run(X0, Y1, X0, Y0, left);
     const top = []; for (let j = 0; j < n; j++) top.push(Object.assign({ at: (j + 1) / (n + 1) }, bulbItem(j, false, s, m)));
@@ -780,12 +791,12 @@ function draw() {
     if (s.am) bot.push(Object.assign({ at: (X1 - 200) / (X1 - X0) }, ammeter("A3", "below", s)));
     run(X1, Y1, X0, Y1, bot);
     if (s.vm) {
-      voltAcross("V0", -22, 240, [X0, 186], [X0, 294], s, "right");
+      voltAcross("V0", -22, 260, [X0, 206], [X0, 314], s, "right");
       for (let j = 0; j < n; j++) { if (s.rem[j]) continue; const x = X0 + (X1 - X0) * (j + 1) / (n + 1); voltAcross("V" + (j + 1), x, 62, [x - 45, Y0], [x + 45, Y0], s, "above"); }
     }
   } else {
     const X0 = 90, Y0 = 100, Y1 = 340, xs = n === 2 ? [320, 540] : [230, 420, 610], XE = xs[xs.length - 1];
-    const left = [{ at: (Y1 - 240) / (Y1 - Y0), half: bat.half, draw: bat.draw }];
+    const left = [{ at: (Y1 - 260) / (Y1 - Y0), half: bat.half, draw: bat.draw }];
     run(X0, Y1, X0, Y0, left);
     const mx = (X0 + xs[0]) / 2;
     const top = s.am ? [Object.assign({ at: (mx - X0) / (XE - X0) }, ammeter("A1", "below", s))] : [];
@@ -795,10 +806,10 @@ function draw() {
       const x = xs[j], it = [Object.assign({ at: (250 - Y0) / (Y1 - Y0) }, bulbItem(j, true, s, m))];
       if (s.am) it.push(Object.assign({ at: (172 - Y0) / (Y1 - Y0) }, ammeter("A" + (j + 2), "right", s)));
       run(x, Y0, x, Y1, it);
-      mk("circle", { cx: x, cy: Y0, r: 6, fill: "var(--ink)" }, svg); mk("circle", { cx: x, cy: Y1, r: 6, fill: "var(--ink)" }, svg);
+      if (j < n - 1) { mk("circle", { cx: x, cy: Y0, r: 6, fill: "var(--ink)" }, svg); mk("circle", { cx: x, cy: Y1, r: 6, fill: "var(--ink)" }, svg); }   // the last branch meets the wires at corners: no junction dots there
       if (s.vm && !s.rem[j]) voltAcross("V" + (j + 1), x + 76, 250, [x, 210], [x, 290], s, "right");
     }
-    if (s.vm) voltAcross("V0", -22, 240, [X0, 186], [X0, 294], s, "right");
+    if (s.vm) voltAcross("V0", -22, 260, [X0, 206], [X0, 314], s, "right");
   }
 }
 function flushLate() { LATE.forEach(f => f()); LATE = []; }

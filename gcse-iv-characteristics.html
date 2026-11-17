@@ -1034,9 +1034,10 @@ function slotSVG(G, s) {
 }
 /* component X, centred at (x, y) on a horizontal wire; conventional current flows right → left along the bottom wire */
 function xSym(x, y, comp, rev, glow) {
-  if (comp === "res") return `<path class="cwb" d="M${x - 46} ${y}H${x + 46}"/><rect class="res" x="${x - 40}" y="${y - 15}" width="80" height="30" rx="2"/>`;
+  /* circuit fix 17 Nov: each erase stroke (.cwb) is exactly as wide as its symbol, so the wire meets the symbol (it stopped 6 px short) */
+  if (comp === "res") return `<path class="cwb" d="M${x - 40} ${y}H${x + 40}"/><rect class="res" x="${x - 40}" y="${y - 15}" width="80" height="30" rx="2"/>`;
   if (comp === "lamp") { const r = 22, d = r * .7;
-    return `<path class="cwb" d="M${x - r - 2} ${y}H${x + r + 2}"/><circle class="lampc" cx="${x}" cy="${y}" r="${r}" style="fill-opacity:${f1(glow)}"/><circle class="lampo" cx="${x}" cy="${y}" r="${r}"/><path class="cw" d="M${f1(x - d)} ${f1(y - d)}L${f1(x + d)} ${f1(y + d)}M${f1(x - d)} ${f1(y + d)}L${f1(x + d)} ${f1(y - d)}"/>`; }
+    return `<path class="cwb" d="M${x - r} ${y}H${x + r}"/><circle class="lampc" cx="${x}" cy="${y}" r="${r}" style="fill-opacity:${f1(glow)}"/><circle class="lampo" cx="${x}" cy="${y}" r="${r}"/><path class="cw" d="M${f1(x - d)} ${f1(y - d)}L${f1(x + d)} ${f1(y + d)}M${f1(x - d)} ${f1(y + d)}L${f1(x + d)} ${f1(y - d)}"/>`; }
   const s = rev ? -1 : 1, w = 20;   // forward: the triangle points left, the way conventional current flows here (+ to −)
   return `<path class="cwb" d="M${x - 30} ${y}H${x + 30}"/><path class="cw" d="M${x - 34} ${y}H${x + 34}"/><path class="dtri" d="M${x + s * w} ${y - 16}L${x - s * w} ${y}L${x + s * w} ${y + 16}Z"/><path class="cw" d="M${x - s * w} ${y - 17}V${y + 17}"/>`;
 }
@@ -1051,7 +1052,7 @@ function drawCir() {
   /* supply: two cells (long plate +); + on the right */
   h += [-18, 6].map(dx => `<path class="cw" d="M${bx + dx} ${T - 9}V${T + 9}"/><path class="cw" d="M${bx + dx + 12} ${T - 20}V${T + 20}"/>`).join("") + `<path class="cw dash" d="M${bx - 6} ${T}H${bx + 6}"/>`;
   h += T_(bx + 30, T - 14, "+", fs, 'class="bold"') + T_(bx - 30, T - 14, "−", fs, 'text-anchor="end" class="bold"');
-  h += T_(bx, T + 40, `supply: ${f1(m.E)} V`, fs - 2, 'text-anchor="middle" class="bold"');
+  h += T_(bx, T + (G.W > 700 ? 48 : 40), `supply: ${f1(m.E)} V`, fs - 2, 'text-anchor="middle" class="bold"');   // clear of the cell plates at the laptop label size
   /* conventional current direction (+ to −), shown while the current flows */
   if (m.on && m.built) h += `<path class="carr" d="M${bx + 60} ${T - 12}h34m-9 -6l9 6l-9 6"/>` + (G.W > 700 ? T_(bx + 56, T - 22, "current", fs - 4, 'class="mut"') : T_(bx + 77, T - 22, "current", fs - 4, 'text-anchor="middle" class="mut"'));
   /* switch */
@@ -1060,10 +1061,10 @@ function drawCir() {
     `<path class="lever" d="M${sw} ${T}L${on ? sw + 56 : sw + 48} ${on ? T : T - 30}"/><circle class="hit" cx="${sw + 28}" cy="${T - 10}" r="32"/></g>` +
     T_(sw + 28, T + fs + 12, on ? "switch: on" : "switch: off", fs - 3, 'text-anchor="middle" class="bold"');
   /* diode only: a protective resistor in the loop */
-  if (m.comp === "diode") h += `<path class="cwb" d="M${G.pr - 34} ${T}H${G.pr + 34}"/><rect class="res" x="${G.pr - 30}" y="${T - 11}" width="60" height="22" rx="2"/>` + (G.W > 700 ? T_(G.pr - 30, T + 40, "protective", fs - 4, 'class="mut"') + T_(G.pr - 30, T + 68, "resistor", fs - 4, 'class="mut"')
+  if (m.comp === "diode") h += `<path class="cwb" d="M${G.pr - 30} ${T}H${G.pr + 30}"/><rect class="res" x="${G.pr - 30}" y="${T - 11}" width="60" height="22" rx="2"/>` + (G.W > 700 ? T_(G.pr - 30, T + 40, "protective", fs - 4, 'class="mut"') + T_(G.pr - 30, T + 68, "resistor", fs - 4, 'class="mut"')
     : T_(G.pr, T - 36, "protective", fs - 4, 'text-anchor="middle" class="mut"') + T_(G.pr, T - 36 + fs - 2, "resistor", fs - 4, 'text-anchor="middle" class="mut"'));
   /* variable resistor: rectangle with a diagonal arrow */
-  const vr = G.VR; h += `<path class="cwb" d="M${vr - 46} ${B}H${vr + 46}"/><rect class="res" x="${vr - 40}" y="${B - 15}" width="80" height="30" rx="2"/><path class="cw thin" d="M${vr - 44} ${B + 24}L${vr + 40} ${B - 26}"/><path class="cwf" d="M${vr + 46} ${B - 30}l-14 2l7 9z"/>`;
+  const vr = G.VR; h += `<path class="cwb" d="M${vr - 40} ${B}H${vr + 40}"/><rect class="res" x="${vr - 40}" y="${B - 15}" width="80" height="30" rx="2"/><path class="cw thin" d="M${vr - 44} ${B + 24}L${vr + 40} ${B - 26}"/><path class="cwf" d="M${vr + 46} ${B - 30}l-14 2l7 9z"/>`;
   h += T_(vr, B - 36, "variable resistor", fs - 3, 'text-anchor="middle" class="mut"');
   /* component X */
   h += xSym(G.X, B, m.comp, m.rev, glow) + T_(G.X, B - 26, "X", fs, 'text-anchor="middle" class="bold"');

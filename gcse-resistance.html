@@ -1020,7 +1020,7 @@ function drawLabBg() {
   h += `<g class="onpic">`;   // marks and numbers in a fixed dark ink: they sit on the light picture ruler in both themes
   for (let c = 0; c <= 100; c++) { const x = cmX(G, c), big = c % 10 === 0, mid = c % 5 === 0; if (G.W < 700 && !mid) continue;
     h += `<path class="tick" d="M${f1(x)} ${yW + 6}v${big ? 16 : mid ? 11 : 7}"/>`; if (big) h += T_(x, yW + 38, String(c), fs - 4, 'text-anchor="middle"'); }
-  h += `</g>` + T_(G.x1 + 10, yW + (G.W > 700 ? 64 : 62), "cm", fs - 4, 'text-anchor="end" class="mut onpic"');
+  h += `</g>` + T_(G.x1 + 10, yW + (G.W > 700 ? 76 : 72), "cm", fs - 4, 'text-anchor="end" class="mut onpic"');
   h += `<path id="wireP" class="rwire" d="M${G.x0} ${yW}H${G.x1}"/>`;
   h += T_(G.W > 700 ? G.x0 + 230 : G.W / 2, yW + (G.W > 700 ? 76 : 72), "resistance wire on a metre ruler", fs - 3, 'text-anchor="middle" class="mut onpic"');
   /* cell */
@@ -1036,7 +1036,7 @@ function drawLabBg() {
   const on = M.on;
   h += `<g id="swG" class="switch" tabindex="-1"><circle class="post" cx="${sw[0]}" cy="${T}" r="7"/><circle class="post" cx="${sw[0] + 62}" cy="${T}" r="7"/>` +
     `<path class="lever" d="M${sw[0]} ${T}L${on ? sw[0] + 62 : sw[0] + 52} ${on ? T : T - 34}"/><circle class="hit" cx="${sw[0] + 31}" cy="${T - 10}" r="34"/></g>` +
-    T_(sw[0] + 31, T + fs + 12, on ? "switch: on" : "switch: off", fs - 3, 'text-anchor="middle" class="bold"');
+    T_(sw[0] + 31, T + Math.max(fs - 3, FMIN) + 12, on ? "switch: on" : "switch: off", fs - 3, 'text-anchor="middle" class="bold"');
   /* voltmeter leads (solid once a meter is there) */
   const [p1x, p1y] = G.p1, [p2x, p2y] = G.p2, r = G.mr;
   const k7 = r * .7;
@@ -1903,7 +1903,8 @@ function amSym(x, y, r, val, fs, hide, below) {
 }
 function vmSym(x, y, r, fs, hide, below) {   // voltmeter across the whole combination: the pupil reads it (ideal supply)
   return `<circle class="msym" cx="${f1(x)}" cy="${f1(y)}" r="${r}"/>` + T_(x, y + r * .36, "V", r * .95, 'text-anchor="middle" class="bold"') +
-    tag(x, below ? y + r + fs + 10 : y - r - 10, hide ? "? V" : fx(SP.V, 1) + " V", fs - 1, "acc");
+    (below === "right" ? tag(x + r + 8, y + Math.max(fs - 1, FMIN) / 2 - 3, hide ? "? V" : fx(SP.V, 1) + " V", fs - 1, "acc", "start")   /* circuit fix 17 Nov: beside the meter, off its leads */
+      : tag(x, below ? y + r + fs + 10 : y - r - 10, hide ? "? V" : fx(SP.V, 1) + " V", fs - 1, "acc"));
 }
 function drawSP() {
   const G = spGeo(), s = M.sp, fs = G.fs, R = s.R.slice(0, s.n), c = spCalc(s.arr, R), hide = s.hide, tall = G.W < 700; setVB($("ssvg"), G.W, G.H); FMIN = tall ? 21 : 15;
@@ -1912,7 +1913,7 @@ function drawSP() {
   /* cell symbol on the left side */
   const cy = (T + B) / 2;
   o += `<path class="cw" d="M${L} ${T}V${cy - 14}M${L} ${cy + 14}V${B}"/><path class="cw" d="M${L - 22} ${cy - 14}H${L + 22}"/><path class="cw th" d="M${L - 12} ${cy + 14}H${L + 12}"/>`;
-  o += T_(L + 30, cy - 8, `${SP.V} V`, fs, 'class="bold"') + T_(L + 30, cy + 16, "supply", fs - 3, 'class="mut"');
+  o += T_(L + 30, cy - 8, `${SP.V} V`, fs, 'class="bold"') + T_(L + 30, cy + (tall ? 22 : 16), "supply", fs - 3, 'class="mut"');
   if (s.arr === "series") {
     const x1 = L + (tall ? 100 : 150), x2 = Rr - (tall ? 100 : 150);
     o += `<path class="cw" d="M${L} ${T}H${Rr}V${B}H${L}"/>`;
@@ -1920,20 +1921,22 @@ function drawSP() {
     R.forEach((r, i) => { const x = x1 + span * (i + .5) / R.length; o += `<path class="cwb" d="M${f1(x - w / 2)} ${T}H${f1(x + w / 2)}"/>` + resSym(x, T, w, 30, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1); });
     if (!s.hideVm) { const nL = x1 + span * .5 / R.length - w / 2 - 14, nR = x1 + span * (R.length - .5) / R.length + w / 2 + 14, vy = T + (tall ? 92 : 78), vx = (nL + nR) / 2;
       o += `<path class="cw" d="M${f1(nL)} ${T}V${vy}H${f1(vx - 22)}M${f1(vx + 22)} ${vy}H${f1(nR)}V${T}"/><circle class="jn" cx="${f1(nL)}" cy="${T}" r="5"/><circle class="jn" cx="${f1(nR)}" cy="${T}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, true); }
-    o += `<path class="cwb" d="M${L + 40} ${B}H${L + 96}"/>` + amSym(L + 68, B, 22, c.I, fs, hide, false);
-    o += `<path class="cwb" d="M${Rr - 96} ${B}H${Rr - 40}"/>` + amSym(Rr - 68, B, 22, c.I, fs, hide, false);
+    o += amSym(L + 68, B, 22, c.I, fs, hide, false);   /* circuit fix 17 Nov: the filled meter sits on an unbroken wire */
+    o += amSym(Rr - 68, B, 22, c.I, fs, hide, false);
     o += tall ? T_((L + Rr) / 2, B - 84, "Same current all the way round:", fs - 3, 'text-anchor="middle" class="mut"') + T_((L + Rr) / 2, B - 84 + Math.max(fs - 3, FMIN) + 4, "both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"')
       : T_((L + Rr) / 2, B - 18, "Same current all the way round: both ammeters read the same.", fs - 3, 'text-anchor="middle" class="mut"');
   } else {
-    const xl = L + (tall ? 140 : 250), xr = Rr - (tall ? 60 : 160), n = R.length, top = T + (tall ? 70 : 54), bot = B - (tall ? 40 : 30), rowY = i => n === 1 ? (top + bot) / 2 : top + (bot - top) * i / (n - 1);
+    const xl = L + (tall ? 140 : 250), xr = Rr - (tall ? 110 : 160), n = R.length, top = T + (tall ? 70 : 54), bot = B - (tall ? 40 : 30), rowY = i => n === 1 ? (top + bot) / 2 : top + (bot - top) * i / (n - 1);
     o += `<path class="cw" d="M${L} ${T}H${xl}V${f1(rowY(n - 1))}M${xr} ${f1(rowY(0))}V${B}H${L}"/>`;
     if (!s.hideVm) { const vx = xr + (tall ? 36 : 80), vy = (T + B) / 2, up = T - 26;   /* voltmeter across the whole combination: left node (top of the left bus) to right node (foot of the right bus) */
-      o += `<path class="cw" d="M${xl} ${T}V${up}H${vx}V${f1(vy - 22)}M${vx} ${f1(vy + 22)}V${B}H${xr}"/><circle class="jn" cx="${xl}" cy="${T}" r="5"/><circle class="jn" cx="${xr}" cy="${B}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, false); }
-    o += `<path class="cwb" d="M${L + (tall ? 50 : 80)} ${T}H${L + (tall ? 106 : 136)}"/>` + amSym(L + (tall ? 78 : 108), T, 22, c.I, fs, hide, true) + (tall || s.hideVm ? "" : T_(L + 108, T + 22 + fs * 2 + 18, "main", fs - 3, 'text-anchor="middle" class="mut"'));
+      o += `<path class="cw" d="M${xl} ${T}V${up}H${vx}V${f1(vy - 22)}M${vx} ${f1(vy + 22)}V${B}H${xr}"/><circle class="jn" cx="${xl}" cy="${T}" r="5"/><circle class="jn" cx="${xr}" cy="${B}" r="5"/>` + vmSym(vx, vy, 22, fs, hide, "right"); }
+    o += amSym(L + (tall ? 78 : 108), T, 22, c.I, fs, hide, true) + (tall || s.hideVm ? "" : T_(L + 108, T + 22 + fs * 2 + 18, "main", fs - 3, 'text-anchor="middle" class="mut"'));
     R.forEach((r, i) => { const y = rowY(i), xm = (xl + xr) / 2, w = tall ? 70 : 96;
-      o += `<path class="cw" d="M${xl} ${f1(y)}H${xr}"/><circle class="jn" cx="${xl}" cy="${f1(y)}" r="5"/><circle class="jn" cx="${xr}" cy="${f1(y)}" r="5"/>`;
-      o += `<path class="cwb" d="M${f1(xm - w / 2 - (tall ? 40 : 60))} ${f1(y)}H${f1(xm + w / 2)}"/>` + resSym(xm + (tall ? 18 : 30), y, w, 28, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1);
-      o += amSym(xm - w / 2 - (tall ? 14 : 30), y, 18, c.br[i], fs - 2, hide, true); });
+      /* circuit fix 17 Nov: the branch wire is unbroken from bus to bus (the ammeter and resistor sit on it); a junction dot only
+         where a bus carries on past the branch (left bus: every branch but the last; right bus: every branch but the first) */
+      o += `<path class="cw" d="M${xl} ${f1(y)}H${xr}"/>` + (i < n - 1 ? `<circle class="jn" cx="${xl}" cy="${f1(y)}" r="5"/>` : "") + (i > 0 ? `<circle class="jn" cx="${xr}" cy="${f1(y)}" r="5"/>` : "");
+      o += resSym(tall ? xr - 60 : xm + 30, y, w, 28, `R${"₁₂₃"[i]} = ${r} Ω`, fs - 1);
+      o += amSym(tall ? xl + 50 : xm - w / 2 - 30, y, 18, c.br[i], fs - 2, hide, false); });
   }
   setLayer($("sG"), o); FMIN = 0;
 }
