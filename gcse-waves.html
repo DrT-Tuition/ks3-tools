@@ -1360,8 +1360,9 @@ function judgeMean(a, v) {
 let sceneVis = true;
 if (window.IntersectionObserver) new IntersectionObserver(es => { sceneVis = es[0].isIntersecting; if (sceneVis) startLoop(); }).observe($("rsvg"));
 /* Idle (16 Nov 2026): like Gas Pressure, the ripples pause after 20 s with nobody touching the page ("Paused to save power",
-   shown over the tank so nothing on the page moves), but never while waves are being counted. Any key, click, touch,
-   scroll or mouse move starts them again. */
+   shown over the tank so nothing on the page moves), but never while pupils watch and wait: the "Watch the marker ... press
+   Start the clock" step and the counting step (RIP_WATCH, 17 Nov 2026). Any key, click, touch, scroll or mouse move starts them again. */
+const RIP_WATCH = ["watch", "counting"];
 const RIP_IDLE = 20000; let ripAct = performance.now(), ripIdle = false;
 function ripWake() { ripAct = performance.now(); if (!ripIdle) return; ripIdle = false; $("ripPause").hidden = true; startLoop(); }
 ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "input"].forEach(ev => document.addEventListener(ev, ripWake, { capture: true, passive: true }));
@@ -1371,7 +1372,7 @@ function startLoop() {
   if (anim || !wantsLoop()) return;
   const a = anim = { id: 0, last: performance.now(), m: M };
   const step = now => { if (anim !== a) return; const r = a.m.rip, n = Math.max(now, performance.now()), dt = Math.min(.25, (n - a.last) / 1000); a.last = n;
-    if (n - ripAct > RIP_IDLE && r.step !== "counting") { anim = null; ripIdle = true; $("ripPause").hidden = false; return; }   // nobody has touched it for 20 s
+    if (n - ripAct > RIP_IDLE && !RIP_WATCH.includes(r.step)) { anim = null; ripIdle = true; $("ripPause").hidden = false; return; }   // nobody has touched it for 20 s
     r.t += dt / RT.slow;
     drawRipMov();
     if (wantsLoop()) a.id = paceFrame(step, 15); else anim = null; };

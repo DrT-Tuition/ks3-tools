@@ -12,9 +12,9 @@
     more O₂ particles in the air than in the blood; CO₂ crosses blood → air for the same reason.
     Particles do cross both ways at random (all particles move at the same speed everywhere,
     so they spread out evenly when left alone; they change direction more often inside the wall).
-    The meter is computed from the simulation's particle counts: (O₂ per area in the air − O₂ per
+    The meter is computed from the simulation's particle counts: (0.6 × O₂ per area in the air − O₂ per
     area in the blood by the wall) ÷ wall thickness × number of alveoli (few = 3, many = 12),
-    smoothed over about 4 s and scaled so it matches the net number of O₂ particles that
+    smoothed over about 3 s and scaled so it matches the net number of O₂ particles that
     actually cross all the way into the blood (checked on load to within 40%).
     Controls: Breathing on/off + "Take one breath" (ventilation: half the air in the alveolus
     leaves up the air tube and fresh air comes in), Blood flow on/off (blood carries particles
@@ -360,6 +360,7 @@ main.layout{min-height:calc(100vh - 70px)}
   .card.model > .particles{padding:10px 12px}
   .card.model > .particles .mini{padding:6px 10px;font-size:15px;min-height:38px}
 }
+@media (min-width:1100px) and (max-height:740px){#spark{height:36px}}   /* 1280 x 720: the Few / Many buttons were 12 px below the screen (17 Nov 2026) */
 /* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
    and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
    Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
@@ -709,7 +710,12 @@ function mapS(P0, P1, s) {
 }
 /* Meter calibration: the diffusion rule (difference in concentration ÷ wall thickness) is scaled by
    METER_K so it matches the crossing rate the particles actually achieve (checked on load). */
-const METER_K = 23000;   // re-measured for the round alveolus (16 Nov 2026): the meter matches the crossings again (about 800 per minute)
+const METER_K = 35000;   // re-measured 17 Nov 2026 (with BLOOD_FULL): the meter matches the crossings (about 600 per minute)
+/* In this model the O₂ particles stop crossing on balance before the blood by the wall reaches the air's concentration
+   (measured with blood flow off: net crossings fall to about a quarter while the blood is at about 0.4 to 0.7 of the air).
+   So the meter takes the difference from BLOOD_FULL × the air's concentration. With flow off the meter now falls clearly
+   within about 10 s and settles near half (17 Nov 2026; before it fell only to about 75%). */
+const BLOOD_FULL = 0.6;
 
 function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -830,11 +836,11 @@ function makeSim(settings, rng) {
   S.meterNow = function () {
     const P = path(); let a = 0, b = 0;
     for (const p of S.parts) if (p.k === "O2") { if (p.r === "air" || p.r === "in") a++; else if (p.r === "blood" && p.s > P.sA && p.s < P.sB) b++; }
-    const diff = a / AIR_AREA - b / P.capArea;
+    const diff = BLOOD_FULL * a / AIR_AREA - b / P.capArea;
     return METER_K * diff / th() * 60 * FACTS.alveoli[S.set.alv];
   };
   S.ema = null;
-  S.track = function (dt) { const m = S.meterNow(); S.ema = S.ema === null ? m : S.ema + (m - S.ema) * Math.min(1, dt / 4); };
+  S.track = function (dt) { const m = S.meterNow(); S.ema = S.ema === null ? m : S.ema + (m - S.ema) * Math.min(1, dt / 3); };
   S.rate = function () { return S.ema; };
   S.counts = function () {
     const c = { air: { o2: 0, co2: 0 }, arr: { o2: 0, co2: 0 }, lea: { o2: 0, co2: 0 } }, L = path().L;
@@ -1117,7 +1123,7 @@ function resize() {
     mainCtx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   }
   const sw = spark.parentElement.clientWidth || 300;
-  spark.width = Math.round(sw * dpr); spark.height = Math.round(56 * dpr); spark.style.width = "100%";
+  spark.width = Math.round(sw * dpr); spark.height = Math.round((spark.clientHeight || 56) * dpr); spark.style.width = "100%";
   sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw(); drawSpark();
 }
@@ -1319,7 +1325,7 @@ function updateMeter() {
 }
 function sampleSpark(n) { for (let i = 0; i < n; i++) { const v = meterVal(); sparkData.push(v || 0); } while (sparkData.length > 60) { sparkData.shift(); sparkMarks = sparkMarks.map(m => m - 1).filter(m => m >= 0); } drawSpark(); }
 function drawSpark() {
-  const w = spark.clientWidth || 300, h = 56;
+  const w = spark.clientWidth || 300, h = spark.clientHeight || 56;
   sctx.clearRect(0, 0, w, h);
   sctx.strokeStyle = TOK.line; sctx.lineWidth = 1; sctx.beginPath(); sctx.moveTo(0, h - 1); sctx.lineTo(w, h - 1); sctx.stroke();
   sctx.setLineDash([4, 4]); sctx.strokeStyle = TOK.muted;
