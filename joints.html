@@ -1116,6 +1116,12 @@ const LK = () => narrow() ? "tall" : "wide";
 /* rollout 14 Nov 2026: from 1100 px wide the Move it stage sits beside its buttons; its viewBox drops the empty sides
    (x 90-670 holds the skeleton, a raised or swung limb, the labels and the caption) */
 const figCrop = K => K === "wide" && window.matchMedia && matchMedia("(min-width:1100px)").matches ? { x: 90, w: 580 } : null;
+/* polish 17 Nov 2026: on a phone (tall stage) the window slides with the pose, at the same scale, so every pose stays in view.
+   Measured over every pose (x, stage units): standing Turned 62-588, Side 90-616 (a leg kicked forwards); seated Turned -58-402,
+   Side -10-424 (an arm swung back or up). The stage is 600 wide, so each is centred: [standing, seated] left edges, blended by
+   how far the skeleton has sat down. On a wide screen the crop (x 90-670, seated Turned from 94) slides 30 units left when seated. */
+const FIG_VX = { front: [0, 0], turned: [25, -128], side: [53, -93] };
+const figVX = (K, F) => { const v = FIG_VX[F.yaw] || [0, 0], t = clamp(F.sit || 0, 0, 1); return K === "tall" ? v[0] + (v[1] - v[0]) * t : 0; };
 function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
 const rd = m => `<p class="r1${m.w ? " warn" : ""}">${esc(m.h)}</p>` + (m.b ? `<p class="r2">${esc(m.b)}</p>` : "") + (m.c ? `<p class="r3">${esc(m.c)}</p>` : "");
 const tbox = (x, y, w, h, t, fs, cls) => `<rect class="${cls || "box"}" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="8"/><text x="${f1(x + 10)}" y="${f1(y + h / 2 + fs * .36)}" font-size="${fs}" font-weight="700">${esc(t)}</text>`;
@@ -1364,21 +1370,27 @@ function figBuild(svg, yaw, K) {   // the static picture for this view: built on
 }
 function drawFig() {
   const K = LK(), F = M.F, svg = $("fsvg"), sc = scr(K), Y = sc.Y, P = pose(F), s = Y.s, to = sc.to;
-  const CX = figCrop(K);   // rollout 14 Nov 2026: on a wide screen the empty sides are cropped, so the skeleton fills the stage
-  setAttr(svg, "viewBox", CX ? `${CX.x} -10 ${CX.w} ${Y.h + 10}` : `0 0 ${Y.w} ${Y.h}`);   // review fix: 10 units of headroom for a raised hand
+  const CX0 = figCrop(K), CX = CX0 && { x: CX0.x - (F.yaw === "front" ? 0 : 30 * clamp(F.sit || 0, 0, 1)), w: CX0.w };   // rollout 14 Nov 2026: on a wide screen the empty sides are cropped, so the skeleton fills the stage
+  const VX = CX ? CX.x : figVX(K, F), VW = CX ? CX.w : Y.w;   // the stage's left edge and width (viewBox units)
+  setAttr(svg, "viewBox", CX ? `${CX.x} -10 ${CX.w} ${Y.h + 10}` : `${VX} 0 ${Y.w} ${Y.h}`);   // review fix: 10 units of headroom for a raised hand
   const LY = figBuild(svg, F.yaw, K), T = (x, y) => `translate(${f1(x)} ${f1(y)})`;
   /* the joints: each bone's group turns about its joint centre (forward kinematics, fixed lengths) */
   const setLimb = (k, root, a1, rel2, len1, len2) => { const g = LY.limb[k]; if (!g) return;
     setAttr(g[0], "transform", `${T(root[0], -root[1])} rotate(${f1(-a1)})`); setAttr(g[1], "transform", `translate(0 ${len1}) rotate(${f1(rel2)})`); setAttr(g[2], "transform", `translate(0 ${len2})`); };
   setLimb("armN", P.armN.S, P.armN.au, -P.armN.e, FIG.ua, FIG.fa); setLimb("armF", P.armF.S, P.armF.au, -P.armF.e, FIG.ua, FIG.fa);
   setLimb("legN", P.legN.Hp, P.legN.at, P.legN.k, FIG.th, FIG.sn); setLimb("legF", P.legF.Hp, P.legF.at, P.legF.k, FIG.th, FIG.sn);
+  /* polish 17 Nov 2026: in the Turned and Side views the near arm is nearer to you than the head, so when it is raised (elbow, wrist
+     or hand above the shoulder) it is drawn in front of the skull; hanging down it stays where it was. The far arm stays behind. */
+  if (!P.front && LY.limb.armN) { const ga = LY.limb.armN[0], sk = LY.core.find(g => g.dataset.core === "skull"), Sy = P.armN.S[1] + 8;
+    if (sk) { const up = P.armN.E[1] > Sy || P.armN.W[1] > Sy || P.armN.Hd[1] > Sy;
+      if (up && ga.previousElementSibling !== sk) LY.fig.insertBefore(ga, sk.nextSibling); else if (!up && ga.nextElementSibling !== sk) LY.fig.insertBefore(ga, sk); } }
   const SR = pose({ ...F, sit: 1 }).R;
   LY.core.forEach(g => { const k = g.dataset.core; setAttr(g, "transform", k === "stool" ? T(SR[0], -SR[1]) : k === "skull" ? T(P.R[0] + F.shake / s, -P.R[1]) : T(P.R[0], -P.R[1]));
     if (k === "stool") setAttr(g, "opacity", f1(Math.min(1, F.sit * 1.6))); });
   const fx0 = (to(P.legN.A)[0] + to(P.legF.A)[0]) / 2;
   setAttr(LY.fig, "transform", `rotate(${f1(F.wob)} ${f1(fx0)} ${Y.gy}) translate(${Y.cx} ${Y.gy}) scale(${s})`);
   /* the floor and the trace of a circle or a swing */
-  const bgl = [{ k: "floor", h: `<path d="M${CX ? CX.x : 0} ${Y.gy}H${CX ? CX.x + CX.w : Y.w}" style="stroke:var(--floor)" stroke-width="4"/><ellipse cx="${f1(fx0)}" cy="${Y.gy}" rx="${f1(70 * s)}" ry="${f1(7 * s)}" style="fill:var(--floor)" opacity=".7"/>` }];
+  const bgl = [{ k: "floor", h: `<path d="M${VX} ${Y.gy}H${VX + VW}" style="stroke:var(--floor)" stroke-width="4"/><ellipse cx="${f1(fx0)}" cy="${Y.gy}" rx="${f1(70 * s)}" ry="${f1(7 * s)}" style="fill:var(--floor)" opacity=".7"/>` }];
   if (F.trace) { const tk = F.trace + F.yaw + K + P.R.map(f1).join();
     if (svg._trk !== tk) { let d = "";
       if (F.trace === "arm") { const c = to(P.armN.S), r = (FIG.ua + FIG.fa + FIG.hand) * s; d = `M${f1(c[0] - r)} ${f1(c[1])}a${f1(r)} ${f1(r)} 0 1 0 ${f1(2 * r)} 0a${f1(r)} ${f1(r)} 0 1 0 ${f1(-2 * r)} 0`; }
@@ -1387,26 +1399,43 @@ function drawFig() {
       svg._trk = tk; svg._trh = `<path d="${d}" fill="none" style="stroke:var(--accent)" stroke-width="3" stroke-dasharray="8 7" opacity=".55"/>`; }
     bgl.push({ k: "trace", h: svg._trh }); }
   patchKeyed(LY.bg, LY.bmap, bgl);
-  const tops = [], tagY = [];
+  const tops = [];
   /* handles (or padlocks when Statue is on) */
   const HP = { shoulder: P.armN.S, elbow: P.armN.E, hip: P.legN.Hp, knee: P.legN.K, skull: vadd(P.head, [0, 16]) };
   let h;
+  /* caption (narrower screens only): the joint you used, its type and how it moves; worked out first so the labels keep clear of it */
+  const capFs = Y.fs, capJ = F.active && !CX ? JOINTS[F.active] : null, capL = capJ ? [`${capJ.n}: ${TYPES[capJ.type].n.toLowerCase()}`, cap(TYPES[capJ.type].move)] : null,
+    capW = capL ? Math.max(capL[0].length * capFs * .58, capL[1].length * capFs * .5) + 24 : 0;
+  /* labels (Labels support), polish 17 Nov 2026: each label sits right beside its own joint (left of it if there is room, else right,
+     above, below or a corner), clear of the other labels, the handles, the caption and, if it can, the long bones of the arm and leg with handles.
+     (They used to slide down a column, so "Shoulder" could end up beside the elbow or the hand.) */
+  const tags = {};
+  if (support.labels) { const th = Y.fs * 1.8, hb = Y.hr * .55, gp = Y.hr * .7 + 6, x0 = VX + 4, x1 = VX + VW - 4, y0 = (CX ? -10 : 0) + 4, y1 = Y.h - 4;
+    const hq = {}; JKEYS.forEach(j => { const q = to(HP[j]); hq[j] = [q[0] + (j === "skull" ? F.shake : 0), q[1]]; });
+    const solid = JKEYS.map(j => [hq[j][0] - hb, hq[j][1] - hb, hq[j][0] + hb, hq[j][1] + hb]);
+    if (capW) solid.push([VX + 8, 8, VX + 8 + capW, 8 + capFs * 2.9]);
+    const pts = []; [[P.armN.S, P.armN.E], [P.armN.E, P.armN.W], [P.legN.Hp, P.legN.K], [P.legN.K, P.legN.A]].forEach(([a, b]) => {
+      const A = to(a), B = to(b), n = Math.max(2, Math.ceil(Math.hypot(B[0] - A[0], B[1] - A[1]) / 8)); for (let i = 0; i <= n; i++) pts.push([A[0] + (B[0] - A[0]) * i / n, A[1] + (B[1] - A[1]) * i / n]); });
+    const over = (b, list) => list.some(o => b[0] < o[2] + 3 && b[2] > o[0] - 3 && b[1] < o[3] + 3 && b[3] > o[1] - 3);
+    const onBone = b => pts.some(p => p[0] > b[0] - 4 && p[0] < b[2] + 4 && p[1] > b[1] - 4 && p[1] < b[3] + 4);
+    ["skull", "shoulder", "elbow", "hip", "knee"].forEach(j => { const [qx, qy] = hq[j], tw = JOINTS[j].n.length * Y.fs * .6 + 18, d = gp * .72;
+      const cand = [[qx - gp - tw, qy - th / 2], [qx + gp, qy - th / 2], [qx - tw / 2, qy - gp - th], [qx - tw / 2, qy + gp],
+        [qx - d - tw, qy - d - th], [qx + d, qy - d - th], [qx - d - tw, qy + d], [qx + d, qy + d]]
+        .map(([x, y]) => { x = clamp(x, x0, x1 - tw); y = clamp(y, y0, y1 - th); return [x, y, x + tw, y + th]; });
+      const b = cand.find(c => !over(c, solid) && !onBone(c)) || cand.find(c => !over(c, solid)) || cand[0];
+      solid.push(b); tags[j] = [b[0], b[1], tw]; }); }
   JKEYS.forEach(j => { const q = to(HP[j]), qx = q[0] + (j === "skull" ? F.shake : 0), on = F.active === j, J = JOINTS[j]; h = "";
     h += `<g class="hdl drag${on ? " on" : ""}" data-j="${j}" tabindex="0" role="button" aria-label="${J.n} handle: ${TYPES[J.type].n.toLowerCase()}. Drag it, or use the arrow keys.">` +
       `<circle class="hit" r="${Y.hr}"/><circle class="ring" r="${f1(Y.hr * .5)}"/>` +   // a small see-through ring: the joint stays visible under it; the hit circle keeps the touch area
       (F.statue ? lockSVG(0, 0, Y.hr / 32) : `<circle class="kh" r="${f1(Y.hr * .34 + 2.2)}"/><circle class="knob" r="${f1(Y.hr * .34)}"/><circle class="core" r="${f1(Y.hr * .08)}"/>`) +
       `<circle class="fr" r="${f1(Y.hr * .62)}"/></g>`;
-    if (support.labels) { const tw = J.n.length * Y.fs * .6 + 18, x = Math.max((CX ? CX.x : 0) + 4, qx - Y.hr * .7 - tw - 6); let ty = q[1] - Y.fs * .9;
-      while (tagY.some(v => Math.abs(v - ty) < Y.fs * 1.9)) ty += Y.fs * 1.9; tagY.push(ty);   // labels never cover each other
-      h += `<g pointer-events="none">${tbox(x - qx, ty - q[1], tw, Y.fs * 1.8, J.n, Y.fs)}</g>`; }
+    const tg = tags[j]; if (tg) h += `<g pointer-events="none">${tbox(tg[0] - qx, tg[1] - q[1], tg[2], Y.fs * 1.8, J.n, Y.fs)}</g>`;
     tops.push({ k: "h-" + j, h, tr: `translate(${f1(qx)} ${f1(q[1])})` }); });
   h = "";
-  /* caption: the joint you used, its type and how it moves */
-  let capW = 0;
   /* cropped (wide screen): no caption in the scene; the readout beside the stage already names the joint and its type */
-  if (F.active && !CX) { const J = JOINTS[F.active], Tp = TYPES[J.type], l1 = `${J.n}: ${Tp.n.toLowerCase()}`, l2 = cap(Tp.move), fs = Y.fs, w = Math.max(l1.length * fs * .58, l2.length * fs * .5) + 24; capW = w;
-    h += `<g pointer-events="none"><rect class="box" x="8" y="8" width="${f1(w)}" height="${f1(fs * 2.9)}" rx="8"/><text x="20" y="${f1(8 + fs * 1.25)}" font-size="${fs}" font-weight="700" style="fill:var(--accent)">${esc(l1)}</text><text x="20" y="${f1(8 + fs * 2.45)}" font-size="${fs - 2}">${esc(l2)}</text></g>`; }
-  tops.push({ k: "cap", h, tr: CX ? `translate(${f1(CX.x + CX.w - capW - 16)} 0)` : "translate(0 0)" }); patchKeyed(LY.top, LY.tmap, tops);
+  if (capL) { const fs = capFs, w = capW;
+    h += `<g pointer-events="none"><rect class="box" x="8" y="8" width="${f1(w)}" height="${f1(fs * 2.9)}" rx="8"/><text x="20" y="${f1(8 + fs * 1.25)}" font-size="${fs}" font-weight="700" style="fill:var(--accent)">${esc(capL[0])}</text><text x="20" y="${f1(8 + fs * 2.45)}" font-size="${fs - 2}">${esc(capL[1])}</text></g>`; }
+  tops.push({ k: "cap", h, tr: CX ? `translate(${f1(CX.x + CX.w - capW - 16)} 0)` : `translate(${f1(VX)} 0)` }); patchKeyed(LY.top, LY.tmap, tops);
   fReadout();
 }
 function patchKeyed(parent, map, list) {   // one small group per item, kept in list order; only changed groups are patched
@@ -1808,6 +1837,7 @@ function tearToggle(force) {
 function pullToggle() {   // bend or straighten the joint: one muscle of the pair contracts, the other relaxes
   const T = M.T; if (locked()) return lockMsg(); stopAll(); T.info = null; T.mi = null;
   const from = T.bend, to = from >= LTM.max / 2 ? 0 : LTM.max; T.act = to > from ? "f" : "e"; T.msg = ltMoveMsg(T);
+  if (reduced()) { T.bend = to; drawJoint("lt"); if (T.act === "f") tried(5); renderCtl(); return; }   // polish 17 Nov 2026: reduced motion jumps straight to the end
   runAnim(1300 * Math.abs(to - from) / LTM.max + 200, u => { T.bend = from + (to - from) * ease(u); drawJoint("lt"); },
     () => { T.bend = to; drawJoint("lt"); if (T.act === "f") tried(5); }, 15);
 }
