@@ -519,6 +519,41 @@ detector controls and the step box fit on one screen. */
 #pane-fl .sscene{max-width:max(734px, calc((100vh - 600px) * 2.526))}
 }
 /* == end tool: gcse-infrared-radiation layout == */
+/* == lobf v1: line-of-best-fit practice (pilot 16 Nov 2026) == */
+:root{--lobf-line:#B4501A;--lobf-hd:#B4501A;--lobf-hd-in:#FBFAF8;--lobf-given:#2D5B8C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lobf-line:#FFB37A;--lobf-hd:#FFB37A;--lobf-hd-in:#14243D;--lobf-given:#8CC4FF}}
+:root[data-theme="dark"]{--lobf-line:#FFB37A;--lobf-hd:#FFB37A;--lobf-hd-in:#14243D;--lobf-given:#8CC4FF}
+.lobf{display:grid;gap:6px;margin-top:6px;min-width:0}
+.lobf-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.lobf-lbl{font-weight:700}
+.lobf-seg{display:inline-flex;flex-wrap:wrap;gap:4px}
+.lobf-seg .btn{padding:8px 14px;font-size:15px;min-height:44px}
+.lobf-seg .btn[aria-pressed="true"]{background:var(--lobf-line);border-color:var(--lobf-line);color:var(--lobf-hd-in)}
+.lobf .btn{min-height:44px}
+.lobf .linkbtn{min-height:44px}
+.lobf-tip{margin:0}
+.lobf-msg{margin:0;padding:8px 10px;border-radius:8px;background:var(--surface-2,transparent)}
+.lobf-msg.good{background:var(--good-bg);color:var(--good)}
+.lobf-msg.bad{background:var(--bad-bg);color:var(--bad)}
+.lobf-msg:focus{outline:none}
+.lobf-use{padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.lobf-use p{margin:0}
+.lobf-g .lobf-line{fill:none;stroke:var(--lobf-line);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.lobf-g .lobf-given{stroke:var(--lobf-given);stroke-dasharray:10 6}
+.lobf-g .lobf-gt{fill:var(--lobf-given);font-weight:700;pointer-events:none}
+.lobf-g .lobf-use-l{fill:none;stroke:var(--lobf-given);stroke-width:2.5;stroke-dasharray:6 5;vector-effect:non-scaling-stroke;pointer-events:none}
+.lobf-g .lobf-use-t,.lobf-g .lobf-gt{paint-order:stroke;stroke:var(--surface,#fff);stroke-width:4px;stroke-linejoin:round}
+.lobf-g .lobf-use-t{fill:var(--lobf-given);font-weight:700;pointer-events:none}
+.lobf-g .lobf-use-bg{fill:var(--surface,#fff);opacity:.9;pointer-events:none}
+.lobf-h{cursor:grab;touch-action:none;pointer-events:auto;outline:none}
+.lobf-h.drag{cursor:grabbing}
+.lobf-h .lobf-hit{fill:transparent;pointer-events:all}
+.lobf-h .lobf-ring{fill:none;stroke:var(--lobf-hd);stroke-width:2;opacity:.55;vector-effect:non-scaling-stroke}
+.lobf-h .lobf-hd{fill:var(--lobf-hd);stroke:var(--lobf-hd-in);stroke-width:2;vector-effect:non-scaling-stroke}
+.lobf-h:focus-visible .lobf-ring{stroke:var(--focus);stroke-width:4;opacity:1}
+.lobf-h.drag .lobf-ring{opacity:1}
+@media (prefers-reduced-motion: no-preference){.lobf .btn,.lobf-msg{transition:background-color .16s ease,border-color .16s ease,color .16s ease}}
+/* == end lobf v1 == */
 /* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
    and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
    Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
@@ -722,7 +757,8 @@ details.trybox > .try{margin-top:6px}
         <div class="labgrid">
           <div id="ftable"></div>
           <div><svg id="fgsvg" class="scene" viewBox="0 0 480 340" role="img" aria-label="Cooling curves: temperature against time for the four flasks"><g id="fgG"></g></svg>
-            <p class="small gkey" id="fgKey"></p></div>
+            <p class="small gkey" id="fgKey"></p>
+            <div class="controls" id="irPick" hidden style="margin-top:6px"></div><div class="lobf-host" data-lobf-host="ir"></div></div>
         </div>
         <div class="panel" id="fconcBox"></div>
       </div>
@@ -920,7 +956,8 @@ function makeFRun(opt) {
     fl[c] = { Ts, k: k0 * Math.exp(z * FL.SIGD / sens) }; });
   return { seed, Tr, fl, step: "fill", t: 0, rec: { start: null, read: [], drop: null }, tries: 0, smsg: null, inp: {} };
 }
-const Tf = (r, c, t) => r.Tr + (r.fl[c].Ts - r.Tr) * Math.exp(-r.fl[c].k * t);
+const no69 = T => T >= 68.75 && T < 69.75 ? 69.75 : T;   // never a reading of 69 or 69.5 °C (house rule: no visible 69)
+const Tf = (r, c, t) => no69(r.Tr + (r.fl[c].Ts - r.Tr) * Math.exp(-r.fl[c].k * t));
 const readKf = r => Math.round(r.t / FL.every);
 
 /* ===== Model state ===== */
@@ -1202,17 +1239,396 @@ function drawFlGraph() {
     for (let it = 0; it < 20; it++) for (let i = 1; i < ends.length; i++) { const d = ends[i].ly - ends[i - 1].ly; if (d < GAP) { ends[i].ly += (GAP - d) / 2; ends[i - 1].ly -= (GAP - d) / 2; } }
     const lx = gpx(FL.tEnd) + 26;   // labels to the right of the curve ends, spread apart, with leader lines
     ends.forEach(e => { o += `<path class="lead" d="M${f1(gpx(FL.tEnd) + 3)} ${f1(e.y)}L${f1(lx - 2)} ${f1(e.ly)}"/><circle cx="${f1(gpx(FL.tEnd))}" cy="${f1(e.y)}" r="3.5" class="pivot"/>` + tag(lx, e.ly + 7, e.L, fs + 1, "bold", "start"); });
-    setLayer($("fgG"), o); morphHTML($("fgKey"), "Four flasks, all starting at 80 °C."); return;
+    setLayer($("fgG"), o); morphHTML($("fgKey"), "Four flasks, all starting at 80 °C."); irPick(); LBI.render(); LBI.draw(); return;
   }
   const rec = M.frun.rec, any = rec.start != null;
-  if (any) COLS.forEach(c => { const p = ptsOfC(rec, c), f = M.fit ? quadFit(p) : null;
+  if (any) COLS.forEach(c => { const p = ptsOfC(rec, c), f = M.fit && !LBI.on() ? quadFit(p) : null;
     if (f) o += `<path class="fitc" d="${curvePath(f, p[p.length - 1][0])}"/>`;
     p.forEach(([t, T]) => { o += symSVG(c, gpx(t), gpy(T), "pt-" + c); }); });
   else o += T_(GRF.x0 + GRF.w / 2, GRF.y0 + GRF.h / 2, "Your readings will be plotted here", fs + 1, 'text-anchor="middle" class="mut"');
-  if (any && M.fit && rec.read.length < 3) o += T_(GRF.x0 + GRF.w / 2, GRF.y0 + GRF.h - 16, "Record at least 4 readings for a curve", fs, 'text-anchor="middle" class="mut"');
+  if (any && M.fit && !LBI.on() && rec.read.length < 3) o += T_(GRF.x0 + GRF.w / 2, GRF.y0 + GRF.h - 16, "Record at least 4 readings for a curve", fs, 'text-anchor="middle" class="mut"');
   setLayer($("fgG"), o); morphHTML($("fgKey"), "Key: " + COLS.map(c => `${COL[c].sym} ${esc(COL[c].n.toLowerCase())}`).join(" · "));
+  irPick(); LBI.render(); LBI.draw();   /* lobf v1: the pupil's own line of best fit for one flask, on top */
 }
 
+/* == lobf v1: line-of-best-fit practice (pilot 16 Nov 2026) ==
+   One self-contained block. A tool makes one instance per graph:  const LB = LOBF.make({ ... })  and calls  LB.draw()  at the end
+   of its own graph drawing (and LB.render() wherever it rebuilds the controls host). Pupils choose Straight / Curve / Dot-to-dot,
+   drag round handles (straight: 2, at the ends of the data; curve: 3, as in graph-it, the middle one also moves left/right; the
+   curve through them is smooth: y = A + B·e^(−kx) when they rise or fall, a monotone cubic for a peak), press Check my line,
+   and get AQA-style feedback compared with a reference fit (least squares without the tool's anomalies; for curves the tool's own
+   fitted curve). Show a good line appears after 3 tries ("given"). Optional "Use your line" (a value or gradient read from it).
+   Options (functions are called every draw, so they always see the tool's current state):
+     id         short unique name (data-lobf-host="<id>" marks the controls host; the tool may also print LB.html() itself)
+     svg()      the graph's <svg> (the overlay <g class="lobf-g"> is appended to it, after the tool's own layers)
+     geom()     { px, py, xmin, xmax, ymin, ymax }   px/py: data -> svg user units; the box is the plot area
+     points()   [{ x, y, anom, out, skip }]   anom: the tool's anomaly (left out; going through it is an error),
+                out: off the part that is fitted (e.g. past the limit of proportionality; leave out, going along it is an error),
+                skip: plotted but not judged (e.g. a start point taken before the heater warmed up)
+     expect()   "straight" | "curve"            allowed() -> bool (hide all while a question needs it hidden)
+     state()    the object that holds this graph's line (keep it in the tool's model, so Demo and questions keep their own)
+     ready()    null, or a sentence that says what to do first (e.g. "Finish the run first.")
+   Optional: ref(P) -> f(x) (curve reference; default quadratic least squares), range() -> [a, b] (x range the line is drawn
+     across; default the plotted points), handleX([a, b]) -> [xa, xb] (straight handles), origin (the science says the line goes
+     through (0, 0)), tol (one "small square" in y data units; default y span ÷ 40), names: { x, xu, y, yu } (words + units),
+     fx(x) -> "40 s" (how to name a point's x), regions: three words for the left / middle / right thirds, notes: { origin,
+     originGood, out, outGood, tip }, peakBase (v1.1: a peak is drawn as a bell above this y, e.g. 0), toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
+     guard() (true = the model is locked: ignore the press), onGood(info), onReset() (a good line was undone because the results changed), onChange() (the tool redraws; default LB.render() + LB.draw()), use: { label, html(f, info), draw(f, g, k) }.
+   No loops: drags redraw at most once per frame, nothing runs while idle.
+   v1.1 (17 Nov 2026): a line pulled towards "out" points gets that reason first; a good line with points left out ("out" or
+   anomalies) no longer says "across all your data"; option peakBase (a peak drawn as a bell). Without peakBase a tool behaves as in v1. */
+const LOBF = (() => {
+  const NS_ID = { n: 0 }, all = {};
+  const avg = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  function lsq(P) {
+    const mx = avg(P.map(p => p.x)), my = avg(P.map(p => p.y)); let sxy = 0, sxx = 0;
+    P.forEach(p => { sxy += (p.x - mx) * (p.y - my); sxx += (p.x - mx) ** 2; });
+    const b = sxx ? sxy / sxx : 0, a = my - b * mx; const f = x => a + b * x; f.a = a; f.b = b; return f;
+  }
+  function quad(P) {   // least squares y = c0 + c1·u + c2·u² (u = x − mean x), as graph-it
+    const m = avg(P.map(p => p.x)), A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], T = [0, 0, 0];
+    P.forEach(p => { const u = p.x - m, v = [1, u, u * u]; for (let i = 0; i < 3; i++) { T[i] += v[i] * p.y; for (let j = 0; j < 3; j++) A[i][j] += v[i] * v[j]; } });
+    const M = A.map((r, i) => r.concat(T[i]));
+    for (let i = 0; i < 3; i++) { let q = i; for (let k = i + 1; k < 3; k++) if (Math.abs(M[k][i]) > Math.abs(M[q][i])) q = k; [M[i], M[q]] = [M[q], M[i]];
+      if (!M[i][i]) return lsq(P); for (let k = i + 1; k < 3; k++) { const f = M[k][i] / M[i][i]; for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j]; } }
+    const c = [0, 0, 0]; for (let i = 2; i >= 0; i--) { let s = M[i][3]; for (let j = i + 1; j < 3; j++) s -= M[i][j] * c[j]; c[i] = s / M[i][i]; }
+    return x => { const u = x - m; return c[0] + c[1] * u + c[2] * u * u; };
+  }
+  /* a smooth curve through the handles that never overshoots them (monotone cubic, Fritsch–Carlson): a plateau stays flat, a peak
+     stays at the middle handle. Outside the handles it carries on along the end slopes. */
+  function pchip(H) {
+    const n = H.length, h = [], d = [], m = [];
+    for (let i = 0; i < n - 1; i++) { h[i] = H[i + 1].x - H[i].x || 1e-9; d[i] = (H[i + 1].y - H[i].y) / h[i]; }
+    for (let i = 1; i < n - 1; i++) { if (d[i - 1] * d[i] <= 0) m[i] = 0; else { const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1]; m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]); } }
+    const end = (h0, h1, d0, d1) => { let s = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1); if (s * d0 <= 0) s = 0; else if (d0 * d1 <= 0 && Math.abs(s) > Math.abs(3 * d0)) s = 3 * d0; return s; };
+    if (n === 2) { m[0] = m[1] = d[0]; } else { m[0] = end(h[0], h[1], d[0], d[1]); m[n - 1] = end(h[n - 2], h[n - 3], d[n - 2], d[n - 3]); }
+    return x => {
+      if (x <= H[0].x) return H[0].y + m[0] * (x - H[0].x);
+      if (x >= H[n - 1].x) return H[n - 1].y + m[n - 1] * (x - H[n - 1].x);
+      let i = 0; while (i < n - 2 && x > H[i + 1].x) i++;
+      const t = (x - H[i].x) / h[i], t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * H[i].y + (t3 - 2 * t2 + t) * h[i] * m[i] + (-2 * t3 + 3 * t2) * H[i + 1].y + (t3 - t2) * h[i] * m[i + 1];
+    };
+  }
+  /* the curve through the three curve handles. Rising or falling handles: the smooth curve y = A + B·e^(−kx) through all three
+     (exact for "rises then levels off" and "falls then levels off", e.g. gas volume, decay, cooling; straight when they line up;
+     it never overshoots). A peak or a dip: the monotone cubic above (the turning point stays at the middle handle). */
+  /* v1.1: a peak above a baseline (opt-in, option peakBase, e.g. 0 for a rate): a smooth bell, base + h·e^(−((x − xp)/w)²), with its
+     top on the middle handle and its own width on each side so it goes through the end handles. It starts slowly, rises, peaks
+     and falls, as enzyme and temperature curves do (the monotone cubic can't: tested 16 Nov on the enzyme data, 0 of 9 placements). */
+  function bell(H, base) {
+    const [p0, p1, p2] = H, ym = p1.y - base; if (!(ym > 0) || !(p1.x > p0.x) || !(p2.x > p1.x)) return null;
+    const ya = Math.max(p0.y - base, .02 * ym), yb = Math.max(p2.y - base, .02 * ym); if (ya >= ym || yb >= ym) return null;
+    const wl = (p1.x - p0.x) / Math.sqrt(Math.log(ym / ya)), wr = (p2.x - p1.x) / Math.sqrt(Math.log(ym / yb));
+    return x => base + ym * Math.exp(-(((x - p1.x) / (x < p1.x ? wl : wr)) ** 2));
+  }
+  function curve3(H, base) {
+    H = H.slice().sort((p, q) => p.x - q.x); const [p0, p1, p2] = H, X = p2.x - p0.x, Y = p2.y - p0.y;
+    if (base != null && p1.y > p0.y && p1.y > p2.y) { const b = bell(H, base); if (b) return b; }
+    if (!(X > 0) || Math.abs(Y) < 1e-12 || (p1.y - p0.y) * (p2.y - p1.y) < 0) return pchip(H);
+    const q = (p1.y - p0.y) / Y, t1 = (p1.x - p0.x) / X;
+    if (q <= 0 || q >= 1) return pchip(H);
+    const g = k => Math.abs(k) < 1e-6 ? t1 : (1 - Math.exp(-k * t1)) / (1 - Math.exp(-k));
+    let lo = -60, hi = 60, qq = Math.min(g(hi) - 1e-9, Math.max(g(lo) + 1e-9, q));
+    for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (g(m) < qq) lo = m; else hi = m; }
+    const k = (lo + hi) / 2;
+    if (Math.abs(k) < 1e-4) return x => p0.y + Y * (x - p0.x) / X;
+    const B = Y / (1 - Math.exp(-k));
+    return x => p0.y + B * (1 - Math.exp(-k * (x - p0.x) / X));
+  }
+  const rms = (P, f) => Math.sqrt(avg(P.map(p => (p.y - f(p.x)) ** 2)));
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+  function make(o) {
+    const id = o.id || "lb" + (++NS_ID.n), I = { o, id };
+    let dragRaf = 0, drag = null;
+    const S = () => { const s = o.state(); if (!s.v) Object.assign(s, { v: 1, on: !o.toggle, kind: null, yL: null, yR: null, H: null, tries: 0, ok: false, given: false, msg: "", cls: "", use: false, sig: "" }); return s; };
+    const allowed = () => !o.allowed || o.allowed();
+    const expect = () => o.expect ? o.expect() : "straight";
+    const tolOf = g => o.tol ? o.tol(g) : (g.ymax - g.ymin) / 40;
+    const fx = x => o.fx ? o.fx(x) : String(Math.round(x * 100) / 100);
+    const P0 = () => (o.points() || []).filter(p => p && isFinite(p.x) && isFinite(p.y));
+    const fitP = () => P0().filter(p => !p.anom && !p.out && !p.skip);
+    function rangeOf() { if (o.range) return o.range(); const xs = P0().map(p => p.x); return xs.length ? [Math.min(...xs), Math.max(...xs)] : [0, 1]; }
+    function evalRange() { const xs = fitP().map(p => p.x); return xs.length ? [Math.min(...xs), Math.max(...xs)] : rangeOf(); }
+    function hX() { const r = rangeOf(); return o.handleX ? o.handleX(r) : r; }
+    function refF() { const P = fitP(); if (P.length < 2) return null; return expect() === "curve" ? (o.ref ? o.ref(P) : quad(P)) : lsq(P); }
+    function sigNow() { return JSON.stringify(P0().map(p => [+p.x.toFixed(4), +p.y.toFixed(4), p.anom ? 1 : 0, p.out ? 1 : 0, p.skip ? 1 : 0])) + "|" + expect(); }
+    function startLine(s, keepKind) {
+      const P = fitP(), m = P.length ? avg(P.map(p => p.y)) : 0, [xa, xb] = hX(), [a, b] = rangeOf();
+      s.yL = m; s.yR = m; s.H = [{ x: a, y: m }, { x: (a + b) / 2, y: m }, { x: b, y: m }];
+      if (!keepKind) s.kind = null; s.ok = false; s.given = false; s.use = false; s.msg = ""; s.cls = ""; s.tries = 0; void xa; void xb;
+    }
+    function sync() {   // new or changed results: start the line again (keeps Straight / Curve chosen)
+      const s = S(), sg = sigNow(); if (s.sig === sg) return s;
+      const first = !s.sig, had = s.ok; s.sig = sg; startLine(s, true); if (first) s.kind = null; if (!first && had && o.onReset) o.onReset(); return s;
+    }
+    /* the pupil's line as a function of x */
+    function lineF(s) {
+      if (s.given) { const r = refF(); if (r) return r; }
+      if (s.kind === "straight") { const [xa, xb] = hX(), b = (s.yR - s.yL) / ((xb - xa) || 1e-9); const f = x => s.yL + b * (x - xa); f.b = b; f.a = s.yL - b * xa; return f; }
+      if (s.kind === "curve") { const [a, , b] = [s.H[0].x, 0, s.H[2].x]; const r = rangeOf(); s.H[0].x = r[0]; s.H[2].x = r[1]; void a; void b; return curve3(s.H, o.peakBase); }
+      return null;
+    }
+    I.lineF = () => { const s = S(); return lineF(s); };
+    I.on = () => { const s = S(); return !!(s.on && allowed()); };
+    I.good = () => { const s = S(); return !!(s.on && s.ok); };
+
+    /* ---------- the verdict ---------- */
+    function verdict(s, g) {
+      const P = fitP(), all = P0(), ex = expect(), T = tolOf(g), on = 0.5 * T, nm = o.names || {};
+      const anoms = all.filter(p => p.anom), outs = all.filter(p => p.out);
+      const aNote = anoms.length ? ` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}, as it should.` : "";
+      if (s.kind === "dots") return { ok: false, why: "That’s a dot-to-dot. A line of best fit is one thin line, straight or a smooth curve, that shows the overall pattern. It doesn’t have to touch every point. Choose " + (ex === "curve" ? "Curve." : "Straight.") };
+      if (ex === "straight" && s.kind === "curve") return { ok: false, why: "These points lie close to a straight line, so draw a straight line of best fit (with a ruler on paper). Choose Straight." };
+      if (ex === "curve" && s.kind === "straight") return { ok: false, why: "These points make a curve, so no straight line fits them well. A line of best fit can be curved: choose Curve and make one smooth curve." };
+      const r = refF(), f = lineF(s); if (!r || !f) return { skip: "Plot more points first." };
+      const [a, b] = evalRange(), N = 40, xs = Array.from({ length: N + 1 }, (_, i) => a + (b - a) * i / N);
+      const diff = xs.map(x => f(x) - r(x)), area = avg(diff.map(Math.abs)), worst = Math.max(...diff.map(Math.abs)), rr = rms(P, r);
+      const A = Math.max(T, 1.2 * rr);
+      let above = 0, below = 0, up = 0, dn = 0, far = 0;
+      P.forEach(p => { const e = p.y - f(p.x); if (e > on) above++; else if (e < -on) below++; if (e > .05 * T) up++; else if (e < -.05 * T) dn++; far = Math.max(far, Math.abs(e)); });
+      const onN = P.length - above - below, oneSide = (up === 0) !== (dn === 0) && far > T, bal = Math.abs(above - below) <= onN + 1 && !oneSide;
+      /* through an anomaly: the line passes the anomaly much closer than a good line would */
+      const hit = anoms.find(p => { const dRef = Math.abs(p.y - r(p.x)), dMe = Math.abs(p.y - f(p.x)); return dRef > 2.5 * T && dMe < Math.max(.8 * T, .25 * dRef); });
+      if (hit) return { ok: false, why: `Your line goes through the anomaly at ${fx(hit.x)}. Leave it out: an anomaly doesn’t fit the pattern, so the line of best fit ignores it and follows the other points.` };
+      const good = area <= A && worst <= 2.6 * A && bal;
+      if (good) {
+        let w = "It goes through or close to most of your points, with about as many above it as below." + aNote;
+        const span = outs.length || anoms.length ? "" : " across all your data";   /* v1.1: with points left out (past a limit, anomalies), not "all your data" */
+        w += s.kind === "curve" ? ` It is one smooth curve${span}, not dot-to-dot.` : ` It is one thin straight line${span}.`;
+        if (o.origin && Math.abs(f(0)) <= 2 * A && o.notes && o.notes.originGood) w += " " + o.notes.originGood;
+        if (outs.length && o.notes && o.notes.outGood) w += " " + o.notes.outGood;
+        return { ok: true, why: w };
+      }
+      /* pulled towards points that are not part of the fitted pattern (e.g. past the limit of proportionality) */
+      let pulled = false;
+      if (outs.length && o.notes && o.notes.out) { const dOut = avg(outs.map(p => Math.abs(p.y - f(p.x)))), dRef = avg(outs.map(p => Math.abs(p.y - r(p.x))));
+        if (dOut < .3 * dRef && dRef > 2 * T) return { ok: false, why: o.notes.out }; pulled = dOut < .7 * dRef && dRef > 2 * T; }
+      let w = "";
+      if (s.kind === "straight") {
+        const dL = f(a) - r(a), dR = f(b) - r(b), tilt = Math.abs(f.b) - Math.abs(r.b), twist = Math.abs(dR - dL) > A;
+        const cnt = ` (${plural(above, "point")} above it, ${below} below)`, more = tilt > 0 ? " It is also too steep." : " It is also not steep enough.";
+        if (dL > A / 2 && dR > A / 2) w = `Your line is too high: most points are below it${cnt}. Move it down.` + (twist ? more : "");
+        else if (dL < -A / 2 && dR < -A / 2) w = `Your line is too low: most points are above it${cnt}. Move it up.` + (twist ? more : "");
+        else if (twist || Math.abs(dL) > A / 2 || Math.abs(dR) > A / 2) {
+          const sd = d => d < 0 ? "below" : "above";
+          w = `${tilt > 0 ? "Too steep" : "Not steep enough"}: on the left your line runs ${sd(dL)} the points, and on the right it runs ${sd(dR)} them. Make it ${tilt > 0 ? "less steep" : "steeper"}.`;
+        }
+        else w = above > below ? `More points lie above your line than below it${cnt}. Move it up a little.` : `More points lie below your line than above it${cnt}. Move it down a little.`;
+        if (o.origin && Math.abs(f(0)) > 2 * A && o.notes && o.notes.origin) w += " " + o.notes.origin;
+      } else {
+        const rg = o.regions || ["on the left", "in the middle", "on the right"], tips = [];
+        [0, 1, 2].forEach(k => { const lo = a + (b - a) * k / 3, hi = a + (b - a) * (k + 1) / 3, q = xs.filter(x => x >= lo - 1e-9 && x <= hi + 1e-9), d = avg(q.map(x => f(x) - r(x)));
+          if (Math.abs(d) > .8 * A) tips.push((d > 0 ? "too high " : "too low ") + rg[k]); });
+        w = tips.length ? `Your curve is ${tips.join(", and ")}. Drag the handles so it runs through the middle of the points there.`
+          : above > below ? `More points lie above your curve than below it (${above} above, ${below} below). Raise it a little.` : `More points lie below your curve than above it (${below} below, ${above} above). Lower it a little.`;
+      }
+      if (pulled) w = o.notes.out + " " + w;   /* v1.1: the specific reason first */
+      w += " A good line of best fit goes through or close to most points, with roughly as many above it as below.";
+      if (anoms.length) w += ` Leave out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`;
+      return { ok: false, why: w };
+    }
+
+    /* ---------- the controls (HTML), for the tool's host ---------- */
+    function html() {
+      if (!allowed()) return "";
+      const s = sync(), on = s.on, why = o.ready && o.ready();
+      let h = `<div class="lobf" data-lobf-id="${id}">`;
+      if (o.toggle) h += `<div class="lobf-row"><button class="sw" type="button" data-lobf="${id}:on" aria-pressed="${on}"><span class="dot"></span>${esc(o.toggle)} <span class="state">${on ? "on" : "off"}</span></button></div>`;
+      if (!on) return h + `</div>`;
+      if (why) return h + `<p class="small lobf-tip">${esc(why)}</p></div>`;
+      const lk = s.ok && (o.lockWhenGood || s.given);
+      h += `<div class="lobf-row"><span class="lobf-lbl" id="${id}-lbl">Line of best fit:</span><span class="lobf-seg" role="group" aria-labelledby="${id}-lbl">` +
+        [["straight", "Straight"], ["curve", "Curve"], ["dots", "Dot-to-dot"]].map(([k, t]) => `<button class="btn" type="button" data-lobf="${id}:k:${k}" aria-pressed="${s.kind === k}"${lk ? " disabled" : ""}>${t}</button>`).join("") + `</span></div>`;
+      if (!s.kind) h += `<p class="small lobf-tip">Choose Straight or Curve, then drag the round handles on the graph.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+      else if (s.kind !== "dots" && !lk) h += `<p class="small lobf-tip">${s.kind === "straight" ? "Drag the two round handles up or down (or use the arrow keys)." : "Drag the three round handles. The middle one moves sideways too."} Aim for roughly as many points above your line as below.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+      h += `<div class="lobf-row">`;
+      if (!lk) h += `<button class="btn primary" type="button" data-lobf="${id}:check"${s.kind ? "" : " disabled"}>Check my line</button>`;
+      if (s.tries >= 3 && !s.ok) h += `<button class="btn" type="button" data-lobf="${id}:show">Show a good line</button>`;
+      if (s.ok && o.use) h += `<button class="btn" type="button" data-lobf="${id}:use" aria-pressed="${s.use}">${esc(s.given ? (o.use.labelGiven || "Use the given line") : o.use.label || "Use your line")}</button>`;
+      if (s.kind && !(s.ok && o.lockWhenGood)) h += `<button class="linkbtn" type="button" data-lobf="${id}:clear">Start again</button>`;
+      h += `</div>`;
+      if (s.msg) h += `<p class="smsg lobf-msg ${s.cls}" role="status">${s.msg}</p>`;
+      if (s.ok && s.use && o.use) h += `<div class="lobf-use" role="status">${o.use.html(lineF(s), { given: s.given })}</div>`;
+      return h + `</div>`;
+    }
+    function render() {
+      document.querySelectorAll(`[data-lobf-host="${id}"]`).forEach(el => { const h = html(); if (el._lh !== h) { el.innerHTML = h; el._lh = h; } });
+    }
+
+    /* ---------- the overlay on the graph ---------- */
+    let gEl = null;
+    function layer() {
+      const svg = o.svg(); if (!svg) return null;
+      if (!gEl || gEl.ownerSVGElement !== svg || !gEl.isConnected) { gEl = document.createElementNS("http://www.w3.org/2000/svg", "g"); gEl.setAttribute("class", "lobf-g"); bind(svg); }
+      if (svg.lastElementChild !== gEl) svg.appendChild(gEl);
+      return gEl;
+    }
+    function scaleOf(svg) { const vb = svg.viewBox && svg.viewBox.baseVal, r = svg.getBoundingClientRect(); return vb && vb.width && r.width && r.height ? Math.min(r.width / vb.width, r.height / vb.height) : 1; }
+    function draw() {
+      const L = layer(); if (!L) return; const svg = o.svg();
+      const s = S(), show = s.on && allowed() && !(o.ready && o.ready());
+      if (!show) { if (L._h !== "") { L.innerHTML = ""; L._h = ""; } if (svg._lobfRole) { svg.setAttribute("role", svg._lobfRole); svg._lobfRole = null; } return; }
+      sync();
+      const g = o.geom(), k = 1 / scaleOf(svg), px = g.px, py = g.py, cy = y => py(Math.max(g.ymin, Math.min(g.ymax, y)));
+      const x0 = Math.min(px(g.xmin), px(g.xmax)), x1 = Math.max(px(g.xmin), px(g.xmax)), y0 = Math.min(py(g.ymin), py(g.ymax)), y1 = Math.max(py(g.ymin), py(g.ymax));
+      let h = `<clipPath id="${id}-clip"><rect x="${f1(x0)}" y="${f1(y0)}" width="${f1(x1 - x0)}" height="${f1(y1 - y0)}"/></clipPath>`;
+      const [a, b] = rangeOf(), f = lineF(s);
+      if (s.kind === "dots" && !s.given) { const q = P0().slice().sort((p, r) => p.x - r.x); if (q.length > 1) h += `<path class="lobf-line lobf-dots" clip-path="url(#${id}-clip)" d="M${q.map(p => f1(px(p.x)) + " " + f1(py(p.y))).join("L")}"/>`; }
+      else if (f) {
+        let d = ""; const n = s.kind === "straight" && !s.given ? 1 : 60;
+        for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }
+        h += `<path class="lobf-line${s.given ? " lobf-given" : ""}" clip-path="url(#${id}-clip)" d="${d}"/>`;
+        if (s.given) {   /* the "given" label: the first place (left, middle, right; above or below the line) clear of the line, the points and the edges */
+          const fs = 14 * k, bw = fs * 2.9, bh = fs * 1.1, pts = P0().map(p => [px(p.x), py(p.y)]), ln = Array.from({ length: 61 }, (_, i) => { const x = a + (b - a) * i / 60; return [px(x), py(f(x))]; });
+          const free = (L, T) => L >= x0 + 2 && L + bw <= x1 - 2 && T >= y0 + 2 && T + bh <= y1 - 2 && !pts.concat(ln).some(([X, Y]) => X > L - 9 * k && X < L + bw + 9 * k && Y > T - 9 * k && Y < T + bh + 9 * k);
+          let at = null;
+          for (const fr of [.12, .5, .85, .3, .7]) { const X = px(a + (b - a) * fr), Y = py(f(a + (b - a) * fr));
+            for (const d of [-1, 1]) for (const off of [10, 22, 36]) { const T = d < 0 ? Y - off * k - bh : Y + off * k; if (!at && free(X, T)) at = [X, T]; } }
+          if (!at) at = [x0 + 6 * k, y0 + 4 * k];
+          h += `<text class="lobf-gt" x="${f1(at[0])}" y="${f1(at[1] + bh * .82)}" font-size="${f1(fs)}">given</text>`; }
+        if (s.ok && s.use && o.use && o.use.draw) h += o.use.draw(f, g, k);
+      }
+      const lk = s.given || (s.ok && o.lockWhenGood);
+      if (!lk && (s.kind === "straight" || s.kind === "curve")) {
+        const nm = o.names || {}, yu = nm.yu ? " " + nm.yu : "";
+        const HS = s.kind === "straight" ? (() => { const [xa, xb] = hX(); return [["L", xa, s.yL, "Left end"], ["R", xb, s.yR, "Right end"]]; })()
+          : s.H.map((p, i) => [["L", "M", "R"][i], p.x, p.y, ["Left end", "Middle", "Right end"][i]]);
+        HS.forEach(([key, x, y, nmH]) => {
+          const X = px(x), Y = cy(y), vt = `${fmtV(y)}${yu} at ${fx(x)}`;
+          h += `<g class="lobf-h${drag && drag.key === key ? " drag" : ""}" data-h="${key}" tabindex="0" role="slider" aria-orientation="vertical" aria-label="${nmH} of your line of best fit. Use the arrow keys${key === "M" && s.kind === "curve" ? " (left and right move it sideways)" : ""}." aria-valuemin="${fmtV(g.ymin)}" aria-valuemax="${fmtV(g.ymax)}" aria-valuenow="${fmtV(y)}" aria-valuetext="${esc(vt)}" transform="translate(${f1(X)} ${f1(Y)})">` +
+            `<circle class="lobf-hit" r="${f1(26 * k)}"/><circle class="lobf-ring" r="${f1(15 * k)}"/><circle class="lobf-hd" r="${f1(8 * k)}"/></g>`;
+        });
+        if (!svg._lobfRole) { svg._lobfRole = svg.getAttribute("role") || "img"; svg.setAttribute("role", "group"); }
+      } else if (svg._lobfRole) { svg.setAttribute("role", svg._lobfRole); svg._lobfRole = null; }
+      if (L._h !== h) { L.innerHTML = h; L._h = h; }
+      if (drag && drag.refocus) { const e = L.querySelector(`.lobf-h[data-h="${drag.key}"]`); if (e && document.activeElement !== e) e.focus({ preventScroll: true }); }
+    }
+    const fmtV = v => String(Math.round(v * 100) / 100);
+    function changed() { if (o.onChange) o.onChange(); else { render(); draw(); } }
+
+    /* ---------- dragging and keys ---------- */
+    function svgPt(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+    function inv(g) { const xa = px0(g), xb = g.px(g.xmax), ya = g.py(g.ymin), yb = g.py(g.ymax);
+      return { ix: X => g.xmin + (X - xa) * (g.xmax - g.xmin) / ((xb - xa) || 1e-9), iy: Y => g.ymin + (Y - ya) * (g.ymax - g.ymin) / ((yb - ya) || 1e-9) }; }
+    const px0 = g => g.px(g.xmin);
+    function setH(s, key, x, y, g) {
+      y = Math.max(g.ymin, Math.min(g.ymax, y));
+      if (s.kind === "straight") s[key === "L" ? "yL" : "yR"] = y;
+      else { const i = { L: 0, M: 1, R: 2 }[key]; s.H[i].y = y;
+        if (key === "M" && x != null) { const [a, b] = rangeOf(), sp = b - a; s.H[1].x = Math.max(a + .12 * sp, Math.min(b - .12 * sp, x)); } }
+      if (s.ok || s.cls) { s.ok = false; s.use = false; s.msg = "You moved your line. Press Check my line again."; s.cls = ""; }
+    }
+    function bind(svg) {
+      if (svg._lobfBound) return; svg._lobfBound = true;
+      svg.addEventListener("pointerdown", e => {
+        const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
+        if (o.guard && o.guard()) return;
+        const s = S(), g = o.geom(), p = svgPt(svg, e), key = hEl.dataset.h;
+        const cur = s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.H[{ L: 0, M: 1, R: 2 }[key]].y, cx = s.kind === "curve" && key === "M" ? s.H[1].x : null;
+        drag = { key, id: e.pointerId, dy: g.py(cur) - p.y, dx: cx == null ? 0 : g.px(cx) - p.x };
+        try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+        e.preventDefault(); e.stopPropagation();
+        hEl.classList.add("drag"); hEl.focus({ preventScroll: true });
+      });
+      /* a finger on a handle drags the handle, not the page (touch-action is not applied to shapes inside an SVG) */
+      svg.addEventListener("touchstart", e => { const t = e.target.closest && e.target.closest(".lobf-h"); if (t && gEl && gEl.contains(t)) e.preventDefault(); }, { passive: false });
+      svg.addEventListener("touchmove", e => { if (drag) e.preventDefault(); }, { passive: false });
+      svg.addEventListener("pointermove", e => {
+        if (!drag || e.pointerId !== drag.id) return; e.preventDefault();
+        const s = S(), g = o.geom(), p = svgPt(svg, e), I2 = inv(g);
+        setH(s, drag.key, drag.key === "M" && s.kind === "curve" ? I2.ix(p.x + drag.dx) : null, I2.iy(p.y + drag.dy), g);
+        if (!dragRaf) dragRaf = requestAnimationFrame(() => { dragRaf = 0; draw(); });
+      });
+      const end = e => { if (!drag || (e && e.pointerId !== drag.id)) return; drag = null; if (dragRaf) { cancelAnimationFrame(dragRaf); dragRaf = 0; }
+        const s = S(); if (!s.msg) s.msg = "Press Check my line when you are happy with it."; changed(); };
+      svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end); svg.addEventListener("lostpointercapture", end);
+      svg.addEventListener("keydown", e => {
+        const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
+        if (o.guard && o.guard()) return;
+        const s = S(), g = o.geom(), key = hEl.dataset.h, step = (g.ymax - g.ymin) / 100, big = (g.ymax - g.ymin) / 10;
+        const cur = s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.H[{ L: 0, M: 1, R: 2 }[key]].y;
+        const sideways = s.kind === "curve" && key === "M", [a, b] = rangeOf(), xs = (b - a) / 50;
+        let y = cur, x = null;
+        if (e.key === "ArrowUp" || (!sideways && e.key === "ArrowRight")) y = cur + step;
+        else if (e.key === "ArrowDown" || (!sideways && e.key === "ArrowLeft")) y = cur - step;
+        else if (e.key === "PageUp") y = cur + big; else if (e.key === "PageDown") y = cur - big;
+        else if (sideways && e.key === "ArrowLeft") x = s.H[1].x - xs; else if (sideways && e.key === "ArrowRight") x = s.H[1].x + xs;
+        else return;
+        e.preventDefault(); setH(s, key, x, y, g); drag = { key, refocus: true }; changed(); drag = null;
+        const e2 = gEl.querySelector(`.lobf-h[data-h="${key}"]`); if (e2) e2.focus({ preventScroll: true });
+      });
+    }
+
+    /* ---------- buttons ---------- */
+    I.act = (act, arg) => {
+      const s = sync();
+      if (act === "on") { s.on = !s.on; if (!s.on) { s.use = false; } }
+      else if (act === "k") { if (s.kind !== arg) { s.kind = arg; s.ok = false; s.given = false; s.use = false; s.cls = ""; s.msg = arg === "dots" ? "Dot-to-dot chosen. Press Check my line." : ""; } }
+      else if (act === "clear") { startLine(s, false); }
+      else if (act === "check") {
+        const g = o.geom(), v = verdict(s, g);
+        if (v.skip) { s.msg = esc(v.skip); s.cls = ""; }
+        else if (v.ok) { s.ok = true; s.given = false; s.msg = "<b>✓ Good line of best fit.</b> " + esc(v.why); s.cls = "good"; if (o.onGood) o.onGood({ given: false, f: lineF(s) }); }
+        else { s.ok = false; s.tries++; s.msg = "<b>Not yet.</b> " + esc(v.why) + (s.tries >= 3 ? " <span class=\"small\">(You can press Show a good line.)</span>" : ""); s.cls = "bad"; }
+      }
+      else if (act === "show") {
+        const r = refF(); if (!r) return; const [xa, xb] = hX(), [a, b] = rangeOf();
+        if (expect() === "straight") { s.kind = "straight"; s.yL = r(xa); s.yR = r(xb); }
+        else { s.kind = "curve"; let best = null; for (let i = 2; i <= 18; i++) { const x = a + (b - a) * i / 20, H = [{ x: a, y: r(a) }, { x, y: r(x) }, { x: b, y: r(b) }], q = curve3(H, o.peakBase); let e = 0; for (let j = 0; j <= 30; j++) { const xx = a + (b - a) * j / 30; e += Math.abs(q(xx) - r(xx)); } if (!best || e < best.e) best = { e, H }; } s.H = best.H; }
+        const anoms = P0().filter(p => p.anom);
+        s.given = true; s.ok = true; s.use = false; s.cls = "good";
+        s.msg = "<b>A good line of best fit (given).</b> It goes through or close to most points, with about as many above it as below." + (anoms.length ? esc(` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`) : "") + (o.lockWhenGood ? " Compare it with yours, then use it for the next step." : " Compare it with yours, then press Start again to try once more.");
+        if (o.onGood) o.onGood({ given: true, f: lineF(s) });
+      }
+      else if (act === "use") s.use = !s.use;
+      changed();
+    };
+    I.html = html; I.render = render; I.draw = draw; I.verdict = () => verdict(S(), o.geom());
+    I.reset = () => { const s = o.state(); for (const k in s) delete s[k]; };
+    all[id] = I; return I;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("[data-lobf]"); if (!b || b.disabled) return;
+    const [id, act, arg] = b.dataset.lobf.split(":"), I = all[id]; if (!I) return;
+    if (I.o.guard && I.o.guard()) return;
+    I.act(act, arg);
+    const again = document.querySelector(`[data-lobf="${b.dataset.lobf}"]`) || document.querySelector(`[data-lobf-id="${id}"] [data-lobf$=":check"]`) || document.querySelector(`[data-lobf-id="${id}"] .lobf-msg`);
+    if (again && document.activeElement !== again) { if (again.tagName === "P") again.setAttribute("tabindex", "-1"); again.focus({ preventScroll: true }); }
+  });
+  return { make, lsq, quad, pchip, curve3, all };
+})();
+/* == end lobf v1 == */
+/* lobf v1 (tool part): the pupil's own line of best fit through one flask's readings (cooling curves), Demo only (never with the
+   question graphs A–D). Pupils choose the flask. Cooling falls and levels off: the three handles' curve is y = A + B·e^(−kx). Over
+   10 minutes these flasks barely bend (the model's bow is under 1 °C for every surface), so a straight line or a curve is accepted,
+   whichever the pupil chose; a run that does bend by 1 °C or more asks for a curve. Reference: least squares (straight) or the
+   tool's own quadFit (curve). Readings are single runs per flask, so there are no point anomalies. Each flask keeps its own line.
+   While it is on, the computer's curves are hidden. */
+const irC = () => COLS.includes(M.irc) ? M.irc : "black";
+const irPts = () => ptsOfC(M.frun.rec, irC()).map(([t, T]) => ({ x: t, y: T }));
+function irBent() { const k = kCol(irC()), f = t => FL.Tr + (80 - FL.Tr) * Math.exp(-k * t); let b = 0;
+  for (let i = 0; i <= 30; i++) { const t = FL.tEnd * i / 30; b = Math.max(b, Math.abs(f(t) - (f(0) + (f(FL.tEnd) - f(0)) * t / FL.tEnd))); } return b >= 1; }
+const LBI = LOBF.make({ id: "ir", toggle: "Draw my own line of best fit",
+  svg: () => $("fgsvg"), state: () => { const S = M.lobfs || (M.lobfs = {}); return S[irC()] || (S[irC()] = {}); },
+  allowed: () => mode === "demo" && M.tab === "fl" && !M.qcurves,
+  ready: () => M.frun.rec.read.length < FL.N ? "Finish the run first: record all the readings. Then draw a line of best fit through one flask’s points." : null,
+  points: irPts,
+  geom: () => ({ px: gpx, py: gpy, xmin: 0, xmax: FL.tEnd, ymin: gLo(), ymax: GRF.hi }),
+  expect: () => { const s = M.lobfs && M.lobfs[irC()]; return irBent() ? "curve" : (s && s.kind === "curve" ? "curve" : "straight"); },
+  ref: P => quadFit(P.map(p => [p.x, p.y])), fx: t => t + " min", names: { x: "time", xu: "min", y: "temperature", yu: "°C" },
+  regions: ["at the start", "in the middle", "at the end"],
+  onChange: () => drawAll() });
+function irPick() {   /* which flask the pupil draws a line for (only while drawing) */
+  const el = $("irPick"), show = LBI.on() && !(LBI.o.ready && LBI.o.ready());
+  el.hidden = !show; if (!show) return;
+  const h = `<span class="gl" id="irPickL">Flask for your line:</span><span class="seg" role="group" aria-labelledby="irPickL">${COLS.map(c => `<button type="button" data-irc="${c}" aria-pressed="${irC() === c}">${COL[c].sym} ${esc(COL[c].n.toLowerCase())}</button>`).join("")}</span>`;
+  if (el._h !== h) { el.innerHTML = h; el._h = h; }
+}
+$("irPick").addEventListener("click", e => { const b = e.target.closest("button[data-irc]"); if (!b || guard()) return; const on = LBI.on(); M.irc = b.dataset.irc; if (on && !LBI.on()) LBI.act("on"); else drawAll(); });   /* practice stays on when the flask changes */
 /* ===== The step-by-step methods ===== */
 const SAFE_C = "Safety: hot water can scald. Pour carefully, keep the water away from the detector and other electrical equipment, and mop up spills.";
 const SAFE_F = "Safety: don’t overfill the kettle; keep the flasks in the middle of the bench; stand up so you can move away from a spill; never touch the hot water.";
@@ -1822,6 +2238,7 @@ function renderCtl() {
   pr("#tabs button", "tab", M.tab); pr("#waterSeg button", "w", M.water); pr("#faceSeg button", "f", M.face);
   document.querySelectorAll("#distRow button").forEach(b => { const dd = +b.dataset.dd; b.disabled = (dd < 0 && M.d <= LC.dMin) || (dd > 0 && M.d >= LC.dMax); });
   const b = $("fitSw"); b.setAttribute("aria-pressed", String(M.fit)); b.querySelector(".state").textContent = M.fit ? "on" : "off";
+  b.hidden = LBI.on();   /* lobf v1: the computer's curves would give the pupil's line away */
   if (!locked()) $("lockNote").hidden = true;
 }
 function drawAll(focusIn) { if (bankCheck.running) return; drawPane(focusIn); renderCtl(); }
