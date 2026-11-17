@@ -382,7 +382,7 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .pausenote{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 36px);margin:0;padding:8px 12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);font-size:15px;line-height:1.35;text-align:center;pointer-events:none}
 .scene.mov{position:absolute;left:0;top:0;width:100%;height:100%;background:none;border-color:transparent;pointer-events:none}
 #rsvgM,#ssvgD{will-change:transform}
-.mwrap{overflow-x:auto;max-width:100%}
+.mwrap{overflow-x:auto;max-width:100%;position:relative}
 .qpanel,#answer{min-width:0}
 .qpanel .grow select{min-width:0;max-width:100%}
 @media (max-width:560px){.qpanel .grow select{width:100%}.stepbox .numin{width:4.8em}.vbtn{min-width:52px;padding-left:8px;padding-right:8px}}
@@ -507,6 +507,41 @@ a little more compact and each scene is capped by the screen height, so the scen
 #pane-str .sscene{max-width:max(734px, calc((100vh - 600px) * 2.376))}
 }
 /* == end tool: gcse-waves layout == */
+/* == lobf v1: line-of-best-fit practice (pilot 16 Nov 2026) == */
+:root{--lobf-line:#B4501A;--lobf-hd:#B4501A;--lobf-hd-in:#FBFAF8;--lobf-given:#2D5B8C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lobf-line:#FFB37A;--lobf-hd:#FFB37A;--lobf-hd-in:#14243D;--lobf-given:#8CC4FF}}
+:root[data-theme="dark"]{--lobf-line:#FFB37A;--lobf-hd:#FFB37A;--lobf-hd-in:#14243D;--lobf-given:#8CC4FF}
+.lobf{display:grid;gap:6px;margin-top:6px;min-width:0}
+.lobf-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.lobf-lbl{font-weight:700}
+.lobf-seg{display:inline-flex;flex-wrap:wrap;gap:4px}
+.lobf-seg .btn{padding:8px 14px;font-size:15px;min-height:44px}
+.lobf-seg .btn[aria-pressed="true"]{background:var(--lobf-line);border-color:var(--lobf-line);color:var(--lobf-hd-in)}
+.lobf .btn{min-height:44px}
+.lobf .linkbtn{min-height:44px}
+.lobf-tip{margin:0}
+.lobf-msg{margin:0;padding:8px 10px;border-radius:8px;background:var(--surface-2,transparent)}
+.lobf-msg.good{background:var(--good-bg);color:var(--good)}
+.lobf-msg.bad{background:var(--bad-bg);color:var(--bad)}
+.lobf-msg:focus{outline:none}
+.lobf-use{padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.lobf-use p{margin:0}
+.lobf-g .lobf-line{fill:none;stroke:var(--lobf-line);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.lobf-g .lobf-given{stroke:var(--lobf-given);stroke-dasharray:10 6}
+.lobf-g .lobf-gt{fill:var(--lobf-given);font-weight:700;pointer-events:none}
+.lobf-g .lobf-use-l{fill:none;stroke:var(--lobf-given);stroke-width:2.5;stroke-dasharray:6 5;vector-effect:non-scaling-stroke;pointer-events:none}
+.lobf-g .lobf-use-t,.lobf-g .lobf-gt{paint-order:stroke;stroke:var(--surface,#fff);stroke-width:4px;stroke-linejoin:round}
+.lobf-g .lobf-use-t{fill:var(--lobf-given);font-weight:700;pointer-events:none}
+.lobf-g .lobf-use-bg{fill:var(--surface,#fff);opacity:.9;pointer-events:none}
+.lobf-h{cursor:grab;touch-action:none;pointer-events:auto;outline:none}
+.lobf-h.drag{cursor:grabbing}
+.lobf-h .lobf-hit{fill:transparent;pointer-events:all}
+.lobf-h .lobf-ring{fill:none;stroke:var(--lobf-hd);stroke-width:2;opacity:.55;vector-effect:non-scaling-stroke}
+.lobf-h .lobf-hd{fill:var(--lobf-hd);stroke:var(--lobf-hd-in);stroke-width:2;vector-effect:non-scaling-stroke}
+.lobf-h:focus-visible .lobf-ring{stroke:var(--focus);stroke-width:4;opacity:1}
+.lobf-h.drag .lobf-ring{opacity:1}
+@media (prefers-reduced-motion: no-preference){.lobf .btn,.lobf-msg{transition:background-color .16s ease,border-color .16s ease,color .16s ease}}
+/* == end lobf v1 == */
 /* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
    and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
    Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
@@ -707,7 +742,8 @@ details.trybox > .try{margin-top:6px}
         <div class="controls"><span class="gl" id="partLbl">Show:</span><span class="seg" role="group" aria-labelledby="partLbl" id="partSeg"><button type="button" data-p="rip" aria-pressed="true">Ripple tank</button><button type="button" data-p="str" aria-pressed="false">Waves on a string</button></span></div>
         <div class="panel" id="tabBox"></div>
         <div class="panel"><svg id="gsvg" class="scene" viewBox="0 0 640 340" role="img" aria-label="Graph of wavelength against frequency, from your results"><g id="gG"></g></svg>
-          <div class="controls" style="margin-top:6px"><button class="sw" type="button" id="fitSw" aria-pressed="false"><span class="dot"></span>Curve of best fit <span class="state">off</span></button><span class="small" id="gRead"></span></div></div>
+          <div class="controls" style="margin-top:6px"><button class="sw" type="button" id="fitSw" aria-pressed="false"><span class="dot"></span>Curve of best fit <span class="state">off</span></button><span class="small" id="gRead"></span></div>
+          <div class="lobf-host" data-lobf-host="wv"></div></div>
         <div class="panel" id="concBox"></div>
       </div>
       <p class="locknote" id="lockNote" hidden></p>
@@ -1473,21 +1509,446 @@ const GR_W = { x0: 84, w: 530, h: 260 }, GR_T = { x0: 112, w: 502, h: 248 };   /
 const AX = { rip: { fMax: 14, fStep: 2, lMax: .04, lStep: .01 }, str: { fMax: 80, fStep: 10, lMax: 3, lStep: .5 } };
 function drawGraph() {
   const tall = LK() === "tall"; Object.assign(GR, tall ? GR_T : GR_W);
-  const p = M.part, A = AX[p], runs = runsOf(M, p), fs = tall ? 24 : 16, gx = f => GR.x0 + GR.w * f / A.fMax, gy = l => GR.y0 + GR.h * (1 - clamp(l, 0, A.lMax) / A.lMax);
+  const p = M.part, A = AX[p], runs = runsOf(M, p), fs = tall ? 25 : 16, gx = f => GR.x0 + GR.w * f / A.fMax, gy = l => GR.y0 + GR.h * (1 - clamp(l, 0, A.lMax) / A.lMax);
   let o = "";
   for (let f = 0; f <= A.fMax + 1e-9; f += A.fStep) o += `<path class="gr" d="M${f1(gx(f))} ${GR.y0}V${GR.y0 + GR.h}"/>` + T_(gx(f), GR.y0 + GR.h + fs + 5, String(f), fs, 'text-anchor="middle"');
   for (let l = 0; l <= A.lMax + 1e-9; l += A.lStep) o += `<path class="gr" d="M${GR.x0} ${f1(gy(l))}H${GR.x0 + GR.w}"/>` + T_(GR.x0 - 6, gy(l) + 5, sf(l, 2), fs, 'text-anchor="end"');
   o += `<path class="ax" d="M${GR.x0} ${GR.y0 - 4}V${GR.y0 + GR.h}H${GR.x0 + GR.w + 4}"/>`;
   o += T_(GR.x0 + GR.w / 2, GR.H - 6, "Frequency f (Hz)", fs, 'text-anchor="middle" class="bold"');
   o += `<text x="${fs + 2}" y="${GR.y0 + GR.h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 2} ${GR.y0 + GR.h / 2})">Wavelength λ (m)</text>`;
-  const v = M.fit ? fitV(runs) : null; let read = "";
+  const v = M.fit && !LBV.on() ? fitV(runs) : null; let read = "";
   if (v) { let d = ""; const f0 = Math.max(v / A.lMax, A.fMax * .04); for (let f = f0; f <= A.fMax; f += A.fMax / 120) d += (d ? "L" : "M") + f1(gx(f)) + " " + f1(gy(v / f)); o += `<path class="fitc" d="${d}"/>`; read = `Curve of best fit: λ = v ÷ f with v = ${sf(v, 3)} m/s.`; }
-  else if (M.fit) read = "Plot at least 2 runs for a curve.";
+  else if (M.fit && !LBV.on()) read = "Plot at least 2 runs for a curve.";
   runs.forEach(x => { o += `<circle class="pt" cx="${f1(gx(x.f))}" cy="${f1(gy(x.lam))}" r="6"/>`; });
   if (!runs.length) o += T_(GR.x0 + GR.w / 2, GR.y0 + GR.h / 2, "Your results will be plotted here", tall ? fs : fs + 1, 'text-anchor="middle" class="mut"');
   setLayer($("gG"), o); morphHTML($("gRead"), esc(read));
+  WV_G = { px: gx, py: gy, xmin: 0, xmax: A.fMax, ymin: 0, ymax: A.lMax }; LBV.render(); LBV.draw();   /* lobf v1: the pupil's own curve of best fit, on top */
   $("gsvg").setAttribute("aria-label", `Graph of wavelength against frequency for the ${p === "rip" ? "ripple tank" : "string"}: ${runs.length} point${runs.length === 1 ? "" : "s"} from your results`);
 }
+/* == lobf v1: line-of-best-fit practice (pilot 16 Nov 2026) ==
+   One self-contained block. A tool makes one instance per graph:  const LB = LOBF.make({ ... })  and calls  LB.draw()  at the end
+   of its own graph drawing (and LB.render() wherever it rebuilds the controls host). Pupils choose Straight / Curve / Dot-to-dot,
+   drag round handles (straight: 2, at the ends of the data; curve: 3, as in graph-it, the middle one also moves left/right; the
+   curve through them is smooth: y = A + B·e^(−kx) when they rise or fall, a monotone cubic for a peak), press Check my line,
+   and get AQA-style feedback compared with a reference fit (least squares without the tool's anomalies; for curves the tool's own
+   fitted curve). Show a good line appears after 3 tries ("given"). Optional "Use your line" (a value or gradient read from it).
+   Options (functions are called every draw, so they always see the tool's current state):
+     id         short unique name (data-lobf-host="<id>" marks the controls host; the tool may also print LB.html() itself)
+     svg()      the graph's <svg> (the overlay <g class="lobf-g"> is appended to it, after the tool's own layers)
+     geom()     { px, py, xmin, xmax, ymin, ymax }   px/py: data -> svg user units; the box is the plot area
+     points()   [{ x, y, anom, out, skip }]   anom: the tool's anomaly (left out; going through it is an error),
+                out: off the part that is fitted (e.g. past the limit of proportionality; leave out, going along it is an error),
+                skip: plotted but not judged (e.g. a start point taken before the heater warmed up)
+     expect()   "straight" | "curve"            allowed() -> bool (hide all while a question needs it hidden)
+     state()    the object that holds this graph's line (keep it in the tool's model, so Demo and questions keep their own)
+     ready()    null, or a sentence that says what to do first (e.g. "Finish the run first.")
+   Optional: ref(P) -> f(x) (curve reference; default quadratic least squares), range() -> [a, b] (x range the line is drawn
+     across; default the plotted points), handleX([a, b]) -> [xa, xb] (straight handles), origin (the science says the line goes
+     through (0, 0)), tol (one "small square" in y data units; default y span ÷ 40), names: { x, xu, y, yu } (words + units),
+     fx(x) -> "40 s" (how to name a point's x), regions: three words for the left / middle / right thirds, notes: { origin,
+     originGood, out, outGood, tip }, peakBase (v1.1: a peak is drawn as a bell above this y, e.g. 0), adjust (v1.2), two (v1.2), toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
+     guard() (true = the model is locked: ignore the press), onGood(info), onReset() (a good line was undone because the results changed), onChange() (the tool redraws; default LB.render() + LB.draw()), use: { label, html(f, info), draw(f, g, k) }.
+   No loops: drags redraw at most once per frame, nothing runs while idle.
+   v1.1 (17 Nov 2026): a line pulled towards "out" points gets that reason first; a good line with points left out ("out" or
+   anomalies) no longer says "across all your data"; option peakBase (a peak drawn as a bell). Without peakBase a tool behaves as in v1.
+   v1.2 (17 Nov 2026): curve messages merge the regions ("too low all the way along"); a curve whose peak is left or right of the
+   best one says "Move the peak to the right / left"; option adjust: "label" (a locked good line can be unlocked and moved again);
+   option two: { ref(P) -> { f1, f2, P1, P2 }, names: [first, second], label } adds a "Two lines" kind: two straight lines that
+   cross (e.g. rising then falling temperatures), four handles, each line judged on its own points. Handle values are read
+   out to 3 significant figures. Tools without these options
+   behave as in v1.1. */
+const LOBF = (() => {
+  const NS_ID = { n: 0 }, all = {};
+  const avg = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  function lsq(P) {
+    const mx = avg(P.map(p => p.x)), my = avg(P.map(p => p.y)); let sxy = 0, sxx = 0;
+    P.forEach(p => { sxy += (p.x - mx) * (p.y - my); sxx += (p.x - mx) ** 2; });
+    const b = sxx ? sxy / sxx : 0, a = my - b * mx; const f = x => a + b * x; f.a = a; f.b = b; return f;
+  }
+  function quad(P) {   // least squares y = c0 + c1·u + c2·u² (u = x − mean x), as graph-it
+    const m = avg(P.map(p => p.x)), A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], T = [0, 0, 0];
+    P.forEach(p => { const u = p.x - m, v = [1, u, u * u]; for (let i = 0; i < 3; i++) { T[i] += v[i] * p.y; for (let j = 0; j < 3; j++) A[i][j] += v[i] * v[j]; } });
+    const M = A.map((r, i) => r.concat(T[i]));
+    for (let i = 0; i < 3; i++) { let q = i; for (let k = i + 1; k < 3; k++) if (Math.abs(M[k][i]) > Math.abs(M[q][i])) q = k; [M[i], M[q]] = [M[q], M[i]];
+      if (!M[i][i]) return lsq(P); for (let k = i + 1; k < 3; k++) { const f = M[k][i] / M[i][i]; for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j]; } }
+    const c = [0, 0, 0]; for (let i = 2; i >= 0; i--) { let s = M[i][3]; for (let j = i + 1; j < 3; j++) s -= M[i][j] * c[j]; c[i] = s / M[i][i]; }
+    return x => { const u = x - m; return c[0] + c[1] * u + c[2] * u * u; };
+  }
+  /* a smooth curve through the handles that never overshoots them (monotone cubic, Fritsch–Carlson): a plateau stays flat, a peak
+     stays at the middle handle. Outside the handles it carries on along the end slopes. */
+  function pchip(H) {
+    const n = H.length, h = [], d = [], m = [];
+    for (let i = 0; i < n - 1; i++) { h[i] = H[i + 1].x - H[i].x || 1e-9; d[i] = (H[i + 1].y - H[i].y) / h[i]; }
+    for (let i = 1; i < n - 1; i++) { if (d[i - 1] * d[i] <= 0) m[i] = 0; else { const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1]; m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]); } }
+    const end = (h0, h1, d0, d1) => { let s = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1); if (s * d0 <= 0) s = 0; else if (d0 * d1 <= 0 && Math.abs(s) > Math.abs(3 * d0)) s = 3 * d0; return s; };
+    if (n === 2) { m[0] = m[1] = d[0]; } else { m[0] = end(h[0], h[1], d[0], d[1]); m[n - 1] = end(h[n - 2], h[n - 3], d[n - 2], d[n - 3]); }
+    return x => {
+      if (x <= H[0].x) return H[0].y + m[0] * (x - H[0].x);
+      if (x >= H[n - 1].x) return H[n - 1].y + m[n - 1] * (x - H[n - 1].x);
+      let i = 0; while (i < n - 2 && x > H[i + 1].x) i++;
+      const t = (x - H[i].x) / h[i], t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * H[i].y + (t3 - 2 * t2 + t) * h[i] * m[i] + (-2 * t3 + 3 * t2) * H[i + 1].y + (t3 - t2) * h[i] * m[i + 1];
+    };
+  }
+  /* the curve through the three curve handles. Rising or falling handles: the smooth curve y = A + B·e^(−kx) through all three
+     (exact for "rises then levels off" and "falls then levels off", e.g. gas volume, decay, cooling; straight when they line up;
+     it never overshoots). A peak or a dip: the monotone cubic above (the turning point stays at the middle handle). */
+  /* v1.1: a peak above a baseline (opt-in, option peakBase, e.g. 0 for a rate): a smooth bell, base + h·e^(−((x − xp)/w)²), with its
+     top on the middle handle and its own width on each side so it goes through the end handles. It starts slowly, rises, peaks
+     and falls, as enzyme and temperature curves do (the monotone cubic can't: tested 16 Nov on the enzyme data, 0 of 9 placements). */
+  function bell(H, base) {
+    const [p0, p1, p2] = H, ym = p1.y - base; if (!(ym > 0) || !(p1.x > p0.x) || !(p2.x > p1.x)) return null;
+    const ya = Math.max(p0.y - base, .02 * ym), yb = Math.max(p2.y - base, .02 * ym); if (ya >= ym || yb >= ym) return null;
+    const wl = (p1.x - p0.x) / Math.sqrt(Math.log(ym / ya)), wr = (p2.x - p1.x) / Math.sqrt(Math.log(ym / yb));
+    return x => base + ym * Math.exp(-(((x - p1.x) / (x < p1.x ? wl : wr)) ** 2));
+  }
+  function curve3(H, base) {
+    H = H.slice().sort((p, q) => p.x - q.x); const [p0, p1, p2] = H, X = p2.x - p0.x, Y = p2.y - p0.y;
+    if (base != null && p1.y > p0.y && p1.y > p2.y) { const b = bell(H, base); if (b) return b; }
+    if (!(X > 0) || Math.abs(Y) < 1e-12 || (p1.y - p0.y) * (p2.y - p1.y) < 0) return pchip(H);
+    const q = (p1.y - p0.y) / Y, t1 = (p1.x - p0.x) / X;
+    if (q <= 0 || q >= 1) return pchip(H);
+    const g = k => Math.abs(k) < 1e-6 ? t1 : (1 - Math.exp(-k * t1)) / (1 - Math.exp(-k));
+    let lo = -60, hi = 60, qq = Math.min(g(hi) - 1e-9, Math.max(g(lo) + 1e-9, q));
+    for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (g(m) < qq) lo = m; else hi = m; }
+    const k = (lo + hi) / 2;
+    if (Math.abs(k) < 1e-4) return x => p0.y + Y * (x - p0.x) / X;
+    const B = Y / (1 - Math.exp(-k));
+    return x => p0.y + B * (1 - Math.exp(-k * (x - p0.x) / X));
+  }
+  const rms = (P, f) => Math.sqrt(avg(P.map(p => (p.y - f(p.x)) ** 2)));
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+  function make(o) {
+    const id = o.id || "lb" + (++NS_ID.n), I = { o, id };
+    let dragRaf = 0, drag = null;
+    const S = () => { const s = o.state(); if (!s.v) Object.assign(s, { v: 1, on: !o.toggle, kind: null, yL: null, yR: null, H: null, tries: 0, ok: false, given: false, msg: "", cls: "", use: false, sig: "" }); return s; };
+    const allowed = () => !o.allowed || o.allowed();
+    const expect = () => o.expect ? o.expect() : "straight";
+    const tolOf = g => o.tol ? o.tol(g) : (g.ymax - g.ymin) / 40;
+    const fx = x => o.fx ? o.fx(x) : String(Math.round(x * 100) / 100);
+    const P0 = () => (o.points() || []).filter(p => p && isFinite(p.x) && isFinite(p.y));
+    const fitP = () => P0().filter(p => !p.anom && !p.out && !p.skip);
+    function rangeOf() { if (o.range) return o.range(); const xs = P0().map(p => p.x); return xs.length ? [Math.min(...xs), Math.max(...xs)] : [0, 1]; }
+    function evalRange() { const xs = fitP().map(p => p.x); return xs.length ? [Math.min(...xs), Math.max(...xs)] : rangeOf(); }
+    function hX() { const r = rangeOf(); return o.handleX ? o.handleX(r) : r; }
+    function refF() { const P = fitP(); if (P.length < 2) return null; return expect() === "curve" ? (o.ref ? o.ref(P) : quad(P)) : lsq(P); }
+    /* v1.2: two straight lines that cross (option two) */
+    const ext = Q => [Math.min(...Q.map(p => p.x)), Math.max(...Q.map(p => p.x))];
+    function twoRef() { const P = fitP(); return o.two && P.length >= 4 ? o.two.ref(P) : null; }
+    function twoX(R) { if (R === undefined) R = twoRef(); if (!R) { const [a, b] = rangeOf(), m = (a + b) / 2; return [[a, m], [m, b]]; } const a = ext(R.P1), b = ext(R.P2);
+      if (a[1] === b[0] && R.P1.length > 2 && R.P2.length > 2) { a[1] = Math.max(...R.P1.map(p => p.x).filter(x => x < b[0])); b[0] = Math.min(...R.P2.map(p => p.x).filter(x => x > a[1] && x > b[0] - 1e-9 && x !== b[0])); }   /* a shared peak point: keep the four handles apart */
+      return [a, b]; }
+    function twoF(s) {
+      if (s.given) { const R = twoRef(); return R ? [R.f1, R.f2] : null; }
+      const X = twoX(); return [0, 1].map(i => { const [xa, xb] = X[i], [ya, yb] = s.T[i], b = (yb - ya) / ((xb - xa) || 1e-9), f = x => ya + b * (x - xa); f.a = ya - b * xa; f.b = b; return f; });
+    }
+    function crossOf(F) { const [f1, f2] = F; if (!(Math.abs(f1.b - f2.b) > 1e-12)) return null; const x = (f2.a - f1.a) / (f1.b - f2.b); return { x, y: f1(x) }; }
+    const twoNames = () => (o.two && o.two.names) || ["first line", "second line"];
+    function sigNow() { return JSON.stringify(P0().map(p => [+p.x.toFixed(4), +p.y.toFixed(4), p.anom ? 1 : 0, p.out ? 1 : 0, p.skip ? 1 : 0])) + "|" + expect(); }
+    function startLine(s, keepKind) {
+      const P = fitP(), m = P.length ? avg(P.map(p => p.y)) : 0, [xa, xb] = hX(), [a, b] = rangeOf();
+      s.yL = m; s.yR = m; s.H = [{ x: a, y: m }, { x: (a + b) / 2, y: m }, { x: b, y: m }]; if (o.two) s.T = [[m, m], [m, m]];
+      if (!keepKind) s.kind = null; s.ok = false; s.given = false; s.use = false; s.msg = ""; s.cls = ""; s.tries = 0; void xa; void xb;
+    }
+    function sync() {   // new or changed results: start the line again (keeps Straight / Curve chosen)
+      const s = S(), sg = sigNow(); if (s.sig === sg) return s;
+      const first = !s.sig, had = s.ok; s.sig = sg; startLine(s, true); if (first) s.kind = null; if (!first && had && o.onReset) o.onReset(); return s;
+    }
+    /* the pupil's line as a function of x */
+    function lineF(s) {
+      if (s.kind === "two") { const F = twoF(s); if (!F) return null; const f = x => Math.min(F[0](x), F[1](x)); f.F = F; f.cross = crossOf(F); return f; }
+      if (s.given) { const r = refF(); if (r) return r; }
+      if (s.kind === "straight") { const [xa, xb] = hX(), b = (s.yR - s.yL) / ((xb - xa) || 1e-9); const f = x => s.yL + b * (x - xa); f.b = b; f.a = s.yL - b * xa; return f; }
+      if (s.kind === "curve") { const [a, , b] = [s.H[0].x, 0, s.H[2].x]; const r = rangeOf(); s.H[0].x = r[0]; s.H[2].x = r[1]; void a; void b; return curve3(s.H, o.peakBase); }
+      return null;
+    }
+    I.lineF = () => { const s = S(); return lineF(s); };
+    I.on = () => { const s = S(); return !!(s.on && allowed()); };
+    I.good = () => { const s = S(); return !!(s.on && s.ok); };
+
+    /* ---------- the verdict ---------- */
+    function verdict(s, g) {
+      const P = fitP(), all = P0(), ex = expect(), T = tolOf(g), on = 0.5 * T, nm = o.names || {};
+      const anoms = all.filter(p => p.anom), outs = all.filter(p => p.out);
+      const aNote = anoms.length ? ` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}, as it should.` : "";
+      if (s.kind === "dots") return { ok: false, why: "That’s a dot-to-dot. A line of best fit is one thin line, straight or a smooth curve, that shows the overall pattern. It doesn’t have to touch every point. Choose " + (ex === "curve" ? "Curve." : ex === "two" ? ((o.two && o.two.label) || "Two lines") + "." : "Straight.") };
+      if (ex === "straight" && s.kind === "curve") return { ok: false, why: "These points lie close to a straight line, so draw a straight line of best fit (with a ruler on paper). Choose Straight." };
+      if (ex === "curve" && s.kind === "straight") return { ok: false, why: "These points make a curve, so no straight line fits them well. A line of best fit can be curved: choose Curve and make one smooth curve." };
+      if (ex === "two" && s.kind === "straight") return { ok: false, why: `These points rise and then fall, so one straight line can’t fit them. Choose ${(o.two && o.two.label) || "Two lines"}: one straight line through the ${twoNames()[0].replace(/ line$/, "")} points and one through the ${twoNames()[1].replace(/ line$/, "")} points.` };
+      if (ex === "two" && s.kind === "curve") return { ok: false, why: `In this practical the line of best fit is two straight lines that cross, not a curve: the crossing point marks the peak. Choose ${(o.two && o.two.label) || "Two lines"}.` };
+      if (ex !== "two" && s.kind === "two") return { ok: false, why: "These points don’t need two lines. Choose " + (ex === "curve" ? "Curve." : "Straight.") };
+      if (s.kind === "two") return verdictTwo(s, g);
+      const r = refF(), f = lineF(s); if (!r || !f) return { skip: "Plot more points first." };
+      const [a, b] = evalRange(), N = 40, xs = Array.from({ length: N + 1 }, (_, i) => a + (b - a) * i / N);
+      const diff = xs.map(x => f(x) - r(x)), area = avg(diff.map(Math.abs)), worst = Math.max(...diff.map(Math.abs)), rr = rms(P, r);
+      const A = Math.max(T, 1.2 * rr);
+      let above = 0, below = 0, up = 0, dn = 0, far = 0;
+      P.forEach(p => { const e = p.y - f(p.x); if (e > on) above++; else if (e < -on) below++; if (e > .05 * T) up++; else if (e < -.05 * T) dn++; far = Math.max(far, Math.abs(e)); });
+      const onN = P.length - above - below, oneSide = (up === 0) !== (dn === 0) && far > T, bal = Math.abs(above - below) <= onN + 1 && !oneSide;
+      /* through an anomaly: the line passes the anomaly much closer than a good line would */
+      const hit = anoms.find(p => { const dRef = Math.abs(p.y - r(p.x)), dMe = Math.abs(p.y - f(p.x)); return dRef > 2.5 * T && dMe < Math.max(.8 * T, .25 * dRef); });
+      if (hit) return { ok: false, why: `Your line goes through the anomaly at ${fx(hit.x)}. Leave it out: an anomaly doesn’t fit the pattern, so the line of best fit ignores it and follows the other points.` };
+      const good = area <= A && worst <= 2.6 * A && bal;
+      if (good) {
+        let w = "It goes through or close to most of your points, with about as many above it as below." + aNote;
+        const span = outs.length || anoms.length ? "" : " across all your data";   /* v1.1: with points left out (past a limit, anomalies), not "all your data" */
+        w += s.kind === "curve" ? ` It is one smooth curve${span}, not dot-to-dot.` : ` It is one thin straight line${span}.`;
+        if (o.origin && Math.abs(f(0)) <= 2 * A && o.notes && o.notes.originGood) w += " " + o.notes.originGood;
+        if (outs.length && o.notes && o.notes.outGood) w += " " + o.notes.outGood;
+        return { ok: true, why: w };
+      }
+      /* pulled towards points that are not part of the fitted pattern (e.g. past the limit of proportionality) */
+      let pulled = false;
+      if (outs.length && o.notes && o.notes.out) { const dOut = avg(outs.map(p => Math.abs(p.y - f(p.x)))), dRef = avg(outs.map(p => Math.abs(p.y - r(p.x))));
+        if (dOut < .3 * dRef && dRef > 2 * T) return { ok: false, why: o.notes.out }; pulled = dOut < .7 * dRef && dRef > 2 * T; }
+      let w = "";
+      if (s.kind === "straight") {
+        const dL = f(a) - r(a), dR = f(b) - r(b), tilt = Math.abs(f.b) - Math.abs(r.b), twist = Math.abs(dR - dL) > A;
+        const cnt = ` (${plural(above, "point")} above it, ${below} below)`, more = tilt > 0 ? " It is also too steep." : " It is also not steep enough.";
+        if (dL > A / 2 && dR > A / 2) w = `Your line is too high: most points are below it${cnt}. Move it down.` + (twist ? more : "");
+        else if (dL < -A / 2 && dR < -A / 2) w = `Your line is too low: most points are above it${cnt}. Move it up.` + (twist ? more : "");
+        else if (twist || Math.abs(dL) > A / 2 || Math.abs(dR) > A / 2) {
+          const sd = d => d < 0 ? "below" : "above";
+          w = `${tilt > 0 ? "Too steep" : "Not steep enough"}: on the left your line runs ${sd(dL)} the points, and on the right it runs ${sd(dR)} them. Make it ${tilt > 0 ? "less steep" : "steeper"}.`;
+        }
+        else w = above > below ? `More points lie above your line than below it${cnt}. Move it up a little.` : `More points lie below your line than above it${cnt}. Move it down a little.`;
+        if (o.origin && Math.abs(f(0)) > 2 * A && o.notes && o.notes.origin) w += " " + o.notes.origin;
+      } else {
+        const rg = o.regions || ["on the left", "in the middle", "on the right"], dir = [];
+        [0, 1, 2].forEach(k => { const lo = a + (b - a) * k / 3, hi = a + (b - a) * (k + 1) / 3, q = xs.filter(x => x >= lo - 1e-9 && x <= hi + 1e-9), d = avg(q.map(x => f(x) - r(x)));
+          dir[k] = Math.abs(d) > .8 * A ? Math.sign(d) : 0; });
+        /* v1.2: one phrase per direction, regions merged ("too low at the start and in the middle"; "too low all the way along") */
+        const say = v => { const ks = [0, 1, 2].filter(k => dir[k] === v); return !ks.length ? null : { k: ks[0], t: (v > 0 ? "too high " : "too low ") + (ks.length === 3 ? "all the way along" : ks.map(k => rg[k]).join(" and ")) }; };
+        const tips = [say(1), say(-1)].filter(Boolean).sort((p, q) => p.k - q.k).map(t => t.t), all3 = dir.every(d => d === dir[0] && d);
+        w = all3 ? `Your curve is ${tips[0]}: most points are ${dir[0] > 0 ? "below" : "above"} it. Move it ${dir[0] > 0 ? "down" : "up"}.`
+          : tips.length ? `Your curve is ${tips.join(", and ")}. Drag the handles so it runs through the middle of the points there.`
+          : above > below ? `More points lie above your curve than below it (${above} above, ${below} below). Raise it a little.` : `More points lie below your curve than above it (${below} below, ${above} above). Lower it a little.`;
+        /* v1.2: a peak in the wrong place: say which way to move it (the direction only, never the value) */
+        const top = q => { let xm = a, ym = -Infinity; xs.forEach(x => { const y = q(x); if (y > ym) { ym = y; xm = x; } }); return { xm, ym, inside: xm > a + (b - a) * .05 && xm < b - (b - a) * .05 && ym > Math.max(q(a), q(b)) + 2 * A }; };
+        const pr = top(r), pf = top(f);
+        if (pr.inside && pf.inside && Math.abs(pf.xm - pr.xm) > .06 * (b - a)) w = `Move the peak to the ${pf.xm < pr.xm ? "right" : "left"}. ` + w;
+      }
+      if (pulled) w = o.notes.out + " " + w;   /* v1.1: the specific reason first */
+      w += " A good line of best fit goes through or close to most points, with roughly as many above it as below.";
+      if (anoms.length) w += ` Leave out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`;
+      return { ok: false, why: w };
+    }
+
+    /* v1.2: two straight lines, each judged on its own points (the tool's split, o.two.ref) */
+    function verdictTwo(s, g) {
+      const R = twoRef(), F = twoF(s); if (!R || !F) return { skip: "Plot more points on each side of the peak first." };
+      const T = tolOf(g), on = .5 * T, nm = twoNames(), res = [];
+      [0, 1].forEach(i => { const P = i ? R.P2 : R.P1, r = i ? R.f2 : R.f1, f = F[i], [a, b] = ext(P), xs = Array.from({ length: 21 }, (_, j) => a + (b - a) * j / 20);
+        const diff = xs.map(x => f(x) - r(x)), area = avg(diff.map(Math.abs)), worst = Math.max(...diff.map(Math.abs)), A = Math.max(T, 1.2 * rms(P, r));
+        let above = 0, below = 0; P.forEach(p => { const e = p.y - f(p.x); if (e > on) above++; else if (e < -on) below++; });
+        const onN = P.length - above - below, bal = Math.abs(above - below) <= onN + 1, good = area <= A && worst <= 2.6 * A && bal;
+        let w = "";
+        if (!good) { const dL = f(a) - r(a), dR = f(b) - r(b), tilt = Math.abs(f.b) - Math.abs(r.b), twist = Math.abs(dR - dL) > A, cnt = ` (${plural(above, "point")} above it, ${below} below)`, who = "Your " + nm[i];
+          if (dL > A / 2 && dR > A / 2) w = `${who} is too high: most of its points are below it${cnt}. Move it down.`;
+          else if (dL < -A / 2 && dR < -A / 2) w = `${who} is too low: most of its points are above it${cnt}. Move it up.`;
+          else if (twist || Math.abs(dL) > A / 2 || Math.abs(dR) > A / 2) w = `${who} is ${tilt > 0 ? "too steep" : "not steep enough"}: make it ${tilt > 0 ? "less steep" : "steeper"}, so its points are spread evenly either side.`;
+          else w = above > below ? `${who}: more of its points lie above it than below it${cnt}. Move it up a little.` : `${who}: more of its points lie below it than above it${cnt}. Move it down a little.`; }
+        res.push({ good, w }); });
+      if (res[0].good && res[1].good) return { ok: true, why: `Each line goes through or close to its own points, with about as many above it as below. Where the ${nm[0]} and the ${nm[1]} cross is the peak.` };
+      return { ok: false, why: res.filter(x => !x.good).map(x => x.w).join(" ") + " Draw one straight line through the points before the peak and one through the points after it, so that they cross." };
+    }
+    /* ---------- the controls (HTML), for the tool's host ---------- */
+    function html() {
+      if (!allowed()) return "";
+      const s = sync(), on = s.on, why = o.ready && o.ready();
+      let h = `<div class="lobf" data-lobf-id="${id}">`;
+      if (o.toggle) h += `<div class="lobf-row"><button class="sw" type="button" data-lobf="${id}:on" aria-pressed="${on}"><span class="dot"></span>${esc(o.toggle)} <span class="state">${on ? "on" : "off"}</span></button></div>`;
+      if (!on) return h + `</div>`;
+      if (why) return h + `<p class="small lobf-tip">${esc(why)}</p></div>`;
+      const lk = s.ok && (o.lockWhenGood || s.given);
+      h += `<div class="lobf-row"><span class="lobf-lbl" id="${id}-lbl">Line of best fit:</span><span class="lobf-seg" role="group" aria-labelledby="${id}-lbl">` +
+        [["straight", "Straight"], ["curve", "Curve"]].concat(o.two ? [["two", o.two.label || "Two lines"]] : [], [["dots", "Dot-to-dot"]]).map(([k, t]) => `<button class="btn" type="button" data-lobf="${id}:k:${k}" aria-pressed="${s.kind === k}"${lk ? " disabled" : ""}>${t}</button>`).join("") + `</span></div>`;
+      if (!s.kind) h += `<p class="small lobf-tip">Choose Straight${o.two ? ", Curve or " + esc(o.two.label || "Two lines") : " or Curve"}, then drag the round handles on the graph.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+      else if (s.kind !== "dots" && !lk) h += `<p class="small lobf-tip">${s.kind === "straight" ? "Drag the two round handles up or down (or use the arrow keys)." : s.kind === "two" ? `Drag the four round handles: one straight line through the ${esc(twoNames()[0].replace(/ line$/, ""))} points, one through the ${esc(twoNames()[1].replace(/ line$/, ""))} points.` : "Drag the three round handles. The middle one moves sideways too."} Aim for roughly as many points above your line as below.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+      h += `<div class="lobf-row">`;
+      if (!lk) h += `<button class="btn primary" type="button" data-lobf="${id}:check"${s.kind ? "" : " disabled"}>Check my line</button>`;
+      if (s.tries >= 3 && !s.ok) h += `<button class="btn" type="button" data-lobf="${id}:show">Show a good line</button>`;
+      if (s.ok && o.use) h += `<button class="btn" type="button" data-lobf="${id}:use" aria-pressed="${s.use}">${esc(s.given ? (o.use.labelGiven || "Use the given line") : o.use.label || "Use your line")}</button>`;
+      if (s.kind && !(s.ok && o.lockWhenGood)) h += `<button class="linkbtn" type="button" data-lobf="${id}:clear">Start again</button>`;
+      if (o.adjust && s.ok && o.lockWhenGood && !s.given) h += `<button class="btn" type="button" data-lobf="${id}:adjust">${esc(o.adjust)}</button>`;   /* v1.2 */
+      h += `</div>`;
+      if (s.msg) h += `<p class="smsg lobf-msg ${s.cls}" role="status">${s.msg}</p>`;
+      if (s.ok && s.use && o.use) h += `<div class="lobf-use" role="status">${o.use.html(lineF(s), { given: s.given })}</div>`;
+      return h + `</div>`;
+    }
+    function render() {
+      document.querySelectorAll(`[data-lobf-host="${id}"]`).forEach(el => { const h = html(); if (el._lh !== h) { el.innerHTML = h; el._lh = h; } });
+    }
+
+    /* ---------- the overlay on the graph ---------- */
+    let gEl = null;
+    function layer() {
+      const svg = o.svg(); if (!svg) return null;
+      if (!gEl || gEl.ownerSVGElement !== svg || !gEl.isConnected) { gEl = document.createElementNS("http://www.w3.org/2000/svg", "g"); gEl.setAttribute("class", "lobf-g"); bind(svg); }
+      if (svg.lastElementChild !== gEl) svg.appendChild(gEl);
+      return gEl;
+    }
+    function scaleOf(svg) { const vb = svg.viewBox && svg.viewBox.baseVal, r = svg.getBoundingClientRect(); return vb && vb.width && r.width && r.height ? Math.min(r.width / vb.width, r.height / vb.height) : 1; }
+    function draw() {
+      const L = layer(); if (!L) return; const svg = o.svg();
+      const s = S(), show = s.on && allowed() && !(o.ready && o.ready());
+      if (!show) { if (L._h !== "") { L.innerHTML = ""; L._h = ""; } if (svg._lobfRole) { svg.setAttribute("role", svg._lobfRole); svg._lobfRole = null; } return; }
+      sync();
+      const g = o.geom(), k = 1 / scaleOf(svg), px = g.px, py = g.py, cy = y => py(Math.max(g.ymin, Math.min(g.ymax, y)));
+      const x0 = Math.min(px(g.xmin), px(g.xmax)), x1 = Math.max(px(g.xmin), px(g.xmax)), y0 = Math.min(py(g.ymin), py(g.ymax)), y1 = Math.max(py(g.ymin), py(g.ymax));
+      let h = `<clipPath id="${id}-clip"><rect x="${f1(x0)}" y="${f1(y0)}" width="${f1(x1 - x0)}" height="${f1(y1 - y0)}"/></clipPath>`;
+      const [a, b] = rangeOf(), f = lineF(s);
+      if (s.kind === "dots" && !s.given) { const q = P0().slice().sort((p, r) => p.x - r.x); if (q.length > 1) h += `<path class="lobf-line lobf-dots" clip-path="url(#${id}-clip)" d="M${q.map(p => f1(px(p.x)) + " " + f1(py(p.y))).join("L")}"/>`; }
+      else if (f) {
+        let d = ""; const n = s.kind === "straight" && !s.given ? 1 : 60;
+        if (s.kind === "two") { const c = f.cross, X = c && c.x > a && c.x < b ? [a, c.x, b] : Array.from({ length: 61 }, (_, i) => a + (b - a) * i / 60); X.forEach((x, i) => { d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }); }
+        else for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }
+        h += `<path class="lobf-line${s.given ? " lobf-given" : ""}" clip-path="url(#${id}-clip)" d="${d}"/>`;
+        if (s.given) {   /* the "given" label: the first place (left, middle, right; above or below the line) clear of the line, the points and the edges */
+          const fs = 14 * k, bw = fs * 2.9, bh = fs * 1.1, pts = P0().map(p => [px(p.x), py(p.y)]), ln = Array.from({ length: 61 }, (_, i) => { const x = a + (b - a) * i / 60; return [px(x), py(f(x))]; });
+          const free = (L, T) => L >= x0 + 2 && L + bw <= x1 - 2 && T >= y0 + 2 && T + bh <= y1 - 2 && !pts.concat(ln).some(([X, Y]) => X > L - 9 * k && X < L + bw + 9 * k && Y > T - 9 * k && Y < T + bh + 9 * k);
+          let at = null;
+          for (const fr of [.12, .5, .85, .3, .7]) { const X = px(a + (b - a) * fr), Y = py(f(a + (b - a) * fr));
+            for (const d of [-1, 1]) for (const off of [10, 22, 36]) { const T = d < 0 ? Y - off * k - bh : Y + off * k; if (!at && free(X, T)) at = [X, T]; } }
+          if (!at) at = [x0 + 6 * k, y0 + 4 * k];
+          h += `<text class="lobf-gt" x="${f1(at[0])}" y="${f1(at[1] + bh * .82)}" font-size="${f1(fs)}">given</text>`; }
+        if (s.ok && s.use && o.use && o.use.draw) h += o.use.draw(f, g, k);
+      }
+      const lk = s.given || (s.ok && o.lockWhenGood);
+      if (!lk && (s.kind === "straight" || s.kind === "curve" || s.kind === "two")) {
+        const nm = o.names || {}, yu = nm.yu ? " " + nm.yu : "";
+        const HS = s.kind === "straight" ? (() => { const [xa, xb] = hX(); return [["L", xa, s.yL, "Left end"], ["R", xb, s.yR, "Right end"]]; })()
+          : s.kind === "two" ? (() => { const X = twoX(), N = twoNames(); return [0, 1].flatMap(i => [0, 1].map(j => [(i ? "B" : "A") + j, X[i][j], s.T[i][j], `${j ? "Right" : "Left"} end of the ${N[i]}`])); })()
+          : s.H.map((p, i) => [["L", "M", "R"][i], p.x, p.y, ["Left end", "Middle", "Right end"][i]]);
+        HS.forEach(([key, x, y, nmH]) => {
+          const X = px(x), Y = cy(y), vt = `${fmtV(y)}${yu} at ${fx(x)}`;
+          h += `<g class="lobf-h${drag && drag.key === key ? " drag" : ""}" data-h="${key}" tabindex="0" role="slider" aria-orientation="vertical" aria-label="${nmH} of your line of best fit. Use the arrow keys${key === "M" && s.kind === "curve" ? " (left and right move it sideways)" : ""}." aria-valuemin="${fmtV(g.ymin)}" aria-valuemax="${fmtV(g.ymax)}" aria-valuenow="${fmtV(y)}" aria-valuetext="${esc(vt)}" transform="translate(${f1(X)} ${f1(Y)})">` +
+            `<circle class="lobf-hit" r="${f1(26 * k)}"/><circle class="lobf-ring" r="${f1(15 * k)}"/><circle class="lobf-hd" r="${f1(8 * k)}"/></g>`;
+        });
+        if (!svg._lobfRole) { svg._lobfRole = svg.getAttribute("role") || "img"; svg.setAttribute("role", "group"); }
+      } else if (svg._lobfRole) { svg.setAttribute("role", svg._lobfRole); svg._lobfRole = null; }
+      if (L._h !== h) { L.innerHTML = h; L._h = h; }
+      if (drag && drag.refocus) { const e = L.querySelector(`.lobf-h[data-h="${drag.key}"]`); if (e && document.activeElement !== e) e.focus({ preventScroll: true }); }
+    }
+    const fmtV = v => String(+(+v).toPrecision(3));   /* v1.2: 3 significant figures, so small values (0.023 /s) still read */
+    function changed() { if (o.onChange) o.onChange(); else { render(); draw(); } }
+
+    /* ---------- dragging and keys ---------- */
+    function svgPt(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+    function inv(g) { const xa = px0(g), xb = g.px(g.xmax), ya = g.py(g.ymin), yb = g.py(g.ymax);
+      return { ix: X => g.xmin + (X - xa) * (g.xmax - g.xmin) / ((xb - xa) || 1e-9), iy: Y => g.ymin + (Y - ya) * (g.ymax - g.ymin) / ((yb - ya) || 1e-9) }; }
+    const px0 = g => g.px(g.xmin);
+    function setH(s, key, x, y, g) {
+      y = Math.max(g.ymin, Math.min(g.ymax, y));
+      if (s.kind === "straight") s[key === "L" ? "yL" : "yR"] = y;
+      else if (s.kind === "two") s.T[key[0] === "A" ? 0 : 1][+key[1]] = y;
+      else { const i = { L: 0, M: 1, R: 2 }[key]; s.H[i].y = y;
+        if (key === "M" && x != null) { const [a, b] = rangeOf(), sp = b - a; s.H[1].x = Math.max(a + .12 * sp, Math.min(b - .12 * sp, x)); } }
+      if (s.ok || s.cls) { s.ok = false; s.use = false; s.msg = "You moved your line. Press Check my line again."; s.cls = ""; }
+    }
+    const curY = (s, key) => s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.kind === "two" ? s.T[key[0] === "A" ? 0 : 1][+key[1]] : s.H[{ L: 0, M: 1, R: 2 }[key]].y;
+    function bind(svg) {
+      if (svg._lobfBound) return; svg._lobfBound = true;
+      svg.addEventListener("pointerdown", e => {
+        const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
+        if (o.guard && o.guard()) return;
+        const s = S(), g = o.geom(), p = svgPt(svg, e), key = hEl.dataset.h;
+        const cur = curY(s, key), cx = s.kind === "curve" && key === "M" ? s.H[1].x : null;
+        drag = { key, id: e.pointerId, dy: g.py(cur) - p.y, dx: cx == null ? 0 : g.px(cx) - p.x };
+        try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+        e.preventDefault(); e.stopPropagation();
+        hEl.classList.add("drag"); hEl.focus({ preventScroll: true });
+      });
+      /* a finger on a handle drags the handle, not the page (touch-action is not applied to shapes inside an SVG) */
+      svg.addEventListener("touchstart", e => { const t = e.target.closest && e.target.closest(".lobf-h"); if (t && gEl && gEl.contains(t)) e.preventDefault(); }, { passive: false });
+      svg.addEventListener("touchmove", e => { if (drag) e.preventDefault(); }, { passive: false });
+      svg.addEventListener("pointermove", e => {
+        if (!drag || e.pointerId !== drag.id) return; e.preventDefault();
+        const s = S(), g = o.geom(), p = svgPt(svg, e), I2 = inv(g);
+        setH(s, drag.key, drag.key === "M" && s.kind === "curve" ? I2.ix(p.x + drag.dx) : null, I2.iy(p.y + drag.dy), g);
+        if (!dragRaf) dragRaf = requestAnimationFrame(() => { dragRaf = 0; draw(); });
+      });
+      const end = e => { if (!drag || (e && e.pointerId !== drag.id)) return; drag = null; if (dragRaf) { cancelAnimationFrame(dragRaf); dragRaf = 0; }
+        const s = S(); if (!s.msg) s.msg = "Press Check my line when you are happy with it."; changed(); };
+      svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end); svg.addEventListener("lostpointercapture", end);
+      svg.addEventListener("keydown", e => {
+        const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
+        if (o.guard && o.guard()) return;
+        const s = S(), g = o.geom(), key = hEl.dataset.h, step = (g.ymax - g.ymin) / 100, big = (g.ymax - g.ymin) / 10;
+        const cur = curY(s, key);
+        const sideways = s.kind === "curve" && key === "M", [a, b] = rangeOf(), xs = (b - a) / 50;
+        let y = cur, x = null;
+        if (e.key === "ArrowUp" || (!sideways && e.key === "ArrowRight")) y = cur + step;
+        else if (e.key === "ArrowDown" || (!sideways && e.key === "ArrowLeft")) y = cur - step;
+        else if (e.key === "PageUp") y = cur + big; else if (e.key === "PageDown") y = cur - big;
+        else if (sideways && e.key === "ArrowLeft") x = s.H[1].x - xs; else if (sideways && e.key === "ArrowRight") x = s.H[1].x + xs;
+        else return;
+        e.preventDefault(); setH(s, key, x, y, g); drag = { key, refocus: true }; changed(); drag = null;
+        const e2 = gEl.querySelector(`.lobf-h[data-h="${key}"]`); if (e2) e2.focus({ preventScroll: true });
+      });
+    }
+
+    /* ---------- buttons ---------- */
+    I.act = (act, arg) => {
+      const s = sync();
+      if (act === "on") { s.on = !s.on; if (!s.on) { s.use = false; } }
+      else if (act === "k") { if (s.kind !== arg) { s.kind = arg; s.ok = false; s.given = false; s.use = false; s.cls = ""; s.msg = arg === "dots" ? "Dot-to-dot chosen. Press Check my line." : ""; } }
+      else if (act === "clear") { startLine(s, false); }
+      else if (act === "check") {
+        const g = o.geom(), v = verdict(s, g);
+        if (v.skip) { s.msg = esc(v.skip); s.cls = ""; }
+        else if (v.ok) { s.ok = true; s.given = false; s.msg = "<b>✓ Good line of best fit.</b> " + esc(v.why); s.cls = "good"; if (o.onGood) o.onGood({ given: false, f: lineF(s) }); }
+        else { s.ok = false; s.tries++; s.msg = "<b>Not yet.</b> " + esc(v.why) + (s.tries >= 3 ? " <span class=\"small\">(You can press Show a good line.)</span>" : ""); s.cls = "bad"; }
+      }
+      else if (act === "show") {
+        const r = refF(); if (!r && expect() !== "two") return; const [xa, xb] = hX(), [a, b] = rangeOf();
+        if (expect() === "two") { const R = twoRef(); if (!R) return; const X = twoX(R); s.kind = "two"; s.T = [[R.f1(X[0][0]), R.f1(X[0][1])], [R.f2(X[1][0]), R.f2(X[1][1])]]; }
+        else if (expect() === "straight") { s.kind = "straight"; s.yL = r(xa); s.yR = r(xb); }
+        else { s.kind = "curve"; let best = null; for (let i = 2; i <= 18; i++) { const x = a + (b - a) * i / 20, H = [{ x: a, y: r(a) }, { x, y: r(x) }, { x: b, y: r(b) }], q = curve3(H, o.peakBase); let e = 0; for (let j = 0; j <= 30; j++) { const xx = a + (b - a) * j / 30; e += Math.abs(q(xx) - r(xx)); } if (!best || e < best.e) best = { e, H }; } s.H = best.H; }
+        const anoms = P0().filter(p => p.anom);
+        s.given = true; s.ok = true; s.use = false; s.cls = "good";
+        s.msg = "<b>A good line of best fit (given).</b> It goes through or close to most points, with about as many above it as below." + (anoms.length ? esc(` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`) : "") + (o.lockWhenGood ? " Compare it with yours, then use it for the next step." : " Compare it with yours, then press Start again to try once more.");
+        if (o.onGood) o.onGood({ given: true, f: lineF(s) });
+      }
+      else if (act === "use") s.use = !s.use;
+      else if (act === "adjust") { if (!(s.ok && !s.given)) return; s.ok = false; s.use = false; s.cls = ""; s.msg = "Your line is unlocked: move it, then press Check my line again."; if (o.onReset) o.onReset(); }   /* v1.2 */
+      changed();
+    };
+    I.html = html; I.render = render; I.draw = draw; I.verdict = () => verdict(S(), o.geom());
+    I.reset = () => { const s = o.state(); for (const k in s) delete s[k]; };
+    all[id] = I; return I;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("[data-lobf]"); if (!b || b.disabled) return;
+    const [id, act, arg] = b.dataset.lobf.split(":"), I = all[id]; if (!I) return;
+    if (I.o.guard && I.o.guard()) return;
+    I.act(act, arg);
+    const again = document.querySelector(`[data-lobf="${b.dataset.lobf}"]`) || document.querySelector(`[data-lobf-id="${id}"] [data-lobf$=":check"]`) || document.querySelector(`[data-lobf-id="${id}"] .lobf-msg`);
+    if (again && document.activeElement !== again) { if (again.tagName === "P") again.setAttribute("tabindex", "-1"); again.focus({ preventScroll: true }); }
+  });
+  return { make, lsq, quad, pchip, curve3, all };
+})();
+/* == end lobf v1 == */
+/* lobf v1 (tool part): the pupil's own curve of best fit on the wavelength–frequency graph (Results), Demo only (no question shows
+   it). Each part (ripple tank, string) keeps its own curve. λ = v ÷ f: a curve that falls and levels off; the three handles' curve
+   y = A + B·e^(−kx) follows it within the judging tolerance over the frequencies used (checked on seeded runs). Reference: the tool's
+   own fit (λ = v ÷ f, v by least squares, fitV). Each run is one point, so there are no point anomalies. Needs 4 runs. While it is
+   on, the computer's curve is hidden. */
+let WV_G = null;
+const wvPts = () => runsOf(M, M.part).map(x => ({ x: x.f, y: x.lam }));
+const LBV = LOBF.make({ id: "wv", toggle: "Draw my own curve of best fit",
+  svg: () => $("gsvg"), state: () => { const S = M.lobfs || (M.lobfs = {}); return S[M.part] || (S[M.part] = {}); },
+  allowed: () => mode === "demo" && M.tab === "res",
+  ready: () => wvPts().length < 4 ? "Record at least 4 runs at different frequencies first. Then draw a curve of best fit through them." : null,
+  points: wvPts,
+  geom: () => WV_G || (A => ({ px: f => 84 + 530 * f / A.fMax, py: l => 16 + 260 * (1 - l / A.lMax), xmin: 0, xmax: A.fMax, ymin: 0, ymax: A.lMax }))(AX[M.part]),
+  expect: () => "curve", ref: P => { const v = fitV(P.map(p => ({ f: p.x, lam: p.y }))); return f => v / f; },
+  fx: f => f + " Hz", names: { x: "frequency", xu: "Hz", y: "wavelength", yu: "m" },
+  regions: ["at low frequencies", "in the middle", "at high frequencies"],
+  onChange: () => drawAll() });
 /* conclusion frame, checked against the pupil's own runs */
 const CONC = {
   a: { lbl: "As the frequency increased, the wavelength", opts: ["decreased", "increased", "stayed the same"] },
@@ -1776,7 +2237,7 @@ function renderCtl() {
   const pr = (sel, attr, v) => document.querySelectorAll(sel).forEach(b => { const on = String(b.dataset[attr]) === String(v); if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); });
   pr("#tabs button", "tab", M.tab); pr("#setSeg button", "s", M.rset); pr("#partSeg button", "p", M.part);
   const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
-  sw("fitSw", M.fit);
+  sw("fitSw", M.fit); $("fitSw").hidden = LBV.on();   /* lobf v1: the computer's curve would give the pupil's curve away */
   const sl = $("fSlider"); if (+sl.value !== M.str.f) sl.value = M.str.f; sl.setAttribute("aria-valuetext", M.str.on ? M.str.f.toFixed(1) + " hertz" : "off");
   if (!locked()) $("lockNote").hidden = true;
 }

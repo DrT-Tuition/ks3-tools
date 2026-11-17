@@ -795,7 +795,8 @@ details.trybox > .try{margin-top:6px}
         <div class="controls" id="xMeanRow"><button class="btn" type="button" id="xCheck">Check my means and rates</button><button class="linkbtn" type="button" id="xClearRow">Clear this row</button><button class="linkbtn" type="button" id="xClearAll">Clear table</button></div>
         <div class="labgrid">
           <div><svg id="xgraph" class="scene" viewBox="0 0 480 330" role="img" aria-label="Graph of rate against concentration"><g id="xgG"></g></svg>
-            <div class="controls" style="margin-top:6px"><span class="gl" id="xpLbl">Plot:</span><span class="seg" role="group" aria-labelledby="xpLbl" id="xpSeg"><button type="button" data-xp="rate" aria-pressed="true">Rate (1 ÷ time)</button><button type="button" data-xp="time" aria-pressed="false">Mean time</button></span><button class="sw" type="button" id="xFitSw" aria-pressed="false"><span class="dot"></span>Line of best fit <span class="state">off</span></button></div></div>
+            <div class="controls" style="margin-top:6px"><span class="gl" id="xpLbl">Plot:</span><span class="seg" role="group" aria-labelledby="xpLbl" id="xpSeg"><button type="button" data-xp="rate" aria-pressed="true">Rate (1 ÷ time)</button><button type="button" data-xp="time" aria-pressed="false">Mean time</button></span><button class="sw" type="button" id="xFitSw" aria-pressed="false"><span class="dot"></span>Line of best fit <span class="state">off</span></button></div>
+            <div class="lobf-host" data-lobf-host="cross"></div></div>
           <div class="concl" id="xConcl"></div>
         </div>
         <div class="readout" id="xread" aria-live="polite"></div>
@@ -1014,11 +1015,17 @@ function judgeRateNum(v, ok, vol, t) {   // a typed mean rate (cm³/s): right, o
      across; default the plotted points), handleX([a, b]) -> [xa, xb] (straight handles), origin (the science says the line goes
      through (0, 0)), tol (one "small square" in y data units; default y span ÷ 40), names: { x, xu, y, yu } (words + units),
      fx(x) -> "40 s" (how to name a point's x), regions: three words for the left / middle / right thirds, notes: { origin,
-     originGood, out, outGood, tip }, peakBase (v1.1: a peak is drawn as a bell above this y, e.g. 0), toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
+     originGood, out, outGood, tip }, peakBase (v1.1: a peak is drawn as a bell above this y, e.g. 0), adjust (v1.2), two (v1.2), toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
      guard() (true = the model is locked: ignore the press), onGood(info), onReset() (a good line was undone because the results changed), onChange() (the tool redraws; default LB.render() + LB.draw()), use: { label, html(f, info), draw(f, g, k) }.
    No loops: drags redraw at most once per frame, nothing runs while idle.
    v1.1 (17 Nov 2026): a line pulled towards "out" points gets that reason first; a good line with points left out ("out" or
-   anomalies) no longer says "across all your data"; option peakBase (a peak drawn as a bell). Without peakBase a tool behaves as in v1. */
+   anomalies) no longer says "across all your data"; option peakBase (a peak drawn as a bell). Without peakBase a tool behaves as in v1.
+   v1.2 (17 Nov 2026): curve messages merge the regions ("too low all the way along"); a curve whose peak is left or right of the
+   best one says "Move the peak to the right / left"; option adjust: "label" (a locked good line can be unlocked and moved again);
+   option two: { ref(P) -> { f1, f2, P1, P2 }, names: [first, second], label } adds a "Two lines" kind: two straight lines that
+   cross (e.g. rising then falling temperatures), four handles, each line judged on its own points. Handle values are read
+   out to 3 significant figures. Tools without these options
+   behave as in v1.1. */
 const LOBF = (() => {
   const NS_ID = { n: 0 }, all = {};
   const avg = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
@@ -1097,10 +1104,22 @@ const LOBF = (() => {
     function evalRange() { const xs = fitP().map(p => p.x); return xs.length ? [Math.min(...xs), Math.max(...xs)] : rangeOf(); }
     function hX() { const r = rangeOf(); return o.handleX ? o.handleX(r) : r; }
     function refF() { const P = fitP(); if (P.length < 2) return null; return expect() === "curve" ? (o.ref ? o.ref(P) : quad(P)) : lsq(P); }
+    /* v1.2: two straight lines that cross (option two) */
+    const ext = Q => [Math.min(...Q.map(p => p.x)), Math.max(...Q.map(p => p.x))];
+    function twoRef() { const P = fitP(); return o.two && P.length >= 4 ? o.two.ref(P) : null; }
+    function twoX(R) { if (R === undefined) R = twoRef(); if (!R) { const [a, b] = rangeOf(), m = (a + b) / 2; return [[a, m], [m, b]]; } const a = ext(R.P1), b = ext(R.P2);
+      if (a[1] === b[0] && R.P1.length > 2 && R.P2.length > 2) { a[1] = Math.max(...R.P1.map(p => p.x).filter(x => x < b[0])); b[0] = Math.min(...R.P2.map(p => p.x).filter(x => x > a[1] && x > b[0] - 1e-9 && x !== b[0])); }   /* a shared peak point: keep the four handles apart */
+      return [a, b]; }
+    function twoF(s) {
+      if (s.given) { const R = twoRef(); return R ? [R.f1, R.f2] : null; }
+      const X = twoX(); return [0, 1].map(i => { const [xa, xb] = X[i], [ya, yb] = s.T[i], b = (yb - ya) / ((xb - xa) || 1e-9), f = x => ya + b * (x - xa); f.a = ya - b * xa; f.b = b; return f; });
+    }
+    function crossOf(F) { const [f1, f2] = F; if (!(Math.abs(f1.b - f2.b) > 1e-12)) return null; const x = (f2.a - f1.a) / (f1.b - f2.b); return { x, y: f1(x) }; }
+    const twoNames = () => (o.two && o.two.names) || ["first line", "second line"];
     function sigNow() { return JSON.stringify(P0().map(p => [+p.x.toFixed(4), +p.y.toFixed(4), p.anom ? 1 : 0, p.out ? 1 : 0, p.skip ? 1 : 0])) + "|" + expect(); }
     function startLine(s, keepKind) {
       const P = fitP(), m = P.length ? avg(P.map(p => p.y)) : 0, [xa, xb] = hX(), [a, b] = rangeOf();
-      s.yL = m; s.yR = m; s.H = [{ x: a, y: m }, { x: (a + b) / 2, y: m }, { x: b, y: m }];
+      s.yL = m; s.yR = m; s.H = [{ x: a, y: m }, { x: (a + b) / 2, y: m }, { x: b, y: m }]; if (o.two) s.T = [[m, m], [m, m]];
       if (!keepKind) s.kind = null; s.ok = false; s.given = false; s.use = false; s.msg = ""; s.cls = ""; s.tries = 0; void xa; void xb;
     }
     function sync() {   // new or changed results: start the line again (keeps Straight / Curve chosen)
@@ -1109,6 +1128,7 @@ const LOBF = (() => {
     }
     /* the pupil's line as a function of x */
     function lineF(s) {
+      if (s.kind === "two") { const F = twoF(s); if (!F) return null; const f = x => Math.min(F[0](x), F[1](x)); f.F = F; f.cross = crossOf(F); return f; }
       if (s.given) { const r = refF(); if (r) return r; }
       if (s.kind === "straight") { const [xa, xb] = hX(), b = (s.yR - s.yL) / ((xb - xa) || 1e-9); const f = x => s.yL + b * (x - xa); f.b = b; f.a = s.yL - b * xa; return f; }
       if (s.kind === "curve") { const [a, , b] = [s.H[0].x, 0, s.H[2].x]; const r = rangeOf(); s.H[0].x = r[0]; s.H[2].x = r[1]; void a; void b; return curve3(s.H, o.peakBase); }
@@ -1123,9 +1143,13 @@ const LOBF = (() => {
       const P = fitP(), all = P0(), ex = expect(), T = tolOf(g), on = 0.5 * T, nm = o.names || {};
       const anoms = all.filter(p => p.anom), outs = all.filter(p => p.out);
       const aNote = anoms.length ? ` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}, as it should.` : "";
-      if (s.kind === "dots") return { ok: false, why: "That’s a dot-to-dot. A line of best fit is one thin line, straight or a smooth curve, that shows the overall pattern. It doesn’t have to touch every point. Choose " + (ex === "curve" ? "Curve." : "Straight.") };
+      if (s.kind === "dots") return { ok: false, why: "That’s a dot-to-dot. A line of best fit is one thin line, straight or a smooth curve, that shows the overall pattern. It doesn’t have to touch every point. Choose " + (ex === "curve" ? "Curve." : ex === "two" ? ((o.two && o.two.label) || "Two lines") + "." : "Straight.") };
       if (ex === "straight" && s.kind === "curve") return { ok: false, why: "These points lie close to a straight line, so draw a straight line of best fit (with a ruler on paper). Choose Straight." };
       if (ex === "curve" && s.kind === "straight") return { ok: false, why: "These points make a curve, so no straight line fits them well. A line of best fit can be curved: choose Curve and make one smooth curve." };
+      if (ex === "two" && s.kind === "straight") return { ok: false, why: `These points rise and then fall, so one straight line can’t fit them. Choose ${(o.two && o.two.label) || "Two lines"}: one straight line through the ${twoNames()[0].replace(/ line$/, "")} points and one through the ${twoNames()[1].replace(/ line$/, "")} points.` };
+      if (ex === "two" && s.kind === "curve") return { ok: false, why: `In this practical the line of best fit is two straight lines that cross, not a curve: the crossing point marks the peak. Choose ${(o.two && o.two.label) || "Two lines"}.` };
+      if (ex !== "two" && s.kind === "two") return { ok: false, why: "These points don’t need two lines. Choose " + (ex === "curve" ? "Curve." : "Straight.") };
+      if (s.kind === "two") return verdictTwo(s, g);
       const r = refF(), f = lineF(s); if (!r || !f) return { skip: "Plot more points first." };
       const [a, b] = evalRange(), N = 40, xs = Array.from({ length: N + 1 }, (_, i) => a + (b - a) * i / N);
       const diff = xs.map(x => f(x) - r(x)), area = avg(diff.map(Math.abs)), worst = Math.max(...diff.map(Math.abs)), rr = rms(P, r);
@@ -1162,11 +1186,19 @@ const LOBF = (() => {
         else w = above > below ? `More points lie above your line than below it${cnt}. Move it up a little.` : `More points lie below your line than above it${cnt}. Move it down a little.`;
         if (o.origin && Math.abs(f(0)) > 2 * A && o.notes && o.notes.origin) w += " " + o.notes.origin;
       } else {
-        const rg = o.regions || ["on the left", "in the middle", "on the right"], tips = [];
+        const rg = o.regions || ["on the left", "in the middle", "on the right"], dir = [];
         [0, 1, 2].forEach(k => { const lo = a + (b - a) * k / 3, hi = a + (b - a) * (k + 1) / 3, q = xs.filter(x => x >= lo - 1e-9 && x <= hi + 1e-9), d = avg(q.map(x => f(x) - r(x)));
-          if (Math.abs(d) > .8 * A) tips.push((d > 0 ? "too high " : "too low ") + rg[k]); });
-        w = tips.length ? `Your curve is ${tips.join(", and ")}. Drag the handles so it runs through the middle of the points there.`
+          dir[k] = Math.abs(d) > .8 * A ? Math.sign(d) : 0; });
+        /* v1.2: one phrase per direction, regions merged ("too low at the start and in the middle"; "too low all the way along") */
+        const say = v => { const ks = [0, 1, 2].filter(k => dir[k] === v); return !ks.length ? null : { k: ks[0], t: (v > 0 ? "too high " : "too low ") + (ks.length === 3 ? "all the way along" : ks.map(k => rg[k]).join(" and ")) }; };
+        const tips = [say(1), say(-1)].filter(Boolean).sort((p, q) => p.k - q.k).map(t => t.t), all3 = dir.every(d => d === dir[0] && d);
+        w = all3 ? `Your curve is ${tips[0]}: most points are ${dir[0] > 0 ? "below" : "above"} it. Move it ${dir[0] > 0 ? "down" : "up"}.`
+          : tips.length ? `Your curve is ${tips.join(", and ")}. Drag the handles so it runs through the middle of the points there.`
           : above > below ? `More points lie above your curve than below it (${above} above, ${below} below). Raise it a little.` : `More points lie below your curve than above it (${below} below, ${above} above). Lower it a little.`;
+        /* v1.2: a peak in the wrong place: say which way to move it (the direction only, never the value) */
+        const top = q => { let xm = a, ym = -Infinity; xs.forEach(x => { const y = q(x); if (y > ym) { ym = y; xm = x; } }); return { xm, ym, inside: xm > a + (b - a) * .05 && xm < b - (b - a) * .05 && ym > Math.max(q(a), q(b)) + 2 * A }; };
+        const pr = top(r), pf = top(f);
+        if (pr.inside && pf.inside && Math.abs(pf.xm - pr.xm) > .06 * (b - a)) w = `Move the peak to the ${pf.xm < pr.xm ? "right" : "left"}. ` + w;
       }
       if (pulled) w = o.notes.out + " " + w;   /* v1.1: the specific reason first */
       w += " A good line of best fit goes through or close to most points, with roughly as many above it as below.";
@@ -1174,6 +1206,24 @@ const LOBF = (() => {
       return { ok: false, why: w };
     }
 
+    /* v1.2: two straight lines, each judged on its own points (the tool's split, o.two.ref) */
+    function verdictTwo(s, g) {
+      const R = twoRef(), F = twoF(s); if (!R || !F) return { skip: "Plot more points on each side of the peak first." };
+      const T = tolOf(g), on = .5 * T, nm = twoNames(), res = [];
+      [0, 1].forEach(i => { const P = i ? R.P2 : R.P1, r = i ? R.f2 : R.f1, f = F[i], [a, b] = ext(P), xs = Array.from({ length: 21 }, (_, j) => a + (b - a) * j / 20);
+        const diff = xs.map(x => f(x) - r(x)), area = avg(diff.map(Math.abs)), worst = Math.max(...diff.map(Math.abs)), A = Math.max(T, 1.2 * rms(P, r));
+        let above = 0, below = 0; P.forEach(p => { const e = p.y - f(p.x); if (e > on) above++; else if (e < -on) below++; });
+        const onN = P.length - above - below, bal = Math.abs(above - below) <= onN + 1, good = area <= A && worst <= 2.6 * A && bal;
+        let w = "";
+        if (!good) { const dL = f(a) - r(a), dR = f(b) - r(b), tilt = Math.abs(f.b) - Math.abs(r.b), twist = Math.abs(dR - dL) > A, cnt = ` (${plural(above, "point")} above it, ${below} below)`, who = "Your " + nm[i];
+          if (dL > A / 2 && dR > A / 2) w = `${who} is too high: most of its points are below it${cnt}. Move it down.`;
+          else if (dL < -A / 2 && dR < -A / 2) w = `${who} is too low: most of its points are above it${cnt}. Move it up.`;
+          else if (twist || Math.abs(dL) > A / 2 || Math.abs(dR) > A / 2) w = `${who} is ${tilt > 0 ? "too steep" : "not steep enough"}: make it ${tilt > 0 ? "less steep" : "steeper"}, so its points are spread evenly either side.`;
+          else w = above > below ? `${who}: more of its points lie above it than below it${cnt}. Move it up a little.` : `${who}: more of its points lie below it than above it${cnt}. Move it down a little.`; }
+        res.push({ good, w }); });
+      if (res[0].good && res[1].good) return { ok: true, why: `Each line goes through or close to its own points, with about as many above it as below. Where the ${nm[0]} and the ${nm[1]} cross is the peak.` };
+      return { ok: false, why: res.filter(x => !x.good).map(x => x.w).join(" ") + " Draw one straight line through the points before the peak and one through the points after it, so that they cross." };
+    }
     /* ---------- the controls (HTML), for the tool's host ---------- */
     function html() {
       if (!allowed()) return "";
@@ -1184,14 +1234,15 @@ const LOBF = (() => {
       if (why) return h + `<p class="small lobf-tip">${esc(why)}</p></div>`;
       const lk = s.ok && (o.lockWhenGood || s.given);
       h += `<div class="lobf-row"><span class="lobf-lbl" id="${id}-lbl">Line of best fit:</span><span class="lobf-seg" role="group" aria-labelledby="${id}-lbl">` +
-        [["straight", "Straight"], ["curve", "Curve"], ["dots", "Dot-to-dot"]].map(([k, t]) => `<button class="btn" type="button" data-lobf="${id}:k:${k}" aria-pressed="${s.kind === k}"${lk ? " disabled" : ""}>${t}</button>`).join("") + `</span></div>`;
-      if (!s.kind) h += `<p class="small lobf-tip">Choose Straight or Curve, then drag the round handles on the graph.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
-      else if (s.kind !== "dots" && !lk) h += `<p class="small lobf-tip">${s.kind === "straight" ? "Drag the two round handles up or down (or use the arrow keys)." : "Drag the three round handles. The middle one moves sideways too."} Aim for roughly as many points above your line as below.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+        [["straight", "Straight"], ["curve", "Curve"]].concat(o.two ? [["two", o.two.label || "Two lines"]] : [], [["dots", "Dot-to-dot"]]).map(([k, t]) => `<button class="btn" type="button" data-lobf="${id}:k:${k}" aria-pressed="${s.kind === k}"${lk ? " disabled" : ""}>${t}</button>`).join("") + `</span></div>`;
+      if (!s.kind) h += `<p class="small lobf-tip">Choose Straight${o.two ? ", Curve or " + esc(o.two.label || "Two lines") : " or Curve"}, then drag the round handles on the graph.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
+      else if (s.kind !== "dots" && !lk) h += `<p class="small lobf-tip">${s.kind === "straight" ? "Drag the two round handles up or down (or use the arrow keys)." : s.kind === "two" ? `Drag the four round handles: one straight line through the ${esc(twoNames()[0].replace(/ line$/, ""))} points, one through the ${esc(twoNames()[1].replace(/ line$/, ""))} points.` : "Drag the three round handles. The middle one moves sideways too."} Aim for roughly as many points above your line as below.${o.notes && o.notes.tip ? " " + esc(o.notes.tip) : ""}</p>`;
       h += `<div class="lobf-row">`;
       if (!lk) h += `<button class="btn primary" type="button" data-lobf="${id}:check"${s.kind ? "" : " disabled"}>Check my line</button>`;
       if (s.tries >= 3 && !s.ok) h += `<button class="btn" type="button" data-lobf="${id}:show">Show a good line</button>`;
       if (s.ok && o.use) h += `<button class="btn" type="button" data-lobf="${id}:use" aria-pressed="${s.use}">${esc(s.given ? (o.use.labelGiven || "Use the given line") : o.use.label || "Use your line")}</button>`;
       if (s.kind && !(s.ok && o.lockWhenGood)) h += `<button class="linkbtn" type="button" data-lobf="${id}:clear">Start again</button>`;
+      if (o.adjust && s.ok && o.lockWhenGood && !s.given) h += `<button class="btn" type="button" data-lobf="${id}:adjust">${esc(o.adjust)}</button>`;   /* v1.2 */
       h += `</div>`;
       if (s.msg) h += `<p class="smsg lobf-msg ${s.cls}" role="status">${s.msg}</p>`;
       if (s.ok && s.use && o.use) h += `<div class="lobf-use" role="status">${o.use.html(lineF(s), { given: s.given })}</div>`;
@@ -1222,7 +1273,8 @@ const LOBF = (() => {
       if (s.kind === "dots" && !s.given) { const q = P0().slice().sort((p, r) => p.x - r.x); if (q.length > 1) h += `<path class="lobf-line lobf-dots" clip-path="url(#${id}-clip)" d="M${q.map(p => f1(px(p.x)) + " " + f1(py(p.y))).join("L")}"/>`; }
       else if (f) {
         let d = ""; const n = s.kind === "straight" && !s.given ? 1 : 60;
-        for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }
+        if (s.kind === "two") { const c = f.cross, X = c && c.x > a && c.x < b ? [a, c.x, b] : Array.from({ length: 61 }, (_, i) => a + (b - a) * i / 60); X.forEach((x, i) => { d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }); }
+        else for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; d += (i ? "L" : "M") + f1(px(x)) + " " + f1(py(f(x))); }
         h += `<path class="lobf-line${s.given ? " lobf-given" : ""}" clip-path="url(#${id}-clip)" d="${d}"/>`;
         if (s.given) {   /* the "given" label: the first place (left, middle, right; above or below the line) clear of the line, the points and the edges */
           const fs = 14 * k, bw = fs * 2.9, bh = fs * 1.1, pts = P0().map(p => [px(p.x), py(p.y)]), ln = Array.from({ length: 61 }, (_, i) => { const x = a + (b - a) * i / 60; return [px(x), py(f(x))]; });
@@ -1235,9 +1287,10 @@ const LOBF = (() => {
         if (s.ok && s.use && o.use && o.use.draw) h += o.use.draw(f, g, k);
       }
       const lk = s.given || (s.ok && o.lockWhenGood);
-      if (!lk && (s.kind === "straight" || s.kind === "curve")) {
+      if (!lk && (s.kind === "straight" || s.kind === "curve" || s.kind === "two")) {
         const nm = o.names || {}, yu = nm.yu ? " " + nm.yu : "";
         const HS = s.kind === "straight" ? (() => { const [xa, xb] = hX(); return [["L", xa, s.yL, "Left end"], ["R", xb, s.yR, "Right end"]]; })()
+          : s.kind === "two" ? (() => { const X = twoX(), N = twoNames(); return [0, 1].flatMap(i => [0, 1].map(j => [(i ? "B" : "A") + j, X[i][j], s.T[i][j], `${j ? "Right" : "Left"} end of the ${N[i]}`])); })()
           : s.H.map((p, i) => [["L", "M", "R"][i], p.x, p.y, ["Left end", "Middle", "Right end"][i]]);
         HS.forEach(([key, x, y, nmH]) => {
           const X = px(x), Y = cy(y), vt = `${fmtV(y)}${yu} at ${fx(x)}`;
@@ -1249,7 +1302,7 @@ const LOBF = (() => {
       if (L._h !== h) { L.innerHTML = h; L._h = h; }
       if (drag && drag.refocus) { const e = L.querySelector(`.lobf-h[data-h="${drag.key}"]`); if (e && document.activeElement !== e) e.focus({ preventScroll: true }); }
     }
-    const fmtV = v => String(Math.round(v * 100) / 100);
+    const fmtV = v => String(+(+v).toPrecision(3));   /* v1.2: 3 significant figures, so small values (0.023 /s) still read */
     function changed() { if (o.onChange) o.onChange(); else { render(); draw(); } }
 
     /* ---------- dragging and keys ---------- */
@@ -1260,17 +1313,19 @@ const LOBF = (() => {
     function setH(s, key, x, y, g) {
       y = Math.max(g.ymin, Math.min(g.ymax, y));
       if (s.kind === "straight") s[key === "L" ? "yL" : "yR"] = y;
+      else if (s.kind === "two") s.T[key[0] === "A" ? 0 : 1][+key[1]] = y;
       else { const i = { L: 0, M: 1, R: 2 }[key]; s.H[i].y = y;
         if (key === "M" && x != null) { const [a, b] = rangeOf(), sp = b - a; s.H[1].x = Math.max(a + .12 * sp, Math.min(b - .12 * sp, x)); } }
       if (s.ok || s.cls) { s.ok = false; s.use = false; s.msg = "You moved your line. Press Check my line again."; s.cls = ""; }
     }
+    const curY = (s, key) => s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.kind === "two" ? s.T[key[0] === "A" ? 0 : 1][+key[1]] : s.H[{ L: 0, M: 1, R: 2 }[key]].y;
     function bind(svg) {
       if (svg._lobfBound) return; svg._lobfBound = true;
       svg.addEventListener("pointerdown", e => {
         const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
         if (o.guard && o.guard()) return;
         const s = S(), g = o.geom(), p = svgPt(svg, e), key = hEl.dataset.h;
-        const cur = s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.H[{ L: 0, M: 1, R: 2 }[key]].y, cx = s.kind === "curve" && key === "M" ? s.H[1].x : null;
+        const cur = curY(s, key), cx = s.kind === "curve" && key === "M" ? s.H[1].x : null;
         drag = { key, id: e.pointerId, dy: g.py(cur) - p.y, dx: cx == null ? 0 : g.px(cx) - p.x };
         try { svg.setPointerCapture(e.pointerId); } catch (x) {}
         e.preventDefault(); e.stopPropagation();
@@ -1292,7 +1347,7 @@ const LOBF = (() => {
         const hEl = e.target.closest && e.target.closest(".lobf-h"); if (!hEl || !gEl || !gEl.contains(hEl)) return;
         if (o.guard && o.guard()) return;
         const s = S(), g = o.geom(), key = hEl.dataset.h, step = (g.ymax - g.ymin) / 100, big = (g.ymax - g.ymin) / 10;
-        const cur = s.kind === "straight" ? (key === "L" ? s.yL : s.yR) : s.H[{ L: 0, M: 1, R: 2 }[key]].y;
+        const cur = curY(s, key);
         const sideways = s.kind === "curve" && key === "M", [a, b] = rangeOf(), xs = (b - a) / 50;
         let y = cur, x = null;
         if (e.key === "ArrowUp" || (!sideways && e.key === "ArrowRight")) y = cur + step;
@@ -1318,8 +1373,9 @@ const LOBF = (() => {
         else { s.ok = false; s.tries++; s.msg = "<b>Not yet.</b> " + esc(v.why) + (s.tries >= 3 ? " <span class=\"small\">(You can press Show a good line.)</span>" : ""); s.cls = "bad"; }
       }
       else if (act === "show") {
-        const r = refF(); if (!r) return; const [xa, xb] = hX(), [a, b] = rangeOf();
-        if (expect() === "straight") { s.kind = "straight"; s.yL = r(xa); s.yR = r(xb); }
+        const r = refF(); if (!r && expect() !== "two") return; const [xa, xb] = hX(), [a, b] = rangeOf();
+        if (expect() === "two") { const R = twoRef(); if (!R) return; const X = twoX(R); s.kind = "two"; s.T = [[R.f1(X[0][0]), R.f1(X[0][1])], [R.f2(X[1][0]), R.f2(X[1][1])]]; }
+        else if (expect() === "straight") { s.kind = "straight"; s.yL = r(xa); s.yR = r(xb); }
         else { s.kind = "curve"; let best = null; for (let i = 2; i <= 18; i++) { const x = a + (b - a) * i / 20, H = [{ x: a, y: r(a) }, { x, y: r(x) }, { x: b, y: r(b) }], q = curve3(H, o.peakBase); let e = 0; for (let j = 0; j <= 30; j++) { const xx = a + (b - a) * j / 30; e += Math.abs(q(xx) - r(xx)); } if (!best || e < best.e) best = { e, H }; } s.H = best.H; }
         const anoms = P0().filter(p => p.anom);
         s.given = true; s.ok = true; s.use = false; s.cls = "good";
@@ -1327,6 +1383,7 @@ const LOBF = (() => {
         if (o.onGood) o.onGood({ given: true, f: lineF(s) });
       }
       else if (act === "use") s.use = !s.use;
+      else if (act === "adjust") { if (!(s.ok && !s.given)) return; s.ok = false; s.use = false; s.cls = ""; s.msg = "Your line is unlocked: move it, then press Check my line again."; if (o.onReset) o.onReset(); }   /* v1.2 */
       changed();
     };
     I.html = html; I.render = render; I.draw = draw; I.verdict = () => verdict(S(), o.geom());
@@ -1721,7 +1778,7 @@ function drawCrossGraph() {
   for (let y = 0; y <= YM + 1e-9; y += ys) o += T_(x0 - 6, py(y) + 5, tm ? String(Math.round(y)) : num(Math.round(y * 1000) / 1000), fs, 'text-anchor="end"');
   o += T_(x0 + w / 2, H - 8, "Concentration of sodium thiosulfate (g/dm³)", fs, 'text-anchor="middle" class="bold"');
   o += `<text x="${fs + 2}" y="${y0 + h / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 ${fs + 2} ${y0 + h / 2})">${tm ? "Mean time (s)" : "Rate, 1 ÷ time (/s)"}</text>`;
-  if (M.xfit) {
+  if (M.xfit && !LBX.on()) {
     if (pts.length < 3) o += T_(x0 + w / 2, y0 + 30, "Plot at least 3 points first", fs, 'text-anchor="middle" class="mut"');
     else if (tm) { const f = invFit(pts); let d = ""; for (let i = 0; i <= 60; i++) { const c = 8 + i * (52 - 8) / 60; d += (i ? "L" : "M") + f1(px(c)) + " " + f1(py(Math.min(YM, f.a / c))); } o += `<path class="fit" d="${d}"/>`; }
     else { const f = lineFit(pts); if (f) { const a = 0, b = 50, ya = f.a + f.b * a, yb = f.a + f.b * b; o += `<path class="fit" d="M${f1(px(a))} ${f1(py(clamp(ya, 0, YM)))}L${f1(px(b))} ${f1(py(clamp(yb, 0, YM)))}"/>`; } }
@@ -1729,7 +1786,25 @@ function drawCrossGraph() {
   pts.forEach(p => { const x = px(p.x), y = py(p.y); o += `<path class="xs" d="M${f1(x - 6)} ${f1(y - 6)}L${f1(x + 6)} ${f1(y + 6)}M${f1(x - 6)} ${f1(y + 6)}L${f1(x + 6)} ${f1(y - 6)}"/>`; });
   if (!pts.length) o += T_(x0 + w / 2, y0 + h / 2, tm ? "Check a mean time to plot it" : "Check a mean and its rate to plot it", fs + 1, 'text-anchor="middle" class="mut"');
   setLayer($("xgG"), o);
+  XG = { px, py, xmin: 0, xmax: 50, ymin: 0, ymax: YM }; LBX.render(); LBX.draw();   /* lobf v1: the pupil's own line of best fit, on top */
 }
+/* lobf v1 (tool part): the pupil's own line of best fit on the disappearing-cross graph, Demo only (no question shows it). Each plot
+   keeps its own line. Rate (1 ÷ time) against concentration: straight (the tool's least-squares line is the reference; no origin
+   hint, the conclusion only asks about the trend). Mean time against concentration: a curve that falls and levels off (reference:
+   the tool's own time = a ÷ concentration). Means are plotted (anomalous runs are left out of the means), so there are no point
+   anomalies. Needs all five mixes. While it is on, the computer's line is hidden. */
+let XG = null;
+const LBX = LOBF.make({ id: "cross", toggle: "Draw my own line of best fit",
+  svg: () => $("xgraph"), state: () => { const S = M.lobfx || (M.lobfx = {}); return S[M.xplot] || (S[M.xplot] = {}); },
+  allowed: () => mode === "demo" && M.tab === "cross",
+  ready: () => xPoints().length < CROSS.MIX.length ? `Check all ${CROSS.MIX.length} mixes first${M.xplot === "time" ? "" : " (mean and rate)"}. Then draw a line of best fit through the points.` : null,
+  points: () => xPoints().map(p => ({ x: p.x, y: p.y })),
+  geom: () => XG || { px: c => 66 + 392 * c / 50, py: y => 16 + 250 * (1 - y / .05), xmin: 0, xmax: 50, ymin: 0, ymax: .05 },
+  expect: () => M.xplot === "time" ? "curve" : "straight",
+  ref: P => { const f = invFit(P); return x => f.a / x; },
+  fx: c => c + " g/dm³", names: { x: "concentration", xu: "g/dm³", y: "rate or time", yu: "" },
+  regions: ["at low concentrations", "in the middle", "at high concentrations"],
+  onChange: () => drawAll() });
 const CONCL = { t: ["falls", "rises", "stays the same"], r: ["increases", "decreases", "stays the same"], h: ["supports", "does not support"] };
 function conclAns() {   // what the pupil's own plotted results show
   const pts = CROSS.MIX.map((m, i) => i).filter(i => M.xrok[i]).map(i => ({ x: xConc(i), y: xGoodMean(M.xdata[i]) }));
@@ -1854,7 +1929,7 @@ function renderCtl() {
   pr("#tabs button", "tab", M.tab); pr("#gcSeg button", "gc", M.gc); pr("#gkSeg button", "gk", M.gk); pr("#grSeg button", "gr", M.gr);
   pr("#xmSeg button", "mix", M.mix); pr("#xpSeg button", "xp", M.xplot); pr("#ccSeg button", "cc", M.cc); pr("#ctSeg button", "ct", M.ct);
   const sw = (id, on) => { const b = $(id); b.setAttribute("aria-pressed", String(on)); b.querySelector(".state").textContent = on ? "on" : "off"; };
-  sw("gFitSw", M.gfit); sw("gTanSw", M.tan); sw("xFitSw", M.xfit);
+  sw("gFitSw", M.gfit); sw("gTanSw", M.tan); sw("xFitSw", M.xfit); $("xFitSw").hidden = LBX.on();   /* lobf v1: the computer's line would give the pupil's line away */
   $("gGraphRow").hidden = lobfOn();   /* lobf v1: the computer's curve and tangent would give the pupil's line away */
   $("gTanRow").hidden = !M.tan || lobfOn(); if (+$("gTanT").value !== M.tanT) $("gTanT").value = M.tanT; $("gTanO").textContent = M.tanT + " s";
   const busy = M.gPhase === "run" || M.gPhase === "wait";
