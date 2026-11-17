@@ -1818,7 +1818,11 @@ $("pview").addEventListener("click", e => { const b = e.target.closest("button[d
     const p = svgPt(svg, e), Y = BEE[LK()]; M.P.bee.x = Math.max(20, Math.min(Y.w - 30, p.x + dr.dx)); M.P.bee.y = Math.max(20, Math.min(Y.h - 20, p.y + dr.dy));
     setAttr($("bee"), "transform", `translate(${f1(M.P.bee.x)} ${f1(M.P.bee.y)})`);
     const a = tAt(M.P.bee.x, M.P.bee.y, "anther"); if (a && !M.P.bee.pollen) { beeVisit(M.P, a.p, "anther"); drawBee(); } });   // a bee carrying pollen keeps it on the way
-  const up = () => { if (!dr) return; const d = dr; dr = null; if (!d.moved) return; const t = tAt(M.P.bee.x, M.P.bee.y); if (t) beeArrive(t); else drawBee(); };
+  /* a tap on the bee (no drag) where it overlaps an anther or stigma counts as a tap on that part: on a touch screen the bee's edge
+     can sit over the stigma after a visit to an inner anther, and the tap then never became a click (17 Nov 2026) */
+  const under = e => { if (!document.elementsFromPoint) return null; const g = document.elementsFromPoint(e.clientX, e.clientY).map(x => x.closest && x.closest("#psvg .tgt")).find(Boolean);
+    return g ? beeTargets(BEE[LK()]).find(x => x.p === g.dataset.p && x.part === g.dataset.part && (x.part !== "anther" || x.i === +g.dataset.i)) : null; };
+  const up = e => { if (!dr) return; const d = dr; dr = null; if (!d.moved) { const t = e && under(e); if (t) beeFly(t); return; } const t = tAt(M.P.bee.x, M.P.bee.y); if (t) beeArrive(t); else drawBee(); };
   svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", () => { dr = null; });
   svg.addEventListener("click", e => { const g = e.target.closest(".tgt"); if (!g || dr) return; const t = beeTargets(BEE[LK()]).find(x => x.p === g.dataset.p && x.part === g.dataset.part && (x.part !== "anther" || x.i === +g.dataset.i)); if (t) beeFly(t); });
   onKey(svg, g => { if (!g.classList.contains("tgt")) return false; g.dispatchEvent(new MouseEvent("click", { bubbles: true })); return true; });
