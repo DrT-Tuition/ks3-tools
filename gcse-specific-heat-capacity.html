@@ -1003,7 +1003,8 @@ function drawLabBg() {
       h += `<rect class="psu" x="${f1(x)}" y="${jy}" width="${f1(mw)}" height="${jh}" rx="8"/><rect class="lcd" x="${f1(x + 7)}" y="${jy + 8}" width="${f1(mw - 14)}" height="${jh - 30}" rx="5"/>` +
         `<text x="${f1(x + mw / 2)}" y="${jy + jh - 7}" font-size="${G.W > 700 ? 17 : 21}" text-anchor="middle" style="fill:#E9EDF3">${nm}</text>`; }); }
   const [px, py, pw, ph] = G.psu, [t1x, t1y] = K.psu.t1, [t2x, t2y] = K.psu.t2;   // picture power pack; leads start at its terminals
-  h += pic("shc_psu", mtx(K.psu.s, K.psu.ox, K.psu.oy)) + `<text class="kitlab" x="${f1(px + pw / 2)}" y="${f1(K.psu.lab)}" font-size="${Math.max(fs - 3, FMIN)}" text-anchor="middle">power supply</text>`;
+  h += pic("shc_psu", mtx(K.psu.s, K.psu.ox, K.psu.oy)) + (() => { const lx = f1((t1x + t2x) / 2), fz = Math.max(fs - 3, FMIN), y1 = K.psu.lab - fz * .3;   // two short lines between the two leads (one line ran under both)
+    return `<text class="kitlab" x="${lx}" y="${f1(y1)}" font-size="${fz}" text-anchor="middle">power</text><text class="kitlab" x="${lx}" y="${f1(y1 + fz)}" font-size="${fz}" text-anchor="middle">supply</text>`; })();
   /* wires: power supply → joulemeter → heater */
   const hx = G.hx, hTop = G.blk[1] - (G.W > 700 ? 86 : 74);
   if (!vi) { const jb = f1(K.jm.y1 - 3), jr = f1(K.jm.x1 - 3), jb8 = f1(Math.max(K.jm.y1 + 8, K.psu.top - 14)), jb16 = f1(Math.max(K.jm.y1 + 16, K.psu.top - 6));
@@ -1012,7 +1013,8 @@ function drawLabBg() {
   else { /* ammeter in series with the heater; voltmeter across the heater */
     const mw = (jw - 8) / 2, ax = jx + mw / 2, vx1 = jx + mw + 8 + mw * .3, vx2 = jx + mw + 8 + mw * .7, wx = jx + jw + 14;
     h += `<path class="wr" d="M${f1(t1x)} ${f1(t1y)}V${f1(Math.max(jy + jh + 10, K.psu.top - 14))}H${f1(ax)}V${jy + jh}"/>`;
-    if (placed) h += `<path class="wr" d="M${f1(jx + 10)} ${jy}V${jy - 8}C${jx + jw * .4} ${jy - 30} ${hx - 70} ${hTop - 50} ${hx - 4} ${hTop}"/>`;
+    if (placed) h += G.W > 700 ? `<path class="wr" d="M${f1(jx + 10)} ${jy}V${jy - 8}C${jx + jw * .4} ${jy - 30} ${hx - 70} ${hTop - 50} ${hx - 4} ${hTop}"/>`
+      : `<path class="wr" d="M${f1(jx + 10)} ${jy}V${jy - 16}Q${f1(jx + 10)} ${jy - 20} ${f1(jx + 14)} ${jy - 20}H${f1(hx - 8)}Q${f1(hx - 4)} ${jy - 20} ${f1(hx - 4)} ${jy - 16}V${hTop}"/>`;   // phone: over the top of the voltmeter, not across it
     if (placed) h += `<path class="wb" d="M${f1(t2x)} ${f1(t2y)}V${f1(Math.max(jy + jh + 20, K.psu.top - 6))}H${f1(wx)}V${jy + 30}C${wx + 40} ${jy + 30} ${hx - 40} ${hTop - 16} ${hx + 4} ${hTop}"/>`;
     if (placed) h += `<path class="wv" d="M${f1(vx1)} ${jy}V${jy - 14}C${f1(vx1 + 40)} ${jy - 40} ${hx - 60} ${hTop - 30} ${hx - 3} ${hTop + 4}"/><path class="wv" d="M${f1(vx2)} ${jy}V${jy - 6}C${f1(vx2 + 40)} ${jy - 20} ${hx - 30} ${hTop - 8} ${hx + 3} ${hTop + 4}"/>`; }
   /* base, insulation (behind), block (cut-away), holes */
