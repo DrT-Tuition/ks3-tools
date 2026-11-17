@@ -1109,9 +1109,11 @@ const readK = r => Math.round(r.t / RP.every);
      across; default the plotted points), handleX([a, b]) -> [xa, xb] (straight handles), origin (the science says the line goes
      through (0, 0)), tol (one "small square" in y data units; default y span ÷ 40), names: { x, xu, y, yu } (words + units),
      fx(x) -> "40 s" (how to name a point's x), regions: three words for the left / middle / right thirds, notes: { origin,
-     originGood, out, outGood, tip }, toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
+     originGood, out, outGood, tip }, peakBase (v1.1: a peak is drawn as a bell above this y, e.g. 0), toggle: "label" (a switch turns the practice on/off; omit to have it always on), lockWhenGood,
      guard() (true = the model is locked: ignore the press), onGood(info), onReset() (a good line was undone because the results changed), onChange() (the tool redraws; default LB.render() + LB.draw()), use: { label, html(f, info), draw(f, g, k) }.
-   No loops: drags redraw at most once per frame, nothing runs while idle. */
+   No loops: drags redraw at most once per frame, nothing runs while idle.
+   v1.1 (17 Nov 2026): a line pulled towards "out" points gets that reason first; a good line with points left out ("out" or
+   anomalies) no longer says "across all your data"; option peakBase (a peak drawn as a bell). Without peakBase a tool behaves as in v1. */
 const LOBF = (() => {
   const NS_ID = { n: 0 }, all = {};
   const avg = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
@@ -1150,8 +1152,18 @@ const LOBF = (() => {
   /* the curve through the three curve handles. Rising or falling handles: the smooth curve y = A + B·e^(−kx) through all three
      (exact for "rises then levels off" and "falls then levels off", e.g. gas volume, decay, cooling; straight when they line up;
      it never overshoots). A peak or a dip: the monotone cubic above (the turning point stays at the middle handle). */
-  function curve3(H) {
+  /* v1.1: a peak above a baseline (opt-in, option peakBase, e.g. 0 for a rate): a smooth bell, base + h·e^(−((x − xp)/w)²), with its
+     top on the middle handle and its own width on each side so it goes through the end handles. It starts slowly, rises, peaks
+     and falls, as enzyme and temperature curves do (the monotone cubic can't: tested 16 Nov on the enzyme data, 0 of 9 placements). */
+  function bell(H, base) {
+    const [p0, p1, p2] = H, ym = p1.y - base; if (!(ym > 0) || !(p1.x > p0.x) || !(p2.x > p1.x)) return null;
+    const ya = Math.max(p0.y - base, .02 * ym), yb = Math.max(p2.y - base, .02 * ym); if (ya >= ym || yb >= ym) return null;
+    const wl = (p1.x - p0.x) / Math.sqrt(Math.log(ym / ya)), wr = (p2.x - p1.x) / Math.sqrt(Math.log(ym / yb));
+    return x => base + ym * Math.exp(-(((x - p1.x) / (x < p1.x ? wl : wr)) ** 2));
+  }
+  function curve3(H, base) {
     H = H.slice().sort((p, q) => p.x - q.x); const [p0, p1, p2] = H, X = p2.x - p0.x, Y = p2.y - p0.y;
+    if (base != null && p1.y > p0.y && p1.y > p2.y) { const b = bell(H, base); if (b) return b; }
     if (!(X > 0) || Math.abs(Y) < 1e-12 || (p1.y - p0.y) * (p2.y - p1.y) < 0) return pchip(H);
     const q = (p1.y - p0.y) / Y, t1 = (p1.x - p0.x) / X;
     if (q <= 0 || q >= 1) return pchip(H);
@@ -1194,7 +1206,7 @@ const LOBF = (() => {
     function lineF(s) {
       if (s.given) { const r = refF(); if (r) return r; }
       if (s.kind === "straight") { const [xa, xb] = hX(), b = (s.yR - s.yL) / ((xb - xa) || 1e-9); const f = x => s.yL + b * (x - xa); f.b = b; f.a = s.yL - b * xa; return f; }
-      if (s.kind === "curve") { const [a, , b] = [s.H[0].x, 0, s.H[2].x]; const r = rangeOf(); s.H[0].x = r[0]; s.H[2].x = r[1]; void a; void b; return curve3(s.H); }
+      if (s.kind === "curve") { const [a, , b] = [s.H[0].x, 0, s.H[2].x]; const r = rangeOf(); s.H[0].x = r[0]; s.H[2].x = r[1]; void a; void b; return curve3(s.H, o.peakBase); }
       return null;
     }
     I.lineF = () => { const s = S(); return lineF(s); };
@@ -1222,7 +1234,8 @@ const LOBF = (() => {
       const good = area <= A && worst <= 2.6 * A && bal;
       if (good) {
         let w = "It goes through or close to most of your points, with about as many above it as below." + aNote;
-        w += s.kind === "curve" ? " It is one smooth curve across all your data, not dot-to-dot." : " It is one thin straight line across all your data.";
+        const span = outs.length || anoms.length ? "" : " across all your data";   /* v1.1: with points left out (past a limit, anomalies), not "all your data" */
+        w += s.kind === "curve" ? ` It is one smooth curve${span}, not dot-to-dot.` : ` It is one thin straight line${span}.`;
         if (o.origin && Math.abs(f(0)) <= 2 * A && o.notes && o.notes.originGood) w += " " + o.notes.originGood;
         if (outs.length && o.notes && o.notes.outGood) w += " " + o.notes.outGood;
         return { ok: true, why: w };
@@ -1250,7 +1263,7 @@ const LOBF = (() => {
         w = tips.length ? `Your curve is ${tips.join(", and ")}. Drag the handles so it runs through the middle of the points there.`
           : above > below ? `More points lie above your curve than below it (${above} above, ${below} below). Raise it a little.` : `More points lie below your curve than above it (${below} below, ${above} above). Lower it a little.`;
       }
-      if (pulled) w += " " + o.notes.out;
+      if (pulled) w = o.notes.out + " " + w;   /* v1.1: the specific reason first */
       w += " A good line of best fit goes through or close to most points, with roughly as many above it as below.";
       if (anoms.length) w += ` Leave out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`;
       return { ok: false, why: w };
@@ -1402,7 +1415,7 @@ const LOBF = (() => {
       else if (act === "show") {
         const r = refF(); if (!r) return; const [xa, xb] = hX(), [a, b] = rangeOf();
         if (expect() === "straight") { s.kind = "straight"; s.yL = r(xa); s.yR = r(xb); }
-        else { s.kind = "curve"; let best = null; for (let i = 2; i <= 18; i++) { const x = a + (b - a) * i / 20, H = [{ x: a, y: r(a) }, { x, y: r(x) }, { x: b, y: r(b) }], q = curve3(H); let e = 0; for (let j = 0; j <= 30; j++) { const xx = a + (b - a) * j / 30; e += Math.abs(q(xx) - r(xx)); } if (!best || e < best.e) best = { e, H }; } s.H = best.H; }
+        else { s.kind = "curve"; let best = null; for (let i = 2; i <= 18; i++) { const x = a + (b - a) * i / 20, H = [{ x: a, y: r(a) }, { x, y: r(x) }, { x: b, y: r(b) }], q = curve3(H, o.peakBase); let e = 0; for (let j = 0; j <= 30; j++) { const xx = a + (b - a) * j / 30; e += Math.abs(q(xx) - r(xx)); } if (!best || e < best.e) best = { e, H }; } s.H = best.H; }
         const anoms = P0().filter(p => p.anom);
         s.given = true; s.ok = true; s.use = false; s.cls = "good";
         s.msg = "<b>A good line of best fit (given).</b> It goes through or close to most points, with about as many above it as below." + (anoms.length ? esc(` It leaves out the anomal${anoms.length > 1 ? "ies" : "y"} at ${anoms.map(p => fx(p.x)).join(" and ")}.`) : "") + (o.lockWhenGood ? " Compare it with yours, then use it for the next step." : " Compare it with yours, then press Start again to try once more.");

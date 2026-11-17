@@ -1426,7 +1426,7 @@ TASKS.hard = [
   { id: "evalgo", kind: "goal", src: "Required practical: evaluation", text: "Do it: make some crystals in the model (any way you like). Then compare them with the description and complete the evaluation.", setup: SU.run,
     test: m => !!(m.run.phase === "dry" && m.ev.ok),
     not: m => m.run.phase === "dry" ? "Choose an answer in each box of the evaluation, then press Check evaluation." : m.run.phase === "spoilt" ? "That run had to stop. Press Start again and make some crystals." : "Make some crystals first: carry on until they are dry.",
-    done: m => { const w = evalWant(m.run.result); return w.match === "yes" ? "Your crystals match: bright blue and regularly shaped." : "Your crystals don't match the description, and you explained why."; },
+    done: m => { const w = evalWant(m.run.result); return w.match === "yes" ? "Your crystals match: bright blue and regularly shaped." + (w.why === "bath" ? " They are smaller because you kept the solution on the hot water bath instead of leaving it to crystallise: you explained that." : "") : "Your crystals don't match the description, and you explained why."; },
     reveal: m => { autoRun(m, "crust"); autoEval(m); },
     hints: ["Make some crystals, then look closely at the close-up.", "Compare shape and colour with “bright blue and regularly shaped”.", "Choose what you see, whether it matches, and what you did that explains it."] },
   { id: "mol", kind: "num", ht: true, chem: true, src: "Titration calculations (applied to this practical)", text: "The method uses 50 cm³ of 1.0 mol/dm³ sulfuric acid. CuO + H₂SO₄ → CuSO₄ + H₂O. Calculate the number of moles of copper oxide needed to react with all of the acid.", setup: SU.fresh, lock: "all",
@@ -1776,7 +1776,7 @@ $("evalBox").addEventListener("click", e => { if (e.target.id !== "checkEval") r
   const j = judgeEval(M);
   if (j.skip) M.msg = j.skip;
   else if (j.ok) { M.ev.ok = true; const w = evalWant(M.run.result);
-    M.msg = "✓ Evaluation correct. " + (w.match === "yes" ? "Your crystals are bright blue and regularly shaped, as the description says." : "Your crystals don't match the description, and you have said why.") + " The regular shape of good crystals comes from the regular arrangement of ions in the salt (its ionic lattice)."; tried(4); }
+    M.msg = "✓ Evaluation correct. " + (w.match === "yes" ? "Your crystals are bright blue and regularly shaped, as the description says." + (w.why === "bath" ? " They are smaller than large ones made slowly because you kept the solution on the hot water bath instead of leaving it to crystallise: the right explanation." : "") : "Your crystals don't match the description, and you have said why.") + " The regular shape of good crystals comes from the regular arrangement of ions in the salt (its ionic lattice)."; tried(4); }
   else M.msg = "✗ " + j.why;
   drawAll(); });
 $("toQuiz").addEventListener("click", () => setMode("easy"));

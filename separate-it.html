@@ -1064,9 +1064,13 @@ function closeUp(slow, grow, title) {   // magnified view of the crystals, top l
     for (let i = 0; i < n; i++) { const c = cells[i]; h += cube(c.x, c.y, +(S * c.f * (0.45 + 0.55 * g)).toFixed(1), c.rot); }
     return h + `</g><circle cx="0" cy="0" r="${R}" style="fill:none;stroke:var(--accent);stroke-width:3"/>`;
   });
+  { const size = 16 * FS, w = title.length * size * 0.53 + 12, m = 11; xtalTitle = [cx + R + 14 - 6 - m, 26 - size * 0.95 - m, w + 2 * m, size * 1.32 + 2 * m]; }   // the title's box (as label() draws it) plus a particle's radius
   return `<path d="M${P(cx + R * 0.8)} ${P(cy + R * 0.55)} L310 120" style="stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 5"/>` +
     `<g transform="translate(${cx} ${cy})">${inner}</g>` + label(cx + R + 14, 26, title, "start");
 }
+let xtalTitle = null;   // [x, y, w, h] of the close-up's title: rising water particles are clipped out of it, so it stays readable (phones too)
+function clearOfTitle(h) { if (!xtalShown || !xtalTitle || !h) return h; const [x, y, w, hh] = xtalTitle;
+  return `<clipPath id="cpXtalTitle"><path clip-rule="evenodd" d="M-100 -100H900V600H-100Z M${P(x)} ${P(y)}h${P(w)}v${P(hh)}h${P(-w)}Z"/></clipPath><g clip-path="url(#cpXtalTitle)">${h}</g>`; }
 let xtalShown = false;   // the close-up is in the picture (set by drawEvap / drawRock)
 function xtalOK() {   // no answer leaks: the close-up and its caption stay hidden while a question is open
   try { if (mode === "demo" || !task) return true; const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; } catch (e) { return true; }
@@ -1196,8 +1200,10 @@ function drawEvap() {
   let h = evapRig({ vol: E.vol, heat: E.heat, spit: E.spit, t: E.t, strong: E.flame === "strong", slow: sl });
   xtalShown = E.vol <= FACTS.crystalVol && xtalOK();
   if (xtalShown) h += closeUp(sl, 1 - E.vol / FACTS.crystalVol, "Close-up");
-  if (reduced()) { if ((E.heat || E.leave) && E.vol > 0) { [[330, 92], [364, 70], [398, 88]].forEach(q => h += particle(q[0], q[1], 9, "W")); h += `<path d="M440 98 L440 40" style="stroke:var(--ink);stroke-width:2.5" marker-end="url(#ah)"/>`; } }
-  else E.vap.forEach(p => h += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
+  let vp = "";
+  if (reduced()) { if ((E.heat || E.leave) && E.vol > 0) { [[330, 92], [364, 70], [398, 88]].forEach(q => vp += particle(q[0], q[1], 9, "W")); vp += `<path d="M440 98 L440 40" style="stroke:var(--ink);stroke-width:2.5" marker-end="url(#ah)"/>`; } }
+  else E.vap.forEach(p => vp += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
+  h += clearOfTitle(vp);   /* the rising particles never cross the close-up's title (a clip region round it) */
   if (support.labels) {
     h += tag(215, 214, "gauze", "end", 276, 211) + tag(215, 290, "tripod", "end", 291, 290);
     h += tag(505, 330, "Bunsen burner", "start", 372, 330) + tag(505, 376, "heatproof mat", "start", 482, 384);
