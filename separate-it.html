@@ -853,6 +853,7 @@ function resetEvap(keep) { E = { vol: FACTS.evapVol, heat: false, heated: false,
 const FAST = { warm: 0, gentle: 0.5, strong: 1 };
 const evapHow = () => E.heat ? E.flame : E.leave && E.vol > 0 ? "warm" : null;
 function xtalSlow() {   // 0 = fast (crust) … 1 = slow (large crystals)
+  if (E.dryHeat) return Math.min(0.15, E.gv > 0.05 ? 1 - E.gw / E.gv : 0);   // heated to dryness: always a crust
   if (E.gv > 0.05) return 1 - E.gw / E.gv;
   return 1 - FAST[evapHow() || (E.leave ? "warm" : "gentle")];
 }
@@ -871,8 +872,8 @@ function updEvap(dt) {
   const before = E.vol;
   if (E.heat) {
     E.heated = true;
-    if (E.vol > 0) E.vol = Math.max(0, E.vol - (E.flame === "strong" ? RATE.evapStrong : RATE.evapHeat) * dt);
-    else E.spit = true;
+    if (E.vol > 0) { E.vol = Math.max(0, E.vol - (E.flame === "strong" ? RATE.evapStrong : RATE.evapHeat) * dt); if (E.vol <= 0) E.dryHeat = true; }   // heated until dry: the last water boils off fast, a crust of small crystals
+    else { E.spit = true; E.dryHeat = true; }
   } else if (E.leave && E.vol > 0) E.vol = Math.max(0, E.vol - RATE.evapWarm * dt);
   E.t += dt;
   const how = E.heat ? E.flame : E.leave ? "warm" : null, grew = Math.min(before, FACTS.crystalVol) - Math.min(E.vol, FACTS.crystalVol);
@@ -884,7 +885,7 @@ function updEvap(dt) {
     E.vap.forEach(p => { p.a += dt; p.y -= 46 * dt; p.x += p.dx * dt; });
     E.vap = E.vap.filter(p => p.a < 2.8 && p.y > -10);
   } else E.vap = [];
-  const capNow = E.vol <= FACTS.crystalVol ? Math.round(xtalSlow() * 3) : -1; if (capNow !== E.capK) { E.capK = capNow; xtalCap(); }
+  const capNow = E.vol <= FACTS.crystalVol ? Math.round(xtalSlow() * 3) + (E.dryHeat ? 10 : 0) : -1; if (capNow !== E.capK) { E.capK = capNow; xtalCap(); }
   if ((before > FACTS.crystalVol) !== (E.vol > FACTS.crystalVol) || (before > 0 && E.vol === 0) || (E.spit && before === 0 && E.heat && !E.spitSaid)) { if (E.spit) E.spitSaid = true; status(); }
 }
 const surfE = vol => 134 - 12 * Math.sqrt(clamp(vol, 0, FACTS.evapVol) / FACTS.evapVol);   // centre of the solution surface in the basin picture
@@ -990,10 +991,10 @@ const svg = $("scene"), gMain = $("gMain");
 if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) kick(); }).observe(svg);
 const GL = "fill:var(--glass);stroke:none", GE = "fill:none;stroke:var(--glass-edge);stroke-width:3;stroke-linejoin:round;stroke-linecap:round";
 const bench = y => `<path d="M0 ${y} L720 ${y}" style="stroke:var(--bench);stroke-width:4"/>`;
-function flameStrong(x, base, t) {   // heating strongly: a bigger, roaring flame
-  const f = reduced() ? 0 : Math.sin(t * 13) * 3, top = base - 62;
-  return `<path d="M${x - 17} ${base} Q${x - 22} ${top + 26} ${x} ${top + f} Q${x + 22} ${top + 26} ${x + 17} ${base} Z" style="fill:var(--flame-o);opacity:.85"/>` +
-         `<path d="M${x - 9} ${base} Q${x - 10} ${top + 34} ${x} ${top + 16 + f / 2} Q${x + 10} ${top + 34} ${x + 9} ${base} Z" style="fill:var(--flame-i)"/>`;
+function flameStrong(x, base, t) {   // heating strongly: a big flame that reaches the gauze and spreads out under it
+  const f = reduced() ? 0 : Math.sin(t * 13) * 1.5, g = 214;   // g: underside of the gauze in the picture
+  return `<path d="M${x - 10} ${base} Q${x - 13} ${g + 12} ${x - 30 - f} ${g} L${x + 30 + f} ${g} Q${x + 13} ${g + 12} ${x + 10} ${base} Z" style="fill:var(--flame-o);opacity:.9"/>` +
+         `<path d="M${x - 6} ${base} Q${x - 7} ${g + 10} ${x} ${g + 2 + f} Q${x + 7} ${g + 10} ${x + 6} ${base} Z" style="fill:var(--flame-i)"/>`;
 }
 function flame(x, top, base, t) {   // gentle blue Bunsen flame; still if reduced motion
   const f = reduced() ? 0 : Math.sin(t * 9) * 2.5;
@@ -1073,6 +1074,7 @@ function xtalOK() {   // no answer leaks: the close-up and its caption stay hidd
 function xtalCaption(slow, rock) {
   if (rock) return "<b>Close-up:</b> large salt crystals with flat faces. The water evaporated slowly, so particles had time to join crystals that were already growing.";
   if (slow > 0.66) return "<b>Close-up:</b> a few large crystals with flat faces. Slow evaporation gives particles time to join crystals that are already growing, so they get bigger.";
+  if (E.dryHeat && !rock) return "<b>Close-up:</b> lots of tiny crystals stuck together (a crust). Heating until dry boils off the last water fast, and fast evaporation starts lots of small crystals at once.";
   if (slow < 0.34) return "<b>Close-up:</b> lots of tiny crystals stuck together (a crust). Fast evaporation starts lots of small crystals at once.";
   return "<b>Close-up:</b> medium crystals. Slower evaporation gives fewer, bigger crystals. Faster evaporation gives lots of small ones.";
 }
@@ -1171,7 +1173,8 @@ const EB = { cx: 364, cy: 121.6, rx: 74, ry: 17 };   // inner rim of the basin i
 function evapSurf(vol) { const f = Math.sqrt(clamp(vol, 0, FACTS.evapVol) / FACTS.evapVol); return { y: surfE(vol), rx: 26 + 42 * f, ry: 6 + 9 * f }; }
 function evapRig(o) {
   $("cpBasinP").setAttribute("d", `M${EB.cx - EB.rx} ${EB.cy} A${EB.rx} ${EB.ry} 0 1 0 ${EB.cx + EB.rx} ${EB.cy} A${EB.rx} ${EB.ry} 0 1 0 ${EB.cx - EB.rx} ${EB.cy} Z`);
-  let h = bench(398) + (o.heat ? (o.strong ? flameStrong(360, 238, o.t) : flame(360, 200, 238, o.t)) : "") + `<use href="#sEvap" class="pic" x="225" y="100" width="270.9" height="296.9"/>`;
+  let h = bench(398) + (o.heat && !o.strong ? flame(360, 200, 238, o.t) : "") + `<use href="#sEvap" class="pic" x="225" y="100" width="270.9" height="296.9"/>`;
+  if (o.heat && o.strong) h += flameStrong(360, 238, o.t);   // big roaring flame, spreading out under the gauze (drawn over the picture)
   const s = evapSurf(o.vol);
   if (o.vol > 0.01) h += `<ellipse cx="${EB.cx}" cy="${P(s.y)}" rx="${P(s.rx)}" ry="${P(s.ry)}" clip-path="url(#cpBasin)" style="fill:var(--water);stroke:var(--water-edge);stroke-width:2"/>`;
   // salt crystals: round the edge once only a little water is left, then over the whole bottom when dry
@@ -1192,7 +1195,7 @@ function drawEvap() {
   const sl = xtalSlow();
   let h = evapRig({ vol: E.vol, heat: E.heat, spit: E.spit, t: E.t, strong: E.flame === "strong", slow: sl });
   xtalShown = E.vol <= FACTS.crystalVol && xtalOK();
-  if (xtalShown) h += closeUp(sl, 1 - E.vol / FACTS.crystalVol, "Close-up of the crystals");
+  if (xtalShown) h += closeUp(sl, 1 - E.vol / FACTS.crystalVol, "Close-up");
   if (reduced()) { if ((E.heat || E.leave) && E.vol > 0) { [[330, 92], [364, 70], [398, 88]].forEach(q => h += particle(q[0], q[1], 9, "W")); h += `<path d="M440 98 L440 40" style="stroke:var(--ink);stroke-width:2.5" marker-end="url(#ah)"/>`; } }
   else E.vap.forEach(p => h += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
   if (support.labels) {
@@ -1318,7 +1321,7 @@ function drawRock() {
     const q = a ? p : 1, heat = !!a && q < 0.6, vol = q < 0.6 ? FACTS.evapVol - (FACTS.evapVol - FACTS.crystalVol) * q / 0.6 : FACTS.crystalVol * (1 - (q - 0.6) / 0.4);
     h = evapRig({ vol: Math.max(0, vol), heat, spit: false, t: a ? a.t : 0, slow: 1 });   // heated gently, then left: slow, large crystals
     xtalShown = vol <= FACTS.crystalVol && xtalOK();
-    if (xtalShown) h += closeUp(1, 1 - Math.max(0, vol) / FACTS.crystalVol, "Close-up of the crystals");
+    if (xtalShown) h += closeUp(1, 1 - Math.max(0, vol) / FACTS.crystalVol, "Close-up");
     if (heat && !reduced()) for (let i = 0; i < 4; i++) { const ph = ((a.t * .8 + i / 4) % 1); h += particle(324 + i * 27, surfE(vol) - 8 - ph * 110, 9, "W", 1 - ph); }
     if (support.labels) h += evapLabels(Math.max(0, vol), false);
   }
@@ -1403,10 +1406,11 @@ function statusText() {
     if (E.spit && E.heat) return ["warn", "Too far! It is dry, and the hot salt spits. Stop heating."];
     if (E.vol <= 0.01) return ["good", "Dry salt crystals are left in the basin. The water escaped into the air as a gas."];
     if (E.heat && E.vol <= FACTS.crystalVol) return ["warn", "Crystals at the edge: stop heating now."];
-    if (E.heat) return ["", (E.flame === "strong" ? "Heating strongly: the water evaporates fast. " : "") + "The water evaporates and leaves as a gas. The dissolved salt stays in the basin."];
+    if (E.heat) return E.flame === "strong" ? ["warn", "Heating strongly: the water evaporates fast and leaves as a gas. The solution may spit: wear eye protection."]
+      : ["", "The water evaporates and leaves as a gas. The dissolved salt stays in the basin."];
     if (E.leave) return ["", "Left somewhere warm: the rest of the water slowly evaporates."];
     if (E.heated && E.vol <= FACTS.crystalVol) return ["good", "Heat off. Leave it somewhere warm to finish drying."];
-    return ["", "Turn on the <b>Heat</b> to evaporate the water from the salt solution."];
+    return ["", "Turn on the <b>Heat</b> to evaporate the water from the salt solution." + (E.flame === "strong" ? " Heating strongly: the solution may spit, so wear eye protection." : "")];
   }
   if (scene === "dist") {
     const boiling = D.heat && D.T >= FACTS.waterBp;
