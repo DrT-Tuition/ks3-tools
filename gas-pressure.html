@@ -752,7 +752,7 @@ details.trybox > .try{margin-top:6px}
       </div>
       <p class="xsafe" id="cnSafe">⚠ <b>Teacher demo only.</b> Wear eye protection. Turn the hot can with tongs. Steam scalds.</p>
     </div>
-    <details class="about"><summary>About this model</summary><p class="limits">Push numbers: 100 is the push of the air outside. The can is drawn cut open so you can see inside. Real water molecules are far too small to see, and there are billions of billions of them. Some steam escapes from the top while the can is heated. The picture is flat and leaves out gravity for the gas.</p></details>
+    <details class="about"><summary>About this model</summary><p class="limits">Push numbers: 100 is the push of the air outside. The can is drawn cut open so you can see inside. Real water molecules are far too small to see, and there are billions of billions of them. Some water vapour escapes from the top while the can is heated. Once crushed, the bent metal holds its new shape, so the pushes do not balance again as they do in the other models. The picture is flat and leaves out gravity for the gas.</p></details>
     </div>
     </section>
 
@@ -2212,7 +2212,7 @@ function mkPlane() {
     g.fillStyle = C.muted; g.fillRect(X(TRAY.x0), Y(TRAY.y0), (TRAY.x1 - TRAY.x0) * s, (TRAY.y1 - TRAY.y0) * s);
     g.strokeStyle = C.muted; g.lineWidth = 3; g.beginPath(); g.moveTo(X(TRAY.x0 + 0.02), Y(TRAY.y1)); g.lineTo(X(TRAY.x0 + 0.05), Y(S.H)); g.moveTo(X(TRAY.x1 - 0.02), Y(TRAY.y1)); g.lineTo(X(TRAY.x1 - 0.05), Y(S.H)); g.stroke();
   };
-  S.drawLabels = function (g, X, Y) { const s = S.geo.s; label(g, S, "window", X(0.035) + 0.06 * s, Y(0.05) + 0.2 * s + S.geo.fs + 4); label(g, S, "tray table", X(0.5), Y(TRAY.y1) + S.geo.fs + 3); };
+  S.drawLabels = function (g, X, Y) { const s = S.geo.s; label(g, S, "sealed crisp packet", X(sh.cx + sh.a * 0.62), Y(sh.cy - sh.b) - 7, "center", C.ink); label(g, S, "window", X(0.035) + 0.06 * s, Y(0.05) + 0.2 * s + S.geo.fs + 4); label(g, S, "tray table", X(0.5), Y(TRAY.y1) + S.geo.fs + 3); };
   S.drawDyn = function (g, X, Y) {
     const s = S.geo.s;
     // the packet: a pillow shape, crimped seals at each end; creases while it is slack
@@ -2228,7 +2228,6 @@ function mkPlane() {
     if (slack > 0.05) { g.globalAlpha = 0.55 * slack; g.lineWidth = 1.5; g.beginPath();
       for (const [u, v, w] of [[-0.45, -0.5, 0.25], [0.15, -0.35, 0.3], [-0.1, 0.45, 0.22]]) { const x = X(sh.cx + u * sh.a), y = Y(sh.cy + v * sh.b); g.moveTo(x, y); g.quadraticCurveTo(x + w * sh.a * s * 0.5, y - 6, x + w * sh.a * s, y + 2); }
       g.stroke(); g.globalAlpha = 1; }
-    label(g, S, "sealed crisp packet", X(sh.cx + sh.a * 0.62), Y(sh.cy - sh.b) - 7, "center", C.ink);
     stamp(g, S, S.pout, X, Y); stamp(g, S, S.pin, X, Y);
     flashes(g, S, S.hits, X, Y);
     const r = ratio(), d = r - 1;
@@ -2239,17 +2238,18 @@ function mkPlane() {
     }
   };
   S.STS = ["Balanced: the packet stays this size.", "More hits inside: the net push is outwards.", "More hits outside: the net push is inwards."];
+  const fmtAlt = a => { let v = Math.round(a * 10) / 10; if (Math.abs(v - 6.9) < 1e-6) v = a < 6.9 ? 6.8 : 7; return v.toFixed(v % 1 && v < ALTMAX ? 1 : 0) + " km"; };   // (house rule: never show 69, not even 6.9)
   const el = { alt: $("plAlt"), cab: $("plCab"), bi: $("plBi"), bo: $("plBo"), ni: $("plNi"), no: $("plNo"), st: $("plSt"), icon: $("plIcon"), out: $("plOut"), R: $("plR"), up: $("plUp"), down: $("plDown") };
   S.readout = function () {
     const rate = dens => dens * VMEAN / Math.PI * per, hi = rate(N_IN / areaK()), ho = rate(cab(alt) * DENS0);
-    setIf(el.alt, "textContent", (Math.round(alt * 10) / 10).toFixed(alt % 1 && alt < ALTMAX ? 1 : 0) + " km");
+    setIf(el.alt, "textContent", fmtAlt(alt));
     setIf(el.cab, "textContent", alt < 0.05 ? "Cabin air pressure: the same as on the ground" : "Cabin air pressure: lower than on the ground");
     styleIf(el.bi, "transform", "scaleX(" + clamp(hi / 40, 0, 1).toFixed(3) + ")"); styleIf(el.bo, "transform", "scaleX(" + clamp(ho / 40, 0, 1).toFixed(3) + ")");
     setIf(el.ni, "textContent", n69(hi)); setIf(el.no, "textContent", n69(ho));
     const r = ratio();
     setIf(el.st, "textContent", S.STS[Math.abs(r - 1) <= 0.02 ? 0 : r > 1 ? 1 : 2]);
     styleIf(el.icon, "transform", "translateY(" + (-(alt / ALTMAX) * 86).toFixed(1) + "%)");
-    setIf(el.out, "textContent", (Math.round(alt * 10) / 10).toFixed(alt % 1 && alt < ALTMAX ? 1 : 0) + " km");
+    setIf(el.out, "textContent", fmtAlt(alt));
   };
   S.caption = function () { const r = ratio(); return Math.abs(r - 1) <= 0.02 ? (alt < 0.5 ? S.CAPS[0] : S.CAPS[2]) : r > 1 ? S.CAPS[1] : S.CAPS[3]; };
   S.aria = () => "Plane cabin at " + Math.round(alt) + " km. A sealed crisp packet on a tray table" + (k > 1.12 ? ", puffed up." : ".") + " " + el.st.textContent;
@@ -2314,7 +2314,7 @@ function mkBalloon() {
     // the size at the start (dashed)
     g.setLineDash([6, 5]); g.strokeStyle = C.muted; g.lineWidth = 2; g.beginPath(); g.ellipse(X(CX), Y(CY), R0 * s, R0 * ASP * s, 0, 0, 6.2832); g.stroke(); g.setLineDash([]);
   };
-  S.drawLabels = (g, X, Y) => label(g, S, "air outside", X(0.04), Y(0.06), "left");
+  S.drawLabels = (g, X, Y) => { label(g, S, "air outside", X(0.04), Y(0.06), "left"); label(g, S, "balloon", X(sh.cx + sh.a * 0.8), Y(sh.cy - sh.b * 0.8) - 6, "left", C.ink); };
   S.drawDyn = function (g, X, Y) {
     const s = S.geo.s, bx = X(sh.cx), by = Y(sh.cy + sh.b);
     // string and knot
@@ -2322,7 +2322,6 @@ function mkBalloon() {
     g.fillStyle = C.bln; g.beginPath(); g.moveTo(bx, by - 2); g.lineTo(bx - 6, by + 7); g.lineTo(bx + 6, by + 7); g.closePath(); g.fill();
     g.fillStyle = C["bln-fill"]; g.beginPath(); g.ellipse(bx, Y(sh.cy), sh.a * s, sh.b * s, 0, 0, 6.2832); g.fill();
     g.strokeStyle = C.bln; g.lineWidth = Math.max(2.5, s * 0.006); g.stroke();
-    label(g, S, "balloon", X(sh.cx + sh.a * 0.8), Y(sh.cy - sh.b * 0.8) - 6, "left", C.ink);
     // motion trails: how far each particle moves in a tenth of a second (shorter when slower)
     g.lineCap = "round"; g.lineWidth = Math.max(2, S.spr.pr * 0.7); g.strokeStyle = C.particle; g.globalAlpha = 0.28;
     g.beginPath(); for (const L of [S.pout, S.pin]) for (const p of L) { if (p.d || (p.b && S.time - p.b < FADE)) continue; g.moveTo(X(p.x - p.vx * 0.1), Y(p.y - p.vy * 0.1)); g.lineTo(X(p.x), Y(p.y)); }
@@ -2377,10 +2376,10 @@ function mkCan() {
   S.TRY = ["Press Next step to heat the can. Where does the air inside go?", "Turn the can over. Watch the water molecules condense.",
     "Count the gas particles left inside after it cools.", "Before the last step, predict what the air outside will do to the can."];
   S.CAPS = ["An open can with a little water in it. Air particles are inside and outside. The collisions on each side of the can wall balance.",
-    "Heating: the water boils. Water molecules (steam) fill the can and push most of the air out of the top.",
+    "Heating: the water boils. Water molecules leave as water vapour (steam). They fill the can and push most of the air out of the top.",
     "Quickly turn the can upside down into cold water. The water seals the opening, so air cannot get back in.",
-    "The cold water cools the steam. The water vapour condenses into a few drops of liquid water. Very few gas particles are left inside.",
-    "Far fewer collisions inside than outside. The air outside pushes harder than the gas inside, so the can is crushed. Air does not suck: it pushes."];
+    "The cold water cools the water vapour. It condenses into a few drops of liquid water. Very few gas particles are left inside.",
+    "Far fewer collisions inside than outside, so the air outside crushes the can. Air does not suck: it pushes. The bent metal keeps its new shape."];
   // can-local frame: x across, y along the can, y = -HH is the open end, +HH the closed end. World = centre + rotate(th)
   const toW = (lx, ly) => { const c = Math.cos(th), s = Math.sin(th); return [cxy.x + lx * c - ly * s, cxy.y + lx * s + ly * c]; };
   const toL = (x, y) => { const c = Math.cos(th), s = Math.sin(th), dx = x - cxy.x, dy = y - cxy.y; return [dx * c + dy * s, -dx * s + dy * c]; };
@@ -2584,7 +2583,7 @@ function mkCan() {
     flashes(g, S, S.hits, X, Y);
     if (step < 2) label(g, S, "can (cut open)", X(cxy.x), Y(cxy.y - HH) - 8, "center", C.ink);
     else if (done || step > 2) label(g, S, "can (cut open)", X(cxy.x - HW - 0.02), Y(cxy.y - HH + 0.035), "right", C.ink);
-    if (step === 1 && t > 0.5) label(g, S, "steam", X(cxy.x + HW + 0.015), Y(cxy.y - HH + 0.03), "left", C.ink);
+    if (step === 1 && t > 0.5) label(g, S, "water vapour", X(cxy.x + HW + 0.015), Y(cxy.y - HH + 0.03), "left", C.ink);
     const d = pushIn() / 100 - 1;
     if (step >= 3 && d < -0.1) {
       const L = clamp(-d * 1.2, 0.35, 1) * clamp(s * 0.09, 22, 52), col = C.accent, cut = crush * 0.035;
