@@ -862,11 +862,17 @@ function popRun(o, gens, ev) {   // a run made for a question: o = settings, ev 
   P.raw = false;
   return P;
 }
+/* the chance events so far, for messages once the population is large again */
+function evName(P) {
+  const bot = P.events.some(e => e.k === "bot"), fo = P.events.some(e => e.k === "found");
+  return bot && fo ? "after the bottleneck and the founder event" : bot ? "after the bottleneck" : "after the founder event";
+}
 /* Hardy–Weinberg conditions that the model's settings break */
 function hwBroken(P) {
   const b = [];
   if (P.sel !== "none") b.push("selection");
-  if (P.N <= 50 || P.events.length) b.push("drift (a small population)");
+  if (P.N <= 50) b.push("drift (a small population)");
+  else if (P.events.length) b.push("drift (" + evName(P) + ")");
   else if (P.N < 1000) b.push("some drift (only 200 mice)");
   if (P.mig) b.push("migration");
   return b;
@@ -1414,6 +1420,7 @@ function popText(Pp) {
   else if (Pp.sel === "pale") s.push("On pale sand, pale mice (aa) survive and breed more, so the frequency of A falls. Selection acts on phenotypes: AA and Aa mice look the same.");
   else s.push(Pp.N <= 10 ? "No selection, but in only 10 mice chance decides which alleles are passed on (genetic drift): the frequency jumps about and an allele can be lost."
     : Pp.N <= 50 ? "No selection, but chance still moves the frequency up and down from one generation to the next: genetic drift."
+    : Pp.events.length ? `No selection. With ${Pp.N} mice ${Pp.founded ? "on the island" : "again"}, drift is ${Pp.N < 1000 ? "weaker" : "weak"} now, but the chance change ${evName(Pp).replace("after", "from")} stays in the gene pool.`
     : Pp.N < 1000 ? "No selection. In 200 mice drift is weaker than in 10 or 50, but over many generations chance can still move the frequency by 0.1 or more."
     : "No selection, and in 1000 mice drift is weak: the frequency changes only a little each generation, though over many generations small changes still add up.");
   if (Pp.mig && !(p === 0 || p === 1)) s.push("Gene flow: migrants pull the frequency towards the mainland’s 0.5.");
@@ -1489,8 +1496,14 @@ function renderScene() {
   else if (B.scene === "hw") { hwDraw(); hwReadouts(); }
   else { spDraw(); spReadouts(); }
 }
-function renderAll() { syncCtl(); layout(); renderScene(); renderSupport(); if (LAY.fit) { LAY.fit = false; if (fitView()) renderScene(); } else if (sideOver() > 2 && fitView()) renderScene(); if (tourI >= 0) tourPlace(); }
-/* laptops: a longer "What is happening" message after a click can push the side column past the screen; then fit again (the mouse picture shrinks) */
+function renderAll() {
+  syncCtl(); layout(); renderScene(); renderSupport();
+  if (LAY.fit) { LAY.fit = false; if (fitView()) renderScene(); FL.base = FL.h; }
+  else { const o = sideOver(); if (o > 2) { if (fitView()) renderScene(); } else if (o < -4 && FL.h < FL.base) { FL.h = Math.round(Math.min(FL.base, FL.h - o)); renderScene(); if (sideOver() > 2 && fitView()) renderScene(); } }
+  if (tourI >= 0) tourPlace();
+}
+/* laptops: a longer "What is happening" message after a click can push the side column past the screen; then fit again (the mouse picture shrinks).
+   When the message gets shorter again, the picture grows back, up to its size after the last full fit (FL.base) */
 function sideOver() {
   if (narrowW() || B.scene !== "pop") return 0;
   const side = $("vPop").querySelector(".vside"), two = getComputedStyle($("vPop").querySelector(".vgrid")).gridTemplateColumns.split(" ").length > 1;
@@ -1503,7 +1516,7 @@ function fitView() {
   const main = v.querySelector(".vmain"), side = v.querySelector(".vside"), two = getComputedStyle(v.querySelector(".vgrid")).gridTemplateColumns.split(" ").length > 1;
   const eMain = (main.getBoundingClientRect().bottom - top) - room + (two ? 0 : side.getBoundingClientRect().height + 10);
   const eSide = two ? (side.getBoundingClientRect().bottom - top) - room : -1e9;
-  if (Math.abs(eMain) < 4 && eSide < 4) return false;
+  if (Math.abs(eMain) < 4 && eSide < 1) return false;
   if (B.scene === "pop") {
     if (eSide > 0) FL.h = Math.round(clamp(FL.h - eSide, 90, 260));
     else if (two && FL.h < 190) FL.h = Math.round(clamp(FL.h - eSide, 90, 190));
