@@ -1,0 +1,2256 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion and Surface Area</title>
+<!--
+  SCIENCE SPEC — Diffusion and Surface Area (GCSE: AQA 8461 Biology and 8464 Combined Science Trilogy, same numbers:
+    4.1.3.1 diffusion: the net movement of particles from a higher to a lower concentration; the factors that affect its
+    rate (difference in concentration, temperature, surface area of the membrane); surface area to volume ratio; why
+    single-celled organisms need no exchange organs, and why large multicellular organisms need exchange surfaces and
+    transport systems; how an exchange surface is made effective (large surface area, thin membrane, efficient blood
+    supply, ventilation). The particle picture uses the particle model of AQA 8462 / 8464 C 4.2.2.)
+    Site placement: KS4 · Biology · "4.1.3 Transport in cells". Foundation and Higher. Easy is Foundation; Hard adds
+    calculations (rate, SA : V of a block, % of a cube changed, a pattern prediction) and longer reasoning. Nothing in
+    4.1.3.1 is Higher tier only or Biology only, so no question is labelled.
+  Built 17 Nov 2026 from the gcse-enzymes-and-ph shell (kit v4). The particle idea comes from diffusion.html (KS3); the
+    rainbow-plate practical of that tool is not used here.
+  Model, in four tabs:
+    1. Particles: a box split by a membrane with pores. Side A starts with more particles. Each particle moves at random on a
+       fine grid (integer steps, so a run is the same in every browser); it crosses only through a pore. Settings: temperature
+       (Cold 5 °C, Room 20 °C, Warm 40 °C: 2, 3 or 4 grid steps per move), difference in concentration (Big 400 : 0, Small
+       280 : 120, None 200 : 200), membrane area (pores along 72 or 240 of its 300 units), membrane thickness (6 or 60
+       units). A run is 20 model seconds. Counters: particles on each side, crossings each way, net movement. Each finished
+       run goes into a results table (the pupil compares them). Results of the fixed start layout (an internal seed):
+       Room/Big/Large/Thin net 71 (200 − 129); Cold 41; Warm 104 (339 − 235); Small difference 29 (188 − 159); None −4
+       (178 − 182); Small area 33; Thick 53. All 36 set-ups follow the factor rules.
+    2. Agar cubes: colourless agar with phenolphthalein, cubes of side 1, 2 and 3 cm, in dilute sodium hydroxide. The pink
+       layer has the same depth in every cube: depth = 5 mm × √(t ÷ 4 min); each centre is reached at 4, 16 and 36 min.
+       Pupils read the stopwatch (it can pause when a cube turns pink all the way through) and measure the depth with the
+       ruler in the close-up; a table records their times.
+    3. Surface area : volume: cubes of side 1–4 cm, and a block 4 × 2 × 1, a rod 8 × 1 × 1 and a sheet 4 × 4 × 0.5 cm, all
+       with the volume of the 2 cm cube (8 cm³), drawn to one scale with 1 cm squares; table of SA, V and SA : V.
+    4. Exchange surfaces: a single cell, the lungs (alveoli), the small intestine (villi), fish gills, roots (root hair cells)
+       and leaves; what each exchanges and how it is adapted (large surface area, thin, blood supply, ventilated). Links to
+       Lungs and Gas Exchange, Digestion and Enzymes, Osmosis Practical and Photosynthesis Lab.
+  Misconceptions answered in the feedback: particles want to spread out; diffusion is movement one way only; particles stop
+    moving when evenly spread; heated particles get bigger; bigger surface area means a bigger cube is quicker; diffusion is
+    faster into small cubes; a large organism has a large SA : V; diffusion needs energy; blood pumps oxygen across.
+  While a question is open, anything that would give its answer is hidden (task.hide: pnet, pwhy, ptab, agwhy, agwhich,
+    agtab, agsav, shtab, shwhy, sfwhat, sfgrid, sflab, sfbig, maths; Key words per question) and comes back after a right
+    Check or Show answer. Each question shows only its own tab(s).
+  Performance: the particles and the stopwatch animate only while running (paceFrame); 0 rAF when idle.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.rplabel{margin:6px 0 0;font-size:16px;font-weight:700;color:var(--accent)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 6px;line-height:1.25}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:10px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene .ax{stroke:var(--ink);stroke-width:2.4;fill:none}
+.scene .gr{stroke:var(--grid);stroke-width:1}
+.scene .tag{fill:var(--tagbg);stroke:var(--tagline);stroke-width:1.5}
+.scene .shine{fill:rgba(255,255,255,.38)}
+.scene .lcd{fill:#1E252E;stroke:var(--metal-edge);stroke-width:2}
+.scene .lcdt{fill:#9EF0B4!important;font-variant-numeric:tabular-nums;font-weight:700}
+.scene .acc{fill:var(--accent)!important;font-weight:700}
+.scene .bold{font-weight:700}
+.scene .pedge{stroke:var(--particle-edge)}
+.scene .enz{fill:var(--enz);stroke:var(--particle-edge);stroke-width:2.5;stroke-linejoin:round}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.btn:disabled,.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .warn{color:var(--bad);font-weight:700}
+.readout .okc{color:var(--good);font-weight:700}
+.readout ul{margin:2px 0 0;padding-left:22px}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.small{font-size:16px;color:var(--muted);margin:0}
+.frame{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-left:4px solid var(--accent);border-radius:6px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.status{font-size:16px;font-weight:700;color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none;min-width:1.2em}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.opts.build .opt[aria-pressed="true"]::after{content:"✓ in answer"}
+.grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.grid2 .grow{justify-content:space-between}
+@media (max-width:420px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.unit{font-weight:700}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.ms{margin:6px 0 0;padding-left:20px;font-size:16px}
+@media (max-width:560px){.seg button{padding:8px 10px;font-size:15px}.tabs button{font-size:15px;padding:8px 3px}
+  .rt{font-size:15px}.cnt{min-width:40px}.meanin{width:3.9em}.stp{font-size:14px;padding:6px 9px}}
+@media (min-width:901px) and (max-height:820px){
+  .model{gap:8px}.model .seg button{min-height:40px;padding:6px 12px}.model .readout{padding:6px 10px}.model .readout .r2{font-size:16px}
+  .model .stp{min-height:40px;padding:5px 10px}
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:5px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:4px 8px;font-size:16px}
+  .qpanel .frame{padding:4px 8px;font-size:15px}
+}
+@media (min-width:901px) and (max-height:820px){#demoPanel{gap:8px}#demoPanel .try{gap:2px}#demoPanel .newhere{padding:6px 10px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
+/* ---- Diffusion and surface area: particles (canvas), agar cubes, SA : V shapes, exchange surfaces ---- */
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tabs button{font-size:16px;padding:9px 4px;line-height:1.2}
+.tabs.few{display:flex}
+.tabs.few button{flex:1 1 0}
+.tabs.few button+button:not([hidden]){border-left:1px solid var(--line)}
+@container (max-width:560px){.tabs:not(.few){grid-template-columns:repeat(2,minmax(0,1fr))}.tabs:not(.few) button:nth-child(3){border-left:0}.tabs:not(.few) button:nth-child(n+3){border-top:1px solid var(--line)}}
+.btn.go{min-height:46px}
+.sscene{position:relative;min-width:0}
+.cnote{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-radius:8px}
+.cnote a{color:var(--accent);font-weight:700;display:inline-block;padding:11px 2px;margin:-11px 0}
+.scene .lb{font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:5px;stroke-linejoin:round}
+.hidebox{margin:0;padding:14px;border:1px dashed var(--line);border-radius:12px;background:var(--sunk);font-size:17px;text-align:center}
+.cbt{border-collapse:collapse;width:100%;font-size:16px;font-variant-numeric:tabular-nums;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cbt th,.cbt td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.cbt thead th{font-size:14px;color:var(--muted);background:var(--sunk)}
+.cbt tbody tr:last-child th,.cbt tbody tr:last-child td{border-bottom:0}
+.cbt tr.cur{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.cbt tr.cur th{color:var(--accent)}
+.seg button small{font-weight:400;font-size:13px;display:block;line-height:1.1}
+.mini{font:700 15px var(--f-body);min-height:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mini:hover{border-color:var(--accent)}
+.mini:disabled{opacity:.45;cursor:default}
+
+/* ===== Particles tab ===== */
+:root{--pa-a:#DCEBF8;--pa-b:#F3F7FB;--pa-wall:#E8C9A0;--pa-edge:#8A6534;--pa-dot:#2D5B8C;--pa-dot-edge:#14243D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pa-a:#203A5E;--pa-b:#1A2D48;--pa-wall:#8A6A42;--pa-edge:#E8C9A0;--pa-dot:#8EC5FF;--pa-dot-edge:#0E1A2C}}
+:root[data-theme="dark"]{--pa-a:#203A5E;--pa-b:#1A2D48;--pa-wall:#8A6A42;--pa-edge:#E8C9A0;--pa-dot:#8EC5FF;--pa-dot-edge:#0E1A2C}
+.pcols{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.pleft,.pright{display:contents}
+.plabs{order:1}.pcvwrap{order:2}.prun{order:3}.pread{order:4}.pset{order:5}.ptab{order:6}
+.pleft > *,.pright > *{min-width:0}
+@media (min-width:1100px){.pleft,.pright{display:grid;gap:8px;align-content:start;min-width:0}}
+.pcount{display:grid;grid-template-columns:.8fr .8fr .8fr 1.2fr 1.2fr;gap:6px;font-variant-numeric:tabular-nums}
+@container (max-width:520px){.pcount{grid-template-columns:repeat(6,minmax(0,1fr))}.pcount div{grid-column:span 2}.pcount div:nth-child(n+4){grid-column:span 3}}
+.pcount div{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:3px 8px;min-width:0}
+.pcount b{display:block;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcount span{font-size:19px;line-height:1.2;font-weight:700;color:var(--ink)}
+.pcount small{font-size:13px;font-weight:400;color:var(--muted)}
+.plabs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;font-weight:700;font-size:16px}
+.plabs span:nth-child(2){color:var(--muted);font-size:15px;text-align:center}
+.plabs span:last-child{text-align:right}
+.pcvwrap{position:relative;width:100%;max-width:var(--pcw,none);margin:0 auto;aspect-ratio:2 / 1;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sunk)}
+#pcv{display:block;width:100%;height:100%}
+.pset{display:grid;gap:8px;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.srow{display:grid;gap:3px}
+.srow .seg{display:grid;width:100%}
+.seg.s3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg.s2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.srow .seg button{padding:6px 4px;font-size:15px}
+.srow .seg button+button{border-left:1px solid var(--line)}
+.pread .r1 .tn{font-variant-numeric:tabular-nums}
+.pbar{height:10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.pbar i{display:block;height:100%;width:100%;transform-origin:0 50%;background:var(--accent)}
+.ptab{min-width:0}
+.cbt.pt th,.cbt.pt td{padding:4px 6px;font-size:15px}
+
+/* ===== Agar cubes tab ===== */
+:root{--ag-liq:#EEF4FB;--ag-glass:#5E7A96;--ag-clear:#F5F1DC;--ag-pink:#E04F9A;--ag-edge:#6B3A55;--ag-rule:#FFFFFF;--ag-rule-ink:#1E252E;--ag-sw:#2B3440}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ag-liq:#1E3352;--ag-glass:#9FB6CF;--ag-clear:#E9E3C4;--ag-pink:#E86AAB;--ag-edge:#F5C2DD;--ag-sw:#0F151C}}
+:root[data-theme="dark"]{--ag-liq:#1E3352;--ag-glass:#9FB6CF;--ag-clear:#E9E3C4;--ag-pink:#E86AAB;--ag-edge:#F5C2DD;--ag-sw:#0F151C}
+.scene .ag-liq{fill:var(--ag-liq)}
+.scene .ag-glass{fill:none;stroke:var(--ag-glass);stroke-width:3;stroke-linejoin:round}
+.scene .ag-pink{fill:var(--ag-pink)}
+.scene .ag-clear{fill:var(--ag-clear)}
+.scene .ag-edge{fill:none;stroke:var(--ag-edge);stroke-width:2}
+.scene .ag-mid{stroke:var(--ink);stroke-width:2;stroke-dasharray:5 4}
+.scene .ag-rule{fill:var(--ag-rule);stroke:var(--ag-glass);stroke-width:1.5;opacity:.95}
+.scene .ag-tick{stroke:var(--ag-rule-ink);stroke-width:1.4;fill:none}
+.scene text.rtk{fill:var(--ag-rule-ink)}
+.scene .ag-sw{fill:var(--ag-sw)}
+.scene text.swlab{fill:#E9EDF3}
+.agcols{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.agside{display:grid;gap:8px;align-content:start;min-width:0}
+.agside .sw{justify-content:flex-start;text-align:left}
+#agsvg{max-height:var(--agh,none)}
+.cbt.agt td.agrec{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+
+/* ===== Surface area : volume tab ===== */
+:root{--cb-top:#F3D98E;--cb-l:#D9A536;--cb-r:#E8BE5A;--cb-edge:#6B4E12}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--cb-top:#8A7232;--cb-l:#5E4A16;--cb-r:#735B22;--cb-edge:#F3D98E}}
+:root[data-theme="dark"]{--cb-top:#8A7232;--cb-l:#5E4A16;--cb-r:#735B22;--cb-edge:#F3D98E}
+.scene .cb-top{fill:var(--cb-top);stroke:var(--cb-edge);stroke-width:2;stroke-linejoin:round}
+.scene .cb-l{fill:var(--cb-l);stroke:var(--cb-edge);stroke-width:2;stroke-linejoin:round}
+.scene .cb-r{fill:var(--cb-r);stroke:var(--cb-edge);stroke-width:2;stroke-linejoin:round}
+.scene .cb-grid{fill:none;stroke:var(--cb-edge);stroke-width:1;opacity:.75}
+.scene .cb-edge{fill:none;stroke:var(--cb-edge);stroke-width:2.5}
+.shpick .seg button{padding:8px 12px}
+.shcols{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+#shsvg{max-height:var(--shh,300px)}
+.cbt.sht th,.cbt.sht td{padding:4px 6px;font-size:15px}
+.cbt.sht .rv{display:block;white-space:nowrap}
+.cbt.sht td.sz,.cbt.agt td.nw{white-space:nowrap}
+@media (max-width:600px){.cbt.sht th,.cbt.sht td{padding:4px 4px;font-size:14px}}
+.rbar2{display:block;height:6px;border-radius:999px;background:var(--sunk);overflow:hidden;margin-top:2px;min-width:40px}
+.rbar2 i{display:block;height:100%;width:100%;transform-origin:0 50%;background:var(--accent)}
+
+/* ===== Exchange surfaces tab ===== */
+:root{--sf-cell:#D8EED2;--sf-edge:#3E6B35;--sf-nuc:#8DB57F;--sf-o2:#1F5FA8;--sf-co2:#59606B;--sf-alv:#F6D3D6;--sf-alv-e:#A9505C;--sf-cap:#C0392B;--sf-cap2:#5470C0;--sf-tube:#E8B3B8;
+  --sf-gut:#F2C9A7;--sf-vil:#F7DCC6;--sf-gill:#E07A7A;--sf-lam:#A93A3A;--sf-soil:#E8D7BE;--sf-root:#F5EFD9;--sf-root-e:#7D6A3E;--sf-epi:#BFE0A6;--sf-pal:#7CBF64;--sf-spo:#A8D68F;--sf-arw:#2E7D4F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sf-cell:#2D4A2A;--sf-edge:#BFE3B1;--sf-nuc:#6E9662;--sf-o2:#8EC5FF;--sf-co2:#D6DCE4;--sf-alv:#6B3A44;--sf-alv-e:#F2B8C0;--sf-cap:#F07A6E;--sf-cap2:#9DB2F2;--sf-tube:#8E5A62;
+  --sf-gut:#6E4E36;--sf-vil:#8A6648;--sf-gill:#A94F4F;--sf-lam:#F2A0A0;--sf-soil:#4A3B28;--sf-root:#7C6C48;--sf-root-e:#E8D7A6;--sf-epi:#4F7A3D;--sf-pal:#3F6E30;--sf-spo:#557F44;--sf-arw:#7FD3A0}}
+:root[data-theme="dark"]{--sf-cell:#2D4A2A;--sf-edge:#BFE3B1;--sf-nuc:#6E9662;--sf-o2:#8EC5FF;--sf-co2:#D6DCE4;--sf-alv:#6B3A44;--sf-alv-e:#F2B8C0;--sf-cap:#F07A6E;--sf-cap2:#9DB2F2;--sf-tube:#8E5A62;
+  --sf-gut:#6E4E36;--sf-vil:#8A6648;--sf-gill:#A94F4F;--sf-lam:#F2A0A0;--sf-soil:#4A3B28;--sf-root:#7C6C48;--sf-root-e:#E8D7A6;--sf-epi:#4F7A3D;--sf-pal:#3F6E30;--sf-spo:#557F44;--sf-arw:#7FD3A0}
+.scene .sf-cell{fill:var(--sf-cell);stroke:var(--sf-edge);stroke-width:3}
+.scene .sf-nuc{fill:var(--sf-nuc);stroke:var(--sf-edge);stroke-width:2}
+.scene text.sf-o2{fill:var(--sf-o2)}.scene text.sf-co2{fill:var(--sf-co2)}
+.scene .sf-arw{stroke:var(--sf-o2);stroke-width:3.5;fill:none;stroke-linecap:round}.scene .sf-arwh{fill:var(--sf-o2)}
+.scene .sf-arw2{stroke:var(--sf-co2);stroke-width:3.5;fill:none;stroke-linecap:round}.scene .sf-arw2h{fill:var(--sf-co2)}
+.scene .sf-arw3{stroke:var(--sf-arw);stroke-width:3.5;fill:none;stroke-linecap:round}.scene .sf-arw3h{fill:var(--sf-arw)}
+.scene .sf-alv{fill:var(--sf-alv);stroke:var(--sf-alv-e);stroke-width:2.5}
+.scene .sf-tube{fill:none;stroke:var(--sf-tube);stroke-width:22;stroke-linecap:round}
+.scene .sf-cap{fill:none;stroke:var(--sf-cap);stroke-width:4;stroke-linecap:round}
+.scene .sf-cap2{fill:none;stroke:var(--sf-cap2);stroke-width:3;stroke-linecap:round}
+.scene .sf-wall{fill:var(--sf-gut);stroke:var(--sf-alv-e);stroke-width:2}
+.scene .sf-vil{fill:var(--sf-vil);stroke:var(--sf-alv-e);stroke-width:2.5}
+.scene .sf-arch{fill:none;stroke:var(--sf-edge);stroke-width:12;stroke-linecap:round}
+.scene .sf-fil{fill:none;stroke:var(--sf-gill);stroke-width:9;stroke-linecap:round}
+.scene .sf-lam{fill:none;stroke:var(--sf-lam);stroke-width:2}
+.scene .sf-soil{fill:var(--sf-soil)}
+.scene .sf-root{fill:var(--sf-root);stroke:var(--sf-root-e);stroke-width:2.5}
+.scene .sf-hair{fill:none;stroke:var(--sf-root-e);stroke-width:4;stroke-linecap:round}
+.scene .sf-epi{fill:var(--sf-epi);stroke:var(--sf-edge);stroke-width:1.5}
+.scene .sf-pal{fill:var(--sf-pal);stroke:var(--sf-edge);stroke-width:1.5}
+.scene .sf-spo{fill:var(--sf-spo);stroke:var(--sf-edge);stroke-width:1.5}
+.scene .sf-gc{fill:none;stroke:var(--sf-edge);stroke-width:5;stroke-linecap:round}
+.scene .sf-lead{stroke:var(--ink);stroke-width:1.5}
+.sfpick{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+.sfpick button{padding:8px 4px;font-size:15px}
+.sfpick button+button{border-left:1px solid var(--line)}
+@container (max-width:620px){.sfpick{grid-template-columns:repeat(3,minmax(0,1fr))}.sfpick button:nth-child(4){border-left:0}.sfpick button:nth-child(n+4){border-top:1px solid var(--line)}}
+.sfcols{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.cbt.sft th{font-size:15px;width:36%}
+.cbt.sft td.yes{color:var(--good);font-weight:700;font-size:18px;width:2em;text-align:center}
+.cbt.sft td.no{color:var(--muted);font-weight:700;width:2em;text-align:center}
+.cbt.sft td{font-size:15px}
+@media (max-width:560px){.srow .seg button{font-size:14px}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+.qpanel .opt{line-height:1.3}
+@media (max-width:400px){h1{font-size:23px}header{gap:10px}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* (no late overrides) */
+/* == tool: gcse-diffusion-and-surface-area layout (17 Nov 2026) ==
+   1100 px and wider: a slimmer question panel; on every tab the picture has its controls and readout beside it, so the
+   picture, the controls that change it and the readout are on one screen. Pictures are capped by the screen height. */
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+  .pcols{grid-template-columns:minmax(0,1fr) minmax(250px,280px)}
+  .pleft,.pright{display:grid}
+  .agcols{grid-template-columns:minmax(0,1fr) minmax(240px,270px);grid-template-areas:"s c" "s r" "t t" "w w"}
+  .agcols > .sscene{grid-area:s}.agside{grid-area:c}.agread{grid-area:r}.agtabw{grid-area:t}.agwhy{grid-area:w}
+  .shcols{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
+  .sfcols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+}
+@media (min-width:901px){
+  .model{--pcw:calc((100vh - 250px) * 2);--agh:calc(100vh - 220px);--shh:calc(100vh - 330px)}
+}
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:10px 16px 12px;gap:8px}
+  .model .pane{gap:8px}
+  .model .controls{gap:6px 10px}
+  .model .btn{padding:8px 14px;min-height:42px}
+  .model .readout{padding:6px 10px}
+  .model{--pcw:calc((100vh - 190px) * 2);--agh:calc(100vh - 170px);--shh:calc(100vh - 290px)}
+  .pset{gap:5px;padding:6px 8px}.srow .seg button{min-height:40px}
+  .cbt th,.cbt td{padding:3px 6px}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+}
+/* == end tool: gcse-diffusion-and-surface-area layout == */
+/* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v4 == */
+
+/* == shared: about-model v4 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v4 == */
+
+/* == shared: phone-order v4 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v4 == */
+
+/* == shared: projector v4 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v4 == */
+
+/* == shared: touch v4 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+  .feedback details:not(.nq-fold)>summary{min-height:44px;box-sizing:border-box;padding-top:10px;padding-bottom:6px}   /* a tool's own fold in the feedback (e.g. "msd") */
+}
+/* == end shared: touch v4 == */
+
+/* == shared: polish v4 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v4 == */
+
+/* == shared: next-question v4 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* v4: mark-scheme fold (phones, <= 600 px wide; the JS only folds at that width). A 44 px+ tap target, keyboard focus ring. */
+.feedback details.nq-fold{margin:8px 0 2px;border:1px solid var(--line);border-radius:10px;background:transparent}
+.feedback details.nq-fold>summary{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 12px;cursor:pointer;font-weight:700;list-style:none;border-radius:9px;color:inherit;-webkit-tap-highlight-color:transparent}
+.feedback details.nq-fold>summary::-webkit-details-marker{display:none}
+.feedback details.nq-fold>summary::before{content:"";flex:none;width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.feedback details.nq-fold[open]>summary::before{transform:rotate(90deg)}
+.feedback details.nq-fold>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.feedback details.nq-fold .nq-fh2,.feedback details.nq-fold[open] .nq-fs{display:none}
+.feedback details.nq-fold[open] .nq-fh2{display:inline}
+.feedback .nq-fold-in{padding:0 12px 8px}
+.feedback .nq-fold-in>:first-child{margin-top:0}
+@media (prefers-reduced-motion:no-preference){.feedback details.nq-fold>summary::before{transition:transform .16s ease}}
+/* == end shared: next-question v4 == */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Diffusion and Surface Area<small><span class="cb-desc">Watch particles diffuse across a membrane and change one factor at a time, time agar cubes in alkali and measure the pink layer, work out SA : V, and see how exchange surfaces are adapted.</span></small></h1>
+      <p class="rplabel">GCSE Biology 4.1.3.1 · Combined Science (same numbers) · Foundation and Higher</p>
+    </div>
+        <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+        <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Diffusion and Surface Area</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Diffusion and Surface Area</b><small>GCSE Biology 4.1.3.1 · Combined Science (same numbers) · Foundation and Higher</small></span>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout pj-cols">
+    <section class="card model" aria-label="Diffusion and surface area model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="part" aria-pressed="true">Particles</button><button type="button" data-tab="agar" aria-pressed="false">Agar cubes</button><button type="button" data-tab="sav" aria-pressed="false">Surface area : volume</button><button type="button" data-tab="surf" aria-pressed="false">Exchange surfaces</button></div>
+
+      <div class="pane" id="pane-part">
+        <div class="pcols">
+          <div class="pleft">
+            <div class="plabs" aria-hidden="true"><span>Side A</span><span>Membrane with pores</span><span>Side B</span></div>
+            <div class="pcvwrap" id="pcvWrap"><canvas id="pcv" role="img" aria-label="A box split by a membrane with pores."></canvas></div>
+            <div class="controls prun"><button class="btn primary go" type="button" id="pGo">Start ▶</button><button class="btn" type="button" id="pReset">Start again</button><span class="gl" id="pSpL">Speed:</span><span class="seg" role="group" aria-labelledby="pSpL" id="pSpeed"><button type="button" data-v="1" aria-pressed="true">Normal</button><button type="button" data-v="4" aria-pressed="false">Fast</button></span></div>
+            <div class="readout pread" id="pRead"></div>
+          </div>
+          <div class="pright">
+            <div class="pset" id="pSet" role="group" aria-label="Set-up: change one thing at a time">
+              <div class="srow"><span class="gl" id="lpT">Temperature</span><span class="seg s3" role="group" aria-labelledby="lpT" id="pTemp"><button type="button" data-v="cold">Cold <small>5 °C</small></button><button type="button" data-v="room">Room <small>20 °C</small></button><button type="button" data-v="warm">Warm <small>40 °C</small></button></span></div>
+              <div class="srow"><span class="gl" id="lpG">Difference in concentration</span><span class="seg s3" role="group" aria-labelledby="lpG" id="pGrad"><button type="button" data-v="big">Big</button><button type="button" data-v="small">Small</button><button type="button" data-v="none">None</button></span></div>
+              <div class="srow"><span class="gl" id="lpA">Membrane area (pores)</span><span class="seg s2" role="group" aria-labelledby="lpA" id="pArea"><button type="button" data-v="small">Small</button><button type="button" data-v="large">Large</button></span></div>
+              <div class="srow"><span class="gl" id="lpH">Membrane</span><span class="seg s2" role="group" aria-labelledby="lpH" id="pThick"><button type="button" data-v="thin">Thin</button><button type="button" data-v="thick">Thick</button></span></div>
+            </div>
+            <div class="ptab" id="pTab"></div>
+          </div>
+        </div>
+        <p class="vh" id="pLive" aria-live="polite"></p>
+      </div>
+
+      <div class="pane" id="pane-agar" hidden>
+        <div class="agcols">
+          <div class="sscene"><svg id="agsvg" class="scene" viewBox="0 0 600 330" role="img" aria-label="Agar cubes in alkali."><g id="agG"></g></svg></div>
+          <div class="agside">
+            <div class="controls"><button class="btn primary go" type="button" id="agGo">Start ▶</button><button class="btn" type="button" id="agStep">+1 min</button><button class="btn" type="button" id="agReset">Reset</button></div>
+            <div class="controls"><span class="gl" id="agSpL">Speed:</span><span class="seg" role="group" aria-labelledby="agSpL" id="agSpeed"><button type="button" data-v="30" aria-pressed="true">Normal</button><button type="button" data-v="120" aria-pressed="false">Fast</button></span></div>
+            <button class="sw" type="button" id="agStopSw" aria-pressed="true"><span class="dot"></span>Pause when a cube turns pink all through <span class="state">on</span></button>
+            <div class="controls"><span class="gl" id="agZL">Close-up:</span><span class="seg" role="group" aria-labelledby="agZL" id="agZoom"><button type="button" data-v="1">1 cm</button><button type="button" data-v="2">2 cm</button><button type="button" data-v="3" aria-pressed="true">3 cm</button></span></div>
+          </div>
+          <div class="readout agread" id="agRead" aria-live="polite"></div>
+          <div class="agtabw" id="agTab"></div>
+          <div class="readout agwhy" id="agWhy"></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-sav" hidden>
+        <div class="controls shpick" id="shPick" role="group" aria-label="Choose a shape"><span class="gl">Cubes:</span><span class="seg"><button type="button" data-sh="c1">1 cm</button><button type="button" data-sh="c2">2 cm</button><button type="button" data-sh="c3">3 cm</button><button type="button" data-sh="c4">4 cm</button></span><span class="gl">Same volume as the 2 cm cube:</span><span class="seg"><button type="button" data-sh="blk">Block</button><button type="button" data-sh="rod">Rod</button><button type="button" data-sh="sht">Sheet</button></span></div>
+        <div class="shcols">
+          <div class="sscene"><svg id="shsvg" class="scene" viewBox="0 0 360 300" role="img" aria-label="A shape drawn with 1 cm squares."><g id="shG"></g></svg><p class="small">Each small square is 1 cm × 1 cm. Every shape is drawn to the same scale.</p></div>
+          <div class="shright" id="shTab"></div>
+        </div>
+        <div class="readout" id="shWhy"></div>
+      </div>
+
+      <div class="pane" id="pane-surf" hidden>
+        <div class="controls"><span class="seg sfpick" role="group" aria-label="Choose an exchange surface" id="sfPick"><button type="button" data-sf="cell">Single cell</button><button type="button" data-sf="alv">Lungs</button><button type="button" data-sf="vil">Small intestine</button><button type="button" data-sf="gill">Fish gills</button><button type="button" data-sf="root">Roots</button><button type="button" data-sf="leaf">Leaves</button></span></div>
+        <div class="sfcols">
+          <div class="sscene"><svg id="sfsvg" class="scene" viewBox="0 0 420 250" role="img" aria-label="An exchange surface."><g id="sfG"></g></svg><p class="small">Simple pictures, not to scale.</p></div>
+          <div class="readout sfinfo" id="sfInfo"></div>
+        </div>
+        <div class="readout" id="sfWhy"></div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <details class="about"><summary>About this model</summary><p class="limits">Particles: a flat (2D) box with far fewer, far bigger particles than real; only the particles of one substance are drawn (not the water or air they move through). Each particle moves at random on a fine grid; the particles don't bump into each other. The temperature effect is made much bigger than real so you can see it. Every run of the same set-up starts from the same arrangement, so it gives the same counts; real repeats vary. Agar cubes: the times and depths are model numbers like a class result (real times depend on the agar and the alkali); the corners of a real cube go pink a little sooner than the middles of the faces. Surface area : volume: real organisms are not cubes or blocks, but the ratio changes with size and shape in the same way. Exchange surfaces: simple pictures, not to scale.</p></details>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <details class="trybox" open><summary class="try-h">Things to try</summary><ul class="try" id="tryList"></ul></details>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Equations <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="mathsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Diffusion and Surface Area (AQA 8461 / 8464 4.1.3.1 diffusion, its factors, SA : V and exchange surfaces; 8462 /
+   8464 C 4.2.2 the particle model). Four tabs: Particles (diffusion across a membrane), Agar cubes, Surface area : volume,
+   Exchange surfaces. ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const num = v => { const x = Math.round(v * 1000) / 1000; return String(x); };
+const near = (v, a, tol) => Math.abs(v - a) <= (tol != null ? tol : Math.max(.02 * Math.abs(a), .0005));
+const ABC = "ABCDEFGHIJ";
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+const no69 = s => !/69|6\.9/.test(String(s));
+const show = v => { const s = String(v); return no69(s) ? s : s.replace(/69/g, "70").replace(/6\.9/g, "7.0"); };   // never a pupil-visible 69
+const mmss = s => { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+/* ===== Particles tab: facts of the model =====
+   A box 600 × 300 (model units) split by a membrane. Each particle takes one whole-unit step at a time on a fine grid
+   (8 directions), so a run is the same, bit for bit, in every browser. Each model step it may turn a little (random); it
+   then moves k units (k = 2, 3 or 4: Cold, Room, Warm). It can only cross the membrane through a pore. Pores (14 units
+   tall, one every 24) are in the open part of the membrane (72 or 240 units of its 300). A thick membrane is 60 units
+   wide (68 with the particle's size), a thin one 6. 30 model steps a second; a run is 20 s. */
+const PF = { W: 600, H: 300, X: 300, r: 4, sps: 30, T: 20,
+  temp: { cold: { k: 2, name: "Cold", c: 5 }, room: { k: 3, name: "Room", c: 20 }, warm: { k: 4, name: "Warm", c: 40 } },
+  grad: { big: { n: [400, 0], name: "Big" }, small: { n: [280, 120], name: "Small" }, none: { n: [200, 200], name: "None" } },
+  area: { small: { h: 72, name: "Small" }, large: { h: 240, name: "Large" } },
+  thick: { thin: { h: 3, name: "Thin" }, thick: { h: 30, name: "Thick" } },
+  per: 24, gap: 14, turn: [.25, .75], kink: .15,
+  SEED: 69 };   // the one fixed start layout (internal; never shown). Every run of a set-up gives the same counts.
+const PD = [1, 1, 0, -1, -1, -1, 0, 1], PDY = [0, 1, 1, 1, 0, -1, -1, -1];
+function pMake(c, seed) {
+  const sd0 = seed == null ? PF.SEED : seed, mb = a => () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const rng = mb(sd0);   // the start layout; the moves use their own stream (below)
+  const [na, nb] = PF.grad[c.grad].n, ht = PF.thick[c.thick].h, r = PF.r, win = PF.area[c.area].h, n = na + nb;
+  const x = new Int32Array(n), y = new Int32Array(n), d = new Uint8Array(n), s = new Uint8Array(n), px = new Int32Array(n), py = new Int32Array(n);
+  const lo = PF.X - ht - r, hi = PF.X + ht + r;
+  for (let i = 0; i < n; i++) { const L = i < na; x[i] = L ? r + Math.floor(rng() * (lo - 2 * r)) : hi + r + Math.floor(rng() * (PF.W - hi - 2 * r)); y[i] = r + Math.floor(rng() * (PF.H - 2 * r)); d[i] = Math.floor(rng() * 8); s[i] = L ? 0 : 1; }
+  px.set(x); py.set(y);
+  const y0 = PF.H / 2 - win / 2, pr = new Uint8Array(PF.H + 1);
+  for (let yy = 0; yy <= PF.H; yy++) { const k = (yy - y0) % PF.per; pr[yy] = yy >= y0 && yy < y0 + win && k >= (PF.per - PF.gap) / 2 + 1 && k < (PF.per + PF.gap) / 2 - 1 ? 1 : 0; }
+  return { c, rng: mb(sd0 ^ 0x5bd1e995), n, na, nb, x, y, d, s, px, py, lo, hi, ht, y0, win, pr, kk: PF.temp[c.temp].k, k: 0, ab: 0, ba: 0 };
+}
+function pStep(S) {
+  const rng = S.rng, r = PF.r, W = PF.W, H = PF.H, lo = S.lo, hi = S.hi, pr = S.pr, X = PF.X, k = S.kk, T0 = PF.turn[0], T1 = PF.turn[1], K = PF.kink;
+  S.px.set(S.x); S.py.set(S.y);
+  for (let i = 0; i < S.n; i++) {
+    let d = S.d[i]; const u = rng(); d = (d + (u < T0 ? 7 : u < T1 ? 0 : 1) + (rng() < K ? (rng() < .5 ? 6 : 2) : 0)) & 7;
+    let x = S.x[i], y = S.y[i];
+    for (let j = 0; j < k; j++) {
+      let dx = PD[d], dy = PDY[d];
+      if (y + dy < r || y + dy > H - r) dy = -dy;
+      if (x + dx < r || x + dx > W - r) dx = -dx;
+      let nx = x + dx, ny = y + dy;
+      const inN = nx > lo && nx < hi, inO = x > lo && x < hi;
+      if (inN && !pr[ny]) { if (!inO) { dx = -dx; } else { dy = -dy; if (!pr[y + dy]) dy = 0; } nx = x + dx; ny = y + dy; if (nx > lo && nx < hi && !pr[ny]) { nx = x; ny = y; } }
+      d = dx === 1 ? (dy === 1 ? 1 : dy === -1 ? 7 : 0) : dx === -1 ? (dy === 1 ? 3 : dy === -1 ? 5 : 4) : (dy === 1 ? 2 : dy === -1 ? 6 : d);
+      x = nx; y = ny;
+    }
+    S.x[i] = x; S.y[i] = y; S.d[i] = d;
+    const sd = x < X ? 0 : 1; if (sd !== S.s[i]) { if (sd) S.ab++; else S.ba++; S.s[i] = sd; }
+  }
+  S.k++;
+}
+function pCounts(S) { let a = 0; for (let i = 0; i < S.n; i++) if (!S.s[i]) a++; return [a, S.n - a]; }
+const pSteps = () => PF.T * PF.sps;
+const PRES = {};   // headless results of whole runs, by set-up key (filled on demand, e.g. for the bank check)
+const pKey = c => [c.temp, c.grad, c.area, c.thick].join(",");
+function pRun(c) { const k = pKey(c); if (PRES[k]) return PRES[k]; const S = pMake(c); for (let i = 0; i < pSteps(); i++) pStep(S); const [A, B] = pCounts(S); return (PRES[k] = { ab: S.ab, ba: S.ba, net: S.ab - S.ba, A, B }); }
+/* The results of seed 69 for 20 s, worked out with the same code (checked by the tests in t/ and by bankRun):
+   Room, Big, Large, Thin → 200 across, 129 back, net 71. Cold 41, Warm 104, Small difference 29 (188 / 159),
+   None −4 (178 / 182), Small area 33, Thick 53. Every one of the 36 set-ups follows the factor rules, and none ends on a 69. */
+const P_EXPECT = { base: 71, cold: 41, warm: 104, warmAB: 339, warmBA: 235, small: 29, smallAB: 188, smallBA: 159, none: -4, noneAB: 178, noneBA: 182, areaS: 33, thick: 53 };
+const P_BASE = { temp: "room", grad: "big", area: "large", thick: "thin" };
+
+/* ===== Agar cubes: facts =====
+   Colourless agar made with phenolphthalein indicator, cut into cubes of side 1, 2 and 3 cm, put into dilute sodium
+   hydroxide solution (an alkali). Where the alkali has diffused in, the indicator turns pink. The pink layer has the same
+   depth in every cube: depth = 5 mm × √(t ÷ 4 min), so the centre (half the side) is reached at 4, 16 and 36 minutes.
+   (Model numbers, chosen to be like a class result: real times depend on the agar and the alkali.) */
+const AG = { sides: [1, 2, 3], d0: 5, t0: 240, tMax: 40 * 60 };
+const agDepth = t => Math.min(15, AG.d0 * Math.sqrt(Math.max(0, t) / AG.t0));   // mm
+const agFull = L => AG.t0 * Math.pow(L * 10 / 2 / AG.d0, 2);                     // s until the centre turns pink
+const agPink = (L, t) => { const s = L * 10, c = Math.max(0, s - 2 * agDepth(t)); return 100 * (1 - Math.pow(c / s, 3)); };   // % of the volume
+const cubeSA = L => 6 * L * L, cubeV = L => L * L * L;
+
+/* ===== Surface area : volume: shapes (cm) ===== */
+const SHAPES = [
+  { id: "c1", name: "1 cm cube", d: [1, 1, 1], grp: "cube" }, { id: "c2", name: "2 cm cube", d: [2, 2, 2], grp: "cube" },
+  { id: "c3", name: "3 cm cube", d: [3, 3, 3], grp: "cube" }, { id: "c4", name: "4 cm cube", d: [4, 4, 4], grp: "cube" },
+  { id: "blk", name: "Block", d: [4, 2, 1], grp: "same" }, { id: "rod", name: "Rod", d: [8, 1, 1], grp: "same" },
+  { id: "sht", name: "Sheet", d: [4, 4, .5], grp: "same" }];
+const shSA = s => { const [a, b, c] = s.d; return 2 * (a * b + b * c + a * c); };
+const shV = s => s.d[0] * s.d[1] * s.d[2];
+const shR = s => shSA(s) / shV(s);
+const SH = id => SHAPES.find(s => s.id === id);
+const dimTxt = s => s.d.map(v => String(v)).join(" × ") + " cm";
+
+/* ===== State ===== */
+function freshM() { return { tab: "part", p: Object.assign({}, P_BASE), pSpeed: 1, prow: [], ag: { t: 0, speed: 30, stop: true, zoom: 3, rec: {}, msg: "" }, sh: "c2", surf: "cell", sim: null, pdone: false }; }
+const support = { words: false, maths: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {}, TASKS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const PKEY = "ks3tools-progress:gcse-diffusion-and-surface-area";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };
+const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open until it is right or shown
+const qh = k => quizOpen() && !!task.hide && task.hide.includes(k);   // hide this part of the model for the open question
+const locked = () => mode !== "demo" && !!lock;
+const lockedPart = k => mode !== "demo" && !!task.lockParts && task.lockParts.includes(k);   // one control group set for this question
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "This is set for the question. Answer in the panel, or press Show answer."; }
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+/* ===== Particles tab: diffusion across a membrane (canvas; labels and readouts are HTML) ===== */
+const PV = { run: false, anim: 0, tmr: 0, last: 0, acc: 0, cv: null, ctx: null, w: 0, h: 0, dpr: 1, col: {} };
+function pColours() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  PV.col = { a: g("--pa-a"), b: g("--pa-b"), wall: g("--pa-wall"), edge: g("--pa-edge"), dot: g("--pa-dot"), dotEdge: g("--pa-dot-edge"), ink: g("--ink") };
+}
+function pSize() {
+  const cv = $("pcv"), r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.round(r.width), h = Math.round(r.height);
+  if (!w || (w === PV.w && h === PV.h && dpr === PV.dpr)) return false;
+  PV.w = w; PV.h = h; PV.dpr = dpr; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); PV.ctx = cv.getContext("2d"); return true;
+}
+function pNew() { pStop(); M.sim = pMake(M.p); M.pdone = false; PV.acc = 0; }
+function pDraw() {
+  if (!PV.ctx) pSize(); const c = PV.ctx; if (!c || !PV.w) return;
+  if (!PV.col.a) pColours();
+  const S = M.sim || (M.sim = pMake(M.p)), k = PV.w / PF.W, C = PV.col;
+  c.setTransform(PV.dpr * k, 0, 0, PV.dpr * k, 0, 0);
+  c.fillStyle = C.a; c.fillRect(0, 0, PF.X, PF.H); c.fillStyle = C.b; c.fillRect(PF.X, 0, PF.W - PF.X, PF.H);
+  /* membrane: solid wall above and below the open part; in the open part, wall pieces with pores (gaps) between them */
+  const x0 = PF.X - S.ht, w = 2 * S.ht;
+  c.fillStyle = C.wall; c.strokeStyle = C.edge; c.lineWidth = 1.2 / k;
+  const blk = (y0, y1) => { if (y1 - y0 < .5) return; c.fillRect(x0 - 1, y0, w + 2, y1 - y0); c.strokeRect(x0 - 1, y0, w + 2, y1 - y0); };
+  blk(0, S.y0);
+  for (let y = S.y0; y < S.y0 + S.win; y += PF.per) { const g0 = y + (PF.per - PF.gap) / 2, g1 = g0 + PF.gap; blk(y, g0); blk(g1, Math.min(y + PF.per, S.y0 + S.win)); }
+  blk(S.y0 + S.win, PF.H);
+  /* particles: never drawn smaller than 2.6 screen px across */
+  const r = Math.max(PF.r, 2.6 / k); c.fillStyle = C.dot; c.strokeStyle = C.dotEdge; c.lineWidth = Math.max(.8, .9 / k);
+  c.beginPath();
+  for (let i = 0; i < S.n; i++) { const x = S.x[i], y = S.y[i]; c.moveTo(x + r, y); c.arc(x, y, r, 0, 6.2832); }
+  c.fill(); c.stroke();
+}
+function pRead() {
+  const S = M.sim || (M.sim = pMake(M.p)), [A, B] = pCounts(S), t = S.k / PF.sps, net = S.ab - S.ba;
+  const hn = qh("pnet"), hw = qh("pwhy");
+  const box = (h, v, cls) => `<div${cls ? ` class="${cls}"` : ""}><b>${h}</b><span>${v}</span></div>`;
+  const tl = `<div class="pcount">` + box("Time", `${show(t.toFixed(1))} s`, "ptime") + (qh("pside") ? box("Side A", "?") + box("Side B", "?") : box("Side A", show(A)) + box("Side B", show(B))) + box("Crossed A → B", show(S.ab)) + box("Crossed B → A", show(S.ba)) + `</div>`;
+  const bar = `<div class="pbar" aria-hidden="true"><i style="transform:scaleX(${(S.k / pSteps()).toFixed(3)})"></i></div>`;
+  const nl = hn ? `<p class="r2">Net movement: <b>hidden for this question</b>: work it out.</p>`
+    : `<p class="r2">Net movement: <b>${show(Math.abs(net))}</b> particle${Math.abs(net) === 1 ? "" : "s"}${net > 0 ? " from A to B" : net < 0 ? " from B to A" : ""}${M.pdone ? " (run finished)" : ""}</p>`;
+  const g = M.p.grad, why = hw ? `<p class="r3">The explanation is hidden for this question.</p>`
+    : `<p class="r3">${g === "none" ? "Same concentration on both sides: the particles keep moving and crossing both ways, about the same number each way, so there is no net movement."
+      : "Each particle moves at random. Side A has more particles (a higher concentration), so more cross from A to B than cross back: net movement from higher to lower concentration."}</p>`;
+  return tl + bar + nl + why;
+}
+function pTable() {
+  if (qh("ptab")) return `<p class="hidebox">Your results table is hidden for this question. Run the model and read the counters.</p>`;
+  if (!M.prow.length) return `<p class="small">Each finished 20 s run is added to a table here.</p>`;
+  return `<table class="cbt pt"><caption class="vh">Your runs</caption><thead><tr><th scope="col">Set-up (temperature · difference · area · membrane)</th><th scope="col">Net A → B in 20 s</th></tr></thead><tbody>` +
+    M.prow.map(r => `<tr><td>${esc([PF.temp[r.c.temp].name, PF.grad[r.c.grad].name, PF.area[r.c.area].name, PF.thick[r.c.thick].name].join(" · "))}</td><td><b>${show(r.net)}</b></td></tr>`).join("") + `</tbody></table>`;
+}
+function pRecord() {
+  const S = M.sim, c = Object.assign({}, M.p), k = pKey(c);
+  M.prow = M.prow.filter(r => pKey(r.c) !== k); M.prow.unshift({ c, net: S.ab - S.ba }); if (M.prow.length > 6) M.prow.length = 6;
+}
+function drawPart() {
+  pSize(); pDraw();
+  morphHTML($("pRead"), pRead()); morphHTML($("pTab"), pTable());
+  const S = M.sim;
+  setAttr($("pcv"), "aria-label", qh("pside") ? "A box split by a membrane with pores." : `A box split by a membrane with pores. Side A has ${show(pCounts(S)[0])} particles and side B has ${show(pCounts(S)[1])}.`);
+  [["pTemp", "temp"], ["pGrad", "grad"], ["pArea", "area"], ["pThick", "thick"]].forEach(([id, k]) => document.querySelectorAll("#" + id + " button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.v === M.p[k]))));
+  document.querySelectorAll("#pSpeed button").forEach(b => setAttr(b, "aria-pressed", String(+b.dataset.v === M.pSpeed)));
+}
+function pStart() {
+  if (PV.run) { pStop(); drawPart(); return; }
+  if (M.pdone) pNew();
+  PV.run = true; PV.last = 0; PV.acc = 0; renderCtl(); tourSignal("pstart");
+  if (reduced()) { pStepRM(); return; }
+  PV.anim = paceFrame(pFrame);
+}
+function pStepRM() {   // reduced motion: 4 s of model time each 0.7 s, no smooth movement
+  if (!PV.run) return;
+  pAdvance(4 * PF.sps); drawPart();
+  if (PV.run) PV.tmr = setTimeout(pStepRM, 700);
+}
+function pAdvance(n) {
+  const S = M.sim, left = pSteps() - S.k; n = Math.min(n, left);
+  for (let i = 0; i < n; i++) pStep(S);
+  if (S.k >= pSteps()) { PV.run = false; M.pdone = true; pRecord(); pEnd(); }
+}
+function pFrame(now) {
+  if (!PV.run) return;
+  if (!PV.last) PV.last = now;
+  const dt = Math.min(250, Math.max(0, now - PV.last)); PV.last = now;
+  PV.acc += dt / 1000 * PF.sps * M.pSpeed; const n = Math.min(Math.floor(PV.acc), 2 * M.pSpeed + 1); PV.acc = Math.min(PV.acc - n, 1);   // a slow PC runs the model slower rather than in big jumps
+  if (n) pAdvance(n);
+  pDraw(); morphHTML($("pRead"), pRead());
+  if (PV.run && M.tab === "part") PV.anim = paceFrame(pFrame);
+  else if (!PV.run) drawPart();
+}
+function pEnd() { const S = M.sim; $("pLive").textContent = `Run finished: ${show(S.ab)} crossed from A to B and ${show(S.ba)} crossed back.`; renderCtl(); morphHTML($("pTab"), pTable()); tried(M.p.grad === "none" ? 1 : M.p.temp !== "room" ? 2 : 0); }
+function pStop() { if (PV.run) { PV.run = false; paceCancel(PV.anim); clearTimeout(PV.tmr); renderCtl(); } }
+function pReset() { pNew(); drawPart(); renderCtl(); }
+/* ===== Agar cubes tab: three cubes in alkali, a stopwatch, and a close-up with a ruler (SVG) ===== */
+const AGV = { anim: 0, tmr: 0, last: 0, run: false, k: 1 };
+const AG_SC = 34;   // picture units per cm in the beaker
+const AG_MM = 17.5; // picture units per mm in the close-up (30 mm across)
+function agFs() { const w = $("agsvg").getBoundingClientRect().width; if (w) AGV.k = Math.max(1, Math.min(2, 12.2 / (15 * w / 600))); return AGV.k; }
+function agCube(x, yb, L, t, lab) {
+  const s = L * AG_SC, d = Math.min(s / 2, agDepth(t) / 10 * AG_SC), y = yb - s, c = s - 2 * d;
+  let h = `<rect class="ag-pink" x="${f1(x)}" y="${f1(y)}" width="${f1(s)}" height="${f1(s)}" rx="2"/>`;
+  if (c > .3) h += `<rect class="ag-clear" x="${f1(x + d)}" y="${f1(y + d)}" width="${f1(c)}" height="${f1(c)}"/>`;
+  h += `<rect class="ag-edge" x="${f1(x)}" y="${f1(y)}" width="${f1(s)}" height="${f1(s)}" rx="2"/>`;
+  return h + lab;
+}
+function agSVG() {
+  const t = M.ag.t, k = agFs(), fs = f1(15 * k), fsb = f1(16 * k);
+  let h = "";
+  /* beaker of alkali */
+  const bx0 = 14, bx1 = 372, by0 = 22, by1 = 190, ly = 52;
+  h += `<rect class="ag-liq" x="${bx0 + 3}" y="${ly}" width="${bx1 - bx0 - 6}" height="${by1 - ly - 3}"/>`;
+  h += `<path class="ag-glass" d="M${bx0} ${by0}L${bx0} ${by1 - 8}Q${bx0} ${by1} ${bx0 + 8} ${by1}L${bx1 - 8} ${by1}Q${bx1} ${by1} ${bx1} ${by1 - 8}L${bx1} ${by0}"/>`;
+  h += T_(bx0 + 10, ly - 10, k > 1.2 ? "Sodium hydroxide (alkali)" : "Dilute sodium hydroxide solution (alkali)", fs, `class="mut"`);
+  const xs = [40, 118, 232], yb = by1 - 6;
+  AG.sides.forEach((L, i) => { h += agCube(xs[i], yb, L, t, T_(xs[i] + L * AG_SC / 2, by1 + 8 + 15 * k, L + " cm", fsb, `class="bold" text-anchor="middle"`)); });
+  /* stopwatch */
+  h += `<rect class="ag-sw" x="392" y="40" width="196" height="118" rx="16"/><rect class="lcd" x="406" y="70" width="168" height="64" rx="8"/>`;
+  h += T_(490, 61, "Stopwatch", fs, `class="bold swlab" text-anchor="middle"`);
+  h += T_(490, 116, qh("agclock") ? "--:--" : mmss(t), 38, `class="lcdt" text-anchor="middle"`);
+  h += T_(490, 152, k > 1.2 ? "min : s" : "minutes : seconds", fs, `class="swlab" text-anchor="middle"`);
+  /* close-up of one cube with a ruler (0 at the left edge) */
+  const L = M.ag.zoom, s = L * 10, d = Math.min(s / 2, agDepth(t)), zx = 36, zy = 258 + 10 * (k - 1), zh = 36, X = mm => zx + mm * AG_MM;
+  h += T_(zx - 6, zy - 12, k > 1.2 ? `Close-up: ${L} cm cube (ruler in mm)` : `Close-up of the ${L} cm cube, edge to edge (ruler in mm)`, fs, `class="bold"`);
+  h += `<rect class="ag-pink" x="${f1(X(0))}" y="${zy}" width="${f1(s * AG_MM)}" height="${zh}"/>`;
+  if (s - 2 * d > .01) h += `<rect class="ag-clear" x="${f1(X(d))}" y="${zy}" width="${f1((s - 2 * d) * AG_MM)}" height="${zh}"/>`;
+  h += `<rect class="ag-edge" x="${f1(X(0))}" y="${zy}" width="${f1(s * AG_MM)}" height="${zh}"/>`;
+  h += `<line class="ag-mid" x1="${f1(X(s / 2))}" y1="${zy - 4}" x2="${f1(X(s / 2))}" y2="${zy + zh + 4}"/>`;
+  /* ruler */
+  const ry = zy + zh + 2;
+  h += `<rect class="ag-rule" x="${f1(X(0) - 4 - 9 * k)}" y="${f1(ry)}" width="${f1(30 * AG_MM + 8 + 18 * k)}" height="${f1(22 + 15 * k)}" rx="3"/>`;
+  let tk = "";
+  for (let m = 0; m <= 30; m++) tk += `M${f1(X(m))} ${f1(ry)}v${m % 5 ? 7 : 13}`;
+  for (let m = 1; m < 60; m += 2) tk += `M${f1(X(m / 2))} ${f1(ry)}v4`;
+  h += `<path class="ag-tick" d="${tk}"/>`;
+  for (let m = 0; m <= 30; m += 5) h += T_(X(m), ry + 14 + 13 * k, String(m), fs, `class="rtk" text-anchor="middle"`);
+  return h;
+}
+function agVBH() { return 344 + Math.round(40 * (AGV.k - 1)); }
+function agRead() {
+  const t = M.ag.t, st = AGV.run ? "Running" : t > 0 ? "Paused" : "Ready";
+  const m = M.ag.msg && !qh("agwhich") ? `<p class="r2">${esc(M.ag.msg)}</p>` : "";
+  return `<p class="r1">${st}</p><p class="r3">Speed: ${M.ag.speed === 30 ? "1 second = 30 seconds" : "1 second = 2 minutes"}</p>${m}`;
+}
+function agWhy() {
+  return qh("agwhy") ? `<p class="r3">The explanation is hidden for this question.</p>`
+    : `<p class="r3">The alkali diffuses into every cube at the same rate, so the pink layer is the same depth in each. The smallest cube has the shortest distance to its centre (and the largest SA : V), so it turns pink all the way through first.</p>`;
+}
+function agTable() {
+  const hs = qh("agsav"), ht = qh("agtab");
+  return `<table class="cbt agt"><caption class="vh">Agar cube results</caption><thead><tr><th scope="col">Cube side (cm)</th><th scope="col">SA : V</th><th scope="col">Time to turn pink all through</th></tr></thead><tbody>` +
+    AG.sides.map(L => { const r = M.ag.rec[L]; return `<tr><th scope="row">${L}</th><td class="nw">${hs ? "hidden" : show(6 / L) + " : 1"}</td><td class="agrec">${ht ? "hidden" : r != null ? "<b>" + mmss(r) + "</b> " : ""}${ht ? "" : `<button class="mini" type="button" data-rec="${L}" aria-label="Record the stopwatch time for the ${L} cm cube">${r != null ? "Record again" : "Record time"}</button>`}</td></tr>`; }).join("") + `</tbody></table>`;
+}
+function drawAgar() {
+  agFs();
+  setAttr($("agsvg"), "viewBox", `0 0 600 ${agVBH()}`);
+  setLayer($("agG"), agSVG());
+  setAttr($("agsvg"), "aria-label", `Three agar cubes of side 1, 2 and 3 cm in alkali, a stopwatch, and a close-up of the ${M.ag.zoom} cm cube with a millimetre ruler.`);
+  morphHTML($("agRead"), agRead()); morphHTML($("agTab"), agTable()); morphHTML($("agWhy"), agWhy());
+  document.querySelectorAll("#agSpeed button").forEach(b => setAttr(b, "aria-pressed", String(+b.dataset.v === M.ag.speed)));
+  document.querySelectorAll("#agZoom button").forEach(b => setAttr(b, "aria-pressed", String(+b.dataset.v === M.ag.zoom)));
+}
+function agNext(t0, t1) {   // the first cube to turn pink all through between t0 and t1 (if the stop switch is on)
+  if (!M.ag.stop) return null;
+  for (const L of AG.sides) { const f = agFull(L); if (f > t0 + 1e-6 && f <= t1 + 1e-6) return L; }
+  return null;
+}
+function agMove(dtModel) {
+  const t0 = M.ag.t, t1 = Math.min(AG.tMax, t0 + dtModel), L = agNext(t0, t1);
+  if (L) { M.ag.t = agFull(L); M.ag.msg = `Paused: the ${L} cm cube has just turned pink all the way through. Read the stopwatch.`; agStop(); tried(4); return; }
+  M.ag.t = t1; if (t1 >= AG.tMax) { M.ag.msg = "The stopwatch has reached 40 minutes. Press Start again to repeat."; agStop(); }
+}
+function agPlay() {
+  if (lockedPart("agclock")) return lockMsg();
+  if (AGV.run) { agStop(); drawAgar(); return; }
+  if (M.ag.t >= AG.tMax) M.ag.t = 0;
+  AGV.run = true; M.ag.msg = ""; AGV.last = 0; renderCtl(); tourSignal("agplay");
+  if (reduced()) { const st = () => { if (!AGV.run) return; agMove(30); drawAgar(); if (AGV.run) AGV.tmr = setTimeout(st, 700); }; st(); return; }
+  const fr = now => {
+    if (!AGV.run) return;
+    if (!AGV.last) AGV.last = now;
+    const dt = Math.min(250, Math.max(0, now - AGV.last)); AGV.last = now;
+    agMove(dt / 1000 * M.ag.speed);
+    setLayer($("agG"), agSVG()); morphHTML($("agRead"), agRead());
+    if (AGV.run && M.tab === "agar") AGV.anim = paceFrame(fr, 20); else drawAgar();
+  };
+  AGV.anim = paceFrame(fr, 20);
+}
+function agStop() { if (AGV.run) { AGV.run = false; paceCancel(AGV.anim); clearTimeout(AGV.tmr); renderCtl(); } }
+function agStep() { if (lockedPart("agclock")) return lockMsg(); agStop(); M.ag.msg = ""; agMove(60); drawAgar(); tried(5); }
+function agReset() { if (lockedPart("agclock")) return lockMsg(); agStop(); M.ag.t = 0; M.ag.msg = ""; drawAgar(); }
+/* ===== Surface area : volume tab: cubes 1–4 cm and three shapes with the same volume as the 2 cm cube (all to one scale) ===== */
+const SHU = 27;   // picture units per cm (one scale for every shape, so the sizes can be compared)
+function shSVG() {
+  const s = SH(M.sh), [a, b, c] = s.d, u = SHU, c30 = Math.cos(Math.PI / 6), s30 = .5;
+  const W = 360, H = 300, wid = (a + b) * u * c30, hgt = (a + b) * u * s30 + c * u;
+  const ox = W / 2 - (a - b) * u * c30 / 2, oy = H / 2 + hgt / 2 - 6;   // centre the drawing
+  const P = (x, y, z) => [ox + (x - y) * u * c30, oy - (x + y) * u * s30 - z * u];
+  const poly = pts => pts.map(p => f1(p[0]) + "," + f1(p[1])).join(" ");
+  const pt = p => f1(p[0]) + " " + f1(p[1]);
+  let h = "";
+  h += `<polygon class="cb-top" points="${poly([P(0, 0, c), P(a, 0, c), P(a, b, c), P(0, b, c)])}"/>`;
+  h += `<polygon class="cb-l" points="${poly([P(0, 0, 0), P(0, b, 0), P(0, b, c), P(0, 0, c)])}"/>`;
+  h += `<polygon class="cb-r" points="${poly([P(0, 0, 0), P(a, 0, 0), P(a, 0, c), P(0, 0, c)])}"/>`;
+  let g = "";
+  for (let i = 1; i < a; i++) g += `M${pt(P(i, 0, c))}L${pt(P(i, b, c))}M${pt(P(i, 0, 0))}L${pt(P(i, 0, c))}`;
+  for (let j = 1; j < b; j++) g += `M${pt(P(0, j, c))}L${pt(P(a, j, c))}M${pt(P(0, j, 0))}L${pt(P(0, j, c))}`;
+  for (let k = 1; k < c; k++) g += `M${pt(P(0, 0, k))}L${pt(P(a, 0, k))}M${pt(P(0, 0, k))}L${pt(P(0, b, k))}`;
+  if (g) h += `<path class="cb-grid" d="${g}"/>`;
+  h += `<path class="cb-edge" d="M${pt(P(0, b, 0))}L${pt(P(0, 0, 0))}L${pt(P(a, 0, 0))}M${pt(P(0, 0, 0))}L${pt(P(0, 0, c))}"/>`;
+  const fs = f1(16 * SHK.k), lab = v => String(v) + " cm";
+  const e1 = P(a / 2, 0, 0), e2 = P(0, b / 2, 0), e3 = P(a, 0, c / 2);
+  h += T_(e1[0] + 6, e1[1] + 8 + 14 * SHK.k, lab(a), fs, `class="bold lb"`);
+  h += T_(e2[0] - 6, e2[1] + 8 + 14 * SHK.k, lab(b), fs, `class="bold lb" text-anchor="end"`);
+  h += T_(e3[0] + 8, e3[1] + 6, lab(c), fs, `class="bold lb"`);
+  return h;
+}
+const SHK = { k: 1 };
+function shTable() {
+  if (qh("shtab")) return `<p class="hidebox">The table is hidden for this question. Use the picture and the formulas.</p>`;
+  const mx = Math.max(...SHAPES.map(shR));
+  return `<table class="cbt sht"><caption class="vh">Surface area and volume of each shape</caption><thead><tr><th scope="col">Shape</th><th scope="col">Size (cm)</th><th scope="col">SA (cm²)</th><th scope="col">V (cm³)</th><th scope="col">SA : V</th></tr></thead><tbody>` +
+    SHAPES.map(s => `<tr${s.id === M.sh ? ' class="cur"' : ""}><th scope="row">${esc(s.name)}</th><td class="sz">${esc(s.d.join(" × "))}</td><td>${show(shSA(s))}</td><td>${show(shV(s))}</td><td><span class="rv">${show(+shR(s).toFixed(2))} : 1</span><span class="rbar2" aria-hidden="true"><i style="transform:scaleX(${(shR(s) / mx).toFixed(3)})"></i></span></td></tr>`).join("") + `</tbody></table>`;
+}
+function shWhy() {
+  if (qh("shwhy")) return `<p class="r3">The note on what this means for living things is hidden for this question.</p>`;
+  return `<p class="r3">Bigger cube → smaller SA : V (volume grows faster than surface area). The block, rod and sheet hold the same volume as the 2 cm cube, but a flat or thin shape has more surface for its volume and a short distance to its middle, like a leaf, a flatworm or a villus.</p>`;
+}
+function drawSav() {
+  const w = $("shsvg").getBoundingClientRect().width; if (w) SHK.k = Math.max(1, Math.min(1.9, 12.2 / (16 * w / 360)));
+  setLayer($("shG"), shSVG());
+  const s = SH(M.sh);
+  setAttr($("shsvg"), "aria-label", `${s.name}, ${dimTxt(s)}, drawn with 1 cm squares.`);
+  morphHTML($("shTab"), shTable()); morphHTML($("shWhy"), shWhy());
+  document.querySelectorAll("#shPick button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.sh === M.sh)));
+}
+/* ===== Exchange surfaces tab: a simple picture of each surface, what it exchanges and how it is adapted ===== */
+const SURF = {
+  cell: { name: "Single cell", what: "Oxygen and food in, carbon dioxide and waste out, all across the cell membrane.",
+    f: { sa: [1, "A large SA : V for its size"], thin: [1, "A short distance from the membrane to the middle"], blood: [0, "Not needed: diffusion is enough"], vent: [0, "Not needed"] },
+    note: "A single-celled organism is small, so diffusion across its surface supplies all of it." },
+  alv: { name: "Lungs", what: "Oxygen from the air into the blood; carbon dioxide from the blood into the air.",
+    f: { sa: [1, "Millions of alveoli"], thin: [1, "Walls one cell thick"], blood: [1, "A network of capillaries round each alveolus"], vent: [1, "Breathing brings in fresh air"] },
+    link: ["gcse-lungs-and-gas-exchange.html", "Lungs and Gas Exchange"] },
+  vil: { name: "Small intestine", what: "Digested food (such as glucose and amino acids) from the gut into the blood.",
+    f: { sa: [1, "Millions of villi; microvilli on each cell"], thin: [1, "A wall one cell thick"], blood: [1, "A capillary network in each villus"], vent: [0, "Not for gases"] },
+    link: ["gcse-digestion-and-enzymes.html", "Digestion and Enzymes"] },
+  gill: { name: "Fish gills", what: "Oxygen from the water into the blood; carbon dioxide from the blood into the water.",
+    f: { sa: [1, "Many gill filaments, each covered in lamellae"], thin: [1, "Thin lamellae"], blood: [1, "Many capillaries in the lamellae"], vent: [1, "Water is kept flowing over the gills"] } },
+  root: { name: "Roots", what: "Water (by osmosis) and mineral ions (by active transport) from the soil.",
+    f: { sa: [1, "Root hair cells: long, thin projections"], thin: [0, "—"], blood: [0, "Plants have no blood: the xylem carries water up"], vent: [0, "—"] },
+    link: ["gcse-osmosis-practical.html", "Osmosis Practical"] },
+  leaf: { name: "Leaves", what: "Carbon dioxide in and oxygen out (in the light), and water vapour out, through the stomata.",
+    f: { sa: [1, "A flat shape, and air spaces inside"], thin: [1, "A thin leaf: a short path for the gases"], blood: [0, "Plants have no blood"], vent: [0, "Stomata open and close; no breathing"] },
+    link: ["gcse-photosynthesis-lab.html", "Photosynthesis Lab"] }
+};
+const SURF_KEYS = ["cell", "alv", "vil", "gill", "root", "leaf"];
+const FEAT = [["sa", "Large surface area"], ["thin", "Thin: short diffusion path"], ["blood", "Efficient blood supply"], ["vent", "Ventilated"]];
+const SFK = { k: 1 };
+/* arrows and labels */
+const sfArrow = (x1, y1, x2, y2, cls) => { const a = Math.atan2(y2 - y1, x2 - x1), h = 9, w = 5;
+  return `<path class="${cls || "sf-arw"}" d="M${f1(x1)} ${f1(y1)}L${f1(x2 - Math.cos(a) * h * .6)} ${f1(y2 - Math.sin(a) * h * .6)}"/><path class="${(cls || "sf-arw") + "h"}" d="M${f1(x2)} ${f1(y2)}L${f1(x2 - Math.cos(a) * h + Math.sin(a) * w)} ${f1(y2 - Math.sin(a) * h - Math.cos(a) * w)}L${f1(x2 - Math.cos(a) * h - Math.sin(a) * w)} ${f1(y2 - Math.sin(a) * h + Math.cos(a) * w)}Z"/>`; };
+function sfLab(x, y, s, anchor, px, py) {
+  const fs = 15 * SFK.k, ty = y + fs * .35, tw = String(s).length * fs * .55, x0 = anchor === "end" ? x - tw : anchor === "middle" ? x - tw / 2 : x;
+  let h = "";
+  if (px != null) {   // the leader joins the side of the label nearest the thing it points to
+    const C = [[x0 - 3, y], [x0 + tw + 3, y], [x0 + tw / 2, y - fs * .75], [x0 + tw / 2, y + fs * .6]];
+    let best = C[0], bd = 1e9; C.forEach(c => { const d = (c[0] - px) ** 2 + (c[1] - py) ** 2; if (d < bd) { bd = d; best = c; } });
+    h += `<line class="sf-lead" x1="${f1(px)}" y1="${f1(py)}" x2="${f1(best[0])}" y2="${f1(best[1])}"/>`;
+  }
+  return h + T_(x, ty, s, f1(fs), `class="lb" text-anchor="${anchor || "start"}"`);
+}
+function sfPic(k, labels) {
+  let h = "", L = (...a) => { if (labels) h += sfLab(...a); };
+  if (k === "cell") {
+    h += `<path class="sf-cell" d="M120 60C170 30 250 40 290 70C340 100 330 160 300 190C260 225 180 215 140 195C90 170 70 100 120 60Z"/>`;
+    h += `<ellipse class="sf-nuc" cx="210" cy="130" rx="26" ry="20"/>`;
+    h += sfArrow(60, 80, 110, 98) + sfArrow(330, 222, 300, 196) + sfArrow(250, 120, 345, 88, "sf-arw2");
+    h += T_(40, 70, "O₂", f1(16 * SFK.k), `class="bold sf-o2"`) + T_(336, 240, "O₂", f1(16 * SFK.k), `class="bold sf-o2"`) + T_(352, 84, "CO₂", f1(16 * SFK.k), `class="bold sf-co2"`);
+    L(24, 214, "Cell membrane", "start", 130, 194); L(296, 26, "Nucleus", "middle", 216, 112);
+  } else if (k === "alv") {
+    h += `<path class="sf-tube" d="M30 40C90 60 120 90 150 120"/>`;
+    const C = [[178, 112, 30], [222, 86, 30], [256, 130, 30], [210, 156, 30], [168, 168, 26], [258, 182, 26]];
+    C.forEach(([x, y, r]) => { h += `<circle class="sf-alv" cx="${x}" cy="${y}" r="${r}"/>`; });
+    C.forEach(([x, y, r], i) => { h += `<path class="sf-cap" d="M${x - r * .95} ${y - r * .3}Q${x} ${y + r * .25} ${x + r * .95} ${y - r * .3}"/><path class="sf-cap" d="M${x - r * .5} ${y - r * .85}Q${x - r * .1 + (i % 2 ? 6 : -6)} ${y} ${x - r * .45} ${y + r * .88}"/>`; });
+    h += `<path class="sf-cap" d="M150 210C170 226 250 232 290 206M292 120C306 150 302 186 290 206"/>`;
+    h += sfArrow(330, 70, 286, 108) + T_(334, 66, "O₂", f1(16 * SFK.k), `class="bold sf-o2"`);
+    L(20, 214, "Alveoli (air sacs)", "start", 160, 182); L(316, 214, "Capillaries", "start", 292, 200); L(16, 26, "Bronchiole", "start", 60, 50);
+  } else if (k === "vil") {
+    h += `<rect class="sf-wall" x="20" y="200" width="380" height="34" rx="6"/>`;
+    [70, 160, 250, 340].forEach((x, i) => { h += `<path class="sf-vil" d="M${x - 26} 202L${x - 26} 90Q${x - 26} 50 ${x} 50Q${x + 26} 50 ${x + 26} 90L${x + 26} 202"/>`;
+      if (i === 1) h += `<path class="sf-cap" d="M${x - 12} 202L${x - 12} 92Q${x} 74 ${x + 12} 92L${x + 12} 202"/>`; });
+    h += sfArrow(110, 30, 148, 62) + T_(44, 26, "Digested food", f1(15 * SFK.k), `class="bold sf-o2"`);
+    L(282, 30, "Villus", "start", 268, 70); L(212, 156, "Capillary", "start", 172, 140);
+  } else if (k === "gill") {
+    h += `<path class="sf-arch" d="M60 30C40 90 40 170 60 230"/>`;
+    for (let i = 0; i < 9; i++) { const y = 40 + i * 22; h += `<path class="sf-fil" d="M${56 - (i === 0 || i === 8 ? 4 : 0)} ${y}L250 ${y + 4}"/>`;
+      let tk = ""; for (let x = 90; x < 246; x += 12) tk += `M${x} ${y - 6}L${x} ${y + 8}`; h += `<path class="sf-lam" d="${tk}"/>`; }
+    h += sfArrow(300, 70, 266, 90, "sf-arw3") + sfArrow(300, 200, 266, 180, "sf-arw3") + T_(304, 58, "Water in,", f1(15 * SFK.k), `class="bold"`) + T_(304, 58 + 17 * SFK.k, "with O₂", f1(15 * SFK.k), `class="bold sf-o2"`);
+    L(268, 140, "Gill filaments", "start", 240, 136); L(252, 236, "Lamellae", "start", 200, 222); L(22, 248 - 14, "Gill arch", "start", 52, 208);
+  } else if (k === "root") {
+    h += `<rect class="sf-soil" x="0" y="0" width="420" height="250"/>`;
+    h += `<path class="sf-root" d="M180 0L180 200Q200 236 220 200L220 0Z"/>`;
+    [[200, 40, -1], [200, 70, 1], [200, 100, -1], [200, 130, 1], [200, 160, -1]].forEach(([x, y, s]) => { h += `<path class="sf-hair" d="M${x + s * 18} ${y}C${x + s * 60} ${y - 6} ${x + s * 100} ${y + 10} ${x + s * 150} ${y + 4}"/>`; });
+    h += sfArrow(372, 176, 336, 146) + T_(290, 200, "Water and", f1(15 * SFK.k), `class="bold sf-o2"`) + T_(290, 200 + 17 * SFK.k, "mineral ions", f1(15 * SFK.k), `class="bold sf-o2"`);
+    L(268, 24, "Root hair cell", "start", 290, 72); L(24, 230, "Root", "start", 182, 200);
+  } else {
+    h += `<rect class="sf-epi" x="16" y="40" width="300" height="16"/><rect class="sf-epi" x="16" y="194" width="300" height="16"/>`;
+    for (let x = 20; x < 306; x += 22) h += `<rect class="sf-pal" x="${x}" y="58" width="18" height="54" rx="7"/>`;
+    [[44, 136], [96, 150], [150, 132], [258, 150], [292, 132], [70, 176], [126, 178], [282, 178], [206, 132]].forEach(([x, y]) => { h += `<circle class="sf-spo" cx="${x}" cy="${y}" r="17"/>`; });
+    h += `<path class="sf-gc" d="M186 196C192 212 208 212 214 196M186 210C192 196 208 196 214 210"/>`;
+    h += sfArrow(200, 246, 200, 214) + T_(150, 242, "CO₂ in", f1(15 * SFK.k), `class="bold sf-o2" text-anchor="end"`);
+    L(322, 32, "Thin leaf", "start", 312, 48); L(322, 160, "Air spaces", "start", 236, 166); L(322, 222, "Stoma", "start", 214, 204);
+  }
+  return h;
+}
+function surfInfo() {
+  const s = SURF[M.surf], hw = qh("sfwhat"), hg = qh("sfgrid");
+  let h = `<p class="r1">${esc(s.name)}</p>`;
+  h += hw ? `<p class="r2">What it exchanges: <b>hidden for this question</b>.</p>` : `<p class="r2"><b>Exchanges:</b> ${esc(s.what)}</p>`;
+  if (hg) h += `<p class="hidebox">How it is adapted is hidden for this question.</p>`;
+  else h += `<table class="cbt sft"><caption class="vh">How it is adapted</caption><tbody>` + FEAT.map(([k, n]) => { const [y, txt] = s.f[k]; return `<tr><th scope="row">${esc(n)}</th><td class="${y ? "yes" : "no"}">${y ? "✓" : "–"}<span class="vh">${y ? " yes" : " no"}</span></td><td>${esc(txt)}</td></tr>`; }).join("") + `</tbody></table>`;
+  if (s.note && !hg) h += `<p class="r3">${esc(s.note)}</p>`;
+  if (s.link) h += `<p class="cnote">More in <a href="${s.link[0]}">${esc(s.link[1])}</a>.</p>`;
+  return h;
+}
+function drawSurf() {
+  const w = $("sfsvg").getBoundingClientRect().width; if (w) SFK.k = Math.max(1, Math.min(1.9, 12.2 / (15 * w / 420)));
+  setLayer($("sfG"), sfPic(M.surf, !qh("sflab")));
+  setAttr($("sfsvg"), "aria-label", "A simple picture: " + SURF[M.surf].name.toLowerCase() + ".");
+  morphHTML($("sfInfo"), surfInfo());
+  document.querySelectorAll("#sfPick button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.sf === M.surf)));
+  const why = $("sfWhy"); morphHTML(why, qh("sfbig") ? `<p class="r3">The note on large organisms is hidden for this question.</p>` : `<p class="r3"><b>Why large organisms need these:</b> a large organism has a small SA : V, and its middle is far from its surface. Diffusion through its outside is too slow, so it needs exchange surfaces with a large area, and a transport system (the blood in animals; the xylem and phloem in plants) to carry substances to and from every cell.</p>`);
+}
+/* ===== Draw everything that is showing ===== */
+const TABS = ["part", "agar", "sav", "surf"];
+const TAB_NAME = { part: "Particles", agar: "Agar cubes", sav: "Surface area : volume", surf: "Exchange surfaces" };
+function tabsAllowed() { return mode === "demo" || !task.tabs ? TABS : task.tabs; }
+function drawPane() {
+  const t = M.tab, ok = tabsAllowed();
+  TABS.forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.tab === t)); const h = !ok.includes(b.dataset.tab); if (b.hidden !== h) b.hidden = h; });
+  $("tabs").classList.toggle("few", ok.length < TABS.length);
+  if (t === "part") drawPart();
+  else if (t === "agar") drawAgar();
+  else if (t === "sav") drawSav();
+  else drawSurf();
+  if (mode === "demo" && TRY_TAB !== t) renderTry();
+}
+function renderCtl() {   // touches a control only when its state really changes
+  const lk = locked(), txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  const lp = k => lk || lockedPart(k);
+  [["pTemp", "ptemp"], ["pGrad", "pgrad"], ["pArea", "parea"], ["pThick", "pthick"]].forEach(([id, k]) => document.querySelectorAll("#" + id + " button").forEach(b => dis(b, lp(k))));
+  dis($("pGo"), lp("prun")); dis($("pReset"), lp("prun"));
+  ["agGo", "agStep", "agReset"].forEach(id => dis($(id), lp("agclock")));
+  document.querySelectorAll("#agZoom button").forEach(b => dis(b, lp("agzoom")));
+  document.querySelectorAll("#shPick button").forEach(b => dis(b, lp("sh")));
+  document.querySelectorAll("#sfPick button").forEach(b => dis(b, lp("sf")));
+  txt($("pGo"), PV.run ? "Pause ■" : M.pdone ? "Run again ▶" : M.sim && M.sim.k ? "Carry on ▶" : "Start ▶");
+  txt($("agGo"), AGV.run ? "Pause ■" : M.ag.t > 0 && M.ag.t < AG.tMax ? "Carry on ▶" : "Start ▶");
+  const sw = $("agStopSw"); setAttr(sw, "aria-pressed", String(M.ag.stop)); txt(sw.querySelector(".state"), M.ag.stop ? "on" : "off"); dis(sw, lp("agclock"));
+  const ln = $("lockNote"), show_ = lk; if (ln.hidden !== !show_) ln.hidden = !show_; if (show_) lockMsg();
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) { if (!tabsAllowed().includes(t)) return; stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
+function stopAll() { pStop(); agStop(); }
+
+/* ===== Things to try (Demo): the list follows the open tab ===== */
+const TRY = ["Press Start. Watch the counters: particles cross both ways, but more go from A to B.",
+  "Set the difference in concentration to None and run it. Do the particles stop moving? Is there net movement?",
+  "Run Cold, Room and Warm, keeping everything else the same. Compare the net movement in your table.",
+  "Change only the membrane area, then only the thickness. Which way does each change the net movement?",
+  "Press Start and let the stopwatch pause at each cube. Which cube turns pink all through first?",
+  "Press +1 min a few times. Use the close-up ruler: is the pink layer the same depth in every cube?",
+  "Compare the 1 cm, 2 cm and 3 cm cubes. What happens to SA : V as the cube gets bigger?",
+  "The block, rod and sheet have the same volume as the 2 cm cube. Which has the biggest SA : V?",
+  "Look at each exchange surface. Which ones have all four features in the table?",
+  "Compare the single cell with the lungs. Why does a large animal need lungs and a blood supply?"];
+const TRY_BY = { part: [0, 1, 2, 3], agar: [4, 5], sav: [6, 7], surf: [8, 9] };
+const TRIED = TRY.map(() => false);
+let TRY_TAB = null;
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; if (TRY_BY[M.tab].includes(i)) renderTry(); }
+function renderTry() { TRY_TAB = M.tab;
+  $("tryList").innerHTML = TRY_BY[M.tab].map(i => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(TRY[i])}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+/* ===== Knowledge check ===== */
+const SU = {
+  part: o => m => { m.tab = "part"; Object.assign(m.p, o || {}); },
+  agar: (t, z) => m => { m.tab = "agar"; m.ag.t = t || 0; if (z) m.ag.zoom = z; },
+  sav: id => m => { m.tab = "sav"; m.sh = id; },
+  surf: k => m => { m.tab = "surf"; m.surf = k; }
+};
+const P_ALL = ["ptemp", "pgrad", "parea", "pthick"];
+TASKS.easy = [
+  { id: "what", kind: "choice", text: "Press Start and watch the particles and the counters. Which sentence describes diffusion?", setup: SU.part(), tabs: ["part"], lockParts: P_ALL,
+    hide: ["pwhy"], hideWords: ["Diffusion", "Net movement", "Concentration gradient"],
+    options: [{ t: "The net movement of particles from a higher concentration to a lower concentration.", ok: () => true },
+      { t: "The movement of particles from a lower concentration to a higher concentration.", why: "Side A has more particles (a higher concentration). More cross from A to B than come back, so the net movement is from higher to lower concentration." },
+      { t: "Particles move to side B because they want to spread out.", why: "Particles don’t want anything. Each one moves at random. More cross from A because there are more of them there." },
+      { t: "Particles move one way only, from side A to side B.", why: "Look at Crossed B → A: particles cross both ways. Diffusion is the net (overall) movement." }],
+    explain: "Diffusion is the spreading out of particles: the net movement from a region of higher concentration to a region of lower concentration. It happens because the particles move at random, and it needs no energy.",
+    hints: ["Compare the counters: which way do more particles cross?", "Which side starts with more particles: a higher or a lower concentration?", "Diffusion: net movement from higher to lower concentration."] },
+  { id: "net", kind: "num", text: "The model is set to a small difference in concentration. Press Start and let the 20 s run finish. Work out the net number of particles that moved from A to B.",
+    setup: SU.part({ grad: "small" }), tabs: ["part"], lockParts: P_ALL, hide: ["pnet", "ptab"], hideWords: ["Net movement"],
+    frame: "Net movement = number crossing A → B − number crossing B → A", lbl: "Net movement =", unit: "particles from A to B", ans: () => P_EXPECT.smallAB - P_EXPECT.smallBA, tol: .4,
+    wrongs: [[P_EXPECT.smallAB, "That is how many crossed from A to B. Some crossed back: take them away."], [P_EXPECT.smallBA, "That is how many crossed back from B to A. Take it away from the number that crossed from A to B."],
+      [P_EXPECT.smallAB + P_EXPECT.smallBA, "Net means the difference: take away, don’t add."], [P_EXPECT.smallBA - P_EXPECT.smallAB, "Take the B → A number away from the A → B number."]],
+    generic: "Read both crossing counters when the run has finished, then take the smaller from the larger.",
+    working: () => [`Crossed A → B: ${P_EXPECT.smallAB}.`, `Crossed B → A: ${P_EXPECT.smallBA}.`, `Net = ${P_EXPECT.smallAB} − ${P_EXPECT.smallBA} = ${P_EXPECT.smallAB - P_EXPECT.smallBA} particles from A to B.`],
+    hints: ["Wait until the time reads 20.0 s.", "Read Crossed A → B and Crossed B → A.", "Net = A → B − B → A."] },
+  { id: "even", kind: "choice", text: "The concentration is now the same on both sides. Press Start and watch. What happens?", setup: SU.part({ grad: "none" }), tabs: ["part"], lockParts: P_ALL,
+    hide: ["pwhy", "pnet"], hideWords: ["Net movement"],
+    options: [{ t: "The particles keep moving and crossing both ways, but there is no overall (net) movement.", ok: () => true },
+      { t: "The particles stop moving, because they are already spread out evenly.", why: "Watch the picture: the particles never stop moving. Particles move all the time." },
+      { t: "All the particles move over to one side.", why: "Watch the counts for side A and side B: they stay about the same." },
+      { t: "No particles cross the membrane.", why: "Look at the two crossing counters: lots of particles cross each way." }],
+    explain: "With no difference in concentration, particles still move at random and cross both ways, but about the same number go each way. There is no net movement. Particles never stop moving.",
+    hints: ["Are the particles still moving at the end?", "Compare Crossed A → B with Crossed B → A.", "About the same number cross each way: no net movement."] },
+  { id: "temp", kind: "choice", text: "Run the model at Cold, Room and Warm. Which temperature gives the fastest net movement, and why?", setup: SU.part(), tabs: ["part"], lockParts: ["pgrad", "parea", "pthick"],
+    hide: ["pwhy"], hideWords: ["Kinetic energy"],
+    options: [{ t: "Warm: the particles have more kinetic energy and move faster, so more cross each second.", ok: () => true },
+      { t: "Cold: the particles are closer together, so they cross more easily.", why: "Look at your table: Cold gives the smallest net movement." },
+      { t: "Warm: the particles get bigger, so they push through the membrane.", why: "Particles don’t get bigger when they are heated. They move faster." },
+      { t: "The temperature makes no difference.", why: "Compare the net movement for each temperature in your table." }],
+    explain: "At a higher temperature the particles have more kinetic energy, so they move faster. More reach the pores and cross each second, so diffusion is faster.",
+    hints: ["Press Start at each temperature. Each result goes into the table.", "Which run has the biggest net movement? Watch how fast the particles move.", "Warmer → more kinetic energy → faster particles → faster diffusion."] },
+  { id: "factors", kind: "gaps", fixed: true, text: "Change one thing at a time and compare the net movement. Complete each sentence.", setup: SU.part(), tabs: ["part"],
+    hide: ["pwhy"], hideWords: ["Concentration gradient"],
+    rows: [["g", "A bigger difference in concentration makes diffusion", "faster"], ["a", "A larger membrane area makes diffusion", "faster"], ["t", "A thicker membrane makes diffusion", "slower"]],
+    bank: ["faster", "slower", "no different"],
+    why: (k, w) => ({ g: "Compare Big with Small difference: which gives more net movement?", a: "Compare Small with Large area: more pores means more places to cross.", t: "Compare Thin with Thick: in a thick membrane the particles have further to go." })[k],
+    explain: "A bigger difference in concentration (a steeper concentration gradient), a larger surface area and a thinner membrane (a shorter distance) all make diffusion faster.",
+    hints: ["Keep everything else the same and change only one setting.", "Each finished run goes into your table: compare the net movement.", "Bigger difference: faster. Larger area: faster. Thicker: slower."] },
+  { id: "time1", kind: "num", text: "Press Start. The stopwatch pauses when a cube has just turned pink all the way through. How long did the 1 cm cube take, in minutes?", setup: SU.agar(0, 1), tabs: ["agar"],
+    hide: ["agwhy", "agtab"], lbl: "Time =", unit: "minutes", ans: () => agFull(1) / 60, tol: .05,
+    wrongs: [[agFull(2) / 60, "That is the time for the 2 cm cube."], [agFull(3) / 60, "That is the time for the 3 cm cube."], [agFull(1), "That is the time in seconds. Change it to minutes (÷ 60)."]],
+    generic: "Read the stopwatch (minutes : seconds) when it pauses for the 1 cm cube.",
+    working: () => [`The stopwatch paused at ${mmss(agFull(1))} for the 1 cm cube.`, `That is ${agFull(1) / 60} minutes.`],
+    hints: ["Press Start and wait for the first pause.", "The stopwatch shows minutes : seconds.", `It reads ${mmss(agFull(1))}.`] },
+  { id: "first", kind: "choice", text: "Run the agar cubes. Which cube turned pink all the way through first, and why?", setup: SU.agar(0, 3), tabs: ["agar"], hide: ["agwhy", "agwhich"],
+    options: [{ t: "The 1 cm cube: the alkali had the shortest distance to diffuse to its centre.", ok: () => true },
+      { t: "The 3 cm cube: it has the biggest surface area.", why: "It does have the biggest surface area, but its volume is much bigger too and its centre is furthest in. It was last." },
+      { t: "The 1 cm cube: the alkali diffuses faster into a small cube.", why: "Use the close-up: at any time the pink layer is the same depth in every cube. The alkali diffuses in at the same rate." },
+      { t: "They all turned pink all the way through at the same time.", why: "Watch the stopwatch: it pauses at a different time for each cube." }],
+    explain: "The alkali diffuses into every cube at the same rate, so the pink layer has the same depth in each. The centre of the 1 cm cube is only 5 mm in, so it is reached first. The 1 cm cube also has the largest SA : V (6 : 1).",
+    hints: ["Watch which cube loses its colourless middle first.", "Use the close-up and +1 min: is the pink layer deeper in any cube?", "Same rate in every cube, but the smallest cube’s centre is closest to the surface."] },
+  { id: "sav2", kind: "num", text: "Work out the surface area to volume ratio of a cube with sides of 2 cm.", setup: SU.sav("c2"), tabs: ["sav"], lockParts: ["sh"], hide: ["shtab"], stuck: "maths",
+    frame: "Surface area = 6 × side × side. Volume = side × side × side. Write the ratio as ? : 1.", lbl: "SA : V =", unit: ": 1", ans: () => shR(SH("c2")), tol: .02,
+    wrongs: [[24, "24 cm² is the surface area. Now divide it by the volume."], [8, "8 cm³ is the volume. Divide the surface area by it."], [1 / 3, "Divide the surface area by the volume, not the volume by the surface area."], [6, "That is the ratio for a 1 cm cube. Each face of this cube is 2 cm × 2 cm."], [2, "A cube has 6 faces, not 4."], [4, "4 cm² is the area of one face. Find the area of all 6 faces, then divide by the volume."]],
+    generic: "Work out the surface area and the volume, then divide the surface area by the volume.",
+    working: () => ["Surface area = 6 × 2 × 2 = 24 cm².", "Volume = 2 × 2 × 2 = 8 cm³.", "SA : V = 24 : 8 = 3 : 1."],
+    hints: ["Count the squares on one face, then multiply by 6.", "Surface area 24 cm². Volume 8 cm³.", "24 ÷ 8 = 3, so 3 : 1."] },
+  { id: "single", kind: "choice", text: "Why does a single-celled organism not need lungs or a blood system?", setup: SU.surf("cell"), tabs: ["surf", "sav"], hide: ["sfgrid", "sfbig", "shwhy"], hideWords: ["Exchange surface"],
+    options: [{ t: "It has a large SA : V and a short distance to its middle, so diffusion across its surface is enough.", ok: () => true },
+      { t: "It does not need oxygen.", why: "Most single-celled organisms do need oxygen. It diffuses in across the cell membrane." },
+      { t: "It is too small for diffusion to happen.", why: "Diffusion happens in small organisms too. It is how they get everything they need." },
+      { t: "Its membrane pumps every substance in, using energy.", why: "Oxygen and carbon dioxide cross by diffusion, which needs no energy." }],
+    explain: "A single cell is small: it has a large surface area for its volume and no part of it is far from the surface. Diffusion across the cell membrane supplies everything it needs, so it needs no exchange organ or transport system.",
+    hints: ["Look at the 1 cm cube on the Surface area : volume tab: is its SA : V big or small?", "How far does oxygen have to diffuse to reach the middle of one cell?", "Large SA : V + short distance → diffusion is enough."] },
+  { id: "match", kind: "gaps", fixed: true, grid: false, text: "Use the pictures. What does each exchange surface take in?", setup: SU.surf("alv"), tabs: ["surf"], hide: ["sfwhat"],
+    rows: [["a", "Alveoli in the lungs", "oxygen from the air"], ["v", "Villi in the small intestine", "digested food"], ["g", "Fish gills", "oxygen from the water"], ["r", "Root hair cells", "water and mineral ions"]],
+    bank: ["oxygen from the air", "digested food", "oxygen from the water", "water and mineral ions"],
+    why: k => ({ a: "Look at the Lungs picture: what goes from the air sacs into the capillaries?", v: "Look at the Small intestine picture: what goes into the villi?", g: "Look at the Fish gills picture: fish take their oxygen from the water.", r: "Look at the Roots picture: what goes from the soil into the root hairs?" })[k],
+    explain: "Alveoli: oxygen from the air into the blood. Villi: digested food into the blood. Gills: oxygen from the water into the blood. Root hair cells: water and mineral ions from the soil.",
+    hints: ["Choose each surface in turn and look at the arrows.", "Two of them take in oxygen: one from air, one from water.", "Alveoli: oxygen (air). Villi: digested food. Gills: oxygen (water). Roots: water and mineral ions."] }
+];
+TASKS.hard = [
+  { id: "rate", kind: "num", text: "The model is set to Warm. Let the 20 s run finish, then work out the rate of net movement from A to B, in particles per second.", setup: SU.part({ temp: "warm" }), tabs: ["part"], lockParts: P_ALL,
+    hide: ["pnet", "ptab", "pside"], stuck: "maths", frame: "Rate = net number of particles ÷ time", lbl: "Rate =", unit: "particles per second", ans: () => P_EXPECT.warm / PF.T, tol: .05,
+    wrongs: [[P_EXPECT.warm, "That is the net number. Divide it by the time (20 s)."], [P_EXPECT.warmAB / PF.T, "That uses only Crossed A → B. Take away the particles that crossed back first."], [PF.T / P_EXPECT.warm, "Divide the number by the time, not the time by the number."], [(P_EXPECT.warmAB + P_EXPECT.warmBA) / PF.T, "Net means the difference: take away, don’t add."]],
+    generic: "Find the net number (A → B minus B → A) at 20 s, then divide by 20.",
+    working: () => [`Net = ${P_EXPECT.warmAB} − ${P_EXPECT.warmBA} = ${P_EXPECT.warm} particles.`, `Time = ${PF.T} s.`, `Rate = ${P_EXPECT.warm} ÷ ${PF.T} = ${num(P_EXPECT.warm / PF.T)} particles per second.`],
+    hints: ["Wait for 20.0 s, then read both crossing counters.", "Net = A → B − B → A.", "Divide the net number by 20 s."] },
+  { id: "both", kind: "choice", text: "Particles on side B keep crossing back to side A. Why is there still net movement from A to B?", setup: SU.part(), tabs: ["part"], lockParts: P_ALL, hide: ["pwhy"], hideWords: ["Net movement", "Concentration gradient"],
+    options: [{ t: "There are more particles on side A, so more of them reach a pore and cross to B each second than cross back.", ok: () => true },
+      { t: "The membrane only lets particles through from A to B.", why: "Look at Crossed B → A: particles cross back too. The pores let them through both ways." },
+      { t: "The particles on side B move more slowly.", why: "At one temperature, all the particles in this model move at the same speed." },
+      { t: "The particles on side A are pushed across by the particles behind them.", why: "Nothing pushes them. Each particle moves at random." }],
+    explain: "Every particle moves at random, so particles cross both ways. Side A has a higher concentration, so in any second more particles arrive at the pores from A than from B. The net movement is from A to B, down the concentration gradient.",
+    hints: ["Do particles on both sides move in the same way?", "Which side has more particles near the pores at any moment?", "More particles on A → more crossings A → B each second."] },
+  { id: "fair", kind: "gaps", fixed: true, text: "Plan a fair test with the model: how does temperature affect the rate of diffusion?", setup: SU.part(), tabs: ["part"],
+    rows: [["iv", "Independent variable (what you change):", "temperature"], ["dv", "Dependent variable (what you measure):", "net number of particles crossing in 20 s"], ["cv", "A control variable (keep the same):", "membrane area"]],
+    bank: ["temperature", "net number of particles crossing in 20 s", "membrane area", "how long the particles take to stop"],
+    why: (k, w) => w === "how long the particles take to stop" ? "Particles never stop moving, so this can’t be measured." :
+      ({ iv: "The independent variable is the one you change on purpose.", dv: "The dependent variable is the one you measure.", cv: "A control variable is kept the same so the test is fair." })[k],
+    explain: "Change the temperature (independent variable). Measure the net number crossing in 20 s (dependent variable). Keep the membrane area, the membrane thickness and the difference in concentration the same (control variables).",
+    hints: ["You change one thing and measure another.", "What does the model count for you?", "Change temperature; measure the net crossing; keep the membrane area the same."] },
+  { id: "depth", kind: "num", text: "The stopwatch is stopped at 9:00. Use the ruler in the close-up to measure the depth of the pink layer in the 3 cm cube.", setup: SU.agar(540, 3), tabs: ["agar"], lockParts: ["agclock", "agzoom"], hide: ["agwhy"],
+    lbl: "Depth =", unit: "mm", ans: () => agDepth(540), tol: .5,
+    wrongs: [[15, "15 mm is the centre of the cube. Measure from the edge (0) to where the pink ends."], [30 - agDepth(540), "Measure from the left edge (0) to where the pink ends, not to where it starts again."], [30, "That is the whole width of the cube."]],
+    generic: "Read the ruler where the pink layer meets the colourless middle.",
+    working: () => ["The pink layer starts at the edge (0 mm).", `It ends at ${agDepth(540)} mm.`, `Depth = ${agDepth(540)} mm.`],
+    hints: ["The ruler starts at 0 at the left edge of the cube.", "Each small mark is 1 mm; the short marks between are 0.5 mm.", "Find where pink changes to colourless."] },
+  { id: "pct", kind: "num", text: "The stopwatch is stopped at 1:00. What percentage of the volume of the 2 cm cube has turned pink?", setup: SU.agar(60, 2), tabs: ["agar"], lockParts: ["agclock", "agzoom"], hide: ["agwhy"], stuck: "maths",
+    frame: "Measure the depth. The colourless middle is a cube of side (20 − 2 × depth) mm.", lbl: "Pink =", unit: "%", ans: () => +agPink(2, 60).toFixed(1), tol: .4,
+    wrongs: [[100 - agPink(2, 60), "That is the colourless part. Take it away from 100%."], [25, "Use volumes (side × side × side), not lengths."], [agPink(1, 60), "That is the 1 cm cube."], [agPink(3, 60), "That is the 3 cm cube."]],
+    generic: "Measure the depth, work out the side of the colourless middle, then compare its volume with the whole cube.",
+    working: () => ["Depth = 2.5 mm, so the colourless middle is 20 − 5 = 15 mm across.", "Whole cube = 20 × 20 × 20 = 8000 mm³. Colourless middle = 15 × 15 × 15 = 3375 mm³.", "Pink = 8000 − 3375 = 4625 mm³; 4625 ÷ 8000 × 100 = 57.8%."],
+    hints: ["Measure the pink layer in the close-up.", "The colourless middle is a smaller cube: 15 mm on each side.", "% pink = (8000 − 3375) ÷ 8000 × 100."] },
+  { id: "longer", kind: "num", text: "The pink layer is 2.5 mm deep after 1 min and 5 mm after 4 min. Predict how long the alkali would take to reach the centre of a 4 cm cube (20 mm in).", setup: SU.agar(0, 3), tabs: ["agar"], hide: ["agwhy"],
+    frame: "Look at what happens to the time when the depth doubles.", lbl: "Time =", unit: "minutes", ans: () => agFull(4) / 60, tol: .5,
+    wrongs: [[agFull(2) / 60, "16 minutes is the time for 10 mm (the 2 cm cube). The centre of a 4 cm cube is 20 mm in."], [8, "Doubling the depth does not double the time: 2.5 mm took 1 min but 5 mm took 4 min."], [16 * 2, "From 10 mm to 20 mm the depth doubles. What happened to the time from 2.5 mm to 5 mm?"], [36 + 16, "Look for the pattern: depth × 2 → time × 4."]],
+    generic: "Find the pattern: 2.5 mm → 1 min, 5 mm → 4 min. Use it to go from 5 mm to 20 mm.",
+    working: () => ["Depth × 2 → time × 4 (2.5 mm in 1 min, 5 mm in 4 min).", "20 mm is 4 × 5 mm, so the time is 4 × 4 = 16 times as long as 4 min.", "16 × 4 = 64 minutes. Diffusion over a few centimetres is very slow."],
+    hints: ["Check the pattern with the 2 cm cube: 10 mm took 16 min.", "When the depth doubles, the time goes up 4 times.", "5 mm → 4 min, 10 mm → 16 min, 20 mm → ? min."] },
+  { id: "block", kind: "num", text: "Work out the surface area to volume ratio of the block (4 cm × 2 cm × 1 cm).", setup: SU.sav("blk"), tabs: ["sav"], lockParts: ["sh"], hide: ["shtab"], stuck: "maths",
+    frame: "Surface area = 2 × (l × w + w × h + l × h). Volume = l × w × h. Write the ratio as ? : 1.", lbl: "SA : V =", unit: ": 1", ans: () => shR(SH("blk")), tol: .02,
+    wrongs: [[28, "28 cm² is the surface area. Now divide it by the volume."], [8, "8 cm³ is the volume. Divide the surface area by it."], [3, "3 : 1 is the 2 cm cube. The block has more surface for the same volume."], [8 / 28, "Divide the surface area by the volume, not the other way round."], [14 / 8, "A block has 6 faces: the 3 different faces come in pairs, so double their total."]],
+    generic: "Add the areas of the 6 faces (3 pairs), then divide by the volume.",
+    working: () => ["Faces: 4 × 2 = 8, 2 × 1 = 2, 4 × 1 = 4. Surface area = 2 × (8 + 2 + 4) = 28 cm².", "Volume = 4 × 2 × 1 = 8 cm³.", "SA : V = 28 ÷ 8 = 3.5 : 1."],
+    hints: ["There are 3 different faces, two of each.", "Surface area 28 cm². Volume 8 cm³.", "28 ÷ 8 = 3.5, so 3.5 : 1."] },
+  { id: "flat", kind: "choice", text: "The block, rod and sheet each have the same volume as the 2 cm cube. Why is a flat, thin shape (like a leaf or a flatworm) good for exchanging substances?", setup: SU.sav("sht"), tabs: ["sav"], hide: ["shwhy"],
+    options: [{ t: "It has a larger SA : V and a short distance to its middle, so substances diffuse in and out quickly enough.", ok: () => true },
+      { t: "It has a larger volume, so it can take in more.", why: "Look at the table: all four shapes have the same volume, 8 cm³." },
+      { t: "It has a smaller surface area, so it loses less.", why: "Look at the table: the sheet has the biggest surface area of the four." },
+      { t: "Its shape makes the particles move faster.", why: "Shape doesn’t change how fast particles move. Temperature does." }],
+    explain: "For the same volume, the sheet has the most surface (SA : V 5 : 1, against 3 : 1 for the cube), and no part of it is more than 0.25 cm from its surface. So diffusion alone can supply all of it.",
+    hints: ["Compare the SA : V of the cube and the sheet in the table.", "How far is the middle of the sheet from its surface?", "Bigger SA : V + shorter distance → faster exchange."] },
+  { id: "feat", kind: "build", text: "Which features make an exchange surface in an animal effective? Choose all the right ones.", frame: "Choose four.", setup: SU.surf("alv"), tabs: ["surf"], hide: ["sfgrid", "sflab", "sfbig"], hideWords: ["Exchange surface"],
+    stm: [{ t: "A large surface area", c: 1 }, { t: "A thin membrane, so a short diffusion path", c: 2 }, { t: "An efficient blood supply", c: 3 }, { t: "Being ventilated (for gas exchange)", c: 4 },
+      { t: "A thick wall to protect it", why: "A thick wall would make the diffusion path longer and slow diffusion down." },
+      { t: "Energy from respiration to push the gases across", why: "Diffusion needs no energy." },
+      { t: "A small surface area, so less is lost", why: "A small area would slow exchange. Exchange surfaces have a large area." }],
+    miss: { 1: "What about the size of the surface?", 2: "How far do the substances have to diffuse?", 3: "What carries the substances away on the other side?", 4: "For gases in lungs and gills: how is fresh air or water brought in?" },
+    explain: "An effective exchange surface has a large surface area, a thin membrane (a short diffusion path), an efficient blood supply (in animals) and, for gas exchange, ventilation. The alveoli and gills have all four.",
+    hints: ["Think of the alveoli: how many are there, and how thick is each wall?", "What do the capillaries and breathing do to the concentrations on each side?", "Large area, thin, blood supply, ventilated."] },
+  { id: "gillflow", kind: "choice", text: "In a fish’s gills, blood flows through the lamellae all the time. How does this keep oxygen diffusing into the blood quickly?", setup: SU.surf("gill"), tabs: ["surf"], hide: ["sfgrid"], hideWords: ["Concentration gradient"],
+    options: [{ t: "It carries oxygen away, so the oxygen concentration in the blood stays low and the concentration gradient stays steep.", ok: () => true },
+      { t: "It pumps oxygen across the lamellae into the blood.", why: "Blood flow doesn’t pump oxygen across. Oxygen diffuses; the blood carries it away." },
+      { t: "It makes the lamellae thinner.", why: "Blood flow doesn’t change how thick the lamellae are." },
+      { t: "It brings more water to the gills.", why: "The fish’s mouth and gill covers move the water (ventilation). Blood carries oxygen away from the gills." }],
+    explain: "Moving blood carries oxygen away from the gills, so the blood next to the lamellae always has a low oxygen concentration. The difference in concentration (the gradient) stays steep, so oxygen keeps diffusing in quickly. Ventilation keeps the water side high.",
+    hints: ["Think back to the Particles tab: what makes diffusion fastest?", "If the blood stood still, what would happen to its oxygen concentration?", "Blood flow keeps the blood side low → steep gradient → fast diffusion."] }
+];
+["easy", "hard"].forEach(lv => TASKS[lv].forEach(t => { if (!t.tabs) t.tabs = ["part"]; }));
+/* ===== Load-time bank check (the sums; the particle runs are checked in slices by pCheckSliced, after the first paint) ===== */
+function bankCheck() {
+  const errs = [], F = m => errs.push(m);
+  if (agFull(1) !== 240 || agFull(2) !== 960 || agFull(3) !== 2160 || agDepth(540) !== 7.5 || agDepth(60) !== 2.5) F("model: agar depth and times");
+  if (Math.abs(agPink(2, 60) - 57.8125) > 1e-9 || agPink(1, agFull(1)) !== 100) F("model: agar % pink");
+  if (shSA(SH("c2")) !== 24 || shV(SH("c2")) !== 8 || shR(SH("blk")) !== 3.5 || shR(SH("sht")) !== 5 || shR(SH("rod")) !== 34 / 8) F("model: shapes");
+  if (!["blk", "rod", "sht"].every(id => shV(SH(id)) === 8 && shR(SH(id)) > shR(SH("c2")))) F("model: same-volume shapes must have a bigger SA : V than the 2 cm cube");
+  for (let i = 1; i < 4; i++) if (!(shR(SHAPES[i]) < shR(SHAPES[i - 1]))) F("model: SA : V must fall as the cube grows");
+  SHAPES.forEach(s => { if (!no69(shSA(s)) || !no69(shV(s)) || !no69(+shR(s).toFixed(2))) F("model: 69 in the shapes table"); });
+  [60, 240, 540, 960, 1500, 2160].forEach(t => { if (!no69(mmss(t))) F("model: 69 on the stopwatch"); });
+  Object.keys(P_EXPECT).forEach(k => { if (!no69(P_EXPECT[k])) F("model: 69 in the particle results"); });
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (/\(HT\)/.test(t.text)) E("no HT content in this spec point");
+    if (!no69(t.text) || !no69(t.explain || "") || t.hints.some(h => !no69(h))) E("69 in the question");
+    if (!t.tabs || !t.tabs.length || t.tabs.some(k => !TABS.includes(k))) E("needs its model tabs");
+    if (t.kind === "choice") { if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
+    if (t.kind === "gaps") t.rows.forEach(([k, , a, list]) => { const L = list || t.bank; if (!L.includes(a)) E("answer missing from list " + k);
+      L.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); });
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); if (!no69(num(a))) E("69 in the answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a, t.tol) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); if (t.working().some(x => !no69(x))) E("69 in the working"); }
+    if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
+      c.forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); }
+  });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
+  return errs;
+}
+/* The particle model, run in slices after the first paint: each result must match P_EXPECT (the questions use these), and the
+   factor rules must hold. A disagreement switches the linked questions off. */
+function pCheckSliced(done) {
+  const B = P_BASE, J = [["base", {}], ["cold", { temp: "cold" }], ["warm", { temp: "warm" }], ["small", { grad: "small" }], ["none", { grad: "none" }], ["areaS", { area: "small" }], ["thick", { thick: "thick" }]];
+  const R = {}; let j = 0, Sm = null;
+  const slice = () => {
+    const t0 = performance.now();
+    while (j < J.length && performance.now() - t0 < 8) {
+      if (!Sm) Sm = pMake(Object.assign({}, B, J[j][1]));
+      for (let i = 0; i < 4 && Sm.k < pSteps(); i++) pStep(Sm);
+      if (Sm.k >= pSteps()) { R[J[j][0]] = { ab: Sm.ab, ba: Sm.ba, net: Sm.ab - Sm.ba }; Sm = null; j++; }
+    }
+    if (j < J.length) { setTimeout(slice, 30); return; }
+    const bad = [], at = (lv, id) => lv + " task " + (TASKS[lv].findIndex(t => t.id === id) + 1) + ": ";
+    const X = P_EXPECT;
+    if (R.small.ab !== X.smallAB || R.small.ba !== X.smallBA) bad.push(at("easy", "net") + "the model's small-difference run does not match");
+    if (R.warm.ab !== X.warmAB || R.warm.ba !== X.warmBA || R.warm.net !== X.warm) bad.push(at("hard", "rate") + "the model's warm run does not match");
+    if (!(R.cold.net < R.base.net && R.base.net < R.warm.net)) bad.push(at("easy", "temp") + "the model's net movement must rise with temperature");
+    if (!(R.small.net < R.base.net && R.areaS.net < R.base.net && R.thick.net < R.base.net)) bad.push(at("easy", "factors") + "the model's factor rules do not hold");
+    if (!(Math.abs(R.none.net) <= 8 && R.none.ab > 100 && R.none.ba > 100)) bad.push(at("easy", "even") + "the model's even run is not even");
+    if (!(R.base.ba > 0 && R.base.net > 0)) bad.push(at("hard", "both") + "the model must show crossings both ways");
+    pCheckSliced.result = { R, bad };
+    if (done) done(bad, R);
+  };
+  setTimeout(slice, 0);
+}
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; if (!M.sim) pNew(); renderTry(); drawAll(); }
+function newS() { const t = task;
+  return { choice: null, gap: {}, val: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
+    rowOrder: t.rows ? t.rows.map(r => shuffled((r[3] || t.bank).length)) : [] }; }
+function loadTask() {
+  nqHideEnd();
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; pNew(); drawAll();
+}
+function renderAnswer() {
+  const a = $("answer"), t = task, fr = t.frame ? `<p class="frame">${esc(t.frame)}</p>` : "";
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="frame">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
+    a.innerHTML = fr + (t.fixed || t.rows[0][3] ? "" : `<p class="small" style="margin:0 0 6px">Word bank: ${S.order.map(i => esc(t.bank[i])).join(" · ")}</p>`) +
+      `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.fixed ? (r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
+    const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  } else if (t.kind === "build") {
+    a.innerHTML = fr + `<div class="opts build" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">+</span><span>${esc(t.stm[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.i, j = S.list.indexOf(i); if (j >= 0) S.list.splice(j, 1); else S.list.push(i); paintBuild(); }));
+  }
+}
+function hideWrongStm() { document.querySelectorAll("#answer .opts.build .opt").forEach(b => { if (!task.stm[+b.dataset.i].c) b.hidden = true; }); }
+function paintBuild() { document.querySelectorAll("#answer .opt").forEach(b => { const j = S.list.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? String(j + 1) : "+"; }); }
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+    : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
+}
+const rk = s => s.o || s.c;
+function rightBuild(t) { return t.stm.map((s, i) => [s, i]).filter(x => x[0].c).sort((a, b) => a[0].c - b[0].c).map(x => x[1]); }
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(r => { S.gap[r[0]] = r[2]; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.gap[s.dataset.r]; }); }
+  else if (t.kind === "num") { S.val = num(t.ans()); const inp = $("numIn"); if (inp) inp.value = S.val; }
+  else if (t.kind === "build") { S.list = rightBuild(t); paintBuild(); hideWrongStm(); }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+
+/* ===== Marking ===== */
+function parseNum(s) {
+  s = String(s || "").trim().replace(/\s+/g, "").replace(/^[×x]/i, ""); if (/^\d{1,3}(,\d{3})+(\.\d+)?/.test(s)) s = s.replace(/,/g, ""); else s = s.replace(",", ".");
+  const fm = s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)/); if (fm) return parseFloat(fm[1]) / parseFloat(fm[2]);
+  const m = s.match(/^-?\d*\.?\d+/); return m ? parseFloat(m[0]) : NaN;
+}
+const workHTML = t => t.working ? `<ol class="ms">${t.working().map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : "";
+const msHTML = t => t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+function buildMarks(t, list) {
+  const got = list.map(i => t.stm[i]).filter(s => s.c), bad = list.map(i => t.stm[i]).filter(s => !s.c), all = t.stm.filter(s => s.c);
+  const inOrder = got.every((s, i) => !i || rk(s) >= rk(got[i - 1]));
+  return { got, bad, all, inOrder, missing: all.filter(s => !got.includes(s)) };
+}
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const n = t.rows.filter(([k, , a]) => S.gap[k] !== a).length;
+    return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]} …: ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
+  if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
+    const a = t.ans(); if (near(v, a, t.tol)) return { ok: true, html: esc("Correct.") + workHTML(t) };
+    const hit = t.wrongs.find(([x]) => near(v, x, t.tol)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
+  if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want." };
+    const b = buildMarks(t, S.list);
+    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
+    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };
+    if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. Start with the sentence starter.") };
+    return { ok: true, html: esc("Correct. " + t.explain) + msHTML(t) }; }
+  return { skip: "" };
+}
+const STUCKW = { words: "Key words", maths: "Equations" };
+function msgStuck() { const k = task.stuck; if (!k) return "";
+  if (support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
+function bump() { nqScore(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
+    if (task.finish) { stopAll(); task.finish(M); }
+    drawAll(); renderSupport();
+  } else { p.wrong++; nqMiss(); streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; nqMiss(); msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
+  if (t.kind === "num") return esc(`Answer: ${num(t.ans())}${t.unit ? " " + t.unit : ""}.`) + workHTML(t);
+  return esc("Answer: " + t.explain);
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(); if (task.finish) { stopAll(); task.finish(M); } drawAll(); renderSupport();
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+/* ===== Instructions tour ===== */
+const TOUR = [
+  { el: "#tabs", tab: "part", text: "Four parts: particles diffusing across a membrane, agar cubes, surface area to volume ratio, and exchange surfaces in living things." },
+  { el: "#pcvWrap", tab: "part", text: "Side A starts with lots of particles; side B with few. The particles can only cross through the pores in the membrane." },
+  { el: "#pGo", tab: "part", text: "Start a 20 second run. Watch the counters: particles cross both ways.", do: "pstart", doText: "Press Start." },
+  { el: "#pSet", tab: "part", text: "Change one thing at a time: temperature, the difference in concentration, the membrane area or its thickness. Each finished run goes into your table." },
+  { el: "#tabs", text: "Agar cubes: a real practical with 1, 2 and 3 cm cubes.", do: "tab-agar", doText: "Press Agar cubes." },
+  { el: "#agsvg", tab: "agar", text: "The agar has an indicator in it. Where the alkali has diffused in, it turns pink. Read the stopwatch and measure the pink layer with the ruler in the close-up." },
+  { el: "#agGo", tab: "agar", text: "Start the stopwatch. It pauses each time a cube turns pink all the way through.", do: "agplay", doText: "Press Start." },
+  { el: "#tabs", text: "Surface area to volume ratio.", do: "tab-sav", doText: "Press Surface area : volume." },
+  { el: "#shPick", tab: "sav", text: "Choose a shape. Each small square is 1 cm × 1 cm. Work out the surface area and the volume." },
+  { el: "#tabs", text: "Exchange surfaces in animals and plants.", do: "tab-surf", doText: "Press Exchange surfaces." },
+  { el: "#sfPick", tab: "surf", text: "Choose a surface to see what it exchanges and how it is adapted." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-diffusion-and-surface-area", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, Math.min(fbBot - q.clientHeight + 8, ttTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); clearTimeout(msg.t); msg.t = setTimeout(fbOnScreen, reduced() ? 90 : 520); }
+function fbOnScreen() {   // phones: once keepInView has settled, bring the whole message on screen (the question text may go up under the bar)
+  if (mode === "demo") return;
+  const f = $("fb").querySelector(".msg"); if (!f) return;
+  if (window.innerWidth > 900) {   // laptops: scroll the question panel itself
+    const q = $("qpanel"), qr = q.getBoundingClientRect(), r = f.getBoundingClientRect(), top = Math.max(qr.top, $("topbar").getBoundingClientRect().bottom);
+    if (r.bottom <= qr.bottom - 2 && r.top >= top) return;
+    let d = r.bottom - qr.bottom + 8; if (r.top - d < top + 4) d = r.top - top - 4;
+    q.scrollTo({ top: q.scrollTop + d, behavior: reduced() ? "auto" : "smooth" }); return;
+  }
+  const r = f.getBoundingClientRect(), bar = Math.max(0, $("topbar").getBoundingClientRect().bottom), vh = window.innerHeight;
+  if (r.top >= bar + 4 && r.bottom <= vh - 4) return;
+  let d = r.bottom - (vh - 8); if (r.top - d < bar + 8) d = r.top - bar - 8;
+  window.scrollTo({ top: window.scrollY + d, behavior: reduced() ? "auto" : "smooth" });
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; if (st.set) st.set(M); drawAll(); } else if (st.set) { st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Diffusion", "The spreading out of particles, giving a net movement from a higher to a lower concentration. It needs no energy."],
+  ["Net movement", "The overall movement: the number going one way minus the number coming back."],
+  ["Concentration gradient", "The difference in concentration between two places. The bigger (steeper) it is, the faster the diffusion."],
+  ["Partially permeable membrane", "A membrane that lets some particles through (through tiny pores) but not others."],
+  ["Kinetic energy", "The energy a particle has because it is moving. Hotter particles have more and move faster."],
+  ["Surface area to volume ratio", "SA : V. The surface area divided by the volume, written as ? : 1."],
+  ["Exchange surface", "A surface where substances pass into or out of an organism, such as the alveoli or the villi."]];
+function renderSupport() {
+  ["words", "maths"].forEach(k => { $(k + "Box").hidden = !support[k]; });
+  const open = quizOpen(), hideW = open && task.hideWords || [];
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${hideW.includes(w[0]) ? "hidden for this question: try it first." : esc(w[1])}</p>`).join("");
+  $("mathsBox").innerHTML = qh("maths") ? "<h3>Equations</h3><p>Hidden for this question: try it first.</p>" : "<h3>Equations</h3><p>Cube: surface area = 6 × side × side; volume = side × side × side.</p><p>Block: surface area = 2 × (l × w + w × h + l × h); volume = l × w × h.</p>" +
+    "<p>SA : V = surface area ÷ volume, written as ? : 1.</p><p>Rate = amount ÷ time. Percentage = part ÷ whole × 100.</p>";
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Wiring: controls ===== */
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+[["pTemp", "temp", "ptemp"], ["pGrad", "grad", "pgrad"], ["pArea", "area", "parea"], ["pThick", "thick", "pthick"]].forEach(([id, k, lk]) => $(id).addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]"); if (!b) return;
+  if (locked() || lockedPart(lk)) return lockMsg();
+  if (M.p[k] === b.dataset.v) return;
+  M.p[k] = b.dataset.v; pNew(); drawPart(); renderCtl(); if (k === "area" || k === "thick") tried(3);
+}));
+$("pSpeed").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (!b) return; M.pSpeed = +b.dataset.v; drawPart(); });
+$("pGo").addEventListener("click", () => { if (locked() || lockedPart("prun")) return lockMsg(); pStart(); });
+$("pReset").addEventListener("click", () => { if (locked() || lockedPart("prun")) return lockMsg(); pReset(); });
+$("agGo").addEventListener("click", agPlay);
+$("agStep").addEventListener("click", agStep);
+$("agReset").addEventListener("click", agReset);
+$("agStopSw").addEventListener("click", () => { if (lockedPart("agclock")) return lockMsg(); M.ag.stop = !M.ag.stop; renderCtl(); });
+$("agSpeed").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (!b) return; M.ag.speed = +b.dataset.v; drawAgar(); });
+$("agZoom").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (!b) return; if (lockedPart("agzoom")) return lockMsg(); M.ag.zoom = +b.dataset.v; drawAgar(); tried(5); });
+$("agTab").addEventListener("click", e => { const b = e.target.closest("button[data-rec]"); if (!b) return; M.ag.rec[+b.dataset.rec] = M.ag.t; drawAgar(); });
+$("shPick").addEventListener("click", e => { const b = e.target.closest("button[data-sh]"); if (!b) return; if (lockedPart("sh")) return lockMsg(); M.sh = b.dataset.sh; drawSav(); tourSignal("sh");
+  if (["c1", "c3"].includes(M.sh)) { TRIED.c13 = (TRIED.c13 || 0) | (M.sh === "c1" ? 1 : 2); if (TRIED.c13 === 3) tried(6); } if (M.sh === "sht" || M.sh === "rod") tried(7); });
+$("sfPick").addEventListener("click", e => { const b = e.target.closest("button[data-sf]"); if (!b) return; if (lockedPart("sf")) return lockMsg(); M.surf = b.dataset.sf; drawSurf(); tourSignal("sf");
+  TRIED.sf = Object.assign(TRIED.sf || {}, { [M.surf]: 1 }); if (Object.keys(TRIED.sf).length >= 4) tried(8); if (TRIED.sf.cell && TRIED.sf.alv) tried(9); });
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "easy" || m === "hard") bankNow();
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask(); nqMode();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+if (window.ResizeObserver) {
+  new ResizeObserver(() => { if (pSize() && M.tab === "part") pDraw(); }).observe($("pcv"));
+  let lastW = {};
+  [["agsvg", () => M.tab === "agar" && drawAgar()], ["shsvg", () => M.tab === "sav" && drawSav()], ["sfsvg", () => M.tab === "surf" && drawSurf()]].forEach(([id, f]) =>
+    new ResizeObserver(es => { const w = Math.round(es[0].contentRect.width); if (w && w !== lastW[id]) { lastW[id] = w; f(); } }).observe($(id)));
+}
+const themeObs = new MutationObserver(() => { PV.col = {}; if (M.tab === "part") pDraw(); });
+themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", () => { PV.col = {}; if (M.tab === "part") pDraw(); }); }
+
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+function bankRun() {   // the load-time question-bank check, run after the first paint (bankLater)
+  const errs = bankCheck();
+  pCheckSliced(bad => { if (bad.length) bankFail(bad); });
+  if (errs.length) bankFail(errs);
+}
+function bankFail(errs) {
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = (e.innerHTML ? e.innerHTML : "<b>Question bank error.</b> These questions have been switched off:") + "<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  if (mode !== "demo") { idx = Math.min(idx, LEVELS[level].length - 1); loadTask(); }
+  bump();
+}
+bankLater(); nqTryFold();
+pNew(); bump(); setMode("demo"); renderSupport(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:gcse-diffusion-and-surface-area")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+/* == shared: next-question v4 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026; v4 16 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress.
+   v4: any later write to the feedback box of a finished question (Hint, Check, a tool message) keeps the Next button
+   (nqFbWatch); on phones (<= 600 px wide) level descriptors in the feedback fold into a closed "Show mark scheme" (nqMsFold);
+   on phones nqReveal also brings the top of the feedback back into view when it and Next fit but the top was pushed up. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions"), ast = act && /sticky|fixed/.test(getComputedStyle(act).position);
+      let bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (ast && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)) lim -= act.getBoundingClientRect().height;
+      else if (ast) { const ar = act.getBoundingClientRect(); if (ar.top < innerHeight / 2) bar = Math.max(bar, ar.bottom); }   // v4: one stuck at the top covers the top
+      d = r.bottom + 10 - lim;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+      else {   // v4: Next is on screen but the top of the feedback is hidden (the browser's scroll anchoring can push it up when
+        // the box grows): if the whole message and Next fit, bring its top back into view
+        const m = (row.closest(".msg") || nqFbEl() || row).getBoundingClientRect();
+        if (m.top < bar && r.bottom - m.top + 18 <= lim - bar) window.scrollTo({ top: Math.max(0, scrollY - (bar + 8 - m.top)), behavior: how });
+      }
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+/* v4: the feedback box of a finished question always ends with Next. A tool's Hint or Check (or any other message) can
+   rewrite the box after the question is done, which used to drop the button; this puts it back (no focus move, no scroll).
+   It also folds the mark scheme on phones. A MutationObserver on the box only (no loop): our own changes find nothing to do. */
+var NQ_FBW = false;
+function nqFbWatch() {
+  const fb = nqFbEl(); if (NQ_FBW || !fb || !window.MutationObserver) return; NQ_FBW = true;
+  new MutationObserver(() => {
+    nqMsFold(fb);
+    if (mode === "demo" || fb.querySelector(".nq-row") || !(fb.children.length || fb.textContent.trim())) return;
+    const t = nqT(); if (t && nqIsDone(level, t) && !(document.getElementById("quizPanel") || fb).classList.contains("nq-ended")) nqAfter("finished");
+  }).observe(fb, { childList: true, subtree: true, characterData: true });
+  const mq = nqMsMQ(); if (mq) { const re = () => nqMsFold(fb); if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
+  nqMsFold(fb);
+}
+/* Mark-scheme fold (phones only, <= 600 px wide): level descriptors sit in a closed <details> "Show mark scheme" so the
+   verdict / model answer and Next fit on the screen. A block is folded if the tool marks it with class "nq-ms", or if it is
+   a list whose first item, or a paragraph / span whose text, starts "Level 0-3 (" (the levels of response of the 6-mark
+   questions). A short heading just
+   before it ("Mark scheme", "Levels:") goes in with it. Nothing new is shown: it only wraps what is already in the box.
+   Wider than 600 px the fold is taken out again, so laptops and boards are unchanged. */
+var NQ_MSQ = null;
+function nqMsMQ() { if (!NQ_MSQ && window.matchMedia) NQ_MSQ = matchMedia("(max-width:600px)"); return NQ_MSQ; }
+function nqMsIs(el) {   // tool-marked, or a list / paragraph / span that starts with a level descriptor, "Level 3 (5–6): …"
+  if (el.classList.contains("nq-ms")) return true;
+  const LV = /^\s*Level\s*[0-3]\s*\(/;
+  if (/^(UL|OL)$/.test(el.tagName)) { const li = el.firstElementChild; return !!li && LV.test(li.textContent || ""); }
+  return /^(P|SPAN)$/.test(el.tagName) && !el.querySelector("button,.nq-row") && LV.test(el.textContent || "");
+}
+function nqMsHead(el) {   // a short heading right before the block (only white space between), e.g. <b>Mark scheme</b> or <p><b>Levels:</b></p>
+  let n = el.previousSibling; while (n && n.nodeType === 3 && !n.textContent.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1 || !/^(B|STRONG|P|H3|H4|H5|SPAN)$/.test(n.tagName) || n.classList.contains("nq-ms")) return null;
+  const t = (n.textContent || "").trim();
+  return t && t.length <= 48 && (/mark scheme|levels?\b|marking/i.test(t)) ? n : null;
+}
+function nqMsFold(fb) {
+  const mq = nqMsMQ(), on = !!(mq && mq.matches);
+  if (!on) { fb.querySelectorAll("details.nq-fold").forEach(d => { const inn = d.querySelector(".nq-fold-in");
+      if (inn) while (inn.firstChild) d.parentNode.insertBefore(inn.firstChild, d); d.remove(); }); return; }
+  const all = [...fb.querySelectorAll(".nq-ms, ul, ol, p, span")].filter(el => !el.closest("details") && nqMsIs(el));   // a tool's own <details> fold (e.g. "msd") is left as it is
+  const tops = all.filter(el => !all.some(o => o !== el && o.contains(el)));
+  if (!tops.length) return;
+  const groups = [];   // neighbouring blocks (with their headings) share one fold
+  tops.forEach(el => { const h = nqMsHead(el), first = h || el, g = groups[groups.length - 1];
+    let prev = first.previousSibling; while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+    if (g && prev === g[g.length - 1]) { if (h) g.push(h); g.push(el); } else groups.push(h ? [h, el] : [el]); });
+  groups.forEach(g => {
+    const d = document.createElement("details"), sm = document.createElement("summary"), inn = document.createElement("div");
+    d.className = "nq-fold"; inn.className = "nq-fold-in";
+    sm.innerHTML = '<span class="nq-fs">Show mark scheme</span><span class="nq-fh2">Hide mark scheme</span>';
+    d.append(sm, inn); g[0].parentNode.insertBefore(d, g[0]);
+    let n = g[0];   // move the group, and the white space between its parts, into the fold
+    const last = g[g.length - 1];
+    while (n) { const nx = n.nextSibling; inn.appendChild(n); if (n === last) break; n = nx; }
+  });
+}
+nqTryFold(); nqBar(); nqStickOn(); nqFbWatch();
+/* == end shared: next-question v4 == */
+
+/* == shared: bank-check-later v4 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v4 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Diffusion is the net movement of particles from a higher to a lower concentration. Particles never stop moving.",
+      "It is faster with a bigger difference in concentration, a higher temperature, a larger area and a thinner membrane. Small cubes have a large SA : V."
+    ],
+    "hard": [
+      "Rate = amount ÷ time. A flat or small shape has a large SA : V and a short distance to its middle, so diffusion is enough.",
+      "Diffusion over centimetres is slow, so large organisms need exchange surfaces (large area, thin, blood supply, ventilation) and transport systems."
+    ]
+  };
+  return F[lv] || F.easy;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
