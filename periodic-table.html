@@ -1757,11 +1757,18 @@ function renderTrends(redraw) {
     renderRn();
   }
 }
+/* Writing-frame steps 1-3 (answer-order audit, 18 Nov 2026): each list in one shuffled order per chart set for each page load
+   (step 4's data list was already shuffled), never the authored order, so the right step is not in the same place every time. */
+function frOrd(key, f, list) {
+  const k = key + "|" + f; FR.ord = FR.ord || {};
+  if (!FR.ord[k]) { let o, g = 0; do o = shuffled(list.length); while (list.length > 2 && g++ < 50 && o.every((v, i) => v === i)); FR.ord[k] = o; }
+  return FR.ord[k].map(i => list[i]);
+}
 function renderFrame() {
   const key = CH.set, sel = FR.sel[key] || (FR.sel[key] = { what: "", where: "", how: "", data: "" });
   if (!FR.opts[key]) FR.opts[key] = shuffled(dataOpts(key).length).map(i => dataOpts(key)[i].t);
   const opt = (id, list, v) => { $(id).innerHTML = `<option value="">Choose…</option>` + list.map(x => `<option value="${esc(x)}"${x === v ? " selected" : ""}>${esc(x)}</option>`).join(""); };
-  opt("fWhat", F_WHAT, sel.what); opt("fWhere", F_WHERE, sel.where); opt("fHow", F_HOW, sel.how); opt("fData", FR.opts[key], sel.data);
+  opt("fWhat", frOrd(key, "what", F_WHAT), sel.what); opt("fWhere", frOrd(key, "where", F_WHERE), sel.where); opt("fHow", frOrd(key, "how", F_HOW), sel.how); opt("fData", FR.opts[key], sel.data);
   renderSentence();
   $("fCtl").hidden = mode !== "demo"; $("fMsg").textContent = ""; $("fMsg").className = "vmsg";
 }

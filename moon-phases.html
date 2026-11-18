@@ -1335,6 +1335,21 @@ function applyTaskModel() {
   setScene(t.scene || "phases");
 }
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* Cloze tiles (answer-order audit, 18 Nov 2026): one shuffled order per question and word list for each page load, shared by
+   every gap that uses the list (the tiles don't move when one is pressed), never the authored order or the gaps' answer order
+   (authored, gap 1's answer was first, gap 2's second). */
+const CLOZE_ORD = {};
+function clozeOrd(t, bank) {
+  const key = bank.join("|"), k = level + "|" + t.id + "|" + key;
+  if (!CLOZE_ORD[k]) {
+    const gs = t.gaps.filter(g => g.bank.join("|") === key);
+    let o, g = 0;
+    do o = shuffled(bank.length);
+    while (bank.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || gs.length > 1 && gs.every((x, i) => bank[o[i]] === x.ok)));
+    CLOZE_ORD[k] = o;
+  }
+  return CLOZE_ORD[k].map(i => bank[i]);
+}
 const shuf = arr => shuffled(arr.length).map(i => arr[i]);
 function tileRow(label, items) {
   return `<div class="tiles" role="group" aria-label="${esc(label)}">` + items.map(([v, txt, pressed, extra]) =>
@@ -1363,7 +1378,7 @@ function renderAnswer() {
   }
   if (t.kind === "cloze") {
     const sent = t.parts.map(p => typeof p === "number" ? `<span class="gap">${S.gap[p] ? esc(S.gap[p]) : "gap " + (p + 1)}</span>` : esc(p)).join("");
-    a.innerHTML = `<p class="gapq">${sent}</p>` + t.gaps.map((g, k) => (t.gaps.length > 1 ? `<p class="gaplbl">Gap ${k + 1}:</p>` : "") + tileRow("Gap " + (k + 1), g.bank.map(w => [w, w, S.gap[k] === w]))).join("");
+    a.innerHTML = `<p class="gapq">${sent}</p>` + t.gaps.map((g, k) => (t.gaps.length > 1 ? `<p class="gaplbl">Gap ${k + 1}:</p>` : "") + tileRow("Gap " + (k + 1), clozeOrd(t, g.bank).map(w => [w, w, S.gap[k] === w]))).join("");
     a.querySelectorAll(".tiles").forEach((row, k) => row.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { S.gap[k] = S.gap[k] === b.dataset.v ? null : b.dataset.v; renderAnswer(); })));
     return;
   }

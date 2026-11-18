@@ -1959,6 +1959,21 @@ function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i]
 
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* match: true rows (answer-order audit, 18 Nov 2026): one shuffled order per question for each page load, shared by every row
+   (the list reads the same in each row), never the authored order or the rows' answer order (authored, row 1's answer was
+   first, row 2's second, ...). keepOrder: true keeps a list in authored order where the order is content. */
+const MATCH_ORD = {};
+function matchOrd(t, opts) {
+  const key = opts.join("|"), k = level + "|" + t.id + "|" + key;
+  if (!MATCH_ORD[k]) {
+    const rs = t.rows.filter(r => r.opts.join("|") === key), ans = r => typeof r.ans === "function" ? r.ans() : r.ans;
+    let o, g = 0;
+    do o = shuffled(opts.length);
+    while (opts.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || rs.length > 1 && rs.every((r, i) => opts[o[i]] === ans(r))));
+    MATCH_ORD[k] = o;
+  }
+  return MATCH_ORD[k];
+}
 function loadDemo() {
   task = { kind: "demo" }; S = {};
   J.lock = false; E.lock = false; V.lock = false; scenes = ALL_SCENES.slice(); scene = DEMO.scene;
@@ -1999,7 +2014,7 @@ function renderAnswer() {
   } else if (t.kind === "sel") {
     const bank = t.bank ? `<p class="bankline"><b>Word bank:</b> ${t.bank.map(esc).join(" · ")}</p>` : "";
     a.innerHTML = bank + `<div class="selrows">` + t.rows.map((r, k) => {
-      const order = t.match ? [...r.opts.keys()] : shuffled(r.opts.length);
+      const order = t.keepOrder ? [...r.opts.keys()] : t.match ? matchOrd(t, r.opts) : shuffled(r.opts.length);
       const opts = order.map(i => `<option value="${esc(r.opts[i])}">${esc(r.opts[i])}</option>`).join("");
       const fix = r.line.includes('class="bad"');
       const head = fix ? `<p class="ln">${r.line}</p>` : "";

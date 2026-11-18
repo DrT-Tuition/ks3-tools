@@ -1552,6 +1552,21 @@ function bankCheck() {
 
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* Fixed word lists (fixed: true; answer-order audit, 18 Nov 2026): one shuffled order per question and list for each page load,
+   shared by every row that uses the list, never the authored order or the rows' answer order (the authored order put row 1's
+   answer first, row 2's second, ...). keepOrder: true keeps a list in authored order where the order is content (a number scale). */
+const FIX_ORD = {};
+function fixOrd(t, list) {
+  const key = list.join("|"), k = level + "|" + t.id + "|" + key;
+  if (!FIX_ORD[k]) {
+    const rs = t.rows.filter(r => (r[3] || t.bank || []).join("|") === key);
+    let o, g = 0;
+    do o = shuffled(list.length);
+    while (list.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || rs.length > 1 && rs.every((r, i) => list[o[i]] === r[2])));
+    FIX_ORD[k] = o;
+  }
+  return FIX_ORD[k].map(i => list[i]);
+}
 function loadDemo() {
   task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M;
   if (DEMO_SIM) { W = mk(M.mass); H = Ht = DEMO_SIM.H; clock = DEMO_SIM.clock; joule = DEMO_SIM.joule; graphPts = DEMO_SIM.graphPts; placeAll(); } else resetSim();
@@ -1587,7 +1602,7 @@ function renderAnswer() {
       `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
     a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
   } else if (t.kind === "gaps") {
-    const opts = (r, ri) => { const list = r[3] || t.bank; return t.fixed ? list : S.rowOrder[ri].map(i => list[i]); };
+    const opts = (r, ri) => { const list = r[3] || t.bank; return t.keepOrder ? list : t.fixed ? fixOrd(t, list) : S.rowOrder[ri].map(i => list[i]); };
     a.innerHTML = fr + `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${opts(r, ri).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
     a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
   } else if (t.kind === "num") {

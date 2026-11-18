@@ -1535,6 +1535,19 @@ function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i]
 
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* Gap word bank (answer-order audit, 18 Nov 2026): one shuffled order per question for each page load, used by the Word bank
+   line and every row's list, never the authored order or the rows' answer order (authored, row 1's answer was first, row 2's second). */
+const GAP_ORD = {};
+function gapOrd(t) {
+  const k = level + "|" + t.id;
+  if (!GAP_ORD[k]) {
+    let o, g = 0;
+    do o = shuffled(t.bank.length);
+    while (t.bank.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || t.rows.length > 1 && t.rows.every(([r], i) => t.bank[o[i]] === AFTER[r])));
+    GAP_ORD[k] = o;
+  }
+  return GAP_ORD[k].map(i => t.bank[i]);
+}
 const shuffleKeys = () => shuffled(PKEYS.length).map(i => PKEYS[i]);
 function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; if (!M.bankOrder) M.bankOrder = shuffleKeys(); renderTry(); drawAll(); }
 function newS() { const t = task; return { choice: null, seq: [], sort: {}, gap: {}, order: shuffled(t.options ? t.options.length : t.items ? t.items.length : 0) }; }
@@ -1574,7 +1587,8 @@ function renderAnswer() {
       t.bins.map(([b, w]) => `<button type="button" data-i="${i}" data-b="${b}" aria-pressed="false">${w}</button>`).join("") + `</span></div>`).join("") + `</div>`;
     a.querySelectorAll(".srow button").forEach(b => b.addEventListener("click", () => { S.sort[+b.dataset.i] = b.dataset.b; paintSort(); }));
   } else if (t.kind === "gaps") {
-    a.innerHTML = `<p class="small" style="margin:0 0 6px">Word bank: ${t.bank.join(" · ")}</p><div class="opts">` + t.rows.map(([k, txt]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${t.bank.map(w => `<option value="${w}">${w}</option>`).join("")}</select>.</label>`).join("") + `</div>`;
+    const bank = gapOrd(t);
+    a.innerHTML = `<p class="small" style="margin:0 0 6px">Word bank: ${bank.join(" · ")}</p><div class="opts">` + t.rows.map(([k, txt]) => `<label class="grow">${esc(txt)} <select data-r="${k}" aria-label="${esc(txt)}"><option value="">choose…</option>${bank.map(w => `<option value="${w}">${w}</option>`).join("")}</select>.</label>`).join("") + `</div>`;
     a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
   } else if (t.kind === "goal") {
     const where = { label: "Label", dissect: "Dissect", poll: "Pollinate", germ: "Germinate" }[M.tab];

@@ -1620,7 +1620,7 @@ TASKS.hard = [
     generic: "Number of particles = moles × 6.02 × 10²³.",
     working: () => ["number of molecules = moles × 6.02 × 10²³", "= 0.5 × 6.02 × 10²³", `= ${sform(.5 * AVO)} molecules`],
     hints: ["One mole is 6.02 × 10²³ molecules.", "0.5 mol is half a mole.", "0.5 × 6.02 × 10²³: halve the 6.02 and keep × 10²³."] },
-  { id: "balmass", kind: "gaps", fixed: true, text: "(HT) 5.4 g of aluminium reacts with 4.8 g of oxygen, O₂, to make 10.2 g of aluminium oxide, Al₂O₃. Use moles to find the balancing numbers: …Al + …O₂ → …Al₂O₃",
+  { id: "balmass", kind: "gaps", fixed: true, keepOrder: true, text: "(HT) 5.4 g of aluminium reacts with 4.8 g of oxygen, O₂, to make 10.2 g of aluminium oxide, Al₂O₃. Use moles to find the balancing numbers: …Al + …O₂ → …Al₂O₃",
     frame: "Moles = mass ÷ Mr. Then divide each by the smallest number of moles. Ar: Al = 27, O = 16.",
     setup: SU.mr("Al2O3"), tabs: ["mr"], hide: ["mr", "mk"], lock: ["mf"], stuck: "maths",
     rows: [["a", "Al", "4"], ["b", "O₂", "3"], ["c", "Al₂O₃", "2"]], bank: ["1", "2", "3", "4", "5", "6"],
@@ -1726,6 +1726,21 @@ function bankCheck() {
 }
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* Fixed word lists (fixed: true; answer-order audit, 18 Nov 2026): one shuffled order per question and list for each page load,
+   shared by every row that uses the list, never the authored order or the rows' answer order (the authored order put row 1's
+   answer first, row 2's second, ...). keepOrder: true keeps a list in authored order where the order is content (a number scale). */
+const FIX_ORD = {};
+function fixOrd(t, list) {
+  const key = list.join("|"), k = level + "|" + t.id + "|" + key;
+  if (!FIX_ORD[k]) {
+    const rs = t.rows.filter(r => (r[3] || t.bank || []).join("|") === key);
+    let o, g = 0;
+    do o = shuffled(list.length);
+    while (list.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || rs.length > 1 && rs.every((r, i) => list[o[i]] === r[2])));
+    FIX_ORD[k] = o;
+  }
+  return FIX_ORD[k].map(i => list[i]);
+}
 function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; M = DEMO_M; renderTry(); drawAll(); $("lockNote").hidden = true; }
 function newS() { const t = task;
   return { choice: null, gap: {}, val: "", order: shuffled(t.options ? t.options.length : t.bank ? t.bank.length : 0),
@@ -1761,7 +1776,7 @@ function renderAnswer() {
     a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
-    a.innerHTML = fr + `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.fixed ? (r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.innerHTML = fr + `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.keepOrder ? (r[3] || t.bank) : t.fixed ? fixOrd(t, r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
     a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
   } else if (t.kind === "num") {
     a.innerHTML = fr + (t.note ? `<p class="frame">${esc(t.note)}</p>` : "") + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin${t.sf ? " wide" : ""}" id="numIn" type="text" inputmode="${t.sf ? "text" : "decimal"}" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;

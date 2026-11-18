@@ -2000,6 +2000,21 @@ function bankCheck() {
 }
 /* ===== Task loading ===== */
 function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* Fixed word lists (fixed: true; answer-order audit, 18 Nov 2026): one shuffled order per question and list for each page load,
+   shared by every row that uses the list, never the authored order or the rows' answer order (the authored order put row 1's
+   answer first, row 2's second, ...). keepOrder: true keeps a list in authored order where the order is content (a number scale). */
+const FIX_ORD = {};
+function fixOrd(t, list) {
+  const key = list.join("|"), k = level + "|" + t.id + "|" + key;
+  if (!FIX_ORD[k]) {
+    const rs = t.rows.filter(r => (r[3] || t.bank || []).join("|") === key);
+    let o, g = 0;
+    do o = shuffled(list.length);
+    while (list.length > 2 && g++ < 50 && (o.every((v, i) => v === i) || rs.length > 1 && rs.every((r, i) => list[o[i]] === r[2])));
+    FIX_ORD[k] = o;
+  }
+  return FIX_ORD[k].map(i => list[i]);
+}
 function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; HC.reset(M); renderTry(); drawAll(); }
 function newS() { const t = task;
   return { choice: null, gap: {}, val: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
@@ -2033,7 +2048,7 @@ function renderAnswer() {
   } else if (t.kind === "gaps") {
     const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
     a.innerHTML = fr + (t.fixed || t.rows[0][3] ? "" : `<p class="small" style="margin:0 0 6px">Word bank: ${S.order.map(i => esc(t.bank[i])).join(" · ")}</p>`) +
-      `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.fixed ? (r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+      `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.keepOrder ? (r[3] || t.bank) : t.fixed ? fixOrd(t, r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
     a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
   } else if (t.kind === "num") {
     a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
