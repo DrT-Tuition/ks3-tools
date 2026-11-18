@@ -1,0 +1,2123 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Glucose Control</title>
+<!--
+  SCIENCE SPEC — Blood Glucose Control (GCSE: AQA 8461 Biology and 8464 Combined Science Trilogy 4.5.1 homeostasis; 4.5.3.2
+    control of blood glucose concentration, with glucagon and negative feedback as HT). Site placement: KS4 · Biology ·
+    "4.5.3 Hormonal coordination in humans". Foundation and Higher; HT-only content (glucagon, negative feedback) is in Hard and
+    every HT question starts "(HT)". Nothing here is Biology-only: Combined Science has the same content.
+  Built 17 Nov 2026 from the gcse-enzymes-and-ph shell (kit v4). Everything is drawn in code (SVG or HTML); no pictures.
+  Model, in four tabs.
+    1. Body model. A simple body with the small intestine, pancreas, liver and a leg muscle on a blood vessel loop, and a blood
+       glucose meter (0–20 mmol/dm³, pupils read it). Eat a meal / Exercise / Go without food (and Inject insulin for type 1).
+       A small computer model (sim-minutes, time sped up): insulin is released when glucose is above the person's level and makes
+       cells take in glucose (liver and muscle store glycogen); glucagon (HT, shown with the switch) when it falls below about
+       4.8 makes the liver change glycogen into glucose. Type 1: no insulin made; type 2: cells respond weakly. A graph records
+       blood glucose over time. It runs only while something is happening, then stops by itself.
+    2. Glucose tests. Two people after a glucose drink, measured every 30 min: without diabetes 5 → peak 8 at 30 min → back to 5
+       at 120 min; type 1: 9 → peak 17 at 60 min → 13 at 180 min. Draggable time line with dashed guides; no values printed.
+    3. Control system. Stimulus → receptor → coordination centre → effector → response, with the blood glucose example (too low
+       is HT); Negative feedback (HT): the two-way loop.
+    4. Diabetes. Type 1 and type 2: what happens, blood glucose, when it starts / risk factors, treatment. Factual, no blame.
+  While a question is open, anything that would give its answer is hidden (task.hide: body, bodytxt, ctrl, dia, facts; Key words
+    per question) and comes back after a right Check or Show answer.
+  Performance: drawn on demand; the body model uses paceFrame (capped, time-based) and stops by itself; 0 rAF when idle.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+.rplabel{margin:6px 0 0;font-size:16px;font-weight:700;color:var(--accent)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 6px;line-height:1.25}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:10px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene .ax{stroke:var(--ink);stroke-width:2.4;fill:none}
+.scene .gr{stroke:var(--grid);stroke-width:1}
+.scene .tag{fill:var(--tagbg);stroke:var(--tagline);stroke-width:1.5}
+.scene .shine{fill:rgba(255,255,255,.38)}
+.scene .lcd{fill:#1E252E;stroke:var(--metal-edge);stroke-width:2}
+.scene .lcdt{fill:#9EF0B4!important;font-variant-numeric:tabular-nums;font-weight:700}
+.scene .acc{fill:var(--accent)!important;font-weight:700}
+.scene .bold{font-weight:700}
+.scene .pedge{stroke:var(--particle-edge)}
+.scene .enz{fill:var(--enz);stroke:var(--particle-edge);stroke-width:2.5;stroke-linejoin:round}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.btn:disabled,.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .warn{color:var(--bad);font-weight:700}
+.readout .okc{color:var(--good);font-weight:700}
+.readout ul{margin:2px 0 0;padding-left:22px}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.small{font-size:16px;color:var(--muted);margin:0}
+.frame{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-left:4px solid var(--accent);border-radius:6px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.status{font-size:16px;font-weight:700;color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none;min-width:1.2em}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.opts.build .opt[aria-pressed="true"]::after{content:"✓ in answer"}
+.grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.grid2 .grow{justify-content:space-between}
+@media (max-width:420px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.unit{font-weight:700}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.ms{margin:6px 0 0;padding-left:20px;font-size:16px}
+@media (max-width:560px){.seg button{padding:8px 10px;font-size:15px}.tabs button{font-size:15px;padding:8px 3px}
+  .rt{font-size:15px}.cnt{min-width:40px}.meanin{width:3.9em}.stp{font-size:14px;padding:6px 9px}}
+@media (min-width:901px) and (max-height:820px){
+  .model{gap:8px}.model .seg button{min-height:40px;padding:6px 12px}.model .readout{padding:6px 10px}.model .readout .r2{font-size:16px}
+  .model .stp{min-height:40px;padding:5px 10px}
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:5px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:4px 8px;font-size:16px}
+  .qpanel .frame{padding:4px 8px;font-size:15px}
+}
+@media (min-width:901px) and (max-height:820px){#demoPanel{gap:8px}#demoPanel .try{gap:2px}#demoPanel .newhere{padding:6px 10px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
+/* ---- Blood glucose control: body model, meter, glucose test graph, control system, diabetes ---- */
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tabs button{font-size:16px;padding:9px 4px;line-height:1.2}
+.seg.sm button{padding:8px 12px}
+.btn.go{min-height:46px}
+.sscene{position:relative;min-width:0}
+.scene [tabindex]{outline:none}
+#gsvg:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.scene .drag{cursor:grab;touch-action:none}
+#gsvg{touch-action:none;cursor:ew-resize}
+.cnote{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-radius:8px}
+.hidmsg{margin:0;font-size:16px;padding:10px 12px;border:1px dashed var(--accent);border-radius:8px;background:var(--surface)}
+:root{--body:#F4EEE8;--body-edge:#8A7A6A;--liver:#B9674F;--liver-edge:#6E3424;--stom:#EDB9A6;--stom-edge:#9A5F4C;--panc:#F0CE86;--panc-edge:#9A7A34;
+  --gut:#E9A99A;--gut-edge:#9A5F4C;--musc:#D2705F;--musc-edge:#7E2F24;--ves:#C0392B;--vesi:#F6CBC5;--glu:#E3A92B;--glu-edge:#6B4A06;--ins:#2D5B8C;--gcn:#C2571A;
+  --gly:#5E3A86;--mfill:#E3A92B;--mtube:#FFFFFF;--mband:#CFEBD8;--trl:#14243D;--gn:#2D5B8C;--gt:#C2571A;--gr2:#DFE5EC;--tline:#2E7D4F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--body:#2A3B55;--body-edge:#B9C7D8;--liver:#9A5541;--liver-edge:#F0B7A6;--stom:#8A5A4C;--stom-edge:#F0C2B2;--panc:#9C7F3A;--panc-edge:#F3D78F;
+  --gut:#8E5548;--gut-edge:#F0B9AA;--musc:#9E4A3E;--musc-edge:#F3B0A4;--ves:#FF7A6B;--vesi:#5A2730;--glu:#F5C451;--glu-edge:#FFF2C4;--ins:#8CC4FF;--gcn:#F5A97A;
+  --gly:#C9A6F2;--mfill:#C9952A;--mtube:#14243D;--mband:#1F4A33;--trl:#E9EDF3;--gn:#8CC4FF;--gt:#F5A97A;--gr2:#22344F;--tline:#7FD3A0}}
+:root[data-theme="dark"]{--body:#2A3B55;--body-edge:#B9C7D8;--liver:#9A5541;--liver-edge:#F0B7A6;--stom:#8A5A4C;--stom-edge:#F0C2B2;--panc:#9C7F3A;--panc-edge:#F3D78F;
+  --gut:#8E5548;--gut-edge:#F0B9AA;--musc:#9E4A3E;--musc-edge:#F3B0A4;--ves:#FF7A6B;--vesi:#5A2730;--glu:#F5C451;--glu-edge:#FFF2C4;--ins:#8CC4FF;--gcn:#F5A97A;
+  --gly:#C9A6F2;--mfill:#C9952A;--mtube:#14243D;--mband:#1F4A33;--trl:#E9EDF3;--gn:#8CC4FF;--gt:#F5A97A;--gr2:#22344F;--tline:#7FD3A0}
+/* body model */
+.bcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:stretch}
+#bsvg{height:var(--bh,420px);width:auto;max-width:100%}
+.tcol{display:flex;flex-direction:column;gap:8px;min-width:0;height:var(--bh,420px)}
+.tcol #tscene{flex:1 1 0;min-height:170px;display:flex}
+#tsvg{width:100%;height:100%;min-height:170px}
+.tcol .readout{flex:none}
+.tcol .readout .r1{font-size:17px}.tcol .readout .r2,.tcol .readout .r3{font-size:16px;line-height:1.35}
+@container (max-width:700px){.bcols{grid-template-columns:minmax(0,1fr)}#bsvg{height:auto;width:100%}.tcol{height:auto}.tcol #tscene{flex:none}#tsvg{height:230px}}
+.scene .body{fill:var(--body);stroke:var(--body-edge);stroke-width:2;stroke-linejoin:round}
+.scene .org{stroke-width:2;stroke-linejoin:round}
+.scene .liver{fill:var(--liver);stroke:var(--liver-edge)}
+.scene .stom{fill:var(--stom);stroke:var(--stom-edge)}
+.scene .panc{fill:var(--panc);stroke:var(--panc-edge)}
+.scene .musc{fill:var(--musc);stroke:var(--musc-edge)}
+.scene .striat{fill:none;stroke:var(--musc-edge);stroke-width:1.5;opacity:.6}
+.scene .gut{fill:none;stroke:var(--gut-edge);stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.scene .gutl{fill:none;stroke:var(--gut);stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+.scene .ves{fill:none;stroke:var(--ves);stroke-width:13;stroke-linejoin:round}
+.scene .vesi{fill:none;stroke:var(--vesi);stroke-width:8;stroke-linejoin:round}
+.scene .glu{fill:var(--glu);stroke:var(--glu-edge);stroke-width:1.2}
+.scene .ins{fill:var(--ins);stroke:var(--surface);stroke-width:1}
+.scene .gcn{fill:var(--gcn);stroke:var(--surface);stroke-width:1}
+.scene .gly{fill:var(--gly)}
+.scene .olbl{font-weight:700}
+.scene .lvl{fill:#FFFFFF!important}
+.scene .lead{fill:none;stroke:var(--muted);stroke-width:1.5}
+.scene .mtube{fill:var(--mtube);stroke:var(--ink);stroke-width:2}
+.scene .mband{fill:var(--mband)}
+.scene .mtick{stroke:var(--ink);stroke-width:1.6}
+.scene .mfill{fill:var(--mfill)}
+.scene .mtop{stroke:var(--ink);stroke-width:2.5}
+.scene .acc{fill:var(--accent)!important;font-weight:700}
+/* graphs */
+.scene .gr2{stroke:var(--gr2);stroke-width:1}
+.scene .trl{fill:none;stroke:var(--trl);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.scene .trd{fill:var(--trl)}
+.scene .evl{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.scene .gline{fill:none;stroke-width:3;stroke-linejoin:round}
+.scene .gline.gn{stroke:var(--gn)}.scene .gline.gt{stroke:var(--gt);stroke-dasharray:10 4}
+.scene .gpt.gn{fill:var(--gn)}.scene .gpt.gt{fill:var(--gt)}
+.scene .glab{font-weight:700}.scene .glab.gn{fill:var(--gn)}.scene .glab.gt{fill:var(--gt)}
+.scene .tline{stroke:var(--tline);stroke-width:2.5}
+.scene .tguide{stroke:var(--tline);stroke-width:1.8;stroke-dasharray:6 4}
+.scene .tcross{fill:var(--surface);stroke:var(--tline);stroke-width:2.5}
+.scene .tknob{fill:var(--tline);stroke:var(--surface);stroke-width:2}
+.scene .hit{fill:transparent;stroke:none}
+#gsvg{height:var(--gh,340px)}
+@container (max-width:700px){#gsvg{height:320px}}
+.swl{display:inline-block;width:22px;height:0;border-top:3px solid var(--gn);margin:0 2px 3px 0;vertical-align:middle}
+.swl.t{border-top:3px dashed var(--gt)}
+.tread{font-weight:700;color:var(--tline);font-variant-numeric:tabular-nums}
+/* control system */
+.pflow{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}
+.pbox{flex:1 1 130px;display:grid;gap:4px;align-content:start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+.pbox b{color:var(--accent);font-size:17px}
+.pbox .pex{border-top:1px dashed var(--line);padding-top:4px}
+.pbox.on{border:3px solid var(--tline);padding:6px 8px}
+.parr{align-self:center;font-size:22px;font-weight:700;color:var(--muted)}
+@container (max-width:700px){.pflow{flex-direction:column}.pbox{flex:none}.parr{transform:rotate(90deg);align-self:center;line-height:1}}
+.loopwrap #lsvg{height:var(--lh,420px);width:auto;max-width:100%;margin:0 auto}
+@container (max-width:700px){.loopwrap #lsvg{height:auto;width:100%}}
+.scene .lbox rect{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.scene .lbox.cur rect{stroke:var(--tline);stroke-width:4}
+.scene .lbox.past rect{stroke:var(--tline);stroke-width:2}
+.scene .lbox.dim{opacity:.45}
+.scene .larr{stroke:var(--muted);stroke-width:3;fill:none}
+.scene .larr.cur,.scene .larr.past{stroke:var(--tline)}
+.scene .larr.dim{opacity:.4}
+.scene .lahp{fill:var(--muted)}
+/* diabetes */
+.dcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@container (max-width:640px){.dcards{grid-template-columns:minmax(0,1fr)}}
+.dcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 14px;display:grid;gap:6px;align-content:start}
+.dcard h3{margin:0;font-size:19px;color:var(--accent)}
+.dcard dl{margin:0;display:grid;gap:4px}
+.dcard dt{font-weight:700;font-size:16px}
+.dcard dd{margin:0 0 4px;font-size:16px}
+.dcard .btn{justify-self:start}
+.dnote{grid-column:1 / -1}
+@media (max-width:560px){.tabs button{font-size:15px;padding:8px 2px}}
+#parts .cnote{margin-top:8px}
+@media (max-width:560px){#evReset{order:1}#evFast,#evInj{order:2}#pane-body{gap:6px}#pane-body .controls{gap:6px 8px}#pane-body .btn.go{min-height:44px;padding:8px 12px}}
+@media (max-width:400px){#pane-body .btn.go{font-size:15px;padding:8px 10px}#pane-body .linkbtn{padding-left:4px;padding-right:4px}}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+.qpanel .opt{line-height:1.3}
+@media (max-width:400px){h1{font-size:23px}header{gap:10px}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* (no late overrides) */
+/* == tool: gcse-blood-glucose layout (17 Nov 2026) ==
+   1100 px and wider: a slimmer question panel gives the model more room. The pictures are sized by the screen height
+   (--bh, --gh, --lh), so the controls, the body, the meter, the graph and the readout fit on one screen. */
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+}
+@media (min-width:901px){
+  .model{--bh:min(520px,max(300px,calc(100vh - 380px)));--gh:min(520px,max(260px,calc(100vh - 330px)));--lh:min(520px,calc(100vh - 300px))}
+}
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:10px 16px 12px;gap:8px}
+  .model .pane{gap:8px}
+  .model .controls{gap:6px 10px}
+  .model .btn{padding:8px 14px;min-height:42px}
+  .model .readout{padding:6px 10px}
+  .model{--bh:max(300px,calc(100vh - 318px));--gh:max(260px,calc(100vh - 290px));--lh:calc(100vh - 250px)}
+}
+@media (min-width:901px) and (min-height:821px) and (max-height:960px){
+  .model{--bh:max(300px,calc(100vh - 446px));--lh:calc(100vh - 460px)}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+}
+/* == end tool: gcse-blood-glucose layout == */
+/* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v4 == */
+
+/* == shared: about-model v4 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v4 == */
+
+/* == shared: phone-order v4 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v4 == */
+
+/* == shared: projector v4 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v4 == */
+
+/* == shared: touch v4 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+  .feedback details:not(.nq-fold)>summary{min-height:44px;box-sizing:border-box;padding-top:10px;padding-bottom:6px}   /* a tool's own fold in the feedback (e.g. "msd") */
+}
+/* == end shared: touch v4 == */
+
+/* == shared: polish v4 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v4 == */
+
+/* == shared: next-question v4 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* v4: mark-scheme fold (phones, <= 600 px wide; the JS only folds at that width). A 44 px+ tap target, keyboard focus ring. */
+.feedback details.nq-fold{margin:8px 0 2px;border:1px solid var(--line);border-radius:10px;background:transparent}
+.feedback details.nq-fold>summary{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 12px;cursor:pointer;font-weight:700;list-style:none;border-radius:9px;color:inherit;-webkit-tap-highlight-color:transparent}
+.feedback details.nq-fold>summary::-webkit-details-marker{display:none}
+.feedback details.nq-fold>summary::before{content:"";flex:none;width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.feedback details.nq-fold[open]>summary::before{transform:rotate(90deg)}
+.feedback details.nq-fold>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.feedback details.nq-fold .nq-fh2,.feedback details.nq-fold[open] .nq-fs{display:none}
+.feedback details.nq-fold[open] .nq-fh2{display:inline}
+.feedback .nq-fold-in{padding:0 12px 8px}
+.feedback .nq-fold-in>:first-child{margin-top:0}
+@media (prefers-reduced-motion:no-preference){.feedback details.nq-fold>summary::before{transition:transform .16s ease}}
+/* == end shared: next-question v4 == */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Blood Glucose Control<small><span class="cb-desc">Watch the pancreas, insulin, the liver and muscles keep blood glucose steady, read glucose test graphs, and compare type 1 and type 2 diabetes.</span></small></h1>
+      <p class="rplabel">GCSE Biology 4.5.1, 4.5.3.2 · Combined Science 4.5.1, 4.5.3.2 · Foundation and Higher · HT = Higher tier only</p>
+    </div>
+        <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+        <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Blood Glucose Control</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Blood Glucose Control</b><small>GCSE Biology 4.5.1, 4.5.3.2 · Combined Science 4.5.1, 4.5.3.2 · Foundation and Higher</small></span>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout pj-cols">
+    <section class="card model" aria-label="Blood glucose control model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="body" aria-pressed="true">Body model</button><button type="button" data-tab="test" aria-pressed="false">Glucose tests</button><button type="button" data-tab="ctrl" aria-pressed="false">Control system</button><button type="button" data-tab="dia" aria-pressed="false">Diabetes</button></div>
+
+      <div class="pane" id="pane-body">
+        <div class="controls" id="bodyCtl1">
+          <span class="seg sm" role="group" aria-label="Person" id="persSeg"><button type="button" data-p="none" aria-pressed="true">No diabetes</button><button type="button" data-p="t1" aria-pressed="false">Type 1</button><button type="button" data-p="t2" aria-pressed="false">Type 2</button></span>
+          <button class="sw" type="button" id="gnSw" aria-pressed="false"><span class="dot"></span>Glucagon (HT) <span class="state">off</span></button>
+        </div>
+        <div class="controls" id="bodyCtl2">
+          <button class="btn primary go" type="button" id="evMeal">Eat a meal</button>
+          <button class="btn go" type="button" id="evEx">Exercise</button>
+          <button class="btn go" type="button" id="evFast">Go without food</button>
+          <button class="btn go" type="button" id="evInj" hidden>Inject insulin</button>
+          <button class="linkbtn" type="button" id="evReset">Start again</button>
+        </div>
+        <div class="bcols">
+          <div class="sscene" id="bscene"><svg id="bsvg" class="scene" viewBox="0 0 540 470" role="img" aria-label="Simple body with the gut, pancreas, liver and a leg muscle, joined by a blood vessel, and a blood glucose meter. Not to scale."><g id="bBg"></g><g id="bDyn"></g></svg></div>
+          <div class="tcol"><div class="sscene" id="tscene"><svg id="tsvg" class="scene" role="img" aria-label="Graph of blood glucose concentration against time since you pressed Start again."><g id="tBg"></g><g id="tDyn"></g></svg></div>
+            <div class="readout" id="bread" aria-live="polite"></div></div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-test" hidden>
+        <div class="controls" id="testCtl">
+          <button class="sw" type="button" id="lnN" aria-pressed="true"><span class="dot"></span><span class="swl n" aria-hidden="true"></span>Person without diabetes <span class="state">on</span></button>
+          <button class="sw" type="button" id="lnT" aria-pressed="true"><span class="dot"></span><span class="swl t" aria-hidden="true"></span>Person with type 1 diabetes <span class="state">on</span></button>
+          <span class="tread" id="tOut" aria-live="polite"></span>
+        </div>
+        <div class="sscene" id="gscene"><svg id="gsvg" class="scene" role="img" aria-label="Glucose test graph: blood glucose concentration against time after a glucose drink, with a line for each person. Drag along the graph to move the time line."><g id="gBg"></g><g id="gDyn"></g></svg></div>
+        <p class="cnote" id="testNote">Each person ate nothing overnight. At 0 min they had a glucose drink. Their blood glucose was measured every 30 minutes.</p>
+      </div>
+
+      <div class="pane" id="pane-ctrl" hidden>
+        <div class="controls" id="ctrlCtl">
+          <span class="seg sm" role="group" aria-label="View" id="ctrlView"><button type="button" data-view="parts" aria-pressed="true">Parts of a control system</button><button type="button" data-view="loop" aria-pressed="false">Negative feedback (HT)</button></span>
+          <span class="seg sm" role="group" aria-label="Change" id="loopDir"><button type="button" data-dir="hi" aria-pressed="true">Too high</button><button type="button" data-dir="lo" aria-pressed="false">Too low</button></span>
+          <button class="btn go" type="button" id="loopStep" aria-label="Next step">Step ▶</button>
+        </div>
+        <div id="parts" class="parts"></div>
+        <div id="loopWrap" class="loopwrap" hidden><svg id="lsvg" class="scene" viewBox="0 0 560 400" role="img" aria-label="Negative feedback loop for blood glucose (HT): what happens when it is too high and when it is too low."><g id="lG"></g></svg></div>
+      </div>
+
+      <div class="pane" id="pane-dia" hidden>
+        <div id="dcards" class="dcards"></div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <details class="about"><summary>About this model</summary><p class="limits">The body model is a simple computer model, not real data. Its numbers are chosen to show the main ideas: real blood glucose changes from person to person and from day to day. Time is sped up: an hour takes a few seconds. The organs are not to scale and not in their exact places, the dots stand for far more molecules than are shown, and stores are drawn as small grains. Only a few organs are drawn, and only the liver and one muscle show stores. The glucose test values are typical textbook-style values for two people, measured in mmol/dm³ (the same as mmol/L on a blood glucose meter). A doctor or nurse plans each person’s treatment.</p></details>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <details class="trybox" open><summary class="try-h">Things to try</summary><ul class="try" id="tryList"></ul></details>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 5</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="facts" aria-pressed="false"><span class="dot"></span>Hormone facts <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Graph help <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="factsBox" hidden></div>
+            <div class="support-box" id="graphBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ===== Facts (AQA 8461 / 8464 4.5.1 homeostasis; 4.5.3.2 control of blood glucose concentration, HT: glucagon and negative
+   feedback; type 1 and type 2 diabetes) =====
+   Homeostasis: the regulation of the internal conditions of a cell or organism to keep the conditions right for enzyme action and
+   all cell functions, in response to internal and external changes. Control systems: receptors (detect stimuli), coordination
+   centres (brain, spinal cord, pancreas: receive and process information), effectors (muscles or glands: bring about responses).
+   Blood glucose is monitored and controlled by the pancreas. Too high: the pancreas releases insulin; glucose moves from the blood
+   into the cells; in liver and muscle cells excess glucose is converted to glycogen for storage. (HT) Too low: the pancreas releases
+   glucagon; the liver converts glycogen into glucose, which is released into the blood. (HT) This is a negative feedback cycle.
+   Type 1: the pancreas fails to produce enough insulin; uncontrolled high blood glucose; treated with insulin injections.
+   Type 2: body cells no longer respond to insulin; carbohydrate-controlled diet and exercise; obesity is a risk factor. */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const num = v => { const x = Math.round(v * 1000) / 1000; return String(x); };
+const near = (v, a, tol) => Math.abs(v - a) <= (tol != null ? tol : Math.max(.02 * Math.abs(a), .0005));
+const no69 = s => !/(^|[^0-9.])69([^0-9]|$)/.test(String(s));
+const ABC = "ABCDEFGHIJ";
+const UNIT = "mmol/dm³";
+
+/* ===== Glucose test (glucose-tolerance style): a glucose drink at 0 min, blood glucose measured every 30 min ===== */
+const GTT = {
+  n: { name: "Person without diabetes", pts: [[0, 5], [30, 8], [60, 7], [90, 6], [120, 5], [150, 5], [180, 5]] },
+  t: { name: "Person with type 1 diabetes", pts: [[0, 9], [30, 13], [60, 17], [90, 16], [120, 15], [150, 14], [180, 13]] }
+};
+const GT_MAX = 180, GY_MAX = 20;
+function gval(k, t) { const P = GTT[k].pts; if (t <= P[0][0]) return P[0][1];
+  for (let i = 1; i < P.length; i++) if (t <= P[i][0]) { const [a, va] = P[i - 1], [b, vb] = P[i]; return va + (vb - va) * (t - a) / (b - a); } return P[P.length - 1][1]; }
+const gpeak = k => GTT[k].pts.reduce((b, p) => p[1] > b[1] ? p : b);
+const gback = k => { const P = GTT[k].pts, s = P[0][1]; const p = P.find((q, i) => i > 0 && q[0] > gpeak(k)[0] && q[1] <= s); return p ? p[0] : null; };
+
+/* ===== Body model: a simple computer model in sim-minutes. Each person settles at their own level (gb); insulin (made by the
+   pancreas when glucose is above that level) makes cells take up glucose; liver and muscle store half each as glycogen.
+   Glucagon (made when glucose falls below about 4.8) makes the liver turn glycogen into glucose. Type 1: no insulin is made
+   (an injection adds some); type 2: insulin is made but cells respond weakly. Values are chosen to show the ideas. ===== */
+const PERS = {
+  none: { gb: 5, a: .6, sens: 1, name: "No diabetes", long: "a person without diabetes" },
+  t1: { gb: 9, a: 0, sens: 1, name: "Type 1 diabetes", long: "a person with type 1 diabetes (no insulin injection yet)" },
+  t2: { gb: 7, a: .6, sens: .3, name: "Type 2 diabetes", long: "a person with type 2 diabetes" }
+};
+const K = { ka: .022, kd: .003, kI: .03, kN: .10, meal: 8, ex: .05, fast: .008, tI: 14, tN: 6, inj: 1.0, tD: 70, st: .07, exMin: 60, fastMin: 720 };
+function freshSim(p) { return { p, G: PERS[p].gb, gut: 0, I: 0, N: 0, D: 0, L: .6, Mu: .6, ex: 0, fast: 0, t: 0, A: 0, up: 0, rel: 0, hep: 0, It: 0 }; }
+function simStep(s, dt) {
+  const P = PERS[s.p];
+  const A = K.ka * s.gut; s.gut = Math.max(0, s.gut - A * dt);
+  const tI = clamp((s.G - P.gb) * P.a, 0, 3); s.I += (tI - s.I) * dt / K.tI;
+  const It = s.I + s.D; s.D -= s.D * dt / K.tD; if (s.D < 1e-4) s.D = 0;
+  const tN = clamp((4.9 - s.G) * 4, 0, 1); s.N += (tN - s.N) * dt / K.tN;
+  const up = K.kI * P.sens * It * Math.max(0, s.G - 3);
+  const rel = K.kN * s.N * (s.L > .02 ? 1 : 0);
+  const ex = s.ex > 0 ? K.ex : 0, fu = s.fast > 0 ? K.fast : 0;
+  /* diabetes while fasting: with little or no effective insulin the liver keeps releasing glucose from its glycogen, so blood
+     glucose stays at the person's own (high) level instead of falling into the normal band */
+  const hep = s.p !== "none" && fu > 0 && s.L > .02 ? fu : 0;
+  s.G = clamp(s.G + (A - up + K.kd * (P.gb - s.G) - ex - fu + rel + hep) * dt, 2, 22);
+  s.L = clamp(s.L + (up * .5 - rel - hep) * dt * K.st, 0, 1);
+  s.Mu = clamp(s.Mu + (up * .5 * K.st - (ex ? .005 : 0)) * dt, 0, 1);
+  if (s.ex > 0) s.ex = Math.max(0, s.ex - dt); if (s.fast > 0) s.fast = Math.max(0, s.fast - dt);
+  s.t += dt; s.A = A; s.up = up; s.rel = rel; s.hep = hep; s.It = It;
+}
+const simQuiet = s => s.gut < .02 && s.ex <= 0 && s.fast <= 0 && s.D < .02 && Math.abs(s.G - PERS[s.p].gb) < .06 && s.I < .03 && s.N < .03;
+const simSpeed = s => s.fast > 0 && s.gut < .3 && s.ex <= 0 ? 100 : 25;   // sim-minutes per second
+const fmtClock = t => { const m = Math.round(t), h = Math.floor(m / 60), r = m % 60; return `${h} h ${String(r).padStart(2, "0")} min`; };
+
+/* ===== State ===== */
+function freshM() { return { tab: "body", p: "none", sim: freshSim("none"), trace: [[0, PERS.none.gb]], ev: [], gn: false, view: "parts", dir: "hi", lstep: 0, lnN: true, lnT: true, tcur: 90, note: "" }; }
+const support = { words: false, facts: false, graph: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {}, TASKS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M, lock = "";
+let anim = null;
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const PKEY = "ks3tools-progress:gcse-blood-glucose";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };
+const locked = () => mode !== "demo" && !!lock;
+const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open and unanswered: hide anything that explains its answer
+const qh = k => quizOpen() && !!task.hide && task.hide.includes(k);   // hide this part of the model for the open question
+const HIDDEN = "Hidden for this question: try it first. It comes back when you have answered (or pressed Show answer).";
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
+
+/* ===== Drawing helpers ===== */
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+/* ===== Body model picture (viewBox 540 × 470): body, organs, blood vessel loop, meter, key ===== */
+const BW = 540, BH = 470;
+const VES = [[104, 104], [248, 104], [248, 404], [208, 404], [208, 300], [104, 300], [104, 104]];   // the blood vessel loop
+const VLEN = (() => { let s = 0; for (let i = 1; i < VES.length; i++) s += Math.hypot(VES[i][0] - VES[i - 1][0], VES[i][1] - VES[i - 1][1]); return s; })();
+function vesAt(u) { let d = ((u % 1) + 1) % 1 * VLEN;
+  for (let i = 1; i < VES.length; i++) { const [a, b] = [VES[i - 1], VES[i]], l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d <= l) return [a[0] + (b[0] - a[0]) * d / l, a[1] + (b[1] - a[1]) * d / l]; d -= l; }
+  return VES[0]; }
+/* the meter: upright beside the body on laptops; across the bottom on phones (BL.tall), so its numbers stay big enough */
+const BL = { tall: false };
+function blCheck() { const w = $("pane-body").getBoundingClientRect().width, t = w > 0 && w < 520; if (t !== BL.tall) { BL.tall = t; setAttr($("bsvg"), "viewBox", t ? "0 0 400 586" : "0 0 540 470"); $("bBg")._h = null; $("bDyn")._h = null; return true; } return false; }
+const MT = { x: 452, w: 28, y0: 424, y1: 64 };   // upright tube: 0 at y0, 20 at y1
+const MH = { x0: 22, x1: 382, y: 484, h: 26 };    // tube across: 0 at x0, 20 at x1
+const my = g => MT.y0 - (MT.y0 - MT.y1) * clamp(g, 0, 20) / 20;
+const mx = g => MH.x0 + (MH.x1 - MH.x0) * clamp(g, 0, 20) / 20;
+const F15 = () => BL.tall ? 16 : 15;
+function meterBg() {
+  let o = "";
+  if (!BL.tall) {
+    o += T_(MT.x - 4, 22, "Blood glucose", 16, 'class="olbl" text-anchor="middle"') + T_(MT.x - 4, 42, `(${UNIT})`, F15(), 'class="mut" text-anchor="middle"');
+    o += `<rect class="mband" x="${MT.x - 4}" y="${my(7)}" width="${MT.w + 8}" height="${my(4) - my(7)}"/>`;
+    o += `<rect class="mtube" x="${MT.x}" y="${MT.y1 - 6}" width="${MT.w}" height="${MT.y0 - MT.y1 + 12}" rx="10"/>`;
+    for (let g = 0; g <= 20; g++) { const y = my(g), big = g % 2 === 0; o += `<path class="mtick" d="M${MT.x - (big ? 12 : 7)} ${f1(y)}H${MT.x}"/>`; if (big) o += T_(MT.x - 16, y + 5, String(g), F15(), 'class="mnum" text-anchor="end"'); }
+    o += `<path class="lead" d="M${MT.x + MT.w + 6} ${f1(my(7))}h8v${f1(my(4) - my(7))}h-8"/>` + T_(MT.x + MT.w + 26, (my(4) + my(7)) / 2, "normal", F15(), `class="mut" text-anchor="middle" transform="rotate(-90 ${MT.x + MT.w + 26} ${f1((my(4) + my(7)) / 2)})" dy="5"`);
+    return o;
+  }
+  const y = MH.y;
+  o += T_(MH.x0 - 6, y - 32, `Blood glucose (${UNIT})`, 16, 'class="olbl"');
+  o += `<rect class="mband" x="${mx(4)}" y="${y - 6}" width="${mx(7) - mx(4)}" height="${MH.h + 12}"/>` + T_((mx(4) + mx(7)) / 2, y - 10, "normal", 16, 'class="mut" text-anchor="middle"');
+  o += `<rect class="mtube" x="${MH.x0 - 8}" y="${y}" width="${MH.x1 - MH.x0 + 16}" height="${MH.h}" rx="10"/>`;
+  for (let g = 0; g <= 20; g++) { const x = mx(g), big = g % 2 === 0; o += `<path class="mtick" d="M${f1(x)} ${y + MH.h}v${big ? 10 : 6}"/>`; if (big) o += T_(x, y + MH.h + 27, String(g), 16, 'class="mnum" text-anchor="middle"'); }
+  return o;
+}
+function meterDyn(G) {
+  if (!BL.tall) { const y = my(G); return `<rect class="mfill" x="${MT.x + 4}" y="${f1(y)}" width="${MT.w - 8}" height="${f1(MT.y0 + 2 - y)}" rx="4"/><path class="mtop" d="M${MT.x - 2} ${f1(y)}H${MT.x + MT.w + 2}"/>`; }
+  const x = mx(G); return `<rect class="mfill" x="${MH.x0 - 2}" y="${MH.y + 4}" width="${f1(x - MH.x0 + 2)}" height="${MH.h - 8}" rx="4"/><path class="mtop" d="M${f1(x)} ${MH.y - 2}V${MH.y + MH.h + 2}"/>`;
+}
+const FLUX = {   // short paths for moving dots: [from, to]
+  abs: [[176, 284], [176, 300]], liv: [[104, 160], [136, 164]], mus: [[246, 344], [230, 352]], rel: [[134, 150], [104, 140]],
+  hor: [[224, 196], [248, 196]]
+};
+const ORG = {
+  liver: "M94 118Q140 106 184 120Q190 142 170 158Q142 180 102 178Q86 150 94 118Z",
+  stomach: "M194 114Q214 104 232 116Q244 140 236 164Q222 186 194 178Q182 170 188 160Q206 156 206 140Q202 126 194 114Z",
+  pancreas: "M140 198Q150 186 176 190Q206 192 224 188Q232 196 222 204Q196 210 170 208Q148 210 140 198Z",
+  gut: "M138 226H216Q228 236 216 246H142Q130 256 142 266H216Q228 276 216 286H138"
+};
+const BODY = "M175 14a32 32 0 1 1-0.1 0ZM162 76h26v10h-26ZM122 84Q175 76 228 84L262 94Q276 102 278 122L290 252Q292 264 280 266L270 264L262 150L262 300Q262 314 258 318L258 430L196 430L190 318L160 318L152 430L100 430L96 318Q90 312 90 300L88 150L80 264L70 266Q58 264 60 252L72 122Q74 102 88 94Z";
+function bodyBg() {
+  let o = `<path class="body" d="${BODY}"/>`;
+  o += `<path class="org liver" d="${ORG.liver}"/><path class="org stom" d="${ORG.stomach}"/><path class="org panc" d="${ORG.pancreas}"/>`;
+  o += `<path class="gut" d="${ORG.gut}"/><path class="gutl" d="${ORG.gut}"/>`;
+  o += `<ellipse class="org musc" cx="228" cy="352" rx="14" ry="40"/>` + [338, 352, 366].map(y => `<path class="striat" d="M218 ${y}q10 -4 20 0"/>`).join("");
+  o += `<path class="ves" d="M${VES.map(p => p.join(" ")).join("L")}Z"/><path class="vesi" d="M${VES.map(p => p.join(" ")).join("L")}Z"/>`;
+  /* labels: inside the liver, and with leader lines on the right */
+  o += T_(140, 138, "Liver", 16, 'class="olbl lvl" text-anchor="middle"');
+  const lead = (x0, y0, y, t1, t2) => `<path class="lead" d="M${x0} ${y0}L292 ${y}"/>` + T_(296, y + 5, t1, 16, 'class="olbl"') + (t2 ? T_(296, y + 23, t2, 16, 'class="olbl"') : "");
+  o += lead(234, 132, 128, "Stomach") + lead(226, 196, 192, "Pancreas") + lead(220, 266, 248, "Small", "intestine") + lead(244, 330, 320, "Muscle");
+  o += meterBg();
+  /* key along the bottom (two rows on a phone) */
+  const tall = BL.tall, ky0 = tall ? 553 : 458; let x = 8, ky = ky0;
+  const item = (svg, t) => { const s = svg + T_(x + 16, ky + 5, t, F15(), ""); x += 22 + t.length * F15() * .56 + 14; return s; };
+  o += item(`<circle class="glu" cx="${x + 6}" cy="${ky}" r="5.5"/>`, "glucose");
+  o += item(`<path class="ins" d="M${x} ${ky + 5}l6 -11l6 11Z"/>`, "insulin");
+  if (tall) { x = 8; ky += 22; }
+  o += item(`<path class="gcn" d="M${x + 6} ${ky - 7}l6 7l-6 7l-6 -7Z"/>`, "glucagon (HT)");
+  o += item(`<circle class="gly" cx="${x + 3}" cy="${ky - 2}" r="3.2"/><circle class="gly" cx="${x + 9}" cy="${ky + 3}" r="3.2"/>`, "glycogen");
+  return o;
+}
+function lerpP(P, u) { return [P[0][0] + (P[1][0] - P[0][0]) * u, P[0][1] + (P[1][1] - P[0][1]) * u]; }
+function bodyDyn(M, ph) {   // ph: animation phase in seconds (moves the dots only while the model runs)
+  const s = M.sim, gn = M.gn, o = [];
+  const nG = clamp(Math.round(s.G * 2.4), 2, 50), nI = clamp(Math.round(s.It * 7), 0, 18), nN = gn ? clamp(Math.round(s.N * 20), s.N > .05 ? 1 : 0, 12) : 0;
+  const tri = (x, y) => `<path class="ins" d="M${f1(x - 5)} ${f1(y + 4)}l5 -9l5 9Z"/>`, dia = (x, y) => `<path class="gcn" d="M${f1(x)} ${f1(y - 6)}l6 6l-6 6l-6 -6Z"/>`;
+  for (let i = 0; i < nG; i++) { const [x, y] = vesAt(i / nG + ph * .05); o.push(`<circle class="glu" cx="${f1(x)}" cy="${f1(y)}" r="4.5"/>`); }
+  for (let i = 0; i < nI; i++) { const [x, y] = vesAt((i + .5) / nI + ph * .05 + .013); o.push(tri(x, y)); }
+  for (let i = 0; i < nN; i++) { const [x, y] = vesAt((i + .25) / nN + ph * .05 + .027); o.push(dia(x, y)); }
+  const flow = (P, n, cls) => { for (let i = 0; i < n; i++) { const u = (i / n + ph * .6) % 1, [x, y] = lerpP(P, u);
+    o.push(cls === "ins" ? tri(x, y) : cls === "gcn" ? dia(x, y) : `<circle class="glu" cx="${f1(x)}" cy="${f1(y)}" r="4"/>`); } };
+  flow(FLUX.abs, clamp(Math.round(s.A * 22), 0, 4), "glu");
+  flow(FLUX.liv, clamp(Math.round(s.up * 12), 0, 3), "glu");
+  flow(FLUX.mus, clamp(Math.round(s.up * 12), 0, 3), "glu");
+  { const r = (gn ? s.rel : 0) + (s.hep || 0); flow(FLUX.rel, clamp(Math.round(r * 60), r > .004 ? 1 : 0, 3), "glu"); }
+  if (s.p !== "t1") flow(FLUX.hor, clamp(Math.round(s.I * 3), 0, 3), "ins");
+  if (gn) flow(FLUX.hor.map(p => [p[0], p[1] + 10]), clamp(Math.round(s.N * 5), s.N > .05 ? 1 : 0, 3), "gcn");
+  /* glycogen grains */
+  const nl = Math.round(s.L * 12); for (let i = 0; i < nl; i++) o.push(`<circle class="gly" cx="${116 + (i % 6) * 9}" cy="${152 + Math.floor(i / 6) * 9}" r="3.4"/>`);
+  const nm = Math.round(s.Mu * 8); for (let i = 0; i < nm; i++) o.push(`<circle class="gly" cx="${223 + (i % 2) * 10}" cy="${326 + Math.floor(i / 2) * 15}" r="3.4"/>`);
+  o.push(meterDyn(s.G));
+  /* clock and what is going on */
+  o.push(T_(10, 22, "Clock", F15(), 'class="mut"') + T_(10, 44, fmtClock(s.t), 18, 'class="olbl"'));
+  const doing = [s.ex > 0 ? "Exercising" : "", s.fast > 0 ? "No food" : "", s.gut > .3 ? "Digesting a meal" : ""].filter(Boolean);
+  doing.forEach((d, i) => o.push(BL.tall ? T_(392, 22 + i * 20, d, F15(), 'class="acc" text-anchor="end"') : T_(10, 66 + i * 20, d, F15(), 'class="acc"')));   // phones: top right, clear of the head
+  return o.join("");
+}
+
+/* ===== Graph helpers (pixel-sized SVGs: crisp text at any width) ===== */
+function pxSize(svg) { const r = svg.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; }
+const SZ = { t: { w: 0, h: 0 }, g: { w: 0, h: 0 } };
+function sizeOf(k) { const s = pxSize($(k === "t" ? "tsvg" : "gsvg")); if (s.w > 20 && s.h > 20 && (s.w !== SZ[k].w || s.h !== SZ[k].h)) { SZ[k] = s; return true; } return false; }
+const gfs = w => w < 420 ? 13 : 15;
+
+/* trace: blood glucose over time in the body model */
+function traceSpan(M) { const t = M.sim.t; return t <= 240 ? 240 : t <= 480 ? 480 : t <= 720 ? 720 : t <= 960 ? 960 : 1440; }
+function trGeo() { const w = SZ.t.w || 360, h = SZ.t.h || 400, fs = window.innerWidth > 900 ? 15 : 13; return { w, h, fs, x0: fs * 3.1, x1: w - 12, y0: h - fs * 3.1, y1: fs * 1.6 + 26 }; }
+function traceBg(M) {
+  const G = trGeo(), span = traceSpan(M), X = t => G.x0 + (G.x1 - G.x0) * t / span, Y = g => G.y0 - (G.y0 - G.y1) * g / 20;
+  let o = T_(G.x0 - G.fs * 2.6, G.fs + 4, `Blood glucose (${UNIT})`, G.fs, 'class="bold"');
+  o += `<rect class="mband" x="${f1(G.x0)}" y="${f1(Y(7))}" width="${f1(G.x1 - G.x0)}" height="${f1(Y(4) - Y(7))}"/>`;
+  for (let g = 0; g <= 20; g += 2) { o += `<path class="gr" d="M${f1(G.x0)} ${f1(Y(g))}H${f1(G.x1)}"/>`; if (g % 4 === 0) o += T_(G.x0 - 6, Y(g) + 5, String(g), G.fs, 'text-anchor="end"'); }
+  const hs = span / 60, step = hs <= 4 ? 1 : hs <= 12 ? 2 : 4;
+  for (let h = 0; h <= hs; h += step) { o += `<path class="gr" d="M${f1(X(h * 60))} ${f1(G.y1)}V${f1(G.y0)}"/>` + T_(X(h * 60), G.y0 + G.fs + 6, String(h), G.fs, 'text-anchor="middle"'); }
+  o += T_((G.x0 + G.x1) / 2, G.h - 6, "Time (hours)", G.fs, 'text-anchor="middle" class="bold"');
+  o += `<path class="ax" d="M${f1(G.x0)} ${f1(G.y1)}V${f1(G.y0)}H${f1(G.x1)}"/>`;
+  return o;
+}
+const EVN = { meal: "meal", ex: "exercise", fast: "no food", inj: "insulin" };
+function traceDyn(M) {
+  const G = trGeo(), span = traceSpan(M), X = t => G.x0 + (G.x1 - G.x0) * t / span, Y = g => G.y0 - (G.y0 - G.y1) * g / 20;
+  let o = "";
+  const rows = [-1e9, -1e9, -1e9];   // event labels: first row with room, else none (the dashed line still shows)
+  M.ev.forEach(e => { const x = X(e[0]), t = EVN[e[1]], w = t.length * G.fs * .6 + 6, end = x > G.x1 - w, a = end ? x - w : x, z = end ? x : x + w;
+    o += `<path class="evl" d="M${f1(x)} ${f1(G.y1)}V${f1(G.y0)}"/>`;
+    const r = rows.findIndex(v => v < a - 4); if (r < 0) return; rows[r] = z;
+    o += T_(end ? x - 3 : x + 3, G.y1 - 6 + r * (G.fs + 2), t, G.fs, `class="mut"${end ? ' text-anchor="end"' : ""}`); });
+  const P = M.trace; if (P.length > 1) o += `<path class="trl" d="M${P.map(p => f1(X(p[0])) + " " + f1(Y(p[1]))).join("L")}"/>`;
+  const l = P[P.length - 1]; o += `<circle class="trd" cx="${f1(X(l[0]))}" cy="${f1(Y(l[1]))}" r="4.5"/>`;
+  return o;
+}
+function drawTrace() { if (!SZ.t.w) sizeOf("t"); setAttr($("tsvg"), "viewBox", `0 0 ${SZ.t.w || 360} ${SZ.t.h || 400}`); const k = traceSpan(M) + ":" + SZ.t.w + "x" + SZ.t.h; if ($("tBg")._k !== k) { $("tBg")._k = k; $("tBg")._h = null; } setLayer($("tBg"), traceBg(M)); setLayer($("tDyn"), traceDyn(M)); }
+
+/* glucose test graph */
+function gtGeo() { const w = SZ.g.w || 600, h = SZ.g.h || 320, fs = gfs(w); return { w, h, fs, x0: fs * 3.2, x1: w - (w < 420 ? 16 : 24), y0: h - fs * 3.2, y1: fs * 1.6 + 10 }; }
+const GCOL = { n: "gn", t: "gt" };
+function gtBg() {
+  const G = gtGeo(), X = t => G.x0 + (G.x1 - G.x0) * t / GT_MAX, Y = g => G.y0 - (G.y0 - G.y1) * g / GY_MAX;
+  let o = T_(G.x0 - G.fs * 2.7, G.fs + 2, `Blood glucose concentration (${UNIT})`, G.fs, 'class="bold"');
+  for (let g = 0; g <= GY_MAX; g++) { o += `<path class="${g % 2 ? "gr2" : "gr"}" d="M${f1(G.x0)} ${f1(Y(g))}H${f1(G.x1)}"/>`; if (g % 2 === 0) o += T_(G.x0 - 6, Y(g) + 5, String(g), G.fs, 'text-anchor="end"'); }
+  for (let t = 0; t <= GT_MAX; t += 10) { o += `<path class="${t % 30 ? "gr2" : "gr"}" d="M${f1(X(t))} ${f1(G.y1)}V${f1(G.y0)}"/>`; if (t % 30 === 0) o += T_(X(t), G.y0 + G.fs + 6, String(t), G.fs, 'text-anchor="middle"'); }
+  o += T_((G.x0 + G.x1) / 2, G.h - 6, "Time after the glucose drink (minutes)", G.fs, 'text-anchor="middle" class="bold"');
+  o += `<path class="ax" d="M${f1(G.x0)} ${f1(G.y1)}V${f1(G.y0)}H${f1(G.x1)}"/>`;
+  return o;
+}
+function gtDyn(M) {
+  const G = gtGeo(), X = t => G.x0 + (G.x1 - G.x0) * t / GT_MAX, Y = g => G.y0 - (G.y0 - G.y1) * g / GY_MAX;
+  let o = "";
+  [["n", M.lnN], ["t", M.lnT]].forEach(([k, on]) => { if (!on) return; const P = GTT[k].pts;
+    o += `<path class="gline ${GCOL[k]}" d="M${P.map(p => f1(X(p[0])) + " " + f1(Y(p[1]))).join("L")}"/>`;
+    P.forEach(p => { o += k === "n" ? `<circle class="gpt ${GCOL[k]}" cx="${f1(X(p[0]))}" cy="${f1(Y(p[1]))}" r="5"/>` : `<rect class="gpt ${GCOL[k]}" x="${f1(X(p[0]) - 4.5)}" y="${f1(Y(p[1]) - 4.5)}" width="9" height="9"/>`; });
+    const lt = k === "n" ? 180 : 105, lab = k === "n" ? "no diabetes" : "type 1", ly = Y(gval(k, lt)) + (k === "n" ? G.fs + 10 : -12);
+    o += T_(X(lt) - (k === "n" ? 2 : 0), ly, lab, G.fs, `class="glab ${GCOL[k]}" text-anchor="${k === "n" ? "end" : "middle"}"`); });
+  /* the time line the pupil drags, with dashed guides across to the axis */
+  const tx = X(M.tcur);
+  o += `<path class="tline" d="M${f1(tx)} ${f1(G.y1)}V${f1(G.y0)}"/>`;
+  [["n", M.lnN], ["t", M.lnT]].forEach(([k, on]) => { if (!on) return; const y = Y(gval(k, M.tcur)); o += `<path class="tguide" d="M${f1(G.x0)} ${f1(y)}H${f1(tx)}"/><circle class="tcross" cx="${f1(tx)}" cy="${f1(y)}" r="4"/>`; });
+  o += `<g class="drag" data-gdrag="1"><rect class="hit" x="${f1(tx - 22)}" y="${f1(G.y1)}" width="44" height="${f1(G.y0 - G.y1)}"/><circle class="tknob" cx="${f1(tx)}" cy="${f1(G.y0)}" r="8"/></g>`;
+  return o;
+}
+function drawGT() { if (!SZ.g.w) sizeOf("g"); setAttr($("gsvg"), "viewBox", `0 0 ${SZ.g.w || 600} ${SZ.g.h || 320}`); const k = SZ.g.w + "x" + SZ.g.h; if ($("gBg")._k !== k) { $("gBg")._k = k; $("gBg")._h = null; } setLayer($("gBg"), gtBg()); setLayer($("gDyn"), gtDyn(M)); }
+/* ===== Control system: parts (HTML) and the negative feedback loop (HT, SVG) ===== */
+const PARTS = [
+  ["Stimulus", "A change inside or outside the body"], ["Receptor", "Detects the change"],
+  ["Coordination centre", "Receives and processes the information: the brain, spinal cord or pancreas"],
+  ["Effector", "A muscle or a gland: brings about a response"], ["Response", "Puts the change right"]];
+const PEX = {
+  hi: ["Blood glucose rises, for example after a meal", "Cells in the pancreas detect the rise", "The pancreas releases insulin into the blood",
+    "Liver and muscle cells: insulin makes them take in glucose", "Glucose is stored as glycogen, so blood glucose falls back to normal"],
+  lo: ["(HT) Blood glucose falls, for example in exercise or with no food", "Cells in the pancreas detect the fall", "The pancreas releases glucagon into the blood",
+    "The liver: glucagon makes it change glycogen into glucose", "Glucose is released into the blood, so blood glucose rises back to normal"]
+};
+function partsHTML(M) {
+  if (qh("ctrl")) return `<p class="hidmsg">${HIDDEN}</p>`;
+  const ex = PEX[M.dir], k = M.lstep;
+  return `<div class="pflow" role="list">` + PARTS.map((p, i) => `<div class="pbox${i === k ? " on" : ""}" role="listitem"><b>${esc(p[0])}</b><span>${esc(p[1])}</span><span class="pex">${esc(ex[i])}</span></div>` + (i < 4 ? '<span class="parr" aria-hidden="true">→</span>' : "")).join("") + `</div>` +
+    `<p class="cnote">Blood glucose is controlled by hormones (chemical messages in the blood). Other control systems use nerves. Press <b>Step ▶</b> to follow the ${M.dir === "hi" ? "rise" : "fall (HT)"}.</p>`;
+}
+const LB = {
+  c: { x: 196, y: 162, t: ["Normal blood", "glucose level"] },
+  hi: [{ x: 8, y: 14, t: ["Blood glucose", "too high", "(after a meal)"] }, { x: 196, y: 14, t: ["Pancreas detects", "the rise; releases", "insulin"] },
+    { x: 384, y: 14, t: ["Cells take in", "glucose; liver and", "muscle store it", "as glycogen"] }],
+  lo: [{ x: 8, y: 294, t: ["Blood glucose", "too low (exercise,", "no food)"] }, { x: 196, y: 294, t: ["Pancreas detects", "the fall; releases", "glucagon"] },
+    { x: 384, y: 294, t: ["Liver changes", "glycogen into", "glucose and", "releases it"] }]
+};
+const LW = 168, LH = 92;
+const LL = { tall: false };   // phones: one direction at a time, as a column
+function llCheck() { const w = $("pane-ctrl").getBoundingClientRect().width, t = w > 0 && w < 520; if (t !== LL.tall) { LL.tall = t; setAttr($("lsvg"), "viewBox", t ? "0 0 360 484" : "0 0 560 400"); $("lG")._h = null; return true; } return false; }
+function loopTall(M) {
+  const B = LB[M.dir], k = M.lstep, X = 34, W = 270, H = 82, Y = [8, 120, 232, 344];
+  const box = (y, t, cls) => `<g class="lbox ${cls}"><rect x="${X}" y="${y}" width="${W}" height="${H}" rx="12"/>` + t.map((s, i) => T_(X + W / 2, y + H / 2 + (i - (t.length - 1) / 2) * 20 + 6, s, 16, 'text-anchor="middle"')).join("") + `</g>`;
+  const c = i => k === i ? "cur" : k > i ? "past" : "";
+  let o = `<defs><marker id="lah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" class="lahp"/></marker></defs>`;
+  o += box(Y[0], LB.c.t, k >= 3 ? "cur" : "");
+  B.forEach((b, i) => { o += `<path class="larr ${c(i)}" d="M${X + W / 2} ${Y[i] + H + 2}V${Y[i + 1] - 4}" marker-end="url(#lah)"/>` + box(Y[i + 1], b.t, c(i)); });
+  o += `<path class="larr ${c(3)}" d="M${X + W} ${Y[3] + H / 2}H${X + W + 22}V${Y[0] + H / 2}H${X + W + 6}" marker-end="url(#lah)"/>`;
+  o += T_(X + W + 40, (Y[0] + Y[3] + H) / 2, M.dir === "hi" ? "level falls" : "level rises", 15, `class="mut" text-anchor="middle" transform="rotate(90 ${X + W + 40} ${(Y[0] + Y[3] + H) / 2})"`);
+  o += T_(X + W / 2, 452, "Negative feedback (HT): the response", 15, 'class="acc" text-anchor="middle"') + T_(X + W / 2, 472, "reverses the change.", 15, 'class="acc" text-anchor="middle"');
+  return o;
+}
+function loopSVG(M) {
+  if (qh("ctrl")) return T_(LL.tall ? 180 : 280, 200, "Hidden for this question: try it first.", LL.tall ? 15 : 18, 'text-anchor="middle" class="mut"');
+  if (LL.tall) return loopTall(M);
+  const box = (b, cls) => `<g class="lbox ${cls}"><rect x="${b.x}" y="${b.y}" width="${LW}" height="${LH}" rx="12"/>` + b.t.map((s, i) => T_(b.x + LW / 2, b.y + LH / 2 + (i - (b.t.length - 1) / 2) * 20 + 6, s, 16, 'text-anchor="middle"')).join("") + `</g>`;
+  const arr = (x1, y1, x2, y2, cls) => `<path class="larr ${cls}" d="M${x1} ${y1}L${x2} ${y2}" marker-end="url(#lah)"/>`;
+  let o = `<defs><marker id="lah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" class="lahp"/></marker></defs>`;
+  ["hi", "lo"].forEach(d => { const B = LB[d], on = M.dir === d, top = d === "hi";
+    const c = k => on ? (M.lstep === k ? "cur" : M.lstep > k ? "past" : "") : "dim";
+    o += arr(232, top ? 160 : 256, 120, top ? 110 : 290, c(0)) + arr(178, top ? 60 : 340, 194, top ? 60 : 340, c(1)) + arr(366, top ? 60 : 340, 382, top ? 60 : 340, c(2)) + arr(440, top ? 108 : 292, 336, top ? 160 : 256, c(3));
+    B.forEach((b, i) => { o += box(b, c(i)); });
+    o += T_(470, top ? 140 : 284, top ? "level falls" : "level rises", 15, `class="mut" text-anchor="middle"`); });
+  o += box(LB.c, M.lstep >= 3 ? "cur" : "");
+  o += T_(48, 220, "Negative", 15, 'class="acc" text-anchor="middle"') + T_(48, 238, "feedback", 15, 'class="acc" text-anchor="middle"');
+  o += T_(512, 220, "(HT)", 15, 'class="acc" text-anchor="middle"');
+  return o;
+}
+
+/* ===== Diabetes: type 1 and type 2 (factual, no blame) ===== */
+const DIA = {
+  t1: { h: "Type 1 diabetes", rows: [["What happens", "The pancreas makes too little insulin, or none."],
+    ["Blood glucose", "Can rise very high, because glucose is not taken into cells."],
+    ["When it often starts", "Often in childhood or as a young adult. It is not caused by diet or lifestyle."],
+    ["Treatment", "Insulin injections (or an insulin pump), matched to meals and exercise. Blood glucose is checked often."]] },
+  t2: { h: "Type 2 diabetes", rows: [["What happens", "The pancreas still makes insulin, but body cells no longer respond to it properly."],
+    ["Blood glucose", "Stays higher than normal, especially after meals."],
+    ["Risk factors", "Obesity (carrying a lot of extra body fat) is a risk factor. So are age and family history."],
+    ["Treatment", "A carbohydrate-controlled diet and regular exercise. Some people also need medicines, and some need insulin."]] }
+};
+function diaHTML() {
+  if (qh("dia")) return `<p class="hidmsg">${HIDDEN}</p>`;
+  return ["t1", "t2"].map(k => `<div class="dcard ${k}"><h3>${esc(DIA[k].h)}</h3><dl>` + DIA[k].rows.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("") +
+    `</dl><button class="btn" type="button" data-try="${k}">Try it in the body model</button></div>`).join("") +
+    `<p class="cnote dnote">Both are long-term conditions that people manage every day. Diabetes is not infectious: you cannot catch it from someone.</p>`;
+}
+
+/* ===== Body model readout ===== */
+function bodyEnd(M) {   // the run has stopped: say what the graph is doing, not just "steady"
+  const s = M.sim, d = s.G - PERS[s.p].gb, T = M.trace, hi = s.G > 7.05 ? " This is above the normal range." : "";
+  let k = T.length - 1; while (k > 0 && T[T.length - 1][0] - T[k][0] < 30) k--;
+  const sl = k < T.length - 1 ? (T[T.length - 1][1] - T[k][1]) / (T[T.length - 1][0] - T[k][0]) : 0;   // mmol/dm³ per sim-minute
+  if (Math.abs(d) < .3 && Math.abs(sl) < .004) return "Blood glucose is steady again." + hi + " Try another button.";
+  if (sl > .002) return "Blood glucose is slowly rising again." + hi + " Try another button.";
+  if (d > 0) return "Blood glucose is still high and falling only slowly." + hi + " Try another button.";
+  return "Blood glucose is lower than this person's usual level." + hi + " Try another button.";
+}
+function bodyRead(M) {
+  const s = M.sim, P = PERS[s.p];
+  let h = `<p class="r1">${esc(P.name)}</p>`;
+  if (qh("bodytxt")) return h + `<p class="r3">Read the meter and the graph. The explanation appears here once you have answered (or pressed Show answer).</p>`;
+  const w = [];
+  if (s.A > .03) w.push("Glucose from the meal is absorbed into the blood.");
+  if (s.p === "t1" && s.A > .03 && s.D < .05) w.push("The pancreas makes little or no insulin, so glucose stays in the blood.");
+  else if (s.It > .15) w.push(s.p === "t2" ? "Insulin is released, but cells respond weakly, so glucose falls slowly." : `${s.D > .05 ? "Injected insulin" : "Insulin from the pancreas"} makes cells take in glucose; liver and muscle store it as glycogen.`);
+  if (s.ex > 0) w.push("Working muscles use extra glucose for respiration.");
+  if (s.fast > 0 && s.gut < .3) w.push(s.p === "none" ? "No food: cells keep using glucose." : s.p === "t1"
+    ? "No food: cells keep using glucose, but with little or no insulin the liver keeps releasing glucose from its glycogen store, so blood glucose stays high."
+    : "No food: cells keep using glucose, but insulin works weakly, so the liver keeps releasing glucose from its glycogen store and blood glucose stays above normal.");
+  if (s.N > .05) w.push(M.gn ? "(HT) Glucagon from the pancreas: the liver changes glycogen into glucose and releases it." : "Blood glucose is kept from falling too far. (HT) Switch on Glucagon to see how.");
+  if (!w.length) w.push(anim ? "Blood glucose is steady." : M.ev.length ? bodyEnd(M) : "Steady. Eat a meal, exercise or go without food, then read the meter.");
+  return h + `<p class="r2">${esc(w.join(" "))}</p>`;
+}
+/* ===== Draw everything that is showing ===== */
+const TABS = ["body", "test", "ctrl", "dia"];
+function hidPane(k, on) {   // a pane's own "hidden for this question" line
+  const p = $("pane-" + k); let n = p.querySelector(":scope > .hidmsg.pane-h");
+  if (on && !n) { n = document.createElement("p"); n.className = "hidmsg pane-h"; n.textContent = HIDDEN; p.prepend(n); }
+  if (n) n.hidden = !on;
+  [...p.children].forEach(c => { if (c !== n) { const v = on; if (c.hidden !== v && !c.dataset.keep) c.hidden = v; } });
+}
+function drawPane() {
+  const t = M.tab;
+  TABS.forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  document.querySelectorAll("#tabs button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.tab === t)));
+  if (t === "body") { hidPane("body", qh("body")); if (!qh("body")) blCheck(); if (!qh("body")) { if (!$("bBg")._h) setLayer($("bBg"), bodyBg()); setLayer($("bDyn"), bodyDyn(M, anim ? anim.ph : 0)); drawTrace(); morphHTML($("bread"), bodyRead(M)); } }
+  else if (t === "test") { drawGT(); renderTOut(); }
+  else if (t === "ctrl") { const lp = M.view === "loop"; $("parts").hidden = lp; $("loopWrap").hidden = !lp; if (lp) llCheck(); if (lp) setLayer($("lG"), loopSVG(M)); else morphHTML($("parts"), partsHTML(M)); }
+  else morphHTML($("dcards"), diaHTML());
+  if (mode === "demo" && TRY_TAB !== t) renderTry();
+}
+function renderTOut() { const s = `Time line: ${M.tcur} min`; if ($("tOut").textContent !== s) $("tOut").textContent = s; }
+function renderCtl() {   // touches a control only when its state really changes
+  const lk = locked(), txt = (el, t) => { if (el.textContent !== t) el.textContent = t; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  document.querySelectorAll("#persSeg button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.p === M.p)));
+  [["gnSw", M.gn], ["lnN", M.lnN], ["lnT", M.lnT]].forEach(([id, v]) => { const b = $(id); setAttr(b, "aria-pressed", String(v)); txt(b.querySelector(".state"), v ? "on" : "off"); });
+  $("evInj").hidden = M.p !== "t1";
+  ["evMeal", "evEx", "evFast", "evInj", "evReset", "gnSw", "lnN", "lnT", "loopStep"].forEach(id => dis($(id), lk));
+  document.querySelectorAll("#persSeg button, #ctrlView button, #loopDir button").forEach(b => dis(b, lk));
+  document.querySelectorAll("#ctrlView button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.view === M.view)));
+  document.querySelectorAll("#loopDir button").forEach(b => setAttr(b, "aria-pressed", String(b.dataset.dir === M.dir)));
+  txt($("loopDir").querySelector('[data-dir="lo"]'), "Too low (HT)");
+  txt($("loopStep"), M.lstep >= 4 || (M.view === "loop" && M.lstep >= 3) ? "Start again ↺" : "Step ▶");
+  setAttr($("loopStep"), "aria-label", M.lstep >= 4 || (M.view === "loop" && M.lstep >= 3) ? "Start the steps again" : "Next step");
+  const ln = $("lockNote"); if (ln.hidden !== !lk) ln.hidden = !lk; if (lk) lockMsg();
+}
+function drawAll() { drawPane(); renderCtl(); }
+function sizeCheck() { let ch = false; if (M.tab === "body" && !qh("body") && blCheck()) { ch = true; setLayer($("bBg"), bodyBg()); setLayer($("bDyn"), bodyDyn(M, anim ? anim.ph : 0)); }
+  if (M.tab === "ctrl" && M.view === "loop" && llCheck()) { ch = true; setLayer($("lG"), loopSVG(M)); }
+  if (M.tab === "body" && !qh("body") && sizeOf("t")) { ch = true; drawTrace(); } if (M.tab === "test" && sizeOf("g")) { ch = true; drawGT(); } return ch; }
+function setTab(t) { stopAll(); M.tab = t; drawAll(); sizeCheck(); tourSignal("tab-" + t); }
+
+/* ===== The body model runs only while something is happening (paceFrame caps the frame rate; time-based), then stops
+   by itself: no loop while idle. ===== */
+let visOK = true;
+function lastEv(M) { return M.ev.length ? M.ev[M.ev.length - 1][0] : 0; }
+function startAnim() {
+  if (anim) return;
+  const a = { id: 0, lastT: performance.now(), paused: false, ph: 0, rec: 0 }; anim = a;
+  a.frame = now => {
+    if (anim !== a) return;
+    const t = Math.max(now, performance.now());
+    if (!visOK || document.hidden) { a.paused = true; return; }
+    const dtr = Math.min(250, t - a.lastT); a.lastT = t; a.ph += reduced() ? 0 : dtr / 1000;
+    const s = M.sim; let mins = dtr / 1000 * simSpeed(s);
+    while (mins > 0) { const d = Math.min(1, mins); simStep(s, d); mins -= d;
+      if (s.t - a.rec >= 2) { a.rec = s.t; M.trace.push([s.t, s.G]); } }
+    if (s.t > 1440) { M.trace = [[0, s.G]]; M.ev = []; s.t = 0; a.rec = 0; }
+    const idle = s.gut < .02 && s.ex <= 0 && s.fast <= 0 && s.D < .02, done = idle && (simQuiet(s) || s.t - lastEv(M) >= 240);
+    if (done) { anim = null; M.trace.push([s.t, s.G]); drawAll(); afterRun(); return; }
+    if (M.tab === "body" && !qh("body")) { setLayer($("bDyn"), bodyDyn(M, a.ph)); if ((a.n = (a.n || 0) + 1) % 3 === 0) { setLayer($("tDyn"), traceDyn(M)); if (traceSpan(M) !== a.span) { a.span = traceSpan(M); drawTrace(); } morphHTML($("bread"), bodyRead(M)); } }
+    afterTick();
+    a.id = paceFrame(a.frame, reduced() ? 4 : 24);
+  };
+  a.span = traceSpan(M);
+  a.id = paceFrame(a.frame, reduced() ? 4 : 24);
+}
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 24); }
+function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); M.trace.push([M.sim.t, M.sim.G]); }
+function bodyEvent(k) {
+  if (locked()) return lockMsg();
+  const s = M.sim;
+  if (k === "meal") { s.gut += K.meal; s.fast = 0; }
+  else if (k === "ex") s.ex = K.exMin;
+  else if (k === "fast") { s.fast = K.fastMin; }
+  else if (k === "inj") { if (s.p !== "t1") return; s.D += K.inj; }
+  M.ev.push([s.t, k]); if (M.trace.length === 1 && M.trace[0][0] === 0) M.trace[0] = [s.t, s.G];
+  if (k === "ex" && M.gn) tried(2);
+  if (k === "inj" && M.ev.some(e => e[1] === "meal")) tried(4);
+  startAnim(); drawAll(); tourSignal("ev-" + k);
+}
+function bodyReset(p) {
+  if (locked()) return lockMsg();
+  stopAll(); M.p = p || M.p; M.sim = freshSim(M.p); M.trace = [[0, M.sim.G]]; M.ev = []; drawAll();
+}
+function afterTick() {
+  if (mode !== "demo") return; const s = M.sim;
+  if (s.up > .1 && s.p === "none") tried(1);
+}
+function afterRun() {
+  if (mode !== "demo") return; const s = M.sim;
+  if (M.ev.some(e => e[1] === "meal") && s.p === "none") tried(0);
+  if (M.ev.some(e => e[1] === "fast")) tried(3);
+  if (M.ev.some(e => e[1] === "meal") && s.p === "t2") tried(5);
+}
+
+/* ===== Things to try (Demo): the list follows the open tab ===== */
+const TRY = ["No diabetes: press Eat a meal. Read the meter and the graph as blood glucose rises, then falls back.",
+  "While insulin works, watch the liver and the muscle. What builds up in them?",
+  "Press Exercise. Then switch on Glucagon (HT), press Start again and Exercise again. What does glucagon do?",
+  "Press Go without food. What happens to the glycogen in the liver?",
+  "Choose Type 1. Eat a meal, then press Inject insulin. What happens to blood glucose?",
+  "Choose Type 2 and eat a meal. Compare the graph with No diabetes.",
+  "Drag the time line to the top of each line. Read the highest value and the time of each peak.",
+  "When is the person without diabetes back to their starting level? And the person with type 1?",
+  "Step through Too high. Which is the receptor, the coordination centre and the effector?",
+  "(HT) Open Negative feedback. Step through Too high, then Too low.",
+  "Compare type 1 and type 2: what happens in each, and how each is treated."];
+const TRY_BY = { body: [0, 1, 2, 3, 4, 5], test: [6, 7], ctrl: [8, 9], dia: [10] };
+const TRIED = TRY.map(() => false);
+let TRY_TAB = null;
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { TRY_TAB = M.tab;
+  $("tryList").innerHTML = TRY_BY[M.tab].map(i => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(TRY[i])}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+/* ===== Knowledge check ===== */
+const SU = {
+  body: p => m => { m.tab = "body"; m.p = p || "none"; m.sim = freshSim(m.p); m.trace = [[0, m.sim.G]]; m.ev = []; },
+  test: () => m => { m.tab = "test"; m.tcur = 0; },
+  ctrl: (v, d) => m => { m.tab = "ctrl"; m.view = v || "parts"; m.dir = d || "hi"; m.lstep = 0; },
+  dia: () => m => { m.tab = "dia"; }
+};
+const ALLH = ["body", "ctrl", "dia", "facts"];
+TASKS.easy = [
+  { id: "homeo", kind: "choice", text: "What is homeostasis?", setup: SU.body("none"), hide: ["bodytxt"], hideWords: ["Homeostasis"], stuck: "words",
+    options: [{ t: "Keeping the conditions inside the body steady, so cells can work properly, even when things change", ok: () => true },
+      { t: "Keeping the inside of the body exactly the same all the time, with no changes at all", why: "Levels do change a little, for example after a meal. Homeostasis brings them back, so they stay within a narrow range." },
+      { t: "Changing the conditions inside the body to match the conditions outside", why: "It is the other way round: the inside of the body is kept steady even when the outside changes." },
+      { t: "Using nerves only to control the body", why: "Control systems can use nerves or hormones (chemicals). Blood glucose is controlled by hormones." }],
+    explain: "Homeostasis is keeping the internal conditions of the body (such as blood glucose) steady, so cells and their enzymes work properly, even when things change inside or outside the body.",
+    hints: ["Think about what happens to blood glucose after a meal, and then a bit later.", "Do the levels change at all? What does the body do about it?", "It keeps internal conditions steady, within a narrow range."] },
+  { id: "parts", kind: "gaps", fixed: true, text: "Match each part of a control system to what it does.", setup: SU.body("none"), hide: ["ctrl", "bodytxt"], hideWords: ["Receptor", "Coordination centre", "Effector"], stuck: "words",
+    rows: [["a", "Receptor", "detects a change (a stimulus)"], ["b", "Coordination centre", "receives and processes the information"], ["c", "Effector", "a muscle or gland that brings about a response"]],
+    bank: ["detects a change (a stimulus)", "receives and processes the information", "a muscle or gland that brings about a response", "carries hormones around the body"],
+    why: (k, w) => /carries/.test(w) ? "The blood carries hormones. It is not one of the three parts of a control system." :
+      ({ a: "Receptors are cells that detect stimuli (changes).", b: "Coordination centres include the brain, the spinal cord and the pancreas.", c: "Effectors are muscles or glands. They bring about the response." })[k],
+    explain: "Receptors detect a change. Coordination centres (the brain, spinal cord or pancreas) receive and process the information. Effectors (muscles or glands) bring about a response.",
+    hints: ["Think of the order: detect → decide → do.", "The coordination centre is in the middle: the brain, spinal cord or pancreas.", "Receptor: detects. Coordination centre: processes. Effector: muscle or gland that responds."] },
+  { id: "organ", kind: "choice", text: "Which organ monitors and controls blood glucose concentration?", setup: SU.test(), hide: ALLH, hideWords: ["Insulin", "Glucagon (HT)", "Coordination centre", "Type 1 diabetes"],
+    options: [{ t: "The pancreas", ok: () => true },
+      { t: "The liver", why: "The liver stores glucose as glycogen, but it does not monitor the blood glucose level or release the hormone that controls it." },
+      { t: "The stomach", why: "The stomach digests food. It does not monitor blood glucose." },
+      { t: "The brain", why: "The brain is the coordination centre for many responses, but blood glucose is monitored and controlled by another organ, just below the stomach." }],
+    explain: "The pancreas monitors blood glucose concentration and releases the hormone (insulin) that brings it back down when it is too high.",
+    hints: ["It is an organ near the stomach that releases hormones.", "It is also a coordination centre, like the brain and spinal cord.", "The pancreas."] },
+  { id: "rise", kind: "choice", text: "Choose No diabetes and press Eat a meal. Watch the meter. What happens to blood glucose concentration?", setup: SU.body("none"), hide: ["bodytxt", "dia", "ctrl"], hideWords: ["Homeostasis", "Negative feedback (HT)"],
+    options: [{ t: "It rises, then falls back to about where it started.", ok: () => true },
+      { t: "It rises and stays high.", why: "Keep watching after the meal: in a person without diabetes it comes back down within a couple of hours." },
+      { t: "It falls straight away.", why: "Glucose from the meal is absorbed into the blood, so the level goes up first." },
+      { t: "It does not change at all.", why: "It does change: the meal adds glucose to the blood. Then the body brings it back to normal." }],
+    explain: "After a meal, glucose is absorbed into the blood, so blood glucose rises. Insulin then brings it back down to about where it started.",
+    hints: ["Press Eat a meal and read the meter every few seconds.", "Use the graph next to the body: does the line come back down?", "Up, then back down to the normal level."] },
+  { id: "insulin", kind: "choice", text: "Blood glucose rises after a meal. What does the pancreas do?", setup: SU.test(), hide: ALLH, hideWords: ["Insulin", "Glycogen", "Glucagon (HT)", "Type 1 diabetes", "Type 2 diabetes"], stuck: "facts",
+    options: [{ t: "It releases insulin into the blood.", ok: () => true },
+      { t: "It releases glucose into the blood.", why: "That would make blood glucose go up even more. The pancreas releases a hormone that brings it down." },
+      { t: "It releases glycogen into the blood.", why: "Glycogen is the store made inside liver and muscle cells. The pancreas releases a hormone." },
+      { t: "It releases digestive enzymes into the blood.", why: "The pancreas does make digestive enzymes, but they go into the small intestine, not the blood. Blood glucose is controlled by a hormone." }],
+    explain: "When blood glucose is too high, the pancreas releases the hormone insulin into the blood.",
+    hints: ["The pancreas controls blood glucose with a hormone.", "Its name starts with I.", "Insulin."] },
+  { id: "action", kind: "gaps", text: "What does insulin do? Complete each sentence.", setup: SU.test(), hide: ALLH, hideWords: ["Insulin", "Glycogen", "Glucagon (HT)"], stuck: "facts",
+    rows: [["a", "Insulin makes glucose move from the blood into", "the cells", ["the cells", "the gut", "the urine"]],
+      ["b", "In liver and muscle cells, extra glucose is changed into", "glycogen", ["glycogen", "glucagon", "glycerol"]],
+      ["c", "So blood glucose concentration", "falls", ["falls", "rises", "stays the same"]]],
+    why: (k, w) => ({ "the gut": "Glucose is absorbed from the gut into the blood, not the other way.", "the urine": "In a healthy person glucose is not lost in the urine.",
+      glucagon: "Glucagon (HT) is a hormone, not a store. The store is glycogen: easy to mix up!", glycerol: "Glycerol is made when fats are digested. The glucose store is glycogen.",
+      rises: "Glucose leaves the blood, so the level goes down.", "stays the same": "Glucose leaves the blood, so the level changes." })[w],
+    explain: "Insulin makes glucose move from the blood into the cells. In liver and muscle cells, extra glucose is changed into glycogen and stored. So blood glucose falls.",
+    hints: ["Insulin lowers blood glucose. Where does the glucose go?", "The store in liver and muscle is spelt g-l-y-c-o-g-e-n.", "Into the cells; stored as glycogen; blood glucose falls."] },
+  { id: "peak", kind: "num", text: "Read the graph. What is the highest blood glucose concentration of the person without diabetes?", setup: SU.test(), lbl: "Highest concentration =", unit: UNIT, tol: .25, stuck: "graph",
+    ans: () => gpeak("n")[1],
+    wrongs: [[5, "That is the starting value, at 0 min. Find the top of the line for the person without diabetes."], [17, "That is the person with type 1 diabetes. Use the line for the person without diabetes (circles)."],
+      [30, "30 is a time. Read across from the top of the line to the concentration axis."], [13, "That is a value on the line for type 1 diabetes. Use the circles."]],
+    generic: "Find the highest point of the line with circles, then read across to the left-hand axis.",
+    working: () => [`The line for the person without diabetes peaks at ${gpeak("n")[0]} min.`, `Read across to the axis: ${gpeak("n")[1]} ${UNIT}.`],
+    hints: ["Use the line with circles (the person without diabetes).", "Drag the time line to the top of that line, then follow the dashed guide to the axis.", "Each small square on the axis is 1 mmol/dm³."] },
+  { id: "back", kind: "num", text: "Read the graph. How many minutes after the glucose drink is the person without diabetes back to their starting level?", setup: SU.test(), lbl: "Time =", unit: "min", tol: 2, stuck: "graph",
+    ans: () => gback("n"),
+    wrongs: [[30, "At 30 min blood glucose is at its highest. Look later, when it is back down to the starting value."], [180, "It is back to the starting level earlier than the end of the graph."],
+      [60, "At 60 min it is still above the starting level."], [90, "At 90 min it is still a little above the starting level."]],
+    generic: "Read the starting value at 0 min. Then find the first time, after the peak, when the line is back at that value.",
+    working: () => [`Starting value: ${gval("n", 0)} ${UNIT} at 0 min.`, `The line first comes back to ${gval("n", 0)} ${UNIT} at ${gback("n")} min.`],
+    hints: ["First read the starting value at 0 min.", "Move the time line along until the line for the person without diabetes is back at that value.", "Look between 90 and 150 min."] },
+  { id: "t1cause", kind: "choice", text: "What causes type 1 diabetes?", setup: SU.test(), hide: ["dia", "facts", "bodytxt"], hideWords: ["Type 1 diabetes", "Type 2 diabetes"],
+    options: [{ t: "The pancreas makes too little insulin, or none.", ok: () => true },
+      { t: "Body cells no longer respond to insulin.", why: "That is type 2 diabetes. In type 1 the problem is with making insulin." },
+      { t: "Eating too much sugar.", why: "Type 1 is not caused by diet or lifestyle. It often starts in childhood." },
+      { t: "Catching it from someone who has it.", why: "Diabetes is not infectious: you cannot catch it." }],
+    explain: "In type 1 diabetes the pancreas makes too little insulin, or none, so blood glucose can rise very high.",
+    hints: ["Type 1 and type 2 have different causes. One is about making insulin.", "Which organ makes insulin?", "The pancreas does not make enough insulin."] },
+  { id: "treat", kind: "gaps", text: "How is each type of diabetes treated, and what is a risk factor for type 2?", setup: SU.test(), hide: ["dia", "facts", "bodytxt", "body"], hideWords: ["Type 1 diabetes", "Type 2 diabetes"],
+    rows: [["a", "Type 1 is usually treated with", "insulin injections", ["insulin injections", "antibiotics", "a glucose drink"]],
+      ["b", "Type 2 is often treated first with", "a carbohydrate-controlled diet and exercise", ["a carbohydrate-controlled diet and exercise", "glucagon injections", "a high-sugar diet"]],
+      ["c", "A risk factor for type 2 diabetes is", "obesity", ["obesity", "being infected by someone", "a broken bone"]]],
+    why: (k, w) => ({ antibiotics: "Antibiotics kill bacteria. Diabetes is not caused by bacteria.", "a glucose drink": "That raises blood glucose. In type 1 the problem is too little insulin.",
+      "glucagon injections": "Glucagon (HT) raises blood glucose, so it would not help.", "a high-sugar diet": "That would raise blood glucose more. The diet controls carbohydrate.",
+      "being infected by someone": "Diabetes is not infectious.", "a broken bone": "That is not linked to diabetes." })[w],
+    explain: "Type 1 is treated with insulin injections. Type 2 is often treated with a carbohydrate-controlled diet and exercise (some people also need medicines or insulin). Obesity is a risk factor for type 2.",
+    hints: ["Type 1: the body cannot make enough of one hormone. Replace it.", "Type 2: the cells respond weakly to insulin. Lifestyle changes help first.", "Insulin injections; diet and exercise; obesity."] }
+];
+TASKS.hard = [
+  { id: "glucagon", kind: "choice", text: "(HT) Blood glucose falls too low, for example during long exercise. What happens?", setup: SU.test(), hide: ALLH, hideWords: ["Glucagon (HT)", "Glycogen", "Negative feedback (HT)"], stuck: "facts",
+    options: [{ t: "The pancreas releases glucagon. The liver changes glycogen into glucose and releases it into the blood.", ok: () => true },
+      { t: "The pancreas releases insulin, which changes glycogen back into glucose.", why: "Insulin lowers blood glucose. A different hormone is released when it is too low." },
+      { t: "The pancreas releases glycogen into the blood.", why: "Glycogen is stored inside liver and muscle cells. The pancreas releases a hormone." },
+      { t: "The liver changes glucose into glucagon.", why: "Glucagon is a hormone made by the pancreas. Glycogen (the store) is changed into glucose." }],
+    explain: "(HT) When blood glucose is too low, the pancreas releases glucagon. Glucagon makes the liver change glycogen into glucose, which is released into the blood.",
+    hints: ["Which hormone does the pancreas release when glucose is LOW?", "The store in the liver is glycogen. What is it turned into?", "Glucagon: glycogen → glucose, released into the blood."] },
+  { id: "words", kind: "gaps", fixed: true, text: "(HT) Glucose, glycogen, glucagon or insulin? Choose the right word for each.", setup: SU.test(), hide: ALLH, hideWords: ["Insulin", "Glucagon (HT)", "Glycogen", "Glucose"], stuck: "facts",
+    rows: [["a", "The hormone released when blood glucose is too high", "insulin"], ["b", "The hormone released when blood glucose is too low", "glucagon"],
+      ["c", "The store of carbohydrate in liver and muscle cells", "glycogen"], ["d", "The sugar carried in the blood", "glucose"]],
+    bank: ["insulin", "glucagon", "glycogen", "glucose"],
+    why: (k, w) => ({ a: "When glucose is too high it must be lowered: that hormone makes cells take glucose in.", b: "When glucose is too low the liver must release glucose: that hormone starts with gluca…",
+      c: "The store is glycogen (with a Y), not the hormone glucagon.", d: "The sugar in the blood that cells use for respiration." })[k],
+    explain: "(HT) Insulin is released when blood glucose is too high and glucagon when it is too low. Glycogen is the store in liver and muscle cells. Glucose is the sugar in the blood.",
+    hints: ["Two of these are hormones, one is a store, one is a sugar.", "GlycOgen is the stOre. GlucAgon is the hormone for when glucose is gone (low).", "Insulin, glucagon, glycogen, glucose."] },
+  { id: "loop", kind: "build", ordered: true, text: "(HT) Put the negative feedback loop in order, starting after a meal.", setup: SU.test(), hide: ALLH, hideWords: ["Negative feedback (HT)"], frame: "Press the statements in order. Leave out the wrong ones.",
+    stm: [{ t: "Blood glucose concentration rises above normal.", c: 1 }, { t: "Cells in the pancreas detect the rise.", c: 2 }, { t: "The pancreas releases insulin into the blood.", c: 3 },
+      { t: "Liver and muscle cells take in glucose and store it as glycogen.", c: 4 }, { t: "Blood glucose falls back to normal, so less insulin is released.", c: 5 },
+      { t: "The liver releases insulin.", why: "Insulin is made by the pancreas." }, { t: "Insulin changes glucose into glucagon.", why: "Extra glucose is stored as glycogen. Glucagon is a different hormone." },
+      { t: "The pancreas releases glucagon.", why: "Glucagon is released when blood glucose is too LOW, not after a meal." }],
+    miss: { 1: "Start with the change: what happens to blood glucose after a meal?", 2: "Something must detect the change. Where?", 3: "What does the pancreas release?",
+      4: "What do liver and muscle cells do when insulin reaches them?", 5: "How does the loop end? What happens to blood glucose, and to insulin release?" },
+    explain: "(HT) Blood glucose rises → the pancreas detects it → it releases insulin → liver and muscle cells take in glucose and store it as glycogen → blood glucose falls back to normal, so less insulin is released. The response reverses the change: negative feedback.",
+    hints: ["Start with the change and end with the level back to normal.", "Detect → release hormone → cells respond → level returns.", "Rise → pancreas detects → insulin → glycogen stored → back to normal."] },
+  { id: "negfb", kind: "choice", text: "(HT) Why is the control of blood glucose called negative feedback?", setup: SU.test(), hide: ["ctrl", "facts"], hideWords: ["Negative feedback (HT)", "Homeostasis"],
+    options: [{ t: "The response reverses the change, bringing the level back towards normal.", ok: () => true },
+      { t: "The response makes the change bigger.", why: "That would be positive feedback. Here a rise leads to a fall, and a fall leads to a rise." },
+      { t: "It is harmful to the body.", why: "“Negative” doesn’t mean bad. It means the response goes against the change." },
+      { t: "It only works when blood glucose falls.", why: "It works both ways: insulin when it is too high, glucagon when it is too low." }],
+    explain: "(HT) In negative feedback the response reverses the change. If blood glucose rises, insulin brings it down; if it falls, glucagon brings it up.",
+    hints: ["After a meal glucose rises. Does insulin make it go further up, or back down?", "“Negative” here means opposite, not bad.", "The response reverses the change."] },
+  { id: "diff", kind: "num", text: "Read the graph. How much higher is the peak for the person with type 1 diabetes than for the person without diabetes?", setup: SU.test(), lbl: "Difference =", unit: UNIT, tol: .3, stuck: "graph",
+    ans: () => gpeak("t")[1] - gpeak("n")[1],
+    wrongs: [[4, "That is the difference at 0 min. Compare the two peaks (the highest points)."], [25, "You added the peaks. Subtract the smaller from the larger."],
+      [17, "That is the peak of the type 1 line on its own. Subtract the other peak."], [30, "30 is a time difference. Compare the concentrations."], [10, "Check your readings: read each peak across to the axis."]],
+    generic: "Read each peak across to the axis, then subtract the smaller one from the larger one.",
+    working: () => [`Type 1 peak: ${gpeak("t")[1]} ${UNIT} at ${gpeak("t")[0]} min.`, `Without diabetes: ${gpeak("n")[1]} ${UNIT} at ${gpeak("n")[0]} min.`, `${gpeak("t")[1]} − ${gpeak("n")[1]} = ${gpeak("t")[1] - gpeak("n")[1]} ${UNIT}.`],
+    hints: ["Find the highest point of each line.", "Read each one across to the axis.", "Subtract: type 1 peak − peak without diabetes."] },
+  { id: "pct", kind: "num", text: "Calculate the percentage increase in blood glucose for the person without diabetes, from 0 min to the peak.", setup: SU.test(), lbl: "Percentage increase =", unit: "%", tol: .5, stuck: "graph",
+    ans: () => (gpeak("n")[1] - gval("n", 0)) / gval("n", 0) * 100,
+    wrongs: [[3, "3 is the increase in mmol/dm³. Divide it by the starting value, then × 100."], [37.5, "You divided by the peak. Divide the increase by the starting value."],
+      [160, "That is the peak as a percentage of the start. The increase is the peak minus the start."], [0.6, "You found the fraction. Multiply by 100 to make it a percentage."]],
+    generic: "Percentage increase = (peak − start) ÷ start × 100.",
+    working: () => { const a = gval("n", 0), b = gpeak("n")[1]; return [`Start ${a}, peak ${b} ${UNIT}.`, `Increase = ${b} − ${a} = ${b - a}.`, `${b - a} ÷ ${a} × 100 = ${num((b - a) / a * 100)} %.`]; },
+    hints: ["Read the value at 0 min and the peak value for the person without diabetes.", "Increase = peak − start.", "Percentage increase = increase ÷ start × 100."] },
+  { id: "t1high", kind: "choice", text: "Look at the graph. Why does blood glucose stay high for so long in the person with type 1 diabetes?", setup: SU.test(), hide: ["dia", "facts", "bodytxt"], hideWords: ["Type 1 diabetes"],
+    options: [{ t: "Little or no insulin is released, so cells take in little glucose and little is stored as glycogen.", ok: () => true },
+      { t: "Too much insulin is released.", why: "Insulin lowers blood glucose. Too much would make it fall, not stay high." },
+      { t: "They had a bigger glucose drink.", why: "In a glucose test everyone has the same drink. The difference is in the body." },
+      { t: "Their cells use glucose faster.", why: "If cells used glucose faster, blood glucose would fall faster." }],
+    explain: "In type 1 diabetes the pancreas makes too little insulin, or none. Without insulin, cells take in little glucose and little is stored as glycogen, so blood glucose stays high.",
+    hints: ["What does insulin normally do to blood glucose after a drink?", "In type 1 diabetes, what is wrong with insulin?", "Too little insulin: glucose stays in the blood."] },
+  { id: "t2", kind: "choice", text: "In type 2 diabetes the pancreas still makes insulin. Why does blood glucose stay higher than normal?", setup: SU.body("t2"), hide: ["dia", "facts", "bodytxt"], hideWords: ["Type 2 diabetes"],
+    options: [{ t: "Body cells no longer respond properly to insulin.", ok: () => true },
+      { t: "The pancreas makes no insulin at all.", why: "That is type 1. In type 2 insulin is still made." },
+      { t: "The liver makes too much glycogen.", why: "Storing glycogen lowers blood glucose. The problem is with how cells respond to insulin." },
+      { t: "The kidneys stop removing glucose from the blood.", why: "Healthy kidneys keep glucose in the blood. The problem in type 2 is the cells’ response to insulin." }],
+    explain: "In type 2 diabetes the body cells no longer respond properly to insulin, so less glucose is taken into cells and blood glucose stays higher than normal.",
+    hints: ["Try it: Type 2, Eat a meal. The pancreas still releases insulin. Does it work well?", "The problem is not making insulin. It is the cells.", "The cells no longer respond to insulin."] },
+  { id: "inj", kind: "choice", text: "Choose Type 1 in the body model. Press Eat a meal, then press Inject insulin. What happens to blood glucose, and why?", setup: SU.body("t1"), hide: ["dia", "facts", "bodytxt", "ctrl"], hideWords: ["Type 1 diabetes", "Insulin", "Glycogen", "Glucagon (HT)"],
+    options: [{ t: "It falls, because insulin makes cells take in glucose from the blood.", ok: () => true },
+      { t: "It falls, because insulin breaks glucose down in the blood.", why: "Insulin does not break glucose down. It makes cells take glucose in from the blood." },
+      { t: "It falls, because insulin turns glucose into glucagon (HT).", why: "Glucagon (HT) is a hormone made by the pancreas. Extra glucose is stored as glycogen, inside liver and muscle cells." },
+      { t: "It rises, because insulin makes the liver release glycogen.", why: "Read the meter again: after the injection it falls. Glycogen is a store that insulin helps to build up, not release." }],
+    explain: "In type 1 diabetes the pancreas makes too little insulin, so injected insulin is needed. Insulin makes cells take in glucose from the blood, and liver and muscle cells store the extra as glycogen, so blood glucose falls.",
+    hints: ["Press Eat a meal, wait for the meter to rise, then press Inject insulin. Does the meter go up or down?", "Insulin does not destroy glucose. Where does the glucose in the blood go?", "Into the cells: liver and muscle cells store it as glycogen."] },
+  { id: "fasting", kind: "build", ordered: true, text: "(HT) A person has not eaten for 12 hours, but their blood glucose stays steady. Put the explanation in order.", setup: SU.test(), hide: ALLH, hideWords: ["Glucagon (HT)", "Glycogen", "Negative feedback (HT)"], frame: "Press the statements in order. Leave out the wrong ones.",
+    stm: [{ t: "Cells keep using glucose, so blood glucose starts to fall.", c: 1 }, { t: "Cells in the pancreas detect the fall and release glucagon.", c: 2 },
+      { t: "Glucagon makes the liver change glycogen into glucose.", c: 3 }, { t: "The liver releases the glucose into the blood, so the level rises back to normal.", c: 4 },
+      { t: "The pancreas releases insulin, which raises blood glucose.", why: "Insulin lowers blood glucose." }, { t: "The liver changes glucose into glucagon.", why: "Glucagon is a hormone from the pancreas. The liver changes glycogen into glucose." },
+      { t: "Muscles release glycogen into the blood.", why: "Glycogen is not released into the blood. Muscle glycogen is used by the muscle itself; the liver changes its glycogen into glucose." }],
+    miss: { 1: "Start with the change: what happens to blood glucose without food?", 2: "What detects the fall, and which hormone is released?", 3: "What does that hormone make the liver do?", 4: "Where does the new glucose go, and what happens to the level?" },
+    explain: "(HT) Cells keep using glucose, so it starts to fall → the pancreas detects this and releases glucagon → the liver changes glycogen into glucose → the glucose is released into the blood, so the level rises back to normal.",
+    hints: ["Start with what happens to blood glucose without food.", "Which hormone is released when glucose is low, and which organ does it act on?", "Fall → glucagon → glycogen into glucose → released → back to normal."] }
+];
+
+function bankCheck() {
+  const errs = [], F = m => errs.push(m);
+  if (gpeak("n")[0] !== 30 || gpeak("n")[1] !== 8 || gpeak("t")[0] !== 60 || gpeak("t")[1] !== 17 || gback("n") !== 120) F("model: glucose test peaks");
+  { const s = freshSim("none"); s.gut += K.meal; let pk = 0; for (let i = 0; i < 240; i++) { simStep(s, 1); pk = Math.max(pk, s.G); } if (!(pk > 6.5 && pk < 8.5 && Math.abs(s.G - 5) < .2)) F("model: meal without diabetes"); }
+  { const s = freshSim("t1"); s.gut += K.meal; let pk = 0; for (let i = 0; i < 180; i++) { simStep(s, 1); pk = Math.max(pk, s.G); } if (!(pk > 13 && s.G > 12)) F("model: meal with type 1"); s.D += K.inj; for (let i = 0; i < 90; i++) simStep(s, 1); if (!(s.G < 9)) F("model: insulin injection"); }
+  { const s = freshSim("t2"); s.gut += K.meal; let pk = 0; for (let i = 0; i < 240; i++) { simStep(s, 1); pk = Math.max(pk, s.G); } if (!(pk > 8.5 && pk < 13)) F("model: meal with type 2"); }
+  { const s = freshSim("none"); s.ex = K.exMin; let mn = 9, nm = 0; for (let i = 0; i < 120; i++) { simStep(s, 1); mn = Math.min(mn, s.G); nm = Math.max(nm, s.N); } if (!(mn > 4 && nm > .3)) F("model: exercise and glucagon"); }
+  { const s = freshSim("none"), L0 = s.L; s.fast = K.fastMin; let mn = 9, mx = 0; for (let i = 0; i < 720; i++) { simStep(s, 1); mn = Math.min(mn, s.G); mx = Math.max(mx, s.G); } if (!(mn > 4.3 && s.L < L0 - .2 && mn >= 4 && mx <= 7)) F("model: fasting uses liver glycogen"); }
+  for (const [p, lo] of [["t1", 8.5], ["t2", 6.5]]) { const s = freshSim(p); s.fast = K.fastMin; for (let i = 0; i < 720; i++) simStep(s, 1); if (!(s.G >= lo)) F(`model: fasting does not bring ${p} into the normal band`); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (/\(HT\)/.test(t.text) && lv !== "hard") E("HT questions belong in Hard");
+    if (!no69(t.text) || !no69(t.explain || "") || t.hints.some(h => !no69(h))) E("69 in the question");
+    if (t.kind === "choice") { if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
+    if (t.kind === "gaps") t.rows.forEach(([k, , a, list]) => { const L = list || t.bank; if (!L.includes(a)) E("answer missing from list " + k);
+      L.forEach(w => { if (w !== a && !t.why(k, w)) E(`no feedback for ${k}: ${w}`); }); });
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); if (!no69(num(a))) E("69 in the answer"); t.wrongs.forEach(([v, w]) => { if (near(v, a, t.tol) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs feedback and working"); }
+    if (t.kind === "build") { const c = t.stm.filter(s => s.c); if (c.length < 2) E("needs creditworthy statements"); if (t.stm.some(s => !s.c && !s.why)) E("a wrong statement has no feedback");
+      c.forEach(s => { if (!t.miss[s.c]) E("no hint for a missing point"); }); }
+  });
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
+  return errs;
+}
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; lock = ""; M = DEMO_M; renderTry(); drawAll(); }
+function newS() { const t = task;
+  return { choice: null, gap: {}, val: "", list: [], order: shuffled(t.options ? t.options.length : t.stm ? t.stm.length : t.bank ? t.bank.length : 0),
+    rowOrder: t.rows ? t.rows.map(r => shuffled((r[3] || t.bank).length)) : [] }; }
+function loadTask() {
+  nqHideEnd();
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; lock = t.lock || ""; drawAll();
+}
+function renderAnswer() {
+  const a = $("answer"), t = task, fr = t.frame ? `<p class="frame">${esc(t.frame)}</p>` : "";
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="frame">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
+    a.innerHTML = fr + (t.fixed || t.rows[0][3] ? "" : `<p class="small" style="margin:0 0 6px">Word bank: ${S.order.map(i => esc(t.bank[i])).join(" · ")}</p>`) +
+      `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.fixed ? (r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = fr + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
+    const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  } else if (t.kind === "build") {
+    a.innerHTML = fr + `<div class="opts build" role="group" aria-label="Statements: press them in the order you want them">` + S.order.map(i =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">+</span><span>${esc(t.stm[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { const i = +b.dataset.i, j = S.list.indexOf(i); if (j >= 0) S.list.splice(j, 1); else S.list.push(i); paintBuild(); }));
+  }
+}
+function hideWrongStm() { document.querySelectorAll("#answer .opts.build .opt").forEach(b => { if (!task.stm[+b.dataset.i].c) b.hidden = true; }); }
+function paintBuild() { document.querySelectorAll("#answer .opt").forEach(b => { const j = S.list.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", String(j >= 0)); b.querySelector(".k").textContent = j >= 0 ? String(j + 1) : "+"; }); }
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+    : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
+}
+const rk = s => s.o || s.c;
+function rightBuild(t) { return t.stm.map((s, i) => [s, i]).filter(x => x[0].c).sort((a, b) => a[0].c - b[0].c).map(x => x[1]); }
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(r => { S.gap[r[0]] = r[2]; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.gap[s.dataset.r]; }); }
+  else if (t.kind === "num") { S.val = num(t.ans()); const inp = $("numIn"); if (inp) inp.value = S.val; }
+  else if (t.kind === "build") { S.list = rightBuild(t); paintBuild(); hideWrongStm(); }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+
+/* ===== Marking ===== */
+function parseNum(s) {
+  s = String(s || "").trim().replace(/\s+/g, "").replace(/^[×x]/i, ""); if (/^\d{1,3}(,\d{3})+(\.\d+)?/.test(s)) s = s.replace(/,/g, ""); else s = s.replace(",", ".");
+  const fm = s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)/); if (fm) return parseFloat(fm[1]) / parseFloat(fm[2]);
+  const m = s.match(/^-?\d*\.?\d+/); return m ? parseFloat(m[0]) : NaN;
+}
+const workHTML = t => t.working ? `<ol class="ms">${t.working().map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : "";
+const msHTML = t => t.ms ? `<ul class="ms">${t.ms.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+function buildMarks(t, list) {
+  const got = list.map(i => t.stm[i]).filter(s => s.c), bad = list.map(i => t.stm[i]).filter(s => !s.c), all = t.stm.filter(s => s.c);
+  const inOrder = got.every((s, i) => !i || rk(s) >= rk(got[i - 1]));
+  return { got, bad, all, inOrder, missing: all.filter(s => !got.includes(s)) };
+}
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const n = t.rows.filter(([k, , a]) => S.gap[k] !== a).length;
+    return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]} …: ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
+  if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
+    const a = t.ans(); if (near(v, a, t.tol)) return { ok: true, html: esc("Correct.") + workHTML(t) };
+    const hit = t.wrongs.find(([x]) => near(v, x, t.tol)); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
+  if (t.kind === "build") { if (!S.list.length) return { skip: "Press the statements you want." };
+    const b = buildMarks(t, S.list);
+    if (b.bad.length) return { ok: false, html: esc(`“${b.bad[0].t}” is wrong. ${b.bad[0].why}`) };
+    if (b.missing.length) return { ok: false, html: esc(`Not yet: ${b.got.length} of ${b.all.length} points. ${t.miss[b.missing[0].c]}`) };
+    if (t.ordered && !b.inOrder) return { ok: false, html: esc("All the right points, but not in order. Start with the sentence starter.") };
+    return { ok: true, html: esc("Correct. " + t.explain) + msHTML(t) }; }
+  return { skip: "" };
+}
+const STUCKW = { words: "Key words", facts: "Hormone facts", graph: "Graph help" };
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
+function bump() { nqScore(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok")); if (task.kind === "build") hideWrongStm();
+    if (task.finish) { stopAll(); task.finish(M); }
+    drawAll(); renderSupport();
+  } else { p.wrong++; nqMiss(); streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; nqMiss(); msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
+  if (t.kind === "num") return esc(`Answer: ${num(t.ans())}${t.unit ? " " + t.unit : ""}.`) + workHTML(t);
+  return esc("Answer: " + t.explain);
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(); if (task.finish) { stopAll(); task.finish(M); } drawAll(); renderSupport();
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+/* ===== Instructions tour ===== */
+const TOUR = [
+  { el: "#tabs", tab: "body", text: "Four parts: a body model, glucose test graphs, the control system, and type 1 and type 2 diabetes." },
+  { el: "#evMeal", tab: "body", text: "Choose what the person does. Eat a meal adds glucose to the blood.", do: "ev-meal", doText: "Press Eat a meal." },
+  { el: "#bsvg", tab: "body", text: "Watch the dots: glucose (gold) and insulin (blue triangles) in the blood, and glycogen grains in the liver and muscle. Read the meter on the right." },
+  { el: "#tsvg", tab: "body", text: "The graph records blood glucose over time, so you can read it afterwards." },
+  { el: "#persSeg", tab: "body", text: "Compare a person without diabetes with type 1 and type 2 diabetes.", do: "pers", doText: "Choose Type 1." },
+  { el: "#gnSw", tab: "body", text: "Higher tier: switch on Glucagon to see what happens when blood glucose is low (try Exercise or Go without food)." },
+  { el: "#tabs", text: "Glucose tests: a graph for two people after a glucose drink.", do: "tab-test", doText: "Press Glucose tests." },
+  { el: "#gsvg", tab: "test", text: "Drag along the graph to move the time line. Read the values yourself, across to the axis.", do: "gdrag", doText: "Drag along the graph." },
+  { el: "#tabs", text: "Control system: receptors, coordination centres and effectors, and (HT) negative feedback.", do: "tab-ctrl", doText: "Press Control system." },
+  { el: "#loopStep", tab: "ctrl", text: "Step through what happens when blood glucose is too high.", do: "lstep", doText: "Press Step ▶." },
+  { el: "#tabs", text: "Diabetes: what happens in type 1 and type 2, and how each is treated." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-blood-glucose", "1"); } catch (e) {}
+  stopAll(); DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbR = fbx.getBoundingClientRect(), fbBot = fbx.innerHTML ? fbR.bottom - qr.top - q.clientTop + s0 : 0, fbTop = fbR.top - qr.top - q.clientTop + s0;
+    const want = fbBot - q.clientHeight + 8;   // feedback on screen; the question stays in view when it can, the verdict line always does
+    q.scrollTop = Math.max(0, want <= ttTop - 8 ? want : Math.min(want, fbTop - 8));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const fr = fbx.getBoundingClientRect(), want = fr.bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const d = want <= lim ? want : Math.min(want, fr.top - barH - 8); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { stopAll(); M.tab = st.tab; if (st.set) st.set(M); drawAll(); sizeCheck(); } else if (st.set) { st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Homeostasis", "Keeping the conditions inside the body steady, so cells work properly."],
+  ["Receptor", "Cells that detect a change (a stimulus)."], ["Coordination centre", "Receives and processes information: the brain, spinal cord or pancreas."],
+  ["Effector", "A muscle or gland that brings about a response."], ["Glucose", "The sugar carried in the blood. Cells use it for respiration."],
+  ["Insulin", "A hormone from the pancreas. It lowers blood glucose."], ["Glycogen", "The store of carbohydrate in liver and muscle cells."],
+  ["Glucagon (HT)", "A hormone from the pancreas. It raises blood glucose."], ["Negative feedback (HT)", "The response reverses the change, back towards normal."],
+  ["Type 1 diabetes", "The pancreas makes too little insulin, or none."], ["Type 2 diabetes", "Body cells no longer respond properly to insulin."]];
+function renderSupport() {
+  ["words", "facts", "graph"].forEach(k => { $(k + "Box").hidden = !support[k]; });
+  const open = quizOpen(), hideW = open && task.hideWords || [];
+  $("wordsBox").innerHTML = "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${hideW.includes(w[0]) ? "hidden for this question: try it first." : esc(w[1])}</p>`).join("");
+  $("factsBox").innerHTML = qh("facts") ? "<h3>Hormone facts</h3><p>Hidden for this question: try it first.</p>"
+    : "<h3>Hormone facts</h3><p><b>Insulin</b> (from the pancreas), when blood glucose is too high: glucose moves into cells; liver and muscle cells store it as glycogen.</p><p><b>Glucagon (HT)</b> (from the pancreas), when blood glucose is too low: the liver changes glycogen into glucose and releases it.</p>";
+  $("graphBox").innerHTML = "<h3>Graph help</h3><p>Find the time on the bottom axis. Go straight up to the line, then straight across to the left-hand axis and read the value.</p><p>Drag the time line: the dashed guide runs across to the axis. Each small square is 1 mmol/dm³ up and 10 minutes along.</p><p>Percentage increase = (new − start) ÷ start × 100.</p><p>Some exam papers use mg per 100 cm³: 5 mmol/dm³ ≈ 90 mg per 100 cm³.</p>";
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Wiring: controls ===== */
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+$("persSeg").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return; if (locked()) return lockMsg(); bodyReset(b.dataset.p); tourSignal("pers"); b.focus({ preventScroll: true }); });
+$("gnSw").addEventListener("click", () => { if (locked()) return lockMsg(); M.gn = !M.gn; drawAll(); });
+$("evMeal").addEventListener("click", () => bodyEvent("meal"));
+$("evEx").addEventListener("click", () => bodyEvent("ex"));
+$("evFast").addEventListener("click", () => bodyEvent("fast"));
+$("evInj").addEventListener("click", () => bodyEvent("inj"));
+$("evReset").addEventListener("click", () => bodyReset());
+$("lnN").addEventListener("click", () => { if (locked()) return lockMsg(); M.lnN = !M.lnN; drawAll(); if (!M.lnN || !M.lnT) tried(7); });
+$("lnT").addEventListener("click", () => { if (locked()) return lockMsg(); M.lnT = !M.lnT; drawAll(); if (!M.lnN || !M.lnT) tried(7); });
+/* the glucose test graph: press and drag along it to move the time line (5-minute steps); arrow keys on the graph too */
+(function gtWire() {
+  const svg = $("gsvg"); let dr = null;
+  svg.setAttribute("tabindex", "0");
+  const tFrom = e => { const G = gtGeo(), r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * (G.w / (r.width || 1)); return clamp(Math.round((x - G.x0) / (G.x1 - G.x0) * GT_MAX / 5) * 5, 0, GT_MAX); };
+  const set = v => { if (v === M.tcur) return; M.tcur = v; setLayer($("gDyn"), gtDyn(M)); renderTOut(); tourSignal("gdrag"); if (mode === "demo" && (v === gpeak("n")[0] || v === gpeak("t")[0])) tried(6); };
+  svg.addEventListener("pointerdown", e => { e.preventDefault(); if (locked()) return lockMsg(); dr = { id: e.pointerId }; try { svg.setPointerCapture(e.pointerId); } catch (x) {} set(tFrom(e)); });
+  svg.addEventListener("pointermove", e => { if (!dr || e.pointerId !== dr.id) return; set(tFrom(e)); });
+  const up = e => { if (dr && e.pointerId === dr.id) dr = null; };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  svg.addEventListener("keydown", e => { const k = e.key, d = k === "ArrowRight" || k === "ArrowUp" ? 5 : k === "ArrowLeft" || k === "ArrowDown" ? -5 : k === "PageUp" ? 30 : k === "PageDown" ? -30 : null;
+    if (d == null && k !== "Home" && k !== "End") return; e.preventDefault(); if (locked()) return lockMsg(); set(k === "Home" ? 0 : k === "End" ? GT_MAX : clamp(M.tcur + d, 0, GT_MAX)); });
+})();
+if (window.ResizeObserver) {
+  new ResizeObserver(() => { if (M.tab === "test" && sizeOf("g")) drawGT(); }).observe($("gsvg"));
+  new ResizeObserver(() => { if (M.tab === "body" && sizeOf("t")) drawTrace(); }).observe($("tsvg"));
+}
+$("ctrlView").addEventListener("click", e => { const b = e.target.closest("button[data-view]"); if (!b) return; if (locked()) return lockMsg(); M.view = b.dataset.view; M.lstep = 0; drawAll(); if (M.view === "loop") tried(9); });
+$("loopDir").addEventListener("click", e => { const b = e.target.closest("button[data-dir]"); if (!b) return; if (locked()) return lockMsg(); M.dir = b.dataset.dir; M.lstep = 0; drawAll(); });
+$("loopStep").addEventListener("click", () => { if (locked()) return lockMsg(); const max = M.view === "loop" ? 3 : 4; M.lstep = M.lstep >= max ? 0 : M.lstep + 1; drawAll(); tourSignal("lstep"); if (M.lstep === max && M.view === "parts" && M.dir === "hi") tried(8); });
+$("dcards").addEventListener("click", e => { const b = e.target.closest("button[data-try]"); if (!b) return; if (locked()) return lockMsg(); tried(10); M.tab = "body"; bodyReset(b.dataset.try); sizeCheck(); const pb = document.querySelector(`#persSeg [data-p="${b.dataset.try}"]`); if (pb) pb.focus({ preventScroll: true }); });
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "easy" || m === "hard") bankNow();
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") { stopAll(); DEMO_M = M; }
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask(); sizeCheck(); nqMode();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+  new IntersectionObserver(es => { visOK = es[0].isIntersecting; resumeAnim(); }).observe($("model"));   // pause the body model while it is off-screen
+}
+document.addEventListener("visibilitychange", resumeAnim);
+window.addEventListener("resize", () => { sizeCheck(); });
+
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+function bankRun() {   // the load-time question-bank check, run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (!errs.length) return;
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  if (mode !== "demo") { idx = Math.min(idx, LEVELS[level].length - 1); loadTask(); }
+  bump();
+}
+function nqRedraw() { drawAll(); sizeCheck(); }
+bankLater(); nqTryFold();
+bump(); setMode("demo"); renderSupport(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:gcse-blood-glucose")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+/* == shared: next-question v4 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026; v4 16 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress.
+   v4: any later write to the feedback box of a finished question (Hint, Check, a tool message) keeps the Next button
+   (nqFbWatch); on phones (<= 600 px wide) level descriptors in the feedback fold into a closed "Show mark scheme" (nqMsFold);
+   on phones nqReveal also brings the top of the feedback back into view when it and Next fit but the top was pushed up. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions"), ast = act && /sticky|fixed/.test(getComputedStyle(act).position);
+      let bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (ast && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)) lim -= act.getBoundingClientRect().height;
+      else if (ast) { const ar = act.getBoundingClientRect(); if (ar.top < innerHeight / 2) bar = Math.max(bar, ar.bottom); }   // v4: one stuck at the top covers the top
+      d = r.bottom + 10 - lim;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+      else {   // v4: Next is on screen but the top of the feedback is hidden (the browser's scroll anchoring can push it up when
+        // the box grows): if the whole message and Next fit, bring its top back into view
+        const m = (row.closest(".msg") || nqFbEl() || row).getBoundingClientRect();
+        if (m.top < bar && r.bottom - m.top + 18 <= lim - bar) window.scrollTo({ top: Math.max(0, scrollY - (bar + 8 - m.top)), behavior: how });
+      }
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+/* v4: the feedback box of a finished question always ends with Next. A tool's Hint or Check (or any other message) can
+   rewrite the box after the question is done, which used to drop the button; this puts it back (no focus move, no scroll).
+   It also folds the mark scheme on phones. A MutationObserver on the box only (no loop): our own changes find nothing to do. */
+var NQ_FBW = false;
+function nqFbWatch() {
+  const fb = nqFbEl(); if (NQ_FBW || !fb || !window.MutationObserver) return; NQ_FBW = true;
+  new MutationObserver(() => {
+    nqMsFold(fb);
+    if (mode === "demo" || fb.querySelector(".nq-row") || !(fb.children.length || fb.textContent.trim())) return;
+    const t = nqT(); if (t && nqIsDone(level, t) && !(document.getElementById("quizPanel") || fb).classList.contains("nq-ended")) nqAfter("finished");
+  }).observe(fb, { childList: true, subtree: true, characterData: true });
+  const mq = nqMsMQ(); if (mq) { const re = () => nqMsFold(fb); if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
+  nqMsFold(fb);
+}
+/* Mark-scheme fold (phones only, <= 600 px wide): level descriptors sit in a closed <details> "Show mark scheme" so the
+   verdict / model answer and Next fit on the screen. A block is folded if the tool marks it with class "nq-ms", or if it is
+   a list whose first item, or a paragraph / span whose text, starts "Level 0-3 (" (the levels of response of the 6-mark
+   questions). A short heading just
+   before it ("Mark scheme", "Levels:") goes in with it. Nothing new is shown: it only wraps what is already in the box.
+   Wider than 600 px the fold is taken out again, so laptops and boards are unchanged. */
+var NQ_MSQ = null;
+function nqMsMQ() { if (!NQ_MSQ && window.matchMedia) NQ_MSQ = matchMedia("(max-width:600px)"); return NQ_MSQ; }
+function nqMsIs(el) {   // tool-marked, or a list / paragraph / span that starts with a level descriptor, "Level 3 (5–6): …"
+  if (el.classList.contains("nq-ms")) return true;
+  const LV = /^\s*Level\s*[0-3]\s*\(/;
+  if (/^(UL|OL)$/.test(el.tagName)) { const li = el.firstElementChild; return !!li && LV.test(li.textContent || ""); }
+  return /^(P|SPAN)$/.test(el.tagName) && !el.querySelector("button,.nq-row") && LV.test(el.textContent || "");
+}
+function nqMsHead(el) {   // a short heading right before the block (only white space between), e.g. <b>Mark scheme</b> or <p><b>Levels:</b></p>
+  let n = el.previousSibling; while (n && n.nodeType === 3 && !n.textContent.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1 || !/^(B|STRONG|P|H3|H4|H5|SPAN)$/.test(n.tagName) || n.classList.contains("nq-ms")) return null;
+  const t = (n.textContent || "").trim();
+  return t && t.length <= 48 && (/mark scheme|levels?\b|marking/i.test(t)) ? n : null;
+}
+function nqMsFold(fb) {
+  const mq = nqMsMQ(), on = !!(mq && mq.matches);
+  if (!on) { fb.querySelectorAll("details.nq-fold").forEach(d => { const inn = d.querySelector(".nq-fold-in");
+      if (inn) while (inn.firstChild) d.parentNode.insertBefore(inn.firstChild, d); d.remove(); }); return; }
+  const all = [...fb.querySelectorAll(".nq-ms, ul, ol, p, span")].filter(el => !el.closest("details") && nqMsIs(el));   // a tool's own <details> fold (e.g. "msd") is left as it is
+  const tops = all.filter(el => !all.some(o => o !== el && o.contains(el)));
+  if (!tops.length) return;
+  const groups = [];   // neighbouring blocks (with their headings) share one fold
+  tops.forEach(el => { const h = nqMsHead(el), first = h || el, g = groups[groups.length - 1];
+    let prev = first.previousSibling; while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+    if (g && prev === g[g.length - 1]) { if (h) g.push(h); g.push(el); } else groups.push(h ? [h, el] : [el]); });
+  groups.forEach(g => {
+    const d = document.createElement("details"), sm = document.createElement("summary"), inn = document.createElement("div");
+    d.className = "nq-fold"; inn.className = "nq-fold-in";
+    sm.innerHTML = '<span class="nq-fs">Show mark scheme</span><span class="nq-fh2">Hide mark scheme</span>';
+    d.append(sm, inn); g[0].parentNode.insertBefore(d, g[0]);
+    let n = g[0];   // move the group, and the white space between its parts, into the fold
+    const last = g[g.length - 1];
+    while (n) { const nx = n.nextSibling; inn.appendChild(n); if (n === last) break; n = nx; }
+  });
+}
+nqTryFold(); nqBar(); nqStickOn(); nqFbWatch();
+/* == end shared: next-question v4 == */
+
+/* == shared: bank-check-later v4 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v4 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Homeostasis keeps conditions in the body steady. Receptors detect a change, coordination centres process it and effectors respond.",
+      "The pancreas monitors blood glucose. Insulin makes cells take in glucose and store it as glycogen. Type 1: too little insulin; type 2: cells stop responding."
+    ],
+    "hard": [
+      "(HT) When blood glucose is low, the pancreas releases glucagon and the liver changes glycogen into glucose: negative feedback reverses each change.",
+      "In a glucose test the peak for type 1 diabetes is higher and stays high, because little or no insulin is made. Insulin injections bring it down."
+    ]
+  };
+  return F[lv] || F.easy;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
