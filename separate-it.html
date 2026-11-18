@@ -2584,7 +2584,7 @@ function nqPresent(on) {
       } catch (e) { P.fs = false; }
     }
     nqPresFit();
-    window.addEventListener("resize", nqPresFitSoon);
+    window.addEventListener("resize", nqPresResize);
     if (window.ResizeObserver) {   // the model's content changes size (a tab, a mode, a readout): fit again. Its children are watched, as the
       // stage itself is capped at the screen height
       P.ro = new ResizeObserver(() => { if (NQ_PR === P && Math.abs(Math.max(st.offsetHeight, st.scrollHeight) - P.h) > 2) nqPresFitSoon(true); });
@@ -2595,7 +2595,7 @@ function nqPresent(on) {
   } else {
     const P = NQ_PR; if (!P) return;
     NQ_PR = null; NQ_PZ = 1;
-    window.removeEventListener("resize", nqPresFitSoon); if (P.ro) P.ro.disconnect();
+    window.removeEventListener("resize", nqPresResize); if (P.ro) P.ro.disconnect();
     const band = $("nqPband"); if (band) band.remove();
     P.off.forEach(o => o.removeAttribute("data-nq-off")); P.anc.forEach(a => a.removeAttribute("data-nq-anc"));
     P.st.removeAttribute("data-nq-stage");
@@ -2626,6 +2626,7 @@ function nqPresFs() {
   if (NQ_PR && !fsEl && NQ_PR.fs) { nqPresent(false); return; }   // Esc / the browser's own exit
   if (NQ_PR) nqPresFitSoon(); else nqPresBack();
 }
+function nqPresResize() { nqPresFitSoon(); }   // a screen resize: a full refit (the Event must not count as "content only")
 function nqPresFitSoon(content) {   // content: only the tool's content changed size (not the screen), so keep the chosen width and zoom
   const P = NQ_PR; if (!P) return;
   if (!content) P.full = true;
@@ -2653,7 +2654,12 @@ function nqPresFit(keep) {   // keep: re-fit after a content change at the same 
   const band = ($("nqPband") || { offsetHeight: 56 }).offsetHeight, pad = Math.round(Math.min(innerWidth, innerHeight) * .012) + 6;
   const VW = document.documentElement.clientWidth - 2 * pad, VH = innerHeight - band - pad;
   S("zoom", "1"); S("left", "0px"); S("top", "0px"); S("height", "auto"); S("max-height", "none");
-  if (keep) { nqPresPlace(P, st, S, P.bw, NQ_PZ, VW, VH, band, pad, y); return; }
+  if (keep) {   // same width and zoom; but a much taller or shorter view (a new tab or view), or one that no longer fits, gets a full refit
+    const h0 = P.h; nqPresPlace(P, st, S, P.bw, NQ_PZ, VW, VH, band, pad, y);
+    const fitted = h0 * NQ_PZ <= VH + 1, over = P.h * NQ_PZ > VH * 1.1;   // >10 % past: a small overrun (a message after a drag) just scrolls, so graphs keep their size   // a view that fitted the board and now runs past it also gets a full refit
+    if (!(h0 > 0) || (Math.abs(P.h - h0) <= .25 * h0 && !(fitted && over))) return;
+    S("zoom", "1"); S("left", "0px"); S("top", "0px"); S("height", "auto"); S("max-height", "none");
+  }
   const zmax = 3, zmin = 1, maxW = Math.max(200, Math.round(VW / zmin)), minW = Math.min(maxW, Math.max(460, P.w0 || 0));   // never narrower than on the page: the tool's layout is made for that width
   let sc = null, best = null; P.cands = [];
   for (let i = 0; i <= 12; i++) {
