@@ -1787,10 +1787,12 @@ function nqPresFs() {
   if (NQ_PR && !fsEl && NQ_PR.fs) { nqPresent(false); return; }   // Esc / the browser's own exit
   if (NQ_PR) nqPresFitSoon(); else nqPresBack();
 }
-function nqPresFitSoon(content) {
-  const P = NQ_PR; if (!P || NQ_PFT) return;
+function nqPresFitSoon(content) {   // content: only the tool's content changed size (not the screen), so keep the chosen width and zoom
+  const P = NQ_PR; if (!P) return;
+  if (!content) P.full = true;
+  if (NQ_PFT) return;
   if (content) { const t = Date.now(); if (t - P.t0 > 1000) { P.t0 = t; P.n = 0; } if (++P.n > 6) return; }   // content that keeps changing size: stop chasing it
-  NQ_PFT = requestAnimationFrame(() => { NQ_PFT = 0; nqPresFit(); });
+  NQ_PFT = requestAnimationFrame(() => { NQ_PFT = 0; const keep = !P.full && !!P.bw; P.full = false; nqPresFit(keep); });
 }
 function nqPresScene(st) {   // the picture to make big: data-present="scene", else the biggest svg / canvas / img showing
   const m = st.querySelector('[data-present="scene"]'); if (m && m.getClientRects().length) return m;
@@ -1806,12 +1808,13 @@ function nqPresH(st, vh) {   // --nq-vh = the screen's height in the stage's own
   if (h > vh + 1 && st.style.getPropertyValue("--nq-vh")) { st.style.setProperty("--nq-vh", Math.max(vh * .3, vh - (h - vh)) + "px"); h = st.offsetHeight; }
   return h;
 }
-function nqPresFit() {
+function nqPresFit(keep) {   // keep: re-fit after a content change at the same width and zoom (the graph doesn't change size under the pointer)
   const P = NQ_PR; if (!P) return;
-  const st = P.st, S = (k, v) => st.style.setProperty(k, v, "important");
+  const st = P.st, S = (k, v) => st.style.setProperty(k, v, "important"), y = st.scrollTop;   // a scrolled view stays where the pupil left it
   const band = ($("nqPband") || { offsetHeight: 56 }).offsetHeight, pad = Math.round(Math.min(innerWidth, innerHeight) * .012) + 6;
   const VW = document.documentElement.clientWidth - 2 * pad, VH = innerHeight - band - pad;
   S("zoom", "1"); S("left", "0px"); S("top", "0px"); S("height", "auto"); S("max-height", "none");
+  if (keep) { nqPresPlace(P, st, S, P.bw, NQ_PZ, VW, VH, band, pad, y); return; }
   const zmax = 3, zmin = 1, maxW = Math.max(200, Math.round(VW / zmin)), minW = Math.min(maxW, Math.max(460, P.w0 || 0));   // never narrower than on the page: the tool's layout is made for that width
   let sc = null, best = null; P.cands = [];
   for (let i = 0; i <= 12; i++) {
@@ -1829,13 +1832,17 @@ function nqPresFit() {
     if (!best || tier > best.tier || (tier === best.tier && score > best.score + Math.abs(best.score) * .002)) best = { w, h, z, score, tier };
     P.cands[i] = [w, h, +zf.toFixed(2), tier, Math.round(score / 1e4)];   // kept for checking the fit (nqPresFit's choices)
   }
-  const z = Math.floor(best.z * 100) / 100;
-  S("width", best.w + "px"); NQ_PZ = z;
+  P.bw = best.w; NQ_PZ = Math.floor(best.z * 100) / 100;
+  nqPresPlace(P, st, S, best.w, NQ_PZ, VW, VH, band, pad, y);
+}
+function nqPresPlace(P, st, S, w, z, VW, VH, band, pad, y) {
+  S("width", w + "px");
   const h = nqPresH(st, VH / z); P.h = h;
   S("zoom", String(z));
-  S("left", Math.round(pad + Math.max(0, (VW - z * best.w) / 2)) / z + "px");
+  S("left", Math.round(pad + Math.max(0, (VW - z * w) / 2)) / z + "px");
   S("top", Math.round(band + Math.max(0, (VH - z * h) / 2)) / z + "px");
   S("max-height", (VH / z) + "px");
+  if (y) st.scrollTop = y;
 }
 nqPresInit();
 /* == end shared: present v5 == */
