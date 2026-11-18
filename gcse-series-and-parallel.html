@@ -1,0 +1,2095 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Series and Parallel</title>
+<!--
+  SCIENCE SPEC — Series and Parallel (GCSE: AQA 8464 Combined Science Trilogy 6.2.1–6.2.4.2 and 8463 Physics 4.2.1–4.2.4.2).
+    Site placement: KS4 · Physics · "6.2 Electricity". Foundation and Higher (no Higher-tier-only content in these sections).
+    6.2.1.1 standard circuit symbols (cell, battery, switch, resistor, variable resistor, lamp, LDR, thermistor, diode, LED, fuse,
+      ammeter, voltmeter: Circuit symbols support); 6.2.1.2 Q = I t, the current is the same everywhere in a single loop;
+      6.2.1.3 V = I R; 6.2.1.4 LDR (resistance falls as light intensity rises) and thermistor (falls as temperature rises);
+    6.2.2 series (same current; p.d. shared; R total = R1 + R2) and parallel (same p.d.; currents add; total resistance less than the
+      smallest), explained qualitatively (no calculation of parallel resistance with 1/R: only R = V ÷ I from meter readings);
+    6.2.4.1 P = V I = I² R; 6.2.4.2 E = P t and E = Q V.
+    Misconceptions targeted: current is used up; a battery gives a constant current; adding resistors in parallel increases
+      resistance; voltage flows (voltmeters in series).
+  Built 17 Nov 2026 from the gcse-enzymes-and-ph shell (kit v4), with the circuit drawing ideas of circuit-builder and
+    gcse-resistance (after the 17 Nov circuit fix): unbroken wires (no erase strokes), junction dots only where 3 or more wires
+    meet, ammeters in series in the branch they measure, voltmeters across the part they measure.
+  Model, in two tabs. Everything is drawn in code (SVG) in real pixels; no pictures.
+    1. Series and parallel: 1–3 parts (resistors 2–20 Ω, a lamp, and in part 1 an LDR or a thermistor), 1–4 cells of 1.5 V, a switch,
+       ammeters and voltmeters that pupils read, and a switched-on time for charge and energy.
+    2. LDR and thermistor: a 6 V battery, an ammeter and the sensor with a voltmeter across it; light or temperature steps; Record
+       plots R on a graph.
+  While a question is open, anything that would give its answer is hidden (meter readings, resistor values, the graph, the Demo
+    readout, Key words per question), the question uses only its own tab and its controls are locked. All of it comes back after a
+    right Check or Show answer. No pupil-visible number is 69: shown numbers are nudged to 70 (bankCheck checks every reachable
+    circuit, and that no question needs a nudge).
+  Performance: drawn on demand; nothing animates, so 0 rAF when idle.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--grid:#D5DCE5;--tagbg:#FBFAF8;--tagline:#B9C3D0;--wire:#1E252E;--res:#FFFFFF;--lamp:#FFE27A;--glow:#FFD84A;--msym:#FFFFFF;--sun:#F2B33B;--therm:#E8EEF3;--hot:#D64541;--gline:#2E6DB4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--grid:#2E4A70;--tagbg:#1E3555;--tagline:#4A6890;--wire:#E9EDF3;--res:#16263F;--lamp:#E8C53A;--glow:#FFD84A;--msym:#16263F;--sun:#F5C35A;--therm:#2B4A6E;--hot:#FF7B6E;--gline:#8CC0FF}}
+:root[data-theme="dark"]{--grid:#2E4A70;--tagbg:#1E3555;--tagline:#4A6890;--wire:#E9EDF3;--res:#16263F;--lamp:#E8C53A;--glow:#FFD84A;--msym:#16263F;--sun:#F5C35A;--therm:#2B4A6E;--hot:#FF7B6E;--gline:#8CC0FF}
+.rplabel{margin:6px 0 0;font-size:16px;font-weight:700;color:var(--accent)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.seg button{font:700 16px var(--f-body);padding:8px 14px;min-height:44px;border:0;background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"]::before{content:"✓ "}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.tabs button{font-size:17px;padding:10px 6px;line-height:1.25}
+.tabs button[aria-pressed="true"]::before{content:""}
+.pane{display:grid;gap:10px}
+.scene{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.scene text{font-family:var(--f-body);fill:var(--ink)}
+.scene .mut{fill:var(--muted)}
+.scene .ax{stroke:var(--ink);stroke-width:2.4;fill:none}
+.scene .gr{stroke:var(--grid);stroke-width:1}
+.scene .tag{fill:var(--tagbg);stroke:var(--tagline);stroke-width:1.5}
+.scene .shine{fill:rgba(255,255,255,.38)}
+.scene .lcd{fill:#1E252E;stroke:var(--metal-edge);stroke-width:2}
+.scene .lcdt{fill:#9EF0B4!important;font-variant-numeric:tabular-nums;font-weight:700}
+.scene .acc{fill:var(--accent)!important;font-weight:700}
+.scene .bold{font-weight:700}
+.scene .pedge{stroke:var(--particle-edge)}
+.scene .enz{fill:var(--enz);stroke:var(--particle-edge);stroke-width:2.5;stroke-linejoin:round}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.gl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.btn:disabled,.sw:disabled{opacity:.45;cursor:default}
+.readout{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:3px}
+.readout p{margin:0}
+.readout .r1{font-weight:700;font-size:clamp(18px,1.9vw,20px);color:var(--accent)}
+.readout .r2{font-size:17px;font-variant-numeric:tabular-nums}
+.readout .r3{font-size:16px;color:var(--muted)}
+.readout .warn{color:var(--bad);font-weight:700}
+.readout .okc{color:var(--good);font-weight:700}
+.readout ul{margin:2px 0 0;padding-left:22px}
+.locknote{margin:0;font-size:16px;padding:6px 10px;border-left:4px solid var(--gold);background:var(--surface);border-radius:6px}
+.small{font-size:16px;color:var(--muted);margin:0}
+.frame{margin:0;font-size:16px;padding:6px 10px;background:var(--sunk);border-left:4px solid var(--accent);border-radius:6px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.status{font-size:16px;font-weight:700;color:var(--accent)}
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none;min-width:1.2em}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.opts.build .opt[aria-pressed="true"]::after{content:"✓ in answer"}
+.grow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:17px;line-height:1.35}
+.grow select{font:700 17px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.grid2 .grow{justify-content:space-between}
+@media (max-width:420px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.numin{font:700 18px var(--f-body);width:6.5em;max-width:100%;min-height:44px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.unit{font-weight:700}
+.support-box{margin-top:2px;background:var(--surface);border:1px dashed var(--accent);border-radius:8px;padding:8px 12px;font-size:16px}
+.support-box h3{margin:0 0 4px;font-size:16px;color:var(--accent)}
+.support-box p{margin:2px 0}
+#supportWrap{display:grid;gap:8px}
+.ms{margin:6px 0 0;padding-left:20px;font-size:16px}
+@media (max-width:560px){.seg button{padding:8px 10px;font-size:15px}.tabs button{font-size:15px;padding:8px 3px}
+  .rt{font-size:15px}.cnt{min-width:40px}.meanin{width:3.9em}.stp{font-size:14px;padding:6px 9px}}
+@media (min-width:901px) and (max-height:820px){
+  .model{gap:8px}.model .seg button{min-height:40px;padding:6px 12px}.model .readout{padding:6px 10px}.model .readout .r2{font-size:16px}
+  .model .stp{min-height:40px;padding:5px 10px}
+  .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:5px}
+  .qpanel .grow{font-size:16px}.qpanel .grow select{min-height:40px;padding:4px 8px;font-size:16px}
+  .qpanel .frame{padding:4px 8px;font-size:15px}
+}
+@media (min-width:901px) and (max-height:820px){#demoPanel{gap:8px}#demoPanel .try{gap:2px}#demoPanel .newhere{padding:6px 10px}}
+/* answer rows never widen the question panel: long dropdown options wrap the row or truncate inside the select (30 Oct) */
+#quizPanel, #answer, #answer .opts, #answer .grid2, #answer .grow{min-width:0;max-width:100%}
+#answer .grow > span{min-width:0;overflow-wrap:anywhere}
+#answer .grow select{min-width:0;max-width:100%;text-overflow:ellipsis}
+#answer .opts:not(.bstm) .grow select{flex:1 1 220px}
+#answer .opt{min-width:0;max-width:100%;box-sizing:border-box}
+#answer .opt > span{min-width:0;overflow-wrap:anywhere}
+/* ---- Series and parallel: circuit diagrams, sensor circuit and graph ---- */
+#model{grid-template-columns:minmax(0,1fr);container-type:inline-size}
+.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tabs button.off{opacity:.45;cursor:not-allowed}
+.ctl-lbl{font-weight:700;font-size:16px}
+.btn.go{min-height:46px}
+.sel{font:700 16px var(--f-body);padding:6px 10px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.stepper{display:inline-flex;align-items:center;gap:6px}
+.stepper .btn{min-width:44px;min-height:44px;padding:4px 10px}
+.stepper output{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;min-width:4.6em;text-align:center}
+.cond{display:inline-flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.cond:empty{display:none}
+.sw.tog{font:700 16px var(--f-body);min-height:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.sw.tog[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.sw.tog[aria-pressed="true"]::before{content:"✓ "}
+.sw.tog[aria-pressed="false"]::before{content:"+ "}
+.sbox{position:relative;min-width:0}
+.sbox .scene{width:100%;height:auto;aspect-ratio:960/480}
+#cbox{max-height:var(--ch,none)}
+#cbox .scene{max-height:var(--ch,none)}
+.sgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.sb2 .scene{aspect-ratio:auto}
+#ssvg{aspect-ratio:520/400}#gsvg{aspect-ratio:440/300}
+@container (min-width:640px){.sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+.scene .w{stroke:var(--wire);stroke-width:3;fill:none;stroke-linecap:square}
+.scene .sd{stroke:var(--wire);stroke-width:2.5;fill:none}
+.scene .sdf{fill:var(--wire);stroke:none}
+.scene .res{fill:var(--res);stroke:var(--wire);stroke-width:3}
+.scene .ring{fill:none;stroke:var(--wire);stroke-width:2.5}
+.scene .lampc{fill:var(--lamp);stroke:var(--wire);stroke-width:3}
+.scene .glow{fill:var(--glow)}
+.scene .msym{fill:var(--msym);stroke:var(--wire);stroke-width:3}
+.scene .post{fill:var(--wire)}
+.scene .jn{fill:var(--wire)}
+.scene .mid{font-weight:700;fill:var(--muted)}
+.scene .sun{fill:var(--sun)}
+.scene .ray{stroke:var(--sun);stroke-width:3;stroke-linecap:round}
+.scene .therm{fill:var(--therm);stroke:var(--wire);stroke-width:1.5}
+.scene .bulb,.scene .hot{fill:var(--hot)}
+.scene .gline{fill:none;stroke:var(--gline);stroke-width:2.5}
+.scene .gpt{fill:var(--gline);stroke:var(--surface);stroke-width:1.5}
+.sel.hidv{color:var(--muted)}
+/* symbols key */
+.skg{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.sk{margin:0;display:grid;justify-items:center;gap:2px;background:var(--sunk);border-radius:8px;padding:4px}
+.sk svg{width:100%;max-width:120px;height:auto}
+.sk figcaption{font-size:14px;font-weight:700;text-align:center}
+.sk .w{stroke:var(--wire);stroke-width:3;fill:none}.sk .sd{stroke:var(--wire);stroke-width:2.5;fill:none}.sk .sdf{fill:var(--wire)}
+.sk .res{fill:var(--res);stroke:var(--wire);stroke-width:3}.sk .ring{fill:none;stroke:var(--wire);stroke-width:2.5}.sk .lampc{fill:var(--res);stroke:var(--wire);stroke-width:3}
+.sk .msym{fill:var(--msym);stroke:var(--wire);stroke-width:3}.sk .post,.sk .jn{fill:var(--wire)}.sk text{fill:var(--ink);font-family:var(--f-body)}.sk .bold{font-weight:700}
+.ctlrow2{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.ctlrow2 > .controls{display:contents}
+.seg button{min-width:44px}
+.readout .r1{font-size:18px}.readout .r2,.readout .r3{font-size:16px}
+.cv{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+.qpanel .opt{line-height:1.3}
+@media (max-width:400px){h1{font-size:23px}header{gap:10px}}
+@media (min-width:901px) and (max-height:820px){.qpanel .opts.build .opt{padding:5px 10px;min-height:38px;font-size:16px}}
+/* (no late overrides) */
+/* == tool: gcse-series-and-parallel layout (17 Nov 2026) ==
+   The circuit is capped by the screen height (--ch), so the controls, the circuit and the readout fit on one screen. */
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+}
+@media (min-width:901px){ .model{--ch:min(620px,max(340px,calc(100vh - 480px)))} .model:has(#condB .stepper:not([hidden])){--ch:min(620px,max(340px,calc(100vh - 540px)))} }
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:10px 16px 12px;gap:8px}
+  .model .pane{gap:8px}
+  .model .controls{gap:6px 10px}
+  .model .btn,.model .sw.tog,.model .sel{min-height:40px}
+  .model .btn{padding:6px 12px}
+  .model .stepper .btn{min-height:40px}
+  .model .readout{padding:6px 10px}
+  .model{--ch:max(340px,calc(100vh - 400px))}
+  .model:has(#condB .stepper:not([hidden])){--ch:max(340px,calc(100vh - 452px))}
+}
+@container (max-width:599.98px){ #cbox .scene{aspect-ratio:520/640} }
+@media (max-width:900px){
+  #buildCtl > .gl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@media (max-width:600px){
+  .ctlrow2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #partCtl{display:contents}#partCtl > span[id^="pw"][hidden]{display:none}
+  #partCtl > span[id^="pw"]{min-width:0}#partCtl .sel{width:100%;padding:6px 4px;font-size:15px}
+  #partCtl #condB{grid-column:1 / -1}
+  #swCtl{display:contents}
+  #swCtl .btn,#swCtl .sw.tog{padding:2px 2px;font-size:13px;white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+  .sw.tog[aria-pressed="false"]::before{content:""}
+  #swCtl > .ctl-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #swCtl .sel{width:100%}
+  #buildCtl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  #arrSeg,#nSeg{flex-wrap:nowrap;flex:none}#nSeg{margin-left:auto}
+  #buildCtl .seg button{padding:8px 6px}
+  #cStep{flex:none;gap:4px}#cStep .ctl-lbl,.cv{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #cStep output{min-width:3.4em}
+  #swBtn{flex:1 1 90px;white-space:normal;line-height:1.15;padding:4px 8px;font-size:15px}
+  .ctlrow2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #partCtl{display:contents}#partCtl > span[id^="pw"][hidden]{display:none}
+  #partCtl > span[id^="pw"]{min-width:0}#partCtl .sel{width:100%;padding:6px 4px;font-size:15px}
+  #partCtl #condB{grid-column:1 / -1}
+  #swCtl{display:contents}
+  #swCtl .btn,#swCtl .sw.tog{padding:2px 2px;font-size:13px;white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+  .sw.tog[aria-pressed="false"]::before{content:""}
+  #swCtl > .ctl-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #swCtl .sel{width:100%}
+  #buildCtl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center}
+  #arrSeg,#nSeg{flex-wrap:nowrap}#arrSeg{justify-self:start}
+  #buildCtl .seg button{padding:8px 8px}
+  #nSeg{justify-self:end}
+  #swBtn{white-space:normal;line-height:1.15;padding:4px 8px;font-size:15px}
+  #cStep{gap:4px}#cStep .ctl-lbl{font-size:15px}
+  .model .pane{gap:8px}
+}
+@media (max-width:420px){
+  .model .controls{gap:6px 8px}
+  .stepper output{min-width:3.6em}
+  .sel{font-size:15px;padding:6px 6px}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+}
+/* == end tool: gcse-series-and-parallel layout == */
+/* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v4 == */
+
+/* == shared: about-model v4 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v4 == */
+
+/* == shared: phone-order v4 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v4 == */
+
+/* == shared: projector v4 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v4 == */
+
+/* == shared: touch v4 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+  .feedback details:not(.nq-fold)>summary{min-height:44px;box-sizing:border-box;padding-top:10px;padding-bottom:6px}   /* a tool's own fold in the feedback (e.g. "msd") */
+}
+/* == end shared: touch v4 == */
+
+/* == shared: polish v4 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v4 == */
+
+/* == shared: next-question v4 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* v4: mark-scheme fold (phones, <= 600 px wide; the JS only folds at that width). A 44 px+ tap target, keyboard focus ring. */
+.feedback details.nq-fold{margin:8px 0 2px;border:1px solid var(--line);border-radius:10px;background:transparent}
+.feedback details.nq-fold>summary{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 12px;cursor:pointer;font-weight:700;list-style:none;border-radius:9px;color:inherit;-webkit-tap-highlight-color:transparent}
+.feedback details.nq-fold>summary::-webkit-details-marker{display:none}
+.feedback details.nq-fold>summary::before{content:"";flex:none;width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.feedback details.nq-fold[open]>summary::before{transform:rotate(90deg)}
+.feedback details.nq-fold>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.feedback details.nq-fold .nq-fh2,.feedback details.nq-fold[open] .nq-fs{display:none}
+.feedback details.nq-fold[open] .nq-fh2{display:inline}
+.feedback .nq-fold-in{padding:0 12px 8px}
+.feedback .nq-fold-in>:first-child{margin-top:0}
+@media (prefers-reduced-motion:no-preference){.feedback details.nq-fold>summary::before{transition:transform .16s ease}}
+/* == end shared: next-question v4 == */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Series and Parallel<small><span class="cb-desc">Build series and parallel circuits, read the meters, and use Q = It, V = IR, P = VI = I²R and E = Pt = QV. Test an LDR and a thermistor.</span></small></h1>
+      <p class="rplabel">GCSE Physics 4.2 · Combined Science 6.2 · Foundation and Higher</p>
+    </div>
+        <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <div class="topbar" id="topbar">
+        <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Series and Parallel</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Series and Parallel</b><small>GCSE Physics 4.2 · Combined Science 6.2 · Foundation and Higher</small></span>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout pj-cols">
+    <section class="card model" aria-label="Series and parallel circuits model" id="model">
+      <div class="seg tabs" id="tabs" role="group" aria-label="Part of the model"><button type="button" data-tab="build" aria-pressed="true">Series and parallel</button><button type="button" data-tab="sense" aria-pressed="false">LDR and thermistor</button></div>
+
+      <div class="pane" id="pane-build">
+        <div class="controls" id="buildCtl">
+          <span class="seg sm" role="group" aria-label="Joined in" id="arrSeg"><button type="button" data-arr="series" aria-pressed="true">Series</button><button type="button" data-arr="parallel" aria-pressed="false">Parallel</button></span>
+          <span class="gl" id="nL">Parts:</span><span class="seg sm" role="group" aria-labelledby="nL" id="nSeg"><button type="button" data-n="1" aria-pressed="false">1</button><button type="button" data-n="2" aria-pressed="true">2</button><button type="button" data-n="3" aria-pressed="false">3</button></span>
+          <span class="stepper" id="cStep"><span class="ctl-lbl">Cells</span><button class="btn" type="button" id="cDn" aria-label="One cell fewer">◀</button><output id="cOut" aria-live="polite"></output><button class="btn" type="button" id="cUp" aria-label="One cell more">▶</button></span>
+          <button class="btn primary go" type="button" id="swBtn" aria-pressed="true">Switch: closed</button>
+        </div>
+        <div class="ctlrow2">
+        <div class="controls" id="partCtl">
+          <span id="pw0"><select class="sel" id="p0" aria-label="Part 1 (R₁ if it is a resistor)"></select></span>
+          <span id="pw1"><select class="sel" id="p1" aria-label="Part 2 (R₂ if it is a resistor)"></select></span>
+          <span id="pw2"><select class="sel" id="p2" aria-label="Part 3 (R₃ if it is a resistor)"></select></span>
+          <span id="condB" class="cond"></span>
+        </div>
+        <div class="controls" id="swCtl">
+          <button class="sw tog" type="button" id="amBtn" aria-pressed="true">Ammeters</button>
+          <button class="sw tog" type="button" id="vmBtn" aria-pressed="true">Voltmeters</button>
+          <label class="ctl-lbl vh" for="tSel">Time switched on</label><select class="sel" id="tSel"></select>
+        </div>
+        </div>
+        <div class="sbox" id="cbox"><svg id="csvg" class="scene" role="img" aria-label="Circuit diagram. Each meter shows its reading on a tag: read the meters yourself."><g id="cG"></g></svg></div>
+        <div class="readout" id="cread" aria-live="polite"></div>
+      </div>
+
+      <div class="pane" id="pane-sense" hidden>
+        <div class="controls" id="senseCtl">
+          <span class="seg sm" role="group" aria-label="Sensor" id="sensSeg"><button type="button" data-s="ldr" aria-pressed="true">LDR</button><button type="button" data-s="th" aria-pressed="false">Thermistor</button></span>
+          <span id="condS" class="cond">
+            <span class="stepper" id="lightStep"><span class="ctl-lbl">Light</span><button class="btn" type="button" id="lDn" aria-label="Dimmer">◀</button><output id="lOut" aria-live="polite"></output><button class="btn" type="button" id="lUp" aria-label="Brighter">▶</button></span>
+            <span class="stepper" id="tempStep" hidden><span class="ctl-lbl">Temperature</span><button class="btn" type="button" id="tDn" aria-label="Colder">◀</button><output id="tOut" aria-live="polite"></output><button class="btn" type="button" id="tUp" aria-label="Warmer">▶</button></span>
+          </span>
+        </div>
+        <div class="controls">
+          <button class="btn" type="button" id="sswBtn" aria-pressed="true">Switch: closed</button>
+          <button class="btn primary go" type="button" id="recBtn">Record</button>
+          <button class="btn go" type="button" id="clrBtn">Clear the graph</button>
+        </div>
+        <div class="sgrid">
+          <div class="sbox sb2"><svg id="ssvg" class="scene" role="img" aria-label="A 6 V battery, an ammeter and a sensor, with a voltmeter across the sensor. Read the meters yourself."><g id="sG"></g></svg></div>
+          <div class="sbox sb2"><svg id="gsvg" class="scene" role="img" aria-label="Graph of the sensor's resistance, one point for each reading you record."><g id="gG"></g></svg></div>
+        </div>
+        <div class="readout" id="sread" aria-live="polite"></div>
+      </div>
+      <p class="locknote" id="lockNote" hidden></p>
+      <details class="about"><summary>About this model</summary><p class="limits">The cells and meters are ideal: a cell has no internal resistance, an ammeter has no resistance and a voltmeter takes no current. Real meters change a circuit a little. The lamp is given a fixed resistance of 6 Ω; a real filament lamp’s resistance rises as it gets hotter (see the I–V characteristics practical). The LDR’s resistance is typical: tens of kilohms in the dark and a few hundred ohms in bright light, so its current is shown in milliamps (1 mA = 0.001 A). The thermistor values are typical of a small one, rounded. Meter readings are rounded to 2 decimal places (3 below 0.1 A; 3 significant figures in mA), so shown values sometimes add up only approximately (≈).</p></details>
+    </section>
+
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <details class="trybox" open><summary class="try-h">Things to try</summary><ul class="try" id="tryList"></ul></details>
+        <div id="demoSupport"></div>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="quizSupport">
+          <div id="supportWrap">
+            <div class="support" role="group" aria-label="Support">
+              <span class="lbl">Support:</span>
+              <button class="sw" type="button" data-support="words" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Equations <span class="state">off</span></button>
+              <button class="sw" type="button" data-support="syms" aria-pressed="false"><span class="dot"></span>Circuit symbols <span class="state">off</span></button>
+            </div>
+            <div class="support-box" id="wordsBox" hidden></div>
+            <div class="support-box" id="mathsBox" hidden></div>
+            <div class="support-box" id="symsBox" hidden></div>
+          </div>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+/* ---------- TOOL SCRIPT BELOW ---------- */
+/* ===== Facts (AQA 8464 Combined Science Trilogy 6.2.1–6.2.4.2 / 8463 Physics 4.2.1–4.2.4.2) =====
+   Ideal cells (1.5 V each, no internal resistance), ideal meters (an ammeter has no resistance, a voltmeter takes no current).
+   Every reading is worked out in code from V = IR and the series and parallel rules; nothing is typed in. */
+const CELL = 1.5;                                  // V per cell
+const RV = [2, 3, 4, 5, 6, 10, 12, 15, 20];        // resistor values, Ω
+const LAMP_R = 6;                                  // the lamp's resistance when lit (fixed in this model)
+const LIGHT = [["dark", 60000], ["dim", 12000], ["room light", 3000], ["bright", 600], ["sunlight", 150]];   // LDR (Ω): tens of kΩ in the dark, hundreds of Ω in bright light
+const TEMP = [[0, 300], [20, 150], [40, 60], [60, 30], [80, 15]];                                         // thermistor (°C, Ω): resistance falls as it warms
+const TIMES = [[10, "10 s"], [30, "30 s"], [60, "1 min"], [120, "2 min"], [300, "5 min"]];
+const SUBN = ["₁", "₂", "₃"];
+const SUPD = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const f1 = v => (+v).toFixed(1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ABC = "ABCDEFGHIJ";
+const near = (v, a, tol) => Math.abs(v - a) <= (tol != null ? tol : Math.max(.01 * Math.abs(a), 1e-9));
+function no69(s) { return !/69|6\.9/.test(String(s)); }
+/* Dan's rule: no pupil-visible number is 69. A shown number with "69" in it is nudged up to "70" (later digits become 0), as a
+   meter's last digit would be. Question set-ups are checked (bankCheck) so they never need a nudge. */
+function nudge(s) { s = String(s); if (no69(s)) return s;
+  const m = /(\d*?)(6\.?9)([\d.]*)$/.exec(s); if (!m) return s;
+  let head = s.slice(0, m.index) + m[1], up = m[2].includes(".") ? "7.0" : "70", tail = m[3].replace(/\d/g, "0");
+  return head + up + tail; }
+/* numbers: up to 3 significant figures, no trailing zeros (worked answers and calculations) */
+const num = v => { if (!isFinite(v)) return "?"; if (v === 0) return "0"; const a = Math.abs(v), sg = v < 0 ? "-" : "";   // 3 s.f., .5 ties up (review fix 5)
+  if (a >= 1000) return sg + String(Math.floor(a + .5 + 1e-7)); const d = 2 - Math.floor(Math.log10(a) + 1e-12); return sg + String(Number(rUp(a, d).toFixed(d))); };
+const nf = v => nudge(num(v));
+const grp = s => /^\d{5,}$/.test(s) ? s.replace(/\B(?=(\d{3})+$)/g, " ") : s;   // 60000 → "60 000"
+/* meter displays (review fix 5: .5 ties round up, so 0.825 shows 0.83, not the float's 0.82):
+   an ammeter shows 2 decimal places (3 below 0.1 A, and milliamps to 3 significant figures below 10 mA); a voltmeter 2 dp */
+const rUp = (x, d) => { const f = Math.pow(10, d); return Math.floor(x * f + .5 + 1e-7) / f; };
+const isMA = x => x > 0 && rUp(x, 6) < .01;
+function rawA(x) {   // the number shown, in the unit the meter uses
+  if (isMA(x)) { const v = x * 1000; let d = Math.max(0, 2 - Math.floor(Math.log10(rUp(v, 6)))); let r = rUp(v, d);
+    if (r >= Math.pow(10, 3 - d)) { d = Math.max(0, d - 1); r = rUp(v, d); }   /* re-check: 0.099997 rounds to 0.100, not 0.1000 (3 s.f.) */
+    return r.toFixed(d); }
+  return x < .1 - 5e-4 ? rUp(x, 3).toFixed(3) : rUp(x, 2).toFixed(2);
+}
+const rawV = x => rUp(x, 2).toFixed(2);
+const fA = x => nudge(rawA(x)), fV = x => nudge(rawV(x));
+const aUnit = x => isMA(x) ? "mA" : "A";
+const aText = x => fA(x) + " " + aUnit(x);                          // what an ammeter shows, with its unit
+const aVal = x => +fA(x) / (isMA(x) ? 1000 : 1);                         // the shown reading, in amps
+const aNum = a => String(Number((+a).toPrecision(6)));
+const aIn = x => isMA(x) ? aNum(aVal(x)) : fA(x);                         // a reading in amps, as the meter shows it (0.30, not 0.3)                    // a shown reading in amps, written plainly
+const NB = " ";
+
+/* ===== Parts: "R5" (a 5 Ω resistor), "lamp", "ldr", "th" ===== */
+const partR = (p, m) => p === "lamp" ? LAMP_R : p === "ldr" ? LIGHT[m.light][1] : p === "th" ? TEMP[m.temp][1] : +p.slice(1);
+const isRes = p => /^R\d+$/.test(p);
+function partName(p, j) {   // what the label on the diagram says (the value can be hidden for a question)
+  if (isRes(p)) return "R" + SUBN[j];
+  return p === "lamp" ? "lamp" : p === "ldr" ? "LDR" : "thermistor";
+}
+const partWord = p => isRes(p) ? "resistor" : p === "lamp" ? "lamp" : p === "ldr" ? "LDR" : "thermistor";
+
+/* ===== The physics: computed, never typed in ===== */
+function solve(m) {
+  const n = m.n, V = CELL * m.cells, R = m.parts.slice(0, n).map(p => partR(p, m)), on = m.closed;
+  const o = { V, R, n, I: [], Vp: [], P: [] };
+  if (m.arr === "series") {
+    const Rt = R.reduce((s, x) => s + x, 0), I = on ? V / Rt : 0;
+    R.forEach(r => { o.I.push(I); o.Vp.push(I * r); });
+    o.Rt = Rt; o.Itot = I;
+    o.amm = { A1: I, A2: I, A3: I };
+  } else {
+    R.forEach(r => { const I = on ? V / r : 0; o.I.push(I); o.Vp.push(on ? V : 0); });
+    o.Itot = o.I.reduce((s, x) => s + x, 0); o.Rt = 1 / R.reduce((s, x) => s + 1 / x, 0);
+    o.amm = { A1: o.Itot }; R.forEach((r, j) => { o.amm["A" + (j + 2)] = o.I[j]; });
+  }
+  o.P = o.I.map((I, j) => I * o.Vp[j]);
+  o.V0 = V;   // an ideal cell: the p.d. across the battery is the same with the switch open or closed
+  return o;
+}
+/* meter ids in each arrangement (series: A1 before the parts, A2 between parts 1 and 2, A3 on the way back; parallel: A1 main,
+   A2–A4 one in each branch). V0 is across the battery; V1–V3 across each part. */
+function meterIds(m) {
+  const a = m.arr === "series" ? (m.n > 1 ? ["A1", "A2", "A3"] : ["A1", "A3"]) : ["A1"].concat([...Array(m.n).keys()].map(j => "A" + (j + 2)));
+  return { A: a, V: ["V0"].concat([...Array(m.n).keys()].map(j => "V" + (j + 1))) };
+}
+function meterText(id, m, o) {
+  o = o || solve(m);
+  if (id[0] === "A") return aText(o.amm[id]);
+  if (id === "V0") return fV(o.V0) + NB + "V";
+  return fV(o.Vp[+id.slice(1) - 1]) + NB + "V";
+}
+/* the sensor tab: a 6 V battery, an ammeter and an LDR or a thermistor, with a voltmeter across it */
+const SENSE_V = 6;
+function senseR(m) { return m.sens === "ldr" ? LIGHT[m.light][1] : TEMP[m.temp][1]; }
+function senseI(m) { return m.sclosed ? SENSE_V / senseR(m) : 0; }
+
+/* ===== Model state ===== */
+function freshM() {
+  return { tab: "build", arr: "series", n: 2, parts: ["R5", "R10", "R15"], cells: 4, closed: true, am: true, vm: true, ti: 2, light: 2, temp: 1,
+    sens: "ldr", sclosed: true, rec: { ldr: {}, th: {} } };
+}
+const support = { words: false, maths: false, syms: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {}, TASKS = {};
+let task = { kind: "demo" }, S = {};
+let M = freshM(), DEMO_M = M;
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const PKEY = "ks3tools-progress:gcse-series-and-parallel";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
+const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };
+const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };
+const qh = k => quizOpen() && !!task.hide && task.hide.includes(k);       // hide this part of the model for the open question
+const locked = k => quizOpen() && !!task.lock && (task.lock.includes(k) || task.lock.includes("all"));
+const tabOK = t => !quizOpen() || !task.tabs || task.tabs.includes(t);
+function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "That part of the model is set for this question. Answer in the panel, or press Show answer."; }
+/* ===== Drawing helpers ===== */
+function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
+function setAttr(el, k, v) { if (el.getAttribute(k) !== v) el.setAttribute(k, v); }
+const T_ = (x, y, s, fs, o) => `<text x="${f1(x)}" y="${f1(y)}" font-size="${fs}"${o ? " " + o : ""}>${esc(s)}</text>`;
+const tw = (s, fs) => String(s).length * fs * .56;
+function tag(x, y, s, fs, cls, anchor) {   // a reading on a light tag; (x, y) = the middle of its left edge (start), middle (middle) or right edge (end)
+  const w = tw(s, fs) + 12, h = fs + 9, x0 = anchor === "start" ? x : anchor === "end" ? x - w : x - w / 2;
+  return `<rect class="tag" x="${f1(x0)}" y="${f1(y - h / 2)}" width="${f1(w)}" height="${f1(h)}" rx="5"/>` + T_(x0 + w / 2, y + fs * .36, s, fs, `text-anchor="middle" class="${cls || "acc"}"`);
+}
+const LW = (x1, y1, x2, y2) => `<line class="w" x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`;
+const PW = d => `<path class="w" d="${d}"/>`;
+const DOT = (x, y) => `<circle class="jn" cx="${f1(x)}" cy="${f1(y)}" r="5"/>`;
+/* a straight wire (axis-aligned) with parts on it: each item = { c: position along the wire, half, draw(x, y, vertical) } */
+function run(x1, y1, x2, y2, items) {
+  const v = x1 === x2, a0 = v ? y1 : x1, a1 = v ? y2 : x2, dir = a1 >= a0 ? 1 : -1;
+  const P = s => v ? [x1, s] : [s, y1];
+  let o = "", cur = a0;
+  items.slice().sort((p, q) => dir * (p.c - q.c)).forEach(it => {
+    const s = it.c - dir * it.half, e = it.c + dir * it.half;
+    if (dir * (s - cur) > .5) o += LW(...P(cur), ...P(s));
+    o += it.draw(...P(it.c), v); cur = e;
+  });
+  if (dir * (a1 - cur) > .5) o += LW(...P(cur), ...P(a1));
+  return o;
+}
+/* ----- circuit symbols (AQA) ----- */
+const RES_L = 70, RES_T = 24;
+const SYM = {
+  res: { half: RES_L / 2, ring: RES_L / 2, below: 12, draw: (x, y, v) => v ? `<rect class="res" x="${f1(x - RES_T / 2)}" y="${f1(y - RES_L / 2)}" width="${RES_T}" height="${RES_L}"/>`
+    : `<rect class="res" x="${f1(x - RES_L / 2)}" y="${f1(y - RES_T / 2)}" width="${RES_L}" height="${RES_T}"/>` },
+  lamp: { half: 22, ring: 22, below: 22, draw: (x, y, v, b) => {   // a filament lamp: a circle with a cross in it
+    const d = 15.5; return (b > .04 ? `<circle class="glow" cx="${f1(x)}" cy="${f1(y)}" r="${f1(22 + 9 * b)}" style="opacity:${(.5 * b).toFixed(2)}"/>` : "") +
+      `<circle class="lampc" cx="${f1(x)}" cy="${f1(y)}" r="22" style="fill-opacity:${(.1 + .9 * (b || 0)).toFixed(2)}"/>` +
+      `<line class="sd" x1="${f1(x - d)}" y1="${f1(y - d)}" x2="${f1(x + d)}" y2="${f1(y + d)}"/><line class="sd" x1="${f1(x - d)}" y1="${f1(y + d)}" x2="${f1(x + d)}" y2="${f1(y - d)}"/>`; } },
+  ldr: { half: 25, ring: 33, below: 33, draw: (x, y, v) => {   // an LDR: a resistor in a circle, with two arrows (light) pointing at it
+    const r = v ? `<rect class="res" x="${f1(x - 9)}" y="${f1(y - 25)}" width="18" height="50"/>` : `<rect class="res" x="${f1(x - 25)}" y="${f1(y - 9)}" width="50" height="18"/>`;
+    const ar = (ax, ay) => { const L = 22, ux = .7071, uy = .7071, tx = ax - ux * L, ty = ay - uy * L;   // an arrow from up-left (tx, ty) to (ax, ay)
+      return `<line class="sd" x1="${f1(tx)}" y1="${f1(ty)}" x2="${f1(ax - ux * 5)}" y2="${f1(ay - uy * 5)}"/><path class="sdf" d="M${f1(ax)} ${f1(ay)}L${f1(ax - 10.6)} ${f1(ay - 3.5)}L${f1(ax - 3.5)} ${f1(ay - 10.6)}Z"/>`; };
+    return `<circle class="ring" cx="${f1(x)}" cy="${f1(y)}" r="33"/>` + r + ar(x - 26, y - 22) + ar(x - 12, y - 32); } },
+  th: { half: 30, ring: 30, below: 20, draw: (x, y, v) => {   // a thermistor: a resistor with a line through it that bends flat at its lower end
+    if (v) return `<rect class="res" x="${f1(x - 11)}" y="${f1(y - 30)}" width="22" height="60"/><path class="sd" d="M${f1(x - 28)} ${f1(y + 30)}H${f1(x - 18)}L${f1(x + 20)} ${f1(y - 34)}"/>`;
+    return `<rect class="res" x="${f1(x - 30)}" y="${f1(y - 11)}" width="60" height="22"/><path class="sd" d="M${f1(x - 44)} ${f1(y + 20)}H${f1(x - 30)}L${f1(x + 30)} ${f1(y - 20)}"/>`; } },
+  meter: { half: 22, ring: 22 }
+};
+const symOf = p => isRes(p) ? SYM.res : SYM[p];
+function meterSym(k, x, y) { return `<circle class="msym" cx="${f1(x)}" cy="${f1(y)}" r="22"/>` + T_(x, y + 7.5, k, 21, 'text-anchor="middle" class="bold"'); }
+function cellsSym(n, x, y) {   // a cell (1) or a battery of cells (2–4) on a vertical wire: long thin plate (+) on top, short thick plate (−) below
+  let o = "";
+  for (let i = 0; i < n; i++) {
+    const t = y - 12 * n + 24 * i;
+    o += LW(x - 22, t + 2, x + 22, t + 2).replace('class="w"', 'class="w plate"') + `<line class="w plate" x1="${f1(x - 11)}" y1="${f1(t + 13)}" x2="${f1(x + 11)}" y2="${f1(t + 13)}" style="stroke-width:8"/>` + LW(x, t + 13, x, i < n - 1 ? t + 26 : y + 12 * n);
+  }
+  return o;
+}
+function switchSym(x, y, v, closed) {   // two contacts and a lever; closed: the lever lies flat
+  const a = v ? [x, y - 24] : [x - 24, y], b = v ? [x, y + 24] : [x + 24, y], e = v ? [x - 22, y + 18] : [x + 18, y - 22];
+  return `<circle class="post" cx="${f1(a[0])}" cy="${f1(a[1])}" r="5"/><circle class="post" cx="${f1(b[0])}" cy="${f1(b[1])}" r="5"/>` +
+    (closed ? LW(a[0], a[1], b[0], b[1]) : LW(a[0], a[1], e[0], e[1]).replace('class="w"', 'class="w lever"'));
+}
+
+/* ===== The circuit (Build tab). Wide: 960 × 490; tall (narrow model, phones): 520 × 630. ===== */
+const narrowBox = () => { const b = $("cbox"); return !!(b && b.clientWidth && b.clientWidth < 600); };
+function circGeo(tall) { return tall ? { W: 520, H: 640, fs: 20, tall } : { W: 960, H: 480, fs: 19, tall }; }
+function drawCircuit() {
+  const svg = $("csvg"), tall = narrowBox(), G = circGeo(tall), fs = G.fs, m = M, o = solve(m), n = m.n;
+  setAttr(svg, "viewBox", `0 0 ${G.W} ${G.H}`);
+  const hideA = id => qh("m:" + id), hideR = j => qh("r" + (j + 1)), hideS = qh("supply");
+  let s = "", late = "";
+  let tagIn = null;   /* [left, right]: keep centred tags inside these wires (re-check fix 1: wide mA tags on phones) */
+  const meterLbl = (id, x, y, where) => {   // the meter's name (small) and its reading (on a tag), placed clear of its leads
+    const val = hideA(id) ? "?" + NB + (id[0] === "A" ? "A" : "V") : meterText(id, m, o), nm = id, tf = fs, w = tw(val, tf) + 12;
+    const cx = tagIn ? Math.max(tagIn[0] + 6 + w / 2, Math.min(tagIn[1] - 6 - w / 2, x)) : x;
+    if (where === "below") late += T_(x + 22, y - 25, nm, fs, 'class="mid"') + tag(cx, y + 44, val, tf, "acc");
+    else if (where === "above") late += T_(cx - w / 2 - 5, y - 44 + fs * .36, nm, fs, 'text-anchor="end" class="mid"') + tag(cx, y - 44, val, tf, "acc");
+    else if (where === "aboveR") late += T_(cx + w / 2 + 5, y - 44 + fs * .36, nm, fs, 'class="mid"') + tag(cx, y - 44, val, tf, "acc");
+    else if (where === "right") late += T_(x + 25, y - 26, nm, fs, 'class="mid"') + tag(x + 28, y + 8, val, tf, "acc", "start");
+    else if (where === "aright") late += (tall ? T_(x - 25, y - 20, nm, fs, 'text-anchor="end" class="mid"') : T_(x + 26 + w + 6, y - 21 + fs * .36, nm, fs, 'class="mid"')) + tag(x + 26, y - 21, val, tf, "acc", "start");
+  };
+  const ammeter = (id, c, where) => ({ c, half: 22, draw: (x, y) => { meterLbl(id, x, y, where); return meterSym("A", x, y); } });
+  const glowOf = j => { const p = m.parts[j]; if (p !== "lamp" || !m.closed) return 0; return Math.min(1, o.P[j] / 6); };
+  const partLblText = j => { const p = m.parts[j]; return isRes(p) ? `R${SUBN[j]} = ${hideR(j) ? "?" : p.slice(1)} Ω` : partName(p, j); };
+  const partItem = (j, c, lbl) => { const p = m.parts[j], sy = symOf(p);
+    return { c, half: sy.half, draw: (x, y, v) => { late += lbl(x, y, v); return sy.draw(x, y, v, glowOf(j)); } }; };
+  const vAcross = (id, x, y, v, ring, mx, my, where) => {   // a voltmeter across the part centred at (x, y); its leads join the wire just outside the part
+    const g = ring + 16;
+    if (!m.vm) return;
+    if (!v) { const p1 = x - g, p2 = x + g;
+      s += PW(`M${f1(mx - 22)} ${f1(my)}H${f1(p1)}V${f1(y)}`) + PW(`M${f1(mx + 22)} ${f1(my)}H${f1(p2)}V${f1(y)}`) + DOT(p1, y) + DOT(p2, y); }
+    else { const p1 = y - g, p2 = y + g;
+      s += PW(`M${f1(mx)} ${f1(my - 22)}V${f1(p1)}H${f1(x)}`) + PW(`M${f1(mx)} ${f1(my + 22)}V${f1(p2)}H${f1(x)}`) + DOT(x, p1) + DOT(x, p2); }
+    s += meterSym("V", mx, my); meterLbl(id, mx, my, where);
+  };
+  const batt = (x, y) => ({ c: y, half: 12 * m.cells, draw: (bx, by) => {
+    late += T_(bx + 28, by - 12 * m.cells - 2, "+", fs + 2, 'class="bold"') + T_(bx + 28, by + 12 * m.cells + 16, "−", fs + 2, 'class="bold"');   /* re-check: clear of each other on 1 cell */
+    late += T_(bx - 30, by - 2, hideS ? "? V" : `${f1(o.V0)} V`, fs, 'text-anchor="end" class="bold"') + T_(bx - 30, by + fs + 2, m.cells === 1 ? "cell" : `${m.cells} cells`, fs, 'text-anchor="end" class="mut"');
+    return cellsSym(m.cells, bx, by); } });
+  const sw = (c, lx, ly) => ({ c, half: 24, draw: (x, y, v) => { late += T_(lx(x), ly(y), "switch", fs, 'text-anchor="middle" class="mut"'); return switchSym(x, y, v, m.closed); } });
+  if (!tall) {
+    const XL = 110, XR = 890;
+    if (m.arr === "series") {
+      const YT = 170, YB = 420, cy = (YT + YB) / 2;
+      s += run(XL, YB, XL, YT, [batt(XL, cy)]);
+      const items = [], seq = [["A", "A1"], ["P", 0]]; if (n > 1) seq.push(["A", "A2"], ["P", 1]); if (n > 2) seq.push(["P", 2]);
+      const x0 = XL + 40, x1 = XR - 40, step = (x1 - x0) / seq.length;
+      seq.forEach(([k, v], i) => { const c = x0 + step * (i + .5);
+        if (k === "A") { if (m.am) items.push(ammeter(v, c, "below")); }
+        else { const j = v, sy = symOf(m.parts[j]); items.push(partItem(j, c, (x, y) => T_(x, y + sy.below + 24, partLblText(j), fs, 'text-anchor="middle" class="bold"')));
+          vAcross("V" + (j + 1), c, YT, false, sy.ring, c, YT - 74, "above"); } });
+      s += run(XL, YT, XR, YT, items);
+      s += run(XR, YT, XR, YB, []);
+      const bot = [sw(XL + (XR - XL) * .42, x => x, y => y + 38)]; if (m.am) bot.push(ammeter("A3", XR - 130, "above"));
+      s += run(XR, YB, XL, YB, bot);
+    } else {
+      const xl = 290, xr = XR, rows = n === 2 ? [160, 305] : [150, 282, 414], YB = 450, y1 = rows[0], yn = rows[n - 1], cy = (y1 + YB) / 2;
+      s += run(XL, YB, XL, y1, [batt(XL, cy)]);
+      s += run(XL, y1, xl, y1, m.am ? [ammeter("A1", (XL + xl) / 2, "above")] : []);
+      s += LW(xl, y1, xl, yn) + LW(xr, y1, xr, YB);
+      rows.forEach((y, j) => { const pc = 640, sy = symOf(m.parts[j]), it = [];
+        if (m.am) it.push(ammeter("A" + (j + 2), xl + 80, "above"));
+        const lx = (xl + 80 + 24 + pc - sy.ring - 16) / 2;
+        it.push(partItem(j, pc, () => T_(lx, y - 12, partLblText(j), fs, 'text-anchor="middle" class="bold"')));
+        s += run(xl, y, xr, y, it);
+        if (j < n - 1 || j === 0) s += DOT(xl, y);
+        if (j > 0) s += DOT(xr, y);
+        vAcross("V" + (j + 1), pc, y, false, sy.ring, pc, y - 64, "aright"); });
+      s += run(XR, YB, XL, YB, [sw((XL + xl) / 2, x => x, y => y - 34)]);   /* label above the switch: the bottom row needs the room */   /* review fix 3: the open lever stays clear of the branches */
+    }
+  } else {
+    const XL = 110;
+    if (m.arr === "series") {
+      const XR = 300, YT = 100, YB = 590, cy = (YT + YB) / 2;
+      tagIn = [XL, XR];
+      s += run(XL, YB, XL, YT, [batt(XL, cy)]);
+      s += run(XL, YT, XR, YT, m.am ? [ammeter("A1", (XL + XR) / 2, "above")] : []);
+      const seq = [["P", 0]]; if (n > 1) seq.push(["A", "A2"], ["P", 1]); if (n > 2) seq.push(["P", 2]);
+      const y0 = YT + 30, y1_ = YB - 70, step = (y1_ - y0) / seq.length, items = [], C = seq.map((q, i) => y0 + step * (i + .5)), mx = XR + 80, dots = new Set();
+      /* review fix 1: two parts next to each other (no ammeter between) share one voltmeter node, half way between them, with one
+         junction dot on the circuit wire and one where the two voltmeter leads meet; before, two leads ran 2 px apart */
+      seq.forEach(([k, v], i) => { const c = C[i];
+        if (k === "A") { if (m.am) items.push(ammeter(v, c, "right")); return; }
+        const j = v, sy = symOf(m.parts[j]); items.push(partItem(j, c, (x, y) => T_(x - sy.ring - 12, y + 6, partLblText(j), fs, 'text-anchor="end" class="bold"')));
+        if (!m.vm) return;
+        const upP = i > 0 && seq[i - 1][0] === "P", dnP = i < seq.length - 1 && seq[i + 1][0] === "P";
+        const t = upP ? (C[i - 1] + c) / 2 : c - sy.ring - 16, b = dnP ? (C[i + 1] + c) / 2 : c + sy.ring + 16;
+        s += PW(`M${mx} ${f1(c - 22)}V${f1(t)}` + (upP ? "" : `H${XR}`)) + PW(`M${mx} ${f1(c + 22)}V${f1(b)}H${XR}`);
+        [t, b].forEach(y => { const k2 = f1(y); if (!dots.has(k2)) { dots.add(k2); s += DOT(XR, y); } });
+        if (dnP) s += DOT(mx, b);
+        s += meterSym("V", mx, c); meterLbl("V" + (j + 1), mx, c, "right"); });
+      s += run(XR, YT, XR, YB, items);
+      const bot = [sw((XL + XR) / 2 - 30, x => x, y => y + 34)]; if (m.am) bot.push(ammeter("A3", XR - 50, "above"));
+      s += run(XR, YB, XL, YB, bot);
+    } else {
+      const xl = 200, xr = 500, rows = n === 2 ? [190, 380] : [160, 320, 480], YB = 580, y1 = rows[0], yn = rows[n - 1], cy = (y1 + YB) / 2;
+      s += run(XL, YB, XL, y1, [batt(XL, cy)]);
+      s += run(XL, y1, xl, y1, m.am ? [ammeter("A1", (XL + xl) / 2, "above")] : []);
+      s += LW(xl, y1, xl, yn) + LW(xr, y1, xr, YB);
+      rows.forEach((y, j) => { const pc = 390, sy = symOf(m.parts[j]), it = [];
+        if (m.am) it.push(ammeter("A" + (j + 2), xl + 52, "aboveR"));
+        it.push(partItem(j, pc, (x, yy) => T_(x, yy + sy.below + 26, partLblText(j), fs, 'text-anchor="middle" class="bold"')));
+        s += run(xl, y, xr, y, it);
+        if (j < n - 1) s += DOT(xl, y);
+        if (j > 0) s += DOT(xr, y);
+        vAcross("V" + (j + 1), pc, y, false, sy.ring, pc, y - 68, "aright"); });
+      s += run(xr, YB, XL, YB, [sw((xl + xr) / 2, x => x, y => y + 32)]);
+    }
+  }
+  setLayer($("cG"), s + late);
+}
+
+/* ===== The sensor circuit and its graph (LDR and thermistor tab) ===== */
+function drawSense() {
+  const svg = $("ssvg"), W = 520, H = 400, fs = 20, m = M, I = senseI(m);
+  setAttr(svg, "viewBox", `0 0 ${W} ${H}`);
+  const XL = 110, XR = 330, YT = 90, YB = 340, cy = (YT + YB) / 2, sy = SYM[m.sens];
+  let s = "", late = "";
+  const hm = id => qh("m:" + id);
+  s += run(XL, YB, XL, YT, [{ c: cy, half: 48, draw: (x, y) => { late += T_(x + 28, y - 40, "+", fs + 2, 'class="bold"') + T_(x + 28, y + 52, "−", fs + 2, 'class="bold"') +
+    T_(x - 26, y - 2, "6.0 V", fs, 'text-anchor="end" class="bold"') + T_(x - 26, y + 20, "4 cells", fs, 'text-anchor="end" class="mut"'); return cellsSym(4, x, y); } }]);
+  s += run(XL, YT, XR, YT, [{ c: 250, half: 22, draw: (x, y) => { late += T_(x - 25, y - 20, "A", fs, 'text-anchor="end" class="mid"') + tag(x, y + 46, hm("A") ? "?" + NB + "A" : aText(I), fs, "acc"); return meterSym("A", x, y); } }]);
+  s += run(XR, YT, XR, YB, [{ c: cy, half: sy.half, draw: (x, y) => { late += T_(x - 12, y + sy.ring + 30, m.sens === "ldr" ? "LDR" : "thermistor", fs, 'text-anchor="end" class="bold"'); return sy.draw(x, y, true); } }]);
+  s += run(XR, YB, XL, YB, [{ c: 215, half: 24, draw: (x, y) => { late += T_(x, y + 34, "switch", fs, 'text-anchor="middle" class="mut"'); return switchSym(x, y, false, m.sclosed); } }]);
+  { const mx = XR + 80, g = sy.ring + 16, p1 = cy - g, p2 = cy + g;   // voltmeter across the sensor
+    s += PW(`M${mx} ${cy - 22}V${p1}H${XR}`) + PW(`M${mx} ${cy + 22}V${p2}H${XR}`) + DOT(XR, p1) + DOT(XR, p2) + meterSym("V", mx, cy);
+    late += T_(mx + 21, cy - 21, "V", fs, 'class="mid"') + tag(mx + 27, cy + 8, hm("V") ? "?" + NB + "V" : fV(m.sclosed ? SENSE_V : 0) + NB + "V", fs, "acc", "start"); }
+  /* what the sensor senses: a lamp shining on the LDR, or a thermometer by the thermistor (pictures, not part of the circuit) */
+  if (m.sens === "ldr") { const b = m.light / 4, lx = 185, ly = cy - 5;
+    s += `<g class="pic"><circle class="sun" cx="${lx}" cy="${ly}" r="${f1(9 + 9 * b)}" style="opacity:${(.15 + .85 * b).toFixed(2)}"/>` +
+      [0, 1, 2, 3, 4, 5, 6, 7].map(k => { const a = k * Math.PI / 4, r0 = 22 + 6 * b, r1 = r0 + 6 + 10 * b; return `<line class="ray" x1="${f1(lx + r0 * Math.cos(a))}" y1="${f1(ly + r0 * Math.sin(a))}" x2="${f1(lx + r1 * Math.cos(a))}" y2="${f1(ly + r1 * Math.sin(a))}" style="opacity:${(.1 + .9 * b).toFixed(2)}"/>`; }).join("") + `</g>`;
+    late += T_(lx + 30, ly + 66, LIGHT[m.light][0], fs, 'text-anchor="middle" class="mid"'); }
+  else { const tx = 175, t0 = cy - 60, t1 = cy + 30, f = m.temp / 4;
+    s += `<g class="pic"><rect class="therm" x="${tx - 7}" y="${t0}" width="14" height="${t1 - t0}" rx="7"/><circle class="bulb" cx="${tx}" cy="${t1 + 8}" r="12"/><rect class="hot" x="${tx - 3.5}" y="${f1(t1 - 8 - (t1 - t0 - 16) * (.12 + .88 * f))}" width="7" height="${f1(8 + (t1 - t0 - 16) * (.12 + .88 * f))}"/></g>`;
+    late += T_(tx, t1 + 46, `${TEMP[m.temp][0]} °C`, fs, 'text-anchor="middle" class="mid"'); }
+  setLayer($("sG"), s + late);
+  drawGraph();
+}
+function drawGraph() {
+  const svg = $("gsvg"), W = 440, H = 300, fs = 19, m = M, ldr = m.sens === "ldr", rec = m.rec[m.sens];
+  setAttr(svg, "viewBox", `0 0 ${W} ${H}`);
+  const x0 = 70, x1 = W - 20, y0 = 24, y1 = H - 64, ym = ldr ? 70 : 350, yst = ldr ? 10 : 50, k = ldr ? 1000 : 1;
+  const X = i => x0 + (x1 - x0) * (i + .5) / 5, Y = v => y1 - (y1 - y0) * v / ym;
+  let s = "";
+  for (let v = 0; v <= ym; v += yst) s += `<line class="gr" x1="${x0}" y1="${f1(Y(v))}" x2="${x1}" y2="${f1(Y(v))}"/>` + T_(x0 - 8, Y(v) + 5, String(v), fs, 'text-anchor="end"');
+  s += `<path class="ax" d="M${x0} ${y0 - 6}V${y1}H${x1}"/>`;
+  for (let i = 0; i < 5; i++) s += T_(X(i), y1 + 20, ldr ? ["dark", "dim", "room", "bright", "sun"][i] : String(TEMP[i][0]), fs, 'text-anchor="middle"');
+  s += T_((x0 + x1) / 2, H - 14, ldr ? "Light level" : "Temperature (°C)", fs, 'text-anchor="middle" class="bold"');
+  s += `<text x="18" y="${(y0 + y1) / 2}" font-size="${fs}" text-anchor="middle" class="bold" transform="rotate(-90 18 ${(y0 + y1) / 2})">${ldr ? "Resistance (kΩ)" : "Resistance (Ω)"}</text>`;
+  if (qh("graph")) s += T_((x0 + x1) / 2, (y0 + y1) / 2, "Graph hidden until you answer", fs, 'text-anchor="middle" class="mut"');
+  else {
+    const pts = Object.keys(rec).map(Number).sort((a, b) => a - b);
+    if (pts.length > 1) s += `<path class="gline" d="${pts.map((i, q) => (q ? "L" : "M") + f1(X(i)) + " " + f1(Y(rec[i] / k))).join("")}"/>`;
+    pts.forEach(i => { s += `<circle class="gpt" cx="${f1(X(i))}" cy="${f1(Y(rec[i] / k))}" r="6"/>`; });
+    if (!pts.length) s += T_((x0 + x1) / 2, (y0 + y1) / 2, "Press Record to plot a point", fs, 'text-anchor="middle" class="mut"');
+  }
+  setLayer($("gG"), s);
+}
+
+/* ===== The symbols key (support): each AQA symbol drawn the same way as in the circuits ===== */
+function symbolsHTML() {
+  const one = (name, body, h) => `<figure class="sk"><svg viewBox="0 0 120 ${h || 70}" role="img" aria-label="${esc(name)} symbol">${body}</svg><figcaption>${esc(name)}</figcaption></figure>`;
+  const wire = (a, b) => LW(a, 35, b, 35);
+  const cellH = (x, n) => { let o = ""; for (let i = 0; i < n; i++) { const t = x - 12 * n + 24 * i; o += LW(t + 2, 13, t + 2, 57) + `<line class="w" x1="${t + 13}" y1="24" x2="${t + 13}" y2="46" style="stroke-width:8"/>` + (i < n - 1 ? LW(t + 13, 35, t + 26, 35) : ""); } return o; };
+  const L = [
+    ["cell", wire(8, 50) + cellH(60, 1) + wire(73, 112)],
+    ["battery", wire(8, 38) + cellH(60, 2) + wire(85, 112)],
+    ["switch (open)", wire(8, 36) + switchSym(60, 35, false, false) + wire(84, 112)],
+    ["switch (closed)", wire(8, 36) + switchSym(60, 35, false, true) + wire(84, 112)],
+    ["resistor", wire(8, 25) + SYM.res.draw(60, 35, false) + wire(95, 112)],
+    ["variable resistor", wire(8, 25) + SYM.res.draw(60, 35, false) + `<line class="sd" x1="34" y1="60" x2="84" y2="10"/><path class="sdf" d="M88 6L76 9L85 18Z"/>` + wire(95, 112)],
+    ["lamp", wire(8, 38) + SYM.lamp.draw(60, 35, false, 0) + wire(82, 112)],
+    ["LDR", LW(8, 50, 35, 50) + SYM.ldr.draw(60, 50, false) + LW(85, 50, 112, 50), 88],   /* review fix 4: tall enough for both arrows and the whole ring */
+    ["thermistor", wire(8, 30) + SYM.th.draw(60, 35, false) + wire(90, 112)],
+    ["diode", wire(8, 46) + `<path class="sdf" d="M46 20L46 50L72 35Z"/><line class="sd" x1="74" y1="20" x2="74" y2="50"/>` + wire(74, 112)],
+    ["LED", wire(8, 46) + `<path class="sdf" d="M46 20L46 50L72 35Z"/><line class="sd" x1="74" y1="20" x2="74" y2="50"/><line class="sd" x1="62" y1="16" x2="74" y2="4"/><path class="sdf" d="M77 1L68 4L74 10Z"/><line class="sd" x1="72" y1="20" x2="84" y2="8"/><path class="sdf" d="M87 5L78 8L84 14Z"/>` + wire(74, 112)],
+    ["fuse", wire(8, 32) + `<rect class="res" x="32" y="25" width="56" height="20"/>` + LW(32, 35, 88, 35) + wire(88, 112)],
+    ["ammeter", wire(8, 38) + meterSym("A", 60, 35) + wire(82, 112)],
+    ["voltmeter", wire(8, 38) + meterSym("V", 60, 35) + wire(82, 112)],
+    ["junction", LW(8, 35, 112, 35) + LW(60, 35, 60, 66) + DOT(60, 35)]];
+  return `<div class="skg">${L.map(([n, b, h]) => one(n, b, h)).join("")}</div>`;
+}
+/* ===== Draw everything that is showing ===== */
+const TABS = ["build", "sense"];
+function drawPane() {
+  const t = M.tab;
+  TABS.forEach(k => { const p = $("pane-" + k); if (p.hidden !== (k !== t)) p.hidden = k !== t; });
+  if (t === "build") { drawCircuit(); morphHTML($("cread"), buildRead()); }
+  else { drawSense(); morphHTML($("sread"), senseRead()); }
+  if (mode === "demo" && TRY_TAB !== t) renderTry();
+}
+/* the readout: in Demo it states the rules with this circuit's numbers; while a question is open it only says what to read */
+/* review fix 5: every step works from the numbers the meters SHOW, so a pupil can repeat it on a calculator. "≈" where the
+   shown parts don't add up exactly (each meter rounds), or where an answer is rounded. */
+const sameNum = (x, s) => Math.abs(x - parseFloat(s)) <= 1e-9 * Math.max(1, Math.abs(x));
+const EQ = (x, s) => sameNum(x, s) ? "=" : "≈";
+function buildRead() {
+  const m = M, o = solve(m), n = m.n, sub = j => SUBN[j], names = [...Array(n).keys()].map(j => isRes(m.parts[j]) ? "R" + sub(j) : partName(m.parts[j], j));
+  if (quizOpen()) return `<p class="r1">Read the meters yourself, then answer in the question panel.</p>`;
+  if (!m.closed) return `<p class="r1">The switch is open: there is no complete loop, so no current flows. Every ammeter reads 0.</p><p class="r3">Close the switch to make a complete circuit.</p>`;
+  const t = TIMES[m.ti][0], tl = TIMES[m.ti][1], It = aVal(o.Itot), V0 = +fV(o.V0), V0s = fV(o.V0);
+  let h = "";
+  if (m.arr === "series") {
+    h += `<p class="r1">Series: one loop. The same current, ${aText(o.Itot)}, flows through every part.</p>`;
+    if (n > 1) { const vs = o.Vp.map(v => fV(v)), sum = vs.reduce((a, v) => a + +v, 0), e = Math.abs(sum - V0) < 1e-9 ? "=" : "≈";
+      h += `<p class="r2">The p.d. is shared: ${vs.join(" + ")} ${e} ${V0s} V. R<sub>total</sub> = ${names.join(" + ")} = ${o.R.map(nf).join(" + ")} ${EQ(o.Rt, nf(o.Rt))} ${nf(o.Rt)} Ω.</p>`; }
+    else { const r = nf(V0 / It); h += `<p class="r2">The part has the battery’s whole p.d., ${V0s} V. R = V ÷ I = ${V0s} ÷ ${aIn(o.Itot)} ${EQ(V0 / It, r)} ${r} Ω${sameNum(o.Rt, r) ? "" : ` (it is ${nf(o.Rt)} Ω: the ammeter rounds)`}.</p>`; }
+  } else {
+    /* re-check: one unit in the sum (amps) when the meters mix A and mA */
+    const mixed = o.I.some(isMA) && !o.I.every(isMA), is = o.I.map(x => mixed ? aIn(x) + " A" : aText(x)), sum = o.I.reduce((a, x) => a + aVal(x), 0), e = Math.abs(sum - It) < 1e-9 ? "=" : "≈", r = nf(V0 / It);
+    const small = Math.min(...o.R); let rr = "", k = 3; if (!(parseFloat(r) < small)) { do { rr = String(Number(o.Rt.toPrecision(k))); k++; } while (!(+rr < small) && k < 9); }
+    h += `<p class="r1">Parallel: each branch has the same p.d., ${V0s} V.</p>`;
+    h += `<p class="r2">The branch currents add up: ${is.join(" + ")} ${e} ${mixed ? aIn(o.Itot) + " A" : aText(o.Itot)} in the main wire. R<sub>total</sub> = V ÷ I = ${V0s} ÷ ${aIn(o.Itot)} ${EQ(V0 / It, r)} ${r} Ω${rr ? ` (really ${rr} Ω: the ammeter rounds), just less than` : ", less than"} the smallest branch (${nf(small)} Ω).</p>`;
+  }
+  const q = nf(It * t), qv = parseFloat(q), e2 = nf(qv * V0);
+  h += `<p class="r3">In ${tl}: Q = I t = ${aIn(o.Itot)} × ${t} ${EQ(It * t, q)} ${q} C; E = Q V = ${q} × ${V0s} ${EQ(qv * V0, e2)} ${e2} J.</p>`;
+  return h;
+}
+function senseRead() {
+  const m = M, I = senseI(m), c = m.sens === "ldr" ? `In ${LIGHT[m.light][0]}` : `At ${TEMP[m.temp][0]} °C`;
+  if (quizOpen()) return `<p class="r1">Read the meters yourself, then answer in the question panel.</p>`;
+  if (!m.sclosed) return `<p class="r1">The switch is open, so no current flows.</p>`;
+  const a = aVal(I), r = nf(SENSE_V / a), conv = isMA(I) ? ` (${aText(I)} = ${aNum(a)} A)` : "";
+  return `<p class="r1">${c}: R = V ÷ I = ${fV(SENSE_V)} ÷ ${aIn(I)}${conv} ${EQ(SENSE_V / a, r)} ${grp(r)} Ω${+r >= 1000 ? ` (${nf(+r / 1000)} kΩ)` : ""}.</p><p class="r3">${m.sens === "ldr" ? "The brighter the light, the lower the LDR’s resistance, so the bigger the current." : "The hotter the thermistor, the lower its resistance, so the bigger the current."}</p>`;
+}
+function renderCtl() {   // touches a control only when its state really changes
+  const txt = (el, s) => { if (el.textContent !== s) el.textContent = s; }, dis = (el, v) => { if (el.disabled !== v) el.disabled = v; };
+  document.querySelectorAll("#tabs button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.tab === M.tab)); const ok = tabOK(b.dataset.tab); setAttr(b, "aria-disabled", String(!ok)); b.classList.toggle("off", !ok); });
+  const L = k => locked(k);
+  document.querySelectorAll("#arrSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.arr === M.arr)); dis(b, L("arr")); });
+  document.querySelectorAll("#nSeg button").forEach(b => { const v = +b.dataset.n; setAttr(b, "aria-pressed", String(v === M.n)); dis(b, L("n") || (M.arr === "parallel" && v < 2)); });
+  for (let j = 0; j < 3; j++) { const sel = $("p" + j), w = $("pw" + j); w.hidden = j >= M.n; if (sel.value !== M.parts[j]) sel.value = M.parts[j]; dis(sel, L("parts"));
+    /* a resistor whose value is hidden for a question: its menu says "?" */
+    const hid = qh("r" + (j + 1)); sel.classList.toggle("hidv", hid); if (hid !== !!sel._hid) { sel._hid = hid; [...sel.options].forEach(op => { op.textContent = hid ? "? Ω" : op.dataset.t; }); } }
+  { const h = `${M.cells} cell${M.cells > 1 ? "s" : ""}<span class="cv"> (${f1(M.cells * CELL)} V)</span>`; if ($("cOut")._h !== h) { $("cOut").innerHTML = h; $("cOut")._h = h; } } dis($("cDn"), L("cells") || M.cells <= 1); dis($("cUp"), L("cells") || M.cells >= 4);
+  setAttr($("swBtn"), "aria-pressed", String(M.closed)); txt($("swBtn"), M.closed ? "Switch: closed" : "Switch: open"); dis($("swBtn"), L("switch"));
+  setAttr($("amBtn"), "aria-pressed", String(M.am)); dis($("amBtn"), L("am"));
+  setAttr($("vmBtn"), "aria-pressed", String(M.vm)); dis($("vmBtn"), L("vm"));
+  if (+$("tSel").value !== M.ti) $("tSel").value = String(M.ti); dis($("tSel"), L("time"));
+  const used = M.parts.slice(0, M.n);
+  $("lightStep").hidden = M.tab === "build" ? !used.includes("ldr") : M.sens !== "ldr";
+  $("tempStep").hidden = M.tab === "build" ? !used.includes("th") : M.sens !== "th";
+  /* the light and temperature steppers live in whichever tab is open */
+  const host = M.tab === "build" ? $("condB") : $("condS"); if ($("lightStep").parentNode !== host) { host.appendChild($("lightStep")); host.appendChild($("tempStep")); }
+  txt($("lOut"), LIGHT[M.light][0]); dis($("lDn"), L("light") || M.light <= 0); dis($("lUp"), L("light") || M.light >= 4);
+  txt($("tOut"), `${TEMP[M.temp][0]} °C`); dis($("tDn"), L("temp") || M.temp <= 0); dis($("tUp"), L("temp") || M.temp >= 4);
+  document.querySelectorAll("#sensSeg button").forEach(b => { setAttr(b, "aria-pressed", String(b.dataset.s === M.sens)); dis(b, L("sens")); });
+  setAttr($("sswBtn"), "aria-pressed", String(M.sclosed)); txt($("sswBtn"), M.sclosed ? "Switch: closed" : "Switch: open"); dis($("sswBtn"), L("switch"));
+  dis($("recBtn"), !M.sclosed || qh("graph")); dis($("clrBtn"), qh("graph") || !Object.keys(M.rec[M.sens]).length);
+}
+function drawAll() { drawPane(); renderCtl(); }
+function setTab(t) {
+  if (!tabOK(t)) { const n = $("lockNote"); n.hidden = false; n.textContent = "This question uses the part of the model that is open. The other part comes back once you have answered."; return; }
+  M.tab = t; drawAll(); tourSignal("tab-" + t);
+}
+function stopAll() {}   // nothing in this model moves by itself
+
+/* ===== Things to try (Demo): the list follows the open tab ===== */
+const TRY = ["Series with 2 resistors: do A1, A2 and A3 read the same? Is any current used up?",
+  "Series: read V1 and V2 and add them up. Compare the total with the battery’s p.d.",
+  "Switch to Parallel: read the branch ammeters, add them up and compare with A1.",
+  "Parallel: add a third branch. Does the current from the battery go up or down? What happens to the total resistance?",
+  "Change one part to a lamp. Add or take away cells and watch it glow.",
+  "Choose a time. Work out the charge, Q = I × t, and the energy, E = Q × V, then check them in the readout.",
+  "LDR: go from dark to sunlight, pressing Record at each light level. What happens to the resistance?",
+  "Thermistor: warm it from 0 °C to 80 °C, recording at each temperature. Sketch the shape of the graph."];
+const TRY_BY = { build: [0, 1, 2, 3, 4, 5], sense: [6, 7] };
+const TRIED = TRY.map(() => false);
+let TRY_TAB = null;
+function tried(i) { if (mode !== "demo" || TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { TRY_TAB = M.tab;
+  $("tryList").innerHTML = TRY_BY[M.tab].map(i => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(TRY[i])}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+function checkTried() {
+  if (mode !== "demo") return; const m = M, k = m.parts.slice(0, m.n);
+  if (m.tab === "build" && m.closed) {
+    if (m.arr === "series" && m.n > 1 && m.am) tried(0);
+    if (m.arr === "series" && m.n > 1 && m.vm) tried(1);
+    if (m.arr === "parallel" && m.am) tried(2);
+    if (m.arr === "parallel" && m.n === 3) tried(3);
+    if (k.includes("lamp")) tried(4);
+  }
+  if (Object.keys(m.rec.ldr).length >= 4) tried(6);
+  if (Object.keys(m.rec.th).length >= 4) tried(7);
+}
+
+/* ===== Instructions tour ===== */
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:gcse-series-and-parallel", "1"); } catch (e) {}
+  DEMO_M = freshM(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    const fbTop = fbx.innerHTML ? fbx.getBoundingClientRect().top - qr.top - q.clientTop + s0 : 0;
+    q.scrollTop = Math.max(0, fbBot ? Math.min(fbBot - q.clientHeight + 8, fbTop - 8) : ttTop - 8, fbBot ? 0 : 0);
+    if (fbBot && fbBot - q.clientHeight + 8 <= ttTop - 8) q.scrollTop = Math.max(0, Math.min(ttTop - 8, q.scrollTop));
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = tt.getBoundingClientRect().top - barH - 8;
+    const ftop = fbx.getBoundingClientRect().top - barH - 8, d = Math.min(want, Math.max(lim, Math.min(want, ftop))); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); if (window.innerWidth <= 900) { clearTimeout(msg.t); msg.t = setTimeout(fbTopFix, 900); } }
+/* phones (review re-check): once the shared reveal has settled, if the message fits on screen but its top is under the sticky bars, bring it down */
+function fbTopFix() {
+  const f = $("fb"); if (!f.innerHTML || mode === "demo") return;
+  const bar = Math.max(0, $("topbar").getBoundingClientRect().bottom), r = f.getBoundingClientRect();
+  if (r.top < bar + 2 && r.height < window.innerHeight - bar - 16) window.scrollBy({ top: r.top - bar - 8, behavior: "auto" });
+}
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.tab && M.tab !== st.tab) { M.tab = st.tab; if (st.set) st.set(M); drawAll(); } else if (st.set) { st.set(M); drawAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+/* ===== Knowledge check. Easy: Foundation tier. Hard: Higher-tier demand (multi-step and rearranging).
+   AQA Trilogy 6.2.1–6.2.4.2 / Physics 4.2.1–4.2.4.2 has no Higher-tier-only content, so no "(HT)" labels are needed. ===== */
+const SU = {
+  build: (arr, parts, cells, o) => m => { o = o || {}; m.tab = "build"; m.arr = arr; m.n = parts.length; m.parts = parts.concat(["R10", "R10", "R10"]).slice(0, 3); m.cells = cells;
+    m.closed = true; m.am = o.am !== false; m.vm = o.vm !== false; if (o.ti != null) m.ti = o.ti; },
+  sense: (s, lv) => m => { m.tab = "sense"; m.sens = s; m.sclosed = true; if (s === "ldr") m.light = lv; else m.temp = lv; m.rec = { ldr: {}, th: {} }; }
+};
+const ALL = ["all"];
+const V6 = (arr, parts, o) => SU.build(arr, parts, 4, o);
+const SOLVE = (arr, parts, cells, extra) => { const m = freshM(); SU.build(arr, parts, cells || 4)(m); if (extra) extra(m); return solve(m); };
+TASKS.easy = [
+  { id: "meters", kind: "choice", text: "Look at how the ammeters and voltmeters are joined into this circuit. Which statement is right?",
+    setup: V6("series", ["R5", "R10"]), tabs: ["build"], lock: ALL, hideWords: ["Ammeter", "Voltmeter", "Potential difference (p.d.)", "Current"],
+    options: [{ t: "Ammeters are in series: the current flows through them. Voltmeters are in parallel, across a part: p.d. is between two points.", ok: () => true },
+      { t: "Voltmeters are in series, because voltage flows round the circuit.", why: "Voltage (p.d.) doesn’t flow: it is energy per coulomb between two points, so a voltmeter goes across a part." },
+      { t: "Ammeters are joined across a part, to compare the current on each side.", why: "Each ammeter sits in the loop, so the current passes through it: that is series." },
+      { t: "Both meters are in series: they both measure what flows through the part.", why: "Only current flows through a part. A voltmeter’s leads join either side of the part: in parallel." }],
+    explain: "Current flows through a component, so ammeters go in series. p.d. is across a component, so voltmeters go in parallel.",
+    hints: ["Follow the loop round from the battery. Which meters does the current pass through?", "Where do each voltmeter’s two leads join the circuit?", "A voltmeter’s leads join either side of a part: that is in parallel."] },
+  { id: "same", kind: "choice", text: "In this series circuit A1 reads the current before it reaches the resistors. Read A1. What do A2 and A3 read?",
+    setup: V6("series", ["R5", "R10"], { vm: false }), tabs: ["build"], lock: ALL, hide: ["m:A2", "m:A3"], hideWords: ["Series"],
+    options: [{ t: "Both read 0.40 A: the current is the same everywhere in a series loop.", ok: () => fA(SOLVE("series", ["R5", "R10"]).Itot) === "0.40" },
+      { t: "A2 reads less than A1, and A3 less again: resistors use up current.", why: "Current is not used up: every charge that leaves the battery comes back to it." },
+      { t: "A2 reads 0.20 A and A3 reads 0 A: the current is all used up.", why: "Charge isn’t used up. Energy is transferred to the resistors; the current stays the same." },
+      { t: "A3 reads 0.80 A: the current builds up as it goes round.", why: "Charge isn’t made in the wires. The current is the same at every point in a series loop." }],
+    explain: "A series circuit has one path, so the same current, 0.40 A, flows through every part. Energy is transferred to the resistors; charge is not used up.",
+    hints: ["How many paths are there round a series circuit?", "Every charge that passes A1 must also pass A2 and A3.", "The current is the same everywhere in a series loop."] },
+  { id: "share", kind: "num", text: "The battery is 6 V. Read the voltmeter V1 across R₁. What does V2, across R₂, read?",
+    setup: V6("series", ["R4", "R2"]), tabs: ["build"], lock: ALL, hide: ["m:V2"], hideWords: ["Series"], lbl: "V2 reads:", unit: "V", ans: () => 6 - SOLVE("series", ["R4", "R2"]).Vp[0], tol: .02,
+    wrongs: [[4, "That is V1. In series the battery’s p.d. is shared, so V1 + V2 = 6 V."], [6, "6 V is the whole battery. In series the p.d. is shared between the parts."], [10, "The p.d.s add up to the battery’s p.d., not to more than it: V1 + V2 = 6 V."], [3, "The p.d. is not shared equally here: R₁ is bigger, so it gets more. Read V1 and subtract it from 6 V."]],
+    generic: "In series the battery’s p.d. is shared: V1 + V2 = 6 V. Read V1, then subtract.",
+    working: () => ["V1 reads 4.00 V", "In series the p.d. is shared: V1 + V2 = 6 V", "V2 = 6 − 4 = 2 V"],
+    hints: ["Read V1 on its tag.", "In series, the p.d.s across the parts add up to the battery’s p.d.", "V2 = 6 V − V1."] },
+  { id: "rtot", kind: "num", text: "R₁ = 5 Ω and R₂ = 15 Ω are joined in series. What is their total resistance?",
+    setup: V6("series", ["R5", "R15"]), tabs: ["build"], lock: ALL, hideWords: ["Series"], hideMaths: ["series"], lbl: "Total resistance:", unit: "Ω", ans: () => 5 + 15, tol: .01,
+    wrongs: [[3.75, "That is the parallel result. In series the resistances add: R₁ + R₂."], [75, "Don’t multiply. In series, add: R₁ + R₂."], [10, "Don’t subtract. In series, add: R₁ + R₂."], [15, "That is only R₂. Add R₁ as well."]],
+    generic: "In series: R total = R₁ + R₂.",
+    working: () => ["R total = R₁ + R₂", "= 5 + 15", "= 20 Ω"],
+    hints: ["In series the current has to pass through both resistors, one after the other.", "So their resistances add up.", "R total = R₁ + R₂."] },
+  { id: "parv", kind: "num", text: "R₁ and R₂ are in parallel across a 6 V battery. What does V2, the voltmeter across R₂, read?",
+    setup: V6("parallel", ["R6", "R3"]), tabs: ["build"], lock: ALL, hide: ["m:V1", "m:V2"], hideWords: ["Parallel"], lbl: "V2 reads:", unit: "V", ans: () => SOLVE("parallel", ["R6", "R3"]).Vp[1], tol: .02,
+    wrongs: [[3, "That would be true if the p.d. were shared, as in series. In parallel each branch is joined straight across the battery."], [2, "The p.d. isn’t shared between parallel branches. Each branch gets the battery’s whole p.d."], [4, "The p.d. isn’t shared between parallel branches. Each branch gets the battery’s whole p.d."], [12, "The p.d. across a branch can’t be more than the battery’s p.d."]],
+    generic: "In parallel, each branch has the same p.d. as the battery.",
+    working: () => ["Each branch is joined straight across the battery", "So the p.d. across each branch = the battery’s p.d.", "V2 = 6 V"],
+    hints: ["Follow R₂’s branch: where do its two ends join?", "Both ends join straight onto the battery’s wires.", "In parallel, the p.d. across each branch is the same as the battery’s."] },
+  { id: "padd", kind: "num", text: "Read the branch ammeters A2 and A3. What does A1, in the main wire, read?",
+    setup: V6("parallel", ["R10", "R15"], { vm: false }), tabs: ["build"], lock: ALL, hide: ["m:A1"], hideWords: ["Parallel"], lbl: "A1 reads:", unit: "A", ans: () => SOLVE("parallel", ["R10", "R15"]).Itot, tol: .01,
+    wrongs: [[.2, "Don’t subtract. The current splits into the branches and joins up again, so the branch currents add."], [.6, "That is one branch. The main wire carries the current of both branches."], [.4, "That is one branch. The main wire carries the current of both branches."], [.5, "Don’t average. The branch currents add up to the current in the main wire."]],
+    generic: "In parallel the branch currents add up to the current in the main wire.",
+    working: () => ["A2 reads 0.60 A and A3 reads 0.40 A", "The branch currents add up: 0.60 + 0.40", "A1 = 1.00 A"],
+    hints: ["Read A2 and A3 on their tags.", "The current in the main wire splits between the two branches.", "A1 = A2 + A3."] },
+  { id: "vir", kind: "num", text: "Read the ammeter and the voltmeter V1. Calculate the resistance of R₁.",
+    setup: V6("series", ["R10", "R5"]), tabs: ["build"], lock: ALL, hide: ["r1"], stuck: "maths", lbl: "Resistance of R₁:", unit: "Ω", ans: () => { const o = SOLVE("series", ["R10", "R5"]); return +fV(o.Vp[0]) / +fA(o.Itot); }, tol: .05,
+    wrongs: [[1.6, "You multiplied. V = I R, so R = V ÷ I."], [.1, "You divided the wrong way. R = V ÷ I: the p.d. on top."], [15, "That uses the battery’s 6 V, so it is the total resistance. Use V1, the p.d. across R₁."], [5, "That is R₂, the resistor you were told about. Use V1 and the current."]],
+    generic: "R = V ÷ I: V1’s reading ÷ the ammeter reading.",
+    working: () => ["V1 = 4.00 V, I = 0.40 A", "V = I R, so R = V ÷ I", "R = 4.00 ÷ 0.40 = 10 Ω"],
+    hints: ["Read V1 (the p.d. across R₁) and the current.", "V = I R. Rearrange it for R.", "R = V ÷ I."] },
+  { id: "charge", kind: "num", text: "The switch is closed for 1 minute. Read the ammeter. How much charge flows through the resistor?",
+    setup: SU.build("series", ["R15"], 3, { ti: 2, vm: false }), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Charge:", unit: "C", ans: () => SOLVE("series", ["R15"], 3).Itot * 60, tol: .05,
+    wrongs: [[.3, "Change 1 minute into seconds first: 60 s."], [200, "You divided t by I. Q = I × t."], [.005, "You divided I by t. Q = I × t."], [270, "That uses the p.d. Charge depends on the current: Q = I × t."], [81, "That is the energy (Q × V). The question asks for the charge: Q = I × t."]],
+    generic: "Q = I × t, with t in seconds (1 minute = 60 s).",
+    working: () => ["I = 0.30 A, t = 1 minute = 60 s", "Q = I × t = 0.30 × 60", "Q = 18 C"],
+    hints: ["Read the ammeter (in amps).", "Change the time into seconds.", "Charge Q = current I × time t."] },
+  { id: "power", kind: "num", text: "Read the ammeter and the voltmeter across the lamp. Calculate the power of the lamp.",
+    setup: V6("series", ["lamp", "R4"]), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Power of the lamp:", unit: "W", ans: () => { const o = SOLVE("series", ["lamp", "R4"]); return +fV(o.Vp[0]) * +fA(o.Itot); }, tol: .02,
+    wrongs: [[6, "You divided V by I: that gives the resistance. Power P = V × I."], [3.6, "That uses the battery’s p.d. Use V1, the p.d. across the lamp."], [.1667, "You divided I by V. Power P = V × I."], [1.44, "That is the power of the resistor (V2 × I). Use V1, across the lamp."]],
+    generic: "P = V × I: the p.d. across the lamp × the current.",
+    working: () => ["V1 (across the lamp) = 3.60 V, I = 0.60 A", "P = V × I = 3.60 × 0.60", "P = 2.16 W"],
+    hints: ["Which voltmeter is across the lamp?", "Read the current on an ammeter: it is the same everywhere in series.", "Power P = V × I."] },
+  { id: "therm", kind: "choice", text: "Warm the thermistor from 20 °C to 60 °C and watch the meters. What happens to its resistance and the current?",
+    setup: SU.sense("th", 1), tabs: ["sense"], lock: ["sens", "switch"], hide: ["graph"], hideWords: ["Thermistor", "LDR"],
+    options: [{ t: "Its resistance falls, so the current rises.", ok: () => TEMP[3][1] < TEMP[1][1] },
+      { t: "Its resistance rises, so the current falls, as in a filament lamp.", why: "A filament lamp’s resistance rises as it gets hot, but a thermistor is the other way round. Watch the ammeter as it warms." },
+      { t: "Its resistance rises, and the current rises too.", why: "With the same p.d., a bigger resistance means a smaller current (I = V ÷ R). Watch the ammeter as it warms." },
+      { t: "Nothing changes: temperature only affects an LDR.", why: "An LDR responds to light. A thermistor responds to temperature: warm it and read the ammeter." }],
+    explain: "A thermistor’s resistance falls as its temperature rises, so with the same 6 V more current flows. Thermistors are used in thermostats.",
+    hints: ["Press ▶ by Temperature twice and read the ammeter each time.", "The voltmeter stays at 6 V. If the current goes up, what has happened to R = V ÷ I?", "More current with the same p.d. means less resistance."] }
+];
+TASKS.hard = [
+  { id: "findR", kind: "num", text: "R₁ = 4 Ω. The battery is 6 V. Read the ammeter. Calculate the resistance of R₂.",
+    setup: V6("series", ["R4", "R20"], { vm: false }), tabs: ["build"], lock: ALL, hide: ["r2"], stuck: "maths", lbl: "Resistance of R₂:", unit: "Ω", ans: () => 6 / +fA(SOLVE("series", ["R4", "R20"]).Itot) - 4, tol: .05,
+    wrongs: [[24, "That is the total resistance, R₁ + R₂. Now take away R₁."], [1.5, "You multiplied. R = V ÷ I."], [.042, "You divided the wrong way. R = V ÷ I."], [28, "Work out R total = V ÷ I first. It already includes R₁, so subtract R₁ from it, don’t add it."]],
+    generic: "R total = V ÷ I, then R₂ = R total − R₁.",
+    working: () => ["I = 0.25 A", "R total = V ÷ I = 6 ÷ 0.25 = 24 Ω", "R₂ = R total − R₁ = 24 − 4 = 20 Ω"],
+    hints: ["Find the total resistance first: the whole battery’s p.d. ÷ the current.", "In series, R total = R₁ + R₂.", "R₂ = (6 ÷ I) − 4."] },
+  { id: "parR", kind: "num", text: "Three resistors are in parallel. Read the main ammeter A1. The battery is 6 V. Calculate the total resistance of the parallel set.",
+    setup: V6("parallel", ["R12", "R6", "R4"], { vm: false }), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Total resistance:", unit: "Ω", ans: () => 6 / +fA(SOLVE("parallel", ["R12", "R6", "R4"]).Itot), tol: .02,
+    wrongs: [[22, "That adds the resistances, which is the series rule. In parallel, use R = V ÷ I with the main current."], [18, "You multiplied. R = V ÷ I."], [.5, "You divided the wrong way. R = V ÷ I."], [4, "That is the smallest resistor. The total is less than the smallest one: work out V ÷ I."], [12, "That uses a branch current. Use A1, where all the current flows."]],
+    generic: "R total = V ÷ I, using the battery’s p.d. and the main current A1.",
+    working: () => ["A1 = 3.00 A", "R total = V ÷ I = 6 ÷ 3.00 = 2 Ω", "2 Ω is less than the smallest resistor (4 Ω)."],
+    hints: ["The main ammeter A1 measures all the current from the battery.", "R total = battery p.d. ÷ main current.", "6 ÷ 3.00."] },
+  { id: "why", kind: "choice", text: "This parallel circuit has three branches. Press 2 and then 3 under Parts, and compare A1 each time. Why does adding a resistor in parallel make the total resistance smaller?",
+    setup: V6("parallel", ["R12", "R6", "R4"], { vm: false }), tabs: ["build"], lock: ["arr", "parts", "cells", "switch", "am", "vm", "time"], hideWords: ["Parallel", "Resistance"],
+    options: [{ t: "Each branch is another path for the charge, so more current flows for the same p.d.: R = V ÷ I is smaller.", ok: () => SOLVE("parallel", ["R12", "R6", "R4"]).Itot > SOLVE("parallel", ["R12", "R6"]).Itot },
+      { t: "Each resistor gets a smaller share of the p.d., so the total resistance falls.", why: "That is the series rule. In parallel each branch has the whole p.d." },
+      { t: "Adding a resistor always adds resistance, so the total really goes up.", why: "Compare A1 with 2 and 3 branches: the current goes up, so the total resistance goes down." },
+      { t: "The current is shared, so each resistor’s own resistance gets smaller.", why: "Each resistor keeps its own resistance. What changes is the number of paths for the charge." }],
+    explain: "A new branch is another path, so the battery’s current rises at the same p.d. R total = V ÷ I falls, below the smallest branch.",
+    hints: ["Use the Parts buttons: compare A1 with 2 branches and with 3.", "The battery’s p.d. doesn’t change. What happens to the current?", "R = V ÷ I: more current for the same p.d. means less resistance."] },
+  { id: "ratio", kind: "num", text: "Two 6 Ω resistors are joined to a 6 V battery. Read A1 in series, then press Parallel and read A1 again. How many times bigger is the battery’s current in parallel?",
+    setup: V6("series", ["R6", "R6"], { vm: false }), tabs: ["build"], lock: ["n", "parts", "cells", "switch", "am", "vm", "time"], lbl: "Times bigger:", unit: "", ans: () => SOLVE("parallel", ["R6", "R6"]).Itot / SOLVE("series", ["R6", "R6"]).Itot, tol: .02,
+    wrongs: [[1, "A battery doesn’t give out a fixed current. The current depends on the total resistance it is joined to."], [2, "Read A1 in both arrangements: 0.50 A in series. Then press Parallel and read it again."], [.25, "Upside down: the parallel current ÷ the series current."], [1.5, "Read both currents and divide: parallel current ÷ series current."]],
+    generic: "Read A1 in series and in parallel, then divide: parallel ÷ series.",
+    working: () => ["Series: R total = 12 Ω, A1 = 0.50 A", "Parallel: each branch 1.00 A, A1 = 2.00 A (R total = 3 Ω)", "2.00 ÷ 0.50 = 4 times bigger"],
+    hints: ["Read A1 now, in series.", "Press Parallel and read A1 again.", "Divide the parallel current by the series current. The battery’s p.d. is the same both times; its current is not."] },
+  { id: "time", kind: "num", text: "Read the main ammeter A1. How long does it take for 90 C of charge to flow from the battery?",
+    setup: V6("parallel", ["R6", "R3"], { vm: false }), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Time:", unit: "s", ans: () => 90 / +fA(SOLVE("parallel", ["R6", "R3"]).Itot), tol: .1,
+    wrongs: [[270, "You multiplied. Q = I t, so t = Q ÷ I."], [.0333, "You divided the wrong way. t = Q ÷ I."], [45, "That uses one branch current. All the charge from the battery passes A1."], [90, "That uses the 1 A branch. All the charge from the battery passes A1."]],
+    generic: "Q = I t, so t = Q ÷ I, with I from A1.",
+    working: () => ["A1 = 3.00 A", "Q = I t, so t = Q ÷ I", "t = 90 ÷ 3.00 = 30 s"],
+    hints: ["Which ammeter does all the battery’s charge pass through?", "Rearrange Q = I t for t.", "t = Q ÷ I."] },
+  { id: "eqv", kind: "num", text: "A charge of 30 C flows through the lamp. Read the voltmeter across the lamp. How much energy does the lamp transfer?",
+    setup: V6("series", ["lamp", "R4"]), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Energy:", unit: "J", ans: () => 30 * +fV(SOLVE("series", ["lamp", "R4"]).Vp[0]), tol: .5,
+    wrongs: [[180, "That uses the battery’s 6 V. Use the p.d. across the lamp, V1."], [8.33, "You divided. E = Q × V."], [.12, "You divided. E = Q × V."], [18, "That is Q × I. Energy uses the p.d.: E = Q × V."], [72, "That is the energy in the resistor (V2). Use V1, across the lamp."]],
+    generic: "E = Q × V, with V the p.d. across the lamp.",
+    working: () => ["V1 (across the lamp) = 3.60 V", "E = Q × V = 30 × 3.60", "E = 108 J"],
+    hints: ["Which voltmeter is across the lamp?", "p.d. is the energy transferred per coulomb.", "E = Q × V."] },
+  { id: "i2r", kind: "num", text: "R₂ = 20 Ω. Read the ammeter. Use P = I²R to calculate the power transferred in R₂.",
+    setup: V6("series", ["R10", "R20"], { vm: false }), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Power in R₂:", unit: "W", ans: () => { const I = +fA(SOLVE("series", ["R10", "R20"]).Itot); return I * I * 20; }, tol: .01,
+    wrongs: [[4, "That is I × R (the p.d.). Square the current first: P = I² × R."], [.04, "That is I² on its own. Multiply by R."], [8, "Check the decimal point when you square 0.20."], [80, "That is I × R². Square the current, not the resistance."], [1.2, "That uses the battery’s 6 V. Use P = I² R with R₂."]],
+    generic: "P = I² × R: square the current, then multiply by 20 Ω.",
+    working: () => ["I = 0.20 A", "P = I² R = 0.20² × 20 = 0.04 × 20", "P = 0.8 W"],
+    hints: ["Read the current (amps).", "Square it: 0.20 × 0.20.", "Multiply by R₂ = 20 Ω."] },
+  { id: "rearr", kind: "num", text: "R₂ = 10 Ω, and it transfers energy at 1.6 W. Use P = I²R to calculate the current. (The ammeters show it once you have answered.)",
+    setup: V6("series", ["R5", "R10"], { vm: false }), tabs: ["build"], lock: ALL, hide: ["m:A1", "m:A2", "m:A3"], stuck: "maths", lbl: "Current:", unit: "A", ans: () => Math.sqrt(1.6 / 10), tol: .005,
+    wrongs: [[.16, "That is I². Take the square root: I = √(P ÷ R)."], [16, "You multiplied. I² = P ÷ R."], [4, "That is √(P × R), the p.d. across R₂. I = √(P ÷ R)."], [6.25, "Upside down: I² = P ÷ R."], [2.5, "Upside down: I = √(P ÷ R), not √(R ÷ P)."]],
+    generic: "P = I² R, so I² = P ÷ R, then take the square root.",
+    working: () => ["P = I² R, so I² = P ÷ R", "I² = 1.6 ÷ 10 = 0.16", "I = √0.16 = 0.4 A"],
+    hints: ["Rearrange P = I² R to get I² on its own.", "I² = P ÷ R = 1.6 ÷ 10.", "Then take the square root."] },
+  { id: "ept", kind: "num", text: "The lamp is switched on for 2 minutes. Read the meters for the lamp’s branch. How much energy does the lamp transfer?",
+    setup: V6("parallel", ["lamp", "R12"], { ti: 3 }), tabs: ["build"], lock: ALL, stuck: "maths", lbl: "Energy:", unit: "J", ans: () => { const o = SOLVE("parallel", ["lamp", "R12"]); return +fV(o.Vp[0]) * +fA(o.I[0]) * 120; }, tol: 1,
+    wrongs: [[12, "Change 2 minutes into seconds: 120 s."], [1080, "That uses the main current A1. Use A2, the current in the lamp’s branch."], [6, "That is the power. Energy E = P × t."], [360, "That uses the other branch. Use A2 and V1, the lamp’s meters."]],
+    generic: "P = V × I for the lamp, then E = P × t with t in seconds.",
+    working: () => ["Lamp: V1 = 6.00 V, A2 = 1.00 A, so P = V I = 6.0 W", "t = 2 minutes = 120 s", "E = P t = 6.0 × 120 = 720 J"],
+    hints: ["The lamp’s meters are V1 and A2.", "Power P = V × I. Change the time into seconds.", "E = P × t."] },
+  { id: "ldr", kind: "num", text: "The LDR is in the dark. Read the ammeter and the voltmeter. Calculate the resistance of the LDR in ohms.",
+    setup: SU.sense("ldr", 0), tabs: ["sense"], lock: ["sens", "light", "switch"], hide: ["graph"], hideWords: ["LDR", "Thermistor"], stuck: "maths", lbl: "Resistance:", unit: "Ω", ans: () => SENSE_V / aVal(senseI({ sens: "ldr", light: 0, sclosed: true })), tol: 30,
+    wrongs: [[60, "The ammeter reads in milliamps. Change it to amps first: 1 mA = 0.001 A."], [.0006, "You multiplied. R = V ÷ I."], [.6, "You multiplied. R = V ÷ I, with I in amps."], [.0000167, "You divided the wrong way. R = V ÷ I."], [6, "Divide by the current in amps: R = V ÷ I."]],
+    generic: "Change the current to amps (1 mA = 0.001 A), then R = V ÷ I.",
+    working: () => ["V = 6.00 V, I = 0.100 mA = 0.0001 A", "R = V ÷ I = 6.00 ÷ 0.0001", "R = 60 000 Ω (60 kΩ): a large resistance in the dark"],
+    hints: ["Read both meters. The ammeter shows milliamps (mA).", "1 mA = 0.001 A, so 0.100 mA = 0.0001 A.", "R = V ÷ I = 6.00 ÷ 0.0001."] }
+];
+
+/* ===== Load-time bank check (run after the first paint) ===== */
+function bankCheck() {
+  const errs = [], F = m => errs.push(m);
+  /* the 69 nudge (every shown number goes through it) and the circuit rules, on a sample of circuits (the full set of 17 680
+     circuits was checked offline: py/enum69.py) */
+  [["0.69", "0.70"], ["1.69", "1.70"], ["6.90", "7.00"], ["0.069", "0.070"], ["690", "700"], ["169", "170"], ["0.68", "0.68"]].forEach(([a, w]) => { if (nudge(a) !== w) F("model: nudge " + a); });
+  for (const arr of ["series", "parallel"]) for (const ps of [["R5", "R10", "R15"], ["lamp", "R4", "R20"], ["ldr", "R2", "lamp"], ["th", "R6", "R3"]]) for (let cells = 1; cells <= 4; cells++) {
+    const m = { arr, n: 3, parts: ps, cells, closed: true, light: 2, temp: 2 }, o = solve(m);
+    if (!no69(meterIds(m).A.concat(meterIds(m).V).map(id => meterText(id, m, o)).join(" ") + nf(o.Rt))) F("model: 69 shown");
+    if (arr === "series" && Math.abs(o.Vp.reduce((s, x) => s + x, 0) - o.V0) > 1e-9) F("model: series p.d. not shared");
+    if (arr === "parallel" && (Math.abs(o.I.reduce((s, x) => s + x, 0) - o.Itot) > 1e-9 || !(o.Rt < Math.min(...o.R)))) F("model: parallel rules");
+  }
+  for (let i = 1; i < 5; i++) { if (!(LIGHT[i][1] < LIGHT[i - 1][1])) F("model: LDR resistance must fall as light rises"); if (!(TEMP[i][1] < TEMP[i - 1][1])) F("model: thermistor resistance must fall as it warms"); }
+  for (const lv of Object.keys(TASKS)) TASKS[lv].forEach((t, i) => {
+    const E = m => errs.push(`${lv} task ${i + 1}: ${m}`);
+    if (!t.hints || t.hints.length !== 3 || t.hints.some(h => !h)) E("needs 3 hints");
+    if (!no69(t.text) || !no69(t.explain || "") || t.hints.some(h => !no69(h))) E("69 in the question");
+    if (t.tabs && t.setup) { const m = freshM(); t.setup(m); if (!t.tabs.includes(m.tab)) E("opens on a part of the model it doesn’t allow");
+      if (m.tab === "build") { const o = solve(m), ids = meterIds(m); const s = ids.A.concat(ids.V).map(id => meterText(id, m, o)).join(" ");
+        if (ids.A.concat(ids.V).some(id => { const r = id[0] === "A" ? rawA(o.amm[id]) : rawV(id === "V0" ? o.V0 : o.Vp[+id.slice(1) - 1]); return !no69(r); }) || !no69(s)) E("a reading needs a 69 nudge"); } }
+    if (t.kind === "choice") { if (t.options.filter(o => o.ok && o.ok()).length !== 1) E("needs exactly one right option");
+      if (t.options.some(o => !(o.ok && o.ok()) && !o.why)) E("a wrong option has no feedback"); if (t.options.length < 3) E("needs 3+ options"); }
+    if (t.kind === "num") { const a = t.ans(); if (!isFinite(a)) E("no answer"); if (!no69(num(a)) || !no69(ansTxt(t))) E("69 in the answer");
+      t.wrongs.forEach(([v, w]) => { if (near(v, a, t.tol) || !w) E("a slip matches the answer: " + v); }); if (!t.generic || !t.working) E("needs generic feedback and working");
+      if (t.working().some(x => !no69(x))) E("69 in the working"); }
+  });
+  if (TASKS.easy.length > 10 || TASKS.hard.length > 10) F("at most 10 questions per level");
+  { const keep = DONE; DONE = { "easy:__retired__": "solved", "hard:__retired__": "solved" }; const s0 = scoreNow(); DONE = keep; if (s0 !== 0) errs.push("score must count only current question ids"); }
+  return errs;
+}
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadDemo() { stopAll(); task = { kind: "demo" }; S = {}; M = DEMO_M; renderTry(); drawAll(); $("lockNote").hidden = true; }
+function newS() { const t = task;
+  return { choice: null, gap: {}, val: "", order: shuffled(t.options ? t.options.length : t.bank ? t.bank.length : 0),
+    rowOrder: t.rows ? t.rows.map(r => shuffled((r[3] || t.bank).length)) : [] }; }
+function loadTask() {
+  nqHideEnd();
+  if (mode === "demo") return loadDemo();
+  const lst = LEVELS[level]; task = lst[idx]; S = newS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${lst.length}`;
+  $("taskText").textContent = task.text;
+  renderAnswer(); renderSupport(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog(); $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() {
+  if (mode === "demo") return;
+  stopAll(); const t = task, m = freshM();
+  if (t.setup) t.setup(m);
+  M = m; $("lockNote").hidden = true;
+  drawAll();
+}
+function renderAnswer() {
+  const a = $("answer"), t = task, fr = t.frame ? `<p class="frame">${esc(t.frame)}</p>` : "";
+  if (t.kind === "choice") {
+    a.innerHTML = (t.note ? `<p class="frame">${esc(t.note)}</p>` : "") + `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${ABC[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "gaps") {
+    const opts = (r, ri) => { const list = r[3] || t.bank; return S.rowOrder[ri].map(i => list[i]); };
+    a.innerHTML = fr + `<div class="${t.grid ? "grid2" : "opts"}">` + t.rows.map((r, ri) => `<label class="grow"><span>${esc(r[1])}</span> <select data-r="${r[0]}" aria-label="${esc(r[1])}"><option value="">choose…</option>${(t.fixed ? (r[3] || t.bank) : opts(r, ri)).map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("")}</select></label>`).join("") + `</div>`;
+    a.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { S.gap[s.dataset.r] = s.value; }));
+  } else if (t.kind === "num") {
+    a.innerHTML = fr + (t.note ? `<p class="frame">${esc(t.note)}</p>` : "") + `<label class="grow" for="numIn">${esc(t.lbl)} <input class="numin${t.sf ? " wide" : ""}" id="numIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"> <span class="unit">${esc(t.unit)}</span></label>`;
+    const inp = $("numIn"); inp.addEventListener("input", () => { S.val = inp.value; }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+    : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
+}
+function setAnswerState() {
+  const t = task;
+  if (t.kind === "choice") { const i = t.options.findIndex(o => o.ok && o.ok()); S.choice = i; document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i))); }
+  else if (t.kind === "gaps") { t.rows.forEach(r => { S.gap[r[0]] = r[2]; }); document.querySelectorAll("#answer select").forEach(s => { s.value = S.gap[s.dataset.r]; }); }
+  else if (t.kind === "num") { S.val = nf(t.ans()); const inp = $("numIn"); if (inp) inp.value = S.val; }
+}
+function renderDots() {
+  const lst = LEVELS[level];
+  $("dots").innerHTML = lst.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Marking ===== */
+function parseNum(s) {   // "0.88", "0,88 g", "3.01 × 10^23", "3.01x10²³", "3.01e23", "301 000 000 000 000 000 000 000"
+  s = String(s || "").trim().replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, m => "^" + m.split("").map(c => c === "⁻" ? "-" : String(SUPD.indexOf(c))).join(""));
+  s = s.replace(/\s+/g, "").replace(/−/g, "-");
+  if (/^-?\d{1,3}(,\d{3})+(\.\d+)?/.test(s)) s = s.replace(/,/g, ""); else s = s.replace(",", ".");
+  let m = /^(-?\d*\.?\d+)e([+-]?\d+)/i.exec(s); if (m) return parseFloat(m[1]) * Math.pow(10, +m[2]);
+  m = /^(-?\d*\.?\d+)[x×*]10\^?\(?([+-]?\d+)/i.exec(s); if (m) return parseFloat(m[1]) * Math.pow(10, +m[2]);
+  m = /^10\^([+-]?\d+)/.exec(s); if (m) return Math.pow(10, +m[1]);
+  m = /^-?\d*\.?\d+/.exec(s); return m ? parseFloat(m[0]) : NaN;
+}
+const ansTxt = t => grp(nf(t.ans()));
+const unitTxt = t => !t.unit ? "" : t.unit === "%" ? "%" : " " + t.unit;
+const workHTML = t => t.working ? `<ol class="ms work">${t.working().map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : "";
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") { if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice]; return o.ok && o.ok() ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) }; }
+  if (t.kind === "gaps") { if (t.rows.some(([k]) => !S.gap[k])) return { skip: "Choose an answer for each line." };
+    const wrong = t.rows.find(([k, , a]) => S.gap[k] !== a); if (!wrong) return { ok: true, html: esc("Correct. " + t.explain) };
+    const n = t.rows.filter(([k, , a]) => S.gap[k] !== a).length;
+    return { ok: false, html: esc(`${n === 1 ? "One is" : n + " are"} not right yet. ${wrong[1]}: ${t.why(wrong[0], S.gap[wrong[0]])}`) }; }
+  if (t.kind === "num") { const v = parseNum(S.val); if (!isFinite(v)) return { skip: "Type a number first." };
+    const a = t.ans(); if (near(v, a, t.tol)) return { ok: true, html: esc(`Correct: ${ansTxt(t)}${unitTxt(t)}.`) + workHTML(t) };
+    const hit = t.wrongs.find(([x]) => near(v, x, Math.max(Math.abs(x) * .01, 1e-9))); return { ok: false, html: esc(hit ? hit[1] : t.generic) }; }
+  return { skip: "" };
+}
+const STUCKW = { words: "Key words", maths: "Equations", syms: "Circuit symbols" };
+function msgStuck() { const k = task.stuck; if (!k || support[k]) return ""; return `Stuck? Turn on <b>${STUCKW[k]}</b> under Support.`; }
+function bump() { nqScore(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    drawAll(); renderSupport();
+  } else { p.wrong++; nqMiss(); streak = 0; bump(); msg("bad", "<b>✗ Not quite.</b> " + r.html); $("stuckNote").innerHTML = msgStuck(); }
+}
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() { const p = prog(), hs = task.hints; if (p.hints < 3) p.hints++; nqMiss(); msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel(); }
+function answerHTML(t) {
+  if (t.kind === "choice") { const o = t.options.find(x => x.ok && x.ok()).t; return esc("Answer: " + o + (/[.!?]$/.test(o) ? " " : ". ") + t.explain); }
+  if (t.kind === "num") return esc(`Answer: ${ansTxt(t)}${unitTxt(t)}.`) + workHTML(t);
+  return esc("Answer: " + t.explain);
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(); drawAll(); renderSupport();
+  msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
+  S = newS(); $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer(); renderSupport();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+/* ===== Instructions tour ===== */
+const TOUR = [
+  { el: "#tabs", tab: "build", text: "Two parts: build series and parallel circuits, and test an LDR and a thermistor." },
+  { el: "#csvg", tab: "build", set: m => { m.arr = "series"; m.n = 2; m.closed = true; m.am = true; m.vm = true; }, text: "The circuit diagram uses the AQA symbols. Each meter shows its reading on a tag: read them yourself." },
+  { el: "#arrSeg", tab: "build", text: "Join the parts in series (one loop) or in parallel (branches).", do: "arr", doText: "Press Parallel." },
+  { el: "#nSeg", tab: "build", text: "Choose how many parts, then what each part is: a resistor, a lamp, an LDR or a thermistor.", do: "n", doText: "Press 3." },
+  { el: "#cStep", tab: "build", text: "Each cell gives 1.5 V. Two or more cells make a battery." },
+  { el: "#swBtn", tab: "build", text: "Open the switch and the loop is broken: no current flows anywhere.", do: "switch", doText: "Press the switch." },
+  { el: "#tSel", tab: "build", text: "Choose how long the switch stays closed, for charge (Q = I t) and energy (E = Q V, E = P t)." },
+  { el: "#cread", tab: "build", text: "In Demo the readout shows the rules with this circuit’s numbers. In the Knowledge check you work them out." },
+  { el: "#tabs", text: "Next: the LDR and the thermistor.", do: "tab-sense", doText: "Press LDR and thermistor." },
+  { el: "#condS", tab: "sense", text: "Change the light level (or the temperature) and read the meters.", do: "cond", doText: "Press ▶." },
+  { el: "#recBtn", tab: "sense", text: "Record plots the resistance on the graph.", do: "rec", doText: "Press Record." },
+  { el: ".kc", text: "When you are ready, test yourself with the Knowledge check. Start with Easy." }
+];
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Support (off on load, never stored) ===== */
+const WORDS = [["Current", "The rate of flow of electric charge, in amperes (A). Measured with an ammeter joined in series."],
+  ["Potential difference (p.d.)", "The energy transferred per coulomb of charge between two points, in volts (V). Measured with a voltmeter joined in parallel, across the part."],
+  ["Resistance", "How much a part opposes the current, in ohms (Ω). R = V ÷ I."],
+  ["Series", "Parts joined one after another in one loop: the same current flows through each; the p.d. is shared."],
+  ["Parallel", "Parts joined in separate branches: each branch has the same p.d.; the branch currents add up."],
+  ["Charge", "Measured in coulombs (C). Q = I t."], ["Power", "The energy transferred each second, in watts (W)."],
+  ["Ammeter", "Measures current. Joined in series."], ["Voltmeter", "Measures p.d. Joined in parallel, across a part."],
+  ["LDR", "Light-dependent resistor: its resistance falls as the light gets brighter."], ["Thermistor", "Its resistance falls as its temperature rises."]];
+const MATHS = ["Q = I t &nbsp; (charge in C, current in A, time in s)", "V = I R &nbsp; (p.d. in V, current in A, resistance in Ω)", "P = V I &nbsp; and &nbsp; P = I² R &nbsp; (power in W)",
+  "E = P t &nbsp; and &nbsp; E = Q V &nbsp; (energy in J)", ["series", "Series: R<sub>total</sub> = R₁ + R₂"], "1 minute = 60 s"];
+function renderSupport() {
+  ["words", "maths", "syms"].forEach(k => { $(k + "Box").hidden = !support[k]; });
+  const hideW = quizOpen() && task.hideWords || [];
+  morphHTML($("wordsBox"), "<h3>Key words</h3>" + WORDS.map(w => `<p><b>${esc(w[0])}:</b> ${hideW.includes(w[0]) ? "hidden for this question: try it first." : esc(w[1])}</p>`).join(""));
+  const hideM = quizOpen() && task.hideMaths || [];
+  morphHTML($("mathsBox"), "<h3>Equations</h3>" + MATHS.map(x => Array.isArray(x) ? (hideM.includes(x[0]) ? "<p>One equation is hidden for this question: try it first.</p>" : `<p>${x[1]}</p>`) : `<p>${x}</p>`).join(""));
+  if (support.syms && !$("symsBox")._h) morphHTML($("symsBox"), "<h3>Circuit symbols</h3>" + symbolsHTML());
+  document.querySelectorAll(".sw[data-support]").forEach(b => { const k = b.dataset.support; b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off"; });
+  if (mode !== "demo") requestAnimationFrame(keepInView);
+}
+document.querySelectorAll(".sw[data-support]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k]; renderSupport(); if (support[k]) tourSignal("sup-" + k);
+}));
+
+/* ===== Wiring: the model's controls ===== */
+for (let j = 0; j < 3; j++) $("p" + j).innerHTML = (j ? RV.map(r => "R" + r).concat(["lamp"]) : RV.map(r => "R" + r).concat(["lamp", "ldr", "th"])).map(p => {
+  const t = isRes(p) ? `${p.slice(1)} Ω` : partWord(p); return `<option value="${p}" data-t="${esc(t)}">${esc(t)}</option>`; }).join("");
+$("tSel").innerHTML = TIMES.map(([t, l], i) => `<option value="${i}">⏱ ${l}</option>`).join("");
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) setTab(b.dataset.tab); });
+const guard = (k, el, back) => { if (!locked(k)) return false; lockMsg(); if (el && back != null) el.value = back; return true; };
+const after = sig => { drawAll(); checkTried(); if (sig) tourSignal(sig); };
+$("arrSeg").addEventListener("click", e => { const b = e.target.closest("button[data-arr]"); if (!b || b.disabled || guard("arr")) return; M.arr = b.dataset.arr; if (M.arr === "parallel" && M.n < 2) M.n = 2; after(M.arr === "parallel" ? "arr" : null); });
+$("nSeg").addEventListener("click", e => { const b = e.target.closest("button[data-n]"); if (!b || b.disabled || guard("n")) return; M.n = +b.dataset.n; after(M.n === 3 ? "n" : null); });
+for (let j = 0; j < 3; j++) $("p" + j).addEventListener("change", e => { if (guard("parts", e.target, M.parts[j])) return; M.parts[j] = e.target.value; after(); });
+$("cDn").addEventListener("click", () => { if (guard("cells")) return; M.cells = Math.max(1, M.cells - 1); after(); });
+$("cUp").addEventListener("click", () => { if (guard("cells")) return; M.cells = Math.min(4, M.cells + 1); after(); });
+$("swBtn").addEventListener("click", () => { if (guard("switch")) return; M.closed = !M.closed; after("switch"); });
+$("amBtn").addEventListener("click", () => { if (guard("am")) return; M.am = !M.am; after(); });
+$("vmBtn").addEventListener("click", () => { if (guard("vm")) return; M.vm = !M.vm; after(); });
+$("tSel").addEventListener("change", e => { if (guard("time", e.target, String(M.ti))) return; M.ti = +e.target.value; after(); tried(5); });
+$("lDn").addEventListener("click", () => { if (guard("light")) return; M.light = Math.max(0, M.light - 1); after("cond"); });
+$("lUp").addEventListener("click", () => { if (guard("light")) return; M.light = Math.min(4, M.light + 1); after("cond"); });
+$("tDn").addEventListener("click", () => { if (guard("temp")) return; M.temp = Math.max(0, M.temp - 1); after("cond"); });
+$("tUp").addEventListener("click", () => { if (guard("temp")) return; M.temp = Math.min(4, M.temp + 1); after("cond"); });
+$("sensSeg").addEventListener("click", e => { const b = e.target.closest("button[data-s]"); if (!b || b.disabled || guard("sens")) return; M.sens = b.dataset.s; after(); });
+$("sswBtn").addEventListener("click", () => { if (guard("switch")) return; M.sclosed = !M.sclosed; after(); });
+$("recBtn").addEventListener("click", () => { if (!M.sclosed || qh("graph")) return; M.rec[M.sens][M.sens === "ldr" ? M.light : M.temp] = SENSE_V / senseI(M); after("rec"); });
+$("clrBtn").addEventListener("click", () => { if (qh("graph")) return; M.rec[M.sens] = {}; after(); });
+/* redraw a picture when its box changes size (no loop: drawing never changes the size) */
+(function sizeWatch() {
+  if (!window.ResizeObserver) { window.addEventListener("resize", () => drawPane()); return; }
+  let pend = 0, last = "";
+  const ro = new ResizeObserver(() => { const k = narrowBox() ? "t" : "w"; if (k !== last && !pend) pend = requestAnimationFrame(() => { pend = 0; last = narrowBox() ? "t" : "w"; drawPane(); }); });
+  ro.observe($("cbox"));
+})();
+
+/* ===== Wiring: the question panel and the modes ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "easy" || m === "hard") bankNow();
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  if (mode === "demo" && m !== "demo") DEMO_M = M;
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  $(mode === "demo" ? "demoSupport" : "quizSupport").appendChild($("supportWrap"));
+  loadTask(); nqMode();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+function bankRun() {   // the load-time question-bank check, run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (!errs.length) return;
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  if (mode !== "demo") { idx = Math.min(idx, LEVELS[level].length - 1); loadTask(); }
+  bump();
+}
+bankLater(); nqTryFold();
+bump(); setMode("demo"); renderSupport(); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:gcse-series-and-parallel")) $("newHere").hidden = true; } catch (e) {}
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb, cap) {   // cap (optional): a lower frame rate for this call, e.g. 15 for a heavy picture
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const id = ++P.seq, gap = () => 1000 / Math.min(P.fps[P.i], cap || 60); P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && Math.max(now, performance.now()) - P.last < gap() - 10) { go(); return; }   // frame cap (a frame's time stamp can be older than the request, so check the clock too)
+    P.live.delete(id);
+    const tn = Math.max(now, performance.now()); if (P.last && tn - P.last < 250) P.act += tn - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > .4 || P.busy / Math.max(1, P.n) > 40) {   // over 40 % of the time, or frames over 40 ms: aim for about a third of the time
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * .35 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < .15 && P.i > 0) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    const a = performance.now(); P.last = Math.max(now, a); P.n++;   // the clock, not the (sometimes older) frame stamp, so the cap holds
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+/* == shared: next-question v4 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026; v4 16 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress.
+   v4: any later write to the feedback box of a finished question (Hint, Check, a tool message) keeps the Next button
+   (nqFbWatch); on phones (<= 600 px wide) level descriptors in the feedback fold into a closed "Show mark scheme" (nqMsFold);
+   on phones nqReveal also brings the top of the feedback back into view when it and Next fit but the top was pushed up. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions"), ast = act && /sticky|fixed/.test(getComputedStyle(act).position);
+      let bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (ast && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)) lim -= act.getBoundingClientRect().height;
+      else if (ast) { const ar = act.getBoundingClientRect(); if (ar.top < innerHeight / 2) bar = Math.max(bar, ar.bottom); }   // v4: one stuck at the top covers the top
+      d = r.bottom + 10 - lim;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+      else {   // v4: Next is on screen but the top of the feedback is hidden (the browser's scroll anchoring can push it up when
+        // the box grows): if the whole message and Next fit, bring its top back into view
+        const m = (row.closest(".msg") || nqFbEl() || row).getBoundingClientRect();
+        if (m.top < bar && r.bottom - m.top + 18 <= lim - bar) window.scrollTo({ top: Math.max(0, scrollY - (bar + 8 - m.top)), behavior: how });
+      }
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+/* v4: the feedback box of a finished question always ends with Next. A tool's Hint or Check (or any other message) can
+   rewrite the box after the question is done, which used to drop the button; this puts it back (no focus move, no scroll).
+   It also folds the mark scheme on phones. A MutationObserver on the box only (no loop): our own changes find nothing to do. */
+var NQ_FBW = false;
+function nqFbWatch() {
+  const fb = nqFbEl(); if (NQ_FBW || !fb || !window.MutationObserver) return; NQ_FBW = true;
+  new MutationObserver(() => {
+    nqMsFold(fb);
+    if (mode === "demo" || fb.querySelector(".nq-row") || !(fb.children.length || fb.textContent.trim())) return;
+    const t = nqT(); if (t && nqIsDone(level, t) && !(document.getElementById("quizPanel") || fb).classList.contains("nq-ended")) nqAfter("finished");
+  }).observe(fb, { childList: true, subtree: true, characterData: true });
+  const mq = nqMsMQ(); if (mq) { const re = () => nqMsFold(fb); if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
+  nqMsFold(fb);
+}
+/* Mark-scheme fold (phones only, <= 600 px wide): level descriptors sit in a closed <details> "Show mark scheme" so the
+   verdict / model answer and Next fit on the screen. A block is folded if the tool marks it with class "nq-ms", or if it is
+   a list whose first item, or a paragraph / span whose text, starts "Level 0-3 (" (the levels of response of the 6-mark
+   questions). A short heading just
+   before it ("Mark scheme", "Levels:") goes in with it. Nothing new is shown: it only wraps what is already in the box.
+   Wider than 600 px the fold is taken out again, so laptops and boards are unchanged. */
+var NQ_MSQ = null;
+function nqMsMQ() { if (!NQ_MSQ && window.matchMedia) NQ_MSQ = matchMedia("(max-width:600px)"); return NQ_MSQ; }
+function nqMsIs(el) {   // tool-marked, or a list / paragraph / span that starts with a level descriptor, "Level 3 (5–6): …"
+  if (el.classList.contains("nq-ms")) return true;
+  const LV = /^\s*Level\s*[0-3]\s*\(/;
+  if (/^(UL|OL)$/.test(el.tagName)) { const li = el.firstElementChild; return !!li && LV.test(li.textContent || ""); }
+  return /^(P|SPAN)$/.test(el.tagName) && !el.querySelector("button,.nq-row") && LV.test(el.textContent || "");
+}
+function nqMsHead(el) {   // a short heading right before the block (only white space between), e.g. <b>Mark scheme</b> or <p><b>Levels:</b></p>
+  let n = el.previousSibling; while (n && n.nodeType === 3 && !n.textContent.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1 || !/^(B|STRONG|P|H3|H4|H5|SPAN)$/.test(n.tagName) || n.classList.contains("nq-ms")) return null;
+  const t = (n.textContent || "").trim();
+  return t && t.length <= 48 && (/mark scheme|levels?\b|marking/i.test(t)) ? n : null;
+}
+function nqMsFold(fb) {
+  const mq = nqMsMQ(), on = !!(mq && mq.matches);
+  if (!on) { fb.querySelectorAll("details.nq-fold").forEach(d => { const inn = d.querySelector(".nq-fold-in");
+      if (inn) while (inn.firstChild) d.parentNode.insertBefore(inn.firstChild, d); d.remove(); }); return; }
+  const all = [...fb.querySelectorAll(".nq-ms, ul, ol, p, span")].filter(el => !el.closest("details") && nqMsIs(el));   // a tool's own <details> fold (e.g. "msd") is left as it is
+  const tops = all.filter(el => !all.some(o => o !== el && o.contains(el)));
+  if (!tops.length) return;
+  const groups = [];   // neighbouring blocks (with their headings) share one fold
+  tops.forEach(el => { const h = nqMsHead(el), first = h || el, g = groups[groups.length - 1];
+    let prev = first.previousSibling; while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+    if (g && prev === g[g.length - 1]) { if (h) g.push(h); g.push(el); } else groups.push(h ? [h, el] : [el]); });
+  groups.forEach(g => {
+    const d = document.createElement("details"), sm = document.createElement("summary"), inn = document.createElement("div");
+    d.className = "nq-fold"; inn.className = "nq-fold-in";
+    sm.innerHTML = '<span class="nq-fs">Show mark scheme</span><span class="nq-fh2">Hide mark scheme</span>';
+    d.append(sm, inn); g[0].parentNode.insertBefore(d, g[0]);
+    let n = g[0];   // move the group, and the white space between its parts, into the fold
+    const last = g[g.length - 1];
+    while (n) { const nx = n.nextSibling; inn.appendChild(n); if (n === last) break; n = nx; }
+  });
+}
+nqTryFold(); nqBar(); nqStickOn(); nqFbWatch();
+/* == end shared: next-question v4 == */
+
+/* == shared: bank-check-later v4 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v4 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Series: the same current flows through every part, the battery’s p.d. is shared, and R total = R₁ + R₂. Parallel: each branch has the same p.d. and the branch currents add up.",
+      "Ammeters go in series, voltmeters in parallel. Q = I t, V = I R and P = V I. A thermistor’s resistance falls as it warms; an LDR’s falls as the light gets brighter."
+    ],
+    "hard": [
+      "Rearrange V = I R, Q = I t and P = I² R to find any quantity. Adding a branch in parallel gives the charge another path, so the total resistance falls below the smallest branch.",
+      "A battery gives a p.d., not a fixed current: the current depends on the total resistance. Energy: E = P t (time in seconds) and E = Q V."
+    ]
+  };
+  return F[lv] || F.easy;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
