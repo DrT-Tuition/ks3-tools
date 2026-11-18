@@ -1,0 +1,2290 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selection and Hardy–Weinberg</title>
+<!--
+  SCIENCE SPEC: Selection and Hardy–Weinberg (alevel-selection-and-hardy-weinberg.html)
+  A-level tool; site placement: A-level Biology, "OCR A 6.1.2 Patterns of inheritance" (17 Nov 2026). Board: OCR A (H420).
+  OCR A 6.1.2 (e) the factors that can affect the evolution of a species (guidance: stabilising selection and directional
+    selection, genetic drift, genetic bottleneck and founder effect); (f) the use of the Hardy–Weinberg principle to calculate
+    allele frequencies in populations; (g) the role of isolating mechanisms in the evolution of new species (geographical
+    mechanisms: allopatric speciation; reproductive mechanisms: sympatric speciation); (h)(i) the principles of artificial
+    selection and its uses (guidance: keeping a resource of genetic material, including wild types). Also fits AQA 7402
+    3.7.2–3.7.3 (which names disruptive selection). Year 13 reading level, OCR command words.
+  What it models (four views, tabs):
+    1 Population: pocket mice, one gene, A (dark fur, dominant) and a (pale fur). Wright–Fisher generations with seeded random
+      numbers: selection on the parents' phenotypes (none / favours dark / favours pale; weak = 20 % less likely to breed,
+      strong = 50 %), optional migration (10 % of the gene pool from migrants with A at 0.5), random mating; population of
+      10, 50 or 200; start A at 0.2, 0.5 or 0.8. Bottleneck: 4 random survivors breed the next generation. Founder group: 5
+      mice start an island population; the mainland carries on (dashed). Graph: frequency of A against generation (0–40),
+      earlier runs in grey. No frequency is printed; genotype counts are shown. The readout names the Hardy–Weinberg
+      conditions the settings break.
+    2 Types of selection on beak depth (1000 birds per curve, number per 0.5 mm): stabilising (mean 10 mm, SD 1 → 0.55),
+      directional (mean +0.2 mm a generation), disruptive (two peaks moving apart), artificial (breeders keep the deepest
+      beaks: mean +0.35 mm a generation, narrower). Dashed = generation 0; solid = after n generations; the shading marks
+      the birds selected against.
+    3 Hardy–Weinberg: a square with sides p and q (gametes); areas p², 2 × pq and q². q from 0.05 to 0.95. Readouts p, p²,
+      2pq, q² and the numbers in 1000; the five conditions.
+    4 Speciation: allopatric (a canyon; different selection pressures; gene pools diverge; reproductive isolation; no
+      fertile offspring) and sympatric (apple maggot flies on hawthorn and apple: temporal and habitat isolation).
+  Misconceptions designed out (feedback names them): individuals evolve; mutations happen because they are needed; selection
+    makes new alleles; dominant alleles always increase (3 : 1); Hardy–Weinberg applies to every population; a bottleneck
+    selects the best adapted; populations return to their old frequency; 1 − q² is p; q² is q; 2pq without the 2.
+  Leak control: while a question is open (not yet right or shown) every view's explanation is replaced by a neutral line; the
+    type of selection, its buttons and the shading are hidden for type questions; the Hardy–Weinberg values and the region
+    labels are hidden; the conditions, the step titles, isolating mechanisms and labels in the speciation picture are hidden
+    where the question asks for them; named key words and maths lines are hidden. All of it comes back after a right Check
+    or Show answer.
+  Checks in code: bankCheck() (after the first paint) checks the model (selection raises A, drift runs lose and fix A, the
+    bottleneck and founder runs, the directional shift of 2.0 mm, the disruptive dip, curves on the graph, p² + 2pq + q² = 1)
+    and every question (one right option and a reason for each wrong one, 3 hints, gap answers and feedback, planned wrong
+    numbers outside the tolerance, no 69).
+  Drawing: all in code (SVG, CSS pixels), sized from the screen height. Performance: no animation and no loop; each
+    generation is drawn once.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- == shared: fonts-nonblocking v1 == the font loads without holding up the first paint -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"></noscript>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314243D'/%3E%3Cg transform='translate(256,256) scale(4.6) translate(-46,-48)'%3E%3Cpath d='M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z' fill='%23D9A536'/%3E%3Cpath d='M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z' fill='none' stroke='%2314243D' stroke-width='1.6'/%3E%3Ctext x='46' y='57' font-family='Georgia,serif' font-size='34' font-weight='bold' fill='%2314243D' text-anchor='middle'%3ET%3C/text%3E%3C/g%3E%3C/svg%3E">
+<script>
+/* Apply a saved theme choice before the page paints (no flash). */
+try { var t = localStorage.getItem("ks3tools-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+/* Dr T's Classroom palette (brand-tokens.css), set up for dyslexia-friendly reading:
+   pale Tint page, warm Paper cards, Ink text. Gold is decoration only on light. */
+:root{
+  --bg:#E9EDF3; --surface:#FBFAF8; --sunk:#EFF2F6; --ink:#1E252E; --muted:#5A6472; --line:#D5DCE5;
+  --accent:#14243D; --accent-2:#1E3555; --accent-ink:#FBFAF8; --gold:#D9A536; --focus:#14243D;
+  --good:#1D6B3F; --good-bg:#E3F1E8; --bad:#A32020; --bad-bg:#FBE9E7;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --shadow:0 2px 8px rgba(20,36,61,.08); --brand-name:#14243D; --atom-edge:rgba(20,36,61,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14243D; --surface:#1E3555; --sunk:#192E4B; --ink:#E9EDF3; --muted:#A9B4C4; --line:#2E4A70;
+  --accent:#D9A536; --accent-2:#E4B85A; --accent-ink:#14243D; --focus:#D9A536;
+  --good:#7FD4A0; --good-bg:#1B3A2E; --bad:#FF9A90; --bad-bg:#3D2224; --shadow:none; --brand-name:#E9EDF3; --atom-edge:rgba(233,237,243,.45);
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6;letter-spacing:.01em;word-spacing:.06em}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+
+/* header */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0;color:var(--accent)}
+h1 small{display:block;font-weight:400;font-size:17px;color:var(--muted);margin-top:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.chip{font-size:15px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip b{color:var(--accent)}
+.theme-btn{font:700 15px var(--f-body);padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.theme-btn:hover{border-color:var(--accent)}
+
+/* levels */
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{font:700 16px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.levels button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* support bar: every help option starts OFF and is switched on here */
+.support{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.support .lbl{font-weight:700;font-size:16px;color:var(--muted);margin-right:2px}
+.sw{font:700 15px var(--f-body);padding:7px 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.sw .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted)}
+.sw[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--surface)}
+.sw[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent)}
+.sw .state{font-weight:400;color:var(--muted)}
+
+/* main card */
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.ctx{font-weight:700;font-size:clamp(19px,2.2vw,23px)}
+.qno{font-size:15px;color:var(--muted)}
+.particles{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.particles h2,.panel h2{font:700 16px var(--f-body);color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.limits{font-size:15px;color:var(--muted);margin:8px 0 0}
+/* tally + feedback */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.st{font-size:15px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st.ok{color:var(--good);background:var(--good-bg)}
+.st.no{color:var(--bad);background:var(--bad-bg)}
+.hidden-note{color:var(--muted);font-size:16px;margin:4px 0}
+@media (max-width:480px){.st .w{display:none}.st{padding:3px 9px}th,td{padding-left:4px;padding-right:4px}}
+.feedback{min-height:96px;display:grid;align-content:start;gap:6px;font-size:18px}
+.feedback .msg{border-radius:8px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.feedback .msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.feedback .msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.feedback .msg.tip{border-left:4px solid var(--gold)}
+.feedback ul{margin:4px 0 0;padding-left:22px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:700 17px var(--f-body);padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.hint{color:var(--accent);border-bottom:4px solid var(--gold)}
+.btn:not(.primary):hover{border-color:var(--accent)}
+.spacer{flex:1}
+
+.rule{font-size:16px;color:var(--muted);margin:0;max-width:75ch}
+.rule b{color:var(--ink)}
+.bankerr{background:var(--bad-bg);color:var(--bad);padding:12px 14px;border-radius:10px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* brand mark, top right: official shield with the name beneath */
+.brandmark{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;flex:none;padding:2px 4px}
+.brandmark svg{height:52px;width:auto;display:block}
+.brandmark span{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:15px;line-height:1.1;color:var(--brand-name);white-space:nowrap;letter-spacing:0}
+.brandmark .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brandmark .mk-light{display:none}:root:not([data-theme="light"]) .brandmark .mk-dark{display:block}}
+:root[data-theme="dark"] .brandmark .mk-light{display:none}
+:root[data-theme="dark"] .brandmark .mk-dark{display:block}
+/* footer: small shield + licence line */
+footer.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:8px;color:var(--muted);font-size:14px}
+footer.brand svg{height:28px;width:auto;display:block;flex:none}
+footer.brand .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer.brand .mk-light{display:none}:root:not([data-theme="light"]) footer.brand .mk-dark{display:block}}
+:root[data-theme="dark"] footer.brand .mk-light{display:none}
+:root[data-theme="dark"] footer.brand .mk-dark{display:block}
+footer.brand a{color:inherit}
+/* ---- TOOL-SPECIFIC CSS BELOW ---- */
+:root{--dk:#5A4632;--dk-edge:#2E2218;--pl:#E8D3A8;--pl-edge:#8A6D3B;--alA:#1F2A36;--ala:#FFF7E6;--rock:#3E4148;--sand:#E9DDBF;
+  --c0:#14243D;--c1:#C2410C;--grid:rgba(20,36,61,.10);--grid2:rgba(20,36,61,.24);--zone:rgba(194,65,12,.13);--old:rgba(20,36,61,.30);
+  --gAA:#5A4632;--gAa:#A98A62;--gaa:#F1E2C2;--l1:#DDE8CF;--l2:#F1E4C4;--can:#7FA9C9;--o1:#6B4A2B;--o2:#B9925E;--o3:#E8D7AE;--trunk:#7A5A3A;--crown:#6E9C5A;--crown2:#8DB86A;--fruitA:#C8312B;--fruitH:#8E1F3A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dk:#6E5640;--dk-edge:#E8D3A8;--pl:#E8D3A8;--pl-edge:#F5E7C8;--alA:#10161D;--ala:#FFF7E6;--rock:#2A2C31;--sand:#4A4334;
+  --c0:#E9EDF3;--c1:#FF9F66;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.26);--zone:rgba(255,159,102,.16);--old:rgba(233,237,243,.32);
+  --gAA:#6E5640;--gAa:#9C7F5A;--gaa:#E8D7AE;--l1:#2C3A27;--l2:#40392A;--can:#3F6684;--o1:#C99A6B;--o2:#8C6B44;--o3:#F2E2BA;--trunk:#8E6B48;--crown:#3F6B35;--crown2:#56854A;--fruitA:#FF6B5E;--fruitH:#E06A88}}
+:root[data-theme="dark"]{--dk:#6E5640;--dk-edge:#E8D3A8;--pl:#E8D3A8;--pl-edge:#F5E7C8;--alA:#10161D;--ala:#FFF7E6;--rock:#2A2C31;--sand:#4A4334;
+  --c0:#E9EDF3;--c1:#FF9F66;--grid:rgba(233,237,243,.10);--grid2:rgba(233,237,243,.26);--zone:rgba(255,159,102,.16);--old:rgba(233,237,243,.32);
+  --gAA:#6E5640;--gAa:#9C7F5A;--gaa:#E8D7AE;--l1:#2C3A27;--l2:#40392A;--can:#3F6684;--o1:#C99A6B;--o2:#8C6B44;--o3:#F2E2BA;--trunk:#8E6B48;--crown:#3F6B35;--crown2:#56854A;--fruitA:#FF6B5E;--fruitH:#E06A88}
+
+h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-bottom:2px}
+.view{display:grid;gap:10px}
+#sceneBox{display:grid;gap:10px}
+.scenewrap{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.scenewrap svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.scenewrap svg text{font-family:var(--f-body);pointer-events:none}
+.key{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px;line-height:1.4}
+.key li{display:inline-flex;align-items:center;gap:6px}
+.key svg{width:24px;height:18px;flex:none}
+#selKey svg{width:28px}
+/* graphs */
+.gr{stroke:var(--grid);stroke-width:1}
+.gr2{stroke:var(--grid2);stroke-width:1}
+.ax{stroke:var(--ink);stroke-width:1.6;fill:none}
+.tk{fill:var(--ink);font-weight:700}
+.ttl{fill:var(--muted);font-weight:700}
+.run{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.rdot{fill:var(--accent);stroke:var(--sunk);stroke-width:1.5}
+.oldrun{fill:none;stroke:var(--old);stroke-width:2.2;stroke-linejoin:round}
+.mainrun{fill:none;stroke:var(--c1);stroke-width:2.6;stroke-dasharray:8 5;stroke-linejoin:round}
+.evl{stroke:var(--c1);stroke-width:1.6;stroke-dasharray:3 4}
+.evt{fill:var(--c1);font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.dcv{fill:none;stroke-width:3.2;stroke-linejoin:round}
+.dcv.before{stroke:var(--muted);stroke-dasharray:9 6}
+.dcv.after{stroke:var(--accent)}
+.zone{fill:var(--zone)}
+.zl{fill:var(--c1);font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+/* mice */
+.rock{fill:var(--rock)}
+.rock.sand{fill:var(--sand)}
+.mouse{stroke-width:1.4}
+.mouse.fd{fill:var(--dk);stroke:var(--dk-edge)}
+.mouse.fp{fill:var(--pl);stroke:var(--pl-edge)}
+.al{stroke:var(--ink);stroke-width:.8}
+.al.aA{fill:var(--alA)}
+.al.aa{fill:var(--ala)}
+#fSvg .al.aA{stroke:var(--ala)}
+/* Hardy–Weinberg square */
+.hreg{stroke:var(--surface);stroke-width:2}
+.hreg.gAA{fill:var(--gAA)}.hreg.gAa{fill:var(--gAa)}.hreg.gaa{fill:var(--gaa)}
+.hbox{fill:none;stroke:var(--ink);stroke-width:2}
+.hl{font-weight:700}.hs{font-weight:400}
+.hl.gAA,.hs.gAA{fill:#FFF7E6}.hl.gAa,.hs.gAa{fill:#1B1209}.hl.gaa,.hs.gaa{fill:#1B1209}
+.hg{fill:var(--ink);font-weight:700}
+#qIn{flex:1 1 160px;min-width:120px;min-height:44px;accent-color:var(--accent)}
+#qOut{font-size:20px;font-weight:700;color:var(--accent);min-width:5em;font-variant-numeric:tabular-nums}
+/* speciation */
+.land.l1{fill:var(--l1)}.land.l2{fill:var(--l2)}
+.canyon{fill:var(--can);stroke:var(--line);stroke-width:1.5}
+.canyon.dry{fill:var(--sand);opacity:.85}
+.org{stroke:var(--ink);stroke-width:1}
+.org.o1{fill:var(--o1)}.org.o2{fill:var(--o2)}.org.o3{fill:var(--o3)}
+.trunk{fill:var(--trunk)}
+.wing{fill:rgba(255,255,255,.75);stroke:var(--ink);stroke-width:.6}
+.calbg{fill:var(--surface);stroke:var(--line)}
+.cal{stroke:var(--ink);stroke-width:1}
+.cal.o1{fill:var(--o1)}.cal.o3{fill:var(--o3)}
+.crown{fill:var(--crown)}.crown.ap{fill:var(--crown2)}
+.fruit.ap{fill:var(--fruitA)}.fruit.hw{fill:var(--fruitH)}
+.spl{fill:var(--ink);font-weight:700;paint-order:stroke;stroke:var(--sunk);stroke-width:4px;stroke-linejoin:round}
+.spl.bad{fill:var(--bad)}
+.nox{stroke:var(--bad);stroke-width:2.5;stroke-dasharray:6 4}
+.vw{font-size:17px}
+.xs{display:none}
+@media (max-width:480px){.xs{display:inline}}
+/* controls */
+.ctl{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ctlrow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.opt2{display:inline-flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.clbl{font-weight:700;font-size:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.segb{font:700 16px var(--f-body);min-height:44px;min-width:44px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.seg button:not(:disabled):hover,.segb:not(:disabled):hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.segb.tog{border-style:dashed}
+.segb.tog[aria-pressed="true"]{border-style:solid;border-color:var(--accent)}
+.segb .state{font-weight:400;color:var(--muted)}
+.scenetabs button{font-size:17px}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+.ctlrow .btn{min-height:46px}
+.mnote{margin:0;font-size:16px;line-height:1.45;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px}
+.mnote:empty{display:none}
+.mnote.good{border-left-color:var(--good);color:var(--good);background:var(--good-bg)}
+.mnote.bad{border-left-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;gap:0;min-width:0;align-content:start;contain:layout paint}
+.ro.wide2{grid-column:span 2}.ro.wide4{grid-column:1/-1}
+.ro .k{font-size:14px;font-weight:700;color:var(--muted);line-height:1.3}
+.ro .v{font-size:20px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere}
+.ro .v.sm{font-size:16px;font-weight:400;color:var(--ink);line-height:1.45;min-height:4.35em}
+.legend{background:var(--sunk);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;display:grid;gap:2px}
+.legend p{margin:0;font-size:16px;line-height:1.45}
+.kwh{color:var(--muted);font-style:italic}
+.readbox{display:grid;gap:6px;background:var(--sunk);border:2px solid var(--accent);border-radius:10px;padding:8px 12px}
+.readbox .rq{margin:0;font-weight:700;font-size:16px;line-height:1.4}
+.numrow .btn{min-height:48px}
+@container (min-width:640px){
+}
+@container (max-width:639px){
+}
+@media (max-width:640px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.ro .v{font-size:18px}}
+@media (max-width:480px){
+  .model.card{padding:12px}
+  .seg button,.segb{padding:6px 10px;font-size:15px}
+  .btn{padding:10px 14px}
+  .pagt,.xl{display:none}
+  .scenetabs button{font-size:15px;padding:6px 10px}
+}
+/* answer area */
+.opts{display:grid;gap:8px}
+.opt{font:400 17px var(--f-body);text-align:left;padding:10px 14px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.4}
+.opt .k{font-weight:700;color:var(--accent);flex:none}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);font-weight:700}
+.opt[aria-pressed="true"]::after{content:"✓ chosen";margin-left:auto;font-size:14px;color:var(--accent);white-space:nowrap;padding-left:8px}
+.numrow{display:flex;gap:8px;align-items:center;font-size:18px;flex-wrap:wrap}
+.numrow input{width:150px;font:700 20px var(--f-body);min-height:48px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.small{font-size:16px;color:var(--muted);margin:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#supportArea{display:grid;gap:8px}
+.gsel{font:700 17px var(--f-body);min-height:44px;padding:4px 8px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.gsel:hover{border-color:var(--accent)}
+.fixl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#qpanel>*,#quizPanel>*{min-width:0}
+.fixl li{min-width:0;overflow-wrap:break-word;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:17px;line-height:2}
+@media (min-width:901px) and (max-height:820px){
+  .fixl li{padding:4px 10px;line-height:1.8}
+  .fixl .gsel{min-height:40px;padding:2px 6px}
+}
+@media (max-width:480px){.fixl .gsel{display:block;width:100%;margin:2px 0}.fixl li{line-height:1.5;padding:8px 10px}}
+@media (max-width:380px){.fixl .gsel{font-size:15px;padding:4px 4px}}   /* the longest gap option keeps its closing bracket at 360 px */
+.mrows{display:grid;gap:6px}.mrows .numrow{font-size:17px}.mrows label{flex:1 1 11em}.mrows input{width:96px}.mrows .mfin{border-top:1px solid var(--line);padding-top:6px}
+/* ===== Layout shared by every tool (11 Oct 2026): sticky mode bar, model left, question panel right ===== */
+.wrap{max-width:1320px}
+.topbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;margin:0 -12px;background:var(--bg);border-bottom:1px solid transparent}
+.topbar.stuck{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(20,36,61,.08)}
+.tb-name{display:none;align-items:center;gap:8px;text-decoration:none;color:var(--accent);font-weight:700;font-size:18px;white-space:nowrap}
+.tb-name svg{height:28px;width:auto}
+.tb-name .mk-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb-name .mk-light{display:none}:root:not([data-theme="light"]) .tb-name .mk-dark{display:block}}
+:root[data-theme="dark"] .tb-name .mk-light{display:none}:root[data-theme="dark"] .tb-name .mk-dark{display:block}
+.topbar.stuck .tb-name{display:inline-flex}
+.modes{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 auto}
+.mode{font:700 16px var(--f-body);padding:8px 16px;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tourbtn{border-color:var(--accent)}
+.kc{display:inline-flex;align-items:center;gap:6px;padding-left:6px;margin-left:2px;border-left:2px solid var(--line)}
+.kc-lbl{font-weight:700;font-size:15px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:16px;align-items:start}
+main.layout{min-height:calc(100vh - 70px)}
+.card{gap:14px}
+.qpanel{position:sticky;top:72px;overflow:auto;align-content:start;padding-bottom:0}
+.qpanel .actions{position:sticky;bottom:0;z-index:5;background:var(--surface);padding:10px 0 12px;border-top:1px solid var(--line)}
+.qpanel > div{display:grid;gap:12px;align-content:start}
+.pmode{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.qtext{margin:0;font-size:clamp(19px,1.9vw,22px);line-height:1.4;color:var(--ink)}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.done-badge{font-size:15px;font-weight:700;color:var(--good);background:var(--good-bg);border-radius:999px;padding:3px 12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot-q{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--f-body);cursor:pointer;padding:0}
+.dot-q.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.dot-q.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dot-q.shown{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.qno{margin:0}
+.feedback{min-height:0}
+.actions{align-items:center}
+.actions .btn{min-height:46px}
+.support .lbl{font-size:15px}
+.resetrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.linkbtn{font:700 15px var(--f-body);background:none;border:0;padding:6px 2px;color:var(--muted);text-decoration:underline;cursor:pointer;min-height:36px}
+.linkbtn.warn{color:var(--bad)}
+.opt.done-ok{border:2px solid var(--good);background:var(--good-bg)}
+.newhere{margin:0;padding:8px 12px;border-left:4px solid var(--gold);background:var(--sunk);border-radius:6px;font-size:17px}
+.try-h{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.try{margin:0;padding-left:22px;display:grid;gap:6px}
+.try li.done{color:var(--good)}
+.try li.done::marker{content:"✓  "}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .qpanel{position:static;max-height:none;overflow:visible;order:-1}
+  .qpanel .actions{z-index:20}
+}
+@media (max-width:640px){
+  .topbar{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  .topbar.stuck .tb-name,.topbar .chip{display:none}
+  .modes{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}
+  .kc{padding-left:5px;gap:5px}.kc-lbl{display:none}
+  .mode{padding:6px 12px;min-height:44px;font-size:15px;white-space:nowrap}
+  .tourbtn .wd{display:none}
+  .theme-btn{padding:6px 10px;min-height:44px}
+  .theme-btn .wd{display:none}
+}
+/* guided tour */
+.tour{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:grid;gap:6px}
+.tour p{margin:0}
+.tour-step{font-size:14px;font-weight:700;color:var(--muted)}
+.tour-text{font-size:18px}
+.tour-do{font-size:16px;font-weight:700;color:var(--accent)}
+.tour-do.ok{color:var(--good)}
+.tour-btns{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.tour-arrow{position:absolute;width:16px;height:16px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.tour-arrow.up{top:-10px;border-right:0;border-bottom:0}
+.tour-arrow.down{bottom:-10px;border-left:0;border-top:0}
+.tour-arrow.right{right:-10px;border-left:0;border-bottom:0}
+.tour-arrow.left{left:-10px;border-right:0;border-top:0}
+.tour-target{outline:4px solid var(--gold)!important;outline-offset:3px;border-radius:8px;position:relative;z-index:25}
+@media (prefers-reduced-motion:no-preference){.tour{transition:top .2s,left .2s}}
+
+/* shorter screens (laptops, boards at 768 px): tighter question panel so question, answers, buttons and feedback fit together */
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:12px 16px 16px;gap:10px}
+  #sceneBox,.view{gap:8px}
+  .qpanel{padding:14px 16px 0;gap:10px}
+  .qpanel > div{gap:8px}
+  .qpanel .dot-q{width:30px;height:30px;font-size:14px}
+  .qpanel .qtext{font-size:19px;line-height:1.35}
+  .qpanel .qno,.qpanel .pmode{font-size:14px}
+  .qpanel .opt{padding:7px 12px;min-height:40px}
+  .qpanel .feedback .msg{padding:8px 10px}
+  .qpanel .actions{padding:8px 0 10px}
+}
+/* == tool: alevel-selection-and-hardy-weinberg layout (17 Nov 2026) ==
+   1100 px and wider: a slimmer question panel gives the model more room. Graph and picture heights are set in JS from the
+   screen height (layout(), fitView()), so each view's controls, picture and readouts fit on one screen. */
+#vPop,#vSel,#vHw,#vSp{container-type:inline-size}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.vmain,.vside{display:grid;gap:8px;align-content:start;min-width:0}
+.vside .readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.vside .ro.wide2{grid-column:span 1}
+#hwRead{grid-template-columns:repeat(4,minmax(0,1fr))}
+#hwRead .ro{grid-column:span 1}
+#hwRead .ro.wide4{grid-column:1/-1}
+@container (min-width:700px){
+  .vgrid{grid-template-columns:minmax(0,1fr) minmax(240px,270px)}
+  #hwGrid{grid-template-columns:minmax(0,1fr) minmax(260px,320px)}
+  #hwRead{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){.vside .readouts{grid-template-columns:repeat(2,minmax(0,1fr))}#hwRead{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+}
+@media (min-width:901px) and (max-height:820px){
+  .model.card{padding:10px 16px 14px}
+  .view,#sceneBox{gap:8px}
+  .ctlrow{gap:6px 8px}
+  .seg button,.segb{padding:5px 11px;font-size:15.5px}
+  .clbl{font-size:15px}
+  .readouts{gap:6px}
+  .ro{padding:3px 10px}
+  .ro .k{font-size:13.5px}
+  .ro .v{font-size:17px;line-height:1.3}
+  .ro .v.sm{font-size:15px;line-height:1.35;min-height:2.7em}
+  .mnote{padding:6px 10px;font-size:15.5px}
+  .key{font-size:14px}
+  .ctlrow .btn{min-height:44px;padding:8px 12px}
+}
+@media (min-width:1500px){.layout{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}}
+#roPop{min-height:8.1em}
+#roSel{min-height:6.75em}
+#roSp{min-height:6.75em}
+.mech{min-height:2.7em!important}
+#roCond{min-height:0}
+@media (min-width:901px) and (max-height:820px){#roPop{min-height:8.1em}#roSel,#roSp{min-height:6.75em}}
+@media (min-width:901px) and (max-height:760px){.ro .v.sm#roPop{font-size:14px;line-height:1.3}}   /* 1280x720: the longest message (bottleneck + selection + migration) fits beside the picture */
+@media (max-width:480px){#vPop .ctlrow{gap:5px 6px}#vPop .view,#vPop{gap:7px}#popRow1 .seg button,#popRow2 .seg button,#popRow2 .segb{padding:5px 9px}#popPlay .btn{padding:8px 12px}}
+/* == end tool: alevel-selection-and-hardy-weinberg layout == */
+@media (min-width:901px){#popRow2 .seg button,#popRow2 .segb{padding-left:11px;padding-right:11px}#popRow2{column-gap:8px}}
+/* == shared: compact-header v4 == (Pilot 14 Nov 2026; v2 and v3 14 Nov 2026) On screens up to 820 px tall the big title folds away
+   and the tool's name and tier/course label sit in the sticky bar, on one line with the site menus and the mode buttons.
+   Needs: <span class="cb-name"> in .topbar, the h1's description (not its tier label) wrapped in <span class="cb-desc">.
+   The question panel's sticky top follows the bar's real bottom edge when stuck (--nq-bar = the bar's sticky top + its height,
+   set by nqBar() in the shared JS), so nav.js's 44 px site bar above the tool's bar is allowed for. */
+.cb-name{display:none}
+@media (min-width:901px) and (max-height:820px){
+  .wrap{padding-top:6px;gap:8px}
+  .wrap > header{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .wrap > header :is(a,button,input,select,textarea,summary,[tabindex]){visibility:hidden}   /* nothing invisible in the Tab order */
+  .topbar{padding:6px 12px}
+  .cb-name{display:flex;flex-direction:column;justify-content:center;align-self:stretch;min-width:0;max-width:330px;flex:0 1 auto;line-height:1.15;color:var(--accent)}   /* stretch: same top as its neighbours, so nav.js doesn't think the bar wraps */
+  .cb-name b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-name small{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .kc-lbl,.theme-btn .wd{display:none}
+  .theme-btn{min-height:44px;min-width:44px;justify-content:center}
+  .qpanel .actions{gap:6px}.qpanel .actions .btn{padding:9px 11px;font-size:16px}
+  main.layout{min-height:0}
+}
+@media (max-width:900px) and (max-height:820px){
+  .wrap{padding-top:10px;gap:10px}
+  header{align-items:center}
+  header h1{font-size:25px}
+  header h1 small{margin-top:2px}
+  header .cb-desc{display:none}
+  header .brandmark{display:none}
+  header .rplabel{margin-top:2px;font-size:14px}
+}
+@media (min-width:901px){
+  .qpanel{top:calc(var(--nq-bar,66px) + 6px)}
+  .qpanel.nq-low{max-height:var(--nq-room)!important}   /* near the page bottom: the panel shrinks so it never slides under the bar */
+}
+/* == end shared: compact-header v4 == */
+
+/* == shared: about-model v4 == "Model limits" folded into a closed <details> "About this model" */
+details.about{margin:4px 0 0;border-top:1px solid var(--line);padding-top:6px}
+details.about > summary{cursor:pointer;font-weight:700;font-size:15px;color:var(--muted);min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.about > summary::-webkit-details-marker{display:none}
+details.about > summary::before{content:"▸";font-size:13px}
+details.about[open] > summary::before{content:"▾"}
+details.about .limits{margin:0 0 4px}
+/* == end shared: about-model v4 == */
+
+/* == shared: phone-order v4 == On phones Demo shows the model first, "Things to try" folds away, and the score stays in the bar. */
+details.trybox > summary{list-style:none;cursor:pointer}
+details.trybox > summary::-webkit-details-marker{display:none}
+details.trybox > summary::before{content:"▸ ";font-size:13px}
+details.trybox[open] > summary::before{content:"▾ "}
+details.trybox > .try{margin-top:6px}
+@media (max-width:900px){
+  body:not(.nq-quiz) .qpanel{order:0}
+  details.trybox > summary{min-height:44px;display:flex;align-items:center;font-size:17px}
+}
+@media (max-width:640px){   /* score and streak stacked in one small block beside the theme button */
+  .topbar .tools{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:2px;align-items:center;flex:none}
+  .topbar .chip{display:block;grid-column:1;font-size:12.5px;line-height:1.3;padding:1px 7px;border-radius:8px;white-space:nowrap;text-align:center}
+  .topbar .chip.c-score .cl{display:none}
+  .topbar .chip.c-score b::before{content:"✓ ";font-weight:400}
+  .topbar .chip.c-streak .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}   /* still read out */
+  .topbar .chip.c-streak b::before{content:"★ ";font-weight:400}
+  .topbar .theme-btn{grid-column:2;grid-row:1 / span 2}
+  .topbar .mode{padding:6px 10px}
+  .topbar .modes{min-width:0}
+}
+@media (max-width:420px){.topbar{gap:4px;padding:6px 8px}.modes,.kc{gap:4px}.kc{padding-left:4px;margin-left:0}.topbar .mode{padding:6px 8px}.topbar .chip{padding:1px 5px}}
+@media (max-width:389px){.topbar .mode{padding:6px 7px;font-size:14.5px}.topbar .tools{column-gap:4px}.topbar .chip.c-score b::before{content:none}}   /* "10 / 10" reads as a score on its own */
+@media (max-width:350px){   /* 320 px phones: everything still fits on one line, tap targets stay 44 px */
+  .topbar{gap:3px;padding:6px 5px}.modes,.kc{gap:3px}.kc{padding-left:3px}
+  .topbar .mode{padding:6px 5px;font-size:14px}.topbar .tools{column-gap:3px}.topbar .chip{font-size:11.5px;padding:1px 4px}
+}
+/* == end shared: phone-order v4 == */
+
+/* == shared: projector v4 == Above 1500 px wide the page grows, so the tool's own columns (and the model) scale up; text
+   stays the same size. The tool's column ratios are NOT redefined. Opt-in: <main class="layout pj-cols"> also gives the
+   pilot's model-heavy split (1.9 : 1) above 1500 px. Without pj-cols the question panel is capped at 560 px (long lines are
+   hard to read on a board); it keeps to the right-hand edge.
+   Opt-in for text-heavy questions: <main class="layout nq-wide"> gives a 440 px question panel from 1100 to 1499 px wide
+   (instead of the usual 360 px), for tools whose .layout is two columns, model then panel. */
+@media (min-width:1100px) and (max-width:1499px){
+  .layout.nq-wide{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+}
+@media (min-width:1500px){
+  .wrap{max-width:min(1840px,96vw)}
+  .layout.pj-cols{grid-template-columns:minmax(0,1.9fr) minmax(360px,1fr)}
+  .layout:not(.pj-cols) > .qpanel{max-width:560px;justify-self:end;width:100%}
+}
+/* == end shared: projector v4 == */
+
+/* == shared: touch v4 == Tap targets at least 44 px on phones and tablets. */
+@media (max-width:900px){
+  .sw,.theme-btn,.linkbtn,.segb,.seg button,.opt,.gsel{min-height:44px}
+  .theme-btn{min-width:44px;justify-content:center}
+  .dots{gap:8px}
+  .dot-q,.qpanel .dot-q{width:44px;height:44px}
+  .topbar .tourbtn{min-width:44px;justify-content:center}
+  .nq-btns .btn{min-height:44px}
+  .feedback details:not(.nq-fold)>summary{min-height:44px;box-sizing:border-box;padding-top:10px;padding-bottom:6px}   /* a tool's own fold in the feedback (e.g. "msd") */
+}
+/* == end shared: touch v4 == */
+
+/* == shared: polish v4 == Short transitions on buttons, dots and the feedback box (none with reduced motion). */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.mode,.dot-q,.opt,.sw,.segb,.seg button,.theme-btn,.linkbtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+  .btn:not(:disabled):active,.mode:active,.dot-q:active{transform:translateY(1px)}
+  .feedback .msg{animation:nqIn .18s ease-out both}
+  @keyframes nqIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+/* == end shared: polish v4 == */
+
+/* == shared: next-question v4 == Next question button, end-of-level card, score out of N */
+.nq-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.nq-next{min-height:46px}
+#quizPanel.nq-ended > :not(.qhead):not(.dots):not(.nq-end):not(.resetrow){display:none!important}
+#quizPanel.nq-ended #doneBadge,#quizPanel.nq-ended #reset{display:none!important}   /* the card is up: no question to reset (Reset progress stays) */
+.nq-end{position:relative;display:grid;gap:8px;padding:16px 16px 14px;border-radius:12px;border:2px solid var(--good);background:var(--good-bg);color:var(--ink);overflow:hidden;outline:none}
+.nq-end:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nq-end p,.nq-end h2,.nq-end h3,.nq-end ul{margin:0}
+.nq-h{font-size:24px;line-height:1.2;color:var(--good)}
+.nq-score{font-size:19px}
+.nq-score b{font-size:32px;color:var(--accent);font-variant-numeric:tabular-nums}
+.nq-list{padding-left:22px;font-size:16px;line-height:1.45}
+.nq-list .nq-why{color:var(--muted);font-size:15px}
+.nq-fh{font-size:15px;color:var(--muted);margin-top:4px!important}
+.nq-f{font-size:17px;line-height:1.45}
+.nq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px!important}
+.nq-burst{position:absolute;right:46px;top:30px;width:0;height:0;pointer-events:none}
+.nq-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:0}
+.nq-burst i:nth-child(3n+2){background:var(--good);border-radius:50%}
+.nq-burst i:nth-child(3n){background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  .nq-end{animation:nqPop .4s cubic-bezier(.2,.9,.3,1.15) both}
+  .nq-burst i{animation:nqBurst .95s cubic-bezier(.15,.7,.4,1) .12s 1 both}
+  @keyframes nqPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes nqBurst{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(220deg)}}
+  .nq-burst i:nth-child(1){--x:-70px;--y:-18px}.nq-burst i:nth-child(2){--x:-52px;--y:24px}.nq-burst i:nth-child(3){--x:-30px;--y:-26px}
+  .nq-burst i:nth-child(4){--x:-12px;--y:30px}.nq-burst i:nth-child(5){--x:6px;--y:-30px}.nq-burst i:nth-child(6){--x:22px;--y:26px}
+  .nq-burst i:nth-child(7){--x:34px;--y:-14px}.nq-burst i:nth-child(8){--x:40px;--y:12px}.nq-burst i:nth-child(9){--x:-84px;--y:6px}
+  .nq-burst i:nth-child(10){--x:-40px;--y:-4px}.nq-burst i:nth-child(11){--x:14px;--y:4px}.nq-burst i:nth-child(12){--x:-20px;--y:12px}
+}
+/* v4: mark-scheme fold (phones, <= 600 px wide; the JS only folds at that width). A 44 px+ tap target, keyboard focus ring. */
+.feedback details.nq-fold{margin:8px 0 2px;border:1px solid var(--line);border-radius:10px;background:transparent}
+.feedback details.nq-fold>summary{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 12px;cursor:pointer;font-weight:700;list-style:none;border-radius:9px;color:inherit;-webkit-tap-highlight-color:transparent}
+.feedback details.nq-fold>summary::-webkit-details-marker{display:none}
+.feedback details.nq-fold>summary::before{content:"";flex:none;width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.feedback details.nq-fold[open]>summary::before{transform:rotate(90deg)}
+.feedback details.nq-fold>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.feedback details.nq-fold .nq-fh2,.feedback details.nq-fold[open] .nq-fs{display:none}
+.feedback details.nq-fold[open] .nq-fh2{display:inline}
+.feedback .nq-fold-in{padding:0 12px 8px}
+.feedback .nq-fold-in>:first-child{margin-top:0}
+@media (prefers-reduced-motion:no-preference){.feedback details.nq-fold>summary::before{transition:transform .16s ease}}
+/* == end shared: next-question v4 == */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Selection and Hardy–Weinberg<small><b class="lvl">A-level Biology · OCR A 6.1.2</b><span class="cb-desc">Breed a population and read its allele frequencies, see selection change a distribution, use the Hardy–Weinberg equations, and step through speciation.</span></small></h1>
+    <a class="brandmark" href="index.html" title="Science Tools by Dr T’s Classroom"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Dr T’s Classroom</span></a>
+  </header>
+
+  <!-- Sticky bar: modes, score, theme. The tool name slides in once the big title has scrolled away. -->
+  <div class="topbar" id="topbar">
+    <a class="tb-name" href="index.html" title="Science Tools by Dr T’s Classroom" aria-hidden="true" tabindex="-1"><svg class="mk-light" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg><svg class="mk-dark" viewBox="10 4 72 88" aria-hidden="true"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg><span>Selection and Hardy–Weinberg</span></a>
+    <span class="cb-name" aria-hidden="true"><b>Selection and Hardy–Weinberg</b><small>A-level Biology · OCR A 6.1.2</small></span>
+    <nav class="modes" aria-label="Mode">
+      <button type="button" class="mode tourbtn" data-mode="tour" aria-pressed="false" aria-label="Instructions">ⓘ<span class="wd"> Instructions</span></button>
+      <button type="button" class="mode" data-mode="demo" aria-pressed="true">Demo</button>
+      <span class="kc" role="group" aria-label="Knowledge check"><span class="kc-lbl">Knowledge check:</span><button type="button" class="mode" data-mode="easy" aria-pressed="false">Easy</button><button type="button" class="mode" data-mode="hard" aria-pressed="false">Hard</button></span>
+    </nav>
+    <div class="tools">
+      <div class="chip c-score" aria-live="polite" title="Questions you have got right"><span class="cl">Score </span><b id="sScore">0</b></div>
+      <div class="chip c-streak" title="Right first time, in a row"><span class="cl">Streak </span><b id="sStreak">0</b></div>
+      <button class="theme-btn" type="button" id="themeBtn" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <div id="bankErr" class="bankerr" role="alert" hidden></div>
+  <main class="layout pj-cols">
+    <section class="card model" aria-label="Population genetics and evolution model" id="model">
+      <div class="seg scenetabs" id="sceneTabs" role="group" aria-label="View">
+        <button type="button" data-scene="pop" aria-pressed="true">Population</button>
+        <button type="button" data-scene="sel" aria-pressed="false"><span class="xl">Types of selection</span><span class="xs">Selection</span></button>
+        <button type="button" data-scene="hw" aria-pressed="false">Hardy–Weinberg</button>
+        <button type="button" data-scene="sp" aria-pressed="false">Speciation</button>
+      </div>
+      <div id="sceneBox">
+
+      <!-- View 1: a population of pocket mice; allele frequency over generations -->
+      <div class="view" id="vPop">
+        <div class="ctlrow" id="popRow1"><span class="clbl" id="selL">Selection:</span><div class="seg" role="group" aria-labelledby="selL" id="selSeg"><button type="button" data-sel="none" aria-pressed="true">None</button><button type="button" data-sel="dark" aria-pressed="false"><span class="xl">Favours d</span><span class="xs">D</span>ark</button><button type="button" data-sel="pale" aria-pressed="false"><span class="xl">Favours p</span><span class="xs">P</span>ale</button></div>
+          <span class="opt2" id="strBox"><span class="clbl" id="strL">Strength:</span><span class="seg" role="group" aria-labelledby="strL" id="strSeg"><button type="button" data-str="weak" aria-pressed="false">Weak</button><button type="button" data-str="strong" aria-pressed="true">Strong</button></span></span></div>
+        <div class="ctlrow" id="popRow2"><span class="clbl" id="nL"><span class="xl">Population</span><span class="xs">Mice</span>:</span><div class="seg" role="group" aria-labelledby="nL" id="nSeg"><button type="button" data-n="10" aria-pressed="false">10</button><button type="button" data-n="50" aria-pressed="true">50</button><button type="button" data-n="200" aria-pressed="false">200</button><button type="button" data-n="1000" aria-pressed="false">1000</button></div>
+          <span class="opt2"><span class="clbl" id="stL">Start A:</span><span class="seg" role="group" aria-labelledby="stL" id="stSeg"><button type="button" data-st="0.2" aria-pressed="false">0.2</button><button type="button" data-st="0.5" aria-pressed="true">0.5</button><button type="button" data-st="0.8" aria-pressed="false">0.8</button></span></span>
+          <button type="button" class="segb tog" id="migBtn" aria-pressed="false">Migration <span class="state">off</span></button><button type="button" class="segb" id="pNew">New run</button></div>
+        <div class="vgrid" id="popGrid">
+          <div class="vmain">
+            <div class="scenewrap" id="gWrap"><svg id="gSvg" role="img" aria-label="Graph of the frequency of allele A against generation"><g id="gD"></g></svg></div>
+            <div class="ctlrow" id="popPlay"><button type="button" class="btn primary" id="pNext">Next generation ▸</button><button type="button" class="btn" id="pTen">10 more ▸</button><button type="button" class="btn" id="pBot">Bottleneck</button><button type="button" class="btn" id="pFound">Founders</button></div>
+          </div>
+          <div class="vside">
+            <div class="scenewrap" id="fWrap"><svg id="fSvg" role="img" aria-label="The mice in this generation"><g id="fD"></g></svg></div>
+            <ul class="key" id="popKey" aria-label="Key"></ul>
+            <div class="readouts" id="popRead">
+              <div class="ro wide2"><span class="k">Generation</span><span class="v" id="roGen"></span></div>
+              <div class="ro wide2"><span class="k">Mice</span><span class="v" id="roN"></span></div>
+              <div class="ro wide4"><span class="k">Genotypes</span><span class="v" id="roGt"></span></div>
+              <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roPop"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 2: stabilising, directional, disruptive and artificial selection -->
+      <div class="view" id="vSel" hidden>
+        <div class="ctlrow" id="tRow"><span class="clbl" id="tL">Selection:</span><div class="seg" role="group" aria-labelledby="tL" id="tSeg"><button type="button" data-t="stab" aria-pressed="true">Stabilising</button><button type="button" data-t="dir" aria-pressed="false">Directional</button><button type="button" data-t="dis" aria-pressed="false">Disruptive</button><button type="button" data-t="art" aria-pressed="false">Artificial</button></div></div>
+        <div class="vgrid" id="selGrid">
+          <div class="vmain">
+            <div class="scenewrap" id="tWrap"><svg id="tSvg" role="img" aria-label="Graph of the number of birds against beak depth, before and after selection"><g id="tD"></g></svg></div>
+            <div class="ctlrow" id="tPlay"><button type="button" class="btn primary" id="tNext">Next generation ▸</button><button type="button" class="btn" id="tAll">Jump to 10</button><button type="button" class="btn" id="tReset">Back to 0</button></div>
+          </div>
+          <div class="vside">
+            <ul class="key" id="selKey" aria-label="Key"></ul>
+            <div class="readouts" id="selRead">
+              <div class="ro wide2"><span class="k">Generations of selection</span><span class="v" id="roTg"></span></div>
+              <div class="ro wide2"><span class="k">Type</span><span class="v" id="roTt"></span></div>
+              <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roSel"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: the Hardy–Weinberg principle -->
+      <div class="view" id="vHw" hidden>
+        <div class="ctlrow" id="qRow"><label class="clbl" for="qIn" id="qL">Frequency of allele a (q):</label><input type="range" id="qIn" min="0.05" max="0.95" step="0.05" value="0.3"><output id="qOut" for="qIn"></output></div>
+        <div class="vgrid" id="hwGrid">
+          <div class="vmain"><div class="scenewrap" id="hWrap"><svg id="hSvg" role="img" aria-label="A square whose sides are the allele frequencies; its areas are the genotype frequencies"><g id="hD"></g></svg></div></div>
+          <div class="vside">
+            <div class="readouts" id="hwRead">
+              <div class="ro"><span class="k">p (A)</span><span class="v" id="roP"></span></div>
+              <div class="ro"><span class="k">p² (AA)</span><span class="v" id="roPP"></span></div>
+              <div class="ro"><span class="k">2pq (Aa)</span><span class="v" id="roPQ"></span></div>
+              <div class="ro"><span class="k">q² (aa)</span><span class="v" id="roQQ"></span></div>
+              <div class="ro wide4"><span class="k">In 1000 mice you would expect</span><span class="v vw" id="roK"></span></div>
+              <div class="ro wide4" id="hwCondBox"><span class="k">It only works if there is</span><span class="v sm" id="roCond"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 4: allopatric and sympatric speciation -->
+      <div class="view" id="vSp" hidden>
+        <div class="ctlrow" id="spRow"><span class="clbl" id="spL">Speciation:</span><div class="seg" role="group" aria-labelledby="spL" id="spSeg"><button type="button" data-sp="allo" aria-pressed="true">Allopatric</button><button type="button" data-sp="sym" aria-pressed="false">Sympatric</button></div></div>
+        <div class="vgrid" id="spGrid">
+          <div class="vmain">
+            <div class="scenewrap" id="sWrap"><svg id="sSvg" role="img" aria-label="A population that splits into two species"><g id="sD"></g></svg></div>
+            <div class="ctlrow" id="spPlay"><button type="button" class="btn primary" id="sNext">Next step ▸</button><button type="button" class="btn" id="sBack">◂ Back</button><button type="button" class="btn" id="sFirst">Start again</button></div>
+          </div>
+          <div class="vside">
+            <div class="readouts" id="spRead">
+              <div class="ro wide4"><span class="k">Step</span><span class="v" id="roStep"></span></div>
+              <div class="ro wide4"><span class="k">What is happening</span><span class="v sm" id="roSp"></span></div>
+              <div class="ro wide4"><span class="k">Isolating mechanism</span><span class="v sm mech" id="roMech"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <p class="mnote" id="lockNote"></p>
+
+      <div class="legend" id="supKw" hidden></div>
+      <div class="legend" id="supMaths" hidden></div>
+      <div class="legend" id="supGraph" hidden></div>
+      <details class="about" id="limits"><summary>About this model</summary><p class="limits">Population: one gene with two alleles (A, dominant, for dark fur; a for pale fur), in pocket mice, which really do have a dominant allele for dark fur. Each generation, selection acts on the parents (strong: the disadvantaged phenotype is half as likely to breed; weak: 20 % less likely), 10 % of the gene pool comes from migrants with A at 0.5 when migration is on, and the offspring get two alleles at random from the parents’ gene pool. Seeded random numbers; mutation is not modelled; generations don’t overlap. A bottleneck leaves 4 random survivors; a founder group is 5 mice, and the mainland carries on (dashed line). Types of selection: idealised normal curves for 1000 birds, not a simulation. Two of the four types are named in OCR’s guidance, and artificial selection is in OCR 6.1.2(h); the fourth goes beyond the specification. The speciation steps are simplified; the apple maggot fly is a real example of speciation that may be happening now.</p></details>
+    </section>
+    <aside class="card qpanel" id="qpanel" aria-label="Questions">
+      <!-- Demo -->
+      <div id="demoPanel">
+        <p class="pmode">Demo</p>
+        <h2 class="qtext">Use the model freely to see what happens.</h2>
+        <p class="newhere" id="newHere">New here? Press <b>ⓘ Instructions</b> for a quick tour.</p>
+        <details class="trybox" open><summary class="try-h">Things to try</summary><ul class="try" id="tryList"></ul></details>
+        <button class="btn primary" type="button" id="toQuiz">Try the Knowledge check →</button>
+      </div>
+      <!-- Knowledge check -->
+      <div id="quizPanel" hidden>
+        <div class="qhead">
+          <p class="pmode" id="qmode">Knowledge check · Easy</p>
+          <span class="done-badge" id="doneBadge" hidden>✓ Completed</span>
+        </div>
+        <div class="dots" id="dots" role="group" aria-label="Choose a question"></div>
+        <p class="qno" id="qno">Question 1 of 10</p>
+        <h2 class="qtext" id="taskText"></h2>
+        <div id="answer"></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="check">Check</button>
+          <button class="btn hint" type="button" id="hint">Hint (1/3)</button>
+          <button class="btn" type="button" id="reveal">Show answer</button>
+        </div>
+        <div class="feedback" id="fb" aria-live="polite"></div>
+        <div id="supportSlot"></div>
+        <div class="resetrow">
+          <button class="linkbtn" type="button" id="reset">Reset this question</button>
+          <span id="resetAll"><button class="linkbtn" type="button" id="resetProg">Reset progress</button></span>
+        </div>
+      </div>
+      <div id="supportArea">
+        <div class="support" role="group" aria-label="Support">
+          <span class="lbl">Support:</span>
+          <button class="sw" type="button" data-support="kw" aria-pressed="false"><span class="dot"></span>Key words <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="maths" aria-pressed="false"><span class="dot"></span>Maths help <span class="state">off</span></button>
+          <button class="sw" type="button" data-support="graph" aria-pressed="false"><span class="dot"></span>Graph help <span class="state">off</span></button>
+        </div>
+        <p class="hidden-note" id="stuckNote"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tour" id="tour" role="dialog" aria-live="polite" aria-label="Instructions" hidden>
+    <span class="tour-arrow" id="tourArrow"></span>
+    <p class="tour-step" id="tourStep"></p>
+    <p class="tour-text" id="tourText"></p>
+    <p class="tour-do" id="tourDo"></p>
+    <div class="tour-btns"><button class="btn" type="button" id="tourSkip">End tour</button><button class="btn primary" type="button" id="tourNext">Next →</button></div>
+  </div>
+
+  <footer class="brand">
+    <svg class="mk-light" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#14243D"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#D9A536" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#FFFFFF" text-anchor="middle">T</text></svg>
+    <svg class="mk-dark" viewBox="10 4 72 88" role="img" aria-label="Dr T’s Classroom"><path d="M46 8 L78 18 v30 c0 22 -18 34 -32 40 -14 -6 -32 -18 -32 -40 V18 z" fill="#D9A536"/><path d="M46 15 L71 23 v25 c0 17 -14 27 -25 32 -11 -5 -25 -15 -25 -32 V23 z" fill="none" stroke="#14243D" stroke-width="1.6"/><text x="46" y="57" font-family="Georgia,'DejaVu Serif','Times New Roman',serif" font-size="34" font-weight="bold" fill="#14243D" text-anchor="middle">T</text></svg>
+    <span>Dr T’s Classroom · Free for teaching · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---------- light / dark switch (same on every tool) ---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById("themeBtn");
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : !!(mq && mq.matches);
+  const paint = () => { const d = isDark(); btn.innerHTML = d ? '☀<span class="wd"> Light mode</span>' : '☾<span class="wd"> Dark mode</span>'; btn.setAttribute("aria-label", d ? "Light mode" : "Dark mode"); btn.setAttribute("aria-pressed", d ? "true" : "false"); btn.title = d ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => { const next = isDark() ? "light" : "dark"; root.dataset.theme = next; try { localStorage.setItem("ks3tools-theme", next); } catch (e) {} paint(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", paint);
+  paint();
+})();
+
+
+/* ===== Small helpers ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+/* no pupil-visible 69: a rounded value that would show "69" is nudged one step up */
+function fx(v, dp) { const st = Math.pow(10, -dp); let s = (+v).toFixed(dp), n = 0; while (/69/.test(s) && n++ < 200) { v = +v + st; s = (+v).toFixed(dp); } return s; }
+const f0 = v => fx(v, 0), f1 = v => fx(v, 1), f2 = v => fx(v, 2);
+/* a frequency written the way a pupil would (0.42, 0.0225, 0.6): at most 4 decimal places, no trailing zeros */
+const fr = v => { let s = (+v).toFixed(4).replace(/0+$/, "").replace(/\.$/, ""); return /69/.test(s) ? fx(v, 3) : s; };
+
+/* ===== View 1: a population of pocket mice (one gene, two alleles; A = dark fur, dominant; a = pale fur, recessive) =====
+   Wright–Fisher model: each generation, selection acts on the parents' genotypes (relative fitness), migrants may join,
+   then every offspring gets two alleles drawn at random from the parents' gene pool (random mating). Seeded random numbers,
+   so a question always shows the same run. */
+const POPC = { GMAX: 40, MIG: 0.1, PMIG: 0.5, BOT: 4, FOUND: 5, S: { weak: 0.2, strong: 0.5 }, SIZES: [10, 50, 200, 1000], STARTS: [0.2, 0.5, 0.8] };
+function rnd(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gcount(ind) { let AA = 0, Aa = 0, aa = 0; ind.forEach(g => { const k = g[0] + g[1]; if (k === 2) AA++; else if (k === 1) Aa++; else aa++; }); return { AA, Aa, aa, n: ind.length }; }
+const pOf = ind => { const c = gcount(ind); return c.n ? (2 * c.AA + c.Aa) / (2 * c.n) : 0; };
+function fitness(sel, str) { const s = POPC.S[str] || 0; return sel === "dark" ? [1, 1, 1 - s] : sel === "pale" ? [1 - s, 1 - s, 1] : [1, 1, 1]; }   // [AA, Aa, aa]
+function popNew(o) {
+  const P = { N: o.N || 50, start: o.start != null ? o.start : 0.5, sel: o.sel || "none", str: o.str || "strong", mig: !!o.mig, seed: o.seed || 1,
+    gen: 0, ind: [], pts: [], events: [], main: null, founded: false, old: o.old || [] };
+  P.r = rnd(P.seed);
+  /* the starting gene pool holds exactly round(2N × start) A alleles, shuffled into pairs */
+  const k = Math.round(2 * P.N * P.start), al = []; for (let i = 0; i < 2 * P.N; i++) al.push(i < k ? 1 : 0);
+  for (let i = al.length - 1; i > 0; i--) { const j = Math.floor(P.r() * (i + 1)); [al[i], al[j]] = [al[j], al[i]]; }
+  for (let i = 0; i < P.N; i++) P.ind.push([al[2 * i], al[2 * i + 1]]);
+  if (!o.raw) { let t = 0; while (has69(gcount(P.ind)) && t < 5000) {   // never show 69: swap one allele of a mouse with another mouse's (the A count stays the same)
+    const i = P.N - 1 - (Math.floor(t / 8) % P.N), j = Math.floor(P.r() * P.N), a = Math.floor(P.r() * 2);
+    [P.ind[i][0], P.ind[j][a]] = [P.ind[j][a], P.ind[i][0]]; t++; } }
+  P.pts.push([0, pOf(P.ind)]);
+  return P;
+}
+function poolP(P) {   // the frequency of A in the gametes that make the next generation: after selection, then migration
+  const c = gcount(P.ind), w = fitness(P.sel, P.str);
+  const den = 2 * (c.AA * w[0] + c.Aa * w[1] + c.aa * w[2]);
+  let p = den > 0 ? (2 * c.AA * w[0] + c.Aa * w[1]) / den : pOf(P.ind);
+  if (P.mig) p = (1 - POPC.MIG) * p + POPC.MIG * POPC.PMIG;
+  return p;
+}
+const has69 = c => /69/.test(`${c.AA} ${c.Aa} ${c.aa} ${c.n}`);
+/* raw: a generation that is never shown as counts (inside a question's pre-run); otherwise, if a genotype count would
+   contain 69, the last offspring is bred again with the next random numbers (then the one before it, if that can't help),
+   so runs that never reach a 69 keep exactly the same numbers */
+function breed(P, n, raw) {
+  const p = poolP(P), ind = [];
+  for (let i = 0; i < n; i++) ind.push([P.r() < p ? 1 : 0, P.r() < p ? 1 : 0]);
+  if (!raw) { let t = 0; while (has69(gcount(ind)) && t < 5000) { ind[n - 1 - (Math.floor(t / 8) % n)] = [P.r() < p ? 1 : 0, P.r() < p ? 1 : 0]; t++; } }
+  P.ind = ind; P.gen++; P.pts.push([P.gen, pOf(ind)]);
+}
+function popStep(P, n) {
+  if (P.gen >= POPC.GMAX) return false;
+  breed(P, n || P.N, P.raw);
+  if (P.main) breed(P.main, P.main.N, P.raw);   // the mainland copy (drawn dashed) gets the same guard
+  return true;
+}
+function popBottleneck(P) {   // a disaster kills all but a few, at random (not selection): the next generation comes from 4 survivors' offspring
+  if (P.gen >= POPC.GMAX) return false;
+  const surv = [];
+  for (let i = 0; i < POPC.BOT && P.ind.length; i++) surv.push(P.ind.splice(Math.floor(P.r() * P.ind.length), 1)[0]);
+  P.ind = surv; P.events.push({ g: P.gen, k: "bot" }); P.pts.push([P.gen, pOf(surv)]);
+  return popStep(P);
+}
+function popFound(P) {   // 5 mice reach an island and start a new population; the mainland population carries on (dashed)
+  if (P.founded || P.gen >= POPC.GMAX) return false;
+  const M = { N: P.N, sel: P.sel, str: P.str, mig: P.mig, gen: P.gen, ind: P.ind.map(g => g.slice()), pts: P.pts.map(x => x.slice()), r: rnd(P.seed * 7 + 3), main: null };
+  const fo = []; for (let i = 0; i < POPC.FOUND; i++) fo.push(P.ind.splice(Math.floor(P.r() * P.ind.length), 1)[0]);
+  P.ind = fo; P.main = M; P.founded = true; P.mig = false; P.events.push({ g: P.gen, k: "found" }); P.pts.push([P.gen, pOf(fo)]);
+  return popStep(P);
+}
+/* p at generation g (the last value if the population was re-founded at that generation) */
+const pAt = (P, g) => { let v = null; P.pts.forEach(x => { if (x[0] === g) v = x[1]; }); return v; };
+const pBefore = (P, g) => { const x = P.pts.find(x => x[0] === g); return x ? x[1] : null; };
+function popRun(o, gens, ev) {   // a run made for a question: o = settings, ev = { gen: "bot" | "found" }
+  const P = popNew(Object.assign({}, o, { raw: gens > 0 }));   // only the generation a question opens on shows counts
+  while (P.gen < gens) { P.raw = P.gen + 1 < gens; const e = ev && ev[P.gen]; if (e === "bot") popBottleneck(P); else if (e === "found") popFound(P); else popStep(P); }
+  P.raw = false;
+  return P;
+}
+/* Hardy–Weinberg conditions that the model's settings break */
+function hwBroken(P) {
+  const b = [];
+  if (P.sel !== "none") b.push("selection");
+  if (P.N <= 50 || P.events.length) b.push("drift (a small population)");
+  else if (P.N < 1000) b.push("some drift (only 200 mice)");
+  if (P.mig) b.push("migration");
+  return b;
+}
+
+/* ===== View 2: types of selection on beak depth (a continuous, polygenic trait) =====
+   Each curve is a normal distribution (or two, for disruptive selection) of 1000 birds, plotted as the number of birds in
+   each 0.5 mm class. Stabilising: the mean stays at 10 mm and the SD narrows. Directional: the mean moves 0.2 mm a
+   generation. Disruptive: two peaks move apart. Artificial: breeders keep the deepest-beaked birds (fast, and it narrows). */
+const TR = { MU: 10, SD: 1, N: 1000, CLS: 0.5, XMIN: 5, XMAX: 16, GMAX: 10, YMAX: 350 };
+const SELT = { stab: "Stabilising", dir: "Directional", dis: "Disruptive", art: "Artificial" };
+const SELT_ORDER = ["stab", "dir", "dis", "art"];
+function distParts(type, g) {
+  const k = 1 - Math.pow(0.85, g);
+  if (type === "stab") return [{ w: 1, mu: TR.MU, sd: TR.SD - 0.45 * k }];
+  if (type === "dir") return [{ w: 1, mu: TR.MU + 0.2 * g, sd: TR.SD }];
+  if (type === "dis") return [{ w: .5, mu: TR.MU - 1.6 * k, sd: TR.SD - 0.4 * k }, { w: .5, mu: TR.MU + 1.6 * k, sd: TR.SD - 0.4 * k }];
+  return [{ w: 1, mu: TR.MU + 0.35 * g, sd: TR.SD - 0.2 * k }];   // artificial
+}
+const npdf = (x, mu, sd) => Math.exp(-0.5 * ((x - mu) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+const birds = (parts, x) => parts.reduce((s, q) => s + q.w * TR.N * TR.CLS * npdf(x, q.mu, q.sd), 0);
+const meanOf = parts => parts.reduce((s, q) => s + q.w * q.mu, 0);
+/* where birds are selected against this generation (x ranges, in mm) */
+function zones(type, g) {
+  const P0 = distParts(type, g)[0];
+  if (type === "stab") return [[TR.XMIN, P0.mu - 1.5 * P0.sd], [P0.mu + 1.5 * P0.sd, TR.XMAX]];
+  if (type === "dir") return [[TR.XMIN, P0.mu - 0.5 * P0.sd]];
+  if (type === "dis") return [[TR.MU - 0.6, TR.MU + 0.6]];
+  return [[TR.XMIN, P0.mu + 0.84 * P0.sd]];
+}
+
+/* ===== View 3: Hardy–Weinberg ===== */
+const HWQ = { MIN: 0.05, MAX: 0.95, STEP: 0.05 };
+const hwVals = q => { const p = 1 - q; return { p, q, pp: p * p, pq2: 2 * p * q, qq: q * q }; };
+const HW_COND = ["a large population, so there is no genetic drift", "random mating", "no mutation", "no migration (no gene flow in or out)", "no selection: every genotype is equally likely to survive and reproduce"];
+
+/* ===== View 4: speciation, step by step ===== */
+const SP = {
+  allo: { n: "Allopatric", title: ["One population", "A barrier forms", "Different selection pressures", "Gene pools diverge", "Reproductive isolation", "Two species"],
+    text: ["One population of squirrels lives on a plateau. They all interbreed, so alleles flow through one gene pool.",
+      "A canyon (a geographical barrier) cuts the population in two. No individuals cross it, so there is no gene flow between the two groups.",
+      "The two sides differ: one is cooler and forested, the other is drier. Different alleles are favoured on each side (different selection pressures). Different mutations also arise, and drift acts separately in each group.",
+      "Over many generations the allele frequencies in the two gene pools become more and more different, and so do the phenotypes.",
+      "The changes build up until the two groups could no longer breed together: for example, they breed at different times of year or their courtship differs.",
+      "If the barrier is crossed, the two groups can no longer interbreed to produce fertile offspring. They are now two species: allopatric speciation."],
+    mech: ["none yet", "geographical isolation (the canyon)", "geographical isolation (the canyon)", "geographical isolation (the canyon)", "geographical isolation, then reproductive isolation (breeding season, courtship)", "reproductive isolation: no fertile offspring"] },
+  sym: { n: "Sympatric", title: ["One population", "A new food plant", "Reproductive isolation, same place", "Gene pools diverge", "Becoming two species"],
+    text: ["Apple maggot flies lay their eggs in hawthorn fruit. Flies find their mates on the kind of tree they grew up on.",
+      "Apple trees are planted in the same area. A few flies, by chance, lay eggs on apples, and their young grow up on apples. There is no geographical barrier.",
+      "Apples fruit earlier than hawthorn, so the apple flies breed earlier in the year (temporal isolation) and mate on apple trees (habitat, or ecological, isolation). Little gene flow passes between the two groups, though they live side by side.",
+      "Different selection pressures on each tree change the allele frequencies in the two gene pools.",
+      "In time the two groups may no longer interbreed to produce fertile offspring: sympatric speciation, a new species forming in the same place. Biologists think these flies are part of the way there. (In plants, polyploidy can make a new species in one step: offspring with extra sets of chromosomes can’t produce fertile offspring with the parent species.)"],
+    mech: ["none yet", "none yet", "temporal and habitat isolation (prezygotic)", "temporal and habitat isolation (prezygotic)", "reproductive isolation"] }
+};
+
+/* ===== Key words, Maths help and Graph help (Support). A question can hide the ones that would answer it. ===== */
+const KW = [
+  ["pool", "Gene pool", "All the alleles of all the genes in a population."],
+  ["af", "Allele frequency", "How common one allele is in a gene pool, as a decimal: copies of the allele ÷ all copies of that gene."],
+  ["evo", "Evolution", "A change in the allele frequencies of a population over many generations. Individuals do not evolve; populations do."],
+  ["mut", "Mutation", "A random change in DNA that can make a new allele. It happens by chance, not because the organism needs it."],
+  ["drift", "Genetic drift", "Random changes in allele frequency from one generation to the next, because chance decides which alleles are passed on. Strongest in small populations."],
+  ["bott", "Genetic bottleneck", "A sharp fall in population size. The few survivors carry only some of the alleles, so genetic diversity falls."],
+  ["found", "Founder effect", "A few individuals start a new population. Their allele frequencies may differ by chance from the population they came from."],
+  ["stab", "Stabilising selection", "The middle of the range is favoured and both extremes are selected against: the mean stays the same and the range narrows."],
+  ["dir", "Directional selection", "One extreme is favoured, so the mean moves in one direction over the generations."],
+  ["dis", "Disruptive selection", "Both extremes are favoured and the middle is selected against, so the distribution can split into two peaks."],
+  ["hw", "Hardy–Weinberg principle", "In a large, randomly mating population with no selection, mutation or migration, allele and genotype frequencies stay the same from generation to generation."],
+  ["flow", "Gene flow", "Alleles moving between populations when individuals migrate and breed."],
+  ["allo", "Allopatric speciation", "A new species forms after a geographical barrier separates two populations."],
+  ["sym", "Sympatric speciation", "A new species forms in the same place, without a geographical barrier."],
+  ["iso", "Reproductive isolation", "Two groups can no longer interbreed to produce fertile offspring. Prezygotic (before fertilisation): temporal (seasonal), habitat (ecological), behavioural, mechanical, gametic (gametes can’t fuse). Postzygotic: hybrids die or are infertile (sterile), like a mule, or hybrid breakdown (the hybrids’ offspring are weak or infertile)."],
+  ["art", "Artificial selection", "Humans choose which individuals breed, to increase a useful characteristic. It reduces genetic diversity."]
+];
+const MATHS = [
+  ["eq1", "p + q = 1", "p = frequency of the dominant allele (A), q = frequency of the recessive allele (a)."],
+  ["eq2", "p² + 2pq + q² = 1", "p² = frequency of AA, 2pq = frequency of Aa (carriers), q² = frequency of aa."],
+  ["way", "Method", "the recessive phenotype gives q² (a percentage ÷ 100). Then q = √q², p = 1 − q, and 2pq gives the carriers."],
+  ["cnt", "Counting alleles", "frequency of A = (2 × number of AA + number of Aa) ÷ (2 × number of individuals). Each individual has two alleles."]
+];
+const GHELP = [
+  ["read", "Reading the allele graph", "find the generation on the x-axis, go up to the line, then across to the frequency axis. Each small square is 0.05."],
+  ["mean", "Reading a mean", "for one peak, the mean is under the top of the curve. Each small square on the x-axis is 0.5 mm."],
+  ["shape", "Comparing two curves", "look at where the peak is (the mean) and how wide the curve is (the range of variation)."]
+];
+
+/* ===== Question bank. Every number is computed from the model or from the Hardy–Weinberg equations. ===== */
+const RUN = {   // the seeded runs that questions show (seeds chosen so each run shows its point clearly; checked in bankCheck)
+  who: { o: { N: 200, start: 0.2, sel: "dark", str: "strong", seed: 4 }, gens: 30 },
+  drift: { o: { N: 10, start: 0.5, sel: "none", seed: 43 }, gens: 40, old: [40, 41, 42] },
+  readp: { o: { N: 200, start: 0.2, sel: "dark", str: "weak", seed: 3 }, gens: 30 },
+  count: { o: { N: 50, start: 0.5, sel: "none", seed: 2 }, gens: 1 },
+  bottle: { o: { N: 200, start: 0.5, sel: "none", seed: 1 }, gens: 30, ev: { 10: "bot" } },
+  found: { o: { N: 200, start: 0.8, sel: "none", seed: 14 }, gens: 25, ev: { 5: "found" } },
+  large: { o: { N: 1000, start: 0.2, sel: "none", seed: 3 }, gens: 0 }
+};
+const runOf = k => popRun(Object.assign({}, RUN[k].o), RUN[k].gens, RUN[k].ev);
+const READ_P = () => pAt(runOf("readp"), 20);
+const CNT = () => gcount(runOf("count").ind);
+const COUNT_Q = () => { const c = CNT(); return (2 * c.aa + c.Aa) / (2 * c.n); };
+const MEAN_SHIFT = () => meanOf(distParts("dir", 10)) - meanOf(distParts("dir", 0));
+const hwq = q2 => Math.sqrt(q2);
+const TASKS = {
+  easy: [
+    { id: "who", kind: "choice", text: "Pocket mice live on dark lava rock. The graph shows that over many generations the allele for dark fur (A) becomes commoner. Describe what has evolved.",
+      setup: { scene: "pop", pop: RUN.who }, lock: true, hideKw: ["evo"],
+      options: [{ t: "The population: the frequency of the allele for dark fur in its gene pool rose over the generations.", ok: true },
+        { t: "Each mouse: pale mice became darker during their lives to match the rock.", why: "Individuals don’t evolve. A mouse’s fur colour is set by the alleles it inherited and doesn’t change to suit the rock. The population changes as allele frequencies change from one generation to the next." },
+        { t: "Each mouse changed its alleles because dark fur was needed.", why: "Alleles don’t change because they are needed. Mice with dark fur were more likely to survive and breed, so they passed on more A alleles." },
+        { t: "The whole species changed at once, as soon as the mice reached the dark rock.", why: "Look at the graph: the frequency of A rises a little each generation, over many generations, in this population." }],
+      explain: "Evolution is a change in a population’s allele frequencies over many generations. Dark mice are better camouflaged on dark rock, so more survive, breed and pass on allele A. No individual mouse changes.",
+      hints: ["Look at what the graph’s y-axis measures.", "Does any single mouse change colour during its life?", "Evolution happens to populations, not to individuals."] },
+    { id: "mut", kind: "choice", text: "Explain where the allele for dark fur came from in the first place.", setup: { scene: "pop" }, hideKw: ["mut"],
+      options: [{ t: "A random mutation in DNA, which happened by chance whether or not dark fur would help.", ok: true },
+        { t: "The dark rock caused mutations for dark fur because the mice needed camouflage.", why: "Mutations are random. The environment doesn’t cause the mutation an organism needs; it only affects whether that allele is then selected." },
+        { t: "Mice living on dark rock developed darker fur during their lives and passed it on.", why: "Characteristics gained during a lifetime aren’t passed on. Only alleles in the gametes are inherited." },
+        { t: "Natural selection made the new allele.", why: "Selection doesn’t make alleles. It changes the frequency of alleles that are already there because of mutation." }],
+      explain: "New alleles arise by random mutation, by chance, and not because they are needed. If a mutation happens to give an advantage in that environment, natural selection then makes the allele commoner over the generations.",
+      hints: ["What makes a new allele?", "Does the environment decide which mutation happens?", "Mutations happen by chance; selection acts afterwards."] },
+    { id: "stab", kind: "choice", text: "The dashed curve shows beak depth in a population of birds; the solid curve is 10 generations later. Identify the type of selection and describe what happened.",
+      setup: { scene: "sel", tsel: "stab", tg: 10 }, lock: true, hideSel: true, hideKw: ["stab", "dir", "dis"],
+      options: [{ t: "Stabilising selection: the mean stayed the same and the range narrowed, because both extremes were selected against.", ok: true },
+        { t: "Directional selection: the mean moved because the deepest beaks were favoured.", why: "Compare the peaks: both curves peak at the same beak depth, so the mean hasn’t moved." },
+        { t: "Disruptive selection: both extremes were favoured.", why: "If both extremes were favoured, the curve would get wider or split into two peaks. Here it has one peak and is narrower." },
+        { t: "No selection took place: the curves show the same population.", why: "The solid curve is taller and narrower: fewer birds have extreme beak depths, so something selected against them." }],
+      explain: "Stabilising selection: birds with medium beaks survive and breed best, and both extremes are selected against. The mean stays at 10 mm, while the curve becomes narrower and taller: there is less variation.",
+      hints: ["Compare where the two peaks are.", "Compare how wide the two curves are.", "Same mean, narrower curve: which type of selection is that?"] },
+    { id: "dirread", kind: "num", sup: "graph", text: "Directional selection on beak depth. Use the graph to calculate how much the mean beak depth changed in 10 generations.",
+      setup: { scene: "sel", tsel: "dir", tg: 10 }, lock: true, hideKw: [], hideGraph: [], unit: "mm", lab: "Change in mean",
+      ans: MEAN_SHIFT, tol: 0.3, show: v => f1(v),
+      wrongs: () => [[TR.MU + MEAN_SHIFT(), "That is the new mean. Subtract the old mean (under the peak of the dashed curve)."], [TR.MU, "That is the mean at generation 0. Find the change: new mean − old mean."], [-MEAN_SHIFT(), "The beaks got deeper, so the change is positive: new mean − old mean."]],
+      generic: "Read the x-value under each peak. Each small square is 0.5 mm. Then subtract: new mean − old mean.",
+      right: a => `Correct. The peak moved from about ${f1(TR.MU)} mm to about ${f1(TR.MU + a)} mm: an increase of about ${f1(a)} mm in 10 generations.`,
+      hints: ["The mean of each curve is under its peak.", "Read the beak depth under the dashed peak, then under the solid peak.", "Change = new mean − old mean."] },
+    { id: "hweq", kind: "fill", text: "Complete the Hardy–Weinberg equations and what they stand for.", setup: { scene: "hw", q: 0.3 }, hideHW: true, hideKw: ["hw"], hideMaths: ["eq1", "eq2", "way"],
+      items: [{ pre: "p + q = ", opts: ["1", "100", "2pq"], ans: "1", post: ", where p and q are the frequencies of the two alleles.", why: { "100": "Frequencies are decimals, so all the alleles of this gene add up to 1, not 100.", "2pq": "p and q are the two alleles’ frequencies: together they are the whole gene pool for this gene." } },
+        { pre: "p² + 2pq + q² = ", opts: ["1", "p + q", "0.5"], ans: "1", post: ".", why: { "p + q": "That is true too (both are 1), but the equation adds up all three genotypes: the whole population.", "0.5": "The three genotypes together are the whole population, so their frequencies add up to 1." } },
+        { pre: "2pq is the frequency of ", opts: ["heterozygotes (Aa)", "homozygous dominants (AA)", "the recessive allele (a)"], ans: "heterozygotes (Aa)", post: ".", why: { "homozygous dominants (AA)": "AA needs an A from each parent: p × p = p².", "the recessive allele (a)": "The frequency of allele a is q. 2pq is a genotype frequency." } },
+        { pre: "q² is the frequency of ", opts: ["homozygous recessives (aa)", "carriers", "allele a"], ans: "homozygous recessives (aa)", post: ".", why: { carriers: "Carriers are heterozygous (Aa): 2pq.", "allele a": "The frequency of allele a is q, not q²." } }],
+      explain: "p + q = 1 (alleles) and p² + 2pq + q² = 1 (genotypes). p² = AA, 2pq = Aa (an A from one parent and an a from the other, or the other way round), q² = aa. Look at the square: its sides are p and q; its areas are the genotype frequencies.",
+      hints: ["Frequencies are decimals: the whole gene pool is 1.", "In the square, the sides are allele frequencies and the areas are genotype frequencies.", "Aa can form two ways (A from either parent): pq + pq."] },
+    { id: "hwp", kind: "num", sup: "maths", text: "In a population of pocket mice, 16 % have pale fur (aa, recessive). Calculate p, the frequency of the dominant allele A. Give your answer as a decimal.",
+      setup: { scene: "hw", q: 0.5 }, hideHW: true, hideKw: [], lab: "p",
+      ans: () => 1 - hwq(0.16), tol: 0.005, show: v => fr(v),
+      wrongs: () => [[1 - 0.16, "1 − 0.16 is the frequency of dark mice (AA + Aa), not of allele A. First find q = √0.16."], [hwq(0.16), "That is q, the frequency of allele a. p = 1 − q."], [0.16, "0.16 is q², the frequency of aa mice. Take the square root to get q, then p = 1 − q."], [0.16 / 2, "Don’t halve q². q = √q²."]],
+      generic: "Start from q² = 0.16 (16 % ÷ 100). Then q = √q², and p = 1 − q.",
+      right: a => `Correct. q² = 0.16, so q = √0.16 = 0.4, and p = 1 − 0.4 = ${fr(a)}.`,
+      hints: ["Pale mice are aa, so 16 % gives q² = 0.16.", "q = √0.16.", "p = 1 − q."] },
+    { id: "carrier", kind: "num", sup: "maths", text: "4 % of a population show a recessive phenotype (aa). Calculate the percentage of the population that are heterozygous carriers (Aa).",
+      setup: { scene: "hw", q: 0.5 }, hideHW: true, hideKw: [], hideMaths: [], unit: "%", lab: "Carriers",
+      ans: () => 2 * (1 - hwq(0.04)) * hwq(0.04) * 100, tol: 0.5, show: v => f0(v),
+      wrongs: () => [[(1 - hwq(0.04)) * hwq(0.04) * 100, "That is pq. Carriers are 2pq: an A from one parent and an a from the other, either way round."], [(1 - hwq(0.04)) ** 2 * 100, "That is p², the AA mice. Carriers are 2pq."], [96, "96 % is everyone with the dominant phenotype (AA + Aa). Find 2pq."], [hwq(0.04) * 100, "That is q as a percentage. Carriers are 2pq."], [(1 - hwq(0.04)) * 100, "That is p as a percentage. Carriers are 2pq."]],
+      generic: "q² = 0.04, so q = 0.2 and p = 0.8. Carriers = 2pq.",
+      right: a => `Correct. q² = 0.04, q = 0.2, p = 0.8, so 2pq = 2 × 0.8 × 0.2 = 0.32: ${f0(a)} % of the population are carriers, many more than the 4 % who show the phenotype.`,
+      hints: ["4 % is q², so q² = 0.04.", "q = √0.04 = 0.2, and p = 1 − q.", "Carriers = 2pq. Multiply by 100 for a percentage."] },
+    { id: "drift", kind: "choice", text: "Four runs of a population of 10 mice, with no selection and no migration (the grey lines are earlier runs). Explain why the frequency of allele A changes, and why the runs end differently.",
+      setup: { scene: "pop", pop: RUN.drift }, lock: true, hideHWc: true, hideKw: ["drift", "bott", "found"],
+      options: [{ t: "Genetic drift: in a small population, chance decides which alleles are passed on, so the frequency changes at random and an allele can be lost.", ok: true },
+        { t: "Allele A is dominant, so it increases over the generations.", why: "Look at the runs: in some A rises, in others it falls and is lost. Being dominant doesn’t make an allele commoner." },
+        { t: "Mutations keep happening because the population is small.", why: "There is no mutation in this model. The changes come from chance in which alleles get passed on." },
+        { t: "Natural selection favours whichever allele is commoner.", why: "There is no selection here: every genotype is equally likely to breed. The direction of change is random, so different runs go different ways." }],
+      explain: "This is genetic drift. With only 10 mice, which alleles get into the next generation is largely down to chance, so the allele frequency wanders at random. An allele can be lost or fixed by chance. Drift matters most in small populations.",
+      hints: ["Is there any selection in these runs?", "With only 10 mice, how much does chance matter?", "Random change in allele frequency has a name."] },
+    { id: "readp", kind: "num", sup: "graph", text: "Selection favours dark fur in this population of 200 mice. Read the graph: what was the frequency of allele A at generation 20?",
+      setup: { scene: "pop", pop: RUN.readp }, lock: true, hideKw: [], hideGraph: [], lab: "Frequency of A",
+      ans: READ_P, tol: 0.03, show: v => f2(v),
+      wrongs: () => { const P = runOf("readp"); return [[pAt(P, 30), "That is the frequency at the last generation (30). Go up from 20 on the x-axis."], [pAt(P, 10), "That looks like generation 10. Go up from 20 on the x-axis."], [1 - READ_P(), "That is the frequency of allele a. The y-axis shows A."]]; },
+      generic: "Find 20 on the x-axis, go up to the line, then across to the y-axis. Each small square is 0.05.",
+      right: a => `Correct. At generation 20 the line is at about ${f2(a)}. It started at 0.2: selection for dark fur made A commoner.`,
+      hints: ["Find generation 20 on the x-axis.", "Go straight up to the line (each dot is one generation).", "Go across to the y-axis. Each small square is 0.05."] },
+    { id: "allo", kind: "fill", text: "Step through allopatric speciation. Complete the description.", setup: { scene: "sp", sp: "allo", sstep: 5 }, hideSp: true, hideHWc: true, hideKw: ["allo", "sym", "iso", "flow"],
+      items: [{ pre: "A canyon splits a population into two. It is a ", opts: ["geographical barrier", "reproductive barrier", "mutation"], ans: "geographical barrier", post: ",", why: { "reproductive barrier": "At first the two groups could still interbreed if they met: only the land keeps them apart.", mutation: "A canyon isn’t a change in DNA: it is a physical barrier." } },
+        { pre: "so there is no ", opts: ["gene flow", "mutation", "selection"], ans: "gene flow", post: " between the two groups.", why: { mutation: "Mutations still happen on both sides. What stops is alleles passing between the two groups.", selection: "Selection still acts on each side. What stops is alleles passing between the groups." } },
+        { pre: "The two sides have different ", opts: ["selection pressures", "chromosome numbers", "dominant alleles"], ans: "selection pressures", post: ", so different alleles are favoured.", why: { "chromosome numbers": "Nothing changes the chromosome number here. The environments differ (cool forest, dry).", "dominant alleles": "Dominance doesn’t decide which allele is favoured. The environment does." } },
+        { pre: "Over many generations the groups become ", opts: ["reproductively isolated", "geographically isolated", "identical"], ans: "reproductively isolated", post: ": they can no longer interbreed to produce fertile offspring.", why: { "geographically isolated": "They were geographically isolated from the start. The new species form when they can no longer interbreed.", identical: "Their gene pools become more different, not more alike." } }],
+      explain: "Allopatric speciation: a geographical barrier stops gene flow; different selection pressures (and different mutations and drift) change each gene pool; in time the groups are reproductively isolated: two species.",
+      hints: ["Use Next step ▸ and ◂ Back to go through the steps.", "What passes between populations when individuals move and breed?", "A new species is defined by whether the groups can interbreed to produce fertile offspring."] }
+  ],
+  hard: [
+    { id: "domrise", kind: "choice", text: "In a large population of mice the dominant allele A has a frequency of 0.2. There is no selection, migration or mutation. Predict what happens to the frequency of A over many generations, and explain your prediction.",
+      setup: { scene: "pop", pop: RUN.large }, hideHWc: true, hideKw: ["hw", "drift"],
+      options: [{ t: "It stays at about 0.2: in a large population with no selection, allele frequencies stay the same from one generation to the next.", ok: true },
+        { t: "It rises to about 0.75, because dominant alleles always become commoner (the 3 : 1 ratio).", why: "Dominance only decides which phenotype a heterozygote shows. It doesn’t make an allele commoner. (3 : 1 is the ratio of phenotypes from one Aa × Aa cross, not a population’s allele frequencies.) Try it: press 10 more ▸ with these 1000 mice." },
+        { t: "It falls to 0, because rare alleles always disappear.", why: "Without selection, a rare allele is lost only by chance (drift), which is very slow in a large population. Try it: press 10 more ▸ with these 1000 mice." },
+        { t: "It rises, because the dominant phenotype is fitter.", why: "There is no selection here, so no phenotype is fitter. Dominant doesn’t mean better." }],
+      explain: "This is the Hardy–Weinberg principle: in a large, randomly mating population with no selection, mutation or migration, allele frequencies stay the same. A stays at about 0.2 (in a real, finite population drift moves it a little). Being dominant doesn’t make an allele commoner.",
+      hints: ["Is anything here making one allele more likely to be passed on?", "Does dominance change how often an allele is passed on?", "You can test it: these are 1000 mice, with no selection and Start A 0.2. Press 10 more ▸."] },
+    { id: "hwcond", kind: "choice", text: "Which population would the Hardy–Weinberg equations describe most accurately?", setup: { scene: "hw", q: 0.3 }, hideHWc: true, hideKw: ["hw", "drift", "found"],
+      options: [{ t: "A very large population that mates at random, with no selection, migration or mutation affecting this gene.", ok: true },
+        { t: "Any population: the equations work for every population.", why: "The equations only hold when their conditions are met. Selection, migration, mutation, non-random mating or a small population all change allele frequencies." },
+        { t: "A small island population started by a few individuals.", why: "In a small population drift changes allele frequencies at random, and a founder population is a chance sample." },
+        { t: "A population in which pale individuals are eaten more often by predators.", why: "That is selection: one phenotype is less likely to survive and breed, so allele frequencies change." }],
+      explain: "The Hardy–Weinberg principle assumes a large population (no genetic drift), random mating, no mutation, no migration and no selection. Few real populations meet every condition, so it tells you what to expect if nothing is changing allele frequencies: a difference suggests something is.",
+      hints: ["Think about what changes allele frequencies.", "Which options include drift or selection?", "The principle describes a population where nothing is changing allele frequencies."] },
+    { id: "cf", kind: "num", sup: "maths", text: "Cystic fibrosis is caused by a recessive allele. About 1 in 2500 babies in a population is born with cystic fibrosis. Calculate the frequency of carriers in the population. Give your answer as a decimal to 2 significant figures.",
+      setup: { scene: "hw", q: 0.5 }, hideHW: true, hideKw: [], lab: "Frequency of carriers",
+      ans: () => 2 * (1 - hwq(1 / 2500)) * hwq(1 / 2500), tol: 0.0012, show: v => (+v.toPrecision(2)).toString(),
+      wrongs: () => { const q = hwq(1 / 2500); return [[q, "That is q, the frequency of the allele. Carriers are 2pq."], [(1 - q) * q, "That is pq. Carriers can get the allele from either parent: 2pq."], [1 / 2500, "That is q², the babies with cystic fibrosis. Carriers are 2pq."], [1 - q, "That is p. Carriers are 2pq."], [(1 - q) ** 2, "That is p², people with no copy of the allele. Carriers are 2pq."]]; },
+      generic: "q² = 1 ÷ 2500 = 0.0004, so q = 0.02 and p = 0.98. Carriers = 2pq.",
+      right: a => `Correct. q² = 1 ÷ 2500 = 0.0004, so q = 0.02 and p = 0.98. 2pq = 2 × 0.98 × 0.02 = 0.0392, about ${(+a.toPrecision(2))}: roughly 1 person in 25 is a carrier.`,
+      hints: ["1 in 2500 babies are aa: q² = 1 ÷ 2500 = 0.0004.", "q = √0.0004 = 0.02, so p = 0.98.", "Carriers = 2pq = 2 × 0.98 × 0.02."] },
+    { id: "het500", kind: "num", sup: "maths", text: "A population of 500 mice in Hardy–Weinberg equilibrium has 45 pale mice (aa). Calculate the number of heterozygous mice you would expect.",
+      setup: { scene: "hw", q: 0.5 }, hideHW: true, hideKw: [], unit: "mice", lab: "Heterozygous mice",
+      ans: () => { const q = hwq(45 / 500); return 2 * (1 - q) * q * 500; }, tol: 1, show: v => f0(v),
+      wrongs: () => { const q = hwq(45 / 500), p = 1 - q; return [[p * q * 500, "That is pq × 500. Heterozygotes are 2pq."], [p * p * 500, "That is p² × 500, the AA mice."], [500 - 45, "455 is all the dark mice (AA + Aa). Find 2pq × 500."], [q * 500, "That uses q instead of 2pq."], [2 * p * q, "That is the frequency 2pq. Multiply by 500 to get a number of mice."]]; },
+      generic: "q² = 45 ÷ 500 = 0.09, so q = 0.3 and p = 0.7. Heterozygotes = 2pq × 500.",
+      right: a => `Correct. q² = 45 ÷ 500 = 0.09, so q = 0.3 and p = 0.7. 2pq = 2 × 0.7 × 0.3 = 0.42, and 0.42 × 500 = ${f0(a)} heterozygous mice.`,
+      hints: ["q² = 45 ÷ 500.", "q = √0.09 = 0.3, so p = 0.7.", "Number of Aa = 2pq × 500."] },
+    { id: "count", kind: "num", sup: "maths", text: "Use the genotype counts in the readout to calculate q, the frequency of allele a, in this generation of 50 mice. Count alleles: don’t assume Hardy–Weinberg. Give your answer as a decimal.",
+      setup: { scene: "pop", pop: RUN.count }, lock: true, hideKw: [], hideMaths: [], lab: "q",
+      ans: COUNT_Q, tol: 0.005, show: v => fr(v),
+      wrongs: () => { const c = CNT(); return [[Math.sqrt(c.aa / c.n), "That assumes Hardy–Weinberg (q = √q²). Here you have real counts: count the a alleles."], [c.aa / c.n, "That is the frequency of aa mice. Count alleles: each aa mouse has two a alleles, each Aa mouse has one."], [(c.aa + c.Aa) / c.n, "That counts mice, not alleles. Each mouse has two alleles: divide by 2 × 50."], [1 - COUNT_Q(), "That is p, the frequency of allele A."], [(c.aa + c.Aa) / (2 * c.n), "Each aa mouse has two a alleles: use 2 × aa + Aa."]]; },
+      generic: "q = (2 × number of aa + number of Aa) ÷ (2 × 50).",
+      right: a => { const c = CNT(); return `Correct. q = (2 × ${c.aa} + ${c.Aa}) ÷ (2 × ${c.n}) = ${2 * c.aa + c.Aa} ÷ ${2 * c.n} = ${fr(a)}. (√(${c.aa} ÷ ${c.n}) would give about ${f2(Math.sqrt(c.aa / c.n))}: a small population is not exactly in Hardy–Weinberg proportions.)`; },
+      hints: ["Each mouse has two alleles for this gene: 100 alleles in all.", "Each aa mouse has two a alleles; each Aa mouse has one.", "q = (2 × aa + Aa) ÷ 100."] },
+    { id: "bottle", kind: "choice", text: "At the marked generation a flood killed all but 4 mice, at random. The population then grew back to 200. Explain the change in the frequency of allele A.",
+      setup: { scene: "pop", pop: RUN.bottle }, lock: true, hideHWc: true, hideKw: ["bott", "drift", "found"],
+      options: [{ t: "By chance the 4 survivors carried different allele frequencies from the old population; the new population grew from their alleles, so genetic diversity fell.", ok: true },
+        { t: "The survivors were the best adapted, so their alleles were selected for.", why: "The flood killed mice at random, not by phenotype: this is chance, not selection." },
+        { t: "New mutations in the survivors helped the population recover.", why: "There is no mutation in this model. The change comes from which alleles the 4 survivors happened to carry." },
+        { t: "Once the population grows back, the allele frequency returns to its old value.", why: "Look after the crash: the population has no memory of the old frequency. It grows from the survivors’ alleles, so the change stays." }],
+      explain: "A genetic bottleneck: the 4 survivors were a small, chance sample of the gene pool. Their allele frequencies differed from the original population, and the new population inherited them. Genetic diversity fell, and an allele can be lost altogether.",
+      hints: ["Did the flood choose which mice survived?", "How well can 4 mice represent a gene pool of 200?", "Does the population ‘remember’ its old allele frequency?"] },
+    { id: "founder", kind: "choice", text: "Data question: a few families settled a new community, and few people have joined since. A recessive allele causing extra fingers (Ellis–van Creveld syndrome) is far commoner there than in the population they came from. The graph shows a model of this. Explain the high frequency.",
+      setup: { scene: "pop", pop: RUN.found }, lock: true, hideHWc: true, hideKw: ["found", "drift", "bott"],
+      options: [{ t: "The few founders happened, by chance, to carry the allele at a higher frequency than the original population, and the community grew from their alleles.", ok: true },
+        { t: "Extra fingers gave an advantage in the new place, so the allele was selected for.", why: "There is no sign of an advantage: this is a harmful condition. The change came from chance in who the founders were." },
+        { t: "Moving to a new place caused the mutation.", why: "Moving doesn’t cause mutations. The founders brought the allele with them." },
+        { t: "Small populations always make dominant alleles commoner.", why: "The allele is recessive, and drift is random: it doesn’t favour dominant alleles." }],
+      explain: "The founder effect: a small group starting a new population is a chance sample of the original gene pool, so its allele frequencies can be very different. With little migration since, the allele stays common. In the model the island line (solid) differs from the mainland (dashed).",
+      hints: ["How many people started the community?", "Was the allele helpful?", "A small group starting a new population: what is this called?"] },
+    { id: "disrupt", kind: "choice", text: "Beyond the specification: the solid curve shows beak depth 10 generations after the dashed one. Suggest the conditions that caused this change.",
+      setup: { scene: "sel", tsel: "dis", tg: 10 }, lock: true, hideSel: true, hideKw: ["stab", "dir", "dis"],
+      options: [{ t: "The food was mostly very small seeds and very large seeds, so medium beaks were at a disadvantage and both extremes were favoured.", ok: true },
+        { t: "The environment stayed the same, so medium beaks were favoured.", why: "Medium beaks are now the least common: they were selected against, not favoured." },
+        { t: "Large seeds became common, so only the deepest beaks were favoured.", why: "Then the whole curve would move right. Here both the shallow and the deep beaks increased." },
+        { t: "Each bird changed its beak to fit the seeds it ate.", why: "Individuals don’t change their inherited characteristics. Birds with suitable beaks survived and bred more." }],
+      explain: "Disruptive selection: both extremes are favoured and the middle is selected against, for example when only very small and very large seeds are available. The curve splits into two peaks. If the two groups stop interbreeding, this can lead to sympatric speciation.",
+      hints: ["Which beak depths became less common?", "Which became more common?", "What food would suit both extremes but not the middle?"] },
+    { id: "isol", kind: "choice", text: "Apple maggot flies that grow up on apples mate on apple trees and breed earlier in the year than flies on hawthorn trees in the same area. Which statement is correct?",
+      setup: { scene: "sp", sp: "sym", sstep: 4 }, hideSp: true, hideKw: ["allo", "sym", "iso"],
+      options: [{ t: "This is temporal and habitat (ecological) isolation, prezygotic mechanisms that can lead to sympatric speciation.", ok: true },
+        { t: "This is allopatric speciation, because the two groups use different trees.", why: "The trees grow in the same area: there is no geographical barrier, so this is not allopatric." },
+        { t: "This is a postzygotic mechanism, like the sterility of mules.", why: "Breeding at different times and on different trees stops mating happening at all: that is before fertilisation (prezygotic)." },
+        { t: "The two groups are already separate species because they use different food.", why: "A species is defined by whether the groups can interbreed to produce fertile offspring, not by what they eat." }],
+      explain: "Breeding at different times (temporal isolation) and mating on different trees (habitat, or ecological, isolation) stop gene flow before fertilisation: prezygotic isolation. With no geographical barrier, this can lead to sympatric speciation.",
+      hints: ["Is there a geographical barrier?", "Does the isolation act before or after fertilisation?", "Different breeding times and mating places are prezygotic mechanisms."] },
+    { id: "artsel", kind: "choice", text: "Breeders have selected wheat for high yield for many generations. Explain why seed banks also keep seeds of old varieties and wild relatives.",
+      setup: { scene: "sel", tsel: "art", tg: 10 }, hideKw: ["art", "bott", "found"],
+      options: [{ t: "Artificial selection reduces genetic diversity, so useful alleles (for example for disease resistance) may be lost from crops; stored seeds keep them for future breeding.", ok: true },
+        { t: "Wild relatives have higher yields, so they will replace modern varieties.", why: "Modern varieties have been selected for yield. Wild relatives are kept for their alleles, not their yield." },
+        { t: "Seeds in a seed bank evolve resistance to new diseases while they are stored.", why: "Stored seeds don’t breed, so they can’t evolve. They keep the alleles they already have." },
+        { t: "Selective breeding makes new alleles, so the old varieties are no longer needed.", why: "Selection doesn’t make new alleles: it only changes the frequency of existing ones, and loses some." }],
+      explain: "Artificial selection breeds from only a few chosen individuals, so the gene pool shrinks (see how the curve narrows). Alleles that might be needed later, for example for resistance to a new disease or climate, can be lost. Seed banks keep old varieties and wild types as a store of these alleles.",
+      hints: ["Look at the width of the curve after artificial selection.", "What happens to alleles carried by individuals that are never chosen to breed?", "Why might breeders want those alleles back one day?"] }
+  ]
+};
+
+function bankCheck() {
+  const errs = [], near = (a, b, e) => Math.abs(a - b) <= (e || 1e-6), no69 = s => !/69/.test(String(s));
+  /* the model */
+  const R = k => runOf(k);
+  if (!(pAt(R("who"), 30) > 0.8)) errs.push("model: selection for dark should raise A above 0.8 in 30 generations");
+  const dr = RUN.drift.old.concat([RUN.drift.o.seed]).map(sd => { const P = popRun(Object.assign({}, RUN.drift.o, { seed: sd }), 40); return P.pts[P.pts.length - 1][1]; });
+  if (!(dr.includes(0) && dr.includes(1))) errs.push("model: the drift runs should include a loss and a fixation");
+  const bt = R("bottle"); if (!(Math.abs(pAt(bt, 12) - pBefore(bt, 10)) > 0.25)) errs.push("model: the bottleneck should change p by more than 0.25");
+  const fo = R("found"); if (!(pAt(fo, 25) < 0.5 && fo.main.pts[fo.main.pts.length - 1][1] > 0.7)) errs.push("model: founder island and mainland should differ");
+  const lg = popRun(Object.assign({}, RUN.large.o), 40); if (!lg.pts.every(x => Math.abs(x[1] - 0.2) <= 0.03)) errs.push("model: large neutral population should stay within 0.03 of 0.2");
+  /* no genotype count, size or generation readout shows 69, every generation (a cheap spot check: counts under 69 can't show it,
+     so 200 mice at every start and selection setting, and 1000 mice from 0.5; t/r3/exh.js checks thousands of runs) */
+  for (const [N, st] of [[200, 0.2], [200, 0.5], [200, 0.8], [1000, 0.5]]) for (const sel of ["none", "dark", "pale"]) for (const seed of [2]) {
+    const P = popNew({ N, start: st, sel, str: "strong", seed }); let ok = true;
+    do { const c = gcount(P.ind); if (!no69(`AA ${c.AA} · Aa ${c.Aa} · aa ${c.aa} ${c.n} ${P.gen}`)) ok = false; } while (ok && popStep(P));
+    if (!ok) { errs.push(`model: 69 in a population readout (N ${N}, start ${st}, ${sel})`); break; }
+  }
+  if (!near(MEAN_SHIFT(), 2, 1e-9)) errs.push("model: directional shift should be 2.0 mm");
+  if (!near(meanOf(distParts("stab", 10)), TR.MU, 1e-9)) errs.push("model: stabilising keeps the mean");
+  { const d = distParts("dis", 10); if (!(birds(d, TR.MU) < birds(d, d[1].mu) * 0.8)) errs.push("model: disruptive should have two peaks"); }
+  for (const t of SELT_ORDER) for (let g = 0; g <= TR.GMAX; g++) for (let x = TR.XMIN; x <= TR.XMAX; x += 0.25) if (birds(distParts(t, g), x) > TR.YMAX) { errs.push("model: a curve goes off the graph: " + t); g = 99; break; }
+  for (let i = 1; i <= 19; i++) { const v = hwVals(i / 20); if (!near(v.pp + v.pq2 + v.qq, 1, 1e-9)) errs.push("model: H–W sum"); [fr(v.p), fr(v.pp), fr(v.pq2), fr(v.qq), f0(v.pp * 1000), f0(v.pq2 * 1000), f0(v.qq * 1000), fr(i / 20)].forEach(s => { if (!no69(s)) errs.push("model: 69 in the H–W readout"); }); }
+  /* the questions */
+  const ids = {};
+  for (const lv of ["easy", "hard"]) TASKS[lv].forEach((t, i) => {
+    const e = m => errs.push(`${lv} task ${i + 1}: ${t.id}: ${m}`);
+    if (ids[t.id]) e("duplicate id"); ids[t.id] = 1;
+    if (!t.hints || t.hints.length !== 3) e("needs 3 hints");
+    if (t.kind === "choice") {
+      if (t.options.filter(o => o.ok).length !== 1) e("needs exactly one right option");
+      t.options.forEach(o => { if (!o.ok && !o.why) e("a wrong option has no reason"); });
+      if (!t.explain) e("no explanation");
+    } else if (t.kind === "fill") {
+      t.items.forEach(it => { if (!it.opts.includes(it.ans)) e("gap answer not an option"); it.opts.forEach(o => { if (o !== it.ans && !(it.why && it.why[o])) e("gap option without feedback: " + o); }); });
+    } else if (t.kind === "num") {
+      const a = t.ans(); if (!isFinite(a)) e("answer not a number");
+      if (!no69(t.right(a)) || !no69(t.show(a))) e("69 in the worked answer");
+      if (Math.abs(+t.show(a) - a) > t.tol) e("the shown answer is outside the tolerance");
+      t.wrongs().forEach(w => { if (Math.abs(w[0] - a) <= t.tol + slipWin(t, w[0])) e("a planned wrong answer is inside the tolerance: " + w[0]); if (!no69(w[1])) e("69 in a slip message"); });
+      if (!t.generic) e("no generic wrong message");
+    }
+    const txt = t.text + " " + (t.explain || "") + " " + (t.options ? t.options.map(o => o.t + " " + (o.why || "")).join(" ") : "") + " " + hintsFor(t).join(" ");
+    if (!no69(txt)) e("69 in the question");
+  });
+  if (TASKS.easy.length > 10 || TASKS.hard.length > 10) errs.push("bank: more than 10 questions in a level");
+  return errs;
+}
+
+/* ===== Colour tokens (read once, and again when the theme changes) ===== */
+let C = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  C = { font: getComputedStyle(document.body).fontFamily };
+  ["ink", "muted", "accent", "good", "bad", "sunk", "surface", "line"].forEach(k => C[k] = g("--" + k));
+}
+const narrowW = () => window.innerWidth <= 900;
+const phoneW = () => window.innerWidth < 560;
+const barBottom = () => { const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nq-bar")); return v > 0 ? v : 100; };
+const P = v => (Math.round(v * 10) / 10).toString();
+function T(x, y, s, cls, a, extra) { return `<text x="${P(x)}" y="${P(y)}"${cls ? ` class="${cls}"` : ""}${a ? ` text-anchor="${a}"` : ""}${extra || ""}>${esc(s)}</text>`; }
+function setVB(svg, W, H) { const v = `0 0 ${P(W)} ${P(H)}`; if (svg.getAttribute("viewBox") !== v) svg.setAttribute("viewBox", v); svg.style.height = P(H) + "px"; }
+const tw = (s, fs) => s.length * fs * 0.56;   // rough text width (for layout only; the edge test checks the real boxes)
+const FS = () => phoneW() ? 12 : 13;
+
+/* ===== View 1: the allele-frequency graph and the population of mice ===== */
+const GR = { h: 300 }, FL = { h: 190 };
+const GA = { A: null };
+function popGraph() {
+  const m = B, Pp = m.pop, svg = $("gSvg"), Wd = Math.max(240, boxW($("gWrap")) - 2), Hd = GR.h, fs = FS();
+  setVB(svg, Wd, Hd);
+  const leg = [Pp.main ? "dashed: mainland" : "", (Pp.old || []).length ? "grey: earlier runs" : ""].filter(Boolean).join(" · ");
+  const ml = fs * 2.6 + 18, mb = fs * 2.9 + 6, mt = (leg ? 2 : 1) * (fs + 6) + 6, mr = 12, pw = Wd - ml - mr, ph = Hd - mt - mb;
+  const X = g => ml + g / POPC.GMAX * pw, Y = v => mt + ph - v * ph;
+  GA.A = { ml, mt, pw, ph, X, Y };
+  let o = "";
+  for (let g = 0; g <= POPC.GMAX; g++) { const maj = g % 5 === 0; if (maj || pw > 360) o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(X(g))} ${P(mt)}V${P(mt + ph)}"/>`; if (g % 10 === 0) o += T(X(g), mt + ph + fs + 4, String(g), "tk", "middle", ` font-size="${fs}"`); }
+  const ystep = ph < 170 ? 0.2 : 0.1;
+  for (let i = 0; i <= 20; i++) { const v = i / 20, maj = i % 2 === 0; o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(ml)} ${P(Y(v))}H${P(ml + pw)}"/>`; if (Math.abs(v / ystep - Math.round(v / ystep)) < 1e-9) o += T(ml - 5, Y(v) + fs * .35, v.toFixed(1), "tk", "end", ` font-size="${fs}"`); }
+  o += `<path class="ax" d="M${P(ml)} ${P(mt)}V${P(mt + ph)}H${P(ml + pw)}"/>`;
+  o += T(ml + pw / 2, Hd - 5, "Generation", "ttl", "middle", ` font-size="${fs}"`);
+  const yt = ph < 210 ? "Frequency of A" : "Frequency of allele A (p)";
+  o += T(fs * .95, mt + ph / 2, yt, "ttl", "middle", ` font-size="${fs}" transform="rotate(-90 ${P(fs * .95)} ${P(mt + ph / 2)})"`);
+  const path = pts => pts.map((x, i) => (i ? "L" : "M") + P(X(x[0])) + " " + P(Y(x[1]))).join("");
+  (Pp.old || []).forEach(h => { o += `<path class="oldrun" d="${path(h)}"/>`; });
+  if (Pp.main) o += `<path class="mainrun" d="${path(Pp.main.pts)}"/>`;
+  /* events: a dotted line and a short label at the top */
+  const boxes = [];   // event labels: above the plot; one that would overlap an earlier one goes just inside the plot, lower down
+  Pp.events.forEach(e => { const x = X(e.g), lab = e.k === "bot" ? "crash to 4" : "5 to island", w = tw(lab, fs) + 4;
+    o += `<path class="evl" d="M${P(x)} ${P(mt)}V${P(mt + ph)}"/>`;
+    const right = x + 4 + w < ml + pw, x0 = right ? x + 4 : x - 4 - w;
+    let y = mt - 3; for (const bx of boxes) if (bx.y === y && x0 < bx.x1 && x0 + w > bx.x0) y = mt + fs + 4;
+    for (const bx of boxes) if (bx.y === y && x0 < bx.x1 && x0 + w > bx.x0) y += fs + 4;
+    boxes.push({ x0, x1: x0 + w, y });
+    o += T(right ? x + 4 : x - 4, y, lab, "evt", right ? "start" : "end", ` font-size="${fs}"`); });
+  if (leg) o += T(ml + pw, fs + 2, leg, "ttl", "end", ` font-size="${fs}"`);
+  o += `<path class="run" d="${path(Pp.pts)}"/>`;
+  const last = Pp.pts[Pp.pts.length - 1];
+  Pp.pts.forEach(x => { o += `<circle class="rdot" cx="${P(X(x[0]))}" cy="${P(Y(x[1]))}" r="${x === last ? 4.5 : 2.6}"/>`; });
+  morph($("gD"), o);
+}
+const FUR = { dark: "fd", pale: "fp" };
+function popField() {
+  const m = B, Pp = m.pop, svg = $("fSvg"), W = Math.max(200, boxW($("fWrap")) - 2), H = FL.h;
+  setVB(svg, W, H);
+  const n = Pp.ind.length, cols = Math.max(1, Math.ceil(Math.sqrt(n * W / H))), rows = Math.ceil(n / cols);
+  const cw = (W - 8) / cols, ch = (H - 8) / rows, r = Math.max(1.5, Math.min(cw, ch) * .4), jit = rnd(Pp.gen * 131 + n);
+  let o = `<rect class="rock ${Pp.sel === "pale" ? "sand" : ""}" x="0" y="0" width="${P(W)}" height="${P(H)}"/>`;
+  Pp.ind.forEach((g, i) => {
+    const cx = 4 + (i % cols + .5) * cw + (jit() - .5) * Math.max(0, cw - 2 * r) * .8, cy = 4 + (Math.floor(i / cols) + .5) * ch + (jit() - .5) * Math.max(0, ch - 2 * r) * .8;
+    const ph = g[0] + g[1] > 0 ? "fd" : "fp";
+    o += `<circle class="mouse ${ph}" cx="${P(cx)}" cy="${P(cy)}" r="${P(r)}"/>`;
+    if (r >= 5) { const pr = r * .32; o += `<circle class="al ${g[0] ? "aA" : "aa"}" cx="${P(cx - r * .4)}" cy="${P(cy)}" r="${P(pr)}"/><circle class="al ${g[1] ? "aA" : "aa"}" cx="${P(cx + r * .4)}" cy="${P(cy)}" r="${P(pr)}"/>`; }
+  });
+  FL.al = r >= 5;   // allele dots are drawn only when the mice are big enough; the key lists them only then
+  morph($("fD"), o);
+}
+function popKey() {
+  const sw = inner => `<svg viewBox="0 0 24 18" aria-hidden="true">${inner}</svg>`;
+  return [[sw('<circle class="mouse fd" cx="12" cy="9" r="8"/>'), "dark fur (AA or Aa)"], [sw('<circle class="mouse fp" cx="12" cy="9" r="8"/>'), "pale fur (aa)"],
+    [sw('<circle class="al aA" cx="12" cy="9" r="5"/>'), "allele A"], [sw('<circle class="al aa" cx="12" cy="9" r="5"/>'), "allele a"]]
+    .slice(0, FL.al === false ? 2 : 4).map(([s, t]) => `<li>${s}<span>${esc(t)}</span></li>`).join("");
+}
+
+/* ===== View 2: selection on beak depth ===== */
+const TG = { h: 300 };
+function selGraph() {
+  const m = B, svg = $("tSvg"), Wd = Math.max(240, boxW($("tWrap")) - 2), Hd = TG.h, fs = FS(), qo = quizOpen(), hide = qo && task.hideSel;
+  setVB(svg, Wd, Hd);
+  const ml = fs * 2.6 + 18, mb = fs * 2.9 + 6, mt = fs + 14, mr = 12, pw = Wd - ml - mr, ph = Hd - mt - mb;
+  const X = v => ml + (v - TR.XMIN) / (TR.XMAX - TR.XMIN) * pw, Y = v => mt + ph - v / TR.YMAX * ph;
+  let o = "";
+  /* selected against (this generation): shaded */
+  if (!hide) zones(m.tsel, m.tg).forEach(z => { const a = X(Math.max(TR.XMIN, z[0])), b = X(Math.min(TR.XMAX, z[1])); if (b - a > 1) o += `<rect class="zone" x="${P(a)}" y="${P(mt)}" width="${P(b - a)}" height="${P(ph)}"/>`; });
+  for (let v = TR.XMIN; v <= TR.XMAX + 1e-9; v += 0.5) { const maj = Math.abs(v - Math.round(v)) < 1e-9; o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(X(v))} ${P(mt)}V${P(mt + ph)}"/>`; if (maj && (pw > 330 || v % 2 === 0)) o += T(X(v), mt + ph + fs + 4, String(v), "tk", "middle", ` font-size="${fs}"`); }
+  const ys = ph < 170 ? 100 : 50;
+  for (let v = 0; v <= TR.YMAX; v += 25) { const maj = v % 50 === 0; o += `<path class="${maj ? "gr2" : "gr"}" d="M${P(ml)} ${P(Y(v))}H${P(ml + pw)}"/>`; if (v % ys === 0) o += T(ml - 5, Y(v) + fs * .35, String(v), "tk", "end", ` font-size="${fs}"`); }
+  o += `<path class="ax" d="M${P(ml)} ${P(mt)}V${P(mt + ph)}H${P(ml + pw)}"/>`;
+  o += T(ml + pw / 2, Hd - 5, "Beak depth / mm", "ttl", "middle", ` font-size="${fs}"`);
+  const yt = ph < 210 ? "Number of birds" : "Number of birds (per 0.5 mm)";
+  o += T(fs * .95, mt + ph / 2, yt, "ttl", "middle", ` font-size="${fs}" transform="rotate(-90 ${P(fs * .95)} ${P(mt + ph / 2)})"`);
+  const curve = parts => { let d = ""; for (let i = 0; i <= 220; i++) { const x = TR.XMIN + (TR.XMAX - TR.XMIN) * i / 220; d += (i ? "L" : "M") + P(X(x)) + " " + P(Y(Math.min(TR.YMAX, birds(parts, x)))); } return d; };
+  o += `<path class="dcv before" d="${curve(distParts(m.tsel, 0))}"/>`;
+  if (m.tg > 0) o += `<path class="dcv after" d="${curve(distParts(m.tsel, m.tg))}"/>`;
+  if (!hide) { const z = zones(m.tsel, m.tg), lab = m.tsel === "art" ? "not chosen to breed" : "selected against", z0 = z[0], cx = (X(Math.max(TR.XMIN, z0[0])) + X(Math.min(TR.XMAX, z0[1]))) / 2;
+    const w = tw(lab, fs), x = clamp(cx, ml + w / 2 + 2, ml + pw - w / 2 - 2); o += T(x, mt - 4, lab, "zl", "middle", ` font-size="${fs}"`); }
+  morph($("tD"), o);
+}
+function selKey() {
+  const sw = cls => `<svg viewBox="0 0 28 10" aria-hidden="true"><path class="dcv ${cls}" d="M2 5H26"/></svg>`;
+  const it = [[sw("before"), "generation 0"], [sw("after"), B.tg > 0 ? `after ${B.tg} generation${B.tg === 1 ? "" : "s"}` : "after selection (press Next)"]];
+  if (!(quizOpen() && task.hideSel)) it.push(['<svg viewBox="0 0 28 18" aria-hidden="true"><rect class="zone" x="2" y="2" width="24" height="14"/></svg>', B.tsel === "art" ? "not chosen to breed" : "selected against"]);
+  return it.map(([s, t]) => `<li>${s}<span>${esc(t)}</span></li>`).join("");
+}
+
+/* ===== View 3: Hardy–Weinberg square (gametes p and q on each side; areas are genotype frequencies) ===== */
+const HS = { h: 300 };
+function hwDraw() {
+  const m = B, svg = $("hSvg"), W = Math.max(240, boxW($("hWrap")) - 2), H = HS.h, fs = FS() + 1, qo = quizOpen(), v = hwVals(m.q), hidL = qo && task.hideHW;
+  setVB(svg, W, H);
+  const lm = fs * 4.6, tm = fs * 2.6 + 6, S = Math.max(120, Math.min(W - lm - 12, H - tm - 10)), x0 = lm + Math.max(0, (W - lm - 12 - S) / 2), y0 = tm, cut = v.p * S;
+  let o = "";
+  const reg = (x, y, w, h, cls, g, sym) => { let s = `<rect class="hreg ${cls}" x="${P(x)}" y="${P(y)}" width="${P(w)}" height="${P(h)}"/>`;
+    const lab = hidL ? "?" : g, lab2 = hidL ? "" : sym, need = Math.max(tw(lab, fs), tw(lab2, fs - 1)) + 8;
+    if (w >= need && h >= (lab2 ? 2.4 : 1.3) * fs + 4) s += T(x + w / 2, y + h / 2 + (lab2 ? -fs * .2 : fs * .35), lab, "hl " + cls, "middle", ` font-size="${fs}"`) + (lab2 ? T(x + w / 2, y + h / 2 + fs * 1.05, lab2, "hs " + cls, "middle", ` font-size="${fs - 1}"`) : "");
+    return s; };
+  o += reg(x0, y0, cut, cut, "gAA", "AA", "p²") + reg(x0 + cut, y0, S - cut, cut, "gAa", "Aa", "pq") + reg(x0, y0 + cut, cut, S - cut, "gAa", "Aa", "pq") + reg(x0 + cut, y0 + cut, S - cut, S - cut, "gaa", "aa", "q²");
+  o += `<rect class="hbox" x="${P(x0)}" y="${P(y0)}" width="${P(S)}" height="${P(S)}"/>`;
+  /* side labels: the gametes */
+  const top = (c, w, s) => w >= tw(s, fs) + 4 ? T(c, y0 - 6, s, "hg", "middle", ` font-size="${fs}"`) : "";
+  o += top(x0 + cut / 2, cut, "A (p)") + top(x0 + cut + (S - cut) / 2, S - cut, "a (q)");
+  const side = (c, h, s) => h >= fs + 4 ? T(x0 - 6, c + fs * .35, s, "hg", "end", ` font-size="${fs}"`) : "";
+  o += side(y0 + cut / 2, cut, "A (p)") + side(y0 + cut + (S - cut) / 2, S - cut, "a (q)");
+  o += T(x0 + S / 2, fs + 2, "Gametes: p and q from each parent", "ttl", "middle", ` font-size="${fs - 1}"`);
+  morph($("hD"), o);
+}
+
+/* ===== View 4: speciation scene ===== */
+const SPV = { h: 300 };
+function spDraw() {
+  const m = B, svg = $("sSvg"), W = Math.max(260, boxW($("sWrap")) - 2), H = SPV.h, fs = FS(), k = m.sstep, r = rnd(7), lab = !(quizOpen() && task.hideSp);
+  setVB(svg, W, H);
+  let o = "";
+  const dot = (x, y, cls) => `<circle class="org ${cls}" cx="${P(x)}" cy="${P(y)}" r="${P(Math.max(4.5, Math.min(W, H) * .018))}"/>`;
+  if (m.sp === "allo") {
+    const wall = k >= 1, cx = W / 2, cw = Math.max(30, W * .09);
+    o += `<rect class="land l1" x="0" y="0" width="${P(W)}" height="${P(H)}"/>`;
+    if (k >= 2) o += `<rect class="land l2" x="${P(cx)}" y="0" width="${P(W - cx)}" height="${P(H)}"/>`;
+    if (wall) o += `<path class="canyon${k >= 5 ? " dry" : ""}" d="M${P(cx - cw / 2)} 0 C${P(cx - cw)} ${P(H * .35)} ${P(cx)} ${P(H * .65)} ${P(cx - cw / 2)} ${P(H)} L${P(cx + cw / 2)} ${P(H)} C${P(cx + cw)} ${P(H * .65)} ${P(cx)} ${P(H * .35)} ${P(cx + cw / 2)} 0 Z"/>`;
+    const n = 36, yT = fs * 2 + 10, yB = H - fs * 2 - 12;
+    for (let i = 0; i < n; i++) {
+      const left = i % 2 === 0, x = left ? 14 + r() * (cx - cw - 28) : cx + cw + 14 + r() * (W - cx - cw - 28), y = yT + r() * (yB - yT), u = r();
+      let cls = u < .5 ? "o1" : "o2";
+      if (k >= 3) cls = left ? (u < .85 ? "o1" : "o2") : (u < .85 ? "o3" : "o2");
+      if (k >= 4) cls = left ? "o1" : "o3";
+      o += dot(x, y, cls);
+    }
+    if (wall && lab) o += T(cx, H - 8, k >= 5 ? "barrier crossed" : "canyon: no gene flow", "spl", "middle", ` font-size="${fs}"`);
+    if (k >= 2 && lab) o += T(cx / 2, fs + 4, "cool, forested", "spl", "middle", ` font-size="${fs}"`) + T(cx + (W - cx) / 2, fs + 4, "dry", "spl", "middle", ` font-size="${fs}"`);
+    if (k >= 5) { const y = H * .5; o += `<path class="nox" d="M${P(cx - cw * 1.3)} ${P(y)}H${P(cx + cw * 1.3)}"/>` + dot(cx - cw * 1.4, y, "o1") + dot(cx + cw * 1.4, y, "o3") + (lab ? T(cx, y - 10, "✗ no fertile offspring", "spl bad", "middle", ` font-size="${fs}"`) : ""); }
+  } else {
+    o += `<rect class="land l1" x="0" y="0" width="${P(W)}" height="${P(H)}"/>`;
+    const cal = k >= 2, calH = cal ? fs * 5.2 + 14 : 0, top = fs + 10, bot = H - calH - fs - 14;
+    const tree = (x, y, s, apple) => `<rect class="trunk" x="${P(x - s * .07)}" y="${P(y + s * .25)}" width="${P(s * .14)}" height="${P(s * .3)}"/><circle class="crown${apple ? " ap" : ""}" cx="${P(x)}" cy="${P(y)}" r="${P(s * .36)}"/>` +
+      (apple ? [[-.2, -.12], [.18, .02], [0, .2], [.2, -.2], [-.12, .12]].map(d => `<circle class="fruit ap" cx="${P(x + d[0] * s)}" cy="${P(y + d[1] * s)}" r="${P(s * .045)}"/>`).join("")
+             : [[-.2, -.15], [.15, 0], [-.02, .17], [.2, -.22], [-.25, .05], [.05, -.1], [-.1, .02]].map(d => `<circle class="fruit hw" cx="${P(x + d[0] * s)}" cy="${P(y + d[1] * s)}" r="${P(s * .025)}"/>`).join(""));
+    const s = Math.min(W * .4, (bot - top) / .62), yb = top + s * .37, xa = W * .27, xb = W * .73, fz = Math.max(4, s * .028);
+    const fly = (x, y, cls) => `<ellipse class="wing" cx="${P(x - fz * .5)}" cy="${P(y - fz * .7)}" rx="${P(fz * .8)}" ry="${P(fz * .45)}"/><ellipse class="wing" cx="${P(x + fz * .5)}" cy="${P(y - fz * .7)}" rx="${P(fz * .8)}" ry="${P(fz * .45)}"/><ellipse class="org ${cls}" cx="${P(x)}" cy="${P(y)}" rx="${P(fz)}" ry="${P(fz * .62)}"/>`;
+    o += tree(xa, yb, s, false);
+    if (k >= 1) o += tree(xb, yb, s, true);
+    if (lab) o += T(xa, yb + s * .55 + fs + 4, "hawthorn", "spl", "middle", ` font-size="${fs}"`) + (k >= 1 ? T(xb, yb + s * .55 + fs + 4, "apple", "spl", "middle", ` font-size="${fs}"`) : "");
+    for (let i = 0; i < 24; i++) {
+      const onA = k >= 1 && i % 3 === 0, cx = onA ? xb : xa, a = r() * Math.PI * 2, d = Math.sqrt(r()) * s * .3, u = r();
+      let cls = "o1"; if (k >= 3) cls = onA ? (u < .8 ? "o3" : "o1") : (u < .85 ? "o1" : "o3"); if (k >= 4 && onA) cls = "o3";
+      o += fly(cx + Math.cos(a) * d, yb + Math.sin(a) * d * .9, cls);
+    }
+    if (cal) {   /* when each group breeds: apple flies emerge and mate a few weeks earlier */
+      const y0 = H - calH, lx = Math.min(W * .3, tw("hawthorn flies", fs) + 16), x0 = lx + 4, x1 = W - 12, mw = (x1 - x0) / 4, M = v => x0 + v * mw;
+      o += `<rect class="calbg" x="4" y="${P(y0 - 4)}" width="${P(W - 8)}" height="${P(calH)}" rx="8"/>`;
+      ["Jun", "Jul", "Aug", "Sep"].forEach((n, i) => { o += `<path class="gr2" d="M${P(M(i))} ${P(y0)}V${P(H - 8)}"/>` + T(M(i) + mw / 2, y0 + fs, n, "tk", "middle", ` font-size="${fs}"`); });
+      const row = (y, a, b, cls, nm) => T(x0 - 6, y + fs * .35, nm, "spl", "end", ` font-size="${fs}"`) + `<rect class="cal ${cls}" x="${P(M(a))}" y="${P(y - fs * .45)}" width="${P(M(b) - M(a))}" height="${P(fs * .9)}" rx="4"/>`;
+      o += row(y0 + fs * 2.5, 2.4, 4, "o1", "hawthorn flies") + row(y0 + fs * 4.1, 1.4, 3, "o3", "apple flies");
+    }
+  }
+  morph($("sD"), o);
+}
+
+/* ===== State ===== */
+const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const reduced = () => !!(reduceMQ && reduceMQ.matches);
+const support = { kw: false, maths: false, graph: false };
+let mode = "demo", level = "", idx = 0, streak = 0;
+const st = {};
+let LEVELS = {};
+let task = { kind: "demo" }, S = {};
+let seedN = 1;
+function freshB(o) {
+  return Object.assign({ scene: "pop", pop: popNew({ N: 50, start: 0.5, sel: "none", str: "strong", mig: false, seed: seedN }),
+    tsel: "stab", tg: 0, tseen: {}, q: 0.3, sp: "allo", sstep: 0 }, o || {});
+}
+function stateFor(t) {
+  const s = t.setup || {}, m = freshB({ scene: s.scene || "pop" });
+  if (s.pop) {
+    const o = s.pop, old = (o.old || []).map(sd => popRun(Object.assign({}, o.o, { seed: sd }), o.gens).pts);
+    m.pop = popRun(Object.assign({}, o.o, { old }), o.gens || 0, o.ev);
+  }
+  if (s.tsel) m.tsel = s.tsel; if (s.tg != null) m.tg = s.tg;
+  if (s.q != null) m.q = s.q;
+  if (s.sp) m.sp = s.sp; if (s.sstep != null) m.sstep = s.sstep;
+  return m;
+}
+let DEMO_B = freshB(), B = DEMO_B;
+
+const PKEY = "ks3tools-progress:alevel-selection-and-hardy-weinberg";
+let DONE = {}; try { DONE = JSON.parse(localStorage.getItem(PKEY) || "{}") || {}; } catch (e) { DONE = {}; }
+function saveDone() { try { localStorage.setItem(PKEY, JSON.stringify(DONE)); } catch (e) {} }
+const qkey = (lv, t) => lv + ":" + t.id;
+function prog() {
+  const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 });
+  p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
+}
+function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
+/* a question is "open" until it has been answered right or its answer shown: anything that would give the answer away
+   (explanations on every view, the H–W values, type names, step titles, key words) stays hidden until then */
+const qDone = () => { const v = DONE[qkey(level, task)]; return v === "solved" || v === "shown"; };
+const quizOpen = () => mode !== "demo" && !!task && task.kind !== "demo" && !qDone();
+
+/* ===== Readouts and controls ===== */
+function note(id, cls, html) { const e = $(id); const c = "mnote" + (cls ? " " + cls : ""); if (e.className !== c) e.className = c; html = html || ""; if (e.innerHTML !== html) e.innerHTML = html; }
+function setHid(id, v) { const e = typeof id === "string" ? $(id) : id; v = !!v; if (e.hidden !== v) e.hidden = v; }
+function setPr(e, v) { v = String(!!v); if (e.getAttribute("aria-pressed") !== v) e.setAttribute("aria-pressed", v); }
+function setSt(b, on) { const e = b.querySelector(".state"), v = on ? "on" : "off"; if (e.textContent !== v) e.textContent = v; }
+function setDis(e, v) { v = !!v; if (e.disabled !== v) e.disabled = v; }
+function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }
+function setHTML(id, v) { const e = $(id); if (e.innerHTML !== v) e.innerHTML = v; }
+const NEUTRAL = "The explanation appears here once you have answered (or pressed Show answer).";
+const MATHS_HID = { eq1: "Equation 1", eq2: "Equation 2" };   // headings that would give the equations away
+const HIDDEN = '<span class="kwh">hidden for this question</span>';
+
+function popText(Pp) {
+  const p = pOf(Pp.ind), ev = Pp.events[Pp.events.length - 1], s = [];
+  if (Pp.gen === 0 && !ev) s.push("Generation 0. Press Next generation ▸: each mouse in the next generation gets two alleles, chosen at random from the parents that breed.");
+  else if (p === 0 || p === 1) s.push(`Allele ${p === 1 ? "a" : "A"} has been lost: every mouse is now ${p === 1 ? "AA" : "aa"} (the population is fixed for ${p === 1 ? "A" : "a"}). Without mutation or migration it can’t come back.`);
+  else if (ev && Pp.gen - ev.g <= 3) s.push(ev.k === "bot" ? "A disaster killed all but 4 mice, at random: a genetic bottleneck. Their alleles, a chance sample, became the whole gene pool, so genetic diversity falls."
+    : "Five mice reached an island and started a new population. Their allele frequencies differed by chance from the mainland’s (dashed line): the founder effect.");
+  else if (Pp.sel === "dark") s.push(p > 0.85 ? "Allele a is now rare but hard to get rid of: most copies are hidden in heterozygous (Aa) mice, which have dark fur, so selection can’t act on them." : "On dark rock, dark mice (AA and Aa) are better camouflaged, so more of them survive and breed: the frequency of A rises (directional selection).");
+  else if (Pp.sel === "pale") s.push("On pale sand, pale mice (aa) survive and breed more, so the frequency of A falls. Selection acts on phenotypes: AA and Aa mice look the same.");
+  else s.push(Pp.N <= 10 ? "No selection, but in only 10 mice chance decides which alleles are passed on (genetic drift): the frequency jumps about and an allele can be lost."
+    : Pp.N <= 50 ? "No selection, but chance still moves the frequency up and down from one generation to the next: genetic drift."
+    : Pp.N < 1000 ? "No selection. In 200 mice drift is weaker than in 10 or 50, but over many generations chance can still move the frequency by 0.1 or more."
+    : "No selection, and in 1000 mice drift is weak: the frequency changes only a little each generation, though over many generations small changes still add up.");
+  if (Pp.mig && !(p === 0 || p === 1)) s.push("Gene flow: migrants pull the frequency towards the mainland’s 0.5.");
+  const b = hwBroken(Pp);
+  s.push(b.length ? "Hardy–Weinberg doesn’t apply: " + b.join(", ") + "." : "Hardy–Weinberg conditions met (large, no selection, no migration).");
+  return s.join(" ");
+}
+function popReadouts() {
+  const m = B, Pp = m.pop, qo = quizOpen(), c = gcount(Pp.ind);
+  setText("roGen", `${Pp.gen} of ${POPC.GMAX}`);
+  setText("roN", Pp.founded ? `${c.n} (island)` : String(c.n));
+  setHTML("roGt", qo && task.hideGt ? HIDDEN : `AA ${c.AA} · Aa ${c.Aa} · aa ${c.aa}`);
+  setHTML("roPop", esc(qo ? NEUTRAL : popText(Pp)));
+  setHTML("popKey", popKey());
+}
+const SEL_TXT = {
+  stab: "Stabilising selection: medium beaks suit the commonest seeds, so both extremes are selected against. The mean stays the same; the curve gets narrower and taller (less variation).",
+  dir: "Directional selection: after a drought only large, hard seeds are left, so birds with deeper beaks survive and breed more. The whole curve moves to the right, generation by generation.",
+  dis: "Disruptive selection: the seeds are mostly very small or very large, so medium beaks are at a disadvantage. Both extremes are favoured and the curve splits into two peaks. This can lead to sympatric speciation.",
+  art: "Artificial selection: breeders choose only the birds with the deepest beaks to breed. The mean moves fast, and the curve narrows: genetic diversity falls because so few individuals breed."
+};
+function selReadouts() {
+  const m = B, qo = quizOpen();
+  setText("roTg", String(m.tg));
+  setHTML("roTt", qo && task.hideSel ? HIDDEN : esc(SELT[m.tsel]));
+  setHTML("roSel", esc(qo ? NEUTRAL : m.tg === 0 ? "Generation 0: the dashed curve. The shaded part shows the birds less likely to survive and breed. Press Next generation ▸." : SEL_TXT[m.tsel]));
+  setHTML("selKey", selKey());
+}
+function hwReadouts() {
+  const m = B, qo = quizOpen(), v = hwVals(m.q), hv = qo, hc = qo && task.hideHWc;
+  setText("qOut", "q = " + fr(m.q));
+  const qi = $("qIn"); if (Math.abs(+qi.value - m.q) > 1e-9) qi.value = m.q; qi.setAttribute("aria-valuetext", "q = " + fr(m.q));
+  const H = '<span class="kwh">hidden</span>';
+  setHTML("roP", hv ? H : fr(v.p)); setHTML("roPP", hv ? H : fr(v.pp)); setHTML("roPQ", hv ? H : fr(v.pq2)); setHTML("roQQ", hv ? H : fr(v.qq));
+  setHTML("roK", hv ? HIDDEN : `AA ${f0(v.pp * 1000)} · Aa ${f0(v.pq2 * 1000)} · aa ${f0(v.qq * 1000)}`);
+  setHTML("roCond", hc ? HIDDEN : esc(HW_COND.join("; ") + "."));
+  document.querySelectorAll("#hwRead .ro:not(#hwCondBox)").forEach(e => setHid(e, qo && task.hideHW));
+}
+function spReadouts() {
+  const m = B, qo = quizOpen(), Sx = SP[m.sp], k = m.sstep, n = Sx.title.length, hs = qo && task.hideSp;
+  setText("roStep", hs ? `${k + 1} of ${n}` : `${k + 1} of ${n}: ${Sx.title[k]}`);
+  setHTML("roSp", esc(qo ? NEUTRAL : Sx.text[k]));
+  setHTML("roMech", hs ? HIDDEN : esc(Sx.mech[k]));
+}
+function syncCtl() {
+  const m = B, Pp = m.pop, end = Pp.gen >= POPC.GMAX;
+  document.querySelectorAll("#sceneTabs button").forEach(b => setPr(b, b.dataset.scene === m.scene));
+  setHid("vPop", m.scene !== "pop"); setHid("vSel", m.scene !== "sel"); setHid("vHw", m.scene !== "hw"); setHid("vSp", m.scene !== "sp");
+  document.querySelectorAll("#selSeg button").forEach(b => setPr(b, b.dataset.sel === Pp.sel));
+  document.querySelectorAll("#strSeg button").forEach(b => setPr(b, b.dataset.str === Pp.str));
+  setHid("strBox", Pp.sel === "none");
+  document.querySelectorAll("#nSeg button").forEach(b => setPr(b, +b.dataset.n === Pp.N));
+  document.querySelectorAll("#stSeg button").forEach(b => setPr(b, Math.abs(+b.dataset.st - Pp.start) < 1e-9));
+  setPr($("migBtn"), Pp.mig); setSt($("migBtn"), Pp.mig); setDis($("migBtn"), Pp.founded);
+  setDis($("pNext"), end); setDis($("pTen"), end); setDis($("pBot"), end); setDis($("pFound"), end || Pp.founded);
+  const hs = quizOpen() && task.hideSel;
+  setHid("tRow", hs); setHid("spRow", quizOpen() && task.hideSp);
+  document.querySelectorAll("#tSeg button").forEach(b => setPr(b, b.dataset.t === m.tsel));
+  setDis($("tNext"), m.tg >= TR.GMAX); setDis($("tAll"), m.tg >= TR.GMAX); setDis($("tReset"), m.tg <= 0);
+  document.querySelectorAll("#spSeg button").forEach(b => setPr(b, b.dataset.sp === m.sp));
+  setDis($("sBack"), m.sstep <= 0); setDis($("sFirst"), m.sstep <= 0); setDis($("sNext"), m.sstep >= SP[m.sp].title.length - 1);
+}
+function renderSupport() {
+  const qo = quizOpen(), hid = qo && task.hideKw ? task.hideKw : [], hg = qo && task.hideGraph ? task.hideGraph : [], hm = qo && task.hideMaths ? task.hideMaths : [];
+  setHTML("supKw", "<p><b>Key words</b></p>" + KW.map(([k, w, d]) => `<p><b>${esc(w)}:</b> ${hid.includes(k) ? HIDDEN : esc(d)}</p>`).join(""));
+  setHTML("supMaths", "<p><b>Maths help</b></p>" + MATHS.map(([k, w, d]) => `<p><b>${esc(hm.includes(k) ? (MATHS_HID[k] || w) : w)}</b>${hm.includes(k) ? ": " + HIDDEN : (k === "way" || k === "cnt" ? ": " : ": ") + esc(d)}</p>`).join(""));
+  setHTML("supGraph", "<p><b>Graph help</b></p>" + GHELP.map(([k, w, d]) => `<p><b>${esc(w)}:</b> ${hg.includes(k) ? HIDDEN : esc(d)}</p>`).join(""));
+  setHid("supKw", !support.kw); setHid("supMaths", !support.maths); setHid("supGraph", !support.graph);
+}
+function renderScene() {
+  if (B.scene === "pop") { popGraph(); popField(); popReadouts(); }
+  else if (B.scene === "sel") { selGraph(); selReadouts(); }
+  else if (B.scene === "hw") { hwDraw(); hwReadouts(); }
+  else { spDraw(); spReadouts(); }
+}
+function renderAll() { syncCtl(); layout(); renderScene(); renderSupport(); if (LAY.fit) { LAY.fit = false; if (fitView()) renderScene(); } else if (sideOver() > 2 && fitView()) renderScene(); if (tourI >= 0) tourPlace(); }
+/* laptops: a longer "What is happening" message after a click can push the side column past the screen; then fit again (the mouse picture shrinks) */
+function sideOver() {
+  if (narrowW() || B.scene !== "pop") return 0;
+  const side = $("vPop").querySelector(".vside"), two = getComputedStyle($("vPop").querySelector(".vgrid")).gridTemplateColumns.split(" ").length > 1;
+  return two ? side.getBoundingClientRect().bottom - $("model").getBoundingClientRect().top - (window.innerHeight - barBottom() - 18) : 0;
+}
+/* laptops and boards: after a change of layout, shrink (or grow) the picture so the whole view ends on the screen */
+function fitView() {
+  if (narrowW()) return false;
+  const id = { pop: "vPop", sel: "vSel", hw: "vHw", sp: "vSp" }[B.scene], v = $(id), room = window.innerHeight - barBottom() - 18, top = $("model").getBoundingClientRect().top;
+  const main = v.querySelector(".vmain"), side = v.querySelector(".vside"), two = getComputedStyle(v.querySelector(".vgrid")).gridTemplateColumns.split(" ").length > 1;
+  const eMain = (main.getBoundingClientRect().bottom - top) - room + (two ? 0 : side.getBoundingClientRect().height + 10);
+  const eSide = two ? (side.getBoundingClientRect().bottom - top) - room : -1e9;
+  if (Math.abs(eMain) < 4 && eSide < 4) return false;
+  if (B.scene === "pop") {
+    if (eSide > 0) FL.h = Math.round(clamp(FL.h - eSide, 90, 260));
+    else if (two && FL.h < 190) FL.h = Math.round(clamp(FL.h - eSide, 90, 190));
+    GR.h = Math.round(clamp(GR.h - eMain, 200, 640)); return true;
+  }
+  if (B.scene === "sel") { TG.h = Math.round(clamp(TG.h - Math.max(eMain, eSide > 0 ? eSide : -1e9), 200, 640)); return true; }
+  if (B.scene === "hw") { HS.h = Math.round(clamp(HS.h - Math.max(eMain, eSide > 0 ? eSide : -1e9), 200, 600)); return true; }
+  SPV.h = Math.round(clamp(SPV.h - Math.max(eMain, eSide > 0 ? eSide : -1e9), 200, 560)); return true;
+}
+function setScene(sc) { B.scene = sc; LAY.key = ""; renderAll(); tourSignal("scene-" + sc); }
+function lockMsg(t) { note("lockNote", "", esc(t || "The model is set for this question. Answer in the panel, or press Show answer.")); clearTimeout(lockMsg.t); lockMsg.t = setTimeout(() => note("lockNote", "", ""), 3200); }
+const locked = () => quizOpen() && task.lock;
+
+/* ===== Layout: picture sizes from the screen (measured on resize and on a change of view, not every frame) ===== */
+const LAY = { key: "" };
+function layout() {
+  const key = [window.innerWidth, window.innerHeight, B.scene].join("|");
+  if (key === LAY.key) return; LAY.key = key; LAY.fit = true;
+  if (narrowW()) { const w = window.innerWidth, ph = phoneW(); GR.h = ph ? (w < 380 ? 228 : 236) : 300; FL.h = ph ? 170 : 200; TG.h = ph ? 250 : 300; HS.h = ph ? Math.min(300, w - 30) : 320; SPV.h = ph ? 250 : 300; LAY.fit = false; }
+}
+
+/* ===== Population controls ===== */
+function popSet(k, v) {
+  if (locked()) return lockMsg();
+  const Pp = B.pop;
+  if (k === "sel" || k === "str") { Pp[k] = v; if (Pp.main) Pp.main[k] = v; }
+  else if (k === "mig") Pp.mig = v;
+  else if (k === "N" || k === "start") {
+    if (Pp.gen === 0 || k === "start") B.pop = popNew(Object.assign(popOpts(Pp), { [k]: v, old: Pp.gen ? keepOld(Pp) : Pp.old }));
+    else { Pp.N = v; if (Pp.main) Pp.main.N = v; }
+  }
+  renderAll(); tourSignal("popset");
+}
+const popOpts = Pp => ({ N: Pp.N, start: Pp.start, sel: Pp.sel, str: Pp.str, mig: Pp.mig, seed: ++seedN });
+const keepOld = Pp => (Pp.old || []).concat([Pp.pts]).slice(-4);
+function popAct(kind) {
+  if (locked()) return lockMsg();
+  const Pp = B.pop;
+  if (kind === "next") popStep(Pp);
+  else if (kind === "ten") for (let i = 0; i < 10; i++) popStep(Pp);
+  else if (kind === "bot") popBottleneck(Pp);
+  else if (kind === "found") popFound(Pp);
+  else if (kind === "new") { if (mode === "demo" && Pp.N <= 10 && Pp.gen >= 10 && Pp.sel === "none") tried(0); B.pop = popNew(Object.assign(popOpts(Pp), { old: Pp.gen ? keepOld(Pp) : Pp.old })); }
+  if (mode === "demo") { if (B.pop.sel === "dark" && B.pop.N >= 200 && B.pop.gen >= 10) tried(1); if (B.pop.events.length) tried(2); }
+  renderAll(); tourSignal("pop-" + kind);
+}
+
+/* ===== Demo: things to try ===== */
+const TRY = ["Population: no selection, 10 mice. Press 10 more ▸ a few times, then New run. Does A always go the same way?",
+  "Choose Favours dark and 200 mice. How does the line change? What happens to allele a when it gets rare?",
+  "Try Bottleneck or Founders, then keep going. What happens to the line?",
+  "Types of selection: run each type. Watch the mean and the width of the curve.",
+  "Hardy–Weinberg: move the slider. When are there more carriers (2pq) than aa mice (q²)?",
+  "Speciation: step through Allopatric, then Sympatric. What stops the two groups interbreeding each time?"];
+const TRIED = [];
+function tried(i) { if (TRIED[i]) return; TRIED[i] = true; renderTry(); }
+function renderTry() { $("tryList").innerHTML = TRY.map((x, i) => `<li${TRIED[i] ? ' class="done"' : ""}>${esc(x)}${TRIED[i] ? '<span class="vh"> (done)</span>' : ""}</li>`).join(""); }
+
+/* ===== Task loading ===== */
+function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function moveSupport() { const a = $("supportArea"); if (mode === "demo") $("demoPanel").appendChild(a); else $("supportSlot").appendChild(a); }
+function loadDemo() {
+  task = { kind: "demo" }; S = {}; B = DEMO_B;
+  document.body.classList.remove("quiz");
+  $("answer").innerHTML = ""; $("stuckNote").textContent = ""; note("lockNote", "", "");
+  LAY.key = ""; moveSupport(); renderAll(); renderTry();
+}
+function freshS() { return { choice: null, order: shuffled(task.options ? task.options.length : 0), shown: false }; }
+const txt = t => typeof t.text === "function" ? t.text(t) : t.text;
+function loadTask() {
+  nqHideEnd();
+  if (mode === "demo") return loadDemo();
+  document.body.classList.add("quiz");
+  const list = LEVELS[level]; task = list[idx];
+  S = freshS();
+  applyTaskModel();
+  $("qmode").textContent = "Knowledge check · " + (level === "easy" ? "Easy" : "Hard");
+  $("qno").textContent = `Question ${idx + 1} of ${list.length}`;
+  $("taskText").textContent = txt(task);
+  moveSupport(); renderAnswer(); hintLabel(); renderDots();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+  const p = prog();
+  $("doneBadge").hidden = !p.solved;
+  if (p.solved || p.revealed) showFinished(p);
+  requestAnimationFrame(keepInView);
+}
+function applyTaskModel() { B = stateFor(task); note("lockNote", "", ""); LAY.key = ""; renderAll(); }
+const selHTML = (id, opts, lab) => `<select class="gsel" id="${id}" aria-label="${esc(lab)}"><option value="">Choose…</option>${shuffled(opts.length).map(i => `<option value="${esc(opts[i])}">${esc(opts[i])}</option>`).join("")}</select>`;
+function renderAnswer() {
+  const a = $("answer"), t = task;
+  if (t.kind === "choice") {
+    a.innerHTML = `<div class="opts" role="group" aria-label="Answer choices">` + S.order.map((i, pos) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="false"><span class="k">${"ABCD"[pos]}</span><span>${esc(t.options[i].t)}</span></button>`).join("") + `</div>`;
+    a.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => { S.choice = +b.dataset.i; a.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
+  } else if (t.kind === "fill") {
+    a.innerHTML = `<ul class="fixl">` + t.items.map((it, i) => `<li>${esc(it.pre)}${selHTML("s" + i, it.opts, "Gap " + (i + 1))}${esc(it.post)}</li>`).join("") + `</ul>`;
+  } else if (t.kind === "num") {
+    a.innerHTML = `<div class="numrow"><label for="numIn">${esc(t.lab || "Answer")}:</label><input id="numIn" type="text" inputmode="decimal" autocomplete="off">${t.unit ? `<span>${esc(t.unit)}</span>` : ""}</div>`;
+    $("numIn").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  }
+}
+function showFinished(p) {
+  setAnswerState(true);
+  msg(p.solved ? "good" : "tip", p.solved ? "<b>✓ You got this one right earlier.</b> Reset this question to try it again."
+                                          : "The answer was shown for this one. Reset this question to try it again."); nqAfter("finished");
+}
+function setAnswerState(instant) {
+  const t = task;
+  if (t.kind === "choice") {
+    const i = t.options.findIndex(o => o.ok); S.choice = i;
+    document.querySelectorAll("#answer .opt").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
+  } else if (t.kind === "fill") t.items.forEach((it, i) => { $("s" + i).value = it.ans; });
+  else if (t.kind === "num") $("numIn").value = numShow(t);
+  revealModel(instant);
+}
+const numShow = t => t.show ? t.show(t.ans()) : String(t.ans());
+function revealModel() { S.shown = true; renderAll(); }
+function renderDots() {
+  const list = LEVELS[level];
+  $("dots").innerHTML = list.map((t, i) => { const v = DONE[qkey(level, t)];
+    return `<button type="button" class="dot-q${i === idx ? " cur" : ""}${v === "solved" ? " ok" : v === "shown" ? " shown" : ""}" data-q="${i}" aria-label="Question ${i + 1}${v === "solved" ? ", completed" : v === "shown" ? ", answer shown" : ""}"${i === idx ? ' aria-current="true"' : ""}>${v === "solved" ? "✓" : i + 1}</button>`; }).join("");
+  $("dots").querySelectorAll(".dot-q").forEach(b => b.addEventListener("click", () => { idx = +b.dataset.q; loadTask(); }));
+}
+
+/* ===== Support (all off on load, never stored) ===== */
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.support; support[k] = !support[k];
+  b.setAttribute("aria-pressed", String(support[k])); b.querySelector(".state").textContent = support[k] ? "on" : "off";
+  renderSupport(); tourSignal("support"); requestAnimationFrame(keepInView);
+}));
+
+/* ===== Marking ===== */
+const num = s => { s = String(s).trim().replace(/\s/g, "").replace(/[−–]/g, "-").replace(/^\+/, "").replace(/,/g, ".").replace(/(%|mm|mice)$/i, ""); return s === "" || isNaN(+s) ? null : +s; };
+function evaluate() {
+  const t = task;
+  if (t.kind === "choice") {
+    if (S.choice == null) return { skip: "Choose an answer first." };
+    const o = t.options[S.choice];
+    return o.ok ? { ok: true, html: esc("Correct. " + t.explain) } : { ok: false, html: esc(o.why) };
+  }
+  if (t.kind === "fill") {
+    const vals = t.items.map((_, i) => $("s" + i).value);
+    if (vals.some(v => !v)) return { skip: "Choose an answer for every gap first." };
+    const wrong = t.items.map((it, i) => vals[i] !== it.ans ? i : -1).filter(i => i >= 0);
+    if (!wrong.length) return { ok: true, html: esc("Correct. " + t.explain) };
+    return { ok: false, html: `${t.items.length - wrong.length} of ${t.items.length} right. ` + esc(t.items[wrong[0]].why[vals[wrong[0]]]) };
+  }
+  if (t.kind === "num") {
+    const v = num($("numIn").value), a = t.ans(), tol = t.tol;
+    if (v == null) return { skip: "Type a number first." };
+    if (Math.abs(v - a) <= tol) return { ok: true, html: esc(t.right(a)) };
+    const w = t.wrongs().find(x => Math.abs(x[0] - v) <= slipWin(t, x[0]));
+    return { ok: false, html: esc(w ? w[1] : t.generic) };
+  }
+  return { skip: "" };
+}
+const slipWin = (t, x) => Math.max(t.tol, Math.abs(x) * 0.02);
+function msgStuck() {
+  const t = task;
+  if (t.kind === "num") return t.sup === "graph" ? (support.graph ? "" : "Stuck? Turn on <b>Graph help</b> under Support.") : (support.maths ? "" : "Stuck? Turn on <b>Maths help</b> under Support.");
+  return support.kw ? "" : "Stuck? Turn on <b>Key words</b> under Support.";
+}
+function bump() { nqScore(); $("sStreak").textContent = streak; }
+function check() {
+  const p = prog();
+  if (p.solved || p.revealed) { msg("tip", "This question is finished. Reset this question to try it again."); nqAfter("finished"); return; }
+  const r = evaluate();
+  if (r.skip) { msg("tip", esc(r.skip)); return; }
+  if (r.ok) {
+    mark(qkey(level, task), "solved"); p.solved = true;
+    if (!p.wrong && !p.hints) streak++;
+    bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
+    $("doneBadge").hidden = false; renderDots();
+    document.querySelectorAll("#answer .opt[aria-pressed='true']").forEach(b => b.classList.add("done-ok"));
+    revealModel(false);
+  } else {
+    p.wrong++; nqMiss(); streak = 0; bump();
+    msg("bad", "<b>✗ Not quite.</b> " + r.html);
+    $("stuckNote").innerHTML = msgStuck();
+  }
+}
+const hintsFor = t => t.hints.map(h => typeof h === "function" ? h(t) : h);
+function hintLabel() { const n = prog().hints; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
+function hint() {
+  const p = prog(), hs = hintsFor(task);
+  if (p.hints < 3) p.hints++; nqMiss();
+  msg("tip", `<b>Hint ${p.hints} of 3:</b> ${esc(hs[p.hints - 1])}`); hintLabel();
+}
+function answerText(t) {
+  if (t.kind === "choice") return "Answer: " + t.options.find(o => o.ok).t.replace(/\.$/, "") + ". " + t.explain;
+  if (t.kind === "fill") return "Answer: " + t.items.map(it => it.pre + it.ans + it.post).join(" ");
+  if (t.kind === "num") return "Answer: " + t.right(t.ans()).replace(/^Correct\. /, "");
+  return "";
+}
+function reveal() {
+  const p = prog();
+  if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  setAnswerState(false);
+  msg("tip", esc(answerText(task)) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
+}
+function resetTask() {
+  if (mode === "demo") return loadDemo();
+  delete DONE[qkey(level, task)]; saveDone(); nqForget(qkey(level, task)); delete st[qkey(level, task)]; bump();
+  S = freshS();
+  $("doneBadge").hidden = true; renderDots(); hintLabel();
+  applyTaskModel(); renderAnswer();
+  $("fb").innerHTML = ""; $("stuckNote").textContent = "";
+}
+
+/* ===== Controls ===== */
+$("sceneTabs").addEventListener("click", e => { const b = e.target.closest("button[data-scene]"); if (b) setScene(b.dataset.scene); });
+$("selSeg").addEventListener("click", e => { const b = e.target.closest("button[data-sel]"); if (b) popSet("sel", b.dataset.sel); });
+$("strSeg").addEventListener("click", e => { const b = e.target.closest("button[data-str]"); if (b) popSet("str", b.dataset.str); });
+$("nSeg").addEventListener("click", e => { const b = e.target.closest("button[data-n]"); if (b) popSet("N", +b.dataset.n); });
+$("stSeg").addEventListener("click", e => { const b = e.target.closest("button[data-st]"); if (b) popSet("start", +b.dataset.st); });
+$("migBtn").addEventListener("click", () => popSet("mig", !B.pop.mig));
+$("pNext").addEventListener("click", () => popAct("next"));
+$("pTen").addEventListener("click", () => popAct("ten"));
+$("pBot").addEventListener("click", () => popAct("bot"));
+$("pFound").addEventListener("click", () => popAct("found"));
+$("pNew").addEventListener("click", () => popAct("new"));
+function selAct(f) {
+  if (locked()) return lockMsg();
+  f(); if (mode === "demo" && B.tg > 0) { B.tseen[B.tsel] = 1; if (Object.keys(B.tseen).length >= 3) tried(3); }
+  renderAll(); tourSignal("sel");
+}
+$("tSeg").addEventListener("click", e => { const b = e.target.closest("button[data-t]"); if (b) selAct(() => { if (B.tsel !== b.dataset.t) { B.tsel = b.dataset.t; B.tg = 0; } }); });
+$("tNext").addEventListener("click", () => selAct(() => { if (B.tg < TR.GMAX) B.tg++; }));
+$("tAll").addEventListener("click", () => selAct(() => { B.tg = TR.GMAX; }));
+$("tReset").addEventListener("click", () => selAct(() => { B.tg = 0; }));
+$("qIn").addEventListener("input", () => { if (locked()) { $("qIn").value = B.q; return lockMsg(); } B.q = Math.round(+$("qIn").value * 20) / 20; if (mode === "demo") tried(4); hwDraw(); hwReadouts(); tourSignal("q"); });
+function spAct(f) { if (locked()) return lockMsg(); f(); if (mode === "demo" && B.sp === "sym" && B.sstep >= SP.sym.title.length - 1) tried(5); renderAll(); tourSignal("sp"); }
+$("spSeg").addEventListener("click", e => { const b = e.target.closest("button[data-sp]"); if (b) spAct(() => { if (B.sp !== b.dataset.sp) { B.sp = b.dataset.sp; B.sstep = 0; } }); });
+$("sNext").addEventListener("click", () => spAct(() => { if (B.sstep < SP[B.sp].title.length - 1) B.sstep++; }));
+$("sBack").addEventListener("click", () => spAct(() => { if (B.sstep > 0) B.sstep--; }));
+$("sFirst").addEventListener("click", () => spAct(() => { B.sstep = 0; }));
+/* ===== Instructions: a guided tour of each control. "do" steps wait until the pupil has done it. ===== */
+const TOUR = [
+  { el: "#sceneTabs", text: "Four views: a population of mice, types of selection, the Hardy–Weinberg equations and speciation." },
+  { el: "#gWrap", scene: "pop", text: "The graph shows the frequency of allele A (dark fur) in each generation. No values are printed: you read the graph yourself." },
+  { el: "#popPlay", scene: "pop", text: "Breed the next generations. Bottleneck and Founders make the population tiny for one generation.", do: "pop-ten", doText: "Press 10 more ▸." },
+  { el: "#fWrap", scene: "pop", text: "Each circle is a mouse. Its colour is its phenotype; the two dots inside are its two alleles (in a big population the dots are too small to show)." },
+  { el: "#popRow1", scene: "pop", text: "Choose the selection, the population size, the starting frequency of A and migration. Small populations show genetic drift.", do: "popset", doText: "Change a setting." },
+  { el: "#sceneTabs", text: "Now the types of selection.", do: "scene-sel", doText: "Press Types of selection." },
+  { el: "#tPlay", scene: "sel", text: "Choose a type above, then run the generations. Compare the solid curve with the dashed one: the peak (mean) and the width.", do: "sel", doText: "Press Next generation ▸." },
+  { el: "#sceneTabs", text: "Next: the Hardy–Weinberg equations.", do: "scene-hw", doText: "Press Hardy–Weinberg." },
+  { el: "#qRow", scene: "hw", text: "Set q, the frequency of allele a. The square’s sides are the allele frequencies; its areas are the genotype frequencies.", do: "q", doText: "Move the slider." },
+  { el: "#sceneTabs", text: "Last view: how new species form.", do: "scene-sp", doText: "Press Speciation." },
+  { el: "#spPlay", scene: "sp", text: "Step through allopatric speciation, then switch to sympatric.", do: "sp", doText: "Press Next step ▸." },
+  { el: ".kc", text: "Support switches (Key words, Maths help, Graph help) start off. When you are ready, test yourself: start with Easy." }
+];
+let tourI = -1, tourWait = null, tourTimer = 0;
+function tourStart() {
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "tour")));
+  try { localStorage.setItem("ks3tools-toured:alevel-selection-and-hardy-weinberg", "1"); } catch (e) {}
+  DEMO_B = freshB(); loadDemo();
+  $("newHere").hidden = true; tourGo(0);
+}
+function keepInView(again) {
+  const q = $("qpanel"), tt = $("taskText"), fbx = $("fb");
+  if (mode === "demo" || !tt.getClientRects().length) return;
+  const barH = Math.max(0, $("topbar").getBoundingClientRect().bottom);
+  if (window.innerWidth > 900) {
+    const stick = parseFloat(getComputedStyle(q).top) || 72, gap = q.getBoundingClientRect().top - stick;
+    if (gap > 1 && again !== true) { window.scrollBy({ top: gap, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => keepInView(true), 450); }
+    fitPanel();
+    q.style.maxHeight = Math.max(320, window.innerHeight - stick - 12) + "px";
+    const qr = q.getBoundingClientRect(), s0 = q.scrollTop;
+    const ttTop = tt.getBoundingClientRect().top - qr.top - q.clientTop + s0;
+    const fbBot = fbx.innerHTML ? fbx.getBoundingClientRect().bottom - qr.top - q.clientTop + s0 : 0;
+    const fbTop = fbx.innerHTML ? fbx.getBoundingClientRect().top - qr.top - q.clientTop + s0 : 0;
+    /* the message comes first: show its bottom, but never scroll past its top; with room to spare, keep the question in view */
+    q.scrollTop = Math.max(0, fbx.innerHTML ? Math.min(Math.max(fbBot - q.clientHeight + 8, Math.min(ttTop - 8, fbTop - 8)), fbTop - 8) : ttTop - 8);
+  } else if (fbx.innerHTML) {
+    const act = q.querySelector(".actions"), actH = act ? act.getBoundingClientRect().height : 0;
+    const want = fbx.getBoundingClientRect().bottom - (window.innerHeight - actH) + 8, lim = Math.max(tt.getBoundingClientRect().top, fbx.getBoundingClientRect().top - (window.innerHeight - actH - barH) / 2) - barH - 8;
+    const d = Math.min(want, lim); if (d > 0) window.scrollBy({ top: d, behavior: reduced() ? "auto" : "smooth" });
+  }
+}
+function msg(cls, html) { $("fb").innerHTML = `<div class="msg ${cls}">${html}</div>`; requestAnimationFrame(keepInView); }
+function tourEnd() {
+  if (tourI < 0) return;
+  clearTimeout(tourTimer); tourI = -1; tourWait = null; $("tour").hidden = true;
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === "demo")));
+}
+function tourGo(i) {
+  if (i >= TOUR.length) { tourEnd(); return; }
+  tourI = i; const st = TOUR[i];
+  if (st.scene && mode === "demo" && B.scene !== st.scene) { B.scene = st.scene; LAY.key = ""; renderAll(); }
+  const el = document.querySelector(st.el);
+  if (!el || !el.getClientRects().length) { tourGo(i + 1); return; }   // skip a control that isn't showing
+  document.querySelectorAll(".tour-target").forEach(e => e.classList.remove("tour-target"));
+  el.classList.add("tour-target");
+  $("tourStep").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("tourText").textContent = st.text;
+  tourWait = st.do || null;
+  $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
+  $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
+  $("tour").hidden = false;
+  el.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  tourPlace(); setTimeout(tourPlace, 350);
+  $("tourNext").focus({ preventScroll: true });
+}
+function tourPlace() {
+  if (tourI < 0) return;
+  const el = document.querySelector(TOUR[tourI].el); if (!el) return;
+  const r = el.getBoundingClientRect(), box = $("tour"), w = box.offsetWidth, h = box.offsetHeight, sx = window.scrollX, sy = window.scrollY;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const minTop = Math.max(0, $("topbar").getBoundingClientRect().bottom) + 8, maxBot = vh - 8;
+  const fitsBelow = r.bottom + 14 + h <= maxBot, fitsAbove = r.top - 14 - h >= minTop;
+  const ar = $("tourArrow"); let left, top, side;
+  if (!fitsBelow && !fitsAbove && vw > 900 && (r.left - w - 16 >= 8 || r.right + w + 16 <= vw - 8)) {
+    side = r.left - w - 16 >= 8 ? "right" : "left";
+    left = side === "right" ? r.left - w - 16 : r.right + 16;
+    top = (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - h / 2;
+  } else {
+    side = fitsBelow || (!fitsAbove && vh - r.bottom >= r.top) ? "up" : "down";
+    left = r.left + r.width / 2 - w / 2;
+    top = side === "up" ? r.bottom + 14 : r.top - h - 14;
+  }
+  left = Math.min(Math.max(8, left), vw - w - 8);
+  top = Math.max(minTop, Math.min(top, maxBot - h));
+  box.style.left = (left + sx) + "px"; box.style.top = (top + sy) + "px";
+  const overlap = left < r.right && left + w > r.left && top < r.bottom && top + h > r.top;
+  ar.hidden = overlap; ar.className = "tour-arrow " + side;
+  if (side === "up" || side === "down") { ar.style.top = ""; ar.style.left = Math.min(Math.max(14, r.left + r.width / 2 - left - 8), w - 30) + "px"; }
+  else { ar.style.left = ""; ar.style.top = Math.min(Math.max(14, (Math.max(r.top, minTop) + Math.min(r.bottom, maxBot)) / 2 - top - 8), h - 30) + "px"; }
+}
+function tourSignal(name) {
+  if (tourI < 0 || tourWait !== name) return;
+  tourWait = null; $("tourDo").className = "tour-do ok"; $("tourDo").textContent = "✓ Well done!";
+  clearTimeout(tourTimer); tourTimer = setTimeout(() => tourGo(tourI + 1), 1100);
+}
+$("tourNext").addEventListener("click", () => tourGo(tourI + 1));
+$("tourSkip").addEventListener("click", tourEnd);
+document.addEventListener("keydown", e => { if (e.key === "Escape") tourEnd(); });
+window.addEventListener("resize", tourPlace); window.addEventListener("scroll", tourPlace, { passive: true });
+function fitPanel() {
+  const q = $("qpanel");
+  if (window.innerWidth <= 900) { q.style.maxHeight = ""; return; }
+  const top = Math.max(72, q.getBoundingClientRect().top);
+  q.style.maxHeight = Math.max(320, window.innerHeight - top - 12) + "px";
+}
+window.addEventListener("scroll", fitPanel, { passive: true }); window.addEventListener("resize", fitPanel);
+
+/* ===== Wiring ===== */
+$("toQuiz").addEventListener("click", () => setMode("easy"));
+$("resetProg").addEventListener("click", function confirmStep() {
+  $("resetAll").innerHTML = 'Clear every tick? <button class="linkbtn warn" type="button" id="rpYes">Yes, reset</button> <button class="linkbtn" type="button" id="rpNo">Cancel</button>';
+  const back = () => { $("resetAll").innerHTML = '<button class="linkbtn" type="button" id="resetProg">Reset progress</button>'; $("resetProg").addEventListener("click", confirmStep); };
+  $("rpYes").addEventListener("click", () => { DONE = {}; saveDone(); nqForget(); for (const k in st) delete st[k]; streak = 0; bump(); back(); loadTask(); msg("tip", "Progress reset. Every question is fresh again."); });
+  $("rpNo").addEventListener("click", back);
+});
+$("check").addEventListener("click", check);
+$("hint").addEventListener("click", hint);
+$("reset").addEventListener("click", resetTask);
+$("reveal").addEventListener("click", reveal);
+function setMode(m) {
+  if (m === "easy" || m === "hard") bankNow();
+  if (m === "tour") { if (mode !== "demo") setMode("demo"); tourStart(); return; }
+  tourEnd();
+  mode = m === "demo" ? "demo" : "quiz";
+  if (m !== "demo") { if (level !== m) idx = firstOpen(m); level = m; }
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
+  $("demoPanel").hidden = mode !== "demo"; $("quizPanel").hidden = mode === "demo";
+  loadTask(); nqMode();
+}
+const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]); return i < 0 ? 0 : i; };
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+if (window.IntersectionObserver) {
+  new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
+}
+/* re-read the colour tokens when the theme changes, then redraw */
+const reTheme = () => { readTokens(); renderScene(); };
+new MutationObserver(reTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", reTheme); }
+let rsT;
+window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { LAY.key = ""; renderAll(); }, 80); });
+
+readTokens();
+LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // at most 10 questions per level
+function bankRun() {   // the question-bank check, run after the first paint (bankLater)
+  const errs = bankCheck();
+  if (!errs.length) return;
+  const e = $("bankErr"); e.hidden = false;
+  e.innerHTML = "<b>Question bank error.</b> These questions have been switched off:<ul>" + errs.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  for (const lv of Object.keys(TASKS)) TASKS[lv] = TASKS[lv].filter((t, i) => !errs.some(x => x.startsWith(lv + " task " + (i + 1) + ":")));
+  LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
+  if (mode !== "demo") { idx = Math.min(idx, LEVELS[level].length - 1); loadTask(); }
+  bump();
+}
+bankLater(); nqTryFold();
+bump(); setMode("demo"); fitPanel();
+try { if (localStorage.getItem("ks3tools-toured:alevel-selection-and-hardy-weinberg")) $("newHere").hidden = true; } catch (e) {}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { readTokens(); LAY.key = ""; renderAll(); });
+
+/* ===== Speed on slow school PCs (Dan, 12 Oct 2026) =====
+   paceFrame(cb) works like requestAnimationFrame, but animations are drawn at most 30 times a second, and fewer
+   (down to 8) if drawing keeps the PC busy for too much of each second (a quiet safety net: it times each frame,
+   including the browser's own drawing, and steps back up when there is room). Motion is time-based, so speeds don't change.
+   morph(el, html) patches the picture in place (only the parts that changed are touched) instead of rebuilding it. */
+function paceFrame(cb) {
+  const P = paceFrame.s || (paceFrame.s = { fps: [30, 20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, live: new Set(), seq: 0, mc: null });
+  const cap = paceFrame.cap ? paceFrame.cap() : 30, bud = paceFrame.budget || .4;   // optional per-tool frame cap and busy budget
+  while (P.i < P.fps.length - 1 && P.fps[P.i] > cap) P.i++;
+  const id = ++P.seq, gap = () => 1000 / P.fps[P.i]; P.live.add(id);
+  const go = () => requestAnimationFrame(now => {
+    if (!P.live.has(id)) return;
+    if (P.last && now - P.last < gap() - 10) { go(); return; }   // frame cap
+    P.live.delete(id);
+    if (P.last && now - P.last < 250) P.act += now - P.last;   // time spent animating (pauses between animations don't count)
+    if (P.act >= 600) {   // every 0.6 s of animation: share of that time spent drawing → set the frame rate down (or one step up)
+      const share = P.busy / P.act, f = P.fps[P.i];
+      if (share > bud || P.busy / Math.max(1, P.n) > 40) {   // over budget (40 % of the time by default), or frames over 40 ms: aim a little under it
+        let j = P.i; while (j < P.fps.length - 1 && P.fps[j] > f * bud * .875 / share) j++; P.i = Math.max(P.i + 1, j); P.i = Math.min(P.i, P.fps.length - 1);
+      } else if (share < bud * .375 && P.i > 0 && P.fps[P.i - 1] <= cap) P.i--;
+      P.busy = P.n = P.act = 0;
+    }
+    P.last = now; P.n++; const a = performance.now();
+    cb(now);
+    /* a message posted now is handled once this frame (script, layout, paint) is done: that gap is the frame's cost */
+    if (!P.mc && window.MessageChannel) { P.mc = new MessageChannel(); P.mc.port1.onmessage = e => { P.busy += performance.now() - e.data; }; }
+    if (P.mc) P.mc.port2.postMessage(a);
+  });
+  const wait = P.last ? P.last + gap() - 8 - performance.now() : 0;   // ask for the frame only when it is nearly due
+  if (wait > 0) setTimeout(go, wait); else go();
+  return id;
+}
+function paceCancel(id) { if (paceFrame.s) paceFrame.s.live.delete(id); }
+function morph(el, html) {
+  const t = morph.t || (morph.t = document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  t.innerHTML = html; morphKids(el, t);
+}
+function morphKids(a, b) {
+  let x = a.firstChild, y = b.firstChild;
+  while (y) {
+    const ny = y.nextSibling;
+    if (!x) a.appendChild(y);
+    else if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { a.replaceChild(y, x); x = y.nextSibling; }
+    else {
+      if (x.nodeType === 1) {
+        const ya = y.attributes, xa = x.attributes;
+        for (let i = 0; i < ya.length; i++) { const at = ya[i]; if (x.getAttributeNS(at.namespaceURI, at.localName) !== at.value) x.setAttributeNS(at.namespaceURI, at.name, at.value); }
+        for (let i = xa.length - 1; i >= 0; i--) { const at = xa[i]; if (!y.hasAttributeNS(at.namespaceURI, at.localName)) x.removeAttributeNS(at.namespaceURI, at.localName); }
+        morphKids(x, y);
+      } else if (x.data !== y.data) x.data = y.data;
+      x = x.nextSibling;
+    }
+    y = ny;
+  }
+  while (x) { const nx = x.nextSibling; a.removeChild(x); x = nx; }
+}
+function setAttr(el, name, value) { value = String(value); if (el.getAttribute(name) !== value) el.setAttribute(name, value); }   // only touch it when it changes
+function boxW(el) {   // an element's width, read once and kept until it changes (reading it every frame forces a slow re-layout)
+  const c = boxW.c || (boxW.c = new Map()); let e = c.get(el);
+  if (!e) { e = { w: null, iw: 0 }; c.set(el, e); if (window.ResizeObserver) new ResizeObserver(() => { e.w = null; }).observe(el); else e.ro = false; }
+  if (e.w == null || e.iw !== window.innerWidth || e.ro === false) { e.w = el.getBoundingClientRect().width; e.iw = window.innerWidth; }
+  return e.w;
+}
+/* == shared: next-question v4 == (Pilot 14 Nov 2026; v2 after review, v3 after the rollout reviews, 14 Nov 2026; v4 16 Nov 2026)
+   Next question button after a right answer or Show answer, an end-of-level card, and an honest score out of N.
+   Uses the tool's own: mode, level, idx, LEVELS, DONE, PKEY, qkey(), loadTask(), setMode(), saveDone(), $(); task (a variable
+   or a function); feedback box #fb or #feedback; dots .dots inside #quizPanel. Optional, read with typeof so a missing one
+   can never throw: prog(), st, bump(). Per tool (written by port_shared.py in the tool block): nqFoundOut(lv) (the two
+   "What you found out" lines) and the adapters nqResetQ(lv, t) (forget one question's working state), nqBump() (redraw
+   the chips) and nqLoad() (open the current question), when the tool's names differ from the shell's.
+   Right first time (no hint, no wrong try, no Show answer) is kept under its own key, "ks3tools-firsttry:<tool>":
+   1 = right first time, "x" = not. The progress key is not changed. Only current question ids are counted. Questions
+   solved before this was tracked have no record: they are reported as "not tracked", never as wrong.
+   v3: after a right answer or Show answer the feedback and Next are scrolled into view (nqReveal); the sticky question
+   panel sits under the bar's real bottom edge and never slides under it at the page bottom (nqBar, nqStick); KS3 wording
+   for partly tracked progress.
+   v4: any later write to the feedback box of a finished question (Hint, Check, a tool message) keeps the Next button
+   (nqFbWatch); on phones (<= 600 px wide) level descriptors in the feedback fold into a closed "Show mark scheme" (nqMsFold);
+   on phones nqReveal also brings the top of the feedback back into view when it and Next fit but the top was pushed up. */
+var NQ_S = null;
+function nqStore() {
+  if (!NQ_S) { NQ_S = { key: PKEY.replace("ks3tools-progress:", "ks3tools-firsttry:"), rft: {} };
+    try { NQ_S.rft = JSON.parse(localStorage.getItem(NQ_S.key) || "{}") || {}; } catch (e) { NQ_S.rft = {}; } }
+  return NQ_S;
+}
+function nqSave() { const s = nqStore(); try { localStorage.setItem(s.key, JSON.stringify(s.rft)); } catch (e) {} }
+function nqName(lv) { return lv === "hard" ? "Hard" : "Easy"; }
+function nqT() {   // the open question: task is a variable in most tools, a function in a few; older tools use currentTask(), curTask() or cur
+  if (typeof nqTask === "function") return nqTask();   // a tool adapter, if its accessor has another name
+  if (typeof currentTask === "function") return currentTask();
+  if (typeof curTask === "function") return curTask();
+  if (typeof task !== "undefined") return typeof task === "function" ? task() : task;
+  if (typeof cur !== "undefined") return typeof cur === "function" ? cur() : cur;
+  return null;
+}
+function nqFbEl() { return $("fb") || $("feedback"); }
+function nqDotsEl() { const q = $("quizPanel"); return (q && q.querySelector(".dots")) || $("dots"); }
+function nqDoBump() { if (typeof nqBump === "function") nqBump(); else if (typeof bump === "function") bump(); nqScore(); }
+function nqDoLoad() { if (typeof nqLoad === "function") nqLoad(); else loadTask(); }
+function nqIsDone(lv, t) { const v = DONE[qkey(lv, t)]; return v === "solved" || v === "shown"; }
+function nqMiss() {   // a hint or a wrong try: this question can't be right first time any more
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const s = nqStore(), k = qkey(level, t); if (s.rft[k] !== "x" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+}
+function nqForget(k) { const s = nqStore(); if (k) delete s.rft[k]; else s.rft = {}; nqSave(); }
+function nqStats(lv) {   // first = right first time; tracked = solved questions that have a first-try record
+  const L = LEVELS[lv] || [], s = nqStore(), shown = []; let solved = 0, first = 0, tracked = 0;
+  L.forEach((t, i) => { const k = qkey(lv, t), v = DONE[k];
+    if (v === "solved") { solved++; if (s.rft[k] === 1) { first++; tracked++; } else if (s.rft[k] === "x") tracked++; }
+    else if (v === "shown") shown.push(i + 1); });
+  return { n: L.length, solved, first, tracked, untracked: solved - tracked, shown, done: L.length > 0 && L.every(t => nqIsDone(lv, t)) };
+}
+function nqNext(lv, from) { const L = LEVELS[lv] || []; for (let j = 1; j <= L.length; j++) { const i = (from + j) % L.length; if (!nqIsDone(lv, L[i])) return i; } return -1; }
+function nqScore() {   // the score chip: right answers out of the questions in the current level
+  const e = $("sScore"); if (!e) return;
+  const lv = LEVELS[level] ? level : "easy", s = nqStats(lv), t = s.solved + " / " + s.n;
+  if (e.textContent !== t) e.textContent = t;
+  const c = e.closest(".chip"); if (c) { c.title = `Questions right in ${nqName(lv)} (out of ${s.n})`; c.setAttribute("aria-label", `Score: ${s.solved} out of ${s.n} right in ${nqName(lv)}`); }
+}
+function nqAfter(kind) {   // kind: "right" (just got it right), "shown" (Show answer), "finished" (opened a question that is done)
+  const t = nqT(); if (mode === "demo" || !t) return;
+  const k = qkey(level, t), s = nqStore();
+  if (kind === "right") { let p = null; try { p = typeof prog === "function" ? prog() : null; } catch (e) {}
+    s.rft[k] = s.rft[k] !== "x" && !(p && (p.wrong || p.hints)) ? 1 : "x"; nqSave(); }
+  if (kind === "shown" && DONE[k] !== "solved") { s.rft[k] = "x"; nqSave(); }
+  nqScore();
+  if (!nqIsDone(level, t)) return;   // only a finished question gets the Next button
+  const nx = nqNext(level, idx), fb = nqFbEl(); if (!fb) return;
+  const box = fb.querySelector(".msg:last-of-type") || fb;
+  const old = fb.querySelector(".nq-row"); if (old) old.remove();
+  const row = document.createElement("div"), b = document.createElement("button");
+  row.className = "nq-row"; b.type = "button"; b.className = "btn primary nq-next";
+  b.textContent = nx < 0 ? `See your ${nqName(level)} score →` : "Next question →";
+  b.addEventListener("click", nqGo);
+  row.appendChild(b); box.appendChild(row);
+  if (kind !== "finished") { const a = document.activeElement; if (!a || a === document.body || a.closest("#quizPanel")) b.focus({ preventScroll: true }); nqReveal(row); }
+  nqStickSoon();
+}
+function nqReduced() { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+/* Scroll just enough that the feedback's Next row is on screen. Runs once the tool's own keep-the-question-at-top script has
+   finished (it settles within ~450 ms, or ~30 ms with reduced motion), so the two never fight; the question text may scroll
+   off the top if the feedback is long. Focus is not moved (Next already has it). Smooth unless reduced motion is on.
+   Absolute scrollTo, not scrollBy: Chrome adds a scrollBy to a smooth scroll still running, which would overshoot. */
+function nqReveal(row) {
+  const go = () => {
+    if (!row.isConnected || mode === "demo") return;
+    const how = nqReduced() ? "auto" : "smooth", tb = $("topbar"), r = row.getBoundingClientRect();
+    const q = row.closest(".qpanel"), sticky = q && window.innerWidth > 900 && getComputedStyle(q).position === "sticky";
+    let d;
+    if (sticky) {
+      const qr = q.getBoundingClientRect(), cb = qr.top + q.clientTop + q.clientHeight;
+      d = r.bottom + 10 - Math.min(cb, innerHeight);
+      const room = q.scrollHeight - q.clientHeight - q.scrollTop;
+      if (d > 0 && room > 0) { const k = Math.min(d, room); q.scrollTo({ top: q.scrollTop + k, behavior: how }); d -= k; }
+      if (d > 0 && qr.bottom > innerHeight) window.scrollTo({ top: scrollY + Math.min(d, qr.bottom - innerHeight + 8), behavior: how });
+    } else {
+      let lim = innerHeight;   // a sticky action bar that comes after the feedback would cover the bottom of the screen
+      const act = q && q.querySelector(".actions"), ast = act && /sticky|fixed/.test(getComputedStyle(act).position);
+      let bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0;
+      if (ast && (act.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)) lim -= act.getBoundingClientRect().height;
+      else if (ast) { const ar = act.getBoundingClientRect(); if (ar.top < innerHeight / 2) bar = Math.max(bar, ar.bottom); }   // v4: one stuck at the top covers the top
+      d = r.bottom + 10 - lim;
+      if (d > 0) window.scrollTo({ top: scrollY + Math.min(d, Math.max(0, r.top - bar - 8)), behavior: how });   // never past the bar
+      else {   // v4: Next is on screen but the top of the feedback is hidden (the browser's scroll anchoring can push it up when
+        // the box grows): if the whole message and Next fit, bring its top back into view
+        const m = (row.closest(".msg") || nqFbEl() || row).getBoundingClientRect();
+        if (m.top < bar && r.bottom - m.top + 18 <= lim - bar) window.scrollTo({ top: Math.max(0, scrollY - (bar + 8 - m.top)), behavior: how });
+      }
+    }
+  };
+  setTimeout(() => requestAnimationFrame(go), nqReduced() ? 90 : 520);
+}
+function nqFocusQ() { const tt = $("taskText"); if (tt) { tt.tabIndex = -1; tt.focus({ preventScroll: true }); } }
+function nqGo() {
+  const nx = nqNext(level, idx);
+  if (nx < 0) { nqShowEnd(); return; }
+  idx = nx; nqDoLoad(); nqFocusQ(); nqToQ();
+}
+function nqToQ() {   // phones: after Next the new question starts at the top of the screen (the page may have been scrolled down to Next)
+  if (window.innerWidth > 900) return;
+  const tt = $("taskText"), d = nqDotsEl(), tb = $("topbar"); if (!tt) return;
+  const bar = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, t = tt.getBoundingClientRect().top;
+  if (t >= bar + 4 && t <= innerHeight * .5) return;
+  const el = d && d.getClientRects().length && t - d.getBoundingClientRect().top < innerHeight * .4 ? d : tt;
+  window.scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - bar - 10), behavior: nqReduced() ? "auto" : "smooth" });
+}
+function nqHideEnd() { const q = $("quizPanel"); if (q) q.classList.remove("nq-ended"); const e = $("nqEnd"); if (e) e.remove(); }
+function nqKS3() {   // KS3 tools: not gcse-*, no A-level label in the header
+  const h = document.querySelector(".wrap > header") || document.querySelector("header");
+  return !/(^|\/)gcse-[^\/]*$/.test(location.pathname) && !/A-level|GCSE/.test(h ? h.textContent : "");
+}
+function nqFirstLine(s) {   // never a false 0: questions solved before right-first-time was tracked are not counted as wrong
+  const why = ` <span class="nq-why">(no hint, no wrong try, no Show answer)</span>`;
+  if (!s.tracked && s.solved) return "";
+  if (!s.untracked) return `<li>Right first time: <b>${s.first}</b> of ${s.n}${why}</li>`;
+  if (nqKS3()) return `<li>Right first time: <b>${s.first}</b> of the ${s.tracked + s.shown.length} you have done since this was added ` +
+    `<span class="nq-why">(${s.untracked} you did earlier ${s.untracked > 1 ? "aren't" : "isn't"} counted)</span></li>`;
+  return `<li>Right first time: <b>${s.first}</b> of ${s.tracked + s.shown.length} tracked <span class="nq-why">(no hint, no wrong try, no Show answer; ${s.untracked} more ${s.untracked > 1 ? "were" : "was"} done before this was tracked)</span></li>`;
+}
+function nqShowEnd() {
+  if (mode === "demo") return;
+  const lv = level, s = nqStats(lv), other = lv === "easy" ? "hard" : "easy", oDone = nqStats(other).done, f = (typeof nqFoundOut === "function" && nqFoundOut(lv)) || [];
+  const list = a => a.length < 2 ? String(a[0]) : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+  let el = $("nqEnd");
+  if (!el) { el = document.createElement("section"); el.id = "nqEnd"; el.className = "nq-end"; el.tabIndex = -1; el.setAttribute("aria-labelledby", "nqEndH");
+    const d = nqDotsEl(); if (d) d.insertAdjacentElement("afterend", el); else $("quizPanel").prepend(el); }
+  el.innerHTML = `<div class="nq-burst" aria-hidden="true">${"<i></i>".repeat(12)}</div>` +
+    `<h2 class="nq-h" id="nqEndH">✓ ${nqName(lv)} complete</h2>` +
+    `<p class="nq-score">Score: <b>${s.solved} / ${s.n}</b></p>` +
+    `<ul class="nq-list">${nqFirstLine(s)}` +
+    `<li>${s.shown.length ? `Answer shown: question${s.shown.length > 1 ? "s" : ""} ${list(s.shown)}` : "No answers were shown."}</li></ul>` +
+    (f.length ? `<h3 class="nq-fh">What you found out</h3>` + f.map(x => `<p class="nq-f">${x}</p>`).join("") : "") +
+    `<div class="nq-btns">` + (oDone ? `<button type="button" class="btn primary" id="nqDemo">Back to Demo</button>` : `<button type="button" class="btn primary" id="nqOther">Try ${nqName(other)} →</button>`) +
+    `<button type="button" class="btn" id="nqAgain">Try ${nqName(lv)} again</button></div>`;
+  $("quizPanel").classList.add("nq-ended");
+  const b1 = $("nqOther") || $("nqDemo");
+  b1.addEventListener("click", () => setMode(oDone ? "demo" : other));
+  $("nqAgain").addEventListener("click", () => nqTryAgain(lv));
+  const q = $("qpanel"); if (q && window.innerWidth > 900) q.scrollTop = 0;
+  if (window.innerWidth <= 900) { const r = el.getBoundingClientRect(), tb = $("topbar"), bar = tb ? tb.getBoundingClientRect().bottom : 0; if (r.top < bar || r.top > innerHeight * .6) window.scrollBy({ top: r.top - bar - 70, behavior: "auto" }); }
+  el.focus({ preventScroll: true }); nqStickSoon();
+}
+function nqTryAgain(lv) {   // clear this level's ticks (and right-first-time marks) and start again from question 1
+  const s = nqStore();
+  (LEVELS[lv] || []).forEach(t => { const k = qkey(lv, t); delete DONE[k]; delete s.rft[k];
+    if (typeof nqResetQ === "function") nqResetQ(lv, t); else if (typeof st === "object" && st) delete st[k]; });
+  saveDone(); nqSave(); idx = 0; nqHideEnd(); nqDoBump(); nqDoLoad(); nqFocusQ();
+}
+function nqMode() {   // after every mode change: body class for the phone order, score chip, and the end card for a finished level
+  document.body.classList.toggle("nq-quiz", mode !== "demo");
+  nqScore();
+  if (mode !== "demo" && LEVELS[level] && nqStats(level).done) nqShowEnd();
+}
+/* "Things to try" is open on a laptop or board and folded on a phone; once the pupil opens or closes it, it stays as they left it */
+var NQ_FOLD = false;
+function nqTryFold() {
+  const d = document.querySelector("details.trybox"); if (NQ_FOLD || !d || !window.matchMedia) return; NQ_FOLD = true;
+  const mq = window.matchMedia("(max-width:900px)"); let chosen = false;
+  const sm = d.querySelector("summary"); if (sm) sm.addEventListener("click", () => { chosen = true; });
+  const set = () => { if (!chosen) d.open = !mq.matches; };
+  set(); if (mq.addEventListener) mq.addEventListener("change", set);
+}
+/* The bar's bottom edge once it is stuck (its sticky top, 44 px when nav.js puts its site bar above it, + its height), for
+   the sticky question panel (CSS var --nq-bar). Measured again only when the bar resizes or nav.js changes the layout. */
+var NQ_BAR = false;
+function nqBar() {
+  const b = $("topbar"); if (NQ_BAR || !b) return; NQ_BAR = true;
+  const set = () => { const h = b.getBoundingClientRect().height, t = parseFloat(getComputedStyle(b).top) || 0;
+    if (h > 0) { const v = Math.ceil(t + h) + "px"; if (document.documentElement.style.getPropertyValue("--nq-bar") !== v) { document.documentElement.style.setProperty("--nq-bar", v); nqStickSoon(); } } };
+  set(); if (window.ResizeObserver) new ResizeObserver(set).observe(b); window.addEventListener("resize", set);
+  if (window.MutationObserver) new MutationObserver(set).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+/* The sticky question panel never slides under the bar: near the page bottom (where the layout ends) it gets shorter
+   instead (class nq-low, --nq-room), and the layout keeps its height so the page doesn't jump. Runs on scroll / resize /
+   content change only (no loop). */
+var NQ_STK = 0, NQ_STKON = false;
+function nqStickSoon() { if (!NQ_STK) NQ_STK = requestAnimationFrame(() => { NQ_STK = 0; nqStick(); }); }
+function nqStick() {
+  const q = document.querySelector(".qpanel"); if (!q) return;
+  const L = q.parentElement, low = q.classList.contains("nq-low");
+  if (window.innerWidth <= 900 || getComputedStyle(q).position !== "sticky") { if (low) q.classList.remove("nq-low"); if (L.style.minHeight) L.style.minHeight = ""; return; }
+  const top = parseFloat(getComputedStyle(q).top) || 0;
+  const cap = parseFloat(q.style.maxHeight) || (innerHeight - top - 12), edge = q.offsetHeight - q.clientHeight;
+  const nat = Math.min(q.scrollHeight + edge, cap);   // the panel's height if it weren't shortened
+  let other = 0; for (const c of L.children) if (c !== q && c.offsetParent !== null) other = Math.max(other, c.offsetHeight);
+  const ls = getComputedStyle(L), pad = ls.boxSizing === "border-box" ? (parseFloat(ls.paddingTop) || 0) + (parseFloat(ls.paddingBottom) || 0) + (parseFloat(ls.borderTopWidth) || 0) + (parseFloat(ls.borderBottomWidth) || 0) : 0;
+  const need = nat > other ? Math.ceil(nat + pad) : 0;   // the panel sets the layout's height: keep it when the panel shortens (never lower the tool's own min-height)
+  if (L.style.minHeight) L.style.minHeight = "";
+  const own = parseFloat(getComputedStyle(L).minHeight) || 0, lh = own >= need ? "" : need + "px";
+  if (L.style.minHeight !== lh) L.style.minHeight = lh;
+  const lr = L.getBoundingClientRect(), room = Math.floor(lr.bottom - (parseFloat(getComputedStyle(L).paddingBottom) || 0) - top);
+  if (room < nat - 1 && lr.top < top) { document.documentElement.style.setProperty("--nq-room", Math.max(room, 120) + "px"); if (!low) q.classList.add("nq-low"); }
+  else if (low) q.classList.remove("nq-low");
+}
+function nqStickOn() {
+  if (NQ_STKON) return; NQ_STKON = true;
+  window.addEventListener("scroll", nqStickSoon, { passive: true }); window.addEventListener("resize", nqStickSoon);
+  const qp = $("quizPanel"), q = document.querySelector(".qpanel");
+  if (window.ResizeObserver) { const ro = new ResizeObserver(nqStickSoon); if (qp) ro.observe(qp); if (q && q.parentElement) for (const c of q.parentElement.children) if (c !== q) ro.observe(c); }
+  nqStickSoon();
+}
+/* v4: the feedback box of a finished question always ends with Next. A tool's Hint or Check (or any other message) can
+   rewrite the box after the question is done, which used to drop the button; this puts it back (no focus move, no scroll).
+   It also folds the mark scheme on phones. A MutationObserver on the box only (no loop): our own changes find nothing to do. */
+var NQ_FBW = false;
+function nqFbWatch() {
+  const fb = nqFbEl(); if (NQ_FBW || !fb || !window.MutationObserver) return; NQ_FBW = true;
+  new MutationObserver(() => {
+    nqMsFold(fb);
+    if (mode === "demo" || fb.querySelector(".nq-row") || !(fb.children.length || fb.textContent.trim())) return;
+    const t = nqT(); if (t && nqIsDone(level, t) && !(document.getElementById("quizPanel") || fb).classList.contains("nq-ended")) nqAfter("finished");
+  }).observe(fb, { childList: true, subtree: true, characterData: true });
+  const mq = nqMsMQ(); if (mq) { const re = () => nqMsFold(fb); if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
+  nqMsFold(fb);
+}
+/* Mark-scheme fold (phones only, <= 600 px wide): level descriptors sit in a closed <details> "Show mark scheme" so the
+   verdict / model answer and Next fit on the screen. A block is folded if the tool marks it with class "nq-ms", or if it is
+   a list whose first item, or a paragraph / span whose text, starts "Level 0-3 (" (the levels of response of the 6-mark
+   questions). A short heading just
+   before it ("Mark scheme", "Levels:") goes in with it. Nothing new is shown: it only wraps what is already in the box.
+   Wider than 600 px the fold is taken out again, so laptops and boards are unchanged. */
+var NQ_MSQ = null;
+function nqMsMQ() { if (!NQ_MSQ && window.matchMedia) NQ_MSQ = matchMedia("(max-width:600px)"); return NQ_MSQ; }
+function nqMsIs(el) {   // tool-marked, or a list / paragraph / span that starts with a level descriptor, "Level 3 (5–6): …"
+  if (el.classList.contains("nq-ms")) return true;
+  const LV = /^\s*Level\s*[0-3]\s*\(/;
+  if (/^(UL|OL)$/.test(el.tagName)) { const li = el.firstElementChild; return !!li && LV.test(li.textContent || ""); }
+  return /^(P|SPAN)$/.test(el.tagName) && !el.querySelector("button,.nq-row") && LV.test(el.textContent || "");
+}
+function nqMsHead(el) {   // a short heading right before the block (only white space between), e.g. <b>Mark scheme</b> or <p><b>Levels:</b></p>
+  let n = el.previousSibling; while (n && n.nodeType === 3 && !n.textContent.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1 || !/^(B|STRONG|P|H3|H4|H5|SPAN)$/.test(n.tagName) || n.classList.contains("nq-ms")) return null;
+  const t = (n.textContent || "").trim();
+  return t && t.length <= 48 && (/mark scheme|levels?\b|marking/i.test(t)) ? n : null;
+}
+function nqMsFold(fb) {
+  const mq = nqMsMQ(), on = !!(mq && mq.matches);
+  if (!on) { fb.querySelectorAll("details.nq-fold").forEach(d => { const inn = d.querySelector(".nq-fold-in");
+      if (inn) while (inn.firstChild) d.parentNode.insertBefore(inn.firstChild, d); d.remove(); }); return; }
+  const all = [...fb.querySelectorAll(".nq-ms, ul, ol, p, span")].filter(el => !el.closest("details") && nqMsIs(el));   // a tool's own <details> fold (e.g. "msd") is left as it is
+  const tops = all.filter(el => !all.some(o => o !== el && o.contains(el)));
+  if (!tops.length) return;
+  const groups = [];   // neighbouring blocks (with their headings) share one fold
+  tops.forEach(el => { const h = nqMsHead(el), first = h || el, g = groups[groups.length - 1];
+    let prev = first.previousSibling; while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+    if (g && prev === g[g.length - 1]) { if (h) g.push(h); g.push(el); } else groups.push(h ? [h, el] : [el]); });
+  groups.forEach(g => {
+    const d = document.createElement("details"), sm = document.createElement("summary"), inn = document.createElement("div");
+    d.className = "nq-fold"; inn.className = "nq-fold-in";
+    sm.innerHTML = '<span class="nq-fs">Show mark scheme</span><span class="nq-fh2">Hide mark scheme</span>';
+    d.append(sm, inn); g[0].parentNode.insertBefore(d, g[0]);
+    let n = g[0];   // move the group, and the white space between its parts, into the fold
+    const last = g[g.length - 1];
+    while (n) { const nx = n.nextSibling; inn.appendChild(n); if (n === last) break; n = nx; }
+  });
+}
+nqTryFold(); nqBar(); nqStickOn(); nqFbWatch();
+/* == end shared: next-question v4 == */
+
+/* == shared: bank-check-later v4 == The question-bank self-check runs after the first paint, when the browser is idle
+   (or at once if a Knowledge check is opened first). Uses bankRun() (the tool's old load-time check) if the tool has one:
+   a tool without it never throws here. v3: some checks test-run the model and leave the screen showing the test state, so
+   afterwards the model is redrawn from its real state: nqRedraw() (a tool adapter) if the tool has one, else the first of
+   its own drawAll / renderAll / redraw (called with no arguments), or render / renderScene / drawScene / draw / sync if it
+   takes no arguments. The check never moves focus: drawAll(focusIn) is called without focusIn. */
+var BANK_DONE = false;
+function bankNow() { if (BANK_DONE) return; BANK_DONE = true; if (typeof bankRun === "function") { bankRun(); nqRedrawModel(); } }
+function nqRedrawModel() {
+  const fs = [typeof nqRedraw === "function" && nqRedraw, typeof drawAll === "function" && drawAll, typeof renderAll === "function" && renderAll,
+    typeof redraw === "function" && redraw, typeof render === "function" && render, typeof renderScene === "function" && renderScene,
+    typeof drawScene === "function" && drawScene, typeof draw === "function" && draw, typeof sync === "function" && sync];
+  const f = fs.find((x, i) => x && (i < 4 || x.length === 0));   // nqRedraw / drawAll / renderAll / redraw: optional arguments are fine (called with none)
+  if (f) try { f(); } catch (e) { if (window.console) console.warn("redraw after the bank check:", e); }
+}
+function bankLater() {   // wait for the first contentful paint, then for an idle moment
+  let go = false;
+  const idle = () => { if (go) return; go = true; if (window.requestIdleCallback) requestIdleCallback(bankNow, { timeout: 1500 }); else setTimeout(bankNow, 300); };
+  const types = window.PerformanceObserver && PerformanceObserver.supportedEntryTypes || [];
+  if (types.indexOf("paint") >= 0) {
+    new PerformanceObserver((l, o) => { if (l.getEntries().some(e => e.name === "first-contentful-paint")) { o.disconnect(); setTimeout(idle, 0); } }).observe({ type: "paint", buffered: true });
+    setTimeout(idle, 4000);   // safety net: a page that never reports a paint still gets its check
+  } else if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(idle, 0));
+  else setTimeout(idle, 0);
+}
+function nqBankReload() {   // after bankRun() switched questions off: rebuild what is on screen
+  if (mode !== "demo" && LEVELS[level]) { idx = Math.max(0, Math.min(idx, LEVELS[level].length - 1)); nqDoLoad(); }
+  nqDoBump();
+}
+/* == end shared: bank-check-later v4 == */
+/* == tool: what you found out (end-of-level card): two short lines per level == */
+function nqFoundOut(lv) {
+  const F = {
+    "easy": [
+      "Populations evolve, not individuals: allele frequencies change over generations. New alleles come from random mutation; selection and genetic drift change how common they are.",
+      "p + q = 1 and p² + 2pq + q² = 1: q² comes from the recessive phenotype, then q = √q², p = 1 − q, and carriers are 2pq. Stabilising selection narrows a curve; directional selection moves it."
+    ],
+    "hard": [
+      "Hardy–Weinberg only holds in a large, randomly mating population with no selection, mutation or migration. Dominant alleles don’t become commoner just because they are dominant.",
+      "Bottlenecks and founder groups are small chance samples of a gene pool. Disruptive selection favours both extremes. Isolation (geographical, or prezygotic in the same place) can lead to new species."
+    ]
+  };
+  return F[lv] || F.easy;
+}
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
