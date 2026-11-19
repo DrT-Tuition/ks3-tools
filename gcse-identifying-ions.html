@@ -901,7 +901,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== The tests. Each action takes the model, so Show answer and the bank check can run them too ===== */
@@ -1844,7 +1844,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = ""; drawAll();   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -1863,6 +1863,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = ""; drawAll();   // shown: the model is free again
   setAnswerState();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }

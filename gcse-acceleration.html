@@ -1031,9 +1031,9 @@ function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
 const finished = () => mode !== "demo" && task && task.id && (prog().solved || prog().revealed);
 const open = () => mode !== "demo" && !finished();          // a question is open and unanswered: hide anything that would give it away
-const locked = () => mode !== "demo" && !!lock && !(task.unlockAfter && finished());
+const locked = () => mode !== "demo" && !!lock && !finished();   // never locked once the question is answered or shown
 const ctlLocked = k => locked() && (lock === "all" || (task.lockCtl || []).includes(k));
-const tabOK = t => mode === "demo" || !task.tabs || task.tabs.includes(t);
+const tabOK = t => mode === "demo" || finished() || !task.tabs || task.tabs.includes(t);
 function lockMsg(txt) { const n = $("lockNote"); n.hidden = false; n.textContent = txt || "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== Drawing helpers ===== */
@@ -2375,7 +2375,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = "";   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2395,6 +2395,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = "";   // shown: the model is free again
   setAnswerState();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
   afterFinish();
@@ -2556,7 +2557,7 @@ function renderCtl() {
   sw("curveSw", M.curve); $("curveSw").hidden = accDrawing();   /* lobf v1: the computer's curve would give the pupil's away; it comes back once theirs is good */
   document.querySelectorAll("#tabs button").forEach(b => { const ok = tabOK(b.dataset.tab); b.disabled = !ok; b.title = ok ? "" : "Not used in this question"; });
   [["#frSeg button", "fric"], ["#maSeg button", "mass"], ["#stSeg button", "start"], ["#puDn", "pull"], ["#puUp", "pull"]].forEach(([s, k]) => document.querySelectorAll(s).forEach(b => { b.disabled = ctlLocked(k); }));
-  const tabsLimited = mode !== "demo" && task.tabs && task.tabs.length < 3;
+  const tabsLimited = mode !== "demo" && task.tabs && task.tabs.length < 3 && !finished();
   if (locked() && lock === "all") lockMsg(); else if (tabsLimited) lockMsg(task.tabs.length === 1 ? "This question uses this part of the model only." : "This question uses these parts of the model only.");
   else $("lockNote").hidden = true;
 }

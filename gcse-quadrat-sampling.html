@@ -1255,7 +1255,7 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
 const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 /* audit Fault A: the IV/DV line is the answer to the variables questions, so it waits until they are answered */
 const hideVars = () => { if (mode === "demo" || !task || !["vars", "describeTr2"].includes(task.id)) return false; const p = prog(); return !(p.solved || p.revealed); };
 const LOCKW = { run: "Predict first. The model shows the result when you get it right, or press Show answer.", all: "The model is set for this question." };
@@ -1518,7 +1518,7 @@ function drawTr(fast) {
 function renderCtl() {
   const R = M.R, T = M.T, c = curQ(R), tc = trCur(T), run = trRun(T);
   document.querySelectorAll("#tabs [data-tab]").forEach(b => setAttr(b, "aria-pressed", b.dataset.tab === M.tab));
-  $("pane-rand").hidden = M.tab !== "rand"; $("pane-tr").hidden = M.tab !== "tr"; $("tabs").hidden = M.labels;
+  $("pane-rand").hidden = M.tab !== "rand"; $("pane-tr").hidden = M.tab !== "tr"; $("tabs").hidden = M.labels && locked();   // answered or shown: the tabs come back; a tab leaves the labelled diagram
   $("pane-tr").classList.toggle("diagram", M.labels);
   document.querySelectorAll("#method [data-m]").forEach(b => setAttr(b, "aria-pressed", b.dataset.m === R.method));
   $("rngBtn").hidden = $("placeBtn").hidden = R.method !== "rand"; $("throwBtn").hidden = R.method !== "throw";
@@ -1537,7 +1537,7 @@ function renderCtl() {
 }
 const qOpenFlag = k => { if (mode === "demo" || !task || !task[k]) return false; const p = prog(); return !(p.solved || p.revealed); };
 function drawAll(fast) { $("safeLine").hidden = qOpenFlag("hideSafety"); $("luxRes").hidden = qOpenFlag("hideRes"); renderCtl(); if (M.tab === "rand") drawRand(fast); else drawTr(fast); }   // fast: a step of Do 10 / Do the rest (the close-up and Work it out wait for the end)
-function setTab(t) { if (locked()) return lockMsg(); stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
+function setTab(t) { if (locked()) return lockMsg(); stopAll(); M.labels = false; M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
 /* steps of "Do 10 for me" and "Do the rest": about 5 a second, time-based with setTimeout (no animation loop) */
 function runSteps(stepFn, doneFn) {
@@ -1662,8 +1662,9 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) { if (["vars", "describeTr2"].includes(t.id)) drawAll(); return; }
-  lock = ""; if (t.after === "bare") { M.R.hide = false; M.R.truth = true; M.R.cur = 0; }
+  const t = task; lock = "";   // every question: the model is free again
+  if (!t.after) { drawAll(); return; }
+  if (t.after === "bare") { M.R.hide = false; M.R.truth = true; M.R.cur = 0; }
   drawAll();
 }
 function renderDots() {

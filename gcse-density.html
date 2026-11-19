@@ -1089,7 +1089,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
-const locked = () => mode !== "demo" && lock === "all";
+const locked = () => mode !== "demo" && lock === "all" && !finished();   // never locked once the question is answered or shown
 const finished = () => mode === "demo" || task.kind === "demo" || (prog().solved || prog().revealed);
 const showTag = tag => finished() || !(task.hide || []).includes(tag);   // a teaching line that would give away the open question's answer waits until it is finished
 function lockMsg(t) { const n = $("lockNote"); n.hidden = false; n.textContent = t || "The model is set for this question. Answer in the panel, or press Show answer."; }
@@ -2014,11 +2014,11 @@ function renderCtl() {
   pr("#tabs button", "tab", M.tab); pr("#regSeg button", "k", M.reg.k); pr("#irrSeg button", "k", M.irr.k); pr("#liqSeg button", "k", M.liq.k);
   const b = $("fitSw"); b.setAttribute("aria-pressed", String(M.fit)); b.querySelector(".state").textContent = M.fit ? "on" : "off";
   $("fitRow").hidden = LBD.on();   /* lobf v1: the computer's line (and its gradient) would give the pupil's line away */
-  if (!locked() && !(mode !== "demo" && task.tabs)) $("lockNote").hidden = true;
+  if (!locked() && !(mode !== "demo" && task.tabs && !finished())) $("lockNote").hidden = true;
 }
 function drawAll(focusIn) { drawPane(focusIn); renderCtl(); }
 function setTab(t) {
-  if (mode !== "demo" && task.tabs && !task.tabs.includes(t)) { lockMsg(`This question uses the ${task.tabs.map(x => TABNAME[x]).join(" and ")} tab only. Answer in the panel, or press Show answer.`); return; }
+  if (mode !== "demo" && task.tabs && !task.tabs.includes(t) && !finished()) { lockMsg(`This question uses the ${task.tabs.map(x => TABNAME[x]).join(" and ")} tab only. Answer in the panel, or press Show answer.`); return; }
   if (locked() && t !== M.tab) { lockMsg(); return; }
   M.tab = t; drawAll(); tourSignal("tab-" + t);
 }
@@ -2432,7 +2432,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = "";   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2452,6 +2452,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = "";   // shown: the model is free again
   setAnswerState(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }

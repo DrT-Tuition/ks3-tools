@@ -974,7 +974,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + (LEVELS[lv] || []).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids of removed or rewritten questions are ignored)
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && qOpen();   // never locked once the question is answered or shown
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== Drawing helpers ===== */
@@ -2199,8 +2199,9 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) return;
-  lock = ""; stopAll();
+  const t = task; lock = "";   // every question: the model is free again
+  if (!t.after) { drawAll(); return; }
+  stopAll();
   if (t.after === "cmp") { M.cHide = false; M.hideC = false; }
   drawAll();
 }

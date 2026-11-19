@@ -927,7 +927,8 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions */
 const quizOn = () => mode !== "demo";
-const locked = () => quizOn() && lock === "all";
+const qDone = () => quizOn() && !!task && (prog().solved || prog().revealed);   // the open question is answered or shown: the model is free
+const locked = () => quizOn() && lock === "all" && !qDone();   // never locked once the question is answered or shown
 const noJudge = () => quizOn() && !!task.noJudge;   // Easy 3 / Easy 10: the model records what the pupil types without judging it (the question's Check judges)
 function lockMsg(t) { const n = $("lockNote"); n.hidden = false; n.textContent = t || "The model is set for this question. Answer in the panel, or press Show answer."; }
 function needEye(m, what) { if (m.eye) return false; m.msg = "Put on eye protection first: " + (what || "you will heat the sample with a Bunsen burner.") ; return true; }
@@ -1519,7 +1520,7 @@ const SEGORD = { end: shufArr([["above", "Above the liquid"], ["below", "Dipping
 const SELORD = {};   // dropdown options shuffled once per visit, then kept still
 const selOpts = (key, list) => (SELORD[key] || (SELORD[key] = shufArr(list)));
 const TABS = ["ph", "solid", "dist", "res"];
-function tabAllowed(t) { if (!quizOn()) return true; if (lock === "all") return false; return (task.tabs || []).includes(t); }
+function tabAllowed(t) { if (!quizOn() || qDone()) return true; if (lock === "all") return false; return (task.tabs || []).includes(t); }
 function stageText() {
   const t = M.tab;
   if (t === "ph") return "pH test";
@@ -1543,7 +1544,7 @@ function renderCtl() {
     $("mRecRow").hidden = !p.meter; $("phRecRow").dataset.off = p.paper === p.sel && p.rec[p.sel] == null ? "0" : "1"; $("dipBtn").classList.toggle("primary", p.paper !== p.sel);
   }
   if (t === "solid") {
-    const r = M.run, ro = quizOn() && task.lockSolid; pressSeg($("sSeg"), "s", r.s);
+    const r = M.run, ro = quizOn() && task.lockSolid && !qDone(); pressSeg($("sSeg"), "s", r.s);
     $("sRow").hidden = ro; $("cylRow").hidden = ro || r.phase !== "measure";
     const rec = { weigh1: ["Mass of empty basin (balance reading):", "g"], measure: ["Volume of sample (your reading):", "cm³"], weigh2: ["Mass of basin + solid (balance reading):", "g"], mass: ["Mass of solid:", "g"] }[r.phase];
     $("sRecRow").hidden = ro || !rec; if (rec) { if ($("sRecLbl").textContent !== rec[0]) $("sRecLbl").textContent = rec[0]; $("sUnit").textContent = rec[1]; }
@@ -1556,7 +1557,7 @@ function renderCtl() {
     morphHTML($("runsBox"), runsHTML()); $("runsBox").hidden = ro;
   }
   if (t === "dist") {
-    const d = M.dist, test = d.phase === "test", ro = quizOn() && task.lockDist;
+    const d = M.dist, test = d.phase === "test", ro = quizOn() && task.lockDist && !qDone();
     pressSeg($("dModeSeg"), "dm", d.mode); $("dModeRow").hidden = ro || test;
     const set = d.mode === "ice" ? `<span class="gl" id="endL">Tube end:</span><span class="seg" role="group" aria-labelledby="endL" id="endSeg">${segHTML("end", SEGORD.end, d.end)}</span><button class="sw" type="button" id="iceSw" aria-pressed="${d.ice}"><span class="dot"></span>Ice bath <span class="state">${d.ice ? "on" : "off"}</span></button>`
       : `<span class="gl" id="thL">Thermometer bulb:</span><span class="seg" role="group" aria-labelledby="thL" id="thSeg">${segHTML("th", SEGORD.therm, d.therm)}</span><span class="gl" id="wL">Cooling water:</span><span class="seg" role="group" aria-labelledby="wL" id="wSeg">${segHTML("wa", SEGORD.water, d.water)}</span>`;
@@ -2056,7 +2057,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = ""; drawAll();   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2076,6 +2077,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = ""; drawAll();   // shown: the model is free again
   setAnswerState();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
   drawAll();

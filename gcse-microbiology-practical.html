@@ -960,9 +960,9 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreFrom = (D, L) => ["easy", "hard"].reduce((n, lv) => n + (L[lv] || []).filter(t => D[qkey(lv, t)] === "solved").length, 0);   // only questions that exist now (old ids from retired questions never count)
 const scoreNow = () => scoreFrom(DONE, LEVELS);
-const locked = () => mode !== "demo" && lock === "all";
+const locked = () => mode !== "demo" && lock === "all" && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 const openQ = id => { if (mode === "demo" || !task || task.id !== id) return false; const p = prog(); return !(p.solved || p.revealed); };   // a question is open and unanswered
-const selLocked = () => mode !== "demo" && (lock === "all" || lock === "sel");
+const selLocked = () => mode !== "demo" && (lock === "all" || lock === "sel") && !(prog().solved || prog().revealed);
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = lock === "sel" ? "This question uses this plate and disc. You can still move the ruler." : "The model is set for this question. Answer in the panel, or press Show answer."; }
 
 /* ===== Drawing helpers ===== */
@@ -1260,7 +1260,7 @@ function renderCtl() {
   const sl = $("sTime"), mx = String(maxNd(M.dt)); if (sl.max !== mx) sl.max = mx; if (+sl.value !== M.nd) sl.value = M.nd;
   const ot = `${M.nd * M.dt} min${M.nd * M.dt >= 60 ? " (" + fmtT(M.nd * M.dt) + ")" : ""}`; if ($("oTime").textContent !== ot) $("oTime").textContent = ot;
   document.querySelectorAll(".stepb, .howb").forEach(b => { b.disabled = !!anim; });
-  if (!locked() && lock !== "sel") $("lockNote").hidden = true;
+  if (!selLocked()) $("lockNote").hidden = true;
 }
 function drawAll() { drawPane(); renderCtl(); }
 function setTab(t) { M.tab = t; if (t === "zone" && tourI >= 0 && !READY()) { M.stage = NSET; M.pend = null; } drawAll(); tourSignal("tab-" + t); }   // the tour uses ready plates
@@ -1305,7 +1305,7 @@ function parseNum(s) {
 }
 function nextEmpty() { for (const k of [M.k, ...KS]) for (let p = 0; p < 3; p++) if (M.rec[k][p] == null) return { k, p }; return null; }
 function record() {
-  if (mode !== "demo" && lock) return lockMsg();
+  if (mode !== "demo" && lock && !(prog().solved || prog().revealed)) return lockMsg();
   if (!READY()) return;
   const s = $("dIn").value, v = parseNum(s);
   if (!isFinite(v)) { M.zmsg = "Type the diameter you read, in mm, then press Record."; morphHTML($("zread"), zoneRead()); return; }
@@ -1662,8 +1662,9 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) return;
-  lock = ""; stopAll();
+  const t = task; lock = "";   // every question: the model is free again
+  if (!t.after) { drawAll(); return; }
+  stopAll();
   if (t.after === "align") { M.r0 = ZC - E7.A[0] / 2; }
   if (t.after === "g30") { M.tab = "grow"; M.n0 = 1; M.dt = 30; M.nd = 6; M.hideWork = false; }
   if (t.after === "gsf") { M.tab = "grow"; M.n0 = SFQ.n0; M.dt = SFQ.dt; M.nd = SFQ.t / SFQ.dt; M.hideWork = false; }

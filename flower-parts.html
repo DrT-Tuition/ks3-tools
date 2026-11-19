@@ -1054,7 +1054,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = lock === "run" ? "Predict first. The model runs when you get it right, or press Show answer." : "The model is set for this question."; }
 
 /* ===== Drawing helpers ===== */
@@ -1616,8 +1616,9 @@ function setAnswerState(instant) {
   revealModel(instant);
 }
 function revealModel(instant) {
-  const t = task; if (!t.after || !lock) return;
-  lock = ""; stopAll(); renderCtl();
+  const t = task; if (!lock) return;
+  lock = ""; if (!t.after) { renderCtl(); return; }   // every question: the model is free again
+  stopAll(); renderCtl();
   if (t.after === "dissect") { if (instant || reduced()) { LAYERS.forEach(k => { for (let i = 0; i < LILY[k]; i++) removePart(M.D, k, i); }); M.D.cut = true; safetySeen = true; drawAll(); } else autoDissect(); }
   if (t.after === "fert") { if (instant || reduced()) { M.P.f.step = 4; drawAll(); } else fertStep(true); }
   if (t.after === "run") { if (instant || reduced()) { M.G.ran = true; M.G.day = DAYS; drawAll(); } else runDays(); }

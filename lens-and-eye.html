@@ -953,6 +953,7 @@ function prog() {
   p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p;
 }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
+const objFixed = () => { const t = taskNow(); if (mode === "demo" || !t.lockObj) return false; const p = prog(); return !(p.solved || p.revealed); };   // the candle is fixed only while the question is open
 const scoreNow = () => Object.values(DONE).filter(v => v === "solved").length;
 
 function startState() {
@@ -1032,7 +1033,7 @@ function drawBench() {
         <rect x="${r1(xs - 5)}" y="34" width="10" height="300" rx="2" class="screenbar"/>
         <rect x="${r1(xs - 16)}" y="330" width="32" height="10" rx="2" style="fill:var(--muted)"/></g>`;
   // candle (object)
-  const locked = t.lockObj;
+  const locked = objFixed();
   g += `<g class="${locked ? "" : "drag"}" data-drag="${locked ? "" : "obj"}"><rect x="${r1(xo - 30)}" y="${tipY - 10}" width="60" height="${hpx + 20}" class="grip"/>${candleAt(xo, BY, hpx, false)}</g>`;
   if (support.labels) {
     g += text(Math.max(xo, 70), tipY - 14, "Candle (object)", "txt", xo < 90 ? "start" : "middle", lf);
@@ -1443,7 +1444,7 @@ $("qbody").addEventListener("click", e => {
 });
 $("qbody").addEventListener("change", e => { const s = e.target.closest("select"); if (s) S.sel[s.dataset.sel] = s.value; });
 const sharpNow = () => Math.abs(S.scr - imageDist(S.obj)) <= FACTS.sharpTol_cm;
-$("objR").addEventListener("input", e => { if (taskNow().lockObj) return; S.obj = +e.target.value; renderSoon(); tourSignal("candle"); });
+$("objR").addEventListener("input", e => { if (objFixed()) return; S.obj = +e.target.value; renderSoon(); tourSignal("candle"); });
 $("scrR").addEventListener("input", e => { S.scr = +e.target.value; renderSoon(); if (sharpNow()) tourSignal("sharp"); });
 
 // dragging on the bench
@@ -1460,7 +1461,7 @@ $("scrR").addEventListener("input", e => { S.scr = +e.target.value; renderSoon()
   svg.addEventListener("pointermove", ev => {
     if (!which) return; const d = toCm(ev);
     if (which === "scr") S.scr = Math.min(FACTS.scrMax, Math.max(FACTS.scrMin, snap(d)));
-    else if (!taskNow().lockObj) S.obj = Math.min(FACTS.objMax, Math.max(FACTS.objMin, snap(-d)));
+    else if (!objFixed()) S.obj = Math.min(FACTS.objMax, Math.max(FACTS.objMin, snap(-d)));
     renderSoon();
   });
   const end = () => { if (which === "scr" && sharpNow()) tourSignal("sharp"); if (which === "obj") tourSignal("candle"); which = null; };

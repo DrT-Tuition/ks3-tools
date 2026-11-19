@@ -1064,7 +1064,7 @@ const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t =
 const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };
 const quizOpen = () => { if (mode === "demo" || !task || !task.id) return false; const v = DONE[qkey(level, task)]; return v !== "solved" && v !== "shown"; };   // a question is open until it is right or shown
 const qh = k => quizOpen() && !!task.hide && task.hide.includes(k);   // hide this part of the model for the open question
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && quizOpen();   // never locked once the question is answered or shown
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 function morphHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
 function setLayer(g, h) { if (g._h !== h) { morph(g, h); g._h = h; } }
@@ -2842,7 +2842,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = "";   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2861,6 +2861,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = "";   // shown: the model is free again
   setAnswerState(); if (task.finish) { stopAll(); task.finish(M); } drawAll(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
