@@ -1443,9 +1443,10 @@ const ICON = {
    root tips (measured from the picture). */
 const ICONIMG = {
   emb: { box: [-31, -31, 62, 62] },
-  bm: { box: [-40, -11.7, 80, 23.3] },   // narrower than the vector bone, so the arrow starts clear of it
+  bm: { box: [-45, -13.1, 90, 26.2] },   // the arrow from it starts further out (ARR0), clear of the bone
   mer: { box: [-27.4, -32, 54.7, 80], top: `<circle cx="0" cy="-27" r="5" class="mer"/><circle cx="-15.6" cy="41.4" r="4" class="mer"/><circle cx="-.3" cy="45.4" r="4" class="mer"/><circle cx="17.1" cy="37.6" r="4" class="mer"/>` }
 };
+const ARR0 = k => k === "bm" ? 49 : 0;   // where the arrow from a source icon starts (icon units), if wider than usual
 const icon = (k, x, y, s) => { const S = SHELLS["icon_" + k], I = ICONIMG[k];
   return `<g transform="translate(${f1(x)} ${f1(y)}) scale(${f1(s * 1000) / 1000})" data-icon="${k}">${S && S.id && I ? `<g class="ivec">${ICON[k]()}</g><g class="iimg">${shUse(S.id, I.box)}${I.top || ""}</g>` : ICON[k]()}</g>`; };
 function drawStem() {
@@ -1469,7 +1470,7 @@ function drawStem() {
   if (w >= 600) {
     const sx = w * .14, mx = w * .4, tx = w * .62, s0 = Math.min(1.5, (h - 4 * fs) / 110, w * .2 / 90), cy = h / 2 - fs * .6;
     o += icon(M.src, sx, cy, s0) + wrap(S.from, fs, w * .25).map((t, j) => T_(sx, cy + 50 * s0 + fs * 1.2 + j * fs * 1.15, t, fs, 'text-anchor="middle" class="mlb"')).join("");
-    o += arrow(sx + 40 * s0, cy, mx - 30 * s0 - 6, cy, "ahS");
+    o += arrow(sx + Math.max(40, ARR0(M.src)) * s0, cy, mx - 30 * s0 - 6, cy, "ahS");
     o += icon("stem", mx, cy, s0) + T_(mx, cy + 26 * s0 + fs + 6, "stem cell", fs, 'text-anchor="middle" class="mlb bold"');
     const n = tg.length, top = fs * .6, slot = (h - top - fs * 2.6) / n, s1 = Math.min(s0 * .8, slot / 66);
     tg.forEach((t, i) => { const y = top + slot * (i + .5); o += arrow(mx + 28 * s0, cy + (y - cy) * .25, tx - 34 * s1, y, "ahS") + icon(t[0], tx, y, s1) + T_(tx + 48 * s1, y + fs * .35, t[1], fs, 'class="mlb"'); });
@@ -1477,7 +1478,7 @@ function drawStem() {
   } else {
     const s0 = Math.min(1.1, w / 260), r1 = fs + 60 * s0, gx = [w * .27, w * .73];
     o += icon(M.src, w * .22, 8 + 32 * s0 + 14 * s0, s0) + wrap(S.from.replace(/ \(.*\)/, ""), fs, w * .42).map((t, j) => T_(w * .22, 8 + 92 * s0 + fs + j * fs * 1.15, t, fs, 'text-anchor="middle" class="mlb"')).join("");
-    o += arrow(w * .22 + 42 * s0, 8 + 46 * s0, w * .7 - 32 * s0, 8 + 46 * s0, "ahS") + icon("stem", w * .7, 8 + 46 * s0, s0 * .9) + T_(w * .7, 8 + 92 * s0 + fs, "stem cell", fs, 'text-anchor="middle" class="mlb bold"');
+    o += arrow(w * .22 + Math.max(42, ARR0(M.src)) * s0, 8 + 46 * s0, w * .7 - 32 * s0, 8 + 46 * s0, "ahS") + icon("stem", w * .7, 8 + 46 * s0, s0 * .9) + T_(w * .7, 8 + 92 * s0 + fs, "stem cell", fs, 'text-anchor="middle" class="mlb bold"');
     const top = 8 + 92 * s0 + fs * 3.2, rows = Math.ceil(tg.length / 2), rh = (h - top - fs * 2.4) / rows, s1 = Math.min(s0 * .8, (rh - fs - 10) / 62);
     tg.forEach((t, i) => { const x = gx[i % 2], y = top + rh * Math.floor(i / 2) + (rh - fs) / 2; o += icon(t[0], x, y, s1) + T_(x, y + 32 * s1 + fs + 2, t[1], fs, 'text-anchor="middle" class="mlb"'); });
     wrap(S.more, fs, w - 12).forEach((t, j, A) => { o += T_(w / 2, h - 6 - (A.length - 1 - j) * fs * 1.15, t, fs, 'text-anchor="middle" class="mut"'); });

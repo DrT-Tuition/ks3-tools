@@ -1316,11 +1316,19 @@ function sisters(x, y, th, l1, l2, w, c, cls, tips, sep, ids) {
 }
 const CHR = [{ l1: 30, l2: 26, cls: "cm" }, { l1: 30, l2: 26, cls: "cp" }, { l1: 22, l2: 13, cls: "cm" }, { l1: 22, l2: 13, cls: "cp" }];   // A mat, A pat, B mat, B pat
 const CW = 8;
-/* chromatin: short squiggles filling a nucleus (made once per radius) */
+/* chromatin: short squiggles filling a nucleus (made once per radius). Each squiggle must lie wholly within .96 r, so none pokes
+   out through the envelope; one that would is drawn again from a second random stream (the others stay as they were). */
 const CLOUD = {};
 function cloud(x, y, r, op) {
-  const k = Math.round(r); if (!CLOUD[k]) { const R = rng(7 + k), out = [];
-    for (let i = 0; i < 16; i++) { const a = R() * 6.283, d = Math.sqrt(R()) * r * .72, px = Math.cos(a) * d, py = Math.sin(a) * d, b = R() * 6.283, L = r * .32;
+  const k = Math.round(r); if (!CLOUD[k]) { const R = rng(7 + k), R2 = rng(907 + k), out = [], L = r * .32;
+    const pts = (px, py, b) => { const u = a => [Math.cos(a) * L, Math.sin(a) * L], c1 = u(b + .8).map(v => v * .6), e1 = u(b), e2 = u(b - .5), o = [];
+      for (let i = 0; i <= 8; i++) { const t = i / 8, m = 2 * t * (1 - t);   // the q curve, then the smooth t curve (its control mirrors c1 about e1)
+        o.push([px + m * c1[0] + t * t * e1[0], py + m * c1[1] + t * t * e1[1]]);
+        o.push([px + e1[0] + m * (e1[0] - c1[0]) + t * t * e2[0], py + e1[1] + m * (e1[1] - c1[1]) + t * t * e2[1]]); }
+      return o; };
+    for (let i = 0; i < 16; i++) { let a = R() * 6.283, d = Math.sqrt(R()) * r * .72, b = R() * 6.283;
+      for (let n = 0; n < 60 && pts(Math.cos(a) * d, Math.sin(a) * d, b).some(q => Math.hypot(q[0], q[1]) > r * .96); n++) { a = R2() * 6.283; d = Math.sqrt(R2()) * r * (.72 - n * .01); b = R2() * 6.283; }
+      const px = Math.cos(a) * d, py = Math.sin(a) * d;
       out.push(`M${P(px)} ${P(py)}q${P(Math.cos(b + .8) * L * .6)} ${P(Math.sin(b + .8) * L * .6)} ${P(Math.cos(b) * L)} ${P(Math.sin(b) * L)}t${P(Math.cos(b - .5) * L)} ${P(Math.sin(b - .5) * L)}`); }
     CLOUD[k] = out.join(""); }
   return `<path d="${CLOUD[k]}" transform="translate(${P(x)} ${P(y)})" class="chrom" opacity="${P(op)}"/>`;
@@ -1366,7 +1374,8 @@ function mitGeom(s, plant, o) {   // o: { cx, cy, labels, sc (G1 size), cent (nu
   if (!plant) { rx = lerp(165, 192, smooth(2.5, 3.5, s)); ry = lerp(140, 124, smooth(2.5, 3.5, s)); pinch = smooth(3.7, 5, s) * .97; two = s >= 4.97; }
   rx *= sc; ry *= sc;
   if (plant) { const hw = 175 * sc, hh = 135 * sc;
-    shell.push(shellSvg("plant", rrD(cx - hw, cy - hh, 2 * hw, 2 * hh, 10), "cyto wall", [P(cx - hw), P(cy - hh), P(2 * hw), P(2 * hh)]));
+    const split = smooth(3.55, 4.75, s) >= .98;   // the new wall is in: one picture per daughter cell, each with its own rim along it
+    shell.push(shellSvg("plant", rrD(cx - hw, cy - hh, 2 * hw, 2 * hh, 10), "cyto wall", split ? [[P(cx - hw), P(cy - hh), P(hw), P(2 * hh)], [P(cx), P(cy - hh), P(hw), P(2 * hh)]] : [P(cx - hw), P(cy - hh), P(2 * hw), P(2 * hh)]));
     lab.wall = [cx + hw, cy + hh * .5];
     const pl = smooth(3.55, 4.75, s);
     if (pl > 0) { const hl = hh * pl;
