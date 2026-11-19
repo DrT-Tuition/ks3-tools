@@ -1124,7 +1124,8 @@ const TIS = {
   phl: ["Phloem", "Living cells with pores in their end walls. They carry dissolved sugars made in the leaf to the rest of the plant."],
   lepi: ["Lower epidermis", "The layer of cells on the underside of the leaf. Most of the stomata are here."],
   guard: ["Guard cell", "A pair of guard cells surrounds each stoma. They open and close it to control gas exchange and water loss."],
-  stoma: ["Stoma", "A pore (plural stomata). Carbon dioxide diffuses in; oxygen and water vapour diffuse out."]
+  stoma: ["Stoma", "A pore (plural stomata). Carbon dioxide diffuses in; oxygen and water vapour diffuse out."],
+  sheath: ["Cells around the vein", "A ring of cells wraps round the vein. Tap inside the ring to see the xylem or the phloem."]   // not assessed: so a tap on the ring never leaves an old answer showing
 };
 const chl = (x, y, a) => `<ellipse class="chl" cx="${f1(x)}" cy="${f1(y)}" rx="4.6" ry="2.9" transform="rotate(${f1(a || 0)} ${f1(x)} ${f1(y)})"/>`;
 function spongyCells() {   // the spongy cells of the picture (traced ellipses)
@@ -1148,12 +1149,13 @@ function leafBase() {   // the vector leaf, traced from the picture: drawn when 
   h += `</g>`;
   /* the vein: xylem towards the upper surface, phloem towards the lower surface */
   const [sx, sy, srx, sry] = G.sh;   // bundle sheath: a ring of small cells
-  h += `<ellipse class="lf-sheath" cx="${sx}" cy="${sy}" rx="${srx}" ry="${sry}"/>`;
+  h += `<g data-tis="sheath"><ellipse class="lf-sheath" cx="${sx}" cy="${sy}" rx="${srx}" ry="${sry}"/>`;
   for (let i = 0; i < 22; i++) { const a = i / 22 * 2 * PI; h += `<circle class="lf-cell" cx="${f1(sx + Math.cos(a) * srx)}" cy="${f1(sy + Math.sin(a) * sry)}" r="6.9"/>`; }
+  h += `</g>`;
   const [xx, xy, xr] = G.xyl, [px, py, pr] = G.phl;   // the groups' circles are the tap areas
   h += `<g data-tis="xyl"><circle class="hit" cx="${xx}" cy="${xy}" r="${xr}"/>${G.xv.map(([x, y, r]) => `<circle class="lf-xyl" cx="${x}" cy="${y}" r="${f1(r - 1)}"/>`).join("")}</g>` +
     `<g data-tis="phl"><circle class="hit" cx="${px}" cy="${py}" r="${pr}"/>${G.pv.map(([x, y, r]) => `<circle class="lf-phl" cx="${x}" cy="${y}" r="${r}"/>`).join("")}</g>`;
-  h += `<g data-tis="lepi">`; G.lepi.forEach(([x, y, w]) => { h += `<rect class="lf-epi" x="${x}" y="352" width="${w}" height="30" rx="6"/>`; }); h += `</g>`;
+  h += `<g data-tis="lepi"><rect class="hit" x="${x0}" y="380" width="${x1 - x0}" height="9.4"/>`; G.lepi.forEach(([x, y, w]) => { h += `<rect class="lf-epi" x="${x}" y="352" width="${w}" height="30" rx="6"/>`; }); h += `</g>`;
   const PG = 4, cuts = [x0, ...LEAF.st.flatMap(s => [s - PG, s + PG]), x1];
   for (let i = 0; i < cuts.length; i += 2) h += `<rect class="lf-cut lo" data-tis="cuticle" x="${f1(cuts[i])}" y="389.4" width="${f1(cuts[i + 1] - cuts[i])}" height="4.6"/>`;
   h += `</g>`;
@@ -1221,7 +1223,8 @@ function leafRead() {
   morphHTML(r, t ? `<p class="r1">${esc(t[0])}</p><p class="r2">${esc(t[1])}</p>` : `<p class="r3">Tap any part of the leaf to see what it is and what it does.</p>`);
 }
 function leafTap(e) {
-  const g = e.target.closest("[data-tis]"); if (!g) return;
+  const g = e.target.closest("[data-tis]");
+  if (!g) { if (LF_PICK && e.target.closest("#lfG .ri-hit, #lfG .ri-img")) { LF_PICK = ""; leafRead(); } return; }   // a gap in the leaf: clear the old answer
   LF_PICK = g.dataset.tis; leafRead(); tourSignal("tap"); if (LF_PICK === "pal" || LF_PICK === "guard" || LF_PICK === "xyl") tried(1);
 }
 /* ===== Transport tab (AQA 4.2.3.2): the whole plant (transpiration stream and translocation), and close-ups of xylem,
