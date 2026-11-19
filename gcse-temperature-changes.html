@@ -944,7 +944,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => ["easy", "hard"].reduce((n, lv) => n + ((LEVELS[lv] && LEVELS[lv].length ? LEVELS[lv] : (TASKS[lv] || []).slice(0, 10))).filter(t => DONE[qkey(lv, t)] === "solved").length, 0);   // only the current questions count (old ids stay stored but don't score)
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 const showFall = () => mode === "demo" || !!DONE[qkey("hard", { id: "fall" })];   // the reason for the fall: Demo, or once Hard 5 is answered
 const qOpen = id => mode !== "demo" && task && task.id === id && !(DONE[qkey(level, task)]);   // that question is open and not yet answered (or shown)
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
@@ -1753,7 +1753,14 @@ function doAct(k) {
     if (!r) { drawAll(); return; }
     drawAll(); animTo(v => { w.T = v; }, from, r.to); tourSignal(k === "exoA" ? "add1" : "react"); if (k === "exoB" && M.ex.st <= 2) tried(M.ex.st - 1);
     return; }
+  const shown = M.rp.phase === "show";   // a question's set-up (example results or a reading): reachable only once that question is answered or shown
+  if (shown) {   // the set-up stays until the pupil starts their own run with the acid; then a clean table and Run 1
+    if (k !== "acid") { M.msg = (M.rp.example ? "These are the lesson’s example results." : "This reading was set up for the question.") + " To do your own run, press Add 30 cm³ acid."; drawAll(); return; }
+    if (needEye(M)) { drawAll(); return; }
+    rpClear(M);
+  }
   const p = M.rp, from = p.T, f = { acid: rpAddAcid, na: rpAddNa, wait: rpWait, run: rpNewRun }[k], r = f(M);
+  if (shown && r) M.msg = "Table cleared for your own results. " + M.msg;
   if (!r) { drawAll(); return; }
   if (k === "run") { M.rp.data = M.rp.data; }
   drawAll(); animTo(v => { p.T = v; }, from, r.to); tourSignal(k === "na" ? "na" : k === "acid" ? "add1" : "");
@@ -2165,7 +2172,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true; if (task.after) { task.after(M); drawAll(); } renderSupport();
+    mark(qkey(level, task), "solved"); p.solved = true; lock = ""; if (task.after) task.after(M); drawAll(); renderSupport();   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2185,6 +2192,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = ""; drawAll();   // shown: the model is free again
   setAnswerState(); if (task.after) { task.after(M); drawAll(); } renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
