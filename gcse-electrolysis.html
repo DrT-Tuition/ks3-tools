@@ -335,6 +335,17 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .scene .tglass{fill:var(--gasfill);stroke:var(--glass-edge);stroke-width:1.6}
 .scene .stand{fill:var(--metal);stroke:var(--metal-edge);stroke-width:1.5}
 .scene .bb{fill:rgba(255,255,255,.7);stroke:var(--glass-edge);stroke-width:1.2}
+/* gas tests (18 Nov 2026): splint, flame, ember and litmus colours are the real ones in both themes */
+.scene .tfx-hl{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:8 5}
+.scene .splint{stroke:#C9A06A;stroke-width:7;stroke-linecap:round;fill:none}
+.scene .splint-e{stroke:#7A5A33;stroke-width:9.5;stroke-linecap:round;fill:none}
+.scene .char{stroke:#2A2522;stroke-width:7.5;stroke-linecap:round;fill:none}
+.scene .fl-o{fill:#F3A73A;fill-opacity:.9}.scene .fl-i{fill:#FFE08A;fill-opacity:.95}
+.scene .ember{fill:#E8461C}.scene .ember-g{fill:#FF8A3D}
+.scene .popf{fill:#FFF3B0;stroke:#F3A73A;stroke-width:2}
+.scene .popl{stroke:#F3A73A;stroke-width:3;stroke-linecap:round}
+.scene .smoke{fill:none;stroke:#9AA3AD;stroke-width:3;stroke-linecap:round}
+.scene .forc{stroke:#7D8792;stroke-width:3.5;stroke-linecap:round;fill:none}
 .scene .ptc{stroke:var(--curve);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .scene .pto{stroke:var(--muted);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .scene .fitc{stroke:var(--curve);stroke-width:3;fill:none}
@@ -351,6 +362,8 @@ h1 small.rplabel{margin-top:4px;font-size:16px;color:var(--ink)}
 .stepbox .erow{display:grid;gap:4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .stepbox .erow .eh{font-weight:700}
 .stepbox .tres{font-size:16px}
+@media (min-width:901px){.stepbox .erows{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}}   /* step 6: anode and cathode side by side, so the test picture and both rows fit on one screen */
+.stepbox .erows{display:grid;gap:8px}
 .stepbox select{font:700 16px var(--f-body);padding:6px 8px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
 .stepbox .vbtn{min-width:64px}
 .panel h2{font-size:17px}
@@ -766,7 +779,7 @@ html.nq-pres [data-nq-stage] .scene{max-height:none!important}   /* the scene's 
 
       <div class="pane" id="pane-rp">
         <div class="controls" id="solRow"><span class="gl" id="solLbl">Solution:</span><span class="seg solseg" role="group" aria-labelledby="solLbl" id="solSeg"></span></div>
-        <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="An electrolysis cell: a beaker of solution with two carbon rods through its base, a test tube of solution clamped over each rod, and leads to a low-voltage power supply. Beside it, a magnified model of the ions in the solution."><g id="rBg"></g></svg><svg id="rsvgM" class="scene mov" viewBox="0 0 960 400" aria-hidden="true"><g id="rMov"></g></svg></div>
+        <div class="sscene"><svg id="rsvg" class="scene" viewBox="0 0 960 400" role="img" aria-label="An electrolysis cell: a beaker of solution with two carbon rods through its base, a test tube of solution clamped over each rod, and leads to a low-voltage power supply. Beside it, a magnified model of the ions in the solution."><g id="rBg"></g></svg><svg id="rsvgM" class="scene mov" viewBox="0 0 960 400" aria-hidden="true"><g id="rMov"></g><g id="rTest"></g></svg></div>
         <div class="stepbox" id="stepRow"></div>
         <div id="rtable" data-present="hide"></div>
         <div class="controls"><button class="btn" type="button" id="newRun">Start a new run</button><span class="small" id="runNote"></span></div>
@@ -1063,7 +1076,7 @@ const qkey = (lv, t) => lv + ":" + t.id;
 function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0, wrong: 0 }); p.solved = DONE[k] === "solved"; p.revealed = DONE[k] === "shown"; return p; }
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const scoreNow = () => Object.keys(DONE).filter(k => DONE[k] === "solved" && (TASKS[k.split(":")[0]] || []).some(t => t.id === k.split(":")[1])).length;   /* ignore ids of retired questions */
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 function lockMsg() { const n = $("lockNote"); n.hidden = false; n.textContent = "The model is set for this question. Answer in the panel, or press Show answer."; }
 /* answer-leak guard: while a question is open and unfinished, anything it lists in task.hide stays hidden */
 const finished = () => { if (mode === "demo" || !task || task.kind === "demo") return true; const p = prog(); return p.solved || p.revealed; };
@@ -1130,31 +1143,37 @@ function cellBg(G, o) {
   h += imgTag(IMG.el_beaker);
   if (o.poured) h += `<clipPath id="bInC${o.grad ? "g" : "r"}"><path d="M${G.bx + 4.5} ${G.btop}V308Q${G.bx + 4.5} 318.5 ${G.bx + 22} 318.5H${G.bx + G.bw - 23}Q${G.bx + G.bw - 5.5} 318.5 ${G.bx + G.bw - 5.5} 308V${G.btop}Z"/></clipPath>` +
     `<rect class="${isCu(o.sol) ? "cusol" : "sol"}" x="${G.bx + 2}" y="${G.solTop}" width="${G.bw - 4}" height="${G.bbot - G.solTop}" clip-path="url(#bInC${o.grad ? "g" : "r"})"/>`;
-  /* carbon rods in their bungs (pictures: each rod, then its bung, centred on G.rods) */
-  h += imgTag(IMG.el_rodA) + imgTag(IMG.el_rodC) + imgTag(IMG.el_bungA) + imgTag(IMG.el_bungC);
-  /* test tubes, clamped over each rod */
+  /* test tubes, clamped over each rod: the solution inside each tube first, so both carbon rods show through it (fix 18 Nov: the anode rod was hidden under its tube) */
+  const tubeAt = e => { const dy = e === "c" && o.slip ? G.bbot - 2 - G.mouth : 0; return { x: G.rods[e], top: G.tubeTop + dy, mo: G.mouth + dy }; };
   if (o.tubes) {
     h += `<rect class="stand" x="${G.rods.a - 34}" y="${G.arm - 5}" width="${G.pole - G.rods.a + 34}" height="10" rx="3"/>`;
-    ["a", "c"].forEach(e => { const x = G.rods[e], dy = e === "c" && o.slip ? G.bbot - 2 - G.mouth : 0, top = G.tubeTop + dy, mo = G.mouth + dy;
-      h += `<path class="${isCu(o.sol) ? "cusol" : "sol"}" d="${tubePath(x, top, mo, 40)}Z"/>`;
+    ["a", "c"].forEach(e => { const { x, top, mo } = tubeAt(e); h += `<path class="${isCu(o.sol) ? "cusol" : "sol"}" d="${tubePath(x, top, mo, 40)}Z"/>`; });
+  }
+  /* carbon rods in their bungs (pictures: each rod, then its bung, centred on G.rods): the same inert graphite rod at both electrodes */
+  h += imgTag(IMG.el_rodA) + imgTag(IMG.el_rodC) + imgTag(IMG.el_bungA) + imgTag(IMG.el_bungC);
+  if (o.coated && !o.tubes) h += `<rect class="cu" x="${G.rods.c - 8}" y="${G.rodTop - 2}" width="16" height="${G.cuBot - G.rodTop + 2}" rx="3" opacity=".95"/>`;   // the old copper coating, before the tubes go on (then the moving layer draws it)
+  if (o.tubes) ["a", "c"].forEach(e => { const { x, top, mo } = tubeAt(e);
       if (o.grad && e === "c") { const y0 = top + 12; for (let v = 0; v <= GV.tube + 1e-9; v += .5) h += `<path d="M${x - 20} ${f1(y0 + v * 20)}h${Math.abs(v - Math.round(v)) < .01 ? 10 : 6}" style="stroke:var(--ink);stroke-width:1.1"/>`; }
       h += `<path class="glassl" d="${tubePath(x, top, mo, 44)}"/><rect class="stand" x="${x - 26}" y="${G.arm - 8}" width="52" height="16" rx="4"/>`; });
-  }
   /* labels */
   if (o.conn) h += tag(G.rods.a - 8, G.bench - 30, G.short ? "anode +" : "anode (+)", fs - 2, "bold", "end") + tag(G.rods.c + 8, G.bench - 30, G.short ? "cathode −" : "cathode (−)", fs - 2, "bold", "start");   // circuit fix 17 Nov: off the leads
   else h += tag((G.rods.a + G.rods.c) / 2, G.bench - 22, "carbon rods", fs - 2, "");
-  if (o.tests) ["a", "c"].forEach(e => { const t = o.tests[e]; if (!t || !t.length) return; const r = testResult(prodOf(o.sol, e), t[t.length - 1]);
-    h += tag(G.rods[e], G.tubeTop - 10 + (e === "c" ? 0 : 0), r.pos ? (t[t.length - 1] === "lit" ? "pop!" : t[t.length - 1] === "glow" ? "relights" : "bleached") : "no change", fs - 4, "", e === "a" ? "end" : "start"); });
+  /* gas tests: drawn as they happen in the test picture (testFx, step 6); once the run is done, the last result stays as a label over each tube */
+  if (o.tests && o.done) ["a", "c"].forEach(e => { const t = o.tests[e]; if (!t || !t.length) return; const g = prodOf(o.sol, e), tt = t.find(x => testResult(g, x).pos) || t[t.length - 1], r = testResult(g, tt);   // the positive test, if any was done
+    h += tag(G.rods[e], G.tubeTop - 10, r.pos ? (tt === "lit" ? "pop!" : tt === "glow" ? "relights" : "bleached") : "no change", fs - 4, "", e === "a" ? "end" : "start"); });
   return h;
 }
 /* the moving parts of the cell: gas in the tubes, rising bubbles, the copper coating, the red-brown colour. Built once per key, then patched. */
 function cellMovBuild(G, o, idp) {
   let h = "";
+  h += `<rect id="${idp}cu" class="cu" x="${G.rods.c - 8}" y="${G.rodTop - 2}" width="16" height="${G.cuBot - G.rodTop + 2}" rx="3" opacity="0"/>`;   // the copper coating first: any gas bubbles form on its surface
   ["a", "c"].forEach(e => { const x = G.rods[e], dy = e === "c" && o.slip ? G.bbot - 2 - G.mouth : 0;
     h += `<clipPath id="${idp}cl${e}"><path d="${tubePath(x, G.tubeTop + dy, G.mouth + dy, 40)}Z"/></clipPath>`;
     h += `<g clip-path="url(#${idp}cl${e})"><rect id="${idp}gas${e}" class="${prodOf(o.sol, e) === "chlorine" ? "clg" : "gasf"}" x="${x - 22}" y="${G.tubeTop + dy}" width="44" height="0"/></g>`;
-    for (let k = 0; k < 5; k++) h += `<circle id="${idp}b${e}${k}" class="${prodOf(o.sol, e) === "chlorine" ? "clb" : "bb"}" cx="${x + (k % 2 ? 7 : -7)}" cy="-20" r="${2.6 + (k % 3) * .7}" visibility="hidden"/>`; });
-  h += `<rect id="${idp}cu" class="cu" x="${G.rods.c - 8}" y="${G.rodTop - 2}" width="16" height="${G.cuBot - G.rodTop + 2}" rx="3" opacity="0"/>`;
+    for (let k = 0; k < 5; k++) h += `<circle id="${idp}b${e}${k}" class="${prodOf(o.sol, e) === "chlorine" ? "clb" : "bb"}" cx="${x + (k % 2 ? 7 : -7)}" cy="-20" r="${2.6 + (k % 3) * .7}" visibility="hidden"/>`;
+    /* small bubbles forming on the rod's surface wherever a gas is made (hydrogen, oxygen or chlorine) */
+    h += `<g id="${idp}sb${e}" visibility="hidden">` + [[-1, 10, 2.2], [1, 22, 1.8], [-1, 36, 2], [1, 47, 2.4], [-1, 60, 1.7], [1, 70, 2]].map(([sd, dy, rb]) =>
+      `<circle class="${prodOf(o.sol, e) === "chlorine" ? "clb" : "bb"}" cx="${f1(x + sd * (8 + rb * .6))}" cy="${G.rodTop + dy}" r="${rb}"/>`).join("") + `</g>`; });
   h += `<path id="${idp}br" class="br" d="M${G.rods.a - 10} ${G.rodTop - 6}C${G.rods.a - 34} ${G.rodTop + 20} ${G.rods.a - 30} ${G.rodTop + 70} ${G.rods.a - 44} ${G.bbot - 12}H${G.rods.a + 44}C${G.rods.a + 30} ${G.rodTop + 70} ${G.rods.a + 34} ${G.rodTop + 20} ${G.rods.a + 10} ${G.rodTop - 6}Z" opacity="0"/>`;
   return h;
 }
@@ -1163,6 +1182,7 @@ function cellMovPatch(G, o, idp, p, now, moving) {
     const gh = gas ? (o.gasPx != null && e === "c" ? o.gasPx : 100 * p * (GASF[pr] || 0)) : 0;
     setAttr($(idp + "gas" + e), "height", f1(gh));
     const lvl = top + gh + 2, low = G.rodTop - 4, L = Math.max(10, low - lvl);
+    setAttr($(idp + "sb" + e), "visibility", gas && p > 0 && (o.rate == null || o.rate > 0) ? "visible" : "hidden");
     for (let k = 0; k < 5; k++) { const b = $(idp + "b" + e + k), show = gas && p > 0 && (o.rate == null || o.rate > 0);
       if (!show) { setAttr(b, "visibility", "hidden"); continue; }
       const sp = moving ? now / 1000 * 70 * (o.rate == null ? 1 : o.rate) : 0, y = low - ((sp + k * L / 5 + k * 13) % L);
@@ -1227,7 +1247,7 @@ function ionBg(G, r) {
 }
 /* ===== Tab 1: do the practical ===== */
 const ELN = { a: "anode (+)", c: "cathode (−)" }, ELW = { a: "positive electrode (anode)", c: "negative electrode (cathode)" };
-const cellOpts = r => ({ sol: r.sol, poured: after(r, "pour"), tubes: after(r, "tubes"), conn: after(r, "connect"), on: switchedOn(r), coated: r.coated, tests: r.tests });
+const cellOpts = r => ({ sol: r.sol, poured: after(r, "pour"), tubes: after(r, "tubes"), conn: after(r, "connect"), on: switchedOn(r), coated: r.coated || r.step === "check", tests: r.tests, done: r.step === "done" });   // check: the last run's coating is still on the cathode
 let sceneVis = true;
 function drawLab(now, moving) {
   const G = cellGeo(), r = M.run, o = cellOpts(r); setVB($("rsvg"), G.W, G.H); setVB($("rsvgM"), G.W, G.H);
@@ -1238,6 +1258,7 @@ function drawLab(now, moving) {
   const p = switchedOn(r) ? pOf(r) : 0;
   if (o.tubes) cellMovPatch(G, o, "r", p, now || 0, !!moving);
   if (g._pl) ionPatch(G, g._pl, p);
+  if (!moving) drawTestFx();
 }
 function selHTML(id, lbl, opts, val, dis) {
   return `<label class="grow"><span>${lbl}</span> <select id="${id}" aria-label="${esc(lbl)}"${dis ? " disabled" : ""}><option value="">choose…</option>${opts.map(([v, t]) => `<option value="${esc(v)}"${val === v ? " selected" : ""}>${esc(t)}</option>`).join("")}</select></label>`;
@@ -1257,12 +1278,12 @@ function stepHTML() {
   else if (s === "run") h = `<p class="stp"><b>Step 5 of 6:</b> Electrolysis is happening. Watch both electrodes and the ions.</p>`;
   else if (s === "obs") h = `<p class="stp"><b>Step 5 of 6:</b> Record what you see at each electrode.</p><div class="row">${selHTML("oA", "At the anode (+):", OBSK.map(k => [k, OBS[k]]), r.obs.a)}${selHTML("oC", "At the cathode (−):", OBSK.map(k => [k, OBS[k]]), r.obs.c)}${btn("Record what I see")}</div>`;
   else if (s === "test") {
-    h = `<p class="stp"><b>Step 6 of 6:</b> Test any gas you collected. Then name the product at each electrode.</p>`;
+    h = `<p class="stp"><b>Step 6 of 6:</b> Test any gas you collected. Then name the product at each electrode.</p><div class="erows">`;
     ["a", "c"].forEach(e => { const gas = gasAt(r, e);
       h += `<div class="erow"><span class="eh">${cap(ELN[e])}</span>` + (gas ? `<div class="row">${TESTK.map(t => `<button class="btn" type="button" data-t="${t}" data-e="${e}">${TESTS[t]}</button>`).join("")}</div>` +
         (r.tests[e].length ? `<p class="tres" role="status">${r.tests[e].map(t => `${TESTS[t]}: ${esc(testResult(prodOf(r.sol, e), t).s)}`).join("<br>")}</p>` : "")
         : `<p class="tres">No gas collected here. Name the product from what you saw.</p>`) + `<div class="row">${selHTML("id" + e.toUpperCase(), "The product is", PICKO(), r.id[e])}</div></div>`; });
-    h += `<div class="row">${btn("Record the products")}</div>`;
+    h += `</div><div class="row">${btn("Record the products")}</div>`;
   } else if (s === "done") {
     h = `<p class="stp"><b>Run complete.</b> It is in the Results table. Choose another solution, or Start a new run.</p>` + doneLines(r) + `<div class="row">${btn("Go to Results", "res", "toRes")}</div>`;
   }
@@ -1360,7 +1381,100 @@ function judgeIds(r) {
 function doTest(e, t) {
   if (guard()) return; const r = M.run; if (r.step !== "test" || !gasAt(r, e)) return;
   if (!r.tests[e].includes(t)) r.tests[e].push(t); else { r.tests[e] = r.tests[e].filter(x => x !== t); r.tests[e].push(t); }
-  r.smsg = null; tourSignal("test"); drawAll(); }
+  r.smsg = null; stopAll(); r.fx = { e, t, u: reduced() ? TFX.end : 0 }; tourSignal("test"); drawAll();
+  showTestFx(e);
+  if (r.fx.u < TFX.end) runTestFx(); }
+/* bring the whole test picture into view (page, or the board in Full screen); no scroll if it is already in view. If there is
+   room, the result line under the pressed button stays in view too. Instant with reduced motion. */
+function showTestFx(e) {
+  const pic = document.querySelector("#rTest rect.wall"); if (!pic) return;
+  const pres = typeof nqPresOn === "function" && nqPresOn(), st = pres ? nqPresStage() : null, bar = $("topbar");
+  const box = st ? st.getBoundingClientRect() : null, top = (st ? Math.max(0, box.top) : bar ? Math.max(0, bar.getBoundingClientRect().bottom) : 0) + 6;
+  const bot = (st ? Math.min(innerHeight, box.bottom) : innerHeight) - 6, r = pic.getBoundingClientRect();
+  let d = 0;
+  if (r.top < top) d = r.top - top;
+  else if (r.bottom > bot) d = Math.min(r.bottom - bot, r.top - top);
+  const res = document.querySelector(`#stepRow button[data-e="${e}"]`), rr = res && res.closest(".erow") ? res.closest(".erow").getBoundingClientRect() : null;
+  if (rr && d > 0 && rr.bottom - d > bot) d = Math.min(r.top - top, rr.bottom - bot);   // scrolling anyway: keep the picture whole, and show the result too if it fits
+  if (Math.abs(d) < 2) return;
+  const how = reduced() ? "auto" : "smooth";
+  if (st) { const z = parseFloat(st.style.getPropertyValue("zoom")) || 1; st.scrollTo({ top: st.scrollTop + d / z, behavior: how }); }
+  else window.scrollTo({ top: scrollY + d, behavior: how });
+}
+/* ===== The gas test, seen (18 Nov 2026): the collection tube, lifted out and held mouth down, with the splint or the damp
+   litmus paper brought to its mouth. The picture shows exactly what testResult() says: hydrogen, lighted splint → a flash
+   and a squeaky pop, the flame goes out; oxygen, glowing splint → the glow grows into a flame; chlorine, damp blue litmus
+   → red, then bleached white; every other pairing → no change. Drawn over the magnified model during step 6 only. */
+const TFX = { come: .9, end: 2.6 };   // seconds: the splint or paper arrives, then the result plays out
+const TFXCAP = { lit: ["squeaky pop!", "no pop"], glow: ["relights", "does not relight"], litmus: ["red, then white", "stays blue"] };
+const TFXN = { lit: "Lighted splint", glow: "Glowing splint", litmus: "Damp blue litmus" };
+function runTestFx() {
+  const r = M.run, m = M, t0 = performance.now(), a = anim = { id: 0 };
+  a.finish = () => { if (r.fx) r.fx.u = TFX.end; if (M === m && M.tab === "rp") drawTestFx(); };
+  const step = now => { if (anim !== a) return;
+    r.fx.u = Math.min(TFX.end, (now - t0) / 1000); if (sceneVis && M.tab === "rp") drawTestFx();
+    if (r.fx.u < TFX.end) a.id = paceFrame(step); else anim = null; };
+  a.id = paceFrame(step);
+}
+function drawTestFx() { const g = $("rTest"); if (!g) return; const r = M.run; setLayer(g, r.step === "test" && r.fx ? testFxSVG(cellGeo(), r) : ""); }
+function flameSVG(x, y, k, cls) {   // a small splint flame, tip up, base at (x, y), scale k (house flame shapes, as on the Bunsen in Identifying ions)
+  if (k <= .02) return "";
+  const t = (w, hh, c) => `<path class="${c}" d="M${f1(x - w * k)} ${f1(y)}Q${f1(x - w * 1.5 * k)} ${f1(y - hh * .45 * k)} ${f1(x)} ${f1(y - hh * k)}Q${f1(x + w * 1.5 * k)} ${f1(y - hh * .45 * k)} ${f1(x + w * k)} ${f1(y)}Q${f1(x)} ${f1(y + w * .9 * k)} ${f1(x - w * k)} ${f1(y)}Z"/>`;
+  return t(10, 44, "fl-o") + t(5, 24, "fl-i") + (cls || "");
+}
+function testFxSVG(G, r) {
+  const { e, t, u } = r.fx, gas = prodOf(r.sol, e), res = testResult(gas, t), pos = res.pos, fs = G.fs, [ix, iy, iw, ih] = G.ion;
+  const S = G.short ? 1.15 : 1, lerp = (a, b, k) => a + (b - a) * k, ph = (a, b) => clamp((u - a) / (b - a), 0, 1);
+  /* the tested tube in the cell, ringed */
+  const x0 = G.rods[e];
+  let h = `<rect class="tfx-hl" x="${x0 - 30}" y="${G.tubeTop - 8}" width="60" height="${G.mouth - G.tubeTop + 16}" rx="24"/>`;
+  /* the picture covers the magnified model (and its title and key) */
+  h += `<rect class="wall" x="${ix - 1}" y="${iy - 34}" width="${iw + 10}" height="${G.lgY + 14 - (iy - 34)}"/>`;
+  h += T_(ix, iy - 10, `Gas test: ${G.short ? (e === "a" ? "anode +" : "cathode −") : ELN[e]} tube`, fs - 1, 'class="bold"') + `<rect class="zoomw" x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="10"/>`;
+  /* the collection tube, lifted out with a thumb over it, full of the gas: hydrogen (less dense than air) held mouth down;
+     oxygen and chlorine (denser than air) turned mouth up */
+  const up = gas !== "hydrogen", tx = ix + iw * (G.short ? .36 : .4), tw2 = 44 * S;
+  const mo = up ? iy + ih * .42 : iy + ih * .56, end = up ? iy + ih - 16 : iy + 18;   // mouth, and the closed (rounded) end
+  const tubeP = w => up ? `M${f1(tx - w / 2)} ${f1(mo)}V${f1(end - w / 2)}A${w / 2} ${w / 2} 0 0 0 ${f1(tx + w / 2)} ${f1(end - w / 2)}V${f1(mo)}` : tubePath(tx, end, mo, w);
+  h += `<path class="${gas === "chlorine" ? "clg" : "gasf"}" d="${tubeP(tw2 - 4)}Z"/><path class="glassl" d="${tubeP(tw2)}"/>`;
+  /* a test-tube holder from the left, near the closed end (mouth down) or near the mouth (mouth up) */
+  const hy = up ? mo + 62 * S : end + 34 * S;   // mouth up: clear of the splint or paper at the mouth
+  h += `<rect class="wood" x="${f1(ix + 14)}" y="${f1(hy - 6 * S)}" width="${f1(tx - tw2 / 2 - ix - 20)}" height="${f1(12 * S)}" rx="4"/><rect class="stand" x="${f1(tx - tw2 / 2 - 8)}" y="${f1(hy - 9 * S)}" width="${f1(tw2 + 16)}" height="${f1(18 * S)}" rx="4"/>`;
+  /* the splint or the paper: up from the lower right to a mouth-down tube, down from the upper right into a mouth-up tube */
+  const into = t === "lit" ? -8 : 26 * S;   // lighted splint at the mouth; glowing splint and paper just inside
+  const come = ease(ph(0, TFX.come)), ox = 70 * S * (1 - come), oy = up ? 0 : 80 * S * (1 - come);
+  const px = tx + ox, py = up ? mo + into : mo - into + oy, dir = up ? [.6, -.8] : [.6, .8];
+  const L = up ? Math.min(G.short ? 150 : 132, (py - iy - 10) / .8) : (G.short ? 150 : 132), ex = px + dir[0] * L, ey = py + dir[1] * L;
+  const at = u >= TFX.come;   // arrived: the result plays from here
+  if (t === "litmus") {
+    const wet = pos ? (u < TFX.come + .3 ? 0 : u < TFX.come + .8 ? ph(TFX.come + .3, TFX.come + .8) : 1) : 0, bl = pos ? ph(TFX.come + 1, TFX.come + 1.6) : 0;
+    const col = bl > 0 ? mixC("#D3423A", "#F4F1EA", bl) : mixC("#3D6FD1", "#D3423A", wet);
+    const pl = 74 * S, ang = Math.atan2(dir[1], dir[0]) * 180 / Math.PI;
+    h += `<path class="forc" d="M${f1(px + dir[0] * (pl - 6) - 4)} ${f1(py + dir[1] * (pl - 6) + 3)}L${f1(ex - 6)} ${f1(ey + 4)}M${f1(px + dir[0] * (pl - 6) + 4)} ${f1(py + dir[1] * (pl - 6) - 3)}L${f1(ex + 6)} ${f1(ey - 4)}"/>`;
+    h += `<g transform="translate(${f1(px)} ${f1(py)}) rotate(${f1(ang)})"><rect x="-2" y="${f1(-8 * S)}" width="${f1(pl)}" height="${f1(16 * S)}" rx="2" style="fill:${col};stroke:${mixC(col, "#000000", .35)};stroke-width:1.3"/></g>`;
+  } else {
+    h += `<path class="splint-e" d="M${f1(px)} ${f1(py)}L${f1(ex)} ${f1(ey)}"/><path class="splint" d="M${f1(px)} ${f1(py)}L${f1(ex)} ${f1(ey)}"/><path class="char" d="M${f1(px)} ${f1(py)}L${f1(px + dir[0] * 9)} ${f1(py + dir[1] * 9)}"/>`;
+    if (t === "lit") {
+      const out = pos && at;   // hydrogen: the flame goes out with the pop
+      if (!out) h += flameSVG(px, py + 3, S * (1 + .06 * Math.sin(u * 23)));
+      if (out) { const k = ph(TFX.come, TFX.come + .45);
+        if (k < 1) h += `<circle class="popf" cx="${f1(px)}" cy="${f1(py - 4)}" r="${f1((14 + 34 * k) * S)}" opacity="${((1 - k) * (1 - k)).toFixed(2)}"/>`;
+        h += [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4 + .3, r1 = (20 + 18 * Math.min(1, k * 1.6)) * S, r2 = r1 + 12 * S;
+          return `<path class="popl" d="M${f1(px + Math.cos(a) * r1)} ${f1(py - 4 + Math.sin(a) * r1)}L${f1(px + Math.cos(a) * r2)} ${f1(py - 4 + Math.sin(a) * r2)}"/>`; }).join("");
+        h += T_(px + 30 * S, py - 34 * S, "pop!", fs + 2, 'class="bold"');
+        const sm = ph(TFX.come + .3, TFX.end); if (sm > 0) h += `<path class="smoke" opacity="${(.8 - .4 * sm).toFixed(2)}" d="M${f1(px + 4)} ${f1(py + 6)}q-8 ${f1(-14 - 10 * sm)} 2 ${f1(-26 - 16 * sm)}t2 ${f1(-20 - 8 * sm)}"/>`; }
+    } else {   // glowing splint: an ember; with oxygen the glow grows into a flame
+      const k = pos ? ph(TFX.come + .2, TFX.come + 1.1) : 0, pul = .75 + .25 * Math.sin(u * 9);
+      h += `<circle class="ember-g" cx="${f1(px)}" cy="${f1(py)}" r="${f1((9 + 5 * k) * S)}" opacity="${(.45 * pul + .3 * k).toFixed(2)}"/><circle class="ember" cx="${f1(px)}" cy="${f1(py)}" r="${f1(4.6 * S)}"/>`;
+      if (k > 0) h += flameSVG(px, py + 3, S * (.15 + .95 * k) * (1 + .05 * Math.sin(u * 23)));
+    }
+  }
+  /* the result, in words, once it has happened (the step panel gives it in full) */
+  if (u >= TFX.end - .25) { const cap = `${TFXN[t]}: ${TFXCAP[t][pos ? 0 : 1]}`; h += tag(ix + iw / 2, G.lgY + 2, cap, fs - 3, "bold"); }
+  return h;
+}
+function mixC(a, b, k) { const p = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)), A = p(a), B = p(b);
+  return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * clamp(k, 0, 1)).toString(16).padStart(2, "0")).join(""); }
 function runLab() {
   const r = M.run, m = M;
   if (reduced()) { r.t = RP.tRun; r.step = "obs"; drawAll(true); return; }
@@ -2459,7 +2573,7 @@ function check() {
   const r = evaluate();
   if (r.skip) { msg("tip", esc(r.skip)); return; }
   if (r.ok) {
-    mark(qkey(level, task), "solved"); p.solved = true;
+    mark(qkey(level, task), "solved"); p.solved = true; lock = "";   // right: the model is free again
     if (!p.wrong && !p.hints) streak++;
     bump(); msg("good", "<b>✓</b> " + r.html); nqAfter("right"); $("stuckNote").textContent = "";
     $("doneBadge").hidden = false; renderDots();
@@ -2479,6 +2593,7 @@ function answerHTML(t) {
 function reveal() {
   const p = prog();
   if (!p.solved) { p.revealed = true; mark(qkey(level, task), "shown"); renderDots(); }
+  lock = "";   // shown: the model is free again
   setAnswerState(); drawAll(); renderSupport();
   msg("tip", answerHTML(task) + (p.solved ? "" : " (No score for this one.)")); nqAfter("shown");
 }
