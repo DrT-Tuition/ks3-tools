@@ -1035,7 +1035,7 @@ function prog() { const k = qkey(level, task), p = st[k] || (st[k] = { hints: 0,
 function mark(k, v) { if (DONE[k] !== "solved") DONE[k] = v; saveDone(); }
 const CUR_IDS = () => new Set(Object.keys(TASKS).flatMap(lv => TASKS[lv].map(t => lv + ":" + t.id)));
 const scoreNow = () => { const cur = CUR_IDS(); return Object.keys(DONE).filter(k => DONE[k] === "solved" && cur.has(k)).length; };   // ticks for retired question ids never count
-const locked = () => mode !== "demo" && !!lock;
+const locked = () => mode !== "demo" && !!lock && !(prog().solved || prog().revealed);   // never locked once the question is answered or shown
 /* a quiz question that is still open: supports give the method, never the answer (audit Fault A) */
 const openQ = () => { if (mode === "demo" || !task || !task.id) return false; const p = prog(); return !(p.solved || p.revealed); };
 const LIM_METHOD = "How to tell: at a point on the graph, ask whether more of the factor on the x-axis would raise the rate there. Look at the slope of the line. (The bars come back once you have answered.)";
@@ -1677,8 +1677,12 @@ function labRead() {
 function isqGeo() { const t = LK() === "tall"; return t ? { W: 600, H: 520, fs: 23, sideH: 200 } : { W: 960, H: 380, fs: 17, sideH: 190 }; }
 function drawIsq() {
   const G = isqGeo(), fs = G.fs, d1 = M.d1, d2 = M.d2, o0 = isq(d1, d2); setVB($("isvg"), G.W, G.H);
-  const lx = 44, cy = G.sideH / 2 + 6, px = (G.W - 110) / 50, k = (G.sideH / 2 - 26) / (50 * px), far = lx + 52 * px;
-  let o = `<path class="beam" d="M${lx} ${cy}L${f1(far)} ${f1(cy - k * 52 * px)}V${f1(cy + k * 52 * px)}Z" opacity=".35"/><circle class="bulb" cx="${lx}" cy="${cy}" r="9"/>` + T_(lx, cy + 30, "lamp", fs - 2, 'text-anchor="middle" class="mut"');
+  const lx = 62, cy = G.sideH / 2 + 6, px = (G.W - 110) / 50, k = (G.sideH / 2 - 26) / (50 * px), far = lx + 52 * px, ls = .42;
+  /* image layers (18 Nov 2026): the same desk lamp picture as the Virtual RP, small, with the front of its head (where the light
+     leaves) at (lx, cy); the code-drawn point of light is the fallback */
+  let o = `<path class="beam" d="M${lx} ${cy}L${f1(far)} ${f1(cy - k * 52 * px)}V${f1(cy + k * 52 * px)}Z" opacity=".35"/>` +
+    `<use class="ri-img" href="#riLampOn" transform="translate(${lx} ${f1(cy)}) scale(${ls})"/><g class="ri-vec"><circle class="bulb" cx="${lx}" cy="${cy}" r="9"/></g>` +
+    T_(lx - 22, cy + 125 * ls + fs, "lamp", fs - 2, 'text-anchor="middle" class="mut"');
   [[d1, "start"], [d2, "new"]].forEach(([d, w], i) => { const x = lx + d * px, hh = k * d * px;
     o += `<path d="M${f1(x)} ${f1(cy - hh)}V${f1(cy + hh)}" style="stroke:var(${i ? "--curve2" : "--curve"});stroke-width:6;stroke-linecap:round${i ? ";stroke-dasharray:10 6" : ""}"/>` +
       T_(x, i ? cy + hh + fs + 8 : cy - hh - 10, `${w}: ${d} cm`, fs - 1, 'text-anchor="middle" class="bold"'); });
@@ -2044,8 +2048,9 @@ function setAnswerState() {
   revealModel();
 }
 function revealModel() {
-  const t = task; if (!t.after) return;
-  lock = ""; stopAll();
+  const t = task; lock = "";   // every question: the model is free again
+  if (!t.after) { drawAll(); return; }
+  stopAll();
   if (t.after === "t60") M.T = 60;
   if (t.after === "isq") { M.tab = "isq"; M.d1 = 10; M.d2 = 40; M.hideWork = false; }
   drawAll();
