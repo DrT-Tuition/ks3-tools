@@ -1605,16 +1605,18 @@ function drawGasBg() {
   let o = `<rect class="wall" x="0" y="0" width="${G.W}" height="${G.bench}"/><rect class="bench" x="0" y="${G.bench}" width="${G.W}" height="${G.H - G.bench}"/>`;
   const fp = flaskPath(G.fx, G.fy, G.b, G.fh, G.nw, G.nh), pic = !G.tall;   // wide layout: picture layers (flask + bung, tube + syringe barrel); tall layout keeps the vector drawing
   if (pic) o += imgTag(IMG.rr_flask) + `<path class="sol" d="${flaskLiquid(G.fx, G.fy, G.b, G.fh, G.nw, G.ly)}" opacity=".9"/>`;
-  else {
+  else {   // tall: the same flask picture (k = b / 136.8, its glass floor px 362.6 at fy, bung top px 9) over the vector fallback
+    const k = G.b / 136.8, b = IMG.rr_flask;
     o += `<path class="sol" d="${flaskLiquid(G.fx, G.fy, G.b, G.fh, G.nw, G.ly)}" opacity=".9"/>`;
-    o += `<path class="glassl" d="${fp}"/>`;
-    o += `<rect class="bung" x="${f1(G.fx - G.nw / 2 - 4)}" y="${f1(G.top - 8)}" width="${f1(G.nw + 8)}" height="18" rx="3"/>`;
+    o += `<g class="ri-vec"><path class="glassl" d="${fp}"/>`;
+    o += `<rect class="bung" x="${f1(G.fx - G.nw / 2 - 4)}" y="${f1(G.top - 8)}" width="${f1(G.nw + 8)}" height="18" rx="3"/></g>`;
+    o += `<g class="ri-img">` + imgTag({ src: b.src, x: f1(G.fx - 140 * k), y: f1(G.fy - 362.6 * k), w: f1(280 * k), h: f1(369 * k) }) + `</g>`;
   }
   if (!G.cyl) {
     const sx1 = G.sx0 + 100 * G.ppc;
     if (pic) o += imgTag(IMG.rr_syr);
     else {
-      o += `<path class="tube" d="M${G.fx} ${f1(G.top - 8)}V${G.sy}H${G.sx0 - 12}"/>`;
+      o += `<path class="tube ri-vec" d="M${G.fx} ${f1(G.top - 8)}V${G.sy}H${G.sx0 - 12}"/><path class="tube ri-img" d="M${G.fx} ${f1(G.fy - 353.6 * G.b / 136.8)}V${G.sy}H${G.sx0 - 12}"/>`;
       o += `<rect class="glass" x="${G.sx0 - 14}" y="${G.sy - 5}" width="16" height="10" rx="2"/><rect class="glass" x="${G.sx0}" y="${G.sy - 16}" width="${f1(sx1 - G.sx0)}" height="32" rx="4"/>`;
     }
     for (let v = 0; v <= 100; v += 2) { const x = G.sx0 + v * G.ppc, big = v % 10 === 0; o += `<path class="tick" d="M${f1(x)} ${G.sy + 16}v${big ? 11 : 5}"/>`; if (v % G.lab === 0) o += T_(x, G.sy + 16 + fs + 9, String(v), fs - 3, 'text-anchor="middle"'); }
@@ -1623,7 +1625,7 @@ function drawGasBg() {
   } else {
     const c = G.cy, x0 = c.cx - c.cw / 2;
     o += `<path class="water" d="M${c.tx0 + 3} ${c.wy}H${c.tx1 - 3}V${G.bench - 3}H${c.tx0 + 3}Z" opacity=".85"/><path class="glassl" d="M${c.tx0} ${c.wy - 12}V${G.bench - 1}H${c.tx1}V${c.wy - 12}"/>`;
-    o += `<path class="tube" d="M${G.fx} ${f1(G.top - 8)}V${c.tubeY}H${c.tubeX}V${G.bench - 16}H${c.cx}V${c.mouth - 4}"/>`;
+    o += `<path class="tube${pic ? "" : " ri-vec"}" d="M${G.fx} ${f1(G.top - 8)}V${c.tubeY}H${c.tubeX}V${G.bench - 16}H${c.cx}V${c.mouth - 4}"/>` + (pic ? "" : `<path class="tube ri-img" d="M${G.fx} ${f1(G.fy - 353.6 * G.b / 136.8)}V${c.tubeY}H${c.tubeX}V${G.bench - 16}H${c.cx}V${c.mouth - 4}"/>`);
     o += `<rect class="water" x="${x0 + 2}" y="${c.cy0 + 2}" width="${c.cw - 4}" height="${c.mouth - c.cy0 - 2}"/>`;
     for (let v = 0; v <= 100; v += 2) { const y = c.cy0 + 8 + v * c.cpc, big = v % 10 === 0; o += `<path class="tick" d="M${x0} ${f1(y)}h${big ? 12 : 6}"/>`; if (v % 20 === 0) o += T_(x0 - 6, y + fs * .35, String(v), fs - 4, 'text-anchor="end"'); }
     o += `<path class="glassl" d="M${x0} ${c.mouth}V${c.cy0 + 6}Q${x0} ${c.cy0} ${x0 + 6} ${c.cy0}H${x0 + c.cw - 6}Q${x0 + c.cw} ${c.cy0} ${x0 + c.cw} ${c.cy0 + 6}V${c.mouth}"/>`;
