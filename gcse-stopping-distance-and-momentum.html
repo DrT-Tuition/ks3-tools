@@ -22,7 +22,7 @@
     Rulers, bands, arrows, graphs, bars and every number are drawn in code.
   Model, in four tabs:
     1. Emergency stop: speed 5–35 m/s, driver (alert 0.6 s, tired 0.9 s, using a phone 1.2 s, after alcohol 1.4 s) or a reaction-time
-       slider 0.2–1.5 s, road (dry 6.25, wet 4, icy 0.625 m/s²) and brakes and tyres (worn × 0.8). Drive ▶: the car drives up (trees scroll),
+       slider 0.2–1.5 s, road (dry 6.25, wet 3.125, icy 0.625 m/s²) and brakes and tyres (worn × 0.8). Drive ▶: the car drives up (trees scroll),
        the cow appears, the car travels the thinking distance (blue band), then brakes (orange band) to a stop, on a ruler to scale.
        Long braking is fast-forwarded (labelled). My own reaction time: press Brake! (or Space) when the cow appears; that time is used.
     2. Graph: thinking, braking and stopping distance against speed for the settings; a kept line to compare.
@@ -683,7 +683,7 @@ html.nq-pres [data-nq-stage] .scene{max-height:none!important}   /* the scene's 
       </div>
       <p class="covernote" id="coverNote" hidden>The model is hidden for this question, so it doesn’t give the answer away. It comes back when you have answered (or pressed Show answer).</p>
       <p class="locknote" id="lockNote" hidden></p>
-      <details class="about"><summary>About this model</summary><p class="limits">Every model leaves something out. The road and the distances are to scale, but the car and the cow are not. The car slows with a steady deceleration: on a dry road with good brakes and tyres it is 6.25 m/s² (close to the Highway Code’s stopping distances); a wet road gives 4 m/s², an icy road 0.625 m/s² (10 times the dry braking distance), and worn brakes or tyres give 0.8 of these. Real cars, roads and drivers vary. The reaction times for a tired, distracted or drunk driver are examples: they vary a lot from person to person. Your own reaction time on a mouse, key or screen is quicker than moving your foot to a brake pedal. In the energy part all the kinetic energy goes to the brakes; really a little goes to the tyres and the air. In the momentum part a bounce loses no kinetic energy (a perfect bounce); real collisions lose some, but momentum is always conserved. Velocities are rounded to 2 decimal places.</p></details>
+      <details class="about"><summary>About this model</summary><p class="limits">Every model leaves something out. The road and the distances are to scale, but the car and the cow are not. The car slows with a steady deceleration: on a dry road with good brakes and tyres it is 6.25 m/s² (close to the Highway Code’s stopping distances); a wet road gives 3.125 m/s² (twice the dry braking distance), an icy road 0.625 m/s² (10 times), and worn brakes or tyres give 0.8 of these. Real cars, roads and drivers vary. The reaction times for a tired, distracted or drunk driver are examples: they vary a lot from person to person. Your own reaction time on a mouse, key or screen is quicker than moving your foot to a brake pedal. In the energy part all the kinetic energy goes to the brakes; really a little goes to the tyres and the air. When the car skids, the energy heats the tyres and the road as well as the brakes. In the momentum part a bounce loses no kinetic energy (a perfect bounce); real collisions lose some, but momentum is always conserved. Velocities are rounded to 2 decimal places.</p></details>
     </section>
 
     <aside class="card qpanel" id="qpanel" aria-label="Questions">
@@ -760,9 +760,9 @@ html.nq-pres [data-nq-stage] .scene{max-height:none!important}   /* the scene's 
 /* ---------- TOOL SCRIPT BELOW ---------- */
 /* ===== Facts (AQA 8464 Combined Science Trilogy 6.5.4.3 forces and braking, 6.5.5 momentum (HT); the same as 8463 Physics 4.5.6.3, 4.5.7) ===== */
 /* Braking: the greatest deceleration the tyres can give on each road (m/s²), with good brakes and tyres. Worn brakes or tyres give 0.8 of it.
-   Dry 6.25 m/s² is close to the deceleration behind the stopping distances in the Highway Code; wet roads need about 1.5 times the
+   Dry 6.25 m/s² is close to the deceleration behind the stopping distances in the Highway Code; wet roads need about 2 times the
    braking distance and icy roads about 10 times. Braking distance = v² ÷ 2a (from v² − u² = 2as with v = 0). */
-const ROADS = { dry: { a: 6.25, t: "Dry" }, wet: { a: 4, t: "Wet" }, icy: { a: .625, t: "Icy" } };
+const ROADS = { dry: { a: 6.25, t: "Dry" }, wet: { a: 3.125, t: "Wet" }, icy: { a: .625, t: "Icy" } };
 const ROADK = ["dry", "wet", "icy"];
 const WORN = .8;
 const decel = (road, cond) => ROADS[road].a * (cond === "worn" ? WORN : 1);
@@ -1160,7 +1160,7 @@ function moRead() {
     (mo.ev === "stick" ? row("A + B", mo.mA + mo.mB, R.a, hv, ha) : row("A", mo.mA, R.a, hv, ha) + row("B", mo.mB, R.b, hv, ha)) +
     `<tr class="tot"><td colspan="3">Total momentum</td><td>${ha ? "?" : pS(1, R.P)}</td></tr></tbody></table>`;
   else o += rp("r3", willHit(mo.vA, mo.vB) ? "Press Collide ▶ to see what happens." : "A must be moving right faster than B, or they never meet.");
-  if (after && !qh("conserve")) o += rp("r3", "p = mv. Total momentum before = total momentum after: momentum is conserved." + (mo.ev === "bounce" && !exact2(R.a) ? " (≈: rounded to 2 decimal places.)" : ""));
+  if (after && !qh("conserve")) o += rp("r3", "p = mv. Total momentum before = total momentum after: momentum is conserved." + (!exact2(R.a) || !exact2(R.b) ? " (≈: rounded to 2 decimal places.)" : ""));
   return `<div class="mowrap">${o}</div>`;
 }
 
@@ -1243,7 +1243,7 @@ function startLoop() {
     const ppm = pxPerM(), wr = Math.max(4, CAR_WR * stopGeo(Math.round($("ssvg").clientWidth) || 800, 300).carW);
     if (R.ph === "lead") {
       if (!reduced()) { R.scroll += R.v * ppm * dtF; R.spin += R.v * ppm * dtF / wr * 57.3; }
-      if (el >= R.lead) { R.ph = "think"; R.t0 = t; tourSignal("hazard"); }
+      if (el >= R.lead) { R.ph = "think"; R.t0 = t; R.msg = ""; tourSignal("hazard"); }
     } else if (R.ph === "think") {
       const x0 = R.x; R.x = R.v * el; R.spin += (R.x - x0) * ppm / wr * 57.3;
       if (R.auto && el >= R.rt) { R.x = R.dt = R.v * R.rt; R.ph = "brake"; R.t0 = t; setK(R); }
@@ -1334,7 +1334,7 @@ function resumeAnim() {}
 const TRY = ["Drive at 20 m/s with an alert driver on a dry road. Read the thinking, braking and stopping distances on the ruler.",
   "Change the driver to tired, or using a phone. Which distance changes: thinking or braking?",
   "Make the road wet or icy (or the brakes worn). Which distance changes now?",
-  "Turn on My own reaction time and test yourself. Is your time inside 0.2–0.9 s?",
+  "Turn on My reaction time and test yourself. Is your time inside 0.2–0.9 s?",
   "On the graph, compare 10 m/s with 20 m/s. Which distance doubles, and which is 4 times as long?",
   "Press Keep this line, then make the road icy. How much further does the car need to stop?",
   "Halve the stopping-in distance. What happens to the braking force and the deceleration?",
@@ -1427,7 +1427,7 @@ TASKS.easy = [
       { t: "It makes the car’s kinetic energy increase", why: "Braking reduces the kinetic energy. A large deceleration reduces it quickly." },
       { t: "It increases the mass of the car", why: "The mass of the car doesn’t change when it brakes." }],
     explain: "A large deceleration needs a large braking force: the brakes may overheat, and the tyres may skid so that the driver loses control.",
-    hints: ["Set a short stopping-in distance and look at the warnings.", "What happens to the brakes when they do a lot of work quickly?", "What happens if the tyres can’t grip the road?"] },
+    hints: ["Set a short stopping-in distance, press Brake ▶ and watch what happens to the car.", "What happens to the brakes when they do a lot of work quickly?", "What happens if the tyres can’t grip the road?"] },
   { id: "tired", kind: "num", stuck: "eqs", text: "At 20 m/s an alert driver reacts in 0.6 s. When tired, the same driver reacts in 0.9 s. How much further does the car travel before the brakes come on?",
     setup: SU.stop(20, "alert", "dry"), tabs: ["stop"], hide: ["dist", "why"], hideWords: ["Thinking distance"],
     lbl: "Extra distance:", unit: "m", ans: () => 20 * .9 - 20 * .6, tol: .05,
@@ -1445,14 +1445,14 @@ TASKS.hard = [
     hints: ["The car stops, so v = 0. Slowing down: a = −5 m/s².", "0 − 400 = 2 × (−5) × s", "s = 400 ÷ 10"] },
   { id: "decel", kind: "num", stuck: "eqs", text: "A car at 30 m/s has a braking distance of 72 m. Calculate its deceleration.", cover: true, hideWords: ["Deceleration"],
     lbl: "Deceleration:", unit: "m/s²", ans: () => 30 * 30 / (2 * 72), tol: .06,
-    wrongs: [[12.5, "Don’t forget the 2 in 2as: 900 ÷ (2 × 72)."], [.417, "Use v² − u² = 2as: the speed is squared."], [2.4, "Use v² − u² = 2as: 900 ÷ 144."]],
+    wrongs: [[12.5, "Don’t forget the 2 in 2as: 900 ÷ (2 × 72)."], [.417, "Use v² − u² = 2as: the speed is squared."], [2.4, "72 ÷ 30 is distance ÷ speed, not the deceleration. Use v² − u² = 2as: 900 ÷ 144."]],
     generic: "Use v² − u² = 2as with v = 0, u = 30 m/s and s = 72 m.",
     working: () => ["0² − 30² = 2 × a × 72", "−900 = 144 a, so a = −6.25 m/s²", "Deceleration = 6.25 m/s²."],
     hints: ["v = 0 and u = 30 m/s.", "−900 = 2 × a × 72", "a = 900 ÷ 144 (the minus sign means it slows down)."] },
   { id: "force", kind: "num", stuck: "eqs", text: "(HT) The model shows a 1000 kg car at 20 m/s that stops in 32 m. The work done by the brakes equals the kinetic energy. Calculate the mean braking force.",
     setup: SU.en(1000, 20, 32), tabs: ["energy"], lock: ["m", "v", "d", "road"], hide: ["force", "why"], hideWords: ["Work done"],
     lbl: "Braking force:", unit: "N", ans: () => enOf(1000, 20, 32).F, tol: 30,
-    wrongs: [[12500, "Don’t forget the ½ in Eₖ = ½mv²: the kinetic energy is 200 000 J."], [200000, "200 000 J is the work done. Force = work done ÷ distance."], [6.25, "6.25 m/s² is the deceleration. Force = mass × deceleration."], [625, "Use energy: Eₖ = ½ × 1000 × 20² = 200 000 J, then F = 200 000 ÷ 32."]],
+    wrongs: [[12500, "Don’t forget the ½ in Eₖ = ½mv²: the kinetic energy is 200 000 J."], [200000, "200 000 J is the work done. Force = work done ÷ distance."], [6.25, "6.25 m/s² is the deceleration. Force = mass × deceleration."], [625, "The speed wasn’t squared. Eₖ = ½ × 1000 × 20² = 200 000 J, then F = 200 000 ÷ 32."]],
     generic: "Kinetic energy = ½mv². Then work done = force × distance, so force = work done ÷ distance.",
     working: () => ["Eₖ = ½ × 1000 × 20² = 200 000 J", "Work done by the brakes = 200 000 J = F × 32", "F = 200 000 ÷ 32 = 6250 N."],
     hints: ["First work out the kinetic energy: ½mv².", "Work done = force × distance.", "Force = 200 000 ÷ 32"] },
@@ -1512,7 +1512,7 @@ function bankCheck() {
   /* the model's physics, checked against hand-worked values */
   const S1 = stopOf(20, .6, 6.25); if (S1.dtS !== "12" || S1.dbS !== "32" || S1.sdS !== "44") F("model: 20 m/s, 0.6 s, dry");
   if (stopOf(10, .6, 6.25).db !== 8 || stopOf(25, .6, 6.25).sd !== 65 || stopOf(30, .7, 6.25).sd !== 93) F("model: stopping distances");
-  if (Math.abs(stopOf(20, .6, decel("wet", "good")).db / stopOf(20, .6, decel("dry", "good")).db - 1.5625) > 1e-9) F("model: wet road");
+  if (Math.abs(stopOf(20, .6, decel("wet", "good")).db / stopOf(20, .6, decel("dry", "good")).db - 2) > 1e-9) F("model: wet road");
   if (Math.abs(stopOf(20, .6, decel("icy", "good")).db / stopOf(20, .6, decel("dry", "good")).db - 10) > 1e-9) F("model: icy road");
   const E1 = enOf(1000, 20, 32); if (E1.ke !== 200000 || E1.F !== 6250 || E1.a !== 6.25) F("model: energy");
   [[2, 3, 1, 0, "stick", 2, 2], [1, 3, 3, 1, "bounce", 0, 2], [1000, 20, 1500, 0, "bounce", -4, 16], [1000, 10, 1500, -10, "stick", -2, -2]].forEach(([a, b, c, d, e, x, y]) => {
@@ -1836,7 +1836,9 @@ $("rtSl").addEventListener("input", e => { if (locked("rt")) { e.target.value = 
 $("roadSeg").addEventListener("click", e => { const b = e.target.closest("button[data-road]"); if (!b || b.disabled) return; if (locked("road")) return lockMsg(); M.road = b.dataset.road; changed(1); tourSignal("road"); });
 $("condSeg").addEventListener("click", e => { const b = e.target.closest("button[data-cond]"); if (!b || b.disabled) return; if (locked("road")) return lockMsg(); M.cond = b.dataset.cond; changed(1); });
 /* 1. emergency stop */
-$("driveBtn").addEventListener("click", () => drive());
+let brakeDown = false;   // Brake! acts on pointerdown (quicker than a click); the click that follows is then ignored
+$("driveBtn").addEventListener("pointerdown", e => { brakeDown = false; const R = M.run; if (R && M.own && !R.auto && (R.ph === "lead" || R.ph === "think")) { e.preventDefault(); brakeDown = true; brakeNow(); } });
+$("driveBtn").addEventListener("click", () => { if (brakeDown) { brakeDown = false; return; } drive(); });
 $("ownSw").addEventListener("click", () => { if (anim) return; if (locked("own")) return lockMsg(); M.own = !M.own; M.run = null; M.res = null; drawAll(); });
 document.addEventListener("keydown", e => {   // the space bar is the brake pedal during your own reaction test
   if ((e.key === " " || e.code === "Space") && M.tab === "stop" && M.run && M.own && !M.run.auto && (M.run.ph === "lead" || M.run.ph === "think") && !e.target.closest("input,select,textarea")) { e.preventDefault(); brakeNow(); }
