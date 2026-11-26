@@ -1292,6 +1292,18 @@ function bulkPhase(G, sub, f) {   // the bulk-transport picture at time f (0..1)
   if (f < .3) { const vy = lerp(B.end, B.pinch, ease((f - .2) / .1)); return { vy, vx: 0, cy: vy, rel: 0, flat: true }; }
   const t = ease((f - .3) / .7); return { cy: lerp(B.pinch, B.top, t), rel: clamp((t - .2) / .8, 0, 1) };
 }
+function carrC(G, P, sub, f, rest) {   // how far the carrier protein has changed shape (0 = binding site open to the outside, 1 = open to the inside) at time f of a run
+  const route = SUBS[sub].route; if ((route !== "carr" && route !== "pump") || !P || f == null) return rest;
+  const n = P.ins.length + P.outs.length, sl = trSlots(G), e = x => x * x * (3 - 2 * x), inv = u => u < .5 ? Math.sqrt(u / 2) : 1 - Math.sqrt(2 * (1 - u)) / 2;
+  const all = P.ins.map((p, j) => [sl.out[p], sl.inn[P.tIn[j]], "in"]).concat(P.outs.map((p, j) => [sl.inn[p], sl.out[P.tOut[j]], "out"]));
+  let best = 0;
+  all.forEach(([a, b, dir], j) => {
+    const Q = trPath(G, a, b, sub, dir), d1 = Math.hypot(Q[1].x - Q[0].x, Q[1].y - Q[0].y), d2 = Math.hypot(Q[2].x - Q[1].x, Q[2].y - Q[1].y), d3 = Math.hypot(Q[3].x - Q[2].x, Q[3].y - Q[2].y), T = d1 + d2 + d3 || 1;
+    const s0 = n > 1 ? j / (n - 1) * .45 : 0, ta = s0 + .55 * inv(d1 / T), tb = s0 + .55 * inv((d1 + d2) / T);   // when this particle enters the carrier and when it leaves it
+    const q = e(clamp((f - ta) / Math.max(.03, tb - ta), 0, 1)) * (1 - e(clamp((f - tb) / .12, 0, 1)));   // the carrier changes shape as the molecule is carried, then returns
+    if (q > best) best = q; });
+  return rest ? 1 - best : best;
+}
 function drawTr() {
   const svg = $("tsvg"), G = trGeo(), fs = G.fs, sl = trSlots(G), f = M.trF, sub = M.sub, bulk = isBulk(sub), y0 = G.y0, R = G.R, xc = G.bc;
   setVB(svg, G.W, G.H);
@@ -1304,25 +1316,28 @@ function drawTr() {
   /* the proteins: channel, glucose carrier, nitrate carrier */
   const k = G.k, top = y0 - G.h - 12 * k, bot = y0 + G.h + 12 * k, g = 9 * k, w = 26 * k;
   o += `<rect class="prot" x="${f1(G.chan - g - w)}" y="${f1(top)}" width="${f1(w)}" height="${f1(bot - top)}" rx="${f1(11 * k)}"/><rect class="prot" x="${f1(G.chan + g)}" y="${f1(top)}" width="${f1(w)}" height="${f1(bot - top)}" rx="${f1(11 * k)}"/><rect class="pore" x="${f1(G.chan - g + 1)}" y="${f1(top + 4)}" width="${f1(2 * g - 2)}" height="${f1(bot - top - 8)}"/>`;
-  const carrier = (x, notch) => `<path class="carr" d="M${f1(x - 36 * k)} ${f1(top + 12 * k)}Q${f1(x - 36 * k)} ${f1(top)} ${f1(x - 18 * k)} ${f1(top)}L${f1(x - 13 * k)} ${f1(top)}Q${f1(x - 11 * k)} ${f1(top + 15 * k)} ${f1(x)} ${f1(top + 15 * k)}Q${f1(x + 11 * k)} ${f1(top + 15 * k)} ${f1(x + 13 * k)} ${f1(top)}L${f1(x + 18 * k)} ${f1(top)}Q${f1(x + 36 * k)} ${f1(top)} ${f1(x + 36 * k)} ${f1(top + 12 * k)}L${f1(x + 32 * k)} ${f1(bot - 12 * k)}Q${f1(x + 30 * k)} ${f1(bot)} ${f1(x + 10 * k)} ${f1(bot)}L${f1(x - 10 * k)} ${f1(bot)}Q${f1(x - 30 * k)} ${f1(bot)} ${f1(x - 32 * k)} ${f1(bot - 12 * k)}Z"${notch ? ' style="fill:var(--carr)"' : ""}/>`;
-  o += carrier(G.carr) + carrier(G.pump);
-  o += `<path d="${hexP(G.carr, top + 24 * k, 5 * k)}" style="fill:none;stroke:var(--carr-edge);stroke-width:1.5;stroke-dasharray:3 2"/><circle cx="${G.pump}" cy="${f1(top + 24 * k)}" r="${f1(5 * k)}" style="fill:none;stroke:var(--carr-edge);stroke-width:1.5;stroke-dasharray:3 2"/>`;
+  const P = !bulk && f != null ? trPlan(M, G) : null, route = SUBS[sub].route, rest = run.inN === 0 && run.outN > 0 ? 1 : 0;
+  const cc = carrC(G, P, sub, f, rest);   // 0 = binding site open to the outside, 1 = open to the inside
+  const carrier = (x, c) => `<path class="carr" d="M${f1(x - 36 * k)} ${f1(top + 12 * k)}Q${f1(x - 36 * k)} ${f1(top)} ${f1(x - 18 * k)} ${f1(top)}L${f1(x - 13 * k)} ${f1(top)}Q${f1(x - 11 * k)} ${f1(top + 26 * k * (1 - c))} ${f1(x)} ${f1(top + 26 * k * (1 - c))}Q${f1(x + 11 * k)} ${f1(top + 26 * k * (1 - c))} ${f1(x + 13 * k)} ${f1(top)}L${f1(x + 18 * k)} ${f1(top)}Q${f1(x + 36 * k)} ${f1(top)} ${f1(x + 36 * k)} ${f1(top + 12 * k)}L${f1(x + 32 * k)} ${f1(bot - 12 * k)}Q${f1(x + 30 * k)} ${f1(bot)} ${f1(x + 18 * k)} ${f1(bot)}L${f1(x + 13 * k)} ${f1(bot)}Q${f1(x + 11 * k)} ${f1(bot - 26 * k * c)} ${f1(x)} ${f1(bot - 26 * k * c)}Q${f1(x - 11 * k)} ${f1(bot - 26 * k * c)} ${f1(x - 13 * k)} ${f1(bot)}L${f1(x - 18 * k)} ${f1(bot)}Q${f1(x - 30 * k)} ${f1(bot)} ${f1(x - 32 * k)} ${f1(bot - 12 * k)}Z"/>`;
+  const siteY = c => f1(top + 20 * k + c * (bot - top - 40 * k)), siteSt = 'style="fill:none;stroke:var(--carr-edge);stroke-width:1.5;stroke-dasharray:3 2"';
+  const cG = route === "carr" ? cc : 0, cN = route === "pump" ? cc : 0;   // only the carrier that is carrying this substance changes shape
+  let dy = carrier(G.carr, cG) + carrier(G.pump, cN) + `<path d="${hexP(G.carr, +siteY(cG), 5 * k)}" ${siteSt}/><circle cx="${G.pump}" cy="${siteY(cN)}" r="${f1(5 * k)}" ${siteSt}/>`;
   /* ATP at the nitrate carrier and at the vesicle */
-  const atpTag = (x, y) => { const used = M.ran && (f == null || f > .5); if (!M.atp) return tag(x, y, "no ATP", fs - 1, "bad");
+  const atpTag = (x, y) => { const used = f != null ? f > .5 : M.ran; if (!M.atp) return tag(x, y, "no ATP", fs - 1, "bad");
     return (SUBS[sub].atp && used ? tag(x, y, "ADP + Pᵢ", fs - 1, "") : tag(x, y, "ATP", fs - 1, "acc")); };
-  if (sub === "no3" && !hid("atp")) o += atpTag(G.t ? 500 : 650, G.t ? 400 : 300);
-  if (bulk && !hid("atp")) o += atpTag(G.t ? 200 : 650, G.t ? 420 : 300);
+  if (sub === "no3" && !hid("atp")) dy += atpTag(G.t ? 500 : 650, G.t ? 400 : 300);
+  if (bulk && !hid("atp")) dy += atpTag(G.t ? 200 : 650, G.t ? 420 : 300);
   /* labels */
   [["bil", "phospholipid bilayer"], ["chan", "channel protein"], ["carr", "glucose carrier"], ["pump", "nitrate carrier"]].forEach(([key, s]) => { const [x, y, a] = G.lab[key]; o += T_(x, y, s, fs, `text-anchor="${a}" class="mut"`); });
   G.cap.forEach(([x, y, s, a]) => { o += T_(x, y, s, fs, `text-anchor="${a || "start"}" class="bold"`); });
   /* particles */
   if (!bulk) {
-    const P = f != null ? trPlan(M, G) : null, mv = new Set(P ? P.ins.map(i => "o" + i).concat(P.outs.map(i => "i" + i)) : []);
+    const mv = new Set(P ? P.ins.map(i => "o" + i).concat(P.outs.map(i => "i" + i)) : []);
     M.pOut.forEach(i => { if (!mv.has("o" + i)) o += particle(sub, sl.out[i].x, sl.out[i].y, G.s); });
     M.pIn.forEach(i => { if (!mv.has("i" + i)) o += particle(sub, sl.inn[i].x, sl.inn[i].y, G.s); });
     if (P) { const n = P.ins.length + P.outs.length, all = P.ins.map((p, j) => [sl.out[p], sl.inn[P.tIn[j]], "in"]).concat(P.outs.map((p, j) => [sl.inn[p], sl.out[P.tOut[j]], "out"]));
-      all.forEach(([a, b, dir], j) => { const s0 = n > 1 ? j / (n - 1) * .45 : 0, ff = clamp((f - s0) / .55, 0, 1), q = along(trPath(G, a, b, sub, dir), ease(ff)); o += particle(sub, q.x, q.y, G.s); });
-      const bo = bounceOf(G, sub); if (bo) { const ff = clamp(f / .5, 0, 1), d = ff < .5 ? ff * 2 : 2 - ff * 2, q = { x: bo.a.x + (bo.b.x - bo.a.x) * d, y: bo.a.y + (bo.b.y - bo.a.y) * d }; o += particle(sub, q.x, q.y, G.s); } }
+      all.forEach(([a, b, dir], j) => { const s0 = n > 1 ? j / (n - 1) * .45 : 0, ff = clamp((f - s0) / .55, 0, 1), q = along(trPath(G, a, b, sub, dir), ease(ff)); dy += particle(sub, q.x, q.y, G.s); });
+      const bo = bounceOf(G, sub); if (bo) { const ff = clamp(f / .5, 0, 1), d = ff < .5 ? ff * 2 : 2 - ff * 2, q = { x: bo.a.x + (bo.b.x - bo.a.x) * d, y: bo.a.y + (bo.b.y - bo.a.y) * d }; dy += particle(sub, q.x, q.y, G.s); } }
     if (done && !hid("why") && bounceOf(G, sub)) { const bo = bounceOf(G, sub); o += `<path class="no" d="M${f1(bo.b.x - 9)} ${f1(bo.b.y - 9)}l18 18m0 -18l-18 18"/>`; }
     if (done && !hid("dir") && run.net !== "none") { const x = rxOr(G, sub), up = run.net === "out"; o += arrow(x + (G.t ? 34 : 46), up ? y0 + 40 : y0 - 40, x + (G.t ? 34 : 46), up ? y0 - 40 : y0 + 40, 4); }
   } else {
@@ -1332,7 +1347,7 @@ function drawTr() {
       const sx = cx0 + dx * R * .55, sy = cyc + dy * R * .55, ex = xc + (dx * 2.6 + (j % 2 ? .2 : -.2)) * R * .75, ey = y0 - G.h - 36 - (j * 13 % 50) * (G.t ? 1.2 : .8);
       o += particle("enz", sx + (ex - sx) * rel, sy + (ey - sy) * rel, G.es); }); }
   }
-  setLayer($("tG"), o);
+  if (bulk) { setLayer($("tG"), o + dy); setLayer($("tMov"), ""); } else { setLayer($("tG"), o); setLayer($("tMov"), dy); }   // the still parts are built once per state; only the moving parts change on each frame
   setAttr(svg, "aria-label", `A membrane between the outside of a cell and its cytoplasm, with a channel protein and two carrier proteins. Substance: ${SUBS[sub].n}.`);
 }
 const rxOr = (G, sub) => routeX(G, sub) == null ? (G.bil[0] + G.bil[1]) / 2 : routeX(G, sub);
@@ -1569,8 +1584,7 @@ function startTr() {
   if (guard() || anim) return;
   if (M.ran) trStart(M);
   const m = M, done = () => { if (M !== m) return; tourSignal("run"); triedTr(m); drawAll(); shown($("tWhy").hidden ? "tRead" : "tWhy"); };
-  if (reduced()) { finishTr(m); done(); return; }
-  const t0 = performance.now(), D = isBulk(m.sub) ? 3400 : 3000;
+  const t0 = performance.now(), D = isBulk(m.sub) ? 3400 : 3000;   // the run always plays: the pupil pressed Run, and the movement is the point (a school PC's "reduce animations" setting used to skip it)
   m.trF = 0; anim = { kind: "tr", finish: () => { finishTr(m); } }; const a = anim; drawAll();
   const step = now => { if (anim !== a) return; const f = clamp((now - t0) / D, 0, 1); m.trF = f; drawTr();
     if (f < 1) a.id = paceFrame(step, 15); else { anim = null; finishTr(m); done(); } };
@@ -1580,7 +1594,6 @@ function triedTr(m) { if (m.sub === "glu" && m.grad !== "eq") { m["tg" + m.grad]
 function startLeave() {
   if (guard() || anim || M.left[M.fac]) return;
   const m = M, f = m.fac, done = () => { if (M !== m) return; m.left[f] = true; m.leaveF = 1; m.rmsg = "20 minutes are up. The liquid is pink where pigment leaked out. Now choose a filter for the colorimeter."; tourSignal("leave"); drawAll(); shown("rread"); };
-  if (reduced()) { done(); return; }
   const t0 = performance.now(), D = 3000;
   anim = { kind: "leave", finish: () => { m.leaveF = 1; m.left[f] = true; } }; const a = anim; drawAll();
   const step = now => { if (anim !== a) return; const fr = clamp((now - t0) / D, 0, 1); m.leaveF = fr; drawRP();
