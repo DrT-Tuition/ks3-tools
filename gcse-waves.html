@@ -1435,7 +1435,7 @@ const RIP_IDLE = 20000; let ripAct = performance.now(), ripIdle = false;
 function ripWake() { ripAct = performance.now(); if (!ripIdle) return; ripIdle = false; $("ripPause").hidden = true; startLoop(); }
 ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "input"].forEach(ev => document.addEventListener(ev, ripWake, { capture: true, passive: true }));
 window.addEventListener("scroll", ripWake, { passive: true });
-const wantsLoop = () => { const r = M.rip; return M.tab === "rip" && !M.qwave && ripOn(r) && !r.frozen && !["time", "freq"].includes(r.step) && sceneVis && !document.hidden && !reduced() && !ripIdle; };
+const wantsLoop = () => { const r = M.rip; return M.tab === "rip" && !M.qwave && ripOn(r) && !r.frozen && !["time", "freq"].includes(r.step) && sceneVis && !document.hidden && !ripIdle; };
 function startLoop() {
   if (anim || !wantsLoop()) return;
   const a = anim = { id: 0, last: performance.now(), m: M };
@@ -1451,13 +1451,13 @@ function stopAll() {   // stop the animation; a count that was running starts ag
   stopLoop(); const r = M.rip; if (["watch", "counting"].includes(r.step)) { r.cnt = null; r.step = "count"; }
 }
 function startCount() {   // the pupil watches the slow-motion video, starts the clock as a line crosses the marker, and taps once per wave
-  const r = M.rip; if (!(reduced() || !sceneVis)) { r.cnt = { N: r.Nsel, t0: r.t, s: null, e: null, taps: 0, tc: null }; r.step = "watch"; r.smsg = null; tourSignal("count"); drawAll(true); stopLoop(); startLoop(); return; }
-  /* reduced motion (no moving picture): the video software times the waves instead */
+  const r = M.rip; if (sceneVis) { r.cnt = { N: r.Nsel, t0: r.t, s: null, e: null, taps: 0, tc: null }; r.step = "watch"; r.smsg = null; tourSignal("count"); drawAll(true); stopLoop(); startLoop(); return; }
+  /* no moving picture (tank off-screen): the video software times the waves instead */
   const N = r.Nsel, G = ripGeo(), t0 = r.t, lp = lamCm(r.f), q0 = qAt(r, t0);
   let c0 = t0 + frac(qm(r, G) - q0) / r.f; if (c0 - t0 < 1e-6) c0 += 1 / r.f;
   const s = t0 + Math.ceil((c0 - t0) / RT.dt - 1e-9) * RT.dt, e = t0 + Math.ceil((c0 + N / r.f - t0) / RT.dt - 1e-9) * RT.dt;
   r.cnt = { N, c0, s, e, taps: N, auto: true, tc: Math.round((e - s) * 100) / 100 }; r.t = e; r.step = "counting"; tourSignal("count");
-  countDone(); rmsg("tip", "Reduced motion is on, so the video software timed the waves for you."); renderRipStep();
+  countDone(); rmsg("tip", "The tank is off-screen, so the video software timed the waves for you."); renderRipStep();
 }
 /* the pupil's taps against the real crossings: a count 1 out stays as their own error; more than 1 out, or taps much faster than the lines, means start again */
 const crossBetween = (r, a, b) => { const G = ripGeo(), q = qm(r, G); return Math.floor(r.f * b + r.ph - q) - Math.floor(r.f * a + r.ph - q); };
@@ -2044,10 +2044,7 @@ TASKS.easy = [
       { t: "It travels along with the ripples to the far end of the tank.", why: "The water doesn’t travel with the wave. Each bit of water only moves up and down, so the cork stays in the same place." },
       { t: "It moves backwards and forwards along the direction the wave travels.", why: "That is how the particles move in a longitudinal wave. Ripples are transverse: the water moves up and down, at right angles to the direction the wave travels." },
       { t: "It stays completely still: only the light pattern moves.", why: "The water surface does move: up and down as each ripple passes. The cork moves with the water, but it doesn’t travel along." }],
-    /* reduced motion (17 Nov 2026): the ripples do not move then, so the last sentence says what the cork would do instead */
-    get explain() { return "Ripples are transverse waves. They transfer energy, but not the water itself, so the cork bobs up and down in the same place." +
-      (reduced() ? " Motion is reduced on this device, so the ripples here are drawn still. In a real tank the cork rises as each crest passes and falls as each trough passes, but it does not move along."
-                 : " The model now runs: watch the cork."); },
+    get explain() { return "Ripples are transverse waves. They transfer energy, but not the water itself, so the cork bobs up and down in the same place. The model now runs: watch the cork."; },
     hints: ["Think about what a wave carries from place to place.", "Waves transfer energy, not the water. Which way does the water surface move as a ripple passes?", "It bobs up and down in the same place."] },
   { id: "arrow", kind: "choice", src: SRC.dw + "; " + SRC.ms + " (worked example)", text: "The diagram shows a wave. Which arrow shows the wavelength?", setup: SU.wave(), lock: "all", kw: ["Wavelength", "Amplitude"],
     options: [{ t: "Arrow R", ok: () => ARW.R.startsWith("one wavelength") },

@@ -66,7 +66,7 @@
     right option, feedback for every wrong one, computed answers accepted when correctly rounded, every 6-mark level reachable with each
     wrong statement a level, goals unmet at the start and reached by Show answer).
   Performance: drawn on demand. One animation only: the stopwatch and fading colour while timing (12 fps, 5–25 s), by paceFrame with adaptive slow-down, patching text in an overlaid SVG built once per view; they skip
-    drawing while the picture is off-screen and stop when the tab is hidden. Reduced motion: the timing jumps straight to the end point.
+    drawing while the picture is off-screen and stop when the tab is hidden. The timing runs the same whatever the reduced-motion setting.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
   Coverage fixes (30 Oct 2026): Easy 6 is a hazard → risk → control question (phenolphthalein made up in ethanol: flammable, irritates eyes; standard lab practice — at the practical's ~0.05 mol/dm³ the sodium carbonate is not an irritant), replacing the fridge question (its point is the fridge row of Easy 2's sort). Hard 5 is a resolution question on the thermometer (1 °C, read from the magnified thermometer; the 1 °C wording in reading feedback is hidden while it is open), replacing the carbon-cycle question. Model limits names the notes' other method (pH read each day with universal indicator or a pH meter).
 -->
@@ -1247,12 +1247,11 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { sceneVis = es[
 /* the stopwatch runs (time sped up, more slowly near the end point so pupils can judge it); the pupil stops it */
 function runClock() {
   const r = M.run, m = M; stopAll();
-  if (reduced()) { r.t = r.end; stopTime(false); return; }
   let last = performance.now(); const a = anim = { id: 0 };
   a.finish = () => {};
   const step = now => { if (anim !== a || M !== m) return;
     const tn = Math.max(now, performance.now()), dt = Math.min(.25, (tn - last) / 1000); last = tn;
-    const sp = reduced() ? 1 : r.t < r.end - RP.near ? RP.fast : RP.slow; r.t += dt * sp;
+    const sp = r.t < r.end - RP.near ? RP.fast : RP.slow; r.t += dt * sp;
     if (r.t >= r.end + RP.late) { r.t = r.end + RP.late; anim = null; r.late = true; stopTime(true); return; }
     if (sceneVis) drawLabMov(); a.id = paceFrame(step, 12); };
   a.id = paceFrame(step, 12); renderStep(true);

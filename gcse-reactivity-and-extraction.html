@@ -46,7 +46,7 @@
     displacement rule and equations (incl. Cu + 2Ag⁺), extraction methods, mystery-metal order, the order questions' answers
     worked out from the model, every question (3 hints, one right option, feedback for every wrong option, no 69).
   Performance: drawn on demand. Animations (metal in water/acid, displacement, heating) are short runs paced by paceFrame
-    and stop at the end, on a tab or mode change and when the page is hidden; reduced motion jumps to the result. 0 rAF idle.
+    and stop at the end, on a tab or mode change and when the page is hidden; reduced motion makes no difference (they always play). 0 rAF idle.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1306,7 +1306,7 @@ function waStop(finish) { if (!waAnim) return; paceCancel(waAnim.id); waAnim = n
 function waGo() {
   const W = M.wa; if (W.r === "acid" && G1.includes(W.metal)) { drawWA(); return; }
   waStop(false); W.t = 0;
-  if (reduced() || document.hidden) { W.phase = "done"; drawAll(); waAfter(); return; }
+  if (document.hidden) { W.phase = "done"; drawAll(); waAfter(); return; }
   W.phase = "run"; drawAll(); const end = waEnd(W.r, W.metal), a = waAnim = { t0: performance.now(), id: 0 };
   const step = now => { if (waAnim !== a) return; W.t = (Math.max(now, performance.now()) - a.t0) / 1000;
     if (W.t >= end) { waAnim = null; W.phase = "done"; drawAll(); waAfter(); return; }
@@ -1463,7 +1463,7 @@ let dpAnim = null;
 function dpStop(finish) { if (!dpAnim) return; paceCancel(dpAnim.id); dpAnim = null; if (finish && M.dp.phase === "run") dpFinish(); }
 function dpGo() {
   const D = M.dp; dpStop(false); D.p = 0; D.drop = 0;
-  if (reduced() || document.hidden) { dpFinish(); return; }
+  if (document.hidden) { dpFinish(); return; }
   D.phase = "run"; drawAll(); const re = dpReacts(D.metal, D.sol), a = dpAnim = { t0: performance.now(), id: 0 }, end = re ? 4.6 : 1;
   const step = now => { if (dpAnim !== a) return; const t = (Math.max(now, performance.now()) - a.t0) / 1000;
     D.drop = clamp(t / .7); D.p = re ? clamp((t - .8) / 3.6) : 0;
@@ -1662,7 +1662,7 @@ function heatFrame(now) {
 }
 function startHeat() {
   const E = M.ex; exStop(false); E.run = "idle"; E.prog = 0;
-  if (reduced() || document.hidden) { E.run = "done"; E.prog = 1; drawAll(); afterHeat(); return; }
+  if (document.hidden) { E.run = "done"; E.prog = 1; drawAll(); afterHeat(); return; }
   E.run = "heating"; drawAll(); exAnim = { t0: performance.now(), dur: 4000, id: 0 }; exAnim.id = paceFrame(heatFrame, 15);
 }
 function finishHeat() { if (exAnim) { paceCancel(exAnim.id); exAnim = null; } M.ex.run = "done"; M.ex.prog = 1; drawAll(); afterHeat(); }

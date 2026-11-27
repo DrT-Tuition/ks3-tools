@@ -1626,17 +1626,16 @@ function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(
 /* ===== Animation: evaporating, distilling, heating the distillate (on demand, 12 fps) ===== */
 let onScreen = true;
 const moving = m => (m.tab === "solid" && m.run.phase === "evap" && m.run.heat) || (m.tab === "dist" && m.dist.flame !== "off" && m.dist.phase === "heat") || (m.tab === "dist" && m.dist.phase === "test" && m.dist.test.heat && m.dist.test.T < BP) || (m.tab === "dist" && boilShow(m));
-const boilShow = m => m.dist.phase === "test" && m.dist.test.heat && m.dist.test.T >= BP && !reduced() && (m.dist.test.bub || 0) < 3;   // a few bubbles, then still
+const boilShow = m => m.dist.phase === "test" && m.dist.test.heat && m.dist.test.T >= BP && (m.dist.test.bub || 0) < 3;   // a few bubbles, then still
 const FPS = () => M.tab === "dist" && M.dist.phase === "heat" ? 8 : 12;   // the distillation (slow-moving liquid, a big picture) is drawn at 8 fps
 function ensureAnim() {
   if (anim || !moving(M) || !onScreen) return;
-  const m = M; let last = performance.now(), acc = 0;
+  const m = M; let last = performance.now();
   anim = { id: 0, k: 0 }; const a = anim;
   const step = now => {
     if (anim !== a || M !== m) { if (anim === a) anim = null; return; }
     if (!onScreen) { anim = null; return; }
-    let dt = clamp((now - last) / 1000, 0, .15); last = now; a.k++;
-    if (reduced()) { acc += dt; if (acc < .5) { a.id = paceFrame(step, FPS()); return; } dt = acc; acc = 0; }
+    const dt = clamp((now - last) / 1000, 0, .15); last = now; a.k++;
     const msg0 = m.msg, ph0 = m.tab === "solid" ? m.run.phase + m.run.heat + (m.run.f <= CRUST) + (m.run.f <= 0) : m.dist.phase + m.dist.flame + boiling(m.dist) + (depth(m.dist) >= 1.5) + (m.dist.coll >= DPERCM);
     if (m.tab === "solid") evapTick(m, dt);
     else if (m.dist.phase === "test") { if (!testTick(m, dt) && m.dist.test.T >= BP) m.dist.test.bub = (m.dist.test.bub || 0) + dt; }

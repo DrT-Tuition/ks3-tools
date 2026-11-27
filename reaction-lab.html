@@ -1518,7 +1518,7 @@ function renderCtl() {   // touches a control only when its state really changes
 function drawAll() { renderCtl(); drawScene(); }
 function setTab(t) { if (anim) finishAnim(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
-/* ===== Animation (paceFrame: frame cap, paused off-screen or when the tab is hidden; reduced motion: a few still steps) ===== */
+/* ===== Animation (paceFrame: frame cap, paused off-screen or when the tab is hidden; reduced motion does not shorten them) ===== */
 function startAnim(a) { anim = a; a.t0 = null; a.el = 0; a.lastQ = -1; paused = false; renderCtl(); rafId = paceFrame(step, a.fps); }
 function step(ts) {
   if (!anim) return;
@@ -1526,7 +1526,6 @@ function step(ts) {
   if (anim.t0 == null) anim.t0 = ts - anim.el;
   anim.el = ts - anim.t0;
   let el = anim.el;
-  if (reduced()) { const q = Math.min(anim.dur, Math.floor(el / 600) * 600); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
   if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) drawAll(); return; }
   rafId = paceFrame(step, anim.fps);
 }
@@ -1866,7 +1865,7 @@ function setAnswerState(instant) {
 function revealModel(instant) {   // a prediction question: once answered (or shown), the model runs
   const t = task; if (!t.after) return;
   lock = ""; hideEl("lockNote", true);
-  const now = instant || reduced();
+  const now = instant;
   if (t.after === "prod") { if (M.B.phase !== "ready") return; if (now) { prodDone(M, M.B.pf); drawAll(); } else prodRun(); }
   if (t.after === "carb") { if (M.C.phase !== "ready") return; if (now) { carbTimed(M); drawAll(); } else carbHeat(); }
 }

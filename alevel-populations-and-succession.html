@@ -1657,7 +1657,7 @@ function tick(now) {
   paceFrame(tick);
 }
 function finishAnim() { B.anim = null; renderAll(); }
-function animate(kind, ids) { if (reduced() || !ids.length) { B.anim = null; renderAll(); return; } B.anim = { kind, ids, p: 0 }; renderAll(); kick(); }
+function animate(kind, ids) { if (!ids.length) { B.anim = null; renderAll(); return; } B.anim = { kind, ids, p: 0 }; renderAll(); kick(); }
 function stopAll() { if (B.anim) B.anim = null; if (B.play) { clearTimeout(B.play); B.play = null; } }
 function doCatch1() { const m = B; if (m.anim || m.step !== 0 || lockedG("step")) return; mrrCatch1(m); animate("in", m.voles.filter(v => v.tray >= 0).map(v => v.id)); tourSignal("catch1"); }
 function doRelease() {
@@ -1835,7 +1835,7 @@ $("seeSeg").addEventListener("click", e => { const b = e.target.closest("button[
 $("stSeg").innerHTML = STAGES.map((s, i) => `<button type="button" data-st="${i}" aria-pressed="${i ? "false" : "true"}"><span class="sn">${i + 1}</span><span class="xl"> ${esc(s.s)}</span></button>`).join("");
 function setStage(i) { if (lockedG("stage")) return; B.stage = clamp(i, 0, 5); renderAll(); tourSignal("stage"); }
 $("stSeg").addEventListener("click", e => { const b = e.target.closest("button[data-st]"); if (!b) return; if (B.play) { clearTimeout(B.play); B.play = null; } setStage(+b.dataset.st); });
-function playStep() { B.play = null; if (B.stage >= 5) { renderAll(); return; } B.stage++; renderAll(); if (B.stage < 5) B.play = setTimeout(playStep, reduced() ? 400 : 1300); else renderAll(); }
+function playStep() { B.play = null; if (B.stage >= 5) { renderAll(); return; } B.stage++; renderAll(); if (B.stage < 5) B.play = setTimeout(playStep, 1300); else renderAll(); }
 $("playBtn").addEventListener("click", () => { if (lockedG("stage")) return; if (B.play) { clearTimeout(B.play); B.play = null; renderAll(); return; } if (B.stage >= 5) B.stage = 0; B.play = setTimeout(playStep, 500); renderAll(); tourSignal("play"); });
 $("mgSeg").addEventListener("click", e => { const b = e.target.closest("button[data-mg]"); if (!b || lockedG("mg")) return; B.mg = b.dataset.mg; if (mode === "demo" && B.mg !== "none" && B.stage > 2) tried(5); renderAll(); tourSignal("mg"); });
 $("spSeg").addEventListener("click", e => { const b = e.target.closest("button[data-sp]"); if (!b || lockedG("sp")) return; B.sp = b.dataset.sp; if (mode === "demo" && B.sp === "both") tried(7); renderAll(); tourSignal("sp"); });

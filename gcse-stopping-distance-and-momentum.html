@@ -1229,7 +1229,6 @@ function drive() {
   M.res = null; M.ownRt = null;
   const R = { L: stopScale(M), ph: "lead", x: 0, scroll: 0, spin: 0, auto, a, v: M.v, rt: auto ? M.rt : null, lead: auto ? .9 : 1.5 + Math.random() * 2, t0: performance.now(), dt: 0, k: 1, msg: "" };
   M.run = R;
-  if (auto && reduced()) { finishRun(); drawAll(); tourSignal("drive"); return; }
   startLoop();
   drawAll();
 }
@@ -1242,7 +1241,7 @@ function startLoop() {
     const t = Math.max(now, performance.now()), R = M.run, el = (t - R.t0) / 1000, dtF = Math.min(.1, (t - last) / 1000); last = t;
     const ppm = pxPerM(), wr = Math.max(4, CAR_WR * stopGeo(Math.round($("ssvg").clientWidth) || 800, 300).carW);
     if (R.ph === "lead") {
-      if (!reduced()) { R.scroll += R.v * ppm * dtF; R.spin += R.v * ppm * dtF / wr * 57.3; }
+      R.scroll += R.v * ppm * dtF; R.spin += R.v * ppm * dtF / wr * 57.3;
       if (el >= R.lead) { R.ph = "think"; R.t0 = t; R.msg = ""; tourSignal("hazard"); }
     } else if (R.ph === "think") {
       const x0 = R.x; R.x = R.v * el; R.spin += (R.x - x0) * ppm / wr * 57.3;
@@ -1264,7 +1263,6 @@ function ownBrake(rt, t) {   // the pupil pressed Brake! (or was too slow): thei
   const R = M.run; rt = Math.round(rt * 100) / 100;
   for (let k = 0; k < 5 && !ownRtOK(rt); k++) rt = Math.round((rt + .01) * 100) / 100;   // never shows 69
   R.rt = rt; M.ownRt = rt; R.x = R.dt = R.v * rt; R.ph = "brake"; R.t0 = t; setK(R);
-  if (reduced()) { finishRun(); anim = null; drawAll(); runDone(); }
 }
 function brakeNow() {
   const R = M.run; if (!R || R.auto) return;
@@ -1290,7 +1288,6 @@ function enGo() {
   const R = { ph: "brake", x: 0, v: M.v, ke: 1, spin: 0, skid, aE, stopX, off: stopX > ELEN * 1.12, t0: performance.now(), k: Math.max(1, (M.v / aE) / 3) };
   M.en = R;
   const fin = () => { const tau = R.off ? (M.v - Math.sqrt(Math.max(0, M.v * M.v - 2 * aE * ELEN * 1.12))) / aE : M.v / aE; R.x = Math.min(stopX, ELEN * 1.12); R.v = M.v - aE * tau; R.ke = (R.v / M.v) ** 2; R.ph = "done"; };
-  if (reduced()) { fin(); drawAll(); enDone(); return; }
   const an = { id: 0 }; anim = an; drawAll();
   an.frame = now => {
     if (anim !== an) return;
@@ -1309,7 +1306,6 @@ function moGo() {
   stopAll(); const mo = M.mo; if (!willHit(mo.vA, mo.vB)) return;
   mo.st = "moving"; mo.t = 0;
   const T = MO_TC + MO_TA;
-  if (reduced()) { mo.t = T; mo.st = "after"; drawAll(); moDone(); return; }
   const an = { id: 0 }, t0 = performance.now(); anim = an; drawAll();
   an.frame = now => {
     if (anim !== an) return;

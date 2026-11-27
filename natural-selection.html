@@ -1128,7 +1128,6 @@ const ease = u => .5 - .5 * Math.cos(Math.PI * Math.min(1, Math.max(0, u)));
 function doHunt(fast) {
   if (M.phase !== "ready" || anim || hunting || M.gen >= MAXG) return;
   const ids = huntPick(M); news = "";
-  if (reduced()) { applyHunt(M, ids, "birds"); drawAll(); afterHunt(); return; }
   const L = LAY(), B = L.bird, byId = {}; M.moths.forEach(m => { byId[m.id] = m; });
   const tg = ids.slice().sort((a, b) => mothXY(L, byId[a])[0] - mothXY(L, byId[b])[0]), legs = []; let t = 0;
   if (fast) {   // Run 10 generations: one quick sweep across the trunk; each eaten moth vanishes as the bird passes it
@@ -1154,13 +1153,12 @@ function doHunt(fast) {
 }
 function afterHunt() {
   tourSignal("hunted");
-  if (autoLeft > 0) autoT = setTimeout(() => doBreed(true), reduced() ? 350 : 140);
+  if (autoLeft > 0) autoT = setTimeout(() => doBreed(true), 140);
 }
 function doBreed(fast) {
   if (M.phase !== "hunted" || anim || hunting) return;
   const old = M.moths.filter(m => !M.eaten.has(m.id)), before = M.hist.slice();
   applyBreed(M); news = newsAfterBreed(before);
-  if (reduced()) { drawAll(); afterBreed(); return; }
   ghost = old; drawAll();
   const D = fast ? 380 : 820, gO = $("mOld"), gN = $("mNow");
   startAnim({ frame(el) { const u = el / D; setAttr(gO, "opacity", Math.max(0, 1 - u / .6).toFixed(2)); setAttr(gN, "opacity", Math.min(1, Math.max(0, (u - .4) / .6)).toFixed(2)); return u >= 1; },
@@ -1176,7 +1174,7 @@ function newsAfterBreed(before) {   // one-off events worth saying
 function afterBreed() {
   tourSignal("bred");
   if (mode === "demo") { if (darkRun(M) >= 10) tried(0); if (M.cleanAfterDark && M.bark === "pale") tried(2); }
-  if (autoLeft > 0) { autoLeft--; if (autoLeft > 0 && M.gen < MAXG) autoT = setTimeout(() => doHunt(true), reduced() ? 400 : 200); else { autoLeft = 0; renderCtl(); } }
+  if (autoLeft > 0) { autoLeft--; if (autoLeft > 0 && M.gen < MAXG) autoT = setTimeout(() => doHunt(true), 200); else { autoLeft = 0; renderCtl(); } }
   else renderCtl();
 }
 function toggleAuto() {
@@ -1291,7 +1289,7 @@ function setAnswerState(instant) {
 function revealModel(instant) {
   const t = task; if (!t.after || !lock) return;
   lock = ""; stopAll();
-  if (t.after === "hunt") { if (instant || reduced()) { if (M.phase === "ready") applyHunt(M, huntPick(M), "birds"); drawAll(); } else { drawAll(); doHunt(false); } }
+  if (t.after === "hunt") { if (instant) { if (M.phase === "ready") applyHunt(M, huntPick(M), "birds"); drawAll(); } else { drawAll(); doHunt(false); } }
   if (t.after === "auto10") { if (instant) { for (let i = 0; i < 10; i++) stepG(M); drawAll(); } else { drawAll(); toggleAuto(); } }
 }
 function renderDots() {

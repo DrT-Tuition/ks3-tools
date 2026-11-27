@@ -1460,7 +1460,7 @@ function startAnim(kind) {
     const t = Math.max(now, performance.now());
     if (!visOK || document.hidden) { a.paused = true; return; }   // off-screen or hidden: stop asking for frames (resumeAnim starts again)
     a.el += Math.min(250, t - a.lastT); a.lastT = t;
-    const u = Math.min(1, a.el / dur), step = reduced() ? Math.floor(u * span + 1e-9) : u * span;
+    const u = Math.min(1, a.el / dur), step = u * span;
     if (kind === "play") { const before = mIdx(M.m); M.m = wrapM(start + step); if (u >= 1) M.m = wrapM(Math.round(start)); if (mIdx(M.m) !== before || u >= 1) { drawOrbitEarth(); morphHTML($("read"), readout()); renderCtl(); } else patchOrbitEarth(); }
     else { const before = Math.floor(M.hD), was = isDay(M.place, M.m, M.tilt, M.hD); M.hD = (start + step) % 24; if (u >= 1) M.hD = start;
       if (was && !isDay(M.place, M.m, M.tilt, M.hD)) tried(1);
@@ -1468,11 +1468,11 @@ function startAnim(kind) {
       else if (Math.floor(M.hD) !== before) { patchDayDot(); patchSpinAria(); morphHTML($("read"), readout()); renderCtl(); }   // a new hour: only the dot, the marker and the slider's value change (the place's path does not)
       else patchDayDot(); }
     if (u >= 1) { anim = null; renderCtl(); return; }
-    a.id = paceFrame(a.frame, reduced() ? 4 : FPS_ANIM);
+    a.id = paceFrame(a.frame, FPS_ANIM);
   };
-  a.id = paceFrame(a.frame, reduced() ? 4 : FPS_ANIM);
+  a.id = paceFrame(a.frame, FPS_ANIM);
 }
-function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : FPS_ANIM); }
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, FPS_ANIM); }
 function stopAll() {   // stop where it is: a month or an hour on the dot
   if (!anim) return; const a = anim; anim = null; paceCancel(a.id);
   if (a.kind === "play") M.m = Math.round(M.m) % 12; else M.hD = Math.round(M.hD) % 24;

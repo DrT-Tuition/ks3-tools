@@ -1676,7 +1676,7 @@ function drawGasMov() {   // built once per state; each frame only moves a few p
 function gasBubbles(now) {   // bubbles rising from the magnesium while it reacts (a pool of circles, patched in place)
   const g = $("gBub"); if (!g._pool) { g._pool = []; g._b = []; }
   const G = gasGeo(); let n = 0;
-  if (anim && anim.kind === "gas" && !reduced()) {
+  if (anim && anim.kind === "gas") {
     const r = gRun(), rateNow = r ? r.V * r.k * Math.exp(-r.k * M.gt) : 0, dt = anim.lastB ? Math.min(.1, (now - anim.lastB) / 1000) : 0; anim.lastB = now;
     let want = rateNow * dt * 1.1; while (want > 0) { if (Math.random() < want) g._b.push({ t: now, x: G.fx - G.b * .5 + Math.random() * G.b, r: 1.6 + Math.random() * 2.4 }); want -= 1; }
   }
@@ -2053,7 +2053,7 @@ function gGo() {
   const step = now => {
     if (anim !== a || M !== m) return;
     const r = gRun();
-    let t = reduced() ? a.base + Math.floor((now - a.t0) / 700) * 10 : a.base + (now - a.t0) / 1000 * GAS.speed;   // reduced motion: one 10 s step at a time
+    let t = a.base + (now - a.t0) / 1000 * GAS.speed;
     while (M.gNext < TIMES.length && t >= TIMES[M.gNext]) {
       if (M.gr === "auto") { r.read[M.gNext] = autoRead(r, M.gNext); M.gNext++; drawGasTable(); drawGasGraph(); }
       else { M.gt = TIMES[M.gNext]; M.gPhase = "wait"; anim = null; const g = $("gBub"); g._b = []; gasBubbles(now); drawAll(); const n = $("gReadIn"); n.value = ""; n.focus({ preventScroll: true }); return; }
@@ -2179,11 +2179,11 @@ function conclCheck() {
 /* ===== Collisions loop (≤ 30 fps; only while the tab is open, visible and on screen) ===== */
 const CL = { id: 0, on: false, last: 0, simT: 0, onscreen: true, playT: 0 };
 const collWanted = () => M.tab === "coll" && M.cplay && !document.hidden && CL.onscreen && $("ccv").getClientRects().length > 0;
-function collStart() { if (CL.on || !collWanted()) return; CL.on = true; CL.last = 0; CL.id = paceFrame(collFrame, reduced() ? 2 : 12); }
+function collStart() { if (CL.on || !collWanted()) return; CL.on = true; CL.last = 0; CL.id = paceFrame(collFrame, 12); }
 function collStop() { CL.on = false; paceCancel(CL.id); }
 function collFrame(now) {
   if (!CL.on) return; if (!collWanted()) { CL.on = false; return; }
-  const dt = CL.last ? Math.min(reduced() ? .6 : .1, (now - CL.last) / 1000) : 0; CL.last = now;
+  const dt = CL.last ? Math.min(.1, (now - CL.last) / 1000) : 0; CL.last = now;
   let left = dt; while (left > 1e-6) { const h = Math.min(left, 1 / 60); CL.simT += h; colStep(h, CL.simT); left -= h;
     if (CV.cnt) { CV.cnt.t += h; if (CV.cnt.t >= 10) { countDone(); break; } } }
   CL.playT += dt;
@@ -2191,7 +2191,7 @@ function collFrame(now) {
   if (sig !== CV.lastSig) { CV.lastSig = sig; colDraw(CL.simT); }
   if (now - CV.lastUI > 250) { CV.lastUI = now; morphHTML($("cread"), collRead()); }
   if (CL.playT > 40 && !CV.cnt) { M.cplay = false; CL.on = false; M.cmsg = "Paused to save power. Press Play to carry on."; morphHTML($("cread"), collRead()); renderCtl(); return; }
-  CL.id = paceFrame(collFrame, reduced() ? 2 : 12);
+  CL.id = paceFrame(collFrame, 12);
 }
 function countDone() { const c = CV.cnt; CV.cnt = null; M.cres.push({ cc: M.cc, ct: M.ct, n: c.n, ok: c.ok }); if (M.cres.length > 8) M.cres.shift();
   M.cmsg = `Counted for 10 s: ${c.n} collisions (${num(c.n / 10)} per second), ${c.ok} successful (${num(c.ok / 10)} per second).`; drawCollTable(); renderCtl(); tourSignal("ccount"); }

@@ -1816,10 +1816,9 @@ function sitePlay(stepOnly) {
   if (B.anim && B.anim.run) return;
   const ok = B.cond === "opt";
   if (!ok) { B.blocked = true; B.su = 0; }
-  const to = ok ? (stepOnly || reduced() ? Math.floor(B.su + 1e-6) + 1 : 4) : 2;
+  const to = ok ? (stepOnly ? Math.floor(B.su + 1e-6) + 1 : 4) : 2;
   B.anim = { to, run: true };
-  if (reduced()) { if (!ok) { B.su = 1; B.anim = null; } else { B.su = to; finishSite(); B.anim = null; } renderAll(); }
-  else { renderAll(); kick(); }
+  renderAll(); kick();
   if (mode === "demo") { B.seen[ok ? B.model : B.cond] = 1; if (B.seen.induced && B.seen.lock) tried(0); if (B.seen.nc) tried(1); }
   tourSignal("play");
 }
@@ -1840,7 +1839,7 @@ function recordReading(v) {
   const R = B.run; R.rd.push([R.t, v]); R.wait = false; R.tries = 0;
   R.next = R.t + XP.DT <= XP.T_END + 1e-9 ? R.t + XP.DT : null;
   if (R.next == null) { R.playing = false; R.done = true; B.readMsg = null; if (mode === "demo" && R.byHand) tried(4); }
-  else if (!reduced()) R.playing = true;
+  else R.playing = true;
 }
 function xStart() {
   if (B.lock.run || B.lock.all) return lockMsg("The run is set for this question.");
@@ -1851,8 +1850,7 @@ function xStart() {
   } else if (R.playing) { R.playing = false; renderAll(); return; }
   else if (R.wait && !B.auto) return;
   const Q = B.run;
-  if (reduced()) { do { Q.t = Q.next == null ? XP.T_END : Q.next; reachReading(); } while (B.auto && !Q.done); renderAll(); }
-  else { Q.playing = true; renderAll(); kick(); }
+  Q.playing = true; renderAll(); kick();
   tourSignal("start");
 }
 function readOk() {

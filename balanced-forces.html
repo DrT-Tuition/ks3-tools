@@ -329,7 +329,6 @@ svg.nar .alab,svg.nar .aval{font-size:21px}svg.nar .slab{font-size:18px}svg.nar 
 .dhub{fill:var(--ink)}
 /* the needle sits on its own layer and turns with a CSS transform, so the dial face isn't repainted every frame */
 .dialbox{position:relative}.gauge svg.ndl{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 74.627%;will-change:transform;pointer-events:none;transition:transform .25s linear}
-@media (prefers-reduced-motion: reduce){.gauge svg.ndl{transition:none}}
 .dval{fill:var(--accent);font-size:22px;font-weight:700}
 .dunit{fill:var(--muted);font-size:17px;font-weight:700}
 .sax{stroke:var(--muted);stroke-width:2;fill:none}
@@ -1433,8 +1432,8 @@ function carAnims() {
   mk("dash", "dashStrip", "translate3d(0,0,0)", `translate3d(${(-70 / (W + 70) * 100).toFixed(4)}%,0,0)`);    // one road dash (70) per cycle
   mk("w0", "whl0", "rotate(0deg)", "rotate(360deg)"); mk("w1", "whl1", "rotate(0deg)", "rotate(360deg)");
 }
-function carWheels() {   // set the animations' speeds: trees 2.4 v, dashes 4 v (viewBox units a second), wheels 14 v degrees a second; still when paused, off-screen or reduced motion
-  const c = M.car, live = M.tab === "car" && onScreen && !document.hidden && !reduced() && !c.hold && !c.top ? Math.max(0, c.v) : 0;
+function carWheels() {   // set the animations' speeds: trees 2.4 v, dashes 4 v (viewBox units a second), wheels 14 v degrees a second; still when paused or off-screen
+  const c = M.car, live = M.tab === "car" && onScreen && !document.hidden && !c.hold && !c.top ? Math.max(0, c.v) : 0;
   const r = { tree: 2.4 * live / 220, dash: 4 * live / 70, w0: 14 * live / 360, w1: 14 * live / 360 };
   for (const k in CARANIM) { const a = CARANIM[k], x = Math.round(r[k] * 1000) / 1000; if (a.r0 !== x) { a.r0 = x; if (a.updatePlaybackRate) a.updatePlaybackRate(x); else a.playbackRate = x; } }
 }
@@ -1667,13 +1666,13 @@ paceFrame.s = { fps: [20, 15, 12, 10, 8], i: 0, last: 0, busy: 0, n: 0, act: 0, 
 let loopOn = false, lastTs = 0, onScreen = true, loopTok = 0;
 const busy = () => M.tab === "tug" ? tugBusy() : M.tab === "car" ? carBusy() : circBusy();
 function wake() { if (!loopOn && busy() && onScreen && !document.hidden) { loopOn = true; lastTs = 0; schedule(); } }
-const slowLoop = () => reduced() || M.tab === "car";   // the car needs no per-frame drawing: its moving parts are compositor animations
+const slowLoop = () => M.tab === "car";   // the car needs no per-frame drawing: its moving parts are compositor animations
 function schedule() { const tok = ++loopTok; if (slowLoop()) setTimeout(() => { if (tok === loopTok) frame(performance.now()); }, 250); else paceFrame(ts => { if (tok === loopTok) frame(ts); }); }
 function frame(ts) {
   if (!onScreen || document.hidden || !busy()) { loopOn = false; draw(); return; }
   const dt = lastTs ? Math.min(slowLoop() ? .3 : .1, (ts - lastTs) / 1000) : 0; lastTs = ts;
   if (M.tab === "tug") { tugAdvance(dt); tugFrame(); }
-  else if (M.tab === "car") { carAdvance(dt); if (reduced()) { M.car.off = 0; M.car.rot = 0; } carFrame(); }
+  else if (M.tab === "car") { carAdvance(dt); carFrame(); }
   else circAdvance(dt);
   if (busy()) schedule(); else { loopOn = false; draw(); }
 }

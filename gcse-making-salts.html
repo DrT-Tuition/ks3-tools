@@ -1246,18 +1246,10 @@ function ensureAnim() {
     if (!onScreen) { anim = null; return; }
     const dt = clamp((now - last) / 1000, 0, .15); last = now; const r = m.run;
     let going = false, big = false;
-    if (reduced()) {   // reduced motion: jump in steps
-      acc += dt; if (acc < .5) { a.id = paceFrame(step, 12); return; } acc = 0;
-      if (r.fx && r.fx.k === "add") { r.fx = null; }
-      else if (r.fx && r.fx.k === "grow") { growTick(m, 1.2); going = r.grow < 1; if (!going) r.fx = null; big = !going; }
-      else if (r.phase === "evap" && r.heat) { going = evapTick(m, .5); big = !going; }
-      going = going || moving(r);
-    } else {
-      if (r.fx && r.fx.k === "add") { r.fx.t += dt / .9; if (r.fx.t >= 1) r.fx = null; }
-      if (r.fx && r.fx.k === "grow") { const g = growTick(m, dt); if (!g) { r.fx = null; big = true; } }
-      if (r.phase === "evap" && r.heat) { if (!evapTick(m, dt)) big = true; }
-      going = moving(r);
-    }
+    if (r.fx && r.fx.k === "add") { r.fx.t += dt / .9; if (r.fx.t >= 1) r.fx = null; }
+    if (r.fx && r.fx.k === "grow") { const g = growTick(m, dt); if (!g) { r.fx = null; big = true; } }
+    if (r.phase === "evap" && r.heat) { if (!evapTick(m, dt)) big = true; }
+    going = moving(r);
     if (big) drawAll(); else drawMov();
     if (going) a.id = paceFrame(step, 12); else { anim = null; drawAll(); }
   };

@@ -1165,14 +1165,12 @@ function fdRead() {
 let fdAnim = null;
 function fdHeat() {
   fdStop(false); const F = M.fd; F.one = null; F.phase = "run"; F.t = 0;
-  if (reduced()) { F.phase = "done"; drawAll(); return; }
   const a = { t0: performance.now() }; fdAnim = a;
   const step = now => { if (fdAnim !== a) return; F.t = (now - a.t0) / 1000; if (F.t >= FD_T) { F.phase = "done"; fdAnim = null; drawAll(); return; } drawCol(); fdRead(); a.id = paceFrame(step, 30); };
   a.id = paceFrame(step, 30); drawAll();
 }
 function fdSend() {
   fdStop(false); const F = M.fd; F.phase = "idle"; F.one = { n: F.n, t: 0, done: false };
-  if (reduced()) { F.one.done = true; drawAll(); return; }
   const a = { t0: performance.now() }, o = F.one; fdAnim = a; const T = fdEnd(o.n, (FD.x0 + FD.x1) / 2) - .1;
   const step = now => { if (fdAnim !== a) return; o.t = (now - a.t0) / 1000; if (o.t >= T) { o.done = true; fdAnim = null; drawAll(); return; } drawCol(); fdRead(); a.id = paceFrame(step, 30); };
   a.id = paceFrame(step, 30); drawAll();
@@ -1393,7 +1391,6 @@ function crkRun(kind) {
   const set = v => { if (kind === "mol") C.p = v / D; else if (kind === "lab") C.lt = v; else C.bt = v; };
   const fin = () => { if (kind === "mol") { C.phase = "done"; C.p = 1; } else if (kind === "lab") C.lab = "done"; else C.br = "done"; };
   if (kind === "mol") { C.phase = "run"; C.p = 0; } else if (kind === "lab") { C.lab = "heat"; C.lt = 0; } else { C.br = "shake"; C.bt = 0; }
-  if (reduced()) { fin(); drawAll(); return; }
   const a = { t0: performance.now(), kind, fin }; crkAnim = a;
   const step = now => { if (crkAnim !== a) return; const v = (now - a.t0) / 1000; if (v >= D) { fin(); crkAnim = null; drawAll(); return; } set(v); drawCrk(); a.id = paceFrame(step, kind === "lab" ? 20 : 30); };
   a.id = paceFrame(step, kind === "lab" ? 20 : 30); drawAll();

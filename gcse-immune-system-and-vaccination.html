@@ -1403,33 +1403,32 @@ function startAnim(kind, opt) {
     const dt = Math.min(.25, (t - a.lastT) / 1000); a.lastT = t; a.el += dt;
     if (step(a, dt)) { anim = null; drawAll(); afterRun(kind); return; }
     drawPane();
-    a.id = paceFrame(a.frame, reduced() ? 4 : 30);
+    a.id = paceFrame(a.frame, 30);
   };
   drawAll();
-  a.id = paceFrame(a.frame, reduced() ? 4 : 30);
+  a.id = paceFrame(a.frame, 30);
 }
 function stage(a, get, set, max, dur, hold) {   // a stepped animation: u runs 0 → 1, then (when playing) the next stage starts after a hold
-  const R = reduced(), [s, u] = get(), d = typeof dur === "function" ? dur(s) : dur;
-  if (u < 1) { set(s, R ? 1 : Math.min(1, u + a.el / d)); a.el = 0; return false; }
+  const [s, u] = get(), d = typeof dur === "function" ? dur(s) : dur;
+  if (u < 1) { set(s, Math.min(1, u + a.el / d)); a.el = 0; return false; }
   if (!a.play || s >= max) return true;
-  if (a.el < (R ? .9 : hold)) return false;
+  if (a.el < hold) return false;
   set(s + 1, 0); a.el = 0; return false;
 }
 function step(a, dt) {   // advance the model; true when this run is over
-  const R = reduced();
   if (a.kind === "def") return stage(a, () => [M.ds, M.du], (s, u) => { M.ds = s; M.du = u; }, 3, s => DDUR[s] || 1, .7);
   if (a.kind === "w") {
     if (M.wbc === "ph") return stage(a, () => [M.ph, M.pu], (s, u) => { M.ph = s; M.pu = u; }, 3, PHDUR, 1.4);
     if (M.wbc === "ab") return stage(a, () => [M.abs, M.au], (s, u) => { M.abs = s; M.au = u; }, 3, s => ABDUR[s] || 1, .5);
     return stage(a, () => [M.atx, M.tu], (s, u) => { M.atx = s; M.tu = u; }, 3, s => ABDUR[s] || 1, .5); }
   if (a.kind === "r") return stage(a, () => [M.res, M.ru], (s, u) => { M.res = s; M.ru = u; }, 4, RDUR, 1.5);
-  if (a.kind === "g") { M.day = R ? LVL.xmax : Math.min(LVL.xmax, M.day + dt * 9); return M.day >= LVL.xmax; }
-  if (a.kind === "m") { M.mday = R ? MED.days : Math.min(MED.days, M.mday + dt * 1.6); return M.mday >= MED.days; }
-  if (a.kind === "h") { const Rr = herdNow().rounds; if (R) { M.hr = Rr; M.hu = 1; return true; }
+  if (a.kind === "g") { M.day = Math.min(LVL.xmax, M.day + dt * 9); return M.day >= LVL.xmax; }
+  if (a.kind === "m") { M.mday = Math.min(MED.days, M.mday + dt * 1.6); return M.mday >= MED.days; }
+  if (a.kind === "h") { const Rr = herdNow().rounds;
     M.hu += dt / .55; if (M.hu >= 1) { if (M.hr >= Rr) { M.hu = 1; return true; } M.hr++; M.hu = 0; } return false; }
   return true;
 }
-function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 30); }
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, 30); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); }
 /* controls */
 function toggleRun(kind, start) { if (anim && anim.kind === kind) { stopAll(); drawAll(); return; } start(); }

@@ -1415,7 +1415,7 @@ function drawAll() { drawPane(); renderCtl(); }
 function setTab(t) { if (anim) finishAnim(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
 function redraw() { if (M.tab === "enz") drawEnz(); else drawBench(); }
 
-/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; reduced motion: a few still steps) ===== */
+/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden) ===== */
 function startAnim(a) { anim = a; a.t0 = null; a.el = 0; a.lastQ = -1; paused = false; renderCtl(); if (M.tab === "mys") drawConcl(); rafId = paceFrame(step, a.fps); }
 function step(ts) {
   if (!anim) return;
@@ -1423,7 +1423,6 @@ function step(ts) {
   if (anim.t0 == null) anim.t0 = ts - anim.el;
   anim.el = ts - anim.t0;
   let el = anim.el;
-  if (reduced()) { const q = Math.min(anim.dur, Math.floor(el / 400) * 400); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
   if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) afterAnim(); return; }
   rafId = paceFrame(step, anim.fps);
 }
@@ -1459,7 +1458,7 @@ function benchStep(force) {
   }
   if (B.stage === 1 && B.test === "ethanol") {   // add ethanol and shake
     runAnim(1000, u => { const a = Math.min(1, u / .3), s = u > .3 ? (u - .3) / .7 : 0;
-        B.vis = { main: { f: .3 + .12 * a, col: mix(food.col, "#EEF4F7", s), op: lerp(food.op, .55, s) }, water: { f: .42, col: FOODS.water.col, op: .5 }, rot: reduced() ? 0 : 9 * Math.sin(s * 6 * Math.PI) * (1 - s), dropper: a < 1 ? { col: "#EEF4F7", op: .6 } : null }; drawBench(true); },
+        B.vis = { main: { f: .3 + .12 * a, col: mix(food.col, "#EEF4F7", s), op: lerp(food.op, .55, s) }, water: { f: .42, col: FOODS.water.col, op: .5 }, rot: 9 * Math.sin(s * 6 * Math.PI) * (1 - s), dropper: a < 1 ? { col: "#EEF4F7", op: .6 } : null }; drawBench(true); },
       () => { B.vis = null; B.stage = 2; B.msg = { h: "Shaken with ethanol.", b: "Now pour it into a tube of water." }; drawBench(); chain(); }, 8);
     return;
   }
@@ -1578,7 +1577,7 @@ function setAnswerState(instant) {
 function revealModel(instant) {
   const t = task; if (!t.after || !lock && t._ran) return;
   lock = ""; stopAll(); renderCtl(); t._ran = true;
-  const now = instant || reduced(), B = M.B.food;
+  const now = instant, B = M.B.food;
   if (t.after === "heat") { if (B.stage >= 4) return drawAll(); if (now) { runTest(M, "food", "glucose", "benedicts"); drawAll(); } else { Object.assign(B, { food: "glucose", test: "benedicts", stage: 2 }); drawAll(); benchStep(true); } }
   if (t.after === "iod3") { ["glucose", "water", "starch"].forEach(f => runTest(M, "food", f, "iodine")); B.msg = { h: "Iodine on all three:", b: "Starch solution: blue-black. Glucose and water: stayed orange-brown." }; drawAll(); }
   if (t.after === "rice") { if (now) { runTest(M, "food", "rice", "benedicts"); drawAll(); } else { Object.assign(B, { food: "rice", test: "benedicts", auto: true }); freshTube(B); B.auto = true; drawAll(); benchStep(true); } }

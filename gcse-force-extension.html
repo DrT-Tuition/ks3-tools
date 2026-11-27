@@ -905,7 +905,7 @@ function newContact(m, R) {
 const target = m => m.P0 + extTrue(forceN(m.n)) + m.ct.d + m.ct.a;   // where the pointer settles (cm on the ruler)
 /* the spring bounces after a change, then settles (time-based) */
 function posAt(m, t) {
-  const a = m.anim; if (!a || reduced()) return target(m);
+  const a = m.anim; if (!a) return target(m);
   const dt = t - a.t0; if (dt >= LAB.settle) return target(m);
   return target(m) + (a.from - target(m)) * Math.exp(-dt / LAB.tau) * Math.cos(LAB.w * dt / 1000);
 }
@@ -1100,7 +1100,7 @@ function setLoad(n) {
   if (!M.safeDone) { M.smsg = ["tip", "Do the safety checks first (Step 1)."]; drawAll(); return; }
   n = clamp(n, 0, LAB.maxN); if (n === M.n) return;
   const t = nowMs(), from = posAt(M, t);
-  M.n = n; newContact(M); M.anim = reduced() ? null : { t0: t, from }; M.settleAt = t + (reduced() ? 1200 : LAB.settle);
+  M.n = n; newContact(M); M.anim = { t0: t, from }; M.settleAt = t + LAB.settle;
   if (forceN(n) > LAB.FL + 1e-9) M.stat.past = true;
   if (n > 0) tourSignal("add");
   M.smsg = null; drawAll(); startTick();

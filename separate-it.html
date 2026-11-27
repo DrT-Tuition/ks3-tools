@@ -898,7 +898,7 @@ resetFilt("sand"); resetEvap(); resetDist(); resetRock(); resetChrom("dyes");
 /* ----- updates (dt in seconds) ----- */
 function updFilt(dt) {
   if (F.phase === "pouring") { F.t += dt; if (F.t >= RATE.pour) { F.t = RATE.pour; F.phase = "done"; status(); tourSignal("poured"); } }
-  if (F.zoom && !reduced()) moveZoom(dt);
+  if (F.zoom) moveZoom(dt);
 }
 function updEvap(dt) {
   const before = E.vol;
@@ -910,13 +910,13 @@ function updEvap(dt) {
   E.t += dt;
   const how = E.heat ? E.flame : E.leave ? "warm" : null, grew = Math.min(before, FACTS.crystalVol) - Math.min(E.vol, FACTS.crystalVol);
   if (how && grew > 0) { E.gw += grew * FAST[how]; E.gv += grew; }   // water lost after the crystals started
-  if (!reduced()) {
+  {
     const rate = E.heat && E.vol > 0 ? (E.flame === "strong" ? 13 : 7) : E.leave && E.vol > 0 ? 2.5 : 0;
     E.acc += rate * dt;
     while (E.acc >= 1) { E.acc -= 1; E.vap.push({ x: 364 + (Math.random() - .5) * 100, y: surfE(E.vol) - 4, a: 0, dx: (Math.random() - .5) * 14 }); }
     E.vap.forEach(p => { p.a += dt; p.y -= 46 * dt; p.x += p.dx * dt; });
     E.vap = E.vap.filter(p => p.a < 2.8 && p.y > -10);
-  } else E.vap = [];
+  }
   const capNow = E.vol <= FACTS.crystalVol ? Math.round(xtalSlow() * 3) + (E.dryHeat ? 10 : 0) : -1; if (capNow !== E.capK) { E.capK = capNow; xtalCap(); }
   if ((before > FACTS.crystalVol) !== (E.vol > FACTS.crystalVol) || (before > 0 && E.vol === 0) || (E.spit && before === 0 && E.heat && !E.spitSaid)) { if (E.spit) E.spitSaid = true; status(); }
 }
@@ -934,12 +934,12 @@ function updDist(dt) {
     D.flask -= v;
     if (D.cool) D.beaker += v; else D.escaped = true;   // no cooling water: the steam escapes from the end
     if (D.beaker >= FACTS.distStop) { D.heat = false; D.stopped = true; syncToggles(); }
-    if (!reduced()) {
+    {
       D.acc += 6 * dt;
       while (D.acc >= 1) { D.acc -= 1; D.parts.push({ s: 0, drop: false, off: (Math.random() - .5) * 8, y: 0, fall: 0, gone: 0 }); }
     }
   }
-  if (!reduced()) {
+  {
     D.parts.forEach(p => {
       if (p.fall) { p.fall += dt; return; }
       if (p.gone) { p.gone += dt; return; }
@@ -948,7 +948,7 @@ function updDist(dt) {
       if (p.s >= DLEN) { if (p.drop) p.fall = 0.001; else p.gone = 0.001; }
     });
     D.parts = D.parts.filter(p => !(p.fall > 0.5) && !(p.gone > 1.6));
-  } else D.parts = [];
+  }
   const now = { boil: boiling, cool: D.cool, stopped: D.stopped };
   if (now.boil !== was.boil || now.cool !== was.cool || now.stopped !== was.stopped) status();
 }
@@ -966,9 +966,9 @@ function updChrom(dt) {
   if (C.front >= 1) { C.running = false; C.ran = true; status(); }
 }
 function needsAnim() {
-  if (scene === "filt") return F.phase === "pouring" || (F.zoom && !reduced());
+  if (scene === "filt") return F.phase === "pouring" || F.zoom;
   if (scene === "evap") return E.heat || (E.leave && E.vol > 0) || E.vap.length > 0;
-  if (scene === "dist") return D.heat || D.T > FACTS.roomT + 0.01 || D.parts.length > 0 || (D.cool && !reduced());
+  if (scene === "dist") return D.heat || D.T > FACTS.roomT + 0.01 || D.parts.length > 0 || D.cool;
   if (scene === "rock") return !!R.anim;
   return C.running;
 }
@@ -977,10 +977,7 @@ function tick(ts) {
   raf = 0;
   if (document.hidden || !onScreen) { lastTs = null; return; }   // tab hidden or picture scrolled off the screen: wait (kick() carries on)
   const dt = lastTs == null ? 0 : Math.min(0.08, (ts - lastTs) / 1000); lastTs = ts;
-  if (reduced()) {   // stepped version: the state jumps every 0.6 s, nothing glides
-    stepAcc += dt;
-    if (stepAcc >= 0.6) { update(stepAcc); stepAcc = 0; draw(); }
-  } else { update(dt); draw(); }
+  update(dt); draw();
   if (needsAnim()) raf = paceFrame(tick); else { lastTs = null; draw(); }
 }
 function update(dt) { ({ filt: updFilt, evap: updEvap, dist: updDist, rock: updRock, chrom: updChrom })[scene](dt); meters(); }
@@ -1024,12 +1021,12 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[
 const GL = "fill:var(--glass);stroke:none", GE = "fill:none;stroke:var(--glass-edge);stroke-width:3;stroke-linejoin:round;stroke-linecap:round";
 const bench = y => `<path d="M0 ${y} L720 ${y}" style="stroke:var(--bench);stroke-width:4"/>`;
 function flameStrong(x, base, t) {   // heating strongly: a big flame that reaches the gauze and spreads out under it
-  const f = reduced() ? 0 : Math.sin(t * 13) * 1.5, g = 214;   // g: underside of the gauze in the picture
+  const f = Math.sin(t * 13) * 1.5, g = 214;   // g: underside of the gauze in the picture
   return `<path d="M${x - 10} ${base} Q${x - 13} ${g + 12} ${x - 30 - f} ${g} L${x + 30 + f} ${g} Q${x + 13} ${g + 12} ${x + 10} ${base} Z" style="fill:var(--flame-o);opacity:.9"/>` +
          `<path d="M${x - 6} ${base} Q${x - 7} ${g + 10} ${x} ${g + 2 + f} Q${x + 7} ${g + 10} ${x + 6} ${base} Z" style="fill:var(--flame-i)"/>`;
 }
 function flame(x, top, base, t) {   // gentle blue Bunsen flame; still if reduced motion
-  const f = reduced() ? 0 : Math.sin(t * 9) * 2.5;
+  const f = Math.sin(t * 9) * 2.5;
   return `<path d="M${x - 11} ${base} Q${x - 15} ${top + 22} ${x} ${top + f} Q${x + 15} ${top + 22} ${x + 11} ${base} Z" style="fill:var(--flame-o);opacity:.8"/>` +
          `<path d="M${x - 6} ${base} Q${x - 7} ${top + 30} ${x} ${top + 18 + f / 2} Q${x + 7} ${top + 30} ${x + 6} ${base} Z" style="fill:var(--flame-i)"/>`;
 }
@@ -1147,7 +1144,7 @@ function filterRig(cx, o) {
     });
   }
   if (o.drip) {   // drops falling from the end of the stem into the flask
-    const ph = reduced() ? 0.5 : (o.t * 2.2) % 1, y = 302 + ph * Math.max(10, fTop - 306), x = cx - 8;
+    const ph = (o.t * 2.2) % 1, y = 302 + ph * Math.max(10, fTop - 306), x = cx - 8;
     h += `<path d="M${x} ${P(y - 6)} Q${x + 4} ${P(y + 1)} ${x} ${P(y + 4)} Q${x - 4} ${P(y + 1)} ${x} ${P(y - 6)} Z" style="fill:${o.filt === "var(--glass)" ? "var(--water)" : o.filt};stroke:var(--water-edge);stroke-width:1.2"/>`;
   }
   if (o.pour) {   // a beaker tipped over the funnel, pouring the mixture in
@@ -1186,10 +1183,8 @@ function drawZoom() {
   HOLES.forEach(hx => { if (hx - ZC.hw > px) h += `<rect x="${P(px)}" y="${top}" width="${P(hx - ZC.hw - px)}" height="${bh}" style="fill:var(--paper);stroke:var(--paper-edge);stroke-width:1.5"/>`; px = hx + ZC.hw; });
   h += `<rect x="${P(px)}" y="${top}" width="${P(x + r - px)}" height="${bh}" style="fill:var(--paper);stroke:var(--paper-edge);stroke-width:1.5"/>`;
   for (let fx = x - r + 4; fx < x + r; fx += 7) if (!HOLES.some(hx => Math.abs(hx - fx) < ZC.hw + 1)) h += `<path d="M${P(fx)} ${top + 4} L${P(fx + 4)} ${top + bh - 4}" style="stroke:var(--paper-edge);stroke-width:1;opacity:.6"/>`;   // fibres
-  const still = reduced();
   F.parts.forEach((p, i) => {
     let px2 = p.x, py = p.y;
-    if (still) { const hs = freeHoles(); py = y - r + 20 + (i * 37) % (2 * r - 40); px2 = py > top - 10 && py < top + bh + 10 ? hs[i % hs.length] : x - 66 + (i * 53) % 132; }
     h += particle(px2, py, 6.5, p.type);
   });
   zoomGrains().forEach(g => {
@@ -1216,7 +1211,7 @@ function evapRig(o) {
   // salt crystals: round the edge once only a little water is left, then over the whole bottom when dry
   const cv = FACTS.crystalVol;
   if (o.vol <= cv) h += `<g clip-path="url(#cpBasin)">${basinCrystals(o.vol, o.slow == null ? 0.5 : o.slow)}</g>`;   // size and number follow the evaporation speed
-  if (o.spit && o.heat) for (let i = 0; i < 6; i++) { const a = -0.4 - i * 0.47 + (reduced() ? 0 : Math.sin(o.t * 7 + i) * 0.12), r1 = 58, r2 = 76; h += `<path d="M${P(EB.cx + r1 * 1.3 * Math.cos(a))} ${P(124 + r1 * Math.sin(a))} L${P(EB.cx + r2 * 1.3 * Math.cos(a))} ${P(124 + r2 * Math.sin(a))}" style="stroke:var(--hot);stroke-width:3;stroke-linecap:round"/>`; }
+  if (o.spit && o.heat) for (let i = 0; i < 6; i++) { const a = -0.4 - i * 0.47 + (Math.sin(o.t * 7 + i) * 0.12), r1 = 58, r2 = 76; h += `<path d="M${P(EB.cx + r1 * 1.3 * Math.cos(a))} ${P(124 + r1 * Math.sin(a))} L${P(EB.cx + r2 * 1.3 * Math.cos(a))} ${P(124 + r2 * Math.sin(a))}" style="stroke:var(--hot);stroke-width:3;stroke-linecap:round"/>`; }
   return h;
 }
 function evapLabels(vol, steam) {
@@ -1233,8 +1228,7 @@ function drawEvap() {
   xtalShown = E.vol <= FACTS.crystalVol && xtalOK();
   if (xtalShown) h += closeUp(sl, 1 - E.vol / FACTS.crystalVol, "Close-up");
   let vp = "";
-  if (reduced()) { if ((E.heat || E.leave) && E.vol > 0) { [[330, 92], [364, 70], [398, 88]].forEach(q => vp += particle(q[0], q[1], 9, "W")); vp += `<path d="M440 98 L440 40" style="stroke:var(--ink);stroke-width:2.5" marker-end="url(#ah)"/>`; } }
-  else E.vap.forEach(p => vp += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
+  E.vap.forEach(p => vp += particle(p.x, p.y, 9, "W", clamp(1.2 - p.a / 2.6, 0, 1)));
   h += clearOfTitle(vp);   /* the rising particles never cross the close-up's title (a clip region round it) */
   if (support.labels) {
     h += tag(215, 214, "gauze", "end", 276, 211) + tag(215, 290, "tripod", "end", 291, 290);
@@ -1260,7 +1254,7 @@ function drawDist() {
   if (D.cool) {
     [[-13.5, -6], [6, 13.5]].forEach(([n1, n2]) => { const j = [cpt(10, n1), cpt(256, n1), cpt(256, n2), cpt(10, n2)]; h += `<path d="M${j.map(q => P(q[0]) + " " + P(q[1])).join(" L")} Z" style="fill:var(--cool);opacity:.6"/>`; });   // two bands: outside the inner tube only
     [W_IN, W_OUT].forEach(w => h += `<path d="M${w[0][0]} ${w[0][1]} L${w[1][0]} ${w[1][1]}" style="stroke:var(--cool);stroke-width:4.5;stroke-linecap:round;opacity:.75"/>`);
-    const off = reduced() ? 0 : -(D.flow * 40) % 24;
+    const off = -(D.flow * 40) % 24;
     [-9.5, 9.5].forEach(n => { const a = cpt(262, n), b = cpt(10, n); h += `<path d="M${P(a[0])} ${P(a[1])} L${P(b[0])} ${P(b[1])}" style="stroke:var(--accent);stroke-width:2;stroke-dasharray:10 14;stroke-dashoffset:${P(off)};opacity:.6"/>`; });
   }
   // distillate in the beaker
@@ -1268,19 +1262,14 @@ function drawDist() {
   $("cpBeakerP").setAttribute("d", `M${DB.l} 290 L${DB.l} ${DB.bot} A${DB.rx} ${DB.ry} 0 0 0 ${DB.r} ${DB.bot} L${DB.r} 290 Z`);
   if (D.beaker > 0.1) h += `<rect x="${DB.l}" y="${P(bt)}" width="${DB.r - DB.l}" height="${P(bh + DB.ry + 1)}" clip-path="url(#cpBeaker)" style="fill:var(--water)"/><ellipse cx="${DB.cx}" cy="${P(bt)}" rx="${DB.rx}" ry="${DB.ry * 0.8}" style="fill:var(--water);stroke:var(--water-edge);stroke-width:1.6"/>`;
   h += `<use href="#sDist" class="pic" x="100" y="10" width="519.3" height="386.9"/>`;
-  if (D.flask > 0.1 && D.heat && D.T >= FACTS.waterBp) for (let i = 0; i < 7; i++) { const ph = reduced() ? (i / 7) : ((D.t * 1.3 + i / 7) % 1), bx = cx - 34 + (i * 47) % 68, by = cy + r - 6 - ph * (lh - 8); h += `<circle cx="${P(bx)}" cy="${P(by)}" r="${P(2.5 + ph * 2)}" clip-path="url(#cpRound)" style="fill:none;stroke:var(--surface);stroke-width:1.6;opacity:.9"/>`; }
+  if (D.flask > 0.1 && D.heat && D.T >= FACTS.waterBp) for (let i = 0; i < 7; i++) { const ph = ((D.t * 1.3 + i / 7) % 1), bx = cx - 34 + (i * 47) % 68, by = cy + r - 6 - ph * (lh - 8); h += `<circle cx="${P(bx)}" cy="${P(by)}" r="${P(2.5 + ph * 2)}" clip-path="url(#cpRound)" style="fill:none;stroke:var(--surface);stroke-width:1.6;opacity:.9"/>`; }
   // flow arrows at the open ends of the water stubs
   const ad = (w, a, b) => { const dx = w[1][0] - w[0][0], dy = w[1][1] - w[0][1], L = Math.hypot(dx, dy); return [w[1][0] + dx / L * a, w[1][1] + dy / L * a, w[1][0] + dx / L * b, w[1][1] + dy / L * b]; };
   const ai = ad(W_IN, 22, 4), ao = ad(W_OUT, 4, 24);
   h += `<path d="M${P(ai[0])} ${P(ai[1])} L${P(ai[2])} ${P(ai[3])}" style="stroke:var(--accent);stroke-width:3" marker-end="url(#ah)"/>`;
   h += `<path d="M${P(ao[0])} ${P(ao[1])} L${P(ao[2])} ${P(ao[3])}" style="stroke:var(--accent);stroke-width:3" marker-end="url(#ah)"/>`;
   // steam particles (W) and condensed drops
-  const still = reduced(), boiling = D.heat && D.T >= FACTS.waterBp;
-  if (still && boiling) {
-    [60, 140, 230].forEach(s => { const q = pointAt(s); h += particle(q[0], q[1], 7, "W"); });
-    if (D.cool) [350, 430, 500].forEach(s => { const q = pointAt(s); h += drop(q[0], q[1] + 2); });
-    else { const q = pointAt(DLEN); h += particle(q[0] + 10, q[1] - 40, 7, "W") + particle(q[0] - 14, q[1] - 70, 7, "W"); }
-  }
+  const boiling = D.heat && D.T >= FACTS.waterBp;
   D.parts.forEach(p => {
     if (p.fall) { const q = pointAt(DLEN); h += drop(q[0], q[1] + p.fall * Math.max(4, bt - q[1]) / 0.5); return; }
     if (p.gone) { const q = pointAt(DLEN); h += particle(q[0] + p.gone * 30, q[1] - p.gone * 70, 7, "W", clamp(1 - p.gone / 1.6, 0, 1)); return; }
@@ -1323,7 +1312,7 @@ function mortar(p, grinding, t) {   // p = how ground (0 lumps → 1 powder). Mo
     HEAPP.forEach((s, i) => { if (i / HEAPP.length < p) { const top = rimY(s.x) + 2 - (rimY(s.x) + 2 - heapTop(s.x)) * (0.35 + 0.65 * p), y = top + (rimY(s.x) + 3 - top) * (1 - s.f); h += `<circle cx="${P(s.x)}" cy="${P(y)}" r="${P(s.r)}" style="fill:${s.salt ? "var(--crystal)" : "var(--rock)"};stroke:${s.salt ? "var(--crystal-edge)" : "#4A3520"};stroke-width:.7"/>`; } });
   }
   HEAPL.forEach((l, i) => { if (i / HEAPL.length >= p) h += `<rect x="${P(l.x - l.s / 2)}" y="${P(l.y - l.s * .4)}" width="${P(l.s)}" height="${P(l.s * .8)}" rx="3" transform="rotate(${P(l.rot)} ${P(l.x)} ${P(l.y)})" style="fill:${l.salt ? "var(--crystal)" : "var(--rock)"};stroke:${l.salt ? "var(--crystal-edge)" : "#4A3520"};stroke-width:1.5"/>`; });
-  const a = grinding && !reduced() ? Math.sin(t * 8) * 18 : 0;
+  const a = grinding ? Math.sin(t * 8) * 18 : 0;
   h += `</g><g clip-path="url(#cpMortarFront)"><g transform="rotate(${P(a)} 388 270)"><use href="#sPestle" class="pic" transform="translate(394 279) rotate(24)" x="-21.15" y="-150" width="42.3" height="150"/></g></g>`;   // the pestle's tip is hidden by the front rim
   if (support.labels) h += tag(232, 330, "pestle and mortar", "end", 254, 315) + tag(490, 300, p > 0.5 ? "rock salt powder" : "rock salt lumps", "start", P(MR.hx + 20), P(heapTop(MR.hx + 20) + 6));
   return h;
@@ -1340,7 +1329,7 @@ function dissolveBeaker(p, t) {   // p 0→1: powder in, salt dissolves, grit se
     else h += `<circle cx="${P(x)}" cy="${P(y)}" r="3" style="fill:var(--rock);stroke:#4A3520;stroke-width:.8"/>`;
   });
   h += `<path d="M${x1} ${y1} L${x1} ${y2 - 8} Q${x1} ${y2} ${x1 + 8} ${y2} L${x2 - 8} ${y2} Q${x2} ${y2} ${x2} ${y2 - 8} L${x2} ${y1}" style="${GE}"/>`;
-  const sx = reduced() || p >= 1 ? 0 : Math.sin(t * 6) * 26;
+  const sx = p >= 1 ? 0 : Math.sin(t * 6) * 26;
   h += `<path d="M${P(360 + sx)} 372 L${P(400 + sx * .4)} 110" style="stroke:var(--glass-edge);stroke-width:7;stroke-linecap:round"/>`;
   if (support.labels) h += tag(266, 250, "warm water", "end", 300, 250) + tag(266, 382, "sand and rock", "end", 300, 384) + tag(456, 132, "stirring rod", "start", 398, 130);
   return h;
@@ -1360,7 +1349,7 @@ function drawRock() {
     h = evapRig({ vol: Math.max(0, vol), heat, spit: false, t: a ? a.t : 0, slow: 1 });   // heated gently, then left: slow, large crystals
     xtalShown = vol <= FACTS.crystalVol && xtalOK();
     if (xtalShown) h += closeUp(1, 1 - Math.max(0, vol) / FACTS.crystalVol, "Close-up");
-    if (heat && !reduced()) for (let i = 0; i < 4; i++) { const ph = ((a.t * .8 + i / 4) % 1); h += particle(324 + i * 27, surfE(vol) - 8 - ph * 110, 9, "W", 1 - ph); }
+    if (heat) for (let i = 0; i < 4; i++) { const ph = ((a.t * .8 + i / 4) % 1); h += particle(324 + i * 27, surfE(vol) - 8 - ph * 110, 9, "W", 1 - ph); }
     if (support.labels) h += evapLabels(Math.max(0, vol), false);
   }
   return h;
@@ -1534,7 +1523,6 @@ function showScene(k) {
 $("mixWrap").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { const was = F.mix; resetFilt(b.dataset.mix); F.seeded = false; refresh(); if (b.dataset.mix !== was) tourSignal("mix"); }));
 $("pourBtn").addEventListener("click", () => {
   resetFilt(F.mix); F.phase = "pouring"; F.t = 0;
-  if (reduced()) { F.phase = "done"; F.t = RATE.pour; }
   refresh(); tourSignal("pour");
 });
 $("zoomBtn").addEventListener("click", () => { F.zoom = !F.zoom; refresh(); if (F.zoom) tourSignal("zoom"); });
@@ -1564,7 +1552,6 @@ function rockStep(step) {
     status(); return;
   }
   R.last = ""; R.anim = { step, t: 0, dur: { grind: 2, dissolve: 2.5, filter: 3, evap: 5 }[step] };
-  if (reduced()) { R.done.push(step); R.anim = null; }
   refresh();
 }
 $("stepWrap").querySelectorAll("button").forEach(b => b.addEventListener("click", () => rockStep(b.dataset.step)));
@@ -1575,7 +1562,6 @@ $("lineWrap").querySelectorAll("button").forEach(b => b.addEventListener("click"
 $("solvWrap").querySelectorAll("button").forEach(b => b.addEventListener("click", () => chromSet("solv", b.dataset.solv)));
 $("runBtn").addEventListener("click", () => {
   C.front = 0; C.ran = false; C.running = true;
-  if (reduced()) { C.front = 1; C.running = false; C.ran = true; }
   refresh();
 });
 $("chromReset").addEventListener("click", () => { resetChrom(); refresh(); });

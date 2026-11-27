@@ -1505,7 +1505,7 @@ function renderCtl() {   // touches a control only when its state really changes
 function drawAll() { drawPane(); renderCtl(); }
 function setTab(t) { stopAll(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
-/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; reduced motion: a few still steps) ===== */
+/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; always plays, whatever the reduced-motion setting) ===== */
 function startAnim(a) { anim = a; a.t0 = null; a.el = 0; a.lastQ = -1; paused = false; renderCtl(); rafId = paceFrame(step, a.fps); }
 function step(ts) {
   if (!anim) return;
@@ -1513,7 +1513,6 @@ function step(ts) {
   if (anim.t0 == null) anim.t0 = ts - anim.el;
   anim.el = ts - anim.t0;
   let el = anim.el;
-  if (reduced()) { const q = Math.min(anim.dur, Math.floor(el / 400) * 400); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
   if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) renderCtl(); return; }
   rafId = paceFrame(step, anim.fps);
 }
@@ -1632,7 +1631,7 @@ function setAnswerState(instant) {
 function revealModel(instant) {
   const t = task; if (!t.after) { if (lock === "all" || lock === "read") lock = ""; drawAll(); return; }
   lock = ""; stopAll(); renderCtl();
-  if (t.after === "hill") { const R = M.R; R.hill = true; if (instant || reduced()) { finishRun(R); drawAll(); } else { drawAll(); runGo(true); } }
+  if (t.after === "hill") { const R = M.R; R.hill = true; if (instant) { finishRun(R); drawAll(); } else { drawAll(); runGo(true); } }
 }
 function renderDots() {
   const lst = LEVELS[level];

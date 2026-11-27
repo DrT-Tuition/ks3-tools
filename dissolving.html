@@ -1058,13 +1058,13 @@ function particleLayout(snap) {
     p.tx = t.x; p.ty = t.y; next.push(p);
   });
   solv = next;
-  if (snap || reduced()) [...solv, ...latL, ...disL].forEach(p => { p.x = p.tx; p.y = p.ty; });
+  if (snap) [...solv, ...latL, ...disL].forEach(p => { p.x = p.tx; p.y = p.ty; });
 }
 function drawZoom(dt) {
   const k = Math.min(1, (dt || 0) * 7), still = reduced();
   ptime += dt || 0;
   const all = [...solv, ...latL, ...disL];
-  all.forEach(p => { p.x += (p.tx - p.x) * (still ? 1 : k); p.y += (p.ty - p.y) * (still ? 1 : k); });
+  all.forEach(p => { p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; });
   const wob = (p, a) => still ? [p.x, p.y] : [p.x + a * Math.sin(ptime * 3.1 + p.ph), p.y + a * Math.cos(ptime * 2.7 + p.ph * 1.3)];
   const stirA = stirLeft > 0 ? 3.2 : 1.8;
   /* drawn on a canvas (cheap on slow PCs): the same house particles as the SVG key, pre-drawn once as sprites */
@@ -1155,9 +1155,9 @@ function drawBeaker() {
   h += `<rect x="173.3" y="${(200 - tH).toFixed(1)}" width="5.4" height="${tH.toFixed(1)}" rx="2.5" style="fill:var(--therm)"/>`;
   // stirring rod
   if (stirLeft > 0) {
-    const sw = reduced() ? 0 : Math.sin(ptime * 9) * 14;
+    const sw = Math.sin(ptime * 9) * 14;
     h += `<path d="M${(234 + sw).toFixed(1)} 32 L${(226 - sw * 0.6).toFixed(1)} 211" style="stroke:var(--rod);stroke-width:5.5;stroke-linecap:round"/>`;
-    if (!reduced()) h += `<path d="M${BK.l + 14} ${BK.liq + 30} q 43 ${(12 * Math.sin(ptime * 9)).toFixed(1)} 86 0" style="fill:none;stroke:var(--glass);stroke-width:2;opacity:.6"/>`;
+    h += `<path d="M${BK.l + 14} ${BK.liq + 30} q 43 ${(12 * Math.sin(ptime * 9)).toFixed(1)} 86 0" style="fill:none;stroke:var(--glass);stroke-width:2;opacity:.6"/>`;
   }
   // the beaker and balance picture (glass is see-through, so everything above shows inside it):
   // one fixed element between the "under" and "over" groups, so its picture (and dark-mode outline filter) is never rebuilt
@@ -1220,12 +1220,11 @@ function addSolute(amt, quiet) {
   if (!(amt > 0)) return false;
   if (totalB(B) + amt > DATA.maxSolute + EPS) { say("The beaker can take up to " + DATA.maxSolute + " g of solute. Press <b>Empty beaker</b> to start again."); return false; }
   B.U += amt;
-  if (!quiet) { say("You added <b>" + g(amt) + "</b> of " + SOLUTES[B.solute].name + "."); if (!reduced()) for (let i = 0; i < 10; i++) addFx.push({ x: 242 + Math.random() * 12, y: 44 - i * 8, v: 180 + Math.random() * 60 }); }
+  if (!quiet) { say("You added <b>" + g(amt) + "</b> of " + SOLUTES[B.solute].name + "."); for (let i = 0; i < 10; i++) addFx.push({ x: 242 + Math.random() * 12, y: 44 - i * 8, v: 180 + Math.random() * 60 }); }
   particleLayout(false); afterChange(); tourSignal("add"); return true;
 }
 function stir() {
-  if (reduced()) { settleState(B); stirLeft = 0.6; particleLayout(false); afterChange(); setTimeout(() => { stirLeft = 0; draw(0); }, 600); }
-  else stirLeft = 2.0;
+  stirLeft = 2.0;
   tourSignal("stir"); kick();
 }
 function setTemp(T) {
@@ -1266,7 +1265,7 @@ function frameCost() {
   }
   costT = now; costCh.port2.postMessage(0);
 }
-const stateBusy = () => stirLeft > 0 || addFx.length || (B.U > EPS && B.D < capB(B) - EPS && !reduced());
+const stateBusy = () => stirLeft > 0 || addFx.length || (B.U > EPS && B.D < capB(B) - EPS);
 /* Idle (16 Nov 2026): like Gas Pressure, once nothing is dissolving or settling the particles' jiggle pauses after 20 s with
    nobody touching the page ("Paused to save power", shown over the zoomed-in view), except while a question asks pupils
    to watch. Any key, click, touch, scroll or mouse move starts it again. */
@@ -1283,7 +1282,7 @@ function loop(ts) {
   if (onScreen) frameCost();
   const dt = lastTs == null ? 0 : Math.min(0.15, (ts - lastTs) / 1000); lastTs = ts;
   let changed = false;
-  if (!reduced()) {
+  {
     const cap = capB(B);
     if (B.U > EPS && B.D < cap - EPS) {
       const rate = stirLeft > 0 ? 150 : 4, m = Math.min(B.U, cap - B.D, rate * dt);

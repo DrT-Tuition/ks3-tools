@@ -1351,32 +1351,29 @@ function startAnim(kind) {
     const dt = Math.min(.25, (t - a.lastT) / 1000); a.lastT = t; a.el += dt;
     if (step(a, dt)) { anim = null; drawAll(); afterRun(kind); return; }
     drawPane(); if (kind === "p") $("swd").textContent = mss(M.rpClock);
-    a.id = paceFrame(a.frame, reduced() ? 4 : 30);
+    a.id = paceFrame(a.frame, 30);
   };
   drawAll();
-  a.id = paceFrame(a.frame, reduced() ? 4 : 30);
+  a.id = paceFrame(a.frame, 30);
 }
 function hops(a, dt, get, set, n, dur, hold) {   // step k moves u 0 → 1, holds, then the next step; true when the last one is done
-  const R = reduced(), [k, u] = get();
-  if (R) { set(n - 1, 1); return true; }
+  const [k, u] = get();
   if (u < 1) { set(k, Math.min(1, u + dt / dur)); a.el = 0; return false; }
   if (k >= n - 1) return true;
   if (a.el < hold) return false;
   set(k + 1, 0); a.el = 0; return false;
 }
 function step(a, dt) {
-  const R = reduced();
   if (a.kind === "c") { const n = atomRoute(M.aseed).length; return hops(a, dt, () => [M.astep, M.au], (k, u) => { M.astep = k; M.au = u; }, n, 1.5, .7); }
   if (a.kind === "w") return hops(a, dt, () => [M.ws, M.wu], (k, u) => { M.ws = k; M.wu = u; }, DROP.length, 1.5, 1.2);
-  if (a.kind === "d") { M.wk = R ? DEC.weeks : Math.min(DEC.weeks, M.wk + dt * 2); return M.wk >= DEC.weeks; }
+  if (a.kind === "d") { M.wk = Math.min(DEC.weeks, M.wk + dt * 2); return M.wk >= DEC.weeks; }
   if (a.kind === "p") {
-    if (R) { M.rpClock = M.rpEnd; M.rpState = "stopped"; return true; }
     M.rpClock += dt * RP_SPEED();
     if (M.rpClock >= M.rpEnd + 20) { M.rpClock = M.rpEnd + 20; M.rpState = "late"; M.rpMsg = "Too late: the clock has stopped. Press Start again."; showRpMsg(); return true; }
     return false; }
   return true;
 }
-function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 30); }
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, 30); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); }
 function toggleRun(kind, start) { if (anim && anim.kind === kind) { stopAll(); drawAll(); return; } start(); }
 /* controls */

@@ -913,7 +913,7 @@ const TASKS = {
       reveal: M => { M.S.sq = 0; M.S.force = 4; placeNow(M.S); },
       hints: ["Choose 4 N. Then try the supports one at a time.", "Which support has the smallest contact area?", "Choose the 2 cm support and 4 N, then Place on the sand."] },
     { id: "bigger", kind: "choice", lesson: "L6", setup: M => { M.tab = "solid"; M.S.view = "block"; M.S.sq = 0; M.S.force = 4; placeNow(M.S); }, lock: "run",
-      after: instant => { const S = M.S; S.sq = 3; S.force = 4; S.dent = null; S.placed = false; S.h = BH_UP; if (instant || reduced()) { placeNow(S); drawAll(); } else placeBlock(true); },
+      after: instant => { const S = M.S; S.sq = 3; S.force = 4; S.dent = null; S.placed = false; S.h = BH_UP; if (instant) { placeNow(S); drawAll(); } else placeBlock(true); },
       text: "Predict: the same 4 N goes on the 5 cm support instead of the 2 cm one. What happens to the pressure?", note: "This is a prediction. When you get it right, the model tries it.",
       options: [{ t: "It gets smaller: the force is spread over a bigger area", ok: () => pressure(4, areaOf(3)) < pressure(4, areaOf(0)) },
         { t: "It gets bigger: the area is bigger", why: "That's a common mistake. A bigger area spreads the same force out, so the pressure is smaller." },
@@ -922,7 +922,7 @@ const TASKS = {
       explain: `The 5 cm support has 25 cm²: 4 N ÷ 25 cm² = ${fmt(pressure(4, 25))} N/cm². The 2 cm support gave ${fmt(pressure(4, 4))} N/cm². Bigger area: smaller pressure.`,
       hints: ["Is the force or the area changing?", "A larger area spreads the force out.", "Smaller pressure: a shallower dent."] },
     { id: "sinkLeast", kind: "choice", lesson: "L6", setup: M => { M.tab = "solid"; M.S.view = "people"; }, lock: "run",
-      after: instant => { if (instant || reduced()) { M.S.foot = "snow"; M.S.fs = 1; drawAll(); } else setFoot("snow", true); },
+      after: instant => { if (instant) { M.S.foot = "snow"; M.S.fs = 1; drawAll(); } else setFoot("snow", true); },
       text: "Predict: the same 600 N person crosses soft mud. Which way of standing sinks least?", note: "This is a prediction. When you get it right, the model shows it.",
       options: [{ t: "Snow shoes", ok: () => FKEYS.every(k => FEET.snow.a >= FEET[k].a) },
         { t: "Football boots", why: "The studs have a tiny area (20 cm²). That gives a high pressure, so they dig in." },
@@ -974,7 +974,7 @@ const TASKS = {
       explain: "The bottom jet lands furthest. The deeper hole has more water above it, so the pressure is greater and the water is pushed out harder.",
       hints: ["Which hole is deepest?", "More water above means more pressure.", "The greatest pressure pushes the water out hardest."] },
     { id: "squash", kind: "choice", lesson: "L5", setup: M => { M.tab = "liquid"; M.L.view = "squash"; }, lock: "run",
-      after: instant => { if (instant || reduced()) { M.L.sqz = 1; M.L.pushed = true; drawAll(); } else squashToggle(true); },
+      after: instant => { if (instant) { M.L.sqz = 1; M.L.pushed = true; drawAll(); } else squashToggle(true); },
       text: "Predict: you push the plunger of a sealed syringe full of water. What happens?", note: "This is a prediction. When you get it right, the model pushes both syringes.",
       options: [{ t: "It hardly moves: the particles are already touching", ok: () => squashTo("water") === SYR.fill && squashTo("air") < SYR.fill },
         { t: "It goes in, like the syringe of air", why: "That's a common mistake. Liquids can't be squashed like gases: the particles are already touching." },
@@ -1377,7 +1377,7 @@ function renderCtl() {
 function drawAll() { drawPane(); renderCtl(); }
 function setTab(t) { if (anim) finishAnim(); M.tab = t; drawAll(); tourSignal("tab-" + t); }
 
-/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; reduced motion: a few still steps) ===== */
+/* ===== Animation (paceFrame: 30 fps cap, paused off-screen or when the tab is hidden; reduced motion does not shorten them) ===== */
 function startAnim(a) { anim = a; a.t0 = null; a.el = 0; a.lastQ = -1; a.prev = null; paused = false; renderCtl(); rafId = paceFrame(step, a.fps); }
 function step(ts) {
   if (!anim) return;
@@ -1385,7 +1385,6 @@ function step(ts) {
   if (anim.t0 == null) anim.t0 = ts - anim.el;
   anim.el = ts - anim.t0;
   let el = anim.el;
-  if (reduced() && anim.dur) { const q = Math.min(anim.dur, Math.floor(el / 400) * 400); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
   if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) renderCtl(); return; }
   rafId = paceFrame(step, anim.fps);
 }
@@ -1418,7 +1417,7 @@ function tapeToggle(force) {
 }
 function maybeDrain() {
   const L = M.L; if (L.tape || L.topUp || L.level <= BOT.holes[2] || anim) return;
-  startAnim({ bg: true, fps: FPS_DRAIN, frame(el) { const dt = this.prev == null ? 0 : Math.min(250, el - this.prev); this.prev = el; const done = drainStep(L, reduced() ? 400 : dt); if (M.tab === "liquid" && L.view === "bottle") drawBottle(); return done || L.topUp || L.tape; },
+  startAnim({ bg: true, fps: FPS_DRAIN, frame(el) { const dt = this.prev == null ? 0 : Math.min(250, el - this.prev); this.prev = el; const done = drainStep(L, dt); if (M.tab === "liquid" && L.view === "bottle") drawBottle(); return done || L.topUp || L.tape; },
     end() { if (M.tab === "liquid" && L.view === "bottle") drawBottle(); } });
 }
 function letGo(force) {

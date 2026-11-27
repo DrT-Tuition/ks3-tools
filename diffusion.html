@@ -1738,7 +1738,7 @@ function paintControls() {
   $("go").textContent = started ? "Start again" : M.setup === "practical" ? "Drop the crystal" : M.setup === "race" ? "Start race" : "Lift barrier";
   $("pause").textContent = run ? "Pause" : "Play";
   $("ff").setAttribute("aria-pressed", String(speed > 1));
-  $("step").hidden = !reduced();
+  $("step").hidden = true;
   $("varsBox").hidden = !support.vars;
 }
 
@@ -1810,7 +1810,7 @@ function recordRun(d) {
   renderTable(); if (plotted) drawRGraph();
   if (PT.every(x => RES[x] && RES[x][0] != null)) tried(4);
 }
-function startAll() { for (const v of views) { if (v.kind === "box") v.sim.lift(); else v.sim.add(); } run = !reduced(); endAt = null; }
+function startAll() { for (const v of views) { if (v.kind === "box") v.sim.lift(); else v.sim.add(); } run = true; endAt = null; }
 function doGo() {
   const s = V1.sim, started = M.setup === "practical" ? s.added : s.lifted;
   if (started) { buildScene(true); return; }
@@ -1875,7 +1875,7 @@ const TASKS = {
         { k: "back", t: "They move back to where they started.", fb: "Particles move randomly. They don't remember where they started, so the gases don't unmix." },
         { k: "slow", t: "They slow down until they stop.", fb: "Misconception: they keep moving just as fast. Only the overall spreading stops, because the concentration is the same everywhere." }],
       answer: () => "move", after: "Now lift the barrier and watch. Try Particle trails under Support.",
-      reveal() { setSupport("trails", true); skipToEnd(); run = !reduced(); paintControls(); markDirty(); },
+      reveal() { setSupport("trails", true); skipToEnd(); run = true; paintControls(); markDirty(); },
       hints: ["Lift the barrier and wait until the strip is even. Then watch the particles.", "Turn on Particle trails under Support. Follow the ringed particle after mixing.", "The particles never stop. The concentration just stays the same everywhere."],
       reason: "The particles keep moving after mixing. There is no overall change, because about as many move each way." },
     { id: "e5", scene: { setup: "race", vary: "state", v: ["gas", "liquid"] }, kind: "choice", text: "Predict: which spreads out faster, a gas or a liquid? Then press Start race.",
@@ -2379,7 +2379,6 @@ const firstOpen = lv => { const i = LEVELS[lv].findIndex(t => !DONE[qkey(lv, t)]
 document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => { if (!b.disabled) setMode(b.dataset.mode); }));
 $("themeBtn").addEventListener("click", () => setTimeout(readColours, 0));
 if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => setTimeout(readColours, 0));
-if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { $("rmNote").hidden = !reduced(); if (reduced()) run = false; paintControls(); plButtons(); });
 document.addEventListener("visibilitychange", () => { lastTs = 0; if (!document.hidden) kick(); });
 if (window.IntersectionObserver) {
   new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
@@ -2540,7 +2539,7 @@ const plQ = () => plTask() && M.setup === "plate" && !DONE[qkey(level, task)];
 function plQSync() { if (!PL.on) return; PL.capKey = PL.zKey = ""; PL.zAt = PL.zDrawn = 0; plWords(); if (PL.zoom) zPaint(); }
 function plButtons() {
   if (!PL.on) return;
-  const rm = reduced();
+  const rm = false;
   $("plGo").disabled = PL.pouring || PL.poured;
   $("plPause").disabled = !(PL.pouring || PL.poured) || rm;
   $("plPause").textContent = PL.run || PL.pouring ? "Pause" : "Play";
@@ -2591,7 +2590,6 @@ function plFrame(ts) {
 function plStop() { if (PL.tmr) { clearTimeout(PL.tmr); PL.tmr = 0; } if (PL.raf > 0) paceCancel(PL.raf); PL.raf = 0; PL.last = 0; }
 function plPour() {
   if (PL.poured || PL.pouring) return;
-  if (reduced()) { const f = document.activeElement === $("plGo"); PL.poured = true; PL.pour = 1; PL.t = plT(); if (PL.zoom) zInit(); plFinish(); plTried(2); plButtons(); plPaint(); if (f) $("plReset").focus({ preventScroll: true }); return; }   // reduced motion: straight to the end
   const f = document.activeElement === $("plGo");
   PL.pouring = true; PL.pour = 0; PL.run = true; plStatus(`Pouring ${PL.water} water into the middle…`); plButtons(); plKick();
   if (f) $("plPause").focus({ preventScroll: true });   // Pour water is now off: keep keyboard focus on the next control
@@ -2635,7 +2633,7 @@ function zPaint() {
   const cv = $("plZcv"), w = Math.round(boxW(cv)); if (!w) return;
   const dpr = Math.min(1.5, window.devicePixelRatio || 1) * (typeof nqPresZoom === "function" ? nqPresZoom() : 1), Wd = Math.round(w * dpr); if (cv.width !== Wd) { cv.width = cv.height = Wd; }
   if (!Z.p) zInit();
-  const live = plWant() && !reduced(), t0 = performance.now(); if (live && t0 - (PL.zDrawn || 0) < 80) return; PL.zDrawn = t0;   // while running, about 12 pictures a second
+  const live = plWant(), t0 = performance.now(); if (live && t0 - (PL.zDrawn || 0) < 80) return; PL.zDrawn = t0;   // while running, about 12 pictures a second
   const c = cv.getContext("2d"), k = Wd / (2 * ZR + 8);
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, Wd, Wd); c.save(); c.translate(Wd / 2, Wd / 2);
   c.beginPath(); c.arc(0, 0, ZR * k, 0, 6.2832); c.fillStyle = PL.poured ? C.water : C.box; c.fill(); c.clip();
@@ -2712,7 +2710,7 @@ if (window.IntersectionObserver) new IntersectionObserver(es => { PL.vis = es[es
 
 /* ===== Start ===== */
 readColours();
-$("rmNote").hidden = !reduced();
+$("rmNote").hidden = true;
 LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };   // 5–10 questions per level
 function bankRun() {   // the load-time question-bank check, now run after the first paint (bankLater)
   const e = bankCheck(); if (!e.length) return;

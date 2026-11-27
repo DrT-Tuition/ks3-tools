@@ -1236,15 +1236,13 @@ function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(
 let onScreen = true;
 function ensureClimb() {
   if (anim || M.tab !== "run" || M.run.phase !== "running" || !onScreen) return;
-  const m = M; let last = performance.now(), acc = 0;
+  const m = M; let last = performance.now();
   anim = { id: 0 }; const a = anim;
   const step = now => {
     if (anim !== a || M !== m || m.tab !== "run") { if (anim === a) anim = null; return; }
     if (!onScreen) { anim = null; return; }
     const dt = clamp((now - last) / 1000, 0, .1); last = now;
-    let going;
-    if (reduced()) { acc += dt; going = true; if (acc >= .6) { const h0 = m.run.h; while (going && m.run.h < h0 + .5) going = runTick(m, .05); acc = 0; } }
-    else going = runTick(m, dt);
+    const going = runTick(m, dt);
     drawRunMov();
     if (going) a.id = paceFrame(step, 12);
     else { anim = null; drawAll(); }

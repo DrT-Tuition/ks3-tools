@@ -287,7 +287,6 @@ html.ri-wait .ri-vec{visibility:hidden}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .fadein{animation:fi .45s ease-out}
 @keyframes fi{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.fadein{animation:none}}
 @media (max-width:560px){.seg button{padding:8px 11px}.tabs button{font-size:15px;padding:8px 4px}.model .btn{padding:10px 13px;font-size:16px}}
 @media (min-width:901px) and (max-height:820px){
   .qpanel #answer .small{margin:0 0 4px!important;font-size:15px}.qpanel .opts{gap:6px}
@@ -1298,7 +1297,7 @@ function drawTwo(fade) {
     + T_(TP[k].x + 4, TP[k].cy, `Population ${k + 1}: ${GROUND[P.ground].n.toLowerCase()}`, 17, 'class="cap" style="fill:var(--ink)"')).join(""));
   const orgs = [T.A, T.B].map((P, k) => P.ind.map(o => { const [x, y] = posTwo(k, o); return animalSVG(T.org, o.g, x, y, .95, o.a, o.f, ex); }).join("")).join("");
   setLayer($("tOrg"), orgs);
-  if (fade && !reduced()) { const g = $("tOrg"); g.classList.remove("fadein"); void g.getBBox; requestAnimationFrame(() => g.classList.add("fadein")); }
+  if (fade) { const g = $("tOrg"); g.classList.remove("fadein"); void g.getBBox; requestAnimationFrame(() => g.classList.add("fadein")); }
   let t = [T.A, T.B].map((P, k) => { const h = P.hist[P.gen]; return T_(TP[k].x + TP[k].w / 2, TP[k].ny, `${h.A} ${O.A} · ${h.a} ${O.a}`, 17, 'text-anchor="middle" style="fill:var(--ink)"')
     + (T.long ? T_(TP[k].x + TP[k].w / 2, TP[k].dy, "+ many other differences (not drawn)", 17, 'text-anchor="middle" font-weight="700" style="fill:var(--accent)"') : ""); }).join("");
   if (T.test) {
@@ -1340,7 +1339,6 @@ function nextGen(fast, chain) {
   if (locked()) return lockMsg();
   if (anim) finishAnim();
   const P = M.P, R = genStep(P);
-  if (reduced()) { commit(P, R); afterGen(R); drawAll(); if (chain > 1) nextGen(fast, chain - 1); return; }
   setLayer($("sRings"), ringsSVG(P, R)); setLayer($("sMarks"), marksSVG(P, R)); setLayer($("sNew"), orgsSVG(P, R.kids, "n"));
   $("ovNew").style.opacity = "0"; $("ovRing").style.opacity = "0";
   setLayer($("sBird"), `<g id="bird" transform="translate(-60 40)">${BIRD}</g>`);
@@ -1430,7 +1428,7 @@ function loadTask() { nqHideEnd();
   const p = prog(); $("doneBadge").hidden = !p.solved;
   if (p.solved || p.revealed) showFinished(p);
   requestAnimationFrame(keepInView);
-  if (task.chart) setTimeout(showChart, reduced() ? 60 : 520);
+  if (task.chart) setTimeout(showChart, 520);
 }
 function showChart() {   // a chart question: bring the whole chart into view (the question panel is sticky, so it stays put)
   if (mode === "demo" || !task.chart || window.innerWidth <= 900) return;

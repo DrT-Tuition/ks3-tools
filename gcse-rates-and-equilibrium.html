@@ -1478,7 +1478,7 @@ function lcApply(c, guess) {
   L.prev = { ...L.m }; L.m = r.m; L.T = r.T; L.P = r.P; if (c.kind === "cat") L.cat = c.to; L.pend = null;
   L.last = { c, dir: r.dir, guess, key: lcChangeKey(c) };
   tried(c.kind === "T" ? 8 : c.kind === "cat" ? 10 : 9); if (L.T === 450 && L.P === 200) tried(11);
-  stopAll(); const steps = reduced() ? 1 : L.cat ? 3 : 7; L.from = r.start; L.k = 0; L.steps = steps;
+  stopAll(); const steps = L.cat ? 3 : 7; L.from = r.start; L.k = 0; L.steps = steps;
   if (steps > 1) { const p = { k: "lc" }; play = p; const tick = () => { if (play !== p) return; L.k++; drawAll(); if (L.k < L.steps) p.id = setTimeout(tick, 260); else { play = null; renderCtl(); } }; p.id = setTimeout(tick, 200); }
   else L.k = L.steps;
   drawAll(); lcKeep();
@@ -1641,7 +1641,7 @@ function nhHeat() {
   if (locked()) return lockMsg();
   const N = M.nh; if (N.heat) { stopAll(); N.gas = false; drawAll(); return; }
   if (N.p >= 1) { N.p = 0; N.ring = 0; }
-  loop("nh", reduced() ? 700 : 260, () => { N.heat = true; N.tick = (N.tick || 0) + 1; N.p = Math.min(1, N.p + (reduced() ? .25 : .045)); N.ring = Math.min(1, Math.max(N.ring, N.p - .12)); N.gas = N.p < 1;
+  loop("nh", 260, () => { N.heat = true; N.tick = (N.tick || 0) + 1; N.p = Math.min(1, N.p + .045); N.ring = Math.min(1, Math.max(N.ring, N.p - .12)); N.gas = N.p < 1;
     if (N.p >= 1) { N.ring = 1; N.heat = false; N.gas = false; tried(1); return false; } if (N.ring > .3) tried(1); return true; });
   N.heat = true; drawAll(); tourSignal("nhheat");
 }
@@ -1649,14 +1649,14 @@ function cuHeat() {
   if (locked()) return lockMsg();
   const U = M.cu; if (U.st !== "blue") return;
   U.st = "heat";
-  loop("cu", reduced() ? 700 : 260, () => { U.st = "heat"; U.tick = (U.tick || 0) + 1; U.h = Math.min(1, U.h + (reduced() ? .25 : .05)); U.w = U.h;
-    if (U.h >= 1) { setTimeout(() => { if (M.cu === U && U.st === "heat" && U.h >= 1) { U.st = "white"; U.temp = CU.t0; drawAll(); } }, reduced() ? 300 : 1200); return false; } return true; });
+  loop("cu", 260, () => { U.st = "heat"; U.tick = (U.tick || 0) + 1; U.h = Math.min(1, U.h + .05); U.w = U.h;
+    if (U.h >= 1) { setTimeout(() => { if (M.cu === U && U.st === "heat" && U.h >= 1) { U.st = "white"; U.temp = CU.t0; drawAll(); } }, 1200); return false; } return true; });
   U.st = "heat"; drawAll();
 }
 function cuWater() {
   if (locked()) return lockMsg();
   const U = M.cu; if (U.st !== "white") return;
-  loop("cu", reduced() ? 700 : 300, () => { U.st = "add"; U.tick = (U.tick || 0) + 1; U.add = Math.min(1, U.add + (reduced() ? .34 : .1)); U.w = 1 - U.add; U.temp = CU.t0 + (CU.t1 - CU.t0) * Math.min(1, U.add * 1.15);
+  loop("cu", 300, () => { U.st = "add"; U.tick = (U.tick || 0) + 1; U.add = Math.min(1, U.add + .1); U.w = 1 - U.add; U.temp = CU.t0 + (CU.t1 - CU.t0) * Math.min(1, U.add * 1.15);
     if (U.add >= 1) { U.st = "blue2"; U.temp = CU.t1; tried(6); return false; } return true; });
   U.st = "add"; drawAll(); tourSignal("cuwater");
 }
@@ -1664,18 +1664,18 @@ function eqRun() {
   if (locked()) return lockMsg();
   const e = M.eq; if (e.run) { stopAll(); drawAll(); return; }
   if (e.done || !e.s) eqReset(e);
-  loop("eq", reduced() ? 600 : 220, () => { e.run = true; const n = reduced() ? 4 : 1; for (let i = 0; i < n && e.t < EQ.tEnd; i++) eqTick(e); if (e.t >= 12 && !e.open) tried(5); if (e.open && e.t >= 10) tried(7); return e.t < EQ.tEnd; });
+  loop("eq", 220, () => { e.run = true; const n = 1; for (let i = 0; i < n && e.t < EQ.tEnd; i++) eqTick(e); if (e.t >= 12 && !e.open) tried(5); if (e.open && e.t >= 10) tried(7); return e.t < EQ.tEnd; });
   e.run = true; drawAll(); tourSignal("erun");
 }
 
 /* ===== Collisions loop (≤ 30 fps; only while the tab is open, visible and on screen) ===== */
 const CL = { id: 0, on: false, last: 0, simT: 0, onscreen: true, playT: 0 };
 const collWanted = () => M.tab === "col" && M.cplay && !document.hidden && CL.onscreen && !qh("col") && $("ccv").getClientRects().length > 0;
-function collStart() { if (CL.on || !collWanted()) return; CL.on = true; CL.last = 0; CL.id = paceFrame(collFrame, reduced() ? 2 : 30); }
+function collStart() { if (CL.on || !collWanted()) return; CL.on = true; CL.last = 0; CL.id = paceFrame(collFrame, 30); }
 function collStop() { CL.on = false; paceCancel(CL.id); }
 function collFrame(now) {
   if (!CL.on) return; if (!collWanted()) { CL.on = false; return; }
-  const dt = CL.last ? Math.min(reduced() ? .6 : .1, (now - CL.last) / 1000) : 0; CL.last = now;
+  const dt = CL.last ? Math.min(.1, (now - CL.last) / 1000) : 0; CL.last = now;
   let left = dt; while (left > 1e-6) { const h = Math.min(left, 1 / 60); CL.simT += h; colStep(h, CL.simT); left -= h;
     if (CV.cnt) { CV.cnt.t += h; if (CV.cnt.t >= 10) { countDone(); break; } } }
   CL.playT += dt;
@@ -1683,7 +1683,7 @@ function collFrame(now) {
   if (now - CV.lastUI > 250) { CV.lastUI = now; morphHTML($("cread"), collRead()); }
   if (!CV.cnt && !CL.doneSeen && colDone()) { CL.doneSeen = true; morphHTML($("cread"), collRead()); }
   if (CL.playT > 40 && !CV.cnt) { M.cplay = false; CL.on = false; M.cmsg = "Paused to save power. Press Play to carry on."; morphHTML($("cread"), collRead()); renderCtl(); return; }
-  CL.id = paceFrame(collFrame, reduced() ? 2 : 30);
+  CL.id = paceFrame(collFrame, 30);
 }
 function collRefill() { if (locked()) return lockMsg(); if (CV.cnt) return; colInit(); CL.playT = 0; CL.doneSeen = false; M.cmsg = ""; M.cplay = true; drawAll(); collStart(); }
 function countDone() { const c = CV.cnt; colEndCount(); CL.doneSeen = false; c.n = nz(c.n); c.ok = nz(c.ok); M.cres.push({ rx: M.rx, cc: M.cc, cp: M.cp, cs: M.cs, ct: M.ct, cat: M.cat, n: c.n, ok: c.ok }); if (M.cres.length > 6) M.cres.shift();

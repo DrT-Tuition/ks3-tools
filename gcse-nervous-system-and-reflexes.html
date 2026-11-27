@@ -1300,27 +1300,26 @@ function startAnim(kind, opt) {
     if (anim !== a) return;
     const t = Math.max(now, performance.now());
     if (!visOK || document.hidden) { a.paused = true; return; }
-    const dt = Math.min(.25, (t - a.lastT) / 1000); a.lastT = t; a.el += dt; a.ph += reduced() ? 0 : dt;
+    const dt = Math.min(.25, (t - a.lastT) / 1000); a.lastT = t; a.el += dt; a.ph += dt;
     if (step(a, dt)) { anim = null; drawAll(); afterRun(kind); return; }
     drawPane();
-    a.id = paceFrame(a.frame, reduced() ? 4 : 24);
+    a.id = paceFrame(a.frame, 24);
   };
   drawAll();
-  a.id = paceFrame(a.frame, reduced() ? 4 : 24);
+  a.id = paceFrame(a.frame, 24);
 }
 function step(a, dt) {   // advance the model; true when this run is over
-  const R = reduced();
-  if (a.kind === "arc") { const d = ADUR[M.st] || 1; M.u = R ? (a.el > .05 ? 1 : 0) : Math.min(1, M.u + dt / d);
-    if (a.el >= d || (R && a.el >= 1.2)) { if (!a.play || M.st >= 7) { M.u = 1; return true; } M.st++; M.u = 0; a.el = 0; tourSignal("arc-" + M.st); } return false; }
-  if (a.kind === "syn") { const d = SDUR[M.syn]; M.su = R ? 1 : Math.min(1, M.su + dt / d);
-    if (a.el >= d || (R && a.el >= 1.2)) { if (!a.play || M.syn >= SYN.length - 1) { M.su = 1; return true; } M.syn++; M.su = 0; a.el = 0; } return false; }
-  if (a.kind === "race") { M.race.t = Math.min(RACE.con + 10, M.race.t + dt * 1000 / (R ? 4 : 20)); if (M.race.t >= RACE.con + 10) { M.race.t = RACE.con + 10; M.race.done = true; return true; } return false; }
+  if (a.kind === "arc") { const d = ADUR[M.st] || 1; M.u = Math.min(1, M.u + dt / d);
+    if (a.el >= d) { if (!a.play || M.st >= 7) { M.u = 1; return true; } M.st++; M.u = 0; a.el = 0; tourSignal("arc-" + M.st); } return false; }
+  if (a.kind === "syn") { const d = SDUR[M.syn]; M.su = Math.min(1, M.su + dt / d);
+    if (a.el >= d) { if (!a.play || M.syn >= SYN.length - 1) { M.su = 1; return true; } M.syn++; M.su = 0; a.el = 0; } return false; }
+  if (a.kind === "race") { M.race.t = Math.min(RACE.con + 10, M.race.t + dt * 1000 / 20); if (M.race.t >= RACE.con + 10) { M.race.t = RACE.con + 10; M.race.done = true; return true; } return false; }
   if (a.kind === "pup") { const tgt = PUPR[M.light], k = a.el / .3; M.pst = Math.min(6, Math.floor(k));
-    if (M.pst >= 5) { const v = R ? 1 : Math.min(1, (a.el - 1.5) / .6); M.pr = a.from + (tgt - a.from) * Math.max(0, v); }
+    if (M.pst >= 5) { const v = Math.min(1, (a.el - 1.5) / .6); M.pr = a.from + (tgt - a.from) * Math.max(0, v); }
     if (a.el >= 2.2) { M.pr = tgt; M.pst = 7; return true; } return false; }
   return true;
 }
-function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 24); }
+function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, 24); }
 function stopAll() { if (!anim) return; const a = anim; anim = null; paceCancel(a.id); }
 /* controls */
 function arcPlay() { if (locked()) return lockMsg(); if (anim && anim.kind === "arc") { stopAll(); drawAll(); return; }

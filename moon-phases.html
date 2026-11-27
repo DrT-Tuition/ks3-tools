@@ -1244,11 +1244,10 @@ $("day").addEventListener("input", e => { stopPlay(); setDay(+e.target.value, "d
 $("back").addEventListener("click", () => { stopPlay(); setDay(Math.round(M.day) - 1, "day"); });
 $("fwd").addEventListener("click", () => { stopPlay(); setDay(Math.round(M.day) + 1, "day"); });
 $("play").addEventListener("click", () => { if (M.playing) stopPlay(); else startPlay(); });
-/* Play: about 2 days a second. rAF pauses while the tab is hidden; reduced motion steps one day at a time. */
+/* Play: about 2 days a second. rAF pauses while the tab is hidden. */
 function startPlay() {
   if (M.lock) return;
   M.playing = true; M.played = 0; lastTs = null; renderCtl(); tourSignal("play");
-  if (reduced()) { stepT = setInterval(() => { M.day = wrapD(Math.round(M.day) + 1); M.played += 1; afterPlayStep(); }, 650); return; }
   rafId = paceFrame(playStep);
 }
 function playStep(ts) {
@@ -1319,14 +1318,13 @@ function renderFacts() {
 function renderIdeas() { drawOrrery(); renderFacts(); }
 function startPlay2() {
   IDEA.playing = true; lastTs2 = null; renderFacts();
-  if (reduced()) { stepT2 = setInterval(() => { IDEA.t += 0.75; drawOrrery(); }, 1000); return; }
   rafId2 = paceFrame(play2Step);
 }
 function play2Step(ts) { if (!IDEA.playing) return; if (!onScreen.orrery) { rafId2 = 0; lastTs2 = null; return; } const dt = lastTs2 == null ? 0 : Math.min(0.05, (ts - lastTs2) / 1000); lastTs2 = ts; IDEA.t += dt; drawOrrery(); rafId2 = paceFrame(play2Step); }
 /* Play keeps going while it can be seen; it waits while its picture is scrolled off the screen (or hidden), then carries on */
 const onScreen = { top: true, orrery: true };
 if (window.IntersectionObserver) ["top", "orrery"].forEach(id => new IntersectionObserver(es => {
-  onScreen[id] = es[es.length - 1].isIntersecting; if (!onScreen[id] || reduced()) return;
+  onScreen[id] = es[es.length - 1].isIntersecting; if (!onScreen[id]) return;
   if (id === "top" && M.playing && !rafId) { lastTs = null; rafId = paceFrame(playStep); }
   if (id === "orrery" && IDEA.playing && !rafId2) { lastTs2 = null; rafId2 = paceFrame(play2Step); }
 }).observe($(id)));

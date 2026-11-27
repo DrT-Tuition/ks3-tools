@@ -92,7 +92,7 @@
     the zoomed-in cut end, the beam, the ruler, the distance arrow, the labels, the table and the graph.
   Performance: drawn on demand (nothing runs while idle); the count animates with paceFrame() (30 fps cap, adaptive
     slow-down) and patches a fixed pool of bubble circles in place; paused when the tab is hidden or the model is
-    off-screen; no CSS filters, no backdrop-filter. Reduced motion: a still half-way reading, then the result.
+    off-screen; no CSS filters, no backdrop-filter. Reduced motion makes no difference: the run always plays.
   Layout (11 Oct 2026): Instructions tour, Demo, Knowledge check Easy/Hard, saved ticks, shuffled answers.
 -->
 
@@ -1448,11 +1448,6 @@ function startCount(force) {
   RUN = { n, arr, lead, wait, t0, cnt, real: 0, d: M.d, on: M.on, sp, ci: 0, nc: 0, lo: 0, said: false };
   note("runNote", "", wait ? "Leaving the pondweed for 2 minutes first (sped up)…" : "Counting the bubbles that reach the top…");
   renderReadouts(); tourSignal("count");
-  if (reduced()) {   // stepped: half-way, then the result
-    const half = arr.filter(a => a.c && a.t <= t0 + cnt / 2).length;
-    $("roTime").textContent = "0:30"; $("roPhase").textContent = "Counting"; $("roCount").textContent = half;
-    stillT = setTimeout(finishCount, 900); return;
-  }
   lastTs = null; rafId = paceFrame(stepCount);
 }
 function stepCount(ts) {
@@ -1476,7 +1471,7 @@ function stepCount(ts) {
   rafId = paceFrame(stepCount);
 }
 function setText(id, v) { const e = $(id); v = String(v); if (e.textContent !== v) e.textContent = v; }   // only touch it when it changes
-function resume() { if (RUN && paused && onScreen && !document.hidden && !reduced()) { paused = false; lastTs = null; rafId = paceFrame(stepCount); } }
+function resume() { if (RUN && paused && onScreen && !document.hidden) { paused = false; lastTs = null; rafId = paceFrame(stepCount); } }
 document.addEventListener("visibilitychange", () => { lastTs = null; resume(); });
 function stopRun() { paceCancel(rafId); clearTimeout(stillT); RUN = null; paused = false; }
 function finishCount() {

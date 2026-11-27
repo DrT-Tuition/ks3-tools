@@ -37,7 +37,7 @@
     the trace descriptions are hidden; questions can also hide the phase bands, the heart picture, wave labels, the trace
     name (Trace X) and the Label waves switch (hidden for Trace X), and named key words / help lines. All of it comes back after a right Check or Show answer.
   Drawing: all in code (SVG). The heart is the gcse-heart-and-blood drawing, driven by this model. Performance: no loop
-    at rest; Play uses paceFrame() and stops by itself. Reduced motion: Play is off; use the slider and Next step.
+    at rest; Play uses paceFrame() and stops by itself. Play always runs, whatever the reduced-motion setting.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1521,7 +1521,7 @@ function cycReadouts() {
   const m = B, qo = quizOpen(), ph = phaseAt(m.person, m.t);
   setText("tOut", ts(m.t) + " s");
   const ti = $("tIn"); if (Math.abs(+ti.value - m.t) > 1e-6) ti.value = m.t; ti.setAttribute("aria-valuetext", ts(m.t) + " seconds");
-  setText("tPlay", CL.on ? "❚❚ Pause" : "▶ Play"); setDis($("tPlay"), reduced());
+  setText("tPlay", CL.on ? "❚❚ Pause" : "▶ Play"); setDis($("tPlay"), false);
   setHTML("roPhase", qo ? HID : esc(PH_N[ph]));
   setHTML("roAv", qo ? HID : avOpenAt(m.person, m.t) ? "open" : "shut");
   setHTML("roSl", qo ? HID : slOpenAt(m.person, m.t) ? "open" : "shut");
@@ -1551,7 +1551,7 @@ function excReadouts() {
   setText("roStep", k === 0 ? "Not started" : qo ? `${k} of ${STEP_N}` : `${k} of ${STEP_N}: ${EX_N[k]}`);
   setText("roET", ts(m.et) + " s");
   setHTML("roExc", esc(qo && k > 0 ? NEUTRAL : k === 3 && m.noDelay ? EX_ND : EX_TXT[k]));
-  setText("ePlay", EL.on ? "❚❚ Pause" : "▶ Play"); setDis($("ePlay"), reduced());
+  setText("ePlay", EL.on ? "❚❚ Pause" : "▶ Play"); setDis($("ePlay"), false);
   setHTML("exKey", exKeyHTML());
 }
 function exKeyHTML() {
@@ -1721,12 +1721,10 @@ function tick(now) {
 }
 function stopPlay() { if (EL.on) B.step = stageOf(B.et, B.noDelay); CL.on = false; EL.on = false; }
 function cPlay() {
-  if (reduced()) return;
   if (CL.on) { CL.on = false; renderAll(); return; }
   CL.on = true; CL.left = 2 * TMAX; renderAll(); kick(); tourSignal("tline"); if (mode === "demo") tried(0);
 }
 function ePlay() {
-  if (reduced()) return;
   if (EL.on) { stopPlay(); renderAll(); return; }
   if (B.et >= EXC.end - 1e-9) B.et = 0;
   EL.on = true; renderAll(); kick(); tourSignal("enext");

@@ -1556,9 +1556,9 @@ function fertFrame(u, t) {
   if (H._day !== d) { H._day = d; tr("dm@", `translate(${(d - 1) * 10} 0)`); const dt = H["dt@"]; if (dt) dt.textContent = fertQ() ? "" : fDayW(k, d); }
 }
 /* Play, Step, Back, Start again */
-function fertAnimate(k) {   // show step k, moving from its start (reduced motion: shown finished at once)
+function fertAnimate(k) {   // show step k, moving from its start (a step with no movement is shown finished at once)
   fertCancel(); M.fs = k;
-  if (reduced() || !FDUR[k]) { fertDraw(); return fertEnded(); }
+  if (!FDUR[k]) { fertDraw(); return fertEnded(); }
   const a = FA = { u: 0, el: 0, lastT: performance.now(), dur: FDUR[k], paused: false };
   fertDraw();
   a.frame = now => {
@@ -1577,7 +1577,7 @@ function fertEnded() {
   afterFert(); renderCtl();
   if (!FPLAY) return;
   if (M.fs >= FN) { FPLAY = null; renderCtl(); return; }
-  const P = FPLAY; P.timer = setTimeout(() => { if (FPLAY === P) fertAnimate(M.fs + 1); }, reduced() ? 2400 : 900);
+  const P = FPLAY; P.timer = setTimeout(() => { if (FPLAY === P) fertAnimate(M.fs + 1); }, 900);
 }
 function fertStop() {   // stop Play and any movement; the step is shown finished
   if (FPLAY) { clearTimeout(FPLAY.timer); FPLAY = null; }
@@ -1746,14 +1746,14 @@ function startAnim() {
     if (!visOK || document.hidden) { a.paused = true; return; }
     a.el += Math.min(250, t - a.lastT); a.lastT = t;
     const u = Math.min(1, a.el / dur), before = dayI(M.day);
-    M.day = reduced() ? start + Math.floor(u * span + 1e-9) : start + u * span; if (u >= 1) M.day = CYCLE;
+    M.day = start + u * span; if (u >= 1) M.day = CYCLE;
     if (dayI(M.day) !== before || u >= 1) { drawPane(); renderCtl(); afterDay(); } else patchCycle((a.n = (a.n || 0) + 1) % 2 === 0);
     if (u >= 1) { anim = null; M.day = CYCLE; drawAll(); tried(0); return; }
-    a.id = paceFrame(a.frame, reduced() ? 4 : 12);
+    a.id = paceFrame(a.frame, 12);
   };
-  a.id = paceFrame(a.frame, reduced() ? 4 : 12);
+  a.id = paceFrame(a.frame, 12);
 }
-function resumeAnim() { fertResume(); const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, reduced() ? 4 : 12); }
+function resumeAnim() { fertResume(); const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, 12); }
 function stopAll() {
   fertStop();
   if (!anim) return; const a = anim; anim = null; paceCancel(a.id);

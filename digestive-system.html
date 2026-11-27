@@ -1201,7 +1201,6 @@ function jStop() { paceCancel(jRaf); clearTimeout(holdT); J.target = null; jPaus
 function moveTo(i, fast) {
   paceCancel(jRaf); clearTimeout(holdT);
   J.target = PATH.stops[i].s; J.fast = !!fast; J.info = null; jLast = null;
-  if (reduced()) { J.s = J.target; arrive(); return; }
   renderJInfo(); jRaf = paceFrame(jStep);
 }
 function jStep(ts) {
@@ -1219,7 +1218,7 @@ function arrive() {
   const o = STOPS[J.idx];
   if (mode === "demo") { if (o === "small") tried(2); if (o === "anus" && J.playing) tried(0); DEMO.s = J.s; DEMO.idx = J.idx; }
   tourSignal("arrive");
-  if (J.playing && J.idx < LAST) holdT = setTimeout(() => moveTo(J.idx + 1), reduced() ? 2600 : 1700);
+  if (J.playing && J.idx < LAST) holdT = setTimeout(() => moveTo(J.idx + 1), 1700);
   else if (J.playing) { J.playing = false; renderStops(); }
   if (S && S.afterArrive) { const f = S.afterArrive; S.afterArrive = null; f(); }
 }
@@ -1493,7 +1492,6 @@ function addE(e, instant) {
   E.anim = { kind, enz: e, ok, t: 0 }; E.anim.end = eEnd(E.anim); eLast = null;
   tourSignal(kind === "bile" ? "bile" : "enz"); renderEChips(); renderEInfo();
   if (instant) { eFinish(); return; }
-  if (reduced()) { E.anim.t = kind === "bile" ? .6 : ok ? E_T.app + .66 * E_T.C : 1.4; /* still: slotted on, first bond broken; or bumped, not fitting */ drawE(); E.anim.still = true; stillT = setTimeout(eFinish, 2000); return; }
   eRaf = paceFrame(eStep);
 }
 function eStep(ts) {
@@ -1632,7 +1630,7 @@ function lipFrame(u) {   // move the lipase and the fat molecules' parts to time
 function lipDraw() {   // show, hide and draw the panel from the model's state
   const a = E.anim, box = $("lipCmp");
   const bileNow = a && a.kind === "bile" && E.food === "fat" && a.end > 1.4;   // the bile step with the comparison in it
-  const still = bileNow && (a.still || reduced());   // reduced motion: the final state straight away, no animation
+  const still = bileNow && a.still;
   const show = scene === "enzymes" && E.food === "fat" && !lipHidden() && (bileNow ? a.t >= 1.0 || still : !!E.bile);
   if (box.hidden !== !show) box.hidden = !show;
   if (!show) return;
@@ -1782,7 +1780,7 @@ function revealModel(instant) {
   }
   if (t.predict && t.predict.stop != null) {
     if (J.idx === t.predict.stop) return;
-    if (instant || reduced()) { setJ(t.predict.stop); renderScene(); } else { J.lock = true; moveTo(t.predict.stop); }
+    if (instant) { setJ(t.predict.stop); renderScene(); } else { J.lock = true; moveTo(t.predict.stop); }
     return;
   }
   if (t.predict && t.predict.enz) {

@@ -1343,11 +1343,11 @@ function bodyDyn() {   // drawn in the small overlay SVG over the chest (viewBox
 function along(P, s) { const seg = []; let tot = 0; for (let i = 1; i < P.length; i++) { const d = Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); seg.push(d); tot += d; }
   let r = s * tot; for (let i = 1; i < P.length; i++) { if (r <= seg[i - 1]) { const u = r / seg[i - 1]; return [P[i - 1][0] + (P[i][0] - P[i - 1][0]) * u, P[i - 1][1] + (P[i][1] - P[i - 1][1]) * u]; } r -= seg[i - 1]; } return P[P.length - 1]; }
 function patchBody() {
-  const hf = hfOf(M), still = reduced();
-  const beat = still ? 0 : Math.pow(Math.max(0, Math.sin(2 * Math.PI * M.ph)), 6);
+  const hf = hfOf(M);
+  const beat = Math.pow(Math.max(0, Math.sin(2 * Math.PI * M.ph)), 6);
   const sH = 1 + .1 * beat, [hx, hy] = BODY.heart;
   setAttr($("heartG"), "transform", `translate(${f1(hx * (1 - sH))} ${f1(hy * (1 - sH))}) scale(${sH.toFixed(3)})`);
-  const amp = .025 + .09 * hf, sL = still ? 1 + amp * .5 : 1 + amp * (.5 - .5 * Math.cos(2 * Math.PI * M.bp)), [cx, cy] = BODY.lungs;   // about the top of the lungs: they grow down and out
+  const amp = .025 + .09 * hf, sL = 1 + amp * (.5 - .5 * Math.cos(2 * Math.PI * M.bp)), [cx, cy] = BODY.lungs;   // about the top of the lungs: they grow down and out
   setAttr($("lungG"), "transform", `translate(${f1(cx * (1 - sL))} ${f1(cy * (1 - sL))}) scale(${sL.toFixed(3)})`);
   const flow = M.liver && repaying(M);
   setAttr($("veinP"), "style", M.liver ? "" : "display:none");
@@ -1580,15 +1580,15 @@ function kick() { if (anim) { if (anim.paused) resumeAnim(); return; } const a =
   a.id = paceFrame(a.frame, FPS());
 }
 function resumeAnim() { const a = anim; if (!a || !a.paused || !visOK || document.hidden) return; a.paused = false; a.lastT = performance.now(); a.id = paceFrame(a.frame, FPS()); }
-const FPS = () => reduced() ? 4 : M.tab === "ex" ? 10 : 12;   // at most 10 frames a second on Exercise, 12 for the yeast flask
+const FPS = () => M.tab === "ex" ? 10 : 12;   // at most 10 frames a second on Exercise, 12 for the yeast flask
 function stopAll() { if (!anim) return; paceCancel(anim.id); anim = null; }
 
 /* model changes from the controls */
 function setLvl(v) { if (locked()) return lockMsg(); const was = M.lvl; M.lvl = clamp(Math.round(v), 0, 3); M.calm = 0; renderCtl(); patchMeters(); morphHTML($("read"), readout()); kick();
   if (M.lvl !== was) { tourSignal("lvl"); if (M.lvl === 2) tourSignal("jog"); if (M.lvl === 3) tourSignal("sprint"); if (M.lvl === 0) tourSignal("rest"); if (M.lvl === 2) tried(0); } }
 function toggleLiver() { if (locked()) return lockMsg(); M.liver = !M.liver; M.calm = Math.min(M.calm, 0); renderCtl(); if (M.tab === "ex") patchBody(); morphHTML($("read"), readout()); kick(); if (M.liver) tourSignal("liver"); }
-function respire(k) { if (locked()) return lockMsg(); M[k + "E"] = 0; M[k + "T"] = RX[k].energy; if (reduced()) M[k + "E"] = RX[k].energy; drawAll(); kick(); }
-function startYeast() { if (locked()) return lockMsg(); M.yt = reduced() ? 3 : 0; drawAll(); kick(); tourSignal("yeast"); tried(4); }
+function respire(k) { if (locked()) return lockMsg(); M[k + "E"] = 0; M[k + "T"] = RX[k].energy; drawAll(); kick(); }
+function startYeast() { if (locked()) return lockMsg(); M.yt = 0; drawAll(); kick(); tourSignal("yeast"); tried(4); }
 function afterEx() { if (M.L > .2) tried(1); if (M.lvl === 0 && repaying(M) && M.x > .5) tried(2); if (M.liver && repaying(M)) tried(3); }
 
 /* ===== Demo: things to try ===== */
@@ -1663,7 +1663,7 @@ function setAnswerState(instant) {
 function revealModel() {
   const t = task; if (!t.after) return;
   lock = ""; stopAll();
-  if (t.after === "flask") { M.yt = reduced() ? 3 : 0; }
+  if (t.after === "flask") { M.yt = 0; }
   drawAll(); kick();
 }
 function renderDots() {

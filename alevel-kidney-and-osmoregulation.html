@@ -2295,7 +2295,7 @@ function tick(now) {
 let playT = 0;
 function stopAll() { if (B.sa) B.sa = null; B.play = 0; clearTimeout(playT); if (B.fa) { B.fa = null; B.filt = 1; } if (B.ua) { B.ua = null; B.ran = true; } if (B.pa) { B.pa = null; B.pran = true; } }
 /* the filtrate, step by step */
-function nGo(to) { const from = B.n; if (to === from) return; B.n = to; if (!reduced() && to === from + 1) B.sa = { from, p: 0 }; renderAll(); kick(); if (!B.sa) nArrived(); }
+function nGo(to) { const from = B.n; if (to === from) return; B.n = to; if (to === from + 1) B.sa = { from, p: 0 }; renderAll(); kick(); if (!B.sa) nArrived(); }
 function nArrived() {
   if (mode === "demo" && B.n >= NST.length - 1) tried(0);
   if (!B.play) { renderAll(); return; }
@@ -2305,17 +2305,16 @@ function nArrived() {
 function nNext() { if (lockedG("step") || B.sa || B.play || B.n >= NST.length - 1) return; nGo(B.n + 1); tourSignal("nnext"); }
 function nBack() { if (lockedG("step") || B.sa || B.play || B.n === 0) return; nGo(B.n - 1); }
 function nPlay() { if (lockedG("step") || B.sa || B.play) return; if (B.n >= NST.length - 1) B.n = 0; B.play = 1; nGo(B.n + 1); tourSignal("nnext"); }
-function filt() { if (lockedG("filt") || B.fa) return; B.filt = 0; if (reduced()) { B.filt = 1; if (mode === "demo") tried(1); renderAll(); return; } B.fa = { p: 0 }; renderAll(); kick(); }
+function filt() { if (lockedG("filt") || B.fa) return; B.filt = 0; B.fa = { p: 0 }; renderAll(); kick(); }
 /* dialysis */
 function runDial() {
   if (lockedG("run") || B.ua) return;
   B.ranFlow = B.flow; B.ran = false;
-  if (reduced()) { B.ran = true; uDone(); return; }
   B.ua = { t: 0 }; renderAll(); kick(); tourSignal("run");
 }
 const DEMO_SEEN = {};
 function uDone() { if (mode === "demo") { DEMO_SEEN[B.ranFlow] = 1; if (DEMO_SEEN.cc && DEMO_SEEN.same) tried(5); } renderAll(); }
-function runPreg() { if (lockedG("prun") || B.pa) return; B.pran = false; if (reduced()) { B.pran = true; if (mode === "demo") tried(6); renderAll(); return; } B.pa = { p: 0 }; renderAll(); kick(); }
+function runPreg() { if (lockedG("prun") || B.pa) return; B.pran = false; B.pa = { p: 0 }; renderAll(); kick(); }
 
 /* ===== Demo: things to try ===== */
 const TRY = ["Nephron: follow the filtrate with Next ▸ (or Play) and read the graph for each substance.",

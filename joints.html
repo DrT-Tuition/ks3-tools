@@ -1815,7 +1815,6 @@ function step(ts) {
   if (anim.t0 == null) anim.t0 = ts - anim.el;
   anim.el = ts - anim.t0;
   let el = anim.el;
-  if (reduced()) { const q = Math.min(anim.dur, Math.floor(el / 400) * 400); if (q === anim.lastQ && el < anim.dur) { rafId = paceFrame(step, 5); return; } anim.lastQ = q; el = el >= anim.dur ? anim.dur : q; }
   if (anim.frame(el)) { const a = anim; anim = null; a.end(); if (!anim) renderCtl(); return; }
   rafId = paceFrame(step, anim.fps);
 }
@@ -1828,7 +1827,7 @@ const runAnim = (dur, frame, end, fps) => startAnim({ dur, fps, frame(el) { cons
 
 function skullShake(force) {
   const F = M.F; if (!force && locked()) return lockMsg(); stopAll(); F.active = "skull"; F.msg = null;
-  runAnim(560, u => { F.shake = reduced() ? 0 : 3.4 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); },
+  runAnim(560, u => { F.shake = 3.4 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); },
     () => { F.shake = 0; F.used.skull = true; F.msg = { h: "Skull: fixed joint", b: FIXED_MSG, c: "It won't move: a fixed joint has no movement at all." }; drawFig(); tried(2); tourSignal("skull"); }, 12);
 }
 function armCircle(force) {
@@ -1849,7 +1848,7 @@ function legCircle() {   // the leg swings: forwards and backwards (Turned, Side
 function sitToggle() {
   const F = M.F; if (locked()) return lockMsg(); stopAll(); F.trace = null;
   if (F.statue) { F.msg = { h: "You're a statue!", b: "Your joints are locked: you can't bend!", w: 1 };
-    runAnim(700, u => { F.wob = reduced() ? 0 : 2.6 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); }, () => { F.wob = 0; drawFig(); tried(0); tourSignal("sitfail"); }, 12); return; }
+    runAnim(700, u => { F.wob = 2.6 * Math.sin(u * 4 * Math.PI) * (1 - u); drawFig(); }, () => { F.wob = 0; drawFig(); tried(0); tourSignal("sitfail"); }, 12); return; }
   const turned = turnForHinge(F); F.turnNote = false; if (turned) drawAll();   // sitting bends the hips and knees forwards and backwards
   const from = F.sitting ? 1 : 0, to = 1 - from; F.leg = { s: 0, o: 0, k: 0 }; F.active = null; F.msg = null;
   const a0 = { s: F.arm.s, e: F.arm.e }, A1 = to ? sitArm(F.yaw).n : { s: 0, e: 0 };
@@ -1859,7 +1858,7 @@ function sitToggle() {
 function jump() {
   const I = M.I; if (locked()) return lockMsg(); stopAll(); I.msg = null; I.info = null;
   runAnim(1000, u => { I.drop = u < .3 ? u / .3 : u < .6 ? 1 : null; const t = u - .3, env = t < 0 ? 0 : t < .08 ? t / .08 : Math.max(0, Math.exp(-(t - .08) * 7) * Math.cos((t - .08) * 16));
-      I.q = I.cart ? env : env; I.flash = !I.cart && t > 0 ? Math.exp(-t * 3) : 0; I.shake = !I.cart && t > 0 && !reduced() ? 5 * Math.sin(t * 70) * Math.exp(-t * 6) : 0; drawJoint("inside"); },
+      I.q = I.cart ? env : env; I.flash = !I.cart && t > 0 ? Math.exp(-t * 3) : 0; I.shake = !I.cart && t > 0 ? 5 * Math.sin(t * 70) * Math.exp(-t * 6) : 0; drawJoint("inside"); },
     () => { I.drop = null; I.q = 0; I.flash = 0; I.shake = 0; jumpResult(I);
       I.msg = I.cart ? { h: "Shock absorbed", b: "The cartilage squashed a little, then sprang back. It absorbs shocks." } : { h: "Jolt!", b: "With no cartilage, the bare bone ends took the shock.", w: 1 };
       drawJoint("inside"); tourSignal("jump"); }, 20);
@@ -1873,7 +1872,6 @@ function tearToggle(force) {
 function pullToggle() {   // bend or straighten the joint: one muscle of the pair contracts, the other relaxes
   const T = M.T; if (locked()) return lockMsg(); stopAll(); T.info = null; T.mi = null;
   const from = T.bend, to = from >= LTM.max / 2 ? 0 : LTM.max; T.act = to > from ? "f" : "e"; T.msg = ltMoveMsg(T);
-  if (reduced()) { T.bend = to; drawJoint("lt"); if (T.act === "f") tried(5); renderCtl(); return; }   // polish 17 Nov 2026: reduced motion jumps straight to the end
   runAnim(1300 * Math.abs(to - from) / LTM.max + 200, u => { T.bend = from + (to - from) * ease(u); drawJoint("lt"); },
     () => { T.bend = to; drawJoint("lt"); if (T.act === "f") tried(5); }, 15);
 }
@@ -1946,7 +1944,7 @@ function revealModel(instant) {
   const t = task; if (!t.after) return;
   if (t.after === "skull" && M.F.used.skull && !lock) return;
   lock = ""; stopAll(); renderCtl();
-  const now = instant || reduced();
+  const now = instant;
   if (t.after === "skull") { if (now) { M.F.active = "skull"; M.F.used.skull = true; M.F.msg = { h: "Skull: fixed joint", b: FIXED_MSG }; drawAll(); } else skullShake(true); }
   if (t.after === "armcircle") { if (now) { M.F.active = "shoulder"; M.F.used.shoulder = true; M.F.trace = "arm"; drawAll(); } else armCircle(true); }
   if (t.after === "tear") { if (M.I.torn) return; if (now) { M.I.torn = true; M.I.slip = 1; M.I.msg = { h: "A torn ligament", b: TEAR_MSG, w: 1 }; drawAll(); } else tearToggle(true); }

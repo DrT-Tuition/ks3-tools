@@ -67,7 +67,7 @@
     and reached by Show answer). A failure shows an error box and switches the question off.
   Performance: drawn on demand. The only animations are a sampling run (stopwatch text and one well patched per 30 s) and
     the digest animation (about 14 small circles), paced by paceFrame (sampling 10 fps, digest 12 fps caps, adaptive slow-down), both stop
-    when done; sampling stops when the tab is hidden. The stopwatch shows 10 s steps (30 s steps with reduced motion); digesting
+    when done; sampling stops when the tab is hidden. The stopwatch shows 10 s steps (whatever the reduced-motion setting); digesting
     finishes at once.
   Answer leaks (audit 29 Oct): while a question is open and unanswered (quizOpen()), the Active site readout and fit tag
     are neutral (no explanation, no rate, no "denatured" label), the Evaluate box is hidden, the class-results button is
@@ -1582,7 +1582,6 @@ function startDig() {
   if (!n) { M.smsg = "No simple sugars made: the starch no longer fits the active site."; drawAll(); return; }
   M.smsg = "";
   const done = () => { M.cut += n; M.smsg = `${n} simple sugar${n > 1 ? "s" : ""} made in 1 minute.`; $("digStat").textContent = ""; drawAll(); tourSignal("dig"); };
-  if (reduced()) { done(); return; }
   const a = anim = { kind: "dig", t0: performance.now(), n, dur: 3000, finish: null }; a.finish = () => { M.cut += n; drawAll(); };
   $("digStat").textContent = "Digesting…"; renderCtl();
   const step = now => { if (anim !== a) return; drawSiteMov(now); if (now - a.t0 < a.dur + 650) a.id = paceFrame(step, 12); else { anim = null; done(); } };
@@ -1663,7 +1662,7 @@ function startSampling(one) {
     let ts = a.base + (now - a.t0) / MS30 * STEP; if (ts >= target) ts = target;
     while ((R.n + 1) * STEP <= ts + 1e-9 && R.n - R.tile0 < NW) take();
     if (R.n - R.tile0 >= NW && ts > R.n * STEP) ts = R.n * STEP;
-    R.t = ts; setSW(reduced() ? R.n * STEP : Math.floor(ts / 10) * 10);   // the stopwatch shows 10 s steps: each change re-lays out the scene's text
+    R.t = ts; setSW(Math.floor(ts / 10) * 10);   // the stopwatch shows 10 s steps: each change re-lays out the scene's text
     const full = R.n - R.tile0 >= NW;
     if (ts >= target || full) { anim = null; $("runStat").textContent = ""; if (full) M.rmsg = R.R > (R.tile0 + NW) * STEP ? "The tile is full and the starch is still there. Press Use a fresh tile to keep sampling." : "The tile is full. Press the first well where the iodine stays orange-brown."; drawAll(); return; }
     a.id = paceFrame(step, 10);

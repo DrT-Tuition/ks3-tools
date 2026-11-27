@@ -1245,7 +1245,6 @@ const HC = (function () {
   }
   const loop = Loop(dt => { advance(dt); draw(true); }, { cap: 30, idle: 30000, onState: (on, to) => { B.paused = !!to; renderCtl(); } });
   function play() {
-    if (reduced()) return;
     if (loop.on) { loop.stop(); return; }
     loop.start(); tourSignal("htplay"); tried(3);
   }
@@ -1367,7 +1366,7 @@ const CC = (function () {
     if (was !== now) { if (now === "ra" || now === "la") C.passes++; if (now === "vc") C.passes = 0; if (now === "body" && was === "ao") { C.circuit = (C.circuit || 0) + 1; } }
   }
   const loop = Loop(step, { cap: 30, idle: 30000, onState: (on, to) => { C.paused = !!to; renderCtl(); } });
-  function play() { if (reduced()) return; if (loop.on) loop.stop(); else { loop.start(); tourSignal("ccplay"); tried(0); } }
+  function play() { if (loop.on) loop.stop(); else { loop.start(); tourSignal("ccplay"); tried(0); } }
   function next() {   // step the followed cell on to the next place
     if (!M.circ.follow) { M.circ.follow = true; }
     loop.stop(); const here = at(C.fs).name; let n = 0;
@@ -1779,16 +1778,15 @@ function drawPane() {
   if (mode === "demo" && TRY_TAB !== t) renderTry();
 }
 function renderCtl() {   // touches a control only when its state really changes
-  const lk = locked(), rm = reduced();
+  const lk = locked();
   ["ccNext", "htStep", "flStart", "flStop", "flEmpty", "chYr", "demoReset"].forEach(id => dis($(id), lk));
-  dis($("ccPlay"), lk || rm); dis($("htPlay"), lk || rm); dis($("ccFollowSw"), lk);
+  dis($("ccPlay"), lk); dis($("htPlay"), lk); dis($("ccFollowSw"), lk);
   document.querySelectorAll("#htView button, #htSpeed button, #htNat button, #htArt button, #vsPick button, #vsFlow button, #flPump button, #chProb button, #chTr button, #chStep button, #chValve button, #chPush button, #chHf button").forEach(b => dis(b, lk));
   document.querySelectorAll("#blPick button").forEach(b => dis(b, lk && !task.pickOk));
   txt($("ccPlay"), CC.loop.on ? "Pause ■" : "Play ▶"); txt($("htPlay"), HC.playing() ? "Pause ■" : "Play ▶");
   swSet("ccLabSw", OPT.circLab, qh("circlab")); swSet("ccFollowSw", M.circ.follow, false); swSet("htLabSw", OPT.htLab, qh("hlab")); swSet("blLabSw", OPT.blLab, qh("blab"));
   segSet("htView", "data-hv", M.ht.view); segSet("htSpeed", "data-sp", M.ht.speed); segSet("htNat", "data-nat", M.ht.nat); segSet("htArt", "data-art", M.ht.art);
   $("htPaused").hidden = !(HC.B.paused && !HC.playing()); $("ccPaused").hidden = !(CC.C.paused && !CC.loop.on);
-  $("htRm").hidden = !rm; $("ccRm").hidden = !rm;
   txt($("flStart"), M.fl.run ? "Running…" : "Start ▶");
   const ln = $("lockNote"); if (ln.hidden !== !lk) ln.hidden = !lk; if (lk) lockMsg();
 }
@@ -2406,7 +2404,7 @@ document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () =
 if (window.IntersectionObserver) new IntersectionObserver(es => { $("topbar").classList.toggle("stuck", !es[0].isIntersecting); }).observe(document.querySelector("header"));
 let rzT = 0; window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { if (mode !== "demo" || !HC.playing()) drawPane(); }, 120); });
 document.addEventListener("visibilitychange", () => { if (document.hidden) stopAll(); });
-if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { if (reduced()) stopAll(); renderCtl(); });
+if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { renderCtl(); });
 
 LEVELS = { easy: TASKS.easy.slice(0, 10), hard: TASKS.hard.slice(0, 10) };
 function bankRun() {   // the load-time question-bank check, run after the first paint (bankLater)

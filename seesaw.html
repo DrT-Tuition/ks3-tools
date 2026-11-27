@@ -1451,7 +1451,7 @@ const rot = d => ({ transform: `rotate(${f2(d)}deg)` });
 function settle(instant) {   // the plank turns to match the moments (or stays level while held)
   const S = M.S, tgt = tiltFor(S);
   if (anim && anim.kind === "settle") cancelAnim(); else stopAll();
-  if (instant || reduced() || Math.abs(S.tilt - tgt) < 1e-3) { S.tilt = tgt; seeDone(); drawSee(); renderCtl(); return; }
+  if (instant || Math.abs(S.tilt - tgt) < 1e-3) { S.tilt = tgt; seeDone(); drawSee(); renderCtl(); return; }
   const a0 = S.tilt, dur = 250 + 450 * Math.abs(tgt - a0), mx = maxAng(SLO[LK()]);
   drawSee();   // the force arrows hide while the plank moves; the readout is already final
   layerAnim({ kind: "settle", el: $("srot"), deg: u => (a0 + (tgt - a0) * ease(u)) * mx, fps: 15, dur, at: u => { S.tilt = a0 + (tgt - a0) * ease(u); },
@@ -1471,7 +1471,7 @@ function doPush(instant) {
   if (r.obj === "spanner" && r.ok && r.F === 10 && r.nut === "stiff") tried(2);
   if (T.near && T.far) tried(3);
   const end = () => { T.ang = tgt; T.wob = 0; drawTurn(); tourSignal("push"); };
-  if (instant || reduced()) { end(); renderCtl(); return; }
+  if (instant) { end(); renderCtl(); return; }
   T.ang = 0; T.wob = 0;
   const wob = u => 1.4 * Math.sin(u * 3 * Math.PI) * (1 - u), el = $("tsvg");
   if (r.ok) layerAnim({ kind: "push", el, deg: u => tgt * ease(u), fps: 20, dur: 900, at: u => { T.ang = tgt * ease(u); }, end });
@@ -1482,7 +1482,7 @@ function liftToggle(instant) {
   if (!instant && locked()) return lockMsg();
   stopAll(); const L = M.L, from = L.lift, to = L.lifted ? 0 : 1;
   const end = () => { L.lift = to; L.lifted = !!to; if (to) { if (L.d >= .4 - 1e-9) tried(4); tourSignal("lift"); } drawLever(); };
-  if (instant || reduced()) { end(); renderCtl(); return; }
+  if (instant) { end(); renderCtl(); return; }
   L.lifted = false;
   layerAnim({ kind: "lift", el: $("lsvg"), deg: u => (from + (to - from) * ease(u)) * LIFT_ANG, fps: 15, dur: 800, at: u => { L.lift = from + (to - from) * ease(u); }, end });
   drawLever();   // the force arrows hide while the bar moves
@@ -1557,7 +1557,7 @@ function setAnswerState(instant) {
 function revealModel(instant) {
   const t = task; if (!t.after) return;
   lock = ""; renderCtl();
-  const now = instant || reduced();
+  const now = instant;
   if (t.after === "hand4") { if (!eq(M.L.d, .4)) { M.L.d = .4; M.L.lifted = false; M.L.lift = 0; } drawAll(); }
   if (t.after === "door8") { const l = M.T.last; M.T.obj = "door"; M.T.d.door = .8; drawAll(); if (!(l && l.obj === "door" && eq(l.d, .8) && l.F === M.T.F)) doPush(now); }
   if (t.after === "release") { M.S.held = false; M.S.hide = false; settle(now); drawAll(); }

@@ -1217,7 +1217,7 @@ function settleAll() { driftUntil = 0; stillT.forEach(clearTimeout); stillT = []
 /* draw on demand: the loop runs only while something is changing, at most 30 frames a second, and stops off-screen */
 function kick() {
   if (rafId) return;
-  if (document.hidden || !onScreen || reduced()) { const d = drifting(); [BK.A, BK.B].forEach(settleB); if (!d) driftUntil = 0; drawAll(); renderMoveBtn(); return; }
+  if (document.hidden || !onScreen) { const d = drifting(); [BK.A, BK.B].forEach(settleB); if (!d) driftUntil = 0; drawAll(); renderMoveBtn(); return; }
   if (!needsFrame()) { drawAll(); renderMoveBtn(); return; }
   lastTs = null; rafId = paceFrame(step);
 }
@@ -1232,11 +1232,6 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) { pac
 function startMove() {
   if (drifting() || stillT.length) { settleAll(); drawAll(); renderMoveBtn(); return; }
   tourSignal("move"); if (mode === "demo") SEEN.moved = true;
-  if (reduced()) {   // reduced motion: three still steps instead of smooth movement
-    driftUntil = 0; [BK.A, BK.B].forEach(settleB); drawAll();
-    stillT = [1, 2, 3].map(i => setTimeout(() => { shownB().forEach(B => { for (let s = 0; s < 8; s++) driftStep(B, .1); }); drawAll(); if (i === 3) { stillT = []; renderMoveBtn(); } }, i * 700));
-    renderMoveBtn(); return;
-  }
   driftUntil = performance.now() + 6000; renderMoveBtn(); kick();
 }
 function renderMoveBtn() {

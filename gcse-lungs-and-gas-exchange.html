@@ -1512,7 +1512,7 @@ function draw(p, flowV){
   const ft = $("ft"), ftt = mag > 0.05 ? (dir > 0 ? "Air in ↓" : "Air out ↑") : ""; if (ft.textContent !== ftt) ft.textContent = ftt;
   // gas molecules in the airways and in the zoom circle
   // breathing in: oxygen molecules; breathing out: still mostly oxygen, plus some carbon dioxide
-  const showDots = !reduceMotion && mag > 0.05, out = dir < 0;
+  const showDots = mag > 0.05, out = dir < 0;
   if (first) for (let i=0;i<7;i++) $("dt"+i).style.opacity = 0;
   for (let i=0;i<MOL_N;i++){
     const m = $("mo"+i);
@@ -1545,8 +1545,6 @@ function draw(p, flowV){
   return g;
 }
 /* ----- state, animation and readouts (rewritten for this tool; the shapes and drawing above are unchanged) ----- */
-const rmq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-let reduceMotion = !!(rmq && rmq.matches);
 let P = 0, prevP = 0, flowV = 0, dotPhase = 0, anim = null, auto = false, autoWait = 0, lastT = 0, rafId = 0, dirty = true;
 const opt = { labels: false, meters: false, letters: null };
 /* labels: the part names (Labels switch), or the letters A, B, C … of a labelling question */
@@ -1583,13 +1581,13 @@ function tick(now) {
   let active = false;
   if (anim) {
     anim.t += dt * 1000; const u = Math.min(1, anim.t / anim.dur);
-    const e = reduceMotion ? Math.ceil(u * 5 - 1e-9) / 5 : ease(u);
+    const e = ease(u);
     P = anim.from + (anim.to - anim.from) * e; anim.frac = u;
     if (u >= 1) { const fin = anim; anim = null; if (auto) autoWait = P > 0.3 ? 0.5 : 1.0; else { tourSignal(fin.to === FACTS.deepBreath ? "deep" : fin.kind); if (fin.to === FACTS.deepBreath) tried(1); } }
     active = true; dirty = true;
   } else if (auto) { autoWait -= dt; if (autoWait <= 0) startBreathAuto(); active = true; }
   const inst = dt > 0 ? (P - prevP) / dt : 0; prevP = P;
-  const k = Math.min(1, dt / (reduceMotion ? 0.45 : 0.2));
+  const k = Math.min(1, dt / 0.2);
   flowV += (inst - flowV) * k;
   if (Math.abs(flowV) < 0.004) flowV = 0;
   if (flowV !== 0) { active = true; dirty = true; dotPhase += flowV * dt * 2.2; }
@@ -1626,12 +1624,11 @@ function render() {
   }
 }
 function setAuto(v) {
-  auto = v && !reduceMotion; const b = $("autoBtn");
+  auto = v; const b = $("autoBtn");
   setAttr(b, "aria-pressed", auto ? "true" : "false"); txt(b.querySelector(".state"), auto ? "on" : "off");
   if (auto) { autoWait = 0; kick(); }
 }
-function applyMotion() { $("autoBtn").disabled = reduceMotion || locked(); $("rmNote").hidden = !reduceMotion; if (reduceMotion) setAuto(false); }
-if (rmq && rmq.addEventListener) rmq.addEventListener("change", () => { reduceMotion = rmq.matches; applyMotion(); kick(); });
+function applyMotion() { $("autoBtn").disabled = locked(); $("rmNote").hidden = true; }
 $("bIn").addEventListener("click", () => { setAuto(false); startBreath("in"); });
 $("bOut").addEventListener("click", () => { setAuto(false); startBreath("out"); });
 $("bDeep").addEventListener("click", () => { setAuto(false); startBreath("deep"); });
@@ -1898,7 +1895,7 @@ const cv = $("sim"), mainCtx = cv.getContext("2d"), spark = $("spark"), sctx = s
 const bgCv = document.getElementById("simBg"), bgCtx = bgCv.getContext("2d");
 let ctx = mainCtx, bgKey = "", SPR = {};
 const reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-let sim = null, running = !(reduceMQ && reduceMQ.matches), sup = { labels: false, counts: false };
+let sim = null, running = true, sup = { labels: false, counts: false };
 let sparkData = [], sparkMarks = [], sparkT = 0, countsT = 0, records = [];
 let TOK = {};
 const TOKS = ["co2-c", "tissue", "air", "sac-edge", "wallc", "wall-line", "nucleus", "lining", "plasma", "vessel-edge", "rbc", "rbc-mid", "o2", "o2-edge", "co2", "co2-edge", "label-bg", "ink", "muted", "accent", "accent-ink", "line", "surface"];
@@ -1931,7 +1928,7 @@ document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click",
 $("breatheBtn").addEventListener("click", () => { if (locked()) return lockMsg(); tourSignal("breath"); sim.breathe(); if (!running) { for (let i = 0; i < 30; i++) { sim.step(DT); sim.track(DT); } } draw(); });
 
 /* ---------- play / pause / step ---------- */
-function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("playBtn").setAttribute("aria-pressed", running ? "false" : "true"); $("motionNote").hidden = !(reduceMQ && reduceMQ.matches); }
+function paintPlay() { $("playBtn").textContent = running ? "Pause" : "Play"; $("playBtn").setAttribute("aria-pressed", running ? "false" : "true"); $("motionNote").hidden = true; }
 $("playBtn").addEventListener("click", () => { running = !running; paintPlay(); if (running) startLoop(); });
 $("stepBtn").addEventListener("click", () => { for (let i = 0; i < Math.round(1 / DT); i++) { sim.step(DT); sim.track(DT); } sampleSpark(1); draw(); updateMeter(); updateCounts(); });
 
@@ -2287,7 +2284,7 @@ function avChanged(k, v) { M.av = Object.assign({}, sim.set); if (mode === "demo
 function meterTitle() { const t = qh("avlab") ? "Oxygen meter" : "Oxygen into the blood", h = $("meterPanel").querySelector("h2"); if (h.textContent !== t) h.textContent = t; }
 function paintSw() { if (typeof renderCtl === "function") renderCtl(); }
 function setSup(k) { sup[k] = !sup[k]; $("counts").hidden = !sup.counts; updateCounts(); draw(); paintSw(); if (k === "counts" && sup.counts) tried(5); if (sup[k]) tourSignal("av-" + k); if (task && task.id) $("stuckNote").innerHTML = msgStuck(); }
-function wake() { lastAct = performance.now(); if (idlePaused) { idlePaused = false; $("pauseNote").hidden = true; running = !(reduceMQ && reduceMQ.matches); paintPlay(); } }
+function wake() { lastAct = performance.now(); if (idlePaused) { idlePaused = false; $("pauseNote").hidden = true; running = true; paintPlay(); } }
 let pend = null;   // the set-up to start when the Alveolus tab is next shown (keeps the 1000-step warm-up off the page load)
 function reset(settings) {
   records = []; $("recList").innerHTML = ""; placeRec();
@@ -2300,7 +2297,6 @@ $("demoReset").addEventListener("click", () => { if (locked()) return lockMsg();
 function retheme() { readTokens(); draw(); drawSpark(); }
 $("themeBtn").addEventListener("click", retheme);
 if (window.matchMedia) { const mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", retheme); }
-if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener("change", () => { if (reduceMQ.matches) running = false; paintPlay(); });
 /* load-time model check, run in small slices after the first paint: blood flow off and a thick wall must both slow the
    meter (Easy Q8 and Q5), and blood leaving must carry more O₂ and less CO₂ than blood arriving (Easy Q4) */
 function modelCheck(done) {
@@ -2454,7 +2450,7 @@ function exPlay() {
   if (locked()) return lockMsg();
   if (exAnim) { exStop(); return; }
   const a = { t: 0, last: performance.now(), id: 0 }; exAnim = a; renderCtl();
-  const speed = 3, stepMode = reduced();
+  const speed = 3, stepMode = false;
   a.frame = now => {
     if (exAnim !== a) return;
     const tn = Math.max(now, performance.now()), dt = Math.min(250, tn - a.last); a.last = tn;

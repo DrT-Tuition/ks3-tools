@@ -1768,16 +1768,11 @@ function doStimulate() {
     relative: ["good", "Relative refractory period: this bigger stimulus was enough, so a new action potential starts."] }[res.k];
   note("memNote", N[0], N[1]);
   if (mode === "demo") { if (res.k === "refr" || res.k === "needMore" || res.k === "relative") tried(1); }
-  if (reduced()) {   // still version: jump to the next stage and stop there
-    const s0 = again ? R.t : STIM_AT - 0.01, nx = stageStarts(R).find(x => x > s0 + 1e-4);
-    R.t = res.k === "sub" ? lastAp(R, T_END).s + BLIP.top : Math.min(T_END, (nx == null ? T_END : nx) + 0.001); R.seen = Math.max(R.seen, R.t); R.playing = false;
-  }
-  else R.playing = true;
+  R.playing = true;
   R.pause = null; renderAll(); kick(); tourSignal("stim");
 }
 function doPlay() {
   const R = B.run; if (!R || B.lock.all) return;
-  if (reduced()) { doStep(); return; }
   if (R.playing) R.playing = false; else { if (R.t >= T_END - 1e-9) { R.t = 0; } R.playing = true; R.pause = null; }
   renderAll(); kick();
 }
@@ -1786,7 +1781,7 @@ function doStep() {
   if (!B.run) { startRun(); B.run.t = B.run.seen = STIM_AT; note("memNote", "", "Step through the stages one at a time."); renderAll(); tourSignal("step"); return; }
   const R = B.run, nx = stageStarts(R).find(x => x > R.t + 1e-4);
   const to = nx == null ? T_END : nx + 0.001;
-  if (reduced() || to <= R.seen) { R.t = Math.min(T_END, to); R.seen = Math.max(R.seen, R.t); R.playing = false; }
+  if (to <= R.seen) { R.t = Math.min(T_END, to); R.seen = Math.max(R.seen, R.t); R.playing = false; }
   else { R.pause = Math.min(T_END, to); R.playing = true; }   // play smoothly up to the next stage, then pause
   renderAll(); kick(); tourSignal("step");
 }
@@ -1795,9 +1790,8 @@ function scrubTo(t) { const R = B.run; if (!R) return; R.playing = false; R.paus
 /* ----- view 2: the race ----- */
 function doRace() {
   if (B.lock.all) return;
-  B.ax.race = { e: 0, on: !reduced() };
-  if (reduced()) { B.ax.race.e = tuOf(B.ax); recordRace(); }
-  note("axNote", "", reduced() ? "Both impulses have arrived (still version)." : "The myelinated impulse jumps from node to node. The unmyelinated one has to depolarise the whole membrane.");
+  B.ax.race = { e: 0, on: true };
+  note("axNote", "", "The myelinated impulse jumps from node to node. The unmyelinated one has to depolarise the whole membrane.");
   renderAll(); kick(); tourSignal("race");
 }
 function recordRace() { const ax = B.ax; ax.res[ax.diam] = { m: tmOf(ax), u: tuOf(ax), temp: ax.temp }; if (mode === "demo") tried(2); }

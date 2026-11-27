@@ -977,9 +977,8 @@ const sim = { sc: null, playing: false, trail: [], clock: null };
 function setScene(spec, autoplay){
   sim.sc = makeScene(spec); sim.trail = []; sim.clock = null;
   const still = sim.sc.kind === "frozen" || sim.sc.kind === "pair" || sim.sc.kind === "super" || sim.sc.kind === "live";
-  sim.playing = !still && autoplay !== false && !RM;
+  sim.playing = !still && autoplay !== false;
   if (sim.sc.kind === "sine" && !sim.playing) sim.sc.t = 1.2;   // paused: show some of the wave already
-  $("rmNote").hidden = !(RM && sim.sc.kind === "sine");
 }
 /* the source (hand) for live mode */
 function srcStep(sc, h){
@@ -1445,8 +1444,7 @@ function watch(){
   const q = state.q, sc = sim.sc;
   if (sc.kind === "super"){ sc.t = superStart; }
   if (sc.kind === "live"){ startShake("T"); }
-  if (RM){ sim.playing = false; fbBox().insertAdjacentHTML("beforeend", '<div class="msg">Press <b>Play</b> to watch what happens (or <b>Step</b> to go slowly).</div>'); }
-  else { sim.playing = true; fbBox().insertAdjacentHTML("beforeend", '<div class="msg">Watch what happens. Press <b>Play</b> to watch again.</div>'); }
+  sim.playing = true; fbBox().insertAdjacentHTML("beforeend", '<div class="msg">Watch what happens. Press <b>Play</b> to watch again.</div>');
   draw();
 }
 function hintLabel(){ const n = state.q ? prog().hints : 0; $("hint").textContent = n >= 3 ? "No more hints – try Show answer" : `Hint (${n + 1}/3)`; }
@@ -1565,7 +1563,7 @@ function place(x){
 function freeVals(){ const A = +$("amp").value, f = +$("freq").value; $("ampVal").textContent = `${f2(A)} m`; $("freqVal").textContent = `${f2(f)} Hz · wavelength ${f2(lam(f))} m`; return { A, f }; }
 function startFree(){ const { A, f } = freeVals(); setScene({ kind: "live", mode: "T", A, f, modes: ["T", "L"] }); layout(); draw(); }
 $("amp").oninput = $("freq").oninput = e => { const { A, f } = freeVals(); const sc = sim.sc; if (sc.kind === "live"){ sc.A = A; sc.f = f; } tourSignal(e.target.id); };
-function freeSuper(h2){ setScene({ kind: "super", h1: PH, h2 }); sim.playing = !RM; layout(); draw(); setFeedback([{ cls: "", html: RM ? "Press <b>Play</b> or <b>Step</b> to send the pulses." : "Watch where the pulses meet. Press <b>Play</b> to see it again." }]); }
+function freeSuper(h2){ setScene({ kind: "super", h1: PH, h2 }); sim.playing = true; layout(); draw(); setFeedback([{ cls: "", html: "Watch where the pulses meet. Press <b>Play</b> to see it again." }]); }
 $("pUU").onclick = () => { freeSuper(PH); tourSignal("pulses"); };
 $("pUD").onclick = () => { freeSuper(-PH); tourSignal("pulses"); };
 const TRY = ["Shake up and down. Then press Stop and watch the red coil.",

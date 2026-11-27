@@ -1594,7 +1594,7 @@ function meiDraw() {
   const G = meiGeom(m); let o = G.svg;
   if (m.labels && MEILAB[m.mi]) o += labelsSvg(MEILAB[m.mi], G.lab, fs, MW);
   const L = meiDraw.last, now = { shell: G.shell, o, pic: G.svg, mi: m.mi, b: m };   // pic: without labels (the fade shows pictures only)
-  if (L && L.b === m && L.mi !== m.mi && !reduced() && !document.hidden) meiFade(L, now);   // a new stage: cross-fade from the last one
+  if (L && L.b === m && L.mi !== m.mi && !document.hidden) meiFade(L, now);   // a new stage: cross-fade from the last one
   else if (!MFADE) { setLayer($("meiS"), G.shell); setLayer($("meiD"), o); }
   meiDraw.last = now;
   const hid = quizOpen() && task.hideStage;
@@ -1937,8 +1937,7 @@ function cycPlay(step) {
   if (B.lock.all) return lockMsg();
   if (B.anim && B.anim.run) { stopAnim(); renderAll(); return; }
   const to = step ? nextBoundary(B.p) : B.p + 1;
-  if (reduced()) { B.p = (step ? to : nextBoundary(B.p)) % 1; renderAll(); }
-  else { B.anim = { kind: "cyc", u: B.p, to, run: true }; renderAll(); kick(); }
+  B.anim = { kind: "cyc", u: B.p, to, run: true }; renderAll(); kick();
   if (mode === "demo" && !step) tried(0);
   tourSignal("play");
 }
@@ -1947,7 +1946,7 @@ function mitGo(to, play) {
   if (B.anim && B.anim.run) { stopAnim(); renderAll(); return; }
   if (play && B.s >= 5 - 1e-6) B.s = 0;
   const target = play ? 5 : to;
-  if (reduced() || (!play && Math.abs(target - B.s) > 1.01) || target < B.s) { B.s = play ? Math.min(5, Math.floor(B.s + 1e-6) + 1) : target; renderAll(); }
+  if ((!play && Math.abs(target - B.s) > 1.01) || target < B.s) { B.s = play ? Math.min(5, Math.floor(B.s + 1e-6) + 1) : target; renderAll(); }
   else { B.anim = { kind: "mit", to: target, run: true }; renderAll(); kick(); }
   if (mode === "demo") { B.seen["s" + Math.round(target)] = 1; if (B.seen.plant && Object.keys(B.seen).filter(k => /^s/.test(k)).length >= 3) tried(2); }
   tourSignal("stage");
@@ -1955,7 +1954,7 @@ function mitGo(to, play) {
 function meiGo(i, play) {
   if (B.lock.stage) return lockMsg();
   if (B.anim && B.anim.run) { stopAnim(); renderAll(); return; }
-  if (play) { if (B.mi >= 9) B.mi = 0; if (reduced()) { B.mi = Math.min(9, B.mi + 1); renderAll(); } else { B.anim = { kind: "mei", t: 0, run: true }; renderAll(); kick(); } }
+  if (play) { if (B.mi >= 9) B.mi = 0; B.anim = { kind: "mei", t: 0, run: true }; renderAll(); kick(); }
   else { B.mi = i; renderAll(); }
   if (mode === "demo" && B.mi === 9 && B.seen.co && B.seen.flip) tried(3);
   tourSignal("mstage");
