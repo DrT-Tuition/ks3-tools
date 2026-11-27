@@ -275,6 +275,10 @@ h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-
 .pen{fill:var(--accent)}
 .tubeO{fill:none;stroke:var(--tube);stroke-width:11;stroke-linejoin:round;stroke-linecap:round}
 .tubeI{fill:none;stroke:var(--tube-in);stroke-width:6.5;stroke-linejoin:round;stroke-linecap:round}
+.spflow{fill:none;stroke:var(--accent);stroke-width:13;stroke-linejoin:round;stroke-linecap:round;opacity:.3}
+.spcap{fill:var(--sunk);stroke:var(--accent);stroke-width:1.2;opacity:.96}
+.plab.spct{stroke:none}
+.sparr{fill:var(--accent);stroke:var(--sunk);stroke-width:1}
 .soda{fill:var(--soda);stroke:var(--ink);stroke-width:1.6}
 .grain{fill:var(--muted);opacity:.55}
 .valve{fill:var(--surface);stroke:var(--ink);stroke-width:1.6}
@@ -1553,14 +1557,23 @@ function spDraw() {
   /* gases moving: O₂ to the mouth while breathing in; O₂ and CO₂ back through the soda lime while breathing out */
   const dv = vol("rest", t + .05, used) - vol("rest", t, used), moving = m.sAnim && Math.abs(dv) > 1e-4;
   if (moving) {
-    const r = Math.max(2.2, S(3.6)), ph = (t * .9) % 1;
+    const r = Math.max(3.6, S(5.4)), ph = (t * .45) % 1, inn = dv < 0, path = inn ? SP_IN : SP_OUT;
     const o2 = (x, y) => ball(x - r * .8, y, r, "o2") + ball(x + r * .8, y, r, "o2"), co2 = (x, y) => `<circle cx="${P(x - r * 1.5)}" cy="${P(y)}" r="${P(r * .8)}" class="o2"/><circle cx="${P(x + r * 1.5)}" cy="${P(y)}" r="${P(r * .8)}" class="o2"/><circle cx="${P(x)}" cy="${P(y)}" r="${P(r)}" class="co2c"/>`;
-    if (dv < 0) for (let k = 0; k < 6; k++) { const [x, y] = along(SP_IN, ((k / 6 + ph) % 1)); o += o2(X(x), Y(y)); }
-    else for (let k = 0; k < 10; k++) { const u = (k / 10 + ph) % 1, [x, y] = along(SP_OUT, u), past = x < 365; if (k % 3 === 0) { if (!past || used) o += co2(X(x), Y(y)); } else o += o2(X(x), Y(y)); }
+    /* the tube in use is lit up, with arrows showing which way the gas goes */
+    o += `<path class="spflow" d="${path.map((q, i) => (i ? "L" : "M") + P(X(q[0])) + " " + P(Y(q[1]))).join("")}"/>`;
+    for (let k = 0; k < 5; k++) { const u = (k + .5) / 5, [x, y] = along(path, u), [x2, y2] = along(path, Math.min(1, u + .01)), a = Math.atan2(y2 - y, x2 - x), c = Math.cos(a), sn = Math.sin(a), q = Math.max(4, S(7)); o += `<path class="sparr" d="M${P(X(x) + c * q)} ${P(Y(y) + sn * q)}L${P(X(x) - c * q - sn * q * .9)} ${P(Y(y) - sn * q + c * q * .9)}L${P(X(x) - c * q + sn * q * .9)} ${P(Y(y) - sn * q - c * q * .9)}Z"/>`; }
+    if (inn) for (let k = 0; k < 4; k++) { const [x, y] = along(SP_IN, ((k / 4 + ph) % 1)); o += o2(X(x), Y(y)); }
+    else for (let k = 0; k < 6; k++) { const u = (k / 6 + ph) % 1, [x, y] = along(SP_OUT, u), past = x < 365; if (k % 3 === 0) { if (!past || used) o += co2(X(x), Y(y)); } else o += o2(X(x), Y(y)); }
+    /* what the person is doing, in words */
+    { const l1 = inn ? "BREATHING IN" : "BREATHING OUT", w = tw(l1, fs) + 16, x0 = X(8), y0 = Y(1);
+      o += `<rect class="spcap" x="${P(x0)}" y="${P(y0)}" width="${P(w)}" height="${P(fs * 1.7)}" rx="6"/>` + T(x0 + 8, y0 + fs * 1.2, l1, "plab on spct", "start", ` font-size="${fs}"`); }
   }
+  /* key to the gases */
+  { const kr = Math.max(3.6, S(5.4)); o += ball(X(34), Y(352), kr, "o2") + lab(X(44), Y(356), "oxygen", null, null, "start", fs, "plab", W) + `<circle cx="${P(X(142) - kr * 1.5)}" cy="${P(Y(352))}" r="${P(kr * .8)}" class="o2"/><circle cx="${P(X(142) + kr * 1.5)}" cy="${P(Y(352))}" r="${P(kr * .8)}" class="o2"/><circle cx="${P(X(142))}" cy="${P(Y(352))}" r="${P(kr)}" class="co2c"/>` + lab(X(158), Y(356), "carbon dioxide", null, null, "start", fs, "plab", W); }
   /* labels */
-  const L = phoneW() ? [["oxygen", 146, 104, null], ["water", 70, 316, null], ["soda lime", 395, 340, [395, 314]], ["drum", 394, 216, [394, 190]], ["nose clip", 556, 112, [551, 218]]]
-    : [["floating chamber", 146, ly - 8, null], ["oxygen", 146, ly + 40, null], ["water", 66, 318, null], ["soda lime", 395, 346, [395, 314]], ["one-way valves", 470, 236, [470, 253]], ["pen", 300, ly + 28, [penX - 6, ly + 8]], ["kymograph drum", 394, 216, [394, 190]], ["mouthpiece", 520, 290, [546, 246]], ["nose clip", 560, 112, [551, 218]]];
+  const sodaTxt = moving && dv > 0 ? (used ? (phoneW() ? "CO₂ passes" : "no CO₂ absorbed") : "absorbs CO₂") : "soda lime";
+  const L = phoneW() ? [["oxygen", 146, 104, null], ["water", 70, 316, null], [sodaTxt, 395, 340, [395, 314]], ["drum", 394, 216, [394, 190]], ["nose clip", 556, 112, [551, 218]]]
+    : [["floating chamber", 146, ly - 8, null], ["oxygen", 146, ly + 40, null], ["water", 66, 318, null], [sodaTxt, 395, 346, [395, 314]], ["one-way valves", 470, 236, [470, 253]], ["pen", 300, ly + 28, [penX - 6, ly + 8]], ["kymograph drum", 394, 216, [394, 190]], ["mouthpiece", 520, 290, [546, 246]], ["nose clip", 560, 112, [551, 218]]];
   L.forEach(([w, x, y, pt]) => { o += lab(X(x), Y(y), w, pt ? X(pt[0]) : null, pt ? Y(pt[1]) : null, "middle", fs, "plab", W); });
   morph($("spD"), o);
 }
@@ -1967,7 +1980,7 @@ function tick(now) {
   const A = B.vAnim;
   if (A) { A.p = Math.min(1, A.p + dt / 1.4); B.vp = A.from + (A.to - A.from) * ease(A.p); if (A.p >= 1) { B.vAnim = null; } }
   const Sa = B.sAnim;
-  if (Sa) { B.st = Math.min(Sa.t1, B.st + dt * 3); if (B.st >= Sa.t1) B.sAnim = null; }
+  if (Sa) { B.st = Math.min(Sa.t1, B.st + dt * 1.5); if (B.st >= Sa.t1) B.sAnim = null; }
   if (!moving()) { loopOn = false; renderAll(); return; }
   if (B.scene === "vent") { chDraw(); icDraw(); } else if (B.scene === "spiro") spDraw();
   paceFrame(tick);
