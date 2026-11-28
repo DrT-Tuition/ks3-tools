@@ -1549,7 +1549,7 @@ function draw(p, flowV){
     const pos = alongAir(pts, u), off = MOL_OFF[i]*pos[3];
     pos[0] -= Math.sin(pos[2])*off; pos[1] += Math.cos(pos[2])*off;
     // fade out over the last few per cent so a molecule arriving at a branch end does not just vanish
-    placeMol(m, pos, out && i % 4 === 1, 0.95*mag*Math.min(1, (1 - u)/0.06));
+    placeMol(m, pos, out && (i % 8 === 1 || i % 8 === 2), 0.95*mag*Math.min(1, (1 - u)/0.06));   // odd i = right lung, even i = left lung (ROUTES[si + 2i]): one CO₂ in four of each lung's molecules, so both lungs send it out
   }
   const zk = (8.5 + 2.5*p)/8.5, zox = ZJUNC[0], zoy = ZJUNC[1];
   for (let i=0;i<ZMOL_N;i++){
@@ -1575,7 +1575,7 @@ function draw(p, flowV){
    ANIMATION STATE
    --------------------------------------------------------------------- */
 const rmq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-let reduceMotion = !!(rmq && rmq.matches);
+let reduceMotion = false;   // 28 Nov 2026: the breath, the flow of air and Auto breathe always play (school PCs with Windows animations off used to see stepped breaths and no molecules); only scrolling still follows the setting (rmq)
 let P = 0, prevP = 0, flowV = 0, dotPhase = 0, anim = null, auto = false, autoWait = 0, lastT = 0, rafId = 0, dirty = true;
 let level = "", streak = 0;   // level "" so the first Easy/Hard press opens the first question not yet done
 const support = { labels:false, meters:false };
@@ -1661,7 +1661,7 @@ $("autoBtn").addEventListener("click", () => { if (!locked()) setAuto(!auto); })
 function applyMotion(){
   $("autoBtn").disabled = reduceMotion; $("rmNote").hidden = !reduceMotion; if (reduceMotion) setAuto(false);
 }
-if (rmq && rmq.addEventListener) rmq.addEventListener("change", () => { reduceMotion = rmq.matches; applyMotion(); kick(); });
+
 function applyLock(){
   const L = locked();
   ["bIn","bOut","bDeep","pSlider","autoBtn"].forEach(id => $(id).disabled = L || (id === "autoBtn" && reduceMotion));
@@ -2062,7 +2062,7 @@ function tourGo(i) {
   $("tourDo").className = "tour-do"; $("tourDo").textContent = st.do ? "▶ " + st.doText : "";
   $("tourNext").textContent = i === TOUR.length - 1 ? "Finish" : st.do ? "Skip this step" : "Next →";
   $("tour").hidden = false;
-  el.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  el.scrollIntoView({ block: "center", behavior: rmq && rmq.matches ? "auto" : "smooth" });
   tourPlace(); setTimeout(tourPlace, 350);
   $("tourNext").focus({ preventScroll: true });
 }
