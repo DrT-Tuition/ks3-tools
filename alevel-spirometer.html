@@ -276,6 +276,8 @@ h1 .lvl{display:block;font-weight:700;color:var(--accent);font-size:17px;margin-
 .tubeO{fill:none;stroke:var(--tube);stroke-width:11;stroke-linejoin:round;stroke-linecap:round}
 .tubeI{fill:none;stroke:var(--tube-in);stroke-width:6.5;stroke-linejoin:round;stroke-linecap:round}
 .spflow{fill:none;stroke:var(--accent);stroke-width:13;stroke-linejoin:round;stroke-linecap:round;opacity:.3}
+.spcpl{fill:none;stroke:var(--tube);opacity:.9;stroke-linejoin:round;stroke-linecap:butt}
+.spcpl2{fill:none;stroke:var(--tube-in);opacity:.75;stroke-linejoin:round;stroke-linecap:butt}
 .spcap{fill:var(--sunk);stroke:var(--accent);stroke-width:1.2;opacity:.96}
 .plab.spct{stroke:none}
 .sparr{fill:var(--accent);stroke:var(--sunk);stroke-width:1}
@@ -1553,6 +1555,8 @@ function spDraw() {
   const hp = [[600, 128], [578, 126], [558, 138], [548, 160], [546, 186], [540, 200], [529, 220], [540, 228], [541, 238], [545, 244], [545, 258], [541, 264], [544, 278], [552, 290], [566, 294], [568, 334], [600, 334]];
   o += `<g class="ri-vec"><path class="head" d="M${hp.map(q => P(X(q[0])) + " " + P(Y(q[1]))).join("L")}Z"/><circle class="pupil" cx="${P(X(559))}" cy="${P(Y(192))}" r="${P(Math.max(1.6, S(2.6)))}"/><path class="ear" d="M${P(X(586))} ${P(Y(200))}q${P(S(9))} ${P(S(4))} ${P(S(2))} ${P(S(24))}"/>`;
   o += `<rect class="mouthp" x="${P(X(516))}" y="${P(Y(242))}" width="${P(S(24))}" height="${P(S(18))}" rx="${P(S(3))}"/><rect class="clip" x="${P(X(531))}" y="${P(Y(209))}" width="${P(S(15))}" height="${P(S(9))}" rx="${P(S(2))}"/></g>`;
+  /* the lower (breathing-out) tube's nozzle stops short of the mouthpiece in the picture, so a short elbow joins it to the mouthpiece block */
+  { const cp = [[536, 256], [541, 256], [541, 249]].map(q => P(X(q[0])) + " " + P(Y(q[1]))), d = "M" + cp.join("L"); o += `<g class="ri-img"><path class="spcpl" style="stroke-width:${P(S(4.4))}px" d="${d}"/><path class="spcpl2" style="stroke-width:${P(S(2.2))}px" d="${d}"/></g>`; }
   o += `<clipPath id="spHeadClip"><rect x="${P(X(500))}" y="${P(Y(100))}" width="${P(S(100))}" height="${P(S(260))}"/></clipPath><g clip-path="url(#spHeadClip)">${spPic("head", X, Y, S, 0)}</g>`;
   /* gases moving: O₂ to the mouth while breathing in; O₂ and CO₂ back through the soda lime while breathing out */
   const dv = vol("rest", t + .05, used) - vol("rest", t, used), moving = m.sAnim && Math.abs(dv) > 1e-4;
@@ -1561,6 +1565,7 @@ function spDraw() {
     const o2 = (x, y) => ball(x - r * .8, y, r, "o2") + ball(x + r * .8, y, r, "o2"), co2 = (x, y) => `<circle cx="${P(x - r * 1.5)}" cy="${P(y)}" r="${P(r * .8)}" class="o2"/><circle cx="${P(x + r * 1.5)}" cy="${P(y)}" r="${P(r * .8)}" class="o2"/><circle cx="${P(x)}" cy="${P(y)}" r="${P(r)}" class="co2c"/>`;
     /* the tube in use is lit up, with arrows showing which way the gas goes */
     o += `<path class="spflow" d="${path.map((q, i) => (i ? "L" : "M") + P(X(q[0])) + " " + P(Y(q[1]))).join("")}"/>`;
+    if (!inn) o += `<path class="spflow ri-img" style="stroke-width:${P(S(7))}px" d="M${P(X(541))} ${P(Y(249))}L${P(X(541))} ${P(Y(256))}L${P(X(522))} ${P(Y(256))}"/>`;
     for (let k = 0; k < 5; k++) { const u = (k + .5) / 5, [x, y] = along(path, u), [x2, y2] = along(path, Math.min(1, u + .01)), a = Math.atan2(y2 - y, x2 - x), c = Math.cos(a), sn = Math.sin(a), q = Math.max(4, S(7)); o += `<path class="sparr" d="M${P(X(x) + c * q)} ${P(Y(y) + sn * q)}L${P(X(x) - c * q - sn * q * .9)} ${P(Y(y) - sn * q + c * q * .9)}L${P(X(x) - c * q + sn * q * .9)} ${P(Y(y) - sn * q - c * q * .9)}Z"/>`; }
     if (inn) for (let k = 0; k < 4; k++) { const [x, y] = along(SP_IN, ((k / 4 + ph) % 1)); o += o2(X(x), Y(y)); }
     else for (let k = 0; k < 6; k++) { const u = (k / 6 + ph) % 1, [x, y] = along(SP_OUT, u), past = x < 365; if (k % 3 === 0) { if (!past || used) o += co2(X(x), Y(y)); } else o += o2(X(x), Y(y)); }
