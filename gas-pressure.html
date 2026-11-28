@@ -369,6 +369,7 @@ body.nq-quiz .mtabs{display:none}
 .xr-bar.one{grid-template-columns:minmax(0,1fr)}
 .xr-t{position:relative;height:14px;border-radius:7px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
 .xr-t i{position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(.5);border-radius:6px}
+.xr-t i.xsz{background:var(--bln)} .xr-sz{margin:0;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
 .xr-t i.xin{background:var(--hit)} .xr-t i.xout{background:var(--hit-out)} .xr-t i.xke{background:var(--accent)}
 .xr-st{font-weight:700;font-size:15px;color:var(--ink);min-height:2.7em}
 .xkey{list-style:none;margin:2px 0 0;padding:6px 0 0;border-top:1px solid var(--line);display:grid;gap:3px;font-size:14px;color:var(--ink)}
@@ -739,6 +740,9 @@ html.nq-pres [data-nq-stage] .scene{max-height:none!important}   /* the scene's 
         </div>
         <p class="xr-h">Kinetic energy of each particle inside</p>
         <div class="xr-bar one"><span class="xr-t"><i class="xke" id="blBk"></i></span></div>
+        <p class="xr-h">Size of the balloon (space inside, compared with the start)</p>
+        <div class="xr-bar one"><span class="xr-t"><i class="xsz" id="blBs"></i></span></div>
+        <p class="xr-sz" id="blNs">100% of the start</p>
         <p class="xr-h">Push from collisions on the skin</p>
         <div class="xr-bar"><span>Inside</span><span class="xr-t"><i class="xin" id="blBi"></i></span><b id="blNi">100</b></div>
         <div class="xr-bar"><span>Outside</span><span class="xr-t"><i class="xout" id="blBo"></i></span><b id="blNo">100</b></div>
@@ -2311,7 +2315,7 @@ function mkPlane() {
    2. COOLING A BALLOON
    ===================================================================== */
 function mkBalloon() {
-  const S = shell("balloon", 0.56), N_IN = 18, R0 = 0.15, ASP = 1.15, CX = 0.5, CY = 0.235, TMIN = -40, TMAX = 60;
+  const S = shell("balloon", 0.56), N_IN = 18, R0 = 0.17, ASP = 1.15, CX = 0.5, CY = 0.235, TMIN = -40, TMAX = 60;
   const AREA0 = Math.PI * R0 * R0 * ASP, DENS0 = N_IN / AREA0;
   let T = 20, TT = 20, k = 1, sh = null;
   const shape = () => { const a = R0 * Math.sqrt(k); sh = { cx: CX, cy: CY, a, b: a * ASP, n: 2 }; };
@@ -2325,7 +2329,7 @@ function mkBalloon() {
     "Look closely: do the particles get smaller when they are cooled?", "Warm the balloon up again. What happens to its size, and why?"];
   S.CAPS = ["The gas particles inside hit the balloon skin as hard and as often as the air particles outside. The pushes balance.",
     "Cooling takes kinetic energy away. The particles inside slow down and hit the skin less often and less hard. The air outside squashes the balloon.",
-    "Smaller now: the slow particles inside are closer together, so the pushes balance again. The particles have not shrunk. They are slower.",
+    "Smaller now, and the skin has gone slack and wrinkled: the slow particles inside are closer together, so the pushes balance again. The particles have not shrunk. They are slower.",
     "Warming gives the particles more kinetic energy. They hit the skin harder and more often. The pressure inside rises and the balloon grows.",
     "Bigger now: the fast particles inside are more spread out, so the pushes balance again. The particles have not grown. They move faster."];
   S.reset = function () {
@@ -2360,14 +2364,22 @@ function mkBalloon() {
     // the size at the start (dashed)
     g.setLineDash([6, 5]); g.strokeStyle = C.muted; g.lineWidth = 2; g.beginPath(); g.ellipse(X(CX), Y(CY), R0 * s, R0 * ASP * s, 0, 0, 6.2832); g.stroke(); g.setLineDash([]);
   };
-  S.drawLabels = (g, X, Y) => { label(g, S, "air outside", X(0.04), Y(0.06), "left"); label(g, S, "balloon", X(sh.cx + sh.a * 0.8), Y(sh.cy - sh.b * 0.8) - 6, "left", C.ink); };
+  S.drawLabels = (g, X, Y) => { label(g, S, "air outside", X(0.04), Y(0.06), "left"); label(g, S, "balloon", X(sh.cx + Math.max(sh.a, R0) * 0.8 + 0.012), Y(sh.cy - Math.max(sh.b, R0 * ASP) * 0.8) - 8, "left", C.ink); };   // clear of the dashed start outline when the balloon has shrunk
   S.drawDyn = function (g, X, Y) {
     const s = S.geo.s, bx = X(sh.cx), by = Y(sh.cy + sh.b);
     // string and knot
     g.strokeStyle = C.muted; g.lineWidth = 2; g.beginPath(); g.moveTo(bx, by + 6); g.quadraticCurveTo(bx - 0.04 * s, Y(S.H * 0.85), bx + 0.01 * s, Y(S.H)); g.stroke();
     g.fillStyle = C.bln; g.beginPath(); g.moveTo(bx, by - 2); g.lineTo(bx - 6, by + 7); g.lineTo(bx + 6, by + 7); g.closePath(); g.fill();
-    g.fillStyle = C["bln-fill"]; g.beginPath(); g.ellipse(bx, Y(sh.cy), sh.a * s, sh.b * s, 0, 0, 6.2832); g.fill();
-    g.strokeStyle = C.bln; g.lineWidth = Math.max(2.5, s * 0.006); g.stroke();
+    /* the space the balloon has lost (or gained) since the start, shaded between the dashed outline and the skin */
+    const cx0 = X(sh.cx), cy0 = Y(sh.cy), shr = clamp((1 - k) / 0.2, 0, 1.2);
+    if (Math.abs(k - 1) > 0.01) { g.save(); g.fillStyle = C.muted; g.globalAlpha = k < 1 ? 0.2 : 0.12; g.beginPath(); g.ellipse(cx0, cy0, R0 * s, R0 * ASP * s, 0, 0, 6.2832); g.ellipse(cx0, cy0, sh.a * s, sh.b * s, 0, 0, 6.2832, true); g.fill("evenodd"); g.restore(); }
+    /* the skin: smooth when full, wrinkled and a little saggy when the gas has cooled and shrunk */
+    const wob = th => shr * s * 0.0065 * (Math.sin(9 * th + 0.6) + 0.7 * Math.sin(14 * th + 2.1)), sag = th => 1 - shr * 0.05 * Math.max(0, -Math.sin(th)) ** 2;
+    g.beginPath(); for (let i = 0; i <= 90; i++) { const th = i / 90 * 6.2832, r = sag(th); const x = cx0 + Math.cos(th) * (sh.a * s + wob(th)), y = cy0 + Math.sin(th) * (sh.b * s * r + wob(th)); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath();
+    g.fillStyle = C["bln-fill"]; g.fill(); g.strokeStyle = C.bln; g.lineWidth = Math.max(2.5, s * 0.006); g.lineJoin = "round"; g.stroke();
+    if (shr > 0.12) { g.save(); g.strokeStyle = C.bln; g.globalAlpha = Math.min(0.8, shr); g.lineWidth = Math.max(1.4, s * 0.0035); g.lineCap = "round";
+      for (let i = 0; i < 9; i++) { const th = i / 9 * 6.2832 + 0.35, r0 = 0.9 - 0.05 * (i % 2), len = shr * 0.16; const x1 = cx0 + Math.cos(th) * sh.a * s * r0, y1 = cy0 + Math.sin(th) * sh.b * s * r0, x2 = cx0 + Math.cos(th) * sh.a * s * (r0 - len), y2 = cy0 + Math.sin(th) * sh.b * s * (r0 - len);
+        g.beginPath(); g.moveTo(x1, y1); g.quadraticCurveTo((x1 + x2) / 2 + Math.sin(th) * 5, (y1 + y2) / 2 - Math.cos(th) * 5, x2, y2); g.stroke(); } g.restore(); }
     // motion trails: how far each particle moves in a tenth of a second (shorter when slower)
     g.lineCap = "round"; g.lineWidth = Math.max(2, S.spr.pr * 0.7); g.strokeStyle = C.particle; g.globalAlpha = 0.28;
     g.beginPath(); for (const L of [S.pout, S.pin]) for (const p of L) { if (p.d || (p.b && S.time - p.b < FADE)) continue; g.moveTo(X(p.x - p.vx * 0.1), Y(p.y - p.vy * 0.1)); g.lineTo(X(p.x), Y(p.y)); }
@@ -2384,13 +2396,14 @@ function mkBalloon() {
     }
   };
   S.STS = ["Balanced: the balloon stays this size.", "Less push inside: the balloon is squashed smaller.", "More push inside: the balloon gets bigger."];
-  const el = { T: $("blT"), where: $("blWhere"), liq: $("blLiq"), bk: $("blBk"), bi: $("blBi"), bo: $("blBo"), ni: $("blNi"), no: $("blNo"), st: $("blSt"), out: $("blOut"), R: $("blR"), cool: $("blCool"), warm: $("blWarm") };
+  const el = { bs: $("blBs"), ns: $("blNs"), T: $("blT"), where: $("blWhere"), liq: $("blLiq"), bk: $("blBk"), bi: $("blBi"), bo: $("blBo"), ni: $("blNi"), no: $("blNo"), st: $("blSt"), out: $("blOut"), R: $("blR"), cool: $("blCool"), warm: $("blWarm") };
   S.readout = function () {
     const r = ratio(), pi = 100 * r;
     setIf(el.T, "textContent", fmtC(T)); setIf(el.out, "textContent", fmtC(T));
     setIf(el.where, "textContent", T <= -15 ? "As cold as a freezer" : T <= 8 ? "Cold, like a fridge" : T < 30 ? "Room temperature" : "Warm, like a sunny car");
     styleIf(el.liq, "transform", "scaleY(" + clamp((T - TMIN + 6) / (TMAX - TMIN + 10), 0.05, 1).toFixed(3) + ")");
     styleIf(el.bk, "transform", "scaleX(" + clamp((T + FACTS.kelvin) / (TMAX + FACTS.kelvin + 20), 0, 1).toFixed(3) + ")");
+    styleIf(el.bs, "transform", "scaleX(" + clamp(k * 100 / 130, 0, 1).toFixed(3) + ")"); setIf(el.ns, "textContent", n69(k * 100) + "% of the start" + (k < 0.97 ? ": shrunk" : k > 1.03 ? ": bigger" : ""));
     styleIf(el.bi, "transform", "scaleX(" + clamp(pi / 130, 0, 1).toFixed(3) + ")"); styleIf(el.bo, "transform", "scaleX(" + (100 / 130).toFixed(3) + ")");
     setIf(el.ni, "textContent", n69(pi)); setIf(el.no, "textContent", "100");
     setIf(el.st, "textContent", S.STS[Math.abs(r - 1) <= 0.03 ? 0 : r < 1 ? 1 : 2]);
